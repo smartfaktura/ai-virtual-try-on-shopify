@@ -259,8 +259,33 @@ export function gtmPricingModalView(args: {
   });
 }
 
-// ---------- 6. checkout_started ----------
-// Caller must invoke only after Stripe has returned a session id.
+// ---------- 6. begin_checkout ----------
+// Caller must invoke only AFTER create-checkout returns a Stripe session id
+// (i.e. data.url + data.sessionId are both present). Never fire on modal open
+// or button click. Dedup keyed by Stripe session id — same session never
+// re-fires; a new session does.
+export function gtmBeginCheckout(args: {
+  userId: string;
+  checkoutId: string;
+  planName: string;
+  value: number;          // already in major units (dollars/euros), not cents
+  currency: string;       // will be uppercased
+  pageLocation?: string;
+}): void {
+  const { userId, checkoutId, planName, value, currency, pageLocation } = args;
+  if (!userId || !checkoutId) return;
+  fireOncePersistent(`checkout:${checkoutId}`, {
+    event: 'begin_checkout',
+    user_id: userId,
+    checkout_id: checkoutId,
+    plan_name: planName,
+    value,
+    currency: upper(currency),
+    page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
+  });
+}
+
+/** @deprecated Use `gtmBeginCheckout` instead. Kept temporarily for backward compatibility. */
 export function gtmCheckoutStarted(args: {
   userId: string;
   checkoutId: string;
@@ -268,16 +293,7 @@ export function gtmCheckoutStarted(args: {
   value: number;
   currency: string;
 }): void {
-  const { userId, checkoutId, planName, value, currency } = args;
-  if (!userId || !checkoutId) return;
-  fireOncePersistent(`checkout:${checkoutId}`, {
-    event: 'checkout_started',
-    user_id: userId,
-    checkout_id: checkoutId,
-    plan_name: planName,
-    value,
-    currency: upper(currency),
-  });
+  gtmBeginCheckout(args);
 }
 
 // ---------- 7. subscription_purchase ----------

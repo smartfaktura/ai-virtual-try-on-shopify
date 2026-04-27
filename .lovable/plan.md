@@ -1,145 +1,163 @@
-# Add `pricing_modal_view` GTM event (with safety adjustments)
+## Implementation plan (with the user's small adjustments folded in)
 
-Track in-app pricing/upgrade/buy-credits/limit modal opens — fully separate from `pricing_page_view` (which stays untouched). No GTM tags or Google Ads conversions yet — only the dataLayer event.
+### 1. `src/lib/gtm.ts` — add `gtmBeginCheckout`, deprecate `gtmCheckoutStarted`
 
-## 1. Helper in `src/lib/gtm.ts`
-
-`fireOnceSession(dedupKey, ttlMs, payload)` already exists with the exact signature, has safe in-memory fallback, and pushes to `window.dataLayer`. But to satisfy the richer debug requirement (must log `dedupHit` AND `willFire`), the new helper inlines the same dedup logic instead of delegating, so we can log the outcome before push.
+Replace the existing `gtmCheckoutStarted` block (lines 262–281) with a new `gtmBeginCheckout` helper that pushes the GA4-standard event name. Keep `gtmCheckoutStarted` exported as a deprecated thin wrapper so any lingering import doesn't break.
 
 ```ts
-const PRICING_MODAL_TTL_MS = 15 * 60 * 1000;
-
-export function gtmPricingModalView(args: {
-  userId?: string | null;
-  modalName: string;
-  source?: string | null;
-  currentPlan?: string | null;
+// ---------- 6. begin_checkout ----------
+// Caller must invoke only AFTER create-checkout returns a Stripe session id
+// (i.e. data.url + data.sessionId are both present). Never fire on modal open
+// or button click. Dedup keyed by Stripe session id — same session never
+// re-fires; a new session does.
+export function gtmBeginCheckout(args: {
+  userId: string;
+  checkoutId: string;
+  planName: string;
+  value: number;          // already in major units (dollars/euros), not cents
+  currency: string;       // will be uppercased
   pageLocation?: string;
 }): void {
-  const { userId, modalName, source, currentPlan, pageLocation } = args;
-  if (!modalName) return;
-  const path = typeof window !== 'undefined' ? window.location.pathname : '';
-  const dedupKey = `pricing-modal:${modalName}:${path}`;
-  const storeKey = `${SESSION_PREFIX}${dedupKey}`;        // → "gtm-session:pricing-modal:..."
-  const now = Date.now();
-  const last = sessionGetTs(storeKey);                    // already wrapped in try/catch
-  const dedupHit = last !== null && now - last < PRICING_MODAL_TTL_MS;
-  const willFire = !dedupHit;
-
-  if (isGtmDebugEnabled() || DEBUG) {
-    console.log('[GTM DEBUG pricing_modal_view]', {
-      modalName, source, currentPlan, path, dedupKey, dedupHit, willFire,
-    });
-  }
-  if (!willFire) return;
-  sessionSetTs(storeKey, now);
-  rawPush({
-    event: 'pricing_modal_view',
-    ...(userId ? { user_id: userId } : {}),
-    modal_name: modalName,
-    ...(source ? { source } : {}),
-    ...(currentPlan ? { current_plan: currentPlan } : {}),
+  const { userId, checkoutId, planName, value, currency, pageLocation } = args;
+  if (!userId || !checkoutId) return;
+  fireOncePersistent(`checkout:${checkoutId}`, {
+    event: 'begin_checkout',
+    user_id: userId,
+    checkout_id: checkoutId,
+    plan_name: planName,
+    value,
+    currency: upper(currency),
     page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
   });
 }
+
+/** @deprecated Use `gtmBeginCheckout` instead. Kept temporarily for backward compatibility. */
+export function gtmCheckoutStarted(args: {
+  userId: string;
+  checkoutId: string;
+  planName: string;
+  value: number;
+  currency: string;
+}): void {
+  gtmBeginCheckout(args);
+}
 ```
 
-`pricing_page_view` and all other helpers remain untouched.
+### 2. `src/contexts/CreditContext.tsx` — fix `startCheckout` timing
 
-## 2. Fire on the false → true open transition only
-
-Each modal component uses `useEffect` with a `useRef` previous value, firing only when `open` flips from `false` to `true`:
+- Remove `gtagBeginCheckout()` from line 194 (the premature push that creates the broken `begin_checkout` event with leaked modal fields).
+- Remove the `gtagBeginCheckout` import.
+- Keep `trackInitiateCheckout()` where it is (Meta Pixel — out of scope per user instructions). Add a TODO comment noting it currently fires too early and should be moved later.
+- Replace `gtmCheckoutStarted({...})` call (lines 208–216) with `gtmBeginCheckout({...})` and add the debug log block.
+- Default `planName`:
+  - For `mode === 'payment'` (top-ups): `'Buy Credits'`.
+  - For `mode === 'subscription'`: `'Unknown Subscription'` (NOT the user's current plan).
+- `value: data.amount` — `create-checkout` already returns dollars (it divides `unit_amount/100`), so no further conversion.
 
 ```ts
-const prevOpen = useRef(false);
-useEffect(() => {
-  if (open && !prevOpen.current) {
-    gtmPricingModalView({ userId: user?.id, modalName, source, currentPlan: plan, ... });
+const startCheckout = useCallback(async (priceId, mode, planName) => {
+  trackInitiateCheckout(); // TODO: Meta Pixel fires too early — move after data.url returns in a follow-up.
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    toast.error('Please log in to continue.');
+    return;
   }
-  prevOpen.current = open;
-}, [open, ...]);
+  try {
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: { priceId, mode },
+    });
+    if (error) throw error;
+
+    const resolvedPlanName =
+      planName ||
+      (mode === 'payment' ? 'Buy Credits' : 'Unknown Subscription');
+
+    const willFire = !!user?.id && !!data?.url && !!data?.sessionId;
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1') {
+      console.log('[GTM DEBUG begin_checkout]', {
+        hasUser: !!user, userId: user?.id,
+        hasUrl: !!data?.url, checkoutId: data?.sessionId,
+        planName: resolvedPlanName,
+        value: data?.amount, currency: data?.currency, willFire,
+      });
+    }
+
+    if (data?.url) {
+      if (willFire) {
+        gtmBeginCheckout({
+          userId: user!.id,
+          checkoutId: data.sessionId,
+          planName: resolvedPlanName,
+          value: typeof data.amount === 'number' ? data.amount : 0,
+          currency: data.currency || 'usd',
+        });
+      }
+      window.location.href = data.url;
+    }
+  } catch (err) {
+    console.error('Checkout error:', err);
+    toast.error('Failed to start checkout. Please try again.');
+  }
+}, [user]);
 ```
 
-This guarantees no firing on render, on close, on unrelated state updates, or on page load.
+### 3. Caller cleanup — pass accurate `planName`
 
-## 3. Modal coverage
+- `src/components/app/UpgradePlanModal.tsx` lines 195 / 206 — already passes `selectedPlan.name` for subs; ensure top-up call (line 206) passes `\`${pack.credits} Credits\``.
+- `src/pages/AppPricing.tsx` line 320 — pass `selectedPlan.name`.
+- `src/components/app/UpgradeValueDrawer.tsx` line 95 — pass `plan.name`.
+- `src/components/app/BuyCreditsModal.tsx` line 77 — pass `\`${pack.credits} Credits\``; line 116 already passes `selectedPlan.name`; line 132 (annual upgrade) — pass `currentPlanData.name`.
+- `src/pages/Settings.tsx` line 376 — pass the selected plan name; line 394 — pass `\`${pack.credits} Credits\``.
 
-| File | `modal_name` | Open signal | Source prop |
-|---|---|---|---|
-| `BuyCreditsModal` | `buy_credits` | `buyModalOpen` (context) | `buyModalSource` (context) |
-| `UpgradePlanModal` | `upgrade_plan` (or `low_credits` if `variant === 'no-credits'`) | `open` prop | new optional `source` prop |
-| `UpgradeValueDrawer` | `upgrade_value_drawer` | `open` prop | new optional `source` prop (callers pass `layer2Reason`) |
+### 4. Untouched (per user instructions)
 
-`NoCreditsModal` is a thin wrapper around `UpgradePlanModal variant="no-credits"`, so the variant-based modal_name in `UpgradePlanModal` automatically covers it without double-firing. `GlobalUpgradeModal` only renders `BuyCreditsModal`, also no double-fire.
+- `pricing_modal_view` helper, payload, and dedup — unchanged.
+- `pricing_page_view` — unchanged.
+- `gtagPurchase` and `gtmSubscriptionPurchase` (post-payment) — unchanged.
+- Meta Pixel `trackInitiateCheckout` and `trackPurchase` — unchanged (TODO comment added).
+- GA4 gtag pageview — unchanged.
 
-All three new `source` props are **optional** — every existing call site keeps working unchanged.
+---
 
-## 4. `CreditContext` — optional source for `openBuyModal`
+## Sample GTM Preview payloads after fix
 
-```ts
-openBuyModal: (source?: string) => void;
-buyModalSource: string | null;          // exposed for BuyCreditsModal to read
+**Open upgrade modal (no change):**
+```json
+{
+  "event": "pricing_modal_view",
+  "user_id": "8a1f…",
+  "modal_name": "upgrade_plan",
+  "source": "header_cta",
+  "current_plan": "free",
+  "page_location": "https://vovv.ai/app/generate/product-images"
+}
 ```
 
-Implementation:
-```ts
-const [buyModalSource, setBuyModalSource] = useState<string | null>(null);
-const openBuyModal = useCallback((source?: string) => {
-  setBuyModalSource(source ?? null);
-  setBuyModalOpen(true);
-}, []);
-const closeBuyModal = useCallback(() => {
-  setBuyModalOpen(false);
-  setBuyModalSource(null);                // reset on close so source never leaks
-}, []);
+**Click "Upgrade to Growth" → Stripe session created → just before redirect:**
+```json
+{
+  "event": "begin_checkout",
+  "user_id": "8a1f…",
+  "checkout_id": "cs_test_a1B2c3D4…",
+  "plan_name": "Growth",
+  "value": 79,
+  "currency": "EUR",
+  "page_location": "https://vovv.ai/app/generate/product-images"
+}
 ```
 
-Existing zero-arg callers stay valid (TypeScript accepts dropping an optional arg).
+Cancelling Stripe and returning produces no purchase event and no re-fire of `begin_checkout` for the same `checkout_id` (`fireOncePersistent` keyed by `checkout:{sessionId}`). A fresh checkout produces a new `cs_…` session and fires once. Payment success continues to fire the existing `subscription_purchase` / `gtagPurchase` events with no changes.
 
-## 5. Source attribution at known-safe call sites
+---
 
-Only update where the source is obvious:
+## Files changed
 
-| Call site | Source value |
-|---|---|
-| `LowCreditsBanner` → `openBuyModal()` | `low_credits_banner` |
-| `CreditIndicator` Pro/Enterprise top-up `openBuyModal()` | `header_cta` |
-| `CreditIndicator` `<UpgradePlanModal>` (canUpgrade path) | `header_cta` (passed as new `source` prop) |
-| `AppShell` line 252 sidebar credits button | `sidebar_cta` |
-| `AppShell` line 484 mobile topbar credit pill | `topbar_cta` |
-| `PostGenerationUpgradeCard` See Plans → `openBuyModal()` in Freestyle / Generate / TextToProduct | `post_gen_card` |
+- `src/lib/gtm.ts`
+- `src/contexts/CreditContext.tsx`
+- `src/components/app/UpgradePlanModal.tsx`
+- `src/components/app/UpgradeValueDrawer.tsx`
+- `src/components/app/BuyCreditsModal.tsx`
+- `src/pages/AppPricing.tsx`
+- `src/pages/Settings.tsx`
 
-All other call sites stay unchanged (source omitted, payload skips the field). Generate.tsx's `<UpgradePlanModal>` instances and Freestyle's other openBuyModal calls remain unattributed because no clear source label fits.
-
-## 6. Privacy
-
-Payload contains only: `user_id`, `modal_name`, `source`, `current_plan`, `page_location`. No emails, names, prompts, image URLs, Stripe IDs, payment info, plan amounts, or product titles.
-
-## 7. Debug logging
-
-Active when `localStorage.getItem('vovv_gtm_debug') === '1'` OR `import.meta.env.DEV`. Production stays silent unless flag set. Log line includes `dedupHit` and `willFire` so you can see in console exactly whether the event fired or was skipped.
-
-## 8. Files to change
-
-1. `src/lib/gtm.ts` — add `gtmPricingModalView` helper.
-2. `src/contexts/CreditContext.tsx` — add optional `source` arg + expose `buyModalSource` + reset on close.
-3. `src/components/app/BuyCreditsModal.tsx` — fire on `buyModalOpen` true edge.
-4. `src/components/app/UpgradePlanModal.tsx` — accept optional `source` prop, fire on `open` true edge with variant-aware `modal_name`.
-5. `src/components/app/UpgradeValueDrawer.tsx` — accept optional `source` prop, fire on `open` true edge.
-6. Source-attribution sites: `LowCreditsBanner.tsx`, `CreditIndicator.tsx`, `AppShell.tsx` (2 buttons), `Freestyle.tsx`, `Generate.tsx`, `TextToProduct.tsx` (PostGenerationUpgradeCard onSeeMore).
-7. Pass `source="layer2_${layer2Reason}"` (or just `layer2Reason`) to `<UpgradeValueDrawer>` in Freestyle.tsx where it's mounted.
-
-## 9. Test plan
-
-1. GTM Preview connected to `GTM-P29VYFW3`.
-2. Click sidebar credits button → expect `pricing_modal_view` with `modal_name: "buy_credits"`, `source: "sidebar_cta"`, `current_plan: "<plan>"`.
-3. Close + reopen same modal → no fire (dedup, console shows `dedupHit: true, willFire: false`).
-4. Click header Upgrade button → expect `pricing_modal_view` with `modal_name: "upgrade_plan"`, `source: "header_cta"`.
-5. Run a generation as a free user with 0 credits → expect `pricing_modal_view` with `modal_name: "low_credits"`.
-6. Trigger Layer 2 upgrade drawer → expect `pricing_modal_view` with `modal_name: "upgrade_value_drawer"`.
-7. Navigate to a different `/app/...` page and reopen Buy Credits → fires (different path in dedup key).
-8. Visit `/app/pricing` → `pricing_page_view` still fires (unchanged), `pricing_modal_view` does NOT fire.
-
-## Report (delivered after implementation)
-
-Will include: components updated, modal_name per component, source per call site, current_plan availability per modal, dedup behavior verified, and GTM Preview test results.
+No DB / edge-function / RLS changes. No new secrets.
