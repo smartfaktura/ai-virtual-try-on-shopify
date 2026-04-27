@@ -1018,7 +1018,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
             </button>
           );
         })}
-        {activeIds.size > 0 && (
+        {applySourceIds && (
           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 w-full sm:w-auto" onClick={handleApplyToAll}>
             <Copy className="w-3.5 h-3.5" />Apply to all categories
           </Button>
