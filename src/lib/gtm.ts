@@ -294,21 +294,84 @@ export function gtmBeginCheckout(args: {
   }
   localSet(storeKey);
 
+  const resolvedPageLocation =
+    pageLocation || (typeof window !== 'undefined' ? window.location.href : '');
+  const upperCurrency = upper(currency);
+
+  // Reset stale modal-only dataLayer fields so GTM Preview doesn't visually
+  // attribute pricing_modal_view fields (modal_name, source, current_plan)
+  // to this begin_checkout entry.
+  if (typeof window !== 'undefined') {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      modal_name: undefined,
+      source: undefined,
+      current_plan: undefined,
+    });
+  }
+
   const payload: Record<string, unknown> = {
     event: 'begin_checkout',
     user_id: userId,
     checkout_id: checkoutId,
     plan_name: planName,
     value,
-    currency: upper(currency),
-    page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
+    currency: upperCurrency,
+    page_location: resolvedPageLocation,
   };
 
-  if (isGtmDebugEnabled() || DEBUG) {
-    // eslint-disable-next-line no-console
-    console.log('[GTM DEBUG gtmBeginCheckout payload]', payload);
-  }
+  const dlBefore =
+    typeof window !== 'undefined' && Array.isArray(window.dataLayer)
+      ? window.dataLayer.length
+      : -1;
+
   rawPush(payload);
+
+  // Also emit through gtag so Google Tag Assistant / GA4-style preview
+  // surfaces this event reliably (the live Google tag G-V3BBTYZXS1 is loaded
+  // in index.html and shares the same dataLayer as GTM-P29VVFW3).
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    try {
+      window.gtag('event', 'begin_checkout', {
+        user_id: userId,
+        checkout_id: checkoutId,
+        transaction_id: checkoutId,
+        plan_name: planName,
+        value,
+        currency: upperCurrency,
+        page_location: resolvedPageLocation,
+        items: [
+          {
+            item_id: checkoutId,
+            item_name: planName,
+            price: value,
+            quantity: 1,
+          },
+        ],
+      });
+    } catch (err) {
+      if (isGtmDebugEnabled() || DEBUG) {
+        // eslint-disable-next-line no-console
+        console.warn('[GTM DEBUG gtmBeginCheckout gtag failed]', err);
+      }
+    }
+  }
+
+  if (isGtmDebugEnabled() || DEBUG) {
+    const dlAfter =
+      typeof window !== 'undefined' && Array.isArray(window.dataLayer)
+        ? window.dataLayer.length
+        : -1;
+    // eslint-disable-next-line no-console
+    console.log('[GTM DEBUG gtmBeginCheckout payload]', payload, {
+      dataLayerExists: typeof window !== 'undefined' && Array.isArray(window.dataLayer),
+      gtagExists: typeof window !== 'undefined' && typeof window.gtag === 'function',
+      dlBefore,
+      dlAfter,
+      dedupKey,
+    });
+  }
+
   return { fired: true };
 }
 
