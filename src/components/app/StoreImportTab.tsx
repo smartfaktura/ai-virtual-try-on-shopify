@@ -208,6 +208,13 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
         .single();
 
       if (insertError) throw new Error(insertError.message);
+      if (productData?.id) {
+        gtmProductUploaded({
+          userId: user.id,
+          productId: productData.id,
+          productCategory: extracted.product_type || null,
+        });
+      }
 
       const storagePaths = extracted.storage_paths || [extracted.storage_path];
 
