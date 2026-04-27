@@ -186,7 +186,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
     }
   }, [user]);
 
-  const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment') => {
+  const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment', planName?: string) => {
     trackInitiateCheckout();
     gtagBeginCheckout();
     const { data: { session } } = await supabase.auth.getSession();
@@ -200,13 +200,24 @@ export function CreditProvider({ children }: CreditProviderProps) {
       });
       if (error) throw error;
       if (data?.url) {
+        // Fire GTM checkout_started ONLY after Stripe returned a session id —
+        // never on click. Currency comes from Stripe (uppercased by helper).
+        if (user && data.sessionId) {
+          gtmCheckoutStarted({
+            userId: user.id,
+            checkoutId: data.sessionId,
+            planName: planName || plan,
+            value: typeof data.amount === 'number' ? data.amount : 0,
+            currency: data.currency || 'usd',
+          });
+        }
         window.location.href = data.url;
       }
     } catch (err) {
       console.error('Checkout error:', err);
       toast.error('Failed to start checkout. Please try again.');
     }
-  }, []);
+  }, [user, plan]);
 
   const openCustomerPortal = useCallback(async () => {
     try {
