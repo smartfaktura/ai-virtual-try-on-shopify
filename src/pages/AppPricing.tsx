@@ -317,7 +317,7 @@ export default function AppPricing() {
           await openCustomerPortal();
         } else {
           const priceId = isAnnual ? selectedDialogPlan.stripePriceIdAnnual : selectedDialogPlan.stripePriceIdMonthly;
-          if (priceId) await startCheckout(priceId, 'subscription');
+          if (priceId) await startCheckout(priceId, 'subscription', selectedDialogPlan.name);
         }
       }
     } finally {
