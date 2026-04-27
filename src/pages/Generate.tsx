@@ -79,6 +79,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { enqueueWithRetry, isEnqueueError, sendWake, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted, isGtmDebugEnabled, safeLocalGet } from '@/lib/gtm';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
