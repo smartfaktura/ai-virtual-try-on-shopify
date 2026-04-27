@@ -3,6 +3,7 @@ import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 
 interface VariationInput {
   label: string;
