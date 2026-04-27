@@ -1306,6 +1306,11 @@ export default function Generate() {
 
         jobMap.set(src.sourceId, result.jobId);
         lastBalance = result.newBalance;
+        fireFirstgenStartedOnce({
+          jobId: result.jobId,
+          productId: src.sourceType === 'generation' ? (src.sourceId ?? null) : null,
+          visualType: 'upscale',
+        });
         injectActiveJob(queryClient, {
           jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
           workflow_slug: activeWorkflow?.slug, product_name: src.title,
