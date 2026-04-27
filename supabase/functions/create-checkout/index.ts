@@ -77,7 +77,10 @@ serve(async (req) => {
     const priceAmount = priceObj.unit_amount ? (priceObj.unit_amount / 100).toFixed(2) : "0";
     logStep("Price amount resolved", { priceAmount });
 
-    const defaultSuccessUrl = `${origin}/app/settings?payment=success&amount=${priceAmount}`;
+    // Include {CHECKOUT_SESSION_ID} placeholder so the frontend can match the
+    // post-payment return to the actual Stripe checkout session for GTM purchase
+    // attribution. Stripe interpolates this server-side.
+    const defaultSuccessUrl = `${origin}/app/settings?payment=success&session_id={CHECKOUT_SESSION_ID}&amount=${priceAmount}`;
     const defaultCancelUrl = `${origin}/app/settings?payment=cancelled`;
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -100,7 +103,12 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id });
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify({
+      url: session.url,
+      sessionId: session.id,
+      amount: priceObj.unit_amount ? priceObj.unit_amount / 100 : 0,
+      currency: priceObj.currency || "usd", // Stripe lowercase; frontend uppercases
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

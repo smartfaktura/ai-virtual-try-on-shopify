@@ -244,12 +244,47 @@ serve(async (req) => {
       .eq("user_id", userId)
       .single();
 
+    // Pick the most recent paid checkout session for this customer (for GTM
+    // purchase attribution on the frontend).
+    let latestSessionId: string | null = null;
+    for (const s of sessions.data) {
+      if (s.payment_status === "paid") {
+        latestSessionId = s.id;
+        break;
+      }
+    }
+
+    // Resolve latest invoice id from the active subscription if available.
+    let latestInvoiceId: string | null = null;
+    if (activeSub?.latest_invoice) {
+      latestInvoiceId = typeof activeSub.latest_invoice === "string"
+        ? activeSub.latest_invoice
+        : (activeSub.latest_invoice as Stripe.Invoice).id ?? null;
+    }
+
+    // Resolve subscription unit amount + currency for purchase value.
+    let subAmount: number | null = null;
+    let subCurrency: string | null = null;
+    if (activeSub) {
+      const item = activeSub.items?.data?.[0];
+      const unit = item?.price?.unit_amount;
+      if (unit != null) subAmount = unit / 100;
+      subCurrency = item?.price?.currency ?? null;
+    }
+
     return new Response(JSON.stringify({
       plan,
       subscription_status: subscriptionStatus,
       credits_balance: profile?.credits_balance ?? 0,
       current_period_end: periodEnd,
       billing_interval: billingInterval,
+      // Extra fields for GTM purchase event dedup + payload (frontend picks
+      // strongest transaction id: invoice → session → subscription).
+      stripe_subscription_id: subscriptionId,
+      latest_invoice_id: latestInvoiceId,
+      latest_session_id: latestSessionId,
+      amount: subAmount,
+      currency: subCurrency,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
