@@ -68,6 +68,7 @@ export function useBulkVideoProject() {
     const batchId = crypto.randomUUID();
     let completed = 0;
     let failed = 0;
+    let firstgenFired = false;
 
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
