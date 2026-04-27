@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
 import { gtagBeginCheckout, gtagPurchase } from '@/lib/gtag';
+import { gtmCheckoutStarted, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
@@ -40,7 +41,7 @@ interface CreditContextValue {
   setBalanceFromServer: (newBalance: number) => void;
   checkSubscription: () => Promise<void>;
   openCustomerPortal: () => Promise<void>;
-  startCheckout: (priceId: string, mode: 'subscription' | 'payment') => Promise<void>;
+  startCheckout: (priceId: string, mode: 'subscription' | 'payment', planName?: string) => Promise<void>;
   
   buyModalOpen: boolean;
   openBuyModal: () => void;
