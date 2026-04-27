@@ -391,7 +391,7 @@ export default function Settings() {
     if (pack?.stripePriceId) {
       setTopUpLoadingId(packId);
       try {
-        await startCheckout(pack.stripePriceId, 'payment');
+        await startCheckout(pack.stripePriceId, 'payment', `${pack.credits} Credits`);
       } catch {
         setTopUpLoadingId(null);
       }
