@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
 import { gtagPurchase } from '@/lib/gtag';
-import { gtmBeginCheckout, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
+import { gtmBeginCheckout, gtmCheckoutSessionCreated, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
+import { pricingPlans, creditPacks } from '@/data/mockData';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
