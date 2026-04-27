@@ -273,8 +273,18 @@ export function gtmBeginCheckout(args: {
   pageLocation?: string;
 }): void {
   const { userId, checkoutId, planName, value, currency, pageLocation } = args;
-  if (!userId || !checkoutId) return;
-  fireOncePersistent(`checkout:${checkoutId}`, {
+  if (!userId || !checkoutId) {
+    if (isGtmDebugEnabled() || DEBUG) {
+      // eslint-disable-next-line no-console
+      console.log('[GTM DEBUG gtmBeginCheckout blocked]', {
+        reason: !userId ? 'missing userId' : 'missing checkoutId',
+        userId,
+        checkoutId,
+      });
+    }
+    return;
+  }
+  const payload = {
     event: 'begin_checkout',
     user_id: userId,
     checkout_id: checkoutId,
@@ -282,7 +292,12 @@ export function gtmBeginCheckout(args: {
     value,
     currency: upper(currency),
     page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
-  });
+  };
+  if (isGtmDebugEnabled() || DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log('[GTM DEBUG gtmBeginCheckout payload]', payload);
+  }
+  fireOncePersistent(`checkout:${checkoutId}`, payload);
 }
 
 /** @deprecated Use `gtmBeginCheckout` instead. Kept temporarily for backward compatibility. */

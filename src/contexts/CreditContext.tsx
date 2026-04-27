@@ -211,19 +211,31 @@ export function CreditProvider({ children }: CreditProviderProps) {
         (mode === 'payment' ? 'Buy Credits' : 'Unknown Subscription');
 
       const willFire = !!user?.id && !!data?.url && !!data?.sessionId;
-      if (typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1') {
-        // eslint-disable-next-line no-console
-        console.log('[GTM DEBUG begin_checkout]', {
-          hasUser: !!user,
-          userId: user?.id,
-          hasUrl: !!data?.url,
-          checkoutId: data?.sessionId,
-          planName: resolvedPlanName,
-          value: data?.amount,
-          currency: data?.currency,
-          willFire,
-        });
-      }
+
+      // Debug logging gated by localStorage flag (vovv_gtm_debug=1).
+      // Wrapped in try/catch so storage errors never break checkout.
+      try {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1') {
+          const dedupKey = data?.sessionId ? `gtm:checkout:${data.sessionId}` : null;
+          let dedupExists: string | null = null;
+          try {
+            dedupExists = dedupKey ? localStorage.getItem(dedupKey) : null;
+          } catch { /* ignore */ }
+          // eslint-disable-next-line no-console
+          console.log('[GTM DEBUG begin_checkout after create-checkout]', {
+            hasUser: !!user,
+            userId: user?.id,
+            hasUrl: !!data?.url,
+            checkoutId: data?.sessionId,
+            planName: resolvedPlanName,
+            value: data?.amount,
+            currency: data?.currency,
+            dedupKey,
+            dedupExists,
+            willFire,
+          });
+        }
+      } catch { /* ignore */ }
 
       if (data?.url) {
         // Fire begin_checkout ONLY after Stripe returned a session id —
@@ -235,7 +247,11 @@ export function CreditProvider({ children }: CreditProviderProps) {
             planName: resolvedPlanName,
             value: typeof data.amount === 'number' ? data.amount : 0,
             currency: data.currency || 'usd',
+            pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
           });
+          // Give GTM Preview / dataLayer a brief window to register the event
+          // before the navigation tears down the page context.
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
         window.location.href = data.url;
       }
