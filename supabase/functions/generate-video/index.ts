@@ -105,6 +105,7 @@ async function handleWorkerMode(body: Record<string, unknown>) {
 
     // Extract video params from payload
     const imageUrl = body.image_url as string;
+    const imageTailUrl = body.image_tail as string | undefined;
     const prompt = (body.prompt as string) || "";
     const duration = (body.duration as string) || "5";
     const modelName = (body.model_name as string) || "kling-v3";
@@ -115,10 +116,17 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     const withAudio = body.with_audio as boolean;
     const projectId = body.project_id as string | undefined;
     const workflowType = body.workflow_type as string | undefined;
+    const cameraControlConfig = body.camera_control_config as
+      | { type?: string; config?: Record<string, number> }
+      | undefined;
 
     if (!imageUrl) throw new Error("image_url is required in payload");
 
-    console.log(`[generate-video:worker] Job ${jobId}, user ${userId}, model=${modelName}, duration=${duration}, aspect_ratio=${aspectRatio}`);
+    const hasTail = !!imageTailUrl;
+
+    console.log(
+      `[generate-video:worker] Job ${jobId}, user ${userId}, model=${modelName}, duration=${duration}, aspect_ratio=${aspectRatio}, has_tail=${hasTail}`,
+    );
 
     // 1. Create Kling task
     const klingBody: Record<string, unknown> = {
@@ -129,8 +137,30 @@ async function handleWorkerMode(body: Record<string, unknown>) {
     };
     if (prompt) klingBody.prompt = prompt;
     if (negativePrompt) klingBody.negative_prompt = negativePrompt;
-    if (typeof cfgScale === "number") klingBody.cfg_scale = cfgScale;
     klingBody.sound = withAudio ? "on" : "off";
+
+    if (hasTail) {
+      // Kling start+end frame interpolation.
+      // image_tail is INCOMPATIBLE with multi_prompt, camera_control, dynamic_masks, static_mask.
+      // We never set those here — listing them defensively for future-proofing.
+      klingBody.image_tail = imageTailUrl;
+      // cfg_scale: caller-provided clamped value, or Kling-recommended baseline 0.5
+      klingBody.cfg_scale = typeof cfgScale === "number" ? cfgScale : 0.5;
+      // Defensive strip — if a caller ever sets these, ensure they don't reach Kling.
+      delete klingBody.camera_control;
+      delete klingBody.dynamic_masks;
+      delete klingBody.static_mask;
+      delete klingBody.multi_prompt;
+    } else {
+      if (typeof cfgScale === "number") klingBody.cfg_scale = cfgScale;
+      // Standard animate flow — forward camera_control if provided
+      if (cameraControlConfig?.type) {
+        klingBody.camera_control = {
+          type: cameraControlConfig.type,
+          config: cameraControlConfig.config ?? {},
+        };
+      }
+    }
 
     const createRes = await fetch(`${KLING_API_BASE}/videos/image2video`, {
       method: "POST",
