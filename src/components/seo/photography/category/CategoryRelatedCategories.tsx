@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
 import { PREVIEW, getRelatedPages, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
@@ -76,7 +76,9 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
                           className="relative overflow-hidden rounded-xl bg-muted/40"
                         >
                           <SmartImage
-                            src={getOptimizedUrl(resolved, { quality: 55 })}
+                            src={getOptimizedUrl(resolved, { width: 320, height: 320, quality: 70, resize: 'cover' })}
+                            srcSet={getResizedSrcSet(resolved, { widths: [220, 320, 440], aspect: [1, 1], quality: 70 })}
+                            sizes="(max-width: 640px) 32vw, (max-width: 1024px) 24vw, 160px"
                             alt={t.alt}
                             imgClassName="transition-transform duration-700 group-hover:scale-[1.05]"
                           />
