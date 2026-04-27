@@ -117,6 +117,21 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
   }, [billingInterval]);
   const [loading, setLoading] = useState(false);
   const [topUpLoading, setTopUpLoading] = useState(false);
+
+  // GTM: fire pricing_modal_view on false → true open transition only
+  const prevOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      gtmPricingModalView({
+        userId: user?.id,
+        modalName: variant === 'no-credits' ? 'low_credits' : 'upgrade_plan',
+        source,
+        currentPlan: plan,
+      });
+    }
+    prevOpenRef.current = open;
+  }, [open, user?.id, source, plan, variant]);
+
   const defaultPackId = creditPacks.find((p) => p.popular)?.packId ?? creditPacks[0]?.packId ?? '';
   const [selectedPackId, setSelectedPackId] = useState<string>(defaultPackId);
 
