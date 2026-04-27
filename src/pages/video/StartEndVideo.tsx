@@ -385,6 +385,10 @@ export default function StartEndVideo() {
       {/* Summary */}
       <TransitionSummaryCard rows={summaryRows} />
 
+      {project.pipelineError && (
+        <ValidationWarnings warnings={[{ type: 'error', message: project.pipelineError }]} />
+      )}
+
       {/* Generate row */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sticky bottom-6 bg-background/90 backdrop-blur-md rounded-2xl border border-border p-4 shadow-lg shadow-foreground/[0.04]">
         <CreditEstimateBox params={creditParams} />
@@ -407,10 +411,6 @@ export default function StartEndVideo() {
           )}
         </Button>
       </div>
-
-      {project.pipelineError && (
-        <ValidationWarnings warnings={[{ type: 'error', message: project.pipelineError }]} />
-      )}
 
       <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} />
     </div>
