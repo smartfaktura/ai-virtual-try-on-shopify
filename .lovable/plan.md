@@ -1,163 +1,95 @@
-## Implementation plan (with the user's small adjustments folded in)
+Plan to fix `begin_checkout` so it appears in GTM Preview before Stripe opens
 
-### 1. `src/lib/gtm.ts` — add `gtmBeginCheckout`, deprecate `gtmCheckoutStarted`
+1. Confirm and keep the current event separation
+- Keep `pricing_modal_view` unchanged and separate
+- Do not restore the old premature `gtagBeginCheckout` event
+- Do not add GTM triggers, Google Ads tags, or duplicate purchase tracking
 
-Replace the existing `gtmCheckoutStarted` block (lines 262–281) with a new `gtmBeginCheckout` helper that pushes the GA4-standard event name. Keep `gtmCheckoutStarted` exported as a deprecated thin wrapper so any lingering import doesn't break.
-
-```ts
-// ---------- 6. begin_checkout ----------
-// Caller must invoke only AFTER create-checkout returns a Stripe session id
-// (i.e. data.url + data.sessionId are both present). Never fire on modal open
-// or button click. Dedup keyed by Stripe session id — same session never
-// re-fires; a new session does.
-export function gtmBeginCheckout(args: {
-  userId: string;
-  checkoutId: string;
-  planName: string;
-  value: number;          // already in major units (dollars/euros), not cents
-  currency: string;       // will be uppercased
-  pageLocation?: string;
-}): void {
-  const { userId, checkoutId, planName, value, currency, pageLocation } = args;
-  if (!userId || !checkoutId) return;
-  fireOncePersistent(`checkout:${checkoutId}`, {
-    event: 'begin_checkout',
-    user_id: userId,
-    checkout_id: checkoutId,
-    plan_name: planName,
-    value,
-    currency: upper(currency),
-    page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
-  });
-}
-
-/** @deprecated Use `gtmBeginCheckout` instead. Kept temporarily for backward compatibility. */
-export function gtmCheckoutStarted(args: {
-  userId: string;
-  checkoutId: string;
-  planName: string;
-  value: number;
-  currency: string;
-}): void {
-  gtmBeginCheckout(args);
-}
-```
-
-### 2. `src/contexts/CreditContext.tsx` — fix `startCheckout` timing
-
-- Remove `gtagBeginCheckout()` from line 194 (the premature push that creates the broken `begin_checkout` event with leaked modal fields).
-- Remove the `gtagBeginCheckout` import.
-- Keep `trackInitiateCheckout()` where it is (Meta Pixel — out of scope per user instructions). Add a TODO comment noting it currently fires too early and should be moved later.
-- Replace `gtmCheckoutStarted({...})` call (lines 208–216) with `gtmBeginCheckout({...})` and add the debug log block.
-- Default `planName`:
-  - For `mode === 'payment'` (top-ups): `'Buy Credits'`.
-  - For `mode === 'subscription'`: `'Unknown Subscription'` (NOT the user's current plan).
-- `value: data.amount` — `create-checkout` already returns dollars (it divides `unit_amount/100`), so no further conversion.
+2. Harden the `begin_checkout` call site in `CreditContext.tsx`
+- Keep `gtmBeginCheckout` imported from `@/lib/gtm`
+- Call it only after `create-checkout` returns successfully with both `data.url` and `data.sessionId`
+- Add the requested debug log immediately after `create-checkout` returns:
 
 ```ts
-const startCheckout = useCallback(async (priceId, mode, planName) => {
-  trackInitiateCheckout(); // TODO: Meta Pixel fires too early — move after data.url returns in a follow-up.
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    toast.error('Please log in to continue.');
-    return;
-  }
-  try {
-    const { data, error } = await supabase.functions.invoke('create-checkout', {
-      body: { priceId, mode },
-    });
-    if (error) throw error;
-
-    const resolvedPlanName =
-      planName ||
-      (mode === 'payment' ? 'Buy Credits' : 'Unknown Subscription');
-
-    const willFire = !!user?.id && !!data?.url && !!data?.sessionId;
-    if (typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1') {
-      console.log('[GTM DEBUG begin_checkout]', {
-        hasUser: !!user, userId: user?.id,
-        hasUrl: !!data?.url, checkoutId: data?.sessionId,
-        planName: resolvedPlanName,
-        value: data?.amount, currency: data?.currency, willFire,
-      });
-    }
-
-    if (data?.url) {
-      if (willFire) {
-        gtmBeginCheckout({
-          userId: user!.id,
-          checkoutId: data.sessionId,
-          planName: resolvedPlanName,
-          value: typeof data.amount === 'number' ? data.amount : 0,
-          currency: data.currency || 'usd',
-        });
-      }
-      window.location.href = data.url;
-    }
-  } catch (err) {
-    console.error('Checkout error:', err);
-    toast.error('Failed to start checkout. Please try again.');
-  }
-}, [user]);
+console.log("[GTM DEBUG begin_checkout after create-checkout]", {
+  hasUser: !!user,
+  userId: user?.id,
+  hasUrl: !!data?.url,
+  checkoutId: data?.sessionId,
+  planName,
+  value: data?.amount,
+  currency: data?.currency,
+  dedupKey: data?.sessionId ? `gtm:checkout:${data.sessionId}` : null,
+  dedupExists: data?.sessionId ? localStorage.getItem(`gtm:checkout:${data.sessionId}`) : null,
+  willFire: !!user?.id && !!data?.url && !!data?.sessionId
+});
 ```
 
-### 3. Caller cleanup — pass accurate `planName`
+- Wrap localStorage reads safely so tracking never breaks if storage is unavailable
+- Pass `pageLocation: window.location.href` explicitly into `gtmBeginCheckout`
+- Add `await new Promise(resolve => setTimeout(resolve, 300))` after `gtmBeginCheckout` and before `window.location.href = data.url`
 
-- `src/components/app/UpgradePlanModal.tsx` lines 195 / 206 — already passes `selectedPlan.name` for subs; ensure top-up call (line 206) passes `\`${pack.credits} Credits\``.
-- `src/pages/AppPricing.tsx` line 320 — pass `selectedPlan.name`.
-- `src/components/app/UpgradeValueDrawer.tsx` line 95 — pass `plan.name`.
-- `src/components/app/BuyCreditsModal.tsx` line 77 — pass `\`${pack.credits} Credits\``; line 116 already passes `selectedPlan.name`; line 132 (annual upgrade) — pass `currentPlanData.name`.
-- `src/pages/Settings.tsx` line 376 — pass the selected plan name; line 394 — pass `\`${pack.credits} Credits\``.
+3. Add payload-level logging inside `gtmBeginCheckout`
+- Build the payload object before dedup
+- When `vovv_gtm_debug === "1"`, log:
 
-### 4. Untouched (per user instructions)
-
-- `pricing_modal_view` helper, payload, and dedup — unchanged.
-- `pricing_page_view` — unchanged.
-- `gtagPurchase` and `gtmSubscriptionPurchase` (post-payment) — unchanged.
-- Meta Pixel `trackInitiateCheckout` and `trackPurchase` — unchanged (TODO comment added).
-- GA4 gtag pageview — unchanged.
-
----
-
-## Sample GTM Preview payloads after fix
-
-**Open upgrade modal (no change):**
-```json
-{
-  "event": "pricing_modal_view",
-  "user_id": "8a1f…",
-  "modal_name": "upgrade_plan",
-  "source": "header_cta",
-  "current_plan": "free",
-  "page_location": "https://vovv.ai/app/generate/product-images"
-}
+```ts
+console.log("[GTM DEBUG gtmBeginCheckout payload]", payload);
 ```
 
-**Click "Upgrade to Growth" → Stripe session created → just before redirect:**
-```json
-{
-  "event": "begin_checkout",
-  "user_id": "8a1f…",
-  "checkout_id": "cs_test_a1B2c3D4…",
-  "plan_name": "Growth",
-  "value": 79,
-  "currency": "EUR",
-  "page_location": "https://vovv.ai/app/generate/product-images"
-}
+- Also log if `gtmBeginCheckout` is blocked because `userId` or `checkoutId` is missing
+- Keep the persistent dedup key as `gtm:checkout:{sessionId}` via `fireOncePersistent("checkout:{sessionId}", payload)`
+
+4. Fix the remaining missing plan-name top-up call
+- In `UpgradePlanModal`, change top-up checkout from:
+
+```ts
+startCheckout(pack.stripePriceId, 'payment')
 ```
 
-Cancelling Stripe and returning produces no purchase event and no re-fire of `begin_checkout` for the same `checkout_id` (`fireOncePersistent` keyed by `checkout:{sessionId}`). A fresh checkout produces a new `cs_…` session and fires once. Payment success continues to fire the existing `subscription_purchase` / `gtagPurchase` events with no changes.
+to:
 
----
+```ts
+startCheckout(pack.stripePriceId, 'payment', `${pack.credits} Credits`)
+```
 
-## Files changed
+- Existing plan-name sources remain:
+  - `AppPricing`: `selectedPlan.name`
+  - `UpgradeValueDrawer`: `plan.name`
+  - `BuyCreditsModal`: `${pack.credits} Credits`
+  - `Settings` top-up: `${pack.credits} Credits`
 
-- `src/lib/gtm.ts`
-- `src/contexts/CreditContext.tsx`
-- `src/components/app/UpgradePlanModal.tsx`
-- `src/components/app/UpgradeValueDrawer.tsx`
-- `src/components/app/BuyCreditsModal.tsx`
-- `src/pages/AppPricing.tsx`
-- `src/pages/Settings.tsx`
+5. Verify the backend response contract
+- `create-checkout` already returns:
+  - `url: session.url`
+  - `sessionId: session.id`
+  - `amount: priceObj.unit_amount / 100`
+  - `currency: priceObj.currency`
+- No backend changes should be required unless testing shows one of these fields is missing
 
-No DB / edge-function / RLS changes. No new secrets.
+Expected flow after implementation
+
+```text
+Open upgrade modal
+  -> pricing_modal_view dataLayer event
+
+Click checkout
+  -> create-checkout succeeds
+  -> debug log shows hasUrl=true, checkoutId=cs_..., willFire=true
+  -> begin_checkout dataLayer event is pushed
+  -> 300ms pause
+  -> redirect to Stripe
+
+Cancel checkout
+  -> no purchase event
+
+Payment success
+  -> existing purchase tracking only
+```
+
+Report after implementation
+- Whether `gtmBeginCheckout` is imported in `CreditContext.tsx`
+- Where it is called relative to `create-checkout`
+- Whether `create-checkout` returns `sessionId`, `amount`, and `currency`
+- Whether missing `sessionId`, missing `user.id`, dedup, or immediate redirect was the likely blocker
+- Sample GTM Preview payloads for `pricing_modal_view` and `begin_checkout`

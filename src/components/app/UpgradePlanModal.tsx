@@ -203,7 +203,7 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
     if (!pack?.stripePriceId || topUpLoading) return;
     setTopUpLoading(true);
     try {
-      await startCheckout(pack.stripePriceId, 'payment');
+      await startCheckout(pack.stripePriceId, 'payment', `${pack.credits} Credits`);
     } finally {
       setTopUpLoading(false);
     }
