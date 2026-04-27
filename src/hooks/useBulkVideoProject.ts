@@ -219,6 +219,19 @@ export function useBulkVideoProject() {
           continue;
         }
 
+        if (!firstgenFired && userId && result?.jobId) {
+          if (import.meta.env.DEV) {
+            console.debug('[GTM:firstgen-started] bulk_video', { jobId: result.jobId });
+          }
+          gtmFirstGenerationStarted({
+            userId,
+            productId: null,
+            generationId: result.jobId,
+            visualType: 'bulk_video',
+          });
+          firstgenFired = true;
+        }
+
         updateItem(img.id, 'complete');
         completed++;
       } catch (err) {
