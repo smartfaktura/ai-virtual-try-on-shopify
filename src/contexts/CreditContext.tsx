@@ -249,6 +249,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
+    const returnedSessionId = params.get('session_id'); // from Stripe success_url
     if (payment === 'success') {
       toast.success('Payment successful! Your credits are being updated…');
 
@@ -262,12 +263,37 @@ export function CreditProvider({ children }: CreditProviderProps) {
         }
       }
 
-      // Delay to give Stripe time to process
-      setTimeout(() => checkSubscription(), 2000);
+      // Delay to give Stripe time to process, then fire GTM purchase event
+      // ONLY when checkSubscription confirms an active subscription AND we
+      // have a transaction id we have not fired before. Helper dedupes by
+      // transaction_id so this is idempotent across refreshes.
+      setTimeout(async () => {
+        await checkSubscription();
+        if (!user) return;
+        const meta = latestSubscriptionMetaRef.current;
+        if (!meta) return;
+        if (meta.subscriptionStatus !== 'active') return;
+        const txId = pickTransactionId({
+          invoiceId: meta.latestInvoiceId,
+          sessionId: returnedSessionId || meta.latestSessionId,
+          subscriptionId: meta.stripeSubscriptionId,
+        });
+        if (!txId) return;
+        const value = amount ? parseFloat(amount) : (meta.amount ?? 0);
+        gtmSubscriptionPurchase({
+          userId: user.id,
+          transactionId: txId,
+          planName: meta.plan,
+          value: isNaN(value) ? 0 : value,
+          currency: meta.currency || 'usd',
+        });
+      }, 2000);
+
       // Clean URL
       const url = new URL(window.location.href);
       url.searchParams.delete('payment');
       url.searchParams.delete('amount');
+      url.searchParams.delete('session_id');
       window.history.replaceState({}, '', url.toString());
     } else if (payment === 'cancelled') {
       toast.info('Payment cancelled.');
@@ -275,7 +301,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       url.searchParams.delete('payment');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [checkSubscription]);
+  }, [checkSubscription, user]);
   
   const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
   const lowThreshold = planConfig.monthlyCredits === Infinity ? 0 : Math.min(Math.round(planConfig.monthlyCredits * 0.2), 200);
