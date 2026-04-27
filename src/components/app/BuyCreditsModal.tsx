@@ -70,11 +70,11 @@ export function BuyCreditsModal() {
   // Show the focused "switch to annual" card when a monthly paid user toggles to annual
   const showAnnualSwitchCard = isPaidUser && effectiveInterval === 'monthly' && isAnnual && currentPlanData;
 
-  const handlePurchase = async (packId: string, stripePriceId: string | undefined) => {
+  const handlePurchase = async (packId: string, stripePriceId: string | undefined, credits: number) => {
     if (!stripePriceId || anyLoading) return;
     setTopUpLoadingId(packId);
     try {
-      await startCheckout(stripePriceId, 'payment');
+      await startCheckout(stripePriceId, 'payment', `${credits} Credits`);
     } catch {
       setTopUpLoadingId(null);
     }
@@ -129,7 +129,7 @@ export function BuyCreditsModal() {
       if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
         await openCustomerPortal();
       } else if (currentPlanData?.stripePriceIdAnnual) {
-        await startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription');
+        await startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription', currentPlanData.name);
       }
     } catch {
       setSwitchLoading(false);
@@ -251,7 +251,7 @@ export function BuyCreditsModal() {
                             <Button
                               variant={pack.popular ? 'default' : 'outline'}
                               className="w-full min-h-[44px] text-sm font-medium gap-2"
-                              onClick={() => handlePurchase(pack.packId, pack.stripePriceId)}
+                              onClick={() => handlePurchase(pack.packId, pack.stripePriceId, pack.credits)}
                               disabled={!!topUpLoadingId || switchLoading}
                             >
                               {topUpLoadingId === pack.packId ? (

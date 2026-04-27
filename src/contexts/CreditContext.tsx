@@ -4,8 +4,8 @@ import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
-import { gtagBeginCheckout, gtagPurchase } from '@/lib/gtag';
-import { gtmCheckoutStarted, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
+import { gtagPurchase } from '@/lib/gtag';
+import { gtmBeginCheckout, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
@@ -190,8 +190,9 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, [user]);
 
   const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment', planName?: string) => {
+    // TODO: Meta Pixel InitiateCheckout currently fires before Stripe session
+    // is created. Move it after data.url returns in a follow-up PR.
     trackInitiateCheckout();
-    gtagBeginCheckout();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error('Please log in to continue.');
@@ -202,14 +203,36 @@ export function CreditProvider({ children }: CreditProviderProps) {
         body: { priceId, mode },
       });
       if (error) throw error;
+
+      // Resolve plan name without leaking the user's CURRENT plan into the
+      // begin_checkout payload — that field belongs to pricing_modal_view only.
+      const resolvedPlanName =
+        planName ||
+        (mode === 'payment' ? 'Buy Credits' : 'Unknown Subscription');
+
+      const willFire = !!user?.id && !!data?.url && !!data?.sessionId;
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1') {
+        // eslint-disable-next-line no-console
+        console.log('[GTM DEBUG begin_checkout]', {
+          hasUser: !!user,
+          userId: user?.id,
+          hasUrl: !!data?.url,
+          checkoutId: data?.sessionId,
+          planName: resolvedPlanName,
+          value: data?.amount,
+          currency: data?.currency,
+          willFire,
+        });
+      }
+
       if (data?.url) {
-        // Fire GTM checkout_started ONLY after Stripe returned a session id —
-        // never on click. Currency comes from Stripe (uppercased by helper).
-        if (user && data.sessionId) {
-          gtmCheckoutStarted({
-            userId: user.id,
+        // Fire begin_checkout ONLY after Stripe returned a session id —
+        // never on click or modal open. Dedup keyed by checkout session id.
+        if (willFire) {
+          gtmBeginCheckout({
+            userId: user!.id,
             checkoutId: data.sessionId,
-            planName: planName || plan,
+            planName: resolvedPlanName,
             value: typeof data.amount === 'number' ? data.amount : 0,
             currency: data.currency || 'usd',
           });
@@ -220,7 +243,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       console.error('Checkout error:', err);
       toast.error('Failed to start checkout. Please try again.');
     }
-  }, [user, plan]);
+  }, [user]);
 
   const openCustomerPortal = useCallback(async () => {
     try {

@@ -92,7 +92,7 @@ export function UpgradeValueDrawer({ open, onClose, category, generationContext,
   const handleCheckout = (plan: typeof pricingPlans[number]) => {
     const priceId = isAnnual ? plan.stripePriceIdAnnual : plan.stripePriceIdMonthly;
     if (!priceId) return;
-    startCheckout(priceId, 'subscription');
+    startCheckout(priceId, 'subscription', plan.name);
     onClose();
   };
 
