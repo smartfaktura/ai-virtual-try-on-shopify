@@ -314,6 +314,9 @@ serve(async (req) => {
       latest_session_id: latestSessionId,
       amount: subAmount,
       currency: subCurrency,
+      // Newly-fulfilled credit pack purchase (verified this call only). null
+      // on subsequent calls so refresh / revisit will not re-emit.
+      last_credit_pack_purchase: lastCreditPackPurchase,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
