@@ -10,6 +10,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { gtmProductUploaded } from '@/lib/gtm';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface StoreImportTabProps {

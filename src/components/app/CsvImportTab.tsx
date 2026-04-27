@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { gtmProductUploaded } from '@/lib/gtm';
 
 interface CsvImportTabProps {
   onProductAdded: () => void;

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { gtmProductUploaded } from '@/lib/gtm';
 import { getQRCodeURL } from '@/lib/qrCode';
 
 interface MobileUploadTabProps {
