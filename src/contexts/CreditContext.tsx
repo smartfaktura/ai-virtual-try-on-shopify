@@ -198,6 +198,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
       toast.error('Please log in to continue.');
       return;
     }
+    // Use the confirmed session user id as primary, with React context user as fallback.
+    const sessionUserId = session.user?.id || user?.id || null;
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId, mode },
@@ -210,48 +212,69 @@ export function CreditProvider({ children }: CreditProviderProps) {
         planName ||
         (mode === 'payment' ? 'Buy Credits' : 'Unknown Subscription');
 
-      const willFire = !!user?.id && !!data?.url && !!data?.sessionId;
+      const debug = (() => {
+        try {
+          return typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1';
+        } catch { return false; }
+      })();
 
-      // Debug logging gated by localStorage flag (vovv_gtm_debug=1).
-      // Wrapped in try/catch so storage errors never break checkout.
-      try {
-        if (typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1') {
-          const dedupKey = data?.sessionId ? `gtm:checkout:${data.sessionId}` : null;
-          let dedupExists: string | null = null;
-          try {
-            dedupExists = dedupKey ? localStorage.getItem(dedupKey) : null;
-          } catch { /* ignore */ }
-          // eslint-disable-next-line no-console
-          console.log('[GTM DEBUG begin_checkout after create-checkout]', {
-            hasUser: !!user,
-            userId: user?.id,
-            hasUrl: !!data?.url,
-            checkoutId: data?.sessionId,
-            planName: resolvedPlanName,
-            value: data?.amount,
-            currency: data?.currency,
-            dedupKey,
-            dedupExists,
-            willFire,
-          });
-        }
-      } catch { /* ignore */ }
+      if (debug) {
+        // eslint-disable-next-line no-console
+        console.log('[GTM DEBUG begin_checkout after create-checkout]', {
+          sessionUserId,
+          hasUrl: !!data?.url,
+          checkoutId: data?.sessionId,
+          planName: resolvedPlanName,
+          value: data?.amount,
+          currency: data?.currency,
+        });
+      }
 
       if (data?.url) {
-        // Fire begin_checkout ONLY after Stripe returned a session id —
-        // never on click or modal open. Dedup keyed by checkout session id.
+        const willFire = !!sessionUserId && !!data?.sessionId;
+
         if (willFire) {
-          gtmBeginCheckout({
-            userId: user!.id,
-            checkoutId: data.sessionId,
-            planName: resolvedPlanName,
-            value: typeof data.amount === 'number' ? data.amount : 0,
-            currency: data.currency || 'usd',
-            pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
+          // Wait for GTM to confirm tags fired (or hit the timeout) before
+          // navigating, so begin_checkout actually reaches GTM Preview /
+          // conversion tags before the page tears down.
+          await new Promise<void>((resolve) => {
+            let done = false;
+            const finish = (reason: string) => {
+              if (done) return;
+              done = true;
+              if (debug) {
+                // eslint-disable-next-line no-console
+                console.log('[GTM DEBUG begin_checkout redirect]', { reason });
+              }
+              resolve();
+            };
+
+            const result = gtmBeginCheckout({
+              userId: sessionUserId!,
+              checkoutId: data.sessionId,
+              planName: resolvedPlanName,
+              value: typeof data.amount === 'number' ? data.amount : 0,
+              currency: data.currency || 'usd',
+              pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
+              eventCallback: () => finish('eventCallback'),
+              eventTimeout: 1500,
+            });
+
+            if (debug) {
+              // eslint-disable-next-line no-console
+              console.log('[GTM DEBUG begin_checkout push result]', result);
+            }
+
+            // If the event was deduped/blocked, no callback will fire — resolve
+            // immediately so we don't block the redirect.
+            if (!result.fired) {
+              finish('not-fired:' + (result.reason ?? 'unknown'));
+              return;
+            }
+
+            // Hard fallback in case GTM is blocked / never calls back.
+            setTimeout(() => finish('timeout'), 1700);
           });
-          // Give GTM Preview / dataLayer a brief window to register the event
-          // before the navigation tears down the page context.
-          await new Promise((resolve) => setTimeout(resolve, 300));
         }
         window.location.href = data.url;
       }
