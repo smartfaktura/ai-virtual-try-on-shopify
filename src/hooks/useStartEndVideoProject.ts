@@ -52,6 +52,10 @@ interface UseStartEndVideoProjectResult {
   isComplete: boolean;
   elapsedSeconds: number;
   activeJob: ReturnType<typeof useGenerateVideo>['activeJob'];
+  /** A recently completed Start & End video the user can re-open. */
+  recentResult: RecentStartEndResult | null;
+  dismissRecentResult: () => void;
+  hydrateFromRecent: () => void;
   /** Analyze both frames upfront so the user can preview compatibility. */
   analyzePair: (startUrl: string, endUrl: string) => Promise<TransitionCompatibility | null>;
   runPipeline: (params: RunStartEndPipelineParams) => Promise<void>;
