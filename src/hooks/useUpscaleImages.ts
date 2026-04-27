@@ -94,6 +94,18 @@ export function useUpscaleImages() {
         }
 
         jobIds.push(result.jobId);
+
+        if (jobIds.length === 1 && user?.id && result?.jobId) {
+          if (import.meta.env.DEV) {
+            console.debug('[GTM:firstgen-started] upscale', { jobId: result.jobId });
+          }
+          gtmFirstGenerationStarted({
+            userId: user.id,
+            productId: null,
+            generationId: result.jobId,
+            visualType: 'upscale',
+          });
+        }
       }
 
       if (jobIds.length > 0) {
