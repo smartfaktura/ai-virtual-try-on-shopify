@@ -373,7 +373,7 @@ export default function Settings() {
         } else {
           const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
           if (priceId) {
-            await startCheckout(priceId, 'subscription');
+            await startCheckout(priceId, 'subscription', selectedPlan.name);
           }
         }
       } else if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
