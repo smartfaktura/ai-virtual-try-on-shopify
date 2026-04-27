@@ -79,6 +79,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { enqueueWithRetry, isEnqueueError, sendWake, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted, isGtmDebugEnabled, safeLocalGet } from '@/lib/gtm';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { useCustomModels } from '@/hooks/useCustomModels';
@@ -401,6 +402,41 @@ export default function Generate() {
 
   const prefillProductId = searchParams.get('product');
   const prefillAppliedRef = useRef(false);
+
+  // GTM: component-level guard so first_generation_started fires at most once
+  // per page lifetime. The gtm helper itself dedupes per user_id across sessions.
+  const firstgenStartedFiredRef = useRef(false);
+  const fireFirstgenStartedOnce = useCallback((opts: {
+    jobId: string;
+    productId: string | null;
+    visualType: string;
+  }) => {
+    if (firstgenStartedFiredRef.current) return;
+    if (!user?.id || !opts.jobId) return;
+    if (isGtmDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.log('[GTM DEBUG first_generation_started]', {
+        flow: 'generate',
+        hasUser: true,
+        userId: user.id,
+        jobId: opts.jobId,
+        isError: false,
+        productId: opts.productId,
+        visualType: opts.visualType,
+        dedupKey: `gtm:firstgen-started:${user.id}`,
+        dedupExists: safeLocalGet(`gtm:firstgen-started:${user.id}`),
+        willFire: true,
+      });
+    }
+    gtmFirstGenerationStarted({
+      userId: user.id,
+      productId: opts.productId,
+      generationId: opts.jobId,
+      visualType: opts.visualType,
+    });
+    // Set ONLY after a successful jobId AND after calling the helper.
+    firstgenStartedFiredRef.current = true;
+  }, [user]);
 
   const { data: brandProfiles = [] } = useQuery({
     queryKey: ['brand-profiles'],
@@ -1270,6 +1306,11 @@ export default function Generate() {
 
         jobMap.set(src.sourceId, result.jobId);
         lastBalance = result.newBalance;
+        fireFirstgenStartedOnce({
+          jobId: result.jobId,
+          productId: src.sourceType === 'generation' ? (src.sourceId ?? null) : null,
+          visualType: 'upscale',
+        });
         injectActiveJob(queryClient, {
           jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
           workflow_slug: activeWorkflow?.slug, product_name: src.title,
@@ -1420,6 +1461,11 @@ export default function Generate() {
           if (!isEnqueueError(result)) {
             jobMap.set(`${product.id}_${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
+            fireFirstgenStartedOnce({
+              jobId: result.jobId,
+              productId: ((payload as Record<string, unknown>)?.product_id as string | undefined) ?? product?.id ?? null,
+              visualType: activeWorkflow?.slug || activeWorkflow?.name || 'workflow',
+            });
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
               workflow_slug: activeWorkflow?.slug, product_name: product.title,
@@ -1623,6 +1669,11 @@ export default function Generate() {
               if (!isEnqueueError(result)) {
                 jobMap.set(`${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratio}_${framingVal}`, result.jobId);
                 lastBalance = result.newBalance;
+                fireFirstgenStartedOnce({
+                  jobId: result.jobId,
+                  productId: ((comboPayload as Record<string, unknown>)?.product_id as string | undefined) ?? null,
+                  visualType: activeWorkflow?.slug || activeWorkflow?.name || 'workflow',
+                });
                 injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1, batch_id: batchId });
               } else if (result.type === 'insufficient_credits') {
                 toast.error('Insufficient credits'); break;
@@ -1699,6 +1750,12 @@ export default function Generate() {
       }
       return null;
     }
+
+    fireFirstgenStartedOnce({
+      jobId: result.jobId,
+      productId: userProducts.some(up => up.id === product.id) ? product.id : null,
+      visualType: activeWorkflow?.slug || activeWorkflow?.name || 'tryon',
+    });
 
     return { jobId: result.jobId, newBalance: result.newBalance };
   };

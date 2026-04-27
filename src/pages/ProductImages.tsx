@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError, sendWake, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted, gtmFirstGenerationCompleted, isGtmDebugEnabled, safeLocalGet } from '@/lib/gtm';
 import { computeTotalImages, expandMultiSelects, computeTotalImagesPerProduct, computeTotalImagesPerCategory } from '@/lib/sceneVariations';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
@@ -810,6 +811,7 @@ export default function ProductImages() {
       key: string;
       payload: Record<string, unknown>;
       productTitle: string;
+      productId: string;
       hasModel: boolean;
       batchId: string;
     }
@@ -936,7 +938,7 @@ export default function ProductImages() {
                 };
 
                 const key = `${product.id}_${scene.id}_m${mIdx}_v${vIdx}_r${ratioForJob}_${i}`;
-                allJobs.push({ key, payload, productTitle: product.title, hasModel: !!currentModelRef, batchId });
+                allJobs.push({ key, payload, productTitle: product.title, productId: product.id, hasModel: !!currentModelRef, batchId });
               }
             }
           }
@@ -962,10 +964,48 @@ export default function ProductImages() {
 
       for (const settled of results) {
         if (settled.status !== 'fulfilled') continue;
-        const { key, result, productTitle, batchId: bid } = settled.value;
+        const { key, result, productTitle, productId, payload: jobPayload, batchId: bid } = settled.value;
         if (!isEnqueueError(result)) {
+          const wasFirst = newJobMap.size === 0;
           newJobMap.set(key, result.jobId);
           lastBalance = result.newBalance;
+
+          // GTM: fire first_generation_started exactly once on the first
+          // successful enqueue. Helper itself dedupes per user_id across sessions.
+          if (wasFirst && user?.id && result.jobId) {
+            const resolvedProductId =
+              (jobPayload?.product_id as string | undefined) ??
+              productId ??
+              selectedProducts[0]?.id ??
+              null;
+            const visualType =
+              (jobPayload?.workflow_slug as string | undefined) ||
+              (jobPayload?.workflow_name as string | undefined) ||
+              'product-images';
+
+            if (isGtmDebugEnabled()) {
+              // eslint-disable-next-line no-console
+              console.log('[GTM DEBUG first_generation_started]', {
+                flow: 'product-images',
+                hasUser: !!user,
+                userId: user.id,
+                jobId: result.jobId,
+                isError: false,
+                productId: resolvedProductId,
+                visualType,
+                dedupKey: `gtm:firstgen-started:${user.id}`,
+                dedupExists: safeLocalGet(`gtm:firstgen-started:${user.id}`),
+                willFire: true,
+              });
+            }
+            gtmFirstGenerationStarted({
+              userId: user.id,
+              productId: resolvedProductId,
+              generationId: result.jobId,
+              visualType,
+            });
+          }
+
           injectActiveJob(queryClient, {
             jobId: result.jobId,
             workflow_name: 'Product Images',
@@ -1035,7 +1075,43 @@ export default function ProductImages() {
     refreshBalance();
     setStep(6);
     try { sessionStorage.removeItem('pi_generation_session'); } catch {}
-  }, [selectedProducts, refreshBalance]);
+
+    // GTM: fire first_generation_completed exactly once per user, only when
+    // there is at least one real backend job ID and a real result image.
+    // Helper itself dedupes per user_id across sessions.
+    const totalResultImages = Array.from(resultMap.values())
+      .reduce((n, r) => n + r.images.length, 0);
+    const firstCompleted = jobs.find(j => j && j.status === 'completed' && j.id);
+    const firstCompletedMeta = firstCompleted ? productMap.get(firstCompleted.id) : undefined;
+    const completedProductId = firstCompletedMeta?.productId && firstCompletedMeta.productId !== 'unknown'
+      ? firstCompletedMeta.productId
+      : (selectedProducts[0]?.id ?? null);
+
+    if (isGtmDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.log('[GTM DEBUG first_generation_completed]', {
+        flow: 'product-images',
+        hasUser: !!user,
+        userId: user?.id,
+        generationId: firstCompleted?.id ?? null,
+        resultCount: totalResultImages,
+        hasImages: totalResultImages > 0,
+        dedupKey: user?.id ? `gtm:firstgen-completed:${user.id}` : null,
+        dedupExists: user?.id ? safeLocalGet(`gtm:firstgen-completed:${user.id}`) : null,
+        willFire: !!(user?.id && firstCompleted?.id && totalResultImages > 0),
+      });
+    }
+
+    if (user?.id && firstCompleted?.id && totalResultImages > 0) {
+      gtmFirstGenerationCompleted({
+        userId: user.id,
+        productId: completedProductId,
+        generationId: firstCompleted.id,
+        visualType: 'product-images',
+        resultCount: totalResultImages,
+      });
+    }
+  }, [selectedProducts, refreshBalance, user]);
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
