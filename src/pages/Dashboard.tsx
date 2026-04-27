@@ -102,7 +102,7 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-              <Button onClick={openBuyModal} className="rounded-full font-semibold shrink-0">
+              <Button onClick={() => openBuyModal()} className="rounded-full font-semibold shrink-0">
                 Get Credits
               </Button>
             </div>

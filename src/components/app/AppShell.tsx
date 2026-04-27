@@ -249,7 +249,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className={cn('border-t border-white/[0.06] pt-4', isCollapsed ? 'px-2 pb-2' : 'px-4 pb-3')}>
           {isCollapsed ? (
             <button
-              onClick={openBuyModal}
+              onClick={() => openBuyModal('sidebar_cta')}
               title={`${balance} credits`}
               className={cn(
                 'flex flex-col items-center gap-1 w-full px-1.5 py-1.5 rounded-2xl border transition-colors',
@@ -481,7 +481,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="flex items-center gap-2">
             {/* Credit pill */}
             <button
-              onClick={openBuyModal}
+              onClick={() => openBuyModal('topbar_cta')}
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-colors',
                 isEmpty

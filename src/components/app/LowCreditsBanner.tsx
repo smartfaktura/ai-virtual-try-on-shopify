@@ -31,7 +31,7 @@ export function LowCreditsBanner() {
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <button
-          onClick={openBuyModal}
+          onClick={() => openBuyModal('low_credits_banner')}
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap"
         >
           Get Credits

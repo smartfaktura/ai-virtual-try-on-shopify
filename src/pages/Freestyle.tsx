@@ -946,7 +946,7 @@ export default function Freestyle() {
                   </p>
                 </div>
               </div>
-              <Button onClick={openBuyModal} size="sm" className="font-semibold shrink-0">
+              <Button onClick={() => openBuyModal()} size="sm" className="font-semibold shrink-0">
                 Get Credits
               </Button>
             </div>
