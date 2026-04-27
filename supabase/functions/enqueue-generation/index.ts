@@ -35,14 +35,9 @@ function calculateCreditCost(
     const wf = String(payload?.workflow_type || "");
     if (jobType === "video_multishot") return 40; // flat rate for short film / multi-shot
 
-    // Start & End workflow: Kling image_tail jobs are slightly pricier and
-    // editorial / cinematic styles add a premium-transition surcharge.
+    // Start & End workflow: flat 20 credits per video.
     if (wf === "start_end") {
-      let cost = 12; // 5s base
-      const style = String(payload?.transition_style || payload?.style || "");
-      if (["cinematic", "editorial"].includes(style)) cost += 2;
-      if (audio === "ambient") cost += 4;
-      return cost;
+      return 20;
     }
 
     let cost = dur === "10" ? 18 : 10;
