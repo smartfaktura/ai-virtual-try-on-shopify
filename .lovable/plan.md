@@ -1,92 +1,87 @@
-# Polish: `/app/video/start-end` — match the VOVV.AI app aesthetic
+# Fix: `/app/video/start-end` — generation, recovery, credits, and pill buttons
 
-## What's wrong today
+## Findings (what's actually happening)
 
-Looking at the current page vs. polished pages like `/app/video/animate`:
+### 1. The "stuck Generating" + last video
+The job the user kicked off **completed successfully**:
+- `generation_queue` row `9ecd07f8…` → `status=completed` at 06:17:13 UTC.
+- `generated_videos` row `7a8ea433…` → `status=complete`, `video_url` is a real `.mp4` in storage.
+- `kling_task_id`: `877623997259714608`.
 
-- Upload tiles are forced **square** (`aspect-square`) with a thin dashed border, generic gray icon, and a tiny "Drop, paste, or browse" line. They feel empty and crowded at the same time.
-- The two slots use a 1:1 grid with a tight 16 px gap, so on wide screens the placeholders look like enormous empty rectangles with a tiny ChevronRight chip overlapping the center.
-- Cards (Goal, Refinement, Preservation, Audio, Summary) all use the same `rounded-xl border bg-card p-4` recipe with `text-sm font-medium` headers — no breathing room, no hierarchy, no soft shadows like the rest of the app uses (`rounded-2xl shadow-sm p-5–p-6`).
-- The Library picker modal is a plain dialog with a small title, no header padding, generic grid, no hover preview polish, no empty state polish.
-- The sticky generate bar sits at `bottom-4` with `rounded-xl` — visually disconnected from the content above.
+So the backend pipeline works. What broke is the **client UI**: the page caught a runtime React error (the "The app encountered an error" overlay in the screenshot) mid-generation, the local `useGenerateVideo` `status` stayed at `'queued'`/`'processing'`, and after reload the page resets to the empty form — there's no path back to the finished video unless the user goes to the Library / Video hub.
 
-## Goals
+### 2. The "nothing happens after Generate"
+Two things contribute:
+- The runtime overlay was triggered by the same render; once the user dismissed it, the spinner kept going because the activeJob ref had been cleared by the reset/reload sequence.
+- We never tell the user that the result is in their Library. There's no "you have a recent transition video — open it" affordance on this page.
 
-Bring this page in line with `AnimateVideo` / `ProductImages` polish: softer rounding (2xl/3xl), generous padding, a real "frame slot" placeholder (large icon-in-circle, primary tint, two clear buttons), a centered direction chip that doesn't overlap the artwork, and a richer Library modal.
+### 3. Credits logic is inconsistent
+- **Frontend** (`videoCreditPricing.ts`) charges Start & End at **12 credits base** + 2 for premium style + 4 for ambient audio.
+- **Backend** (`enqueue-generation/index.ts → calculateCreditCost`) for `jobType === "video"` charges **10 credits base** (the animate price) regardless of `workflow_type`. The Start & End premium-style add-on isn't honored either.
+- Result: the UI says 12 (or 14), the user is actually charged 10. Misleading; also blocks future pricing for premium transition styles.
 
-## Changes
+### 4. The Upload / Library buttons don't match the app pill aesthetic
+Currently `rounded-lg` rectangles. The rest of the app uses `rounded-full` pill buttons with the Folder/Image icons.
 
-### 1. `StartEndUploadPair.tsx` — restyle frame slots
+## Fixes
 
-- Drop `aspect-square`. Use `aspect-[4/5]` (matches the editorial/portrait expectation) on each slot, capped with `min-h-[280px] sm:min-h-[340px]`.
-- Container: `rounded-3xl border-2 border-dashed border-primary/15 bg-gradient-to-b from-primary/[0.02] to-muted/10 hover:border-primary/30 hover:from-primary/[0.04]` — same recipe AnimateVideo uses for its hero uploader.
-- Drag-over state uses `border-primary/60 bg-primary/[0.06]`.
-- Empty placeholder content (centered, generous spacing):
-  - Big circle icon: `h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center` with `Upload` (start slot) or `Flag` (end slot, lucide) — distinguishes the two.
-  - Bold label: "Start frame" / "End frame" (`text-sm font-semibold`).
-  - Sub: `text-xs text-muted-foreground` — "Drop, paste, or click to browse".
-  - Two side-by-side buttons (`Button variant="outline" size="sm" className="h-8 text-xs"`): `Upload` and `Library` (Folder icon). Stack on `<sm`.
-  - Tiny hint line under buttons: `JPG · PNG · WebP — up to 20 MB`.
-- When an image is loaded:
-  - Image fills the slot (`object-cover`).
-  - Top-left chip restyled to `rounded-full px-2.5 py-1 bg-background/90 backdrop-blur shadow-sm text-[11px] font-medium`.
-  - Top-right close: `rounded-full p-1.5 bg-background/90 backdrop-blur shadow-sm hover:bg-background`.
-  - Aspect ratio mini-badge bottom-left (e.g. "9:16") for clarity.
-- Pair layout:
-  - Wrap both slots in a `grid grid-cols-1 sm:grid-cols-2 gap-5 lg:gap-6`.
-  - Direction chip (between slots): a 44 px pill with `rounded-full border border-border bg-background shadow-md flex items-center gap-1 px-3` showing `Start → End` text, sitting **on top** at the centerline (`absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 z-10`). On mobile, becomes a horizontal label between the stacked slots: `← stack ArrowDown chip`.
+### A. Backend credit calculation — honor workflow type
+`supabase/functions/enqueue-generation/index.ts`:
 
-### 2. `LibraryPickerModal.tsx` — premium polish
+In `calculateCreditCost`, when `jobType === "video"`, branch on `payload.workflow_type`:
 
-- DialogContent: `max-w-3xl rounded-2xl p-0 overflow-hidden` (currently `max-w-2xl` with default padding).
-- Header bar with its own padding `px-6 pt-5 pb-4 border-b border-border`:
-  - Title `text-lg font-semibold` + small subtitle `text-xs text-muted-foreground` ("Pick an image from your saved library").
-  - Search input moves into the header bar, full-width, `h-10 rounded-xl pl-10 bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary/30`.
-- Grid area:
-  - Background `bg-muted/20`, padding `p-5`, scroll area `max-h-[60vh]`.
-  - `grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3`.
-  - Each tile: `rounded-xl overflow-hidden ring-1 ring-border hover:ring-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group` with subtle `group-hover:scale-[1.02]` on the image.
-  - Selected state: `ring-2 ring-primary` + checkmark badge already exists but shrinks to `h-6 w-6`.
-  - Add a soft hover overlay revealing the label.
-- Empty state: bigger illustration, friendlier copy — "Your library is empty. Generate or upload images first."
-- Footer (only when single-select): a slim `px-6 py-3 border-t border-border bg-background flex items-center justify-between` with text "Pick a frame to insert" + a Cancel ghost button.
+```ts
+const wf = String(payload?.workflow_type || "");
+if (wf === "start_end") {
+  let cost = 12;                                  // base 5s
+  const style = String(payload?.transition_style || payload?.style || "");
+  if (["cinematic", "editorial"].includes(style)) cost += 2;
+  if (audio === "ambient") cost += 4;
+  return cost;
+}
+```
 
-### 3. Section cards (Goal, Refinement, Preservation, Audio+Note, Summary)
+Forward `style` from the Start & End hook to the edge function so the backend can read it: in `useStartEndVideoProject.runPipeline`, pass `style` into `generateVideo.startGeneration` (we'll extend `startGeneration` to forward `transitionStyle` into `payload.transition_style`). Animate / other workflows keep current pricing.
 
-Apply a unified premium card recipe across all of them:
+### B. Recover the user's last finished Start & End video
+In `useStartEndVideoProject`, fetch the most recent `generated_videos` row for this user where the linked project's `workflow_type='start_end'` and `status='complete'`. If found within the last 24 hours and the local UI is on the empty form (no in-flight pipeline), expose:
 
-- `rounded-2xl border border-border bg-card shadow-sm p-5 sm:p-6 space-y-4`.
-- Header row: `flex items-center justify-between` with `text-base font-semibold tracking-tight` title and a small muted description below it (or right side).
-- Goal grid: button tiles become `rounded-xl border p-3.5 min-h-[96px] hover:shadow-sm hover:-translate-y-px transition-all`. Selected: `border-primary bg-primary/[0.04] ring-1 ring-primary/20`. Title `text-sm font-semibold`, description `text-[11.5px] text-muted-foreground mt-1 leading-relaxed`.
-- Refinement segmented buttons: `h-8 rounded-full px-3 text-[11.5px]` — rounded pills feel more premium than current rounded-md squares.
-- Summary card: change container background to `bg-gradient-to-b from-muted/40 to-muted/10`, title `text-base font-semibold`, rows use `py-2 text-[12.5px]` with `divide-y divide-border/40`.
+```ts
+recentResult: { id, videoUrl, sourceImageUrl, createdAt } | null
+```
 
-### 4. Page header & sticky generate bar
+Render a slim banner at the top of `StartEndVideo.tsx`:
 
-- Wrap the page body in `container max-w-5xl py-8 space-y-6` (currently `max-w-4xl py-6`) — a touch more breathing room matches the rest of the app.
-- Page title size already comes from `PageHeader`; add a small "BETA" pill next to the title (matches Catalog Studio convention).
-- Sticky bar: change to `rounded-2xl border border-border bg-background/90 backdrop-blur-md shadow-lg shadow-foreground/[0.04] p-4 bottom-6`. Generate button becomes `size="lg" className="min-w-[240px] rounded-xl"` with a subtle gradient `bg-gradient-to-r from-primary to-primary` on hover.
+> ✓ Your last transition is ready — `View video` (opens the result panel) · `Start a new one` (dismiss).
 
-### 5. CompatibilityCard
+Clicking "View video" hydrates the Results panel (`videoUrl`, `sourceImageUrl`) without re-spinning anything.
 
-- Card: `rounded-2xl shadow-sm p-5`.
-- Tier pill larger: `px-3 py-1 text-[11.5px]`.
-- Reason text `text-sm` and recommendation `text-[12.5px] text-muted-foreground`.
-- Shared elements as `rounded-full px-2.5 py-1 bg-muted` chips.
+### C. Don't get stuck on "Generating…" again
+- In `useGenerateVideo`, when `queue.activeJob` becomes `null` while local `status` is still `creating`/`queued`/`processing`, run a one-shot reconciliation: query `generated_videos` for the latest row with this `project_id` (passed in `meta`). If it's `complete`, set `status='complete'` and surface `videoUrl`. If it's `failed`, surface the error. Otherwise reset to `idle`.
+- Add a hard client safety net inside `useStartEndVideoProject`: if `pipelineStage === 'queued' || 'processing'` for > 10 minutes with no `activeJob`, automatically run the recovery query above and either flip to `complete` or to `error`.
+
+### D. Pill-style Upload / Library buttons
+`StartEndUploadPair.tsx`:
+- Both buttons → `rounded-full h-9 px-4 text-xs gap-1.5`.
+- Same pill recipe used by other CTAs: `border-border bg-background hover:border-primary/40 hover:bg-primary/[0.04] hover:text-foreground transition-colors`.
+- Slightly more space between them (`gap-2.5`) and align to a single row on `sm+` (already set).
+- Loading state inside the buttons stays `Loader2` icon.
+
+No changes to other section card recipes (Goal, Refinement, Preservation, Audio, Summary) — they stay as they are now.
+
+### E. Surface the right error message
+Right now any pipeline failure shows a toast "Failed to start transition" and bubbles to a `ValidationWarnings` block at the bottom. Move that warning **above** the Generate bar and prefix with the queue's own error if available (`generateVideo.error`), so the user sees it inline next to the button instead of below the fold.
 
 ## Files touched
 
-- `src/components/app/video/start-end/StartEndUploadPair.tsx` (major)
-- `src/components/app/video/LibraryPickerModal.tsx` (major)
-- `src/components/app/video/start-end/TransitionGoalSelector.tsx` (medium)
-- `src/components/app/video/start-end/TransitionRefinementPanel.tsx` (small)
-- `src/components/app/video/start-end/CompatibilityCard.tsx` (small)
-- `src/components/app/video/start-end/TransitionSummaryCard.tsx` (small)
-- `src/pages/video/StartEndVideo.tsx` (container width, sticky bar, audio+note card recipe, BETA pill)
-
-No backend, hook, or routing changes — purely presentational. All semantic design tokens (`primary`, `border`, `muted`, `card`, `background`) — no hardcoded colors.
+- `supabase/functions/enqueue-generation/index.ts` — workflow-aware video pricing.
+- `src/hooks/useGenerateVideo.ts` — extend `startGeneration` params with `transitionStyle`; add reconciliation when activeJob disappears mid-flight.
+- `src/hooks/useStartEndVideoProject.ts` — pass `transitionStyle`, fetch recent result, expose `recentResult` + `loadRecentResult()`, add 10-min safety reconciliation.
+- `src/pages/video/StartEndVideo.tsx` — recent-result banner at the top, error block above the generate bar.
+- `src/components/app/video/start-end/StartEndUploadPair.tsx` — pill-style Upload / Library buttons only.
 
 ## What stays the same
 
-- Pipeline behavior, preflight, compatibility analysis, prompt builder, generation flow.
-- LibraryPickerModal API (`open`, `onOpenChange`, `onSelect`, `multiSelect`, `onMultiSelect`, `maxSelect`) is unchanged so every other caller (Animate, Short Film, etc.) keeps working.
+- Goal / Refinement / Preservation / Summary card layouts — no further restyling.
+- LibraryPickerModal (already polished in the previous pass).
+- The cinematic prompt builder, preflight, compatibility resolver, and the rest of the generation pipeline.
