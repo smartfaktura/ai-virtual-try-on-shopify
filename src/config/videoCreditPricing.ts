@@ -7,9 +7,9 @@ export const VIDEO_CREDIT_RULES = {
     ambient: 4,         // ambient audio add-on
   },
   startEnd: {
-    base5s: 12,         // slightly above animate — Kling image_tail jobs are pricier
-    ambient: 4,
-    premiumTransition: 2, // add-on for Luxury / Cinematic styles
+    base5s: 20,         // flat 20 credits per Start & End video
+    ambient: 0,
+    premiumTransition: 0,
   },
   adSequence: {
     base2Shots: 24,
