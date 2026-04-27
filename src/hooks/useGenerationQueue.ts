@@ -3,6 +3,7 @@ import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { enqueueWithRetry, isEnqueueError } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 
 export type QueueJobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
 
