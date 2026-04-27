@@ -117,17 +117,46 @@ serve(async (req) => {
     });
 
     let creditsToAdd = 0;
+    // Most recent newly-fulfilled credit pack purchase (for verified GTM purchase event).
+    // Only set on the same call where we transition the session to fulfilled=true,
+    // so refresh / revisit will not re-emit.
+    let lastCreditPackPurchase: {
+      payment_intent_id: string | null;
+      session_id: string;
+      amount: number;
+      currency: string;
+      credits: number;
+      plan_name: string;
+    } | null = null;
+
     for (const session of sessions.data) {
       if (session.mode === "payment" && session.payment_status === "paid") {
         if (session.metadata?.fulfilled === "true") continue;
 
         const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+        let sessionCredits = 0;
         for (const item of lineItems.data) {
           const priceId = item.price?.id;
           if (priceId && CREDIT_PACK_AMOUNTS[priceId]) {
-            creditsToAdd += CREDIT_PACK_AMOUNTS[priceId];
-            logStep("Found unfulfilled credit pack", { priceId, credits: CREDIT_PACK_AMOUNTS[priceId] });
+            const c = CREDIT_PACK_AMOUNTS[priceId];
+            creditsToAdd += c;
+            sessionCredits += c;
+            logStep("Found unfulfilled credit pack", { priceId, credits: c });
           }
+        }
+
+        if (sessionCredits > 0 && !lastCreditPackPurchase) {
+          const piId = typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : (session.payment_intent as Stripe.PaymentIntent | null)?.id ?? null;
+          lastCreditPackPurchase = {
+            payment_intent_id: piId,
+            session_id: session.id,
+            amount: (session.amount_total ?? 0) / 100,
+            currency: session.currency ?? "usd",
+            credits: sessionCredits,
+            plan_name: `${sessionCredits} Credits`,
+          };
         }
 
         await stripe.checkout.sessions.update(session.id, {
