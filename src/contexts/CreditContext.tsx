@@ -4,8 +4,8 @@ import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
-import { gtagBeginCheckout, gtagPurchase } from '@/lib/gtag';
-import { gtmCheckoutStarted, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
+import { gtagPurchase } from '@/lib/gtag';
+import { gtmBeginCheckout, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
