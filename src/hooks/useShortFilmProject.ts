@@ -543,6 +543,19 @@ export function useShortFilmProject() {
         throw new Error(result.message);
       }
 
+      if (!firstgenFiredRef.current && user?.id && result?.jobId) {
+        if (import.meta.env.DEV) {
+          console.debug('[GTM:firstgen-started] short_film', { jobId: result.jobId });
+        }
+        gtmFirstGenerationStarted({
+          userId: user.id,
+          productId: null,
+          generationId: result.jobId,
+          visualType: 'short_film',
+        });
+        firstgenFiredRef.current = true;
+      }
+
       sendWake(token);
 
       const resultUrl = await pollQueueJobCompletion(result.jobId, 60);
