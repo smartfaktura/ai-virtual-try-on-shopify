@@ -176,17 +176,17 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
           await supabase.from('video_inputs').insert([
             {
               project_id: project.id,
-              user_id: userId,
               input_role: 'main_reference',
-              source_image_url: params.startImageUrl,
-              order_index: 0,
+              asset_url: params.startImageUrl,
+              sort_order: 0,
+              type: 'image',
             },
             {
               project_id: project.id,
-              user_id: userId,
               input_role: 'end_reference',
-              source_image_url: params.endImageUrl,
-              order_index: 1,
+              asset_url: params.endImageUrl,
+              sort_order: 1,
+              type: 'image',
             },
           ]);
         } catch (e) {
