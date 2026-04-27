@@ -973,7 +973,7 @@ export default function TextToProduct() {
               category={conversionCategory}
               onSeeMore={() => {
                 conversionState.dismissLayer1();
-                conversionState.openUpgradeDrawer('layer1_cta');
+                openBuyModal();
               }}
               onDismiss={conversionState.dismissLayer1}
             />
