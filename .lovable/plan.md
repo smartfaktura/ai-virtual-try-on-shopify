@@ -1,30 +1,20 @@
-# Pass plan name to startCheckout for accurate GTM payload
+I’ll update the GTM container ID from `GTM-P29VYFW3` to the correct `GTM-P29VVFW3` everywhere it is referenced.
 
-## Problem
-`startCheckout(priceId, mode, planName?)` in `CreditContext` accepts an optional 3rd arg used as the `plan_name` field on the `checkout_started` dataLayer event. Two callsites currently omit it, so GTM falls back to the user's *current* plan instead of the plan being purchased — inaccurate attribution in Google Ads / GA4.
+Changes planned:
+1. `index.html`
+   - Update the GTM script container ID.
+   - Update the GTM `<noscript>` iframe container ID.
 
-## Changes
+2. `src/lib/gtm.ts`
+   - Update the comment/reference so the source documentation matches the installed container.
 
-### 1. `src/components/app/UpgradePlanModal.tsx` (line 175)
-```ts
-await startCheckout(priceId, 'subscription', selectedPlan.name);
-```
+What will stay unchanged:
+- Existing `gtag.js` stays untouched.
+- Existing Meta Pixel stays untouched.
+- No duplicate `page_view` tracking will be added.
+- No GTM event payload logic or deduplication behavior will be changed.
 
-### 2. `src/components/app/BuyCreditsModal.tsx` (line 99)
-```ts
-await startCheckout(priceId, 'subscription', selectedPlan.name);
-```
-
-(`selectedPlan` is already in scope in both files — `upgradePlans.find(...)` in UpgradePlanModal, and the destructured `selectedPlan` in BuyCreditsModal.)
-
-## Out of scope
-- No changes to `startCheckout` signature, GTM helper, or edge functions.
-- Top-up/credit-pack `handleTopUp` already passes pack name correctly (verified previously).
-- No other callsites of `startCheckout` need updating.
-
-## Verification
-1. Open GTM Preview.
-2. From `/app` open Upgrade Plan modal → select Growth (annual) → Confirm.
-3. Expect `checkout_started` event with `plan_name: "Growth"` (not the user's current plan).
-4. Repeat from BuyCreditsModal upgrade path — same expectation.
-5. Refresh: event should not re-fire (Stripe session dedup key unchanged).
+Verification after implementation:
+- Search the codebase to confirm `GTM-P29VYFW3` no longer exists.
+- Confirm `GTM-P29VVFW3` appears in the GTM script, noscript iframe, and GTM helper comment.
+- You can then reconnect Tag Assistant Preview using container `GTM-P29VVFW3`.

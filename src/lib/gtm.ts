@@ -1,5 +1,5 @@
 // Google Tag Manager dataLayer helpers for VOVV.AI funnel tracking.
-// Container GTM-P29VYFW3 is loaded in index.html.
+// Container GTM-P29VVFW3 is loaded in index.html.
 //
 // These helpers run in PARALLEL with existing gtag.js (GA4 + Google Ads) and
 // Meta Pixel — they do NOT replace or duplicate them. No `page_view` is pushed
