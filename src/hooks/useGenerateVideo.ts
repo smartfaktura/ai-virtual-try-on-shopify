@@ -400,6 +400,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       workflowType?: string;
       cameraMotion?: string;
       cameraControlConfig?: { type: string; config: Record<string, number> };
+      transitionStyle?: string;
     }) => {
       setStatus('creating');
       setVideoUrl(null);
@@ -428,6 +429,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         if (typeof params.cfgScale === 'number') payload.cfg_scale = params.cfgScale;
         if (params.projectId) payload.project_id = params.projectId;
         if (params.workflowType) payload.workflow_type = params.workflowType;
+        if (params.transitionStyle) payload.transition_style = params.transitionStyle;
         // Start & End workflow — Kling start+end frame interpolation.
         // When image_tail is set, the edge function strips camera_control and uses the cfg_scale we send.
         if (params.imageTailUrl) {
