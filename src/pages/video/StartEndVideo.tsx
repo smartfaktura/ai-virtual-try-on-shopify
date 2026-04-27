@@ -366,7 +366,7 @@ export default function StartEndVideo() {
         <ValidationWarnings warnings={[{ type: 'error', message: project.pipelineError }]} />
       )}
 
-      <NoCreditsModal open={noCreditsOpen} onOpenChange={setNoCreditsOpen} />
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} />
     </div>
   );
 }
