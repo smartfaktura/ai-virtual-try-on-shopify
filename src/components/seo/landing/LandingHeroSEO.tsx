@@ -45,8 +45,8 @@ function Tile({
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(resolvedSrc, { width: 640, height: 854, quality: 85, resize: 'cover' })}
-        srcSet={getResizedSrcSet(resolvedSrc, { widths: [360, 540, 720, 900], aspect: [3, 4], quality: 85 })}
+        src={getOptimizedUrl(resolvedSrc, { width: 540, height: 720, quality: 78, resize: 'cover' })}
+        srcSet={getResizedSrcSet(resolvedSrc, { widths: [360, 540, 720], aspect: [3, 4], quality: 78 })}
         sizes="(max-width: 640px) 180px, 210px"
         alt={resolvedAlt}
         width={210}
@@ -87,9 +87,9 @@ function MarqueeRow({
   eager?: boolean;
 }) {
   // Repeat tiles enough times so each half of the marquee track is always
-  // wider than any realistic viewport. Prevents the right-direction row from
-  // showing empty space on the right edge at frame 0 (translateX(-50%)).
-  const REPEATS = 4;
+  // wider than any realistic viewport. 2× is enough for a 5-tile row at 210px
+  // wide (5 × 210 = 1050px → 2× = 2100px), well beyond common viewports.
+  const REPEATS = 2;
   const repeated = Array.from({ length: REPEATS }, () => tiles).flat();
   return (
     <div className="overflow-hidden w-full group/marquee">
@@ -104,8 +104,8 @@ function MarqueeRow({
             altPrefix={altPrefix}
             resolvedSrc={rt.src}
             resolvedAlt={rt.alt}
-            eager={eager && i < tiles.length}
-            highPriority={eager && i < 2}
+            eager={eager && i < 2}
+            highPriority={eager && i < 1}
           />
         ))}
       </div>

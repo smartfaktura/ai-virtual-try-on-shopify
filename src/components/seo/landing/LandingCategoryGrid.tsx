@@ -4,7 +4,7 @@ import {
   aiProductPhotographyCategories,
   type ProductPhotoCategory,
 } from '@/data/aiProductPhotographyCategories';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
 
@@ -84,8 +84,12 @@ export function LandingCategoryGrid({
                           className={`relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40 ${idx === 2 ? 'hidden sm:block' : ''}`}
                         >
                           <img
-                            src={getOptimizedUrl(src, { quality: 60 })}
+                            src={getOptimizedUrl(src, { width: 300, height: 300, quality: 70, resize: 'cover' })}
+                            srcSet={getResizedSrcSet(src, { widths: [200, 300, 400], aspect: [1, 1], quality: 70 })}
+                            sizes="(max-width: 640px) 40vw, 160px"
                             alt={`${cat.name} AI product photography example`}
+                            width={300}
+                            height={300}
                             loading="lazy"
                             decoding="async"
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
