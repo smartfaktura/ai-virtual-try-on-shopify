@@ -6,6 +6,7 @@ import { toast } from '@/lib/brandedToast';
 import { generateShotPlan, FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
 import { buildShotPrompt, estimateShortFilmCredits, distributeShotDurations, TONE_PRESETS } from '@/lib/shortFilmPromptBuilder';
 import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 import type {
   FilmType,
   StoryStructure,
