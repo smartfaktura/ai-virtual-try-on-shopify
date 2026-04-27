@@ -129,7 +129,7 @@ export function BuyCreditsModal() {
       if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
         await openCustomerPortal();
       } else if (currentPlanData?.stripePriceIdAnnual) {
-        await startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription');
+        await startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription', currentPlanData.name);
       }
     } catch {
       setSwitchLoading(false);
