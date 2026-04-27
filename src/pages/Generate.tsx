@@ -4831,6 +4831,7 @@ export default function Generate() {
         open={conversionState.layer2Open}
         onClose={conversionState.dismissLayer2}
         category={conversionCategory}
+        source={conversionState.layer2Reason || undefined}
         generationContext={{
           productThumbnail: selectedProduct?.images?.[0]?.url || scratchUpload?.previewUrl,
           productTitle: selectedProduct?.title || scratchUpload?.productInfo.title,
@@ -4838,7 +4839,7 @@ export default function Generate() {
           modelName: Array.from(selectedModelMap.values())[0]?.name,
         }}
       />
-      
+
     </PageHeader>
   );
 }
