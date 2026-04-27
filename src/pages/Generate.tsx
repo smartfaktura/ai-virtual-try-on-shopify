@@ -1461,6 +1461,11 @@ export default function Generate() {
           if (!isEnqueueError(result)) {
             jobMap.set(`${product.id}_${modelProfile?.modelId || 'no-model'}_${varIdx}_${ratioVal}_${framingVal}`, result.jobId);
             lastBalance = result.newBalance;
+            fireFirstgenStartedOnce({
+              jobId: result.jobId,
+              productId: ((payload as Record<string, unknown>)?.product_id as string | undefined) ?? product?.id ?? null,
+              visualType: activeWorkflow?.slug || activeWorkflow?.name || 'workflow',
+            });
             injectActiveJob(queryClient, {
               jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name,
               workflow_slug: activeWorkflow?.slug, product_name: product.title,
