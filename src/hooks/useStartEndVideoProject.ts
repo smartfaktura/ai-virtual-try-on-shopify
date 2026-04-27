@@ -82,6 +82,9 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
   const [analysisStart, setAnalysisStart] = useState<VideoAnalysis | null>(null);
   const [analysisEnd, setAnalysisEnd] = useState<VideoAnalysis | null>(null);
   const [compatibility, setCompatibility] = useState<TransitionCompatibility | null>(null);
+  const [recentResult, setRecentResult] = useState<RecentStartEndResult | null>(null);
+  const [hydratedVideoUrl, setHydratedVideoUrl] = useState<string | null>(null);
+  const lastProjectIdRef = useRef<string | null>(null);
 
   const generateVideo = useGenerateVideo();
 
@@ -91,8 +94,58 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
     setAnalysisStart(null);
     setAnalysisEnd(null);
     setCompatibility(null);
+    setHydratedVideoUrl(null);
     generateVideo.reset();
   }, [generateVideo]);
+
+  const dismissRecentResult = useCallback(() => setRecentResult(null), []);
+
+  const hydrateFromRecent = useCallback(() => {
+    if (!recentResult) return;
+    setHydratedVideoUrl(recentResult.videoUrl);
+    setPipelineStage('complete');
+  }, [recentResult]);
+
+  // Look up the most recent completed Start & End video for this user (last 24h).
+  // Used to surface a "your last transition is ready" banner on page load.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: userResp } = await supabase.auth.getUser();
+        const uid = userResp.user?.id;
+        if (!uid) return;
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
+          .from('generated_videos')
+          .select('id, video_url, source_image_url, completed_at, created_at, video_projects!inner(workflow_type)')
+          .eq('user_id', uid)
+          .eq('status', 'complete')
+          .eq('video_projects.workflow_type', 'start_end')
+          .gte('created_at', since)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (cancelled || error || !data?.length) return;
+        const row = data[0] as { id: string; video_url: string; source_image_url: string; completed_at: string | null; created_at: string };
+        if (!row.video_url) return;
+        const [signedVideo, signedSrc] = await Promise.all([
+          toSignedUrl(row.video_url),
+          row.source_image_url ? toSignedUrl(row.source_image_url) : Promise.resolve(null),
+        ]);
+        if (cancelled) return;
+        setRecentResult({
+          id: row.id,
+          videoUrl: signedVideo,
+          sourceImageUrl: signedSrc,
+          createdAt: row.completed_at || row.created_at,
+        });
+      } catch (err) {
+        console.warn('[useStartEndVideoProject] recent-result lookup failed', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
 
   const analyzePair = useCallback(
     async (startUrl: string, endUrl: string): Promise<TransitionCompatibility | null> => {
