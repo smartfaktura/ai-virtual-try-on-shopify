@@ -3,9 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
-import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
-import { gtagPurchase } from '@/lib/gtag';
-import { gtmBeginCheckout, gtmCheckoutSessionCreated, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
+import { trackInitiateCheckout } from '@/lib/fbPixel';
+import { gtmBeginCheckout, gtmCheckoutSessionCreated, gtmPurchase, pickTransactionId } from '@/lib/gtm';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
@@ -102,6 +101,14 @@ export function CreditProvider({ children }: CreditProviderProps) {
     plan: string;
     amount: number | null;
     currency: string | null;
+    lastCreditPackPurchase: {
+      payment_intent_id: string | null;
+      session_id: string;
+      amount: number;
+      currency: string;
+      credits: number;
+      plan_name: string;
+    } | null;
   } | null>(null);
 
   const fetchCredits = useCallback(async () => {
