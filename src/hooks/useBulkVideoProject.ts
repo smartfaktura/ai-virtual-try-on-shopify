@@ -6,6 +6,7 @@ import { resolveVideoStrategy, type VideoAnalysis, type WorkflowType } from '@/l
 import { CAMERA_MOTIONS } from '@/lib/videoMotionRecipes';
 import { buildVideoPrompt } from '@/lib/videoPromptTemplates';
 import { enqueueWithRetry, isEnqueueError, paceDelay, sendWake, getAuthToken } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 
 interface BulkImage {
   id: string;
