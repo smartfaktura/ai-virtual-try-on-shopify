@@ -271,18 +271,13 @@ export function gtmBeginCheckout(args: {
   value: number;          // already in major units (dollars/euros), not cents
   currency: string;       // will be uppercased
   pageLocation?: string;
-  eventCallback?: () => void;
-  eventTimeout?: number;  // ms, default 1500
 }): { fired: boolean; reason?: string } {
-  const { userId, checkoutId, planName, value, currency, pageLocation, eventCallback, eventTimeout } = args;
+  const { userId, checkoutId, planName, value, currency, pageLocation } = args;
   if (!userId || !checkoutId) {
     const reason = !userId ? 'missing userId' : 'missing checkoutId';
     if (isGtmDebugEnabled() || DEBUG) {
       // eslint-disable-next-line no-console
       console.log('[GTM DEBUG gtmBeginCheckout blocked]', { reason, userId, checkoutId });
-    }
-    if (eventCallback) {
-      try { eventCallback(); } catch { /* ignore */ }
     }
     return { fired: false, reason };
   }
@@ -294,9 +289,6 @@ export function gtmBeginCheckout(args: {
     if (isGtmDebugEnabled() || DEBUG) {
       // eslint-disable-next-line no-console
       console.log('[GTM DEBUG gtmBeginCheckout dedup-skip]', { dedupKey });
-    }
-    if (eventCallback) {
-      try { eventCallback(); } catch { /* ignore */ }
     }
     return { fired: false, reason: 'deduped' };
   }
@@ -310,22 +302,7 @@ export function gtmBeginCheckout(args: {
     value,
     currency: upper(currency),
     page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
-    eventTimeout: typeof eventTimeout === 'number' ? eventTimeout : 1500,
   };
-
-  // GTM standard eventCallback: fired after all matching tags finish (or timeout)
-  let resolved = false;
-  if (eventCallback) {
-    payload.eventCallback = () => {
-      if (resolved) return;
-      resolved = true;
-      if (isGtmDebugEnabled() || DEBUG) {
-        // eslint-disable-next-line no-console
-        console.log('[GTM DEBUG gtmBeginCheckout eventCallback fired]', { checkoutId });
-      }
-      try { eventCallback(); } catch { /* ignore */ }
-    };
-  }
 
   if (isGtmDebugEnabled() || DEBUG) {
     // eslint-disable-next-line no-console

@@ -234,47 +234,31 @@ export function CreditProvider({ children }: CreditProviderProps) {
         const willFire = !!sessionUserId && !!data?.sessionId;
 
         if (willFire) {
-          // Wait for GTM to confirm tags fired (or hit the timeout) before
-          // navigating, so begin_checkout actually reaches GTM Preview /
-          // conversion tags before the page tears down.
-          await new Promise<void>((resolve) => {
-            let done = false;
-            const finish = (reason: string) => {
-              if (done) return;
-              done = true;
-              if (debug) {
-                // eslint-disable-next-line no-console
-                console.log('[GTM DEBUG begin_checkout redirect]', { reason });
-              }
-              resolve();
-            };
+          const result = gtmBeginCheckout({
+            userId: sessionUserId!,
+            checkoutId: data.sessionId,
+            planName: resolvedPlanName,
+            value: typeof data.amount === 'number' ? data.amount : 0,
+            currency: data.currency || 'usd',
+            pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
+          });
 
-            const result = gtmBeginCheckout({
-              userId: sessionUserId!,
-              checkoutId: data.sessionId,
-              planName: resolvedPlanName,
-              value: typeof data.amount === 'number' ? data.amount : 0,
-              currency: data.currency || 'usd',
-              pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
-              eventCallback: () => finish('eventCallback'),
-              eventTimeout: 1500,
-            });
+          if (debug) {
+            // eslint-disable-next-line no-console
+            console.log('[GTM DEBUG begin_checkout push result]', result);
+          }
 
+          // Deterministic 1500ms hold so the dataLayer push is visible in
+          // GTM Preview / Tag Assistant before the page tears down for the
+          // Stripe redirect. Do NOT use eventCallback — it can fire instantly
+          // when no GTM tag matches and defeats this guarantee.
+          if (result.fired) {
+            await new Promise((r) => setTimeout(r, 1500));
             if (debug) {
               // eslint-disable-next-line no-console
-              console.log('[GTM DEBUG begin_checkout push result]', result);
+              console.log('[GTM DEBUG begin_checkout redirect]', { reason: 'hold-elapsed' });
             }
-
-            // If the event was deduped/blocked, no callback will fire — resolve
-            // immediately so we don't block the redirect.
-            if (!result.fired) {
-              finish('not-fired:' + (result.reason ?? 'unknown'));
-              return;
-            }
-
-            // Hard fallback in case GTM is blocked / never calls back.
-            setTimeout(() => finish('timeout'), 1700);
-          });
+          }
         }
         window.location.href = data.url;
       }
