@@ -1075,7 +1075,43 @@ export default function ProductImages() {
     refreshBalance();
     setStep(6);
     try { sessionStorage.removeItem('pi_generation_session'); } catch {}
-  }, [selectedProducts, refreshBalance]);
+
+    // GTM: fire first_generation_completed exactly once per user, only when
+    // there is at least one real backend job ID and a real result image.
+    // Helper itself dedupes per user_id across sessions.
+    const totalResultImages = Array.from(resultMap.values())
+      .reduce((n, r) => n + r.images.length, 0);
+    const firstCompleted = jobs.find(j => j && j.status === 'completed' && j.id);
+    const firstCompletedMeta = firstCompleted ? productMap.get(firstCompleted.id) : undefined;
+    const completedProductId = firstCompletedMeta?.productId && firstCompletedMeta.productId !== 'unknown'
+      ? firstCompletedMeta.productId
+      : (selectedProducts[0]?.id ?? null);
+
+    if (isGtmDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.log('[GTM DEBUG first_generation_completed]', {
+        flow: 'product-images',
+        hasUser: !!user,
+        userId: user?.id,
+        generationId: firstCompleted?.id ?? null,
+        resultCount: totalResultImages,
+        hasImages: totalResultImages > 0,
+        dedupKey: user?.id ? `gtm:firstgen-completed:${user.id}` : null,
+        dedupExists: user?.id ? safeLocalGet(`gtm:firstgen-completed:${user.id}`) : null,
+        willFire: !!(user?.id && firstCompleted?.id && totalResultImages > 0),
+      });
+    }
+
+    if (user?.id && firstCompleted?.id && totalResultImages > 0) {
+      gtmFirstGenerationCompleted({
+        userId: user.id,
+        productId: completedProductId,
+        generationId: firstCompleted.id,
+        visualType: 'product-images',
+        resultCount: totalResultImages,
+      });
+    }
+  }, [selectedProducts, refreshBalance, user]);
 
   const startPolling = useCallback((activeJobMap: Map<string, string>) => {
     const jobIds = Array.from(activeJobMap.values());
