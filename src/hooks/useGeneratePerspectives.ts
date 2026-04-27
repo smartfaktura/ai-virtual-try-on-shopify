@@ -360,6 +360,7 @@ export function useGeneratePerspectives() {
     let enqueuedCount = 0;
     const jobs: PerspectiveJobInfo[] = [];
     let lastNewBalance: number | null = null;
+    let firstgenFired = false;
 
     let shouldStop = false;
     for (const product of products) {
