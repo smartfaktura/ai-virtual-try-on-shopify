@@ -188,6 +188,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
           plan: data.plan ?? 'free',
           amount: typeof data.amount === 'number' ? data.amount : null,
           currency: data.currency ?? null,
+          lastCreditPackPurchase: data.last_credit_pack_purchase ?? null,
         };
       }
     } catch (err) {
