@@ -327,39 +327,77 @@ export function CreditProvider({ children }: CreditProviderProps) {
     if (payment === 'success') {
       toast.success('Payment successful! Your credits are being updated…');
 
-      // Fire Facebook Pixel Purchase event with the checkout amount
-      const amount = params.get('amount');
-      if (amount) {
-        const value = parseFloat(amount);
-        if (!isNaN(value) && value > 0) {
-          trackPurchase(value, 'USD');
-          gtagPurchase(value, 'USD');
-        }
-      }
-
-      // Delay to give Stripe time to process, then fire GTM purchase event
-      // ONLY when checkSubscription confirms an active subscription AND we
-      // have a transaction id we have not fired before. Helper dedupes by
-      // transaction_id so this is idempotent across refreshes.
+      // Verify with Stripe server-side, then fire ONE clean `purchase` event.
+      // No URL-only gtag/Meta firing — those events are now wired in GTM from
+      // the verified dataLayer purchase event.
       setTimeout(async () => {
         await checkSubscription();
         if (!user) return;
         const meta = latestSubscriptionMetaRef.current;
         if (!meta) return;
-        if (meta.subscriptionStatus !== 'active') return;
+
+        const debug = (() => {
+          try {
+            return typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1';
+          } catch { return false; }
+        })();
+
+        // Prefer credit pack: only present when this call just transitioned a
+        // paid one-time session to fulfilled=true (so it cannot re-emit).
+        const pack = meta.lastCreditPackPurchase;
+        if (pack) {
+          const txId = pack.payment_intent_id || pack.session_id;
+          if (debug) {
+            // eslint-disable-next-line no-console
+            console.log('[GTM DEBUG purchase verification]', {
+              sessionId: returnedSessionId,
+              purchaseType: 'credits',
+              paymentStatus: 'paid',
+              subscriptionStatus: meta.subscriptionStatus,
+              transactionId: txId,
+              planName: pack.plan_name,
+              value: pack.amount,
+              currency: pack.currency,
+            });
+          }
+          gtmPurchase({
+            userId: user.id,
+            transactionId: txId,
+            purchaseType: 'credits',
+            planName: pack.plan_name,
+            value: pack.amount,
+            currency: pack.currency,
+          });
+          return;
+        }
+
+        // Subscription path: only fire if Stripe confirms `active`.
+        if (meta.subscriptionStatus !== 'active') {
+          if (debug) {
+            // eslint-disable-next-line no-console
+            console.log('[GTM DEBUG purchase verification]', {
+              sessionId: returnedSessionId,
+              purchaseType: 'subscription',
+              subscriptionStatus: meta.subscriptionStatus,
+              willFire: false,
+              reason: 'subscription not active',
+            });
+          }
+          return;
+        }
         const txId = pickTransactionId({
           invoiceId: meta.latestInvoiceId,
           sessionId: returnedSessionId || meta.latestSessionId,
           subscriptionId: meta.stripeSubscriptionId,
         });
         if (!txId) return;
-        const value = amount ? parseFloat(amount) : (meta.amount ?? 0);
-        gtmSubscriptionPurchase({
+        gtmPurchase({
           userId: user.id,
           transactionId: txId,
+          purchaseType: 'subscription',
           planName: meta.plan,
-          value: isNaN(value) ? 0 : value,
-          currency: meta.currency || 'usd',
+          value: meta.amount ?? 0,
+          currency: meta.currency || 'USD',
         });
       }, 2000);
 
