@@ -1,54 +1,40 @@
-I found the important part: the backend checkout is working. Recent `create-checkout` logs show real Stripe sessions being created, so the button flow reaches checkout successfully.
+## Diagnosis
 
-The weak point is the current tracking placement: `begin_checkout` only fires after the backend returns a Stripe session id, immediately before `window.location.href = Stripe URL`. That makes the event dependent on the final redirect moment. Since Tag Assistant is still not showing it, the fix should not be more delay — it should fire the GTM event at the exact moment checkout starts, before the backend call and before any redirect can tear down the page.
+The event is now firing, but it is duplicated because `gtmBeginCheckout` currently sends the same `begin_checkout` twice:
 
-Plan:
+1. `dataLayer.push({ event: 'begin_checkout', ... })`
+2. `window.gtag('event', 'begin_checkout', ... )`
 
-1. Update the GTM helper to support a real checkout-start event
-   - Fire `begin_checkout` immediately when `startCheckout(...)` begins
-   - Do not require `checkoutId` for this event, because the Stripe session does not exist yet
-   - Include standard ecommerce structure so GTM/GA4 recognizes it reliably:
-     ```ts
-     dataLayer.push({ ecommerce: null });
-     dataLayer.push({
-       event: 'begin_checkout',
-       ecommerce: {
-         currency: 'USD',
-         value: 79,
-         items: [{ item_name: 'Growth', price: 79, quantity: 1 }]
-       },
-       plan_name: 'Growth',
-       checkout_mode: 'subscription',
-       page_location: window.location.href
-     });
+In this project, `gtag()` is defined as a wrapper around the same `dataLayer`:
+
+```text
+function gtag(){dataLayer.push(arguments);}
+```
+
+So the second call does not go somewhere separate. It pushes another `begin_checkout` into the same timeline. That matches the screenshot: two `begin_checkout` events appear back-to-back.
+
+## Plan
+
+1. Update `src/lib/gtm.ts`
+   - Keep the canonical GTM event:
+     ```text
+     dataLayer.push({ event: 'begin_checkout', ecommerce: ... })
      ```
+   - Remove the direct `window.gtag('event', 'begin_checkout', ...)` call from `gtmBeginCheckout`
+   - Keep `{ ecommerce: null }` before the event so GA4 ecommerce data resets correctly
+   - Keep the 10-second session deduplication for double-click protection
 
-2. Move `begin_checkout` firing to the start of `CreditContext.startCheckout`
-   - This centralizes the fix for all entry points:
-     - pricing modal
-     - in-app pricing page
-     - settings pricing cards
-     - top-up credits
-     - upgrade drawer
-   - This avoids patching each button separately
+2. Leave checkout timing unchanged
+   - The event should continue firing immediately before `create-checkout`, so it is captured before Stripe redirect
 
-3. Keep Stripe-session tracking separate
-   - After `create-checkout` returns, keep using the Stripe `sessionId` for redirect/purchase attribution
-   - Do not fire a second `begin_checkout` after the backend returns, to avoid duplicates
-   - Optionally push a different debug/custom event like `checkout_session_created` only if GTM debug is enabled, not as a marketing conversion event
+3. Clean debug logs
+   - Update the debug output so it reports only the single canonical dataLayer event
+   - Keep enough logging for future GTM preview checks when `vovv_gtm_debug` is enabled
 
-4. Add safer deduping
-   - Deduplicate checkout-start by short session window, e.g. plan + mode + page for ~10 seconds
-   - This prevents double-click duplicates but still allows a new attempt if the user retries
+4. Verify source count
+   - Confirm only one app-side source emits `begin_checkout`: `gtmBeginCheckout`
+   - Leave Meta Pixel `InitiateCheckout` untouched because that is a different Meta event, not GA4/GTM `begin_checkout`
 
-5. Improve debug visibility
-   - When `localStorage.setItem('vovv_gtm_debug','1')` is enabled, log:
-     - `begin_checkout` fired before backend call
-     - `dataLayer` length before/after
-     - whether GTM/gtag are available
-     - whether checkout redirect starts
+## Expected result
 
-Expected result:
-- In GTM Preview, `begin_checkout` should appear immediately after clicking “Continue to checkout”, before the Stripe redirect.
-- This is independent of redirect timing and independent of Stripe session creation latency.
-- No database changes are needed.
+On a single checkout click, Tag Assistant should show one `begin_checkout` event, not two. GTM tags can then be configured to fire from that single custom event.

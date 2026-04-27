@@ -340,34 +340,12 @@ export function gtmBeginCheckout(args: {
 
   rawPush(payload);
 
-  // Also emit through gtag for GA4 / Google Ads pickup (shares the same
-  // dataLayer as GTM-P29VVFW3 via the snippet in index.html).
-  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-    try {
-      window.gtag('event', 'begin_checkout', {
-        ...(userId ? { user_id: userId } : {}),
-        plan_name: planName,
-        checkout_mode: checkoutMode,
-        value,
-        currency: upperCurrency,
-        page_location: resolvedPageLocation,
-        items: [
-          {
-            item_id: planName,
-            item_name: planName,
-            item_category: checkoutMode,
-            price: value,
-            quantity: 1,
-          },
-        ],
-      });
-    } catch (err) {
-      if (isGtmDebugEnabled() || DEBUG) {
-        // eslint-disable-next-line no-console
-        console.warn('[GTM DEBUG gtmBeginCheckout gtag failed]', err);
-      }
-    }
-  }
+  // NOTE: We intentionally do NOT also call window.gtag('event','begin_checkout',...).
+  // In this app, gtag() is wired as `function gtag(){dataLayer.push(arguments)}`
+  // (see index.html), so a parallel gtag call would push a second begin_checkout
+  // into the same dataLayer and show up as a duplicate event in GTM Preview /
+  // Tag Assistant. GA4 + Google Ads pickup is handled by binding GTM tags to the
+  // single canonical custom event above.
 
   if (isGtmDebugEnabled() || DEBUG) {
     const dlAfter =
@@ -377,7 +355,6 @@ export function gtmBeginCheckout(args: {
     // eslint-disable-next-line no-console
     console.log('[GTM DEBUG gtmBeginCheckout payload]', payload, {
       dataLayerExists: typeof window !== 'undefined' && Array.isArray(window.dataLayer),
-      gtagExists: typeof window !== 'undefined' && typeof window.gtag === 'function',
       dlBefore,
       dlAfter,
       dedupKey,
