@@ -1,60 +1,34 @@
-## Goal
+## Add Google Tag Manager (GTM-P29VVFW3) sitewide
 
-Enable the **Start & End Video** card on `/app/video` with the same `beta` badge styling as **Short Film**, and set a flat **20 credits** per generation.
+Install GTM in `index.html` so it loads on every route — including all public marketing pages and the `/app` authenticated area (this is a single-page React app, so one install covers everything).
 
-## Changes
+### Changes to `index.html`
 
-### 1. `src/pages/VideoHub.tsx` — enable card with beta badge
+**1. Add GTM loader script high in `<head>`** (placed right after the existing `<title>`/meta block, before the deferred gtag/Meta Pixel snippets so GTM initializes as early as possible):
 
-Replace the disabled/comingSoon Start & End card (lines 201–209) with:
-
-```tsx
-<VideoWorkflowCard
-  icon={ArrowRightLeft}
-  title="Start & End Video"
-  description="Create a smooth video between a start image and an end image"
-  bestFor={['Product reveals', 'Before / after', 'Smooth transitions']}
-  to="/app/video/start-end"
-  beta
-/>
+```html
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-P29VVFW3');</script>
+<!-- End Google Tag Manager -->
 ```
 
-This mirrors the Short Film card pattern (also uses `beta`).
+**2. Add GTM noscript iframe immediately after the opening `<body>` tag** (in `<body>`, not `<head>` — per HTML5 rules `<noscript>` with `<iframe>` is only valid in body; project rules also enforce this):
 
-### 2. `src/config/videoCreditPricing.ts` — flat 20 credits
-
-Update `VIDEO_CREDIT_RULES.startEnd` so every Start & End job costs exactly 20 credits regardless of style or audio mode:
-
-```ts
-startEnd: {
-  base5s: 20,
-  ambient: 0,
-  premiumTransition: 0,
-},
+```html
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P29VVFW3"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 ```
 
-Add-on calculations in `estimateCredits()` already multiply against these values, so zeroing them keeps the engine flat at 20 without further code changes.
+This will sit alongside the existing Meta Pixel `<noscript>` fallback already in `<body>`.
 
-### 3. `supabase/functions/enqueue-generation/index.ts` — backend pricing
+### Notes
 
-Match the frontend in the `wf === "start_end"` branch (lines 40–46):
-
-```ts
-if (wf === "start_end") {
-  return 20; // flat: Start & End video
-}
-```
-
-This is the authoritative server-side credit deduction — the frontend estimate is for display only, so both must agree.
-
-## Files touched
-
-- `src/pages/VideoHub.tsx`
-- `src/config/videoCreditPricing.ts`
-- `supabase/functions/enqueue-generation/index.ts` (auto-deploys)
-
-## Verification
-
-- `/app/video` — Start & End card is clickable, shows BETA badge identical to Short Film.
-- `/app/video/start-end` — credit estimate UI shows **20 credits** for any combination of transition style + audio mode.
-- Generating a Start & End video deducts exactly 20 credits from the user's balance.
+- Existing gtag.js (GA4 + Google Ads) and Meta Pixel are kept untouched — GTM runs in parallel, so you can later migrate tags into GTM at your own pace.
+- No changes needed to React routes — since this is a SPA mounted from `index.html`, GTM is automatically present on `/`, `/app/*`, and every other route.
+- `dataLayer` is already initialized by the existing gtag snippet; the GTM snippet safely reuses it (`w[l]=w[l]||[]`).
