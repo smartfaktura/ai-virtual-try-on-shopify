@@ -5,6 +5,7 @@ import { SignupSlideUp } from '@/components/landing/SignupSlideUp';
 import { LandingPricing } from '@/components/landing/LandingPricing';
 import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
+import { gtmPricingPageView } from '@/lib/gtm';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/constants';
@@ -29,7 +30,11 @@ const pricingJsonLd = {
 };
 
 export default function Pricing() {
-  useEffect(() => { trackViewContent('Pricing', 'pricing_page'); gtagViewItem('Pricing', 'pricing_page'); }, []);
+  useEffect(() => {
+    trackViewContent('Pricing', 'pricing_page');
+    gtagViewItem('Pricing', 'pricing_page');
+    gtmPricingPageView({ path: '/pricing' });
+  }, []);
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <SEOHead title="Pricing & Plans — VOVV.AI" description="Free credits to start. Scale with flexible plans from Starter to Enterprise. AI product photography pricing for every e-commerce brand." canonical={`${SITE_URL}/pricing`} />
