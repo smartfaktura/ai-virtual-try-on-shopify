@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError, sendWake, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted, gtmFirstGenerationCompleted, isGtmDebugEnabled, safeLocalGet } from '@/lib/gtm';
 import { computeTotalImages, expandMultiSelects, computeTotalImagesPerProduct, computeTotalImagesPerCategory } from '@/lib/sceneVariations';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { injectActiveJob } from '@/lib/optimisticJobInjection';
@@ -810,6 +811,7 @@ export default function ProductImages() {
       key: string;
       payload: Record<string, unknown>;
       productTitle: string;
+      productId: string;
       hasModel: boolean;
       batchId: string;
     }
@@ -936,7 +938,7 @@ export default function ProductImages() {
                 };
 
                 const key = `${product.id}_${scene.id}_m${mIdx}_v${vIdx}_r${ratioForJob}_${i}`;
-                allJobs.push({ key, payload, productTitle: product.title, hasModel: !!currentModelRef, batchId });
+                allJobs.push({ key, payload, productTitle: product.title, productId: product.id, hasModel: !!currentModelRef, batchId });
               }
             }
           }
