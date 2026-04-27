@@ -90,6 +90,15 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const checkingRef = useRef(false);
+  const latestSubscriptionMetaRef = useRef<{
+    subscriptionStatus: SubscriptionStatus;
+    stripeSubscriptionId: string | null;
+    latestInvoiceId: string | null;
+    latestSessionId: string | null;
+    plan: string;
+    amount: number | null;
+    currency: string | null;
+  } | null>(null);
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
@@ -158,6 +167,17 @@ export function CreditProvider({ children }: CreditProviderProps) {
         if (data.current_period_end) setCurrentPeriodEnd(new Date(data.current_period_end));
         else setCurrentPeriodEnd(null);
         if (data.billing_interval !== undefined) setBillingInterval(data.billing_interval as 'monthly' | 'annual' | null);
+        // Stash latest Stripe IDs so the payment-success handler can pick the
+        // strongest transaction id (invoice → session → subscription) for GTM.
+        latestSubscriptionMetaRef.current = {
+          subscriptionStatus: (data.subscription_status as SubscriptionStatus) ?? 'none',
+          stripeSubscriptionId: data.stripe_subscription_id ?? null,
+          latestInvoiceId: data.latest_invoice_id ?? null,
+          latestSessionId: data.latest_session_id ?? null,
+          plan: data.plan ?? 'free',
+          amount: typeof data.amount === 'number' ? data.amount : null,
+          currency: data.currency ?? null,
+        };
       }
     } catch (err) {
       console.error('Failed to check subscription:', err);
