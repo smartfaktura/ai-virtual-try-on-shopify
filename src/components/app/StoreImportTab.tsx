@@ -10,6 +10,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { gtmProductUploaded } from '@/lib/gtm';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface StoreImportTabProps {
@@ -207,6 +208,13 @@ export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: St
         .single();
 
       if (insertError) throw new Error(insertError.message);
+      if (productData?.id) {
+        gtmProductUploaded({
+          userId: user.id,
+          productId: productData.id,
+          productCategory: extracted.product_type || null,
+        });
+      }
 
       const storagePaths = extracted.storage_paths || [extracted.storage_path];
 

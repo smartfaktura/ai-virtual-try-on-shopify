@@ -3,6 +3,7 @@ import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted, gtmFirstGenerationCompleted } from '@/lib/gtm';
 
 const MAX_IMAGES_PER_JOB = 1;
 
@@ -73,6 +74,7 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
   const [isBatching, setIsBatching] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdsRef = useRef<string[]>([]);
+  const liveBatchMetaRef = useRef<{ productId?: string | null; visualType: string } | null>(null);
   const onCreditRefreshRef = useRef(onCreditRefresh);
   useEffect(() => { onCreditRefreshRef.current = onCreditRefresh; }, [onCreditRefresh]);
 
@@ -182,12 +184,25 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
       if (allDone) {
         stopPolling();
         onCreditRefreshRef.current?.();
+        // first_generation_completed: only fires for live batches with results.
+        // Helper itself dedupes per user_id so it never fires twice.
+        const meta = liveBatchMetaRef.current;
+        const firstCompleted = updatedJobs.find(j => j.status === 'completed');
+        if (user && meta && firstCompleted && aggregatedImages.length > 0) {
+          gtmFirstGenerationCompleted({
+            userId: user.id,
+            productId: meta.productId ?? null,
+            generationId: firstCompleted.jobId,
+            visualType: meta.visualType,
+            resultCount: aggregatedImages.length,
+          });
+        }
       }
     };
 
     poll();
     pollingRef.current = setInterval(poll, 3000);
-  }, [stopPolling]);
+  }, [stopPolling, user]);
 
   const startBatch = useCallback(async (params: BatchParams): Promise<StartBatchResult> => {
     if (!user) {
@@ -268,6 +283,23 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
       jobIds.push(result.jobId);
       lastNewBalance = result.newBalance;
       params.onJobEnqueued?.(result.jobId);
+
+      // first_generation_started: helper dedupes per user_id, so this only
+      // fires once per user lifetime — on the very first successfully
+      // enqueued generation across all batches.
+      if (jobIds.length === 1) {
+        const productId = (payload as Record<string, unknown>).product_id as string | undefined;
+        const visualType = ((payload as Record<string, unknown>).workflow_name as string)
+          || ((payload as Record<string, unknown>).workflow_slug as string)
+          || 'product_images';
+        liveBatchMetaRef.current = { productId: productId ?? null, visualType };
+        gtmFirstGenerationStarted({
+          userId: user.id,
+          productId: productId ?? null,
+          generationId: result.jobId,
+          visualType,
+        });
+      }
     }
 
     // Wake the queue once after all jobs are enqueued

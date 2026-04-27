@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { gtmProductUploaded } from '@/lib/gtm';
 import { getQRCodeURL } from '@/lib/qrCode';
 
 interface MobileUploadTabProps {
@@ -136,15 +137,18 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
 
     setIsSaving(true);
     try {
-      const { error: insertError } = await supabase.from('user_products').insert({
+      const { data: insertedMobile, error: insertError } = await supabase.from('user_products').insert({
         user_id: user.id,
         title: title.trim().substring(0, 200),
         product_type: productType || '',
         description: '',
         image_url: uploadedImageUrl,
-      });
+      }).select('id').single();
 
       if (insertError) throw new Error(insertError.message);
+      if (insertedMobile?.id) {
+        gtmProductUploaded({ userId: user.id, productId: insertedMobile.id, productCategory: productType || null });
+      }
 
       toast.success('Product added!');
       onProductAdded();

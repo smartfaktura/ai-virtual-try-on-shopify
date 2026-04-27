@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
+import { gtmProductUploaded } from '@/lib/gtm';
 
 interface CsvImportTabProps {
   onProductAdded: () => void;
@@ -157,8 +158,20 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
         image_url: r.image_url || 'https://placehold.co/400x400?text=No+Image',
       }));
 
-      const { error: insertError } = await supabase.from('user_products').insert(products);
+      const { data: insertedRows, error: insertError } = await supabase
+        .from('user_products')
+        .insert(products)
+        .select('id, product_type');
       if (insertError) throw new Error(insertError.message);
+      for (const row of insertedRows || []) {
+        if ((row as any)?.id) {
+          gtmProductUploaded({
+            userId: user.id,
+            productId: (row as any).id,
+            productCategory: (row as any).product_type || null,
+          });
+        }
+      }
 
       toast.success(`${validRows.length} products imported!`);
       onProductAdded();

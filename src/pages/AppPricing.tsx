@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { PageHeader } from '@/components/app/PageHeader';
 import { pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { gtmPricingPageView } from '@/lib/gtm';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 import type { PricingPlan } from '@/types';
@@ -228,6 +230,10 @@ function PlanPickerPopover({
 export default function AppPricing() {
   const navigate = useNavigate();
   const { plan, balance, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+  const { user } = useAuth();
+  useEffect(() => {
+    gtmPricingPageView({ userId: user?.id, path: '/app/pricing' });
+  }, [user?.id]);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');

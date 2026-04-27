@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
 import { gtagBeginCheckout, gtagPurchase } from '@/lib/gtag';
+import { gtmCheckoutStarted, gtmSubscriptionPurchase, pickTransactionId } from '@/lib/gtm';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
@@ -40,7 +41,7 @@ interface CreditContextValue {
   setBalanceFromServer: (newBalance: number) => void;
   checkSubscription: () => Promise<void>;
   openCustomerPortal: () => Promise<void>;
-  startCheckout: (priceId: string, mode: 'subscription' | 'payment') => Promise<void>;
+  startCheckout: (priceId: string, mode: 'subscription' | 'payment', planName?: string) => Promise<void>;
   
   buyModalOpen: boolean;
   openBuyModal: () => void;
@@ -89,6 +90,15 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const checkingRef = useRef(false);
+  const latestSubscriptionMetaRef = useRef<{
+    subscriptionStatus: SubscriptionStatus;
+    stripeSubscriptionId: string | null;
+    latestInvoiceId: string | null;
+    latestSessionId: string | null;
+    plan: string;
+    amount: number | null;
+    currency: string | null;
+  } | null>(null);
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
@@ -157,6 +167,17 @@ export function CreditProvider({ children }: CreditProviderProps) {
         if (data.current_period_end) setCurrentPeriodEnd(new Date(data.current_period_end));
         else setCurrentPeriodEnd(null);
         if (data.billing_interval !== undefined) setBillingInterval(data.billing_interval as 'monthly' | 'annual' | null);
+        // Stash latest Stripe IDs so the payment-success handler can pick the
+        // strongest transaction id (invoice → session → subscription) for GTM.
+        latestSubscriptionMetaRef.current = {
+          subscriptionStatus: (data.subscription_status as SubscriptionStatus) ?? 'none',
+          stripeSubscriptionId: data.stripe_subscription_id ?? null,
+          latestInvoiceId: data.latest_invoice_id ?? null,
+          latestSessionId: data.latest_session_id ?? null,
+          plan: data.plan ?? 'free',
+          amount: typeof data.amount === 'number' ? data.amount : null,
+          currency: data.currency ?? null,
+        };
       }
     } catch (err) {
       console.error('Failed to check subscription:', err);
@@ -165,7 +186,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
     }
   }, [user]);
 
-  const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment') => {
+  const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment', planName?: string) => {
     trackInitiateCheckout();
     gtagBeginCheckout();
     const { data: { session } } = await supabase.auth.getSession();
@@ -179,13 +200,24 @@ export function CreditProvider({ children }: CreditProviderProps) {
       });
       if (error) throw error;
       if (data?.url) {
+        // Fire GTM checkout_started ONLY after Stripe returned a session id —
+        // never on click. Currency comes from Stripe (uppercased by helper).
+        if (user && data.sessionId) {
+          gtmCheckoutStarted({
+            userId: user.id,
+            checkoutId: data.sessionId,
+            planName: planName || plan,
+            value: typeof data.amount === 'number' ? data.amount : 0,
+            currency: data.currency || 'usd',
+          });
+        }
         window.location.href = data.url;
       }
     } catch (err) {
       console.error('Checkout error:', err);
       toast.error('Failed to start checkout. Please try again.');
     }
-  }, []);
+  }, [user, plan]);
 
   const openCustomerPortal = useCallback(async () => {
     try {
@@ -217,6 +249,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
+    const returnedSessionId = params.get('session_id'); // from Stripe success_url
     if (payment === 'success') {
       toast.success('Payment successful! Your credits are being updated…');
 
@@ -230,12 +263,37 @@ export function CreditProvider({ children }: CreditProviderProps) {
         }
       }
 
-      // Delay to give Stripe time to process
-      setTimeout(() => checkSubscription(), 2000);
+      // Delay to give Stripe time to process, then fire GTM purchase event
+      // ONLY when checkSubscription confirms an active subscription AND we
+      // have a transaction id we have not fired before. Helper dedupes by
+      // transaction_id so this is idempotent across refreshes.
+      setTimeout(async () => {
+        await checkSubscription();
+        if (!user) return;
+        const meta = latestSubscriptionMetaRef.current;
+        if (!meta) return;
+        if (meta.subscriptionStatus !== 'active') return;
+        const txId = pickTransactionId({
+          invoiceId: meta.latestInvoiceId,
+          sessionId: returnedSessionId || meta.latestSessionId,
+          subscriptionId: meta.stripeSubscriptionId,
+        });
+        if (!txId) return;
+        const value = amount ? parseFloat(amount) : (meta.amount ?? 0);
+        gtmSubscriptionPurchase({
+          userId: user.id,
+          transactionId: txId,
+          planName: meta.plan,
+          value: isNaN(value) ? 0 : value,
+          currency: meta.currency || 'usd',
+        });
+      }, 2000);
+
       // Clean URL
       const url = new URL(window.location.href);
       url.searchParams.delete('payment');
       url.searchParams.delete('amount');
+      url.searchParams.delete('session_id');
       window.history.replaceState({}, '', url.toString());
     } else if (payment === 'cancelled') {
       toast.info('Payment cancelled.');
@@ -243,7 +301,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       url.searchParams.delete('payment');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [checkSubscription]);
+  }, [checkSubscription, user]);
   
   const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
   const lowThreshold = planConfig.monthlyCredits === Infinity ? 0 : Math.min(Math.round(planConfig.monthlyCredits * 0.2), 200);
