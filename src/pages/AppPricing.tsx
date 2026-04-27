@@ -230,6 +230,10 @@ function PlanPickerPopover({
 export default function AppPricing() {
   const navigate = useNavigate();
   const { plan, balance, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+  const { user } = useAuth();
+  useEffect(() => {
+    gtmPricingPageView({ userId: user?.id, path: '/app/pricing' });
+  }, [user?.id]);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
