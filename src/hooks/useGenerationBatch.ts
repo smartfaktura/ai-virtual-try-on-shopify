@@ -283,6 +283,23 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
       jobIds.push(result.jobId);
       lastNewBalance = result.newBalance;
       params.onJobEnqueued?.(result.jobId);
+
+      // first_generation_started: helper dedupes per user_id, so this only
+      // fires once per user lifetime — on the very first successfully
+      // enqueued generation across all batches.
+      if (jobIds.length === 1) {
+        const productId = (payload as Record<string, unknown>).product_id as string | undefined;
+        const visualType = ((payload as Record<string, unknown>).workflow_name as string)
+          || ((payload as Record<string, unknown>).workflow_slug as string)
+          || 'product_images';
+        liveBatchMetaRef.current = { productId: productId ?? null, visualType };
+        gtmFirstGenerationStarted({
+          userId: user.id,
+          productId: productId ?? null,
+          generationId: result.jobId,
+          visualType,
+        });
+      }
     }
 
     // Wake the queue once after all jobs are enqueued
