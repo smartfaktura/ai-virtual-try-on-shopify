@@ -1671,7 +1671,7 @@ export default function Generate() {
                 lastBalance = result.newBalance;
                 fireFirstgenStartedOnce({
                   jobId: result.jobId,
-                  productId: ((comboPayload as Record<string, unknown>)?.product_id as string | undefined) ?? productData?.id ?? null,
+                  productId: ((comboPayload as Record<string, unknown>)?.product_id as string | undefined) ?? null,
                   visualType: activeWorkflow?.slug || activeWorkflow?.name || 'workflow',
                 });
                 injectActiveJob(queryClient, { jobId: result.jobId, workflow_id: activeWorkflow?.id, workflow_name: activeWorkflow?.name, workflow_slug: activeWorkflow?.slug, product_name: productData.title, job_type: 'workflow', quality: 'high', imageCount: 1, batch_id: batchId });
