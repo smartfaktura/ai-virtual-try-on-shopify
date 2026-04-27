@@ -17,6 +17,28 @@ declare global {
 
 const DEBUG = import.meta.env.DEV;
 
+/**
+ * Runtime GTM debug toggle. Enable via:
+ *   localStorage.setItem('vovv_gtm_debug', '1')
+ * Wrapped in try/catch so storage errors never break tracking.
+ */
+export function isGtmDebugEnabled(): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** Safe localStorage.getItem — never throws. */
+export function safeLocalGet(key: string): string | null {
+  try {
+    return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
 // ---------- Storage with safe fallback ----------
 // If localStorage / sessionStorage is unavailable (private mode, quota,
 // SecurityError), fall back to in-memory Sets so dedup still works for the
@@ -174,6 +196,7 @@ export function gtmFirstGenerationCompleted(args: {
     generation_id: generationId,
     visual_type: visualType,
     result_count: resultCount,
+    page_location: typeof window !== 'undefined' ? window.location.href : '',
   });
 }
 
