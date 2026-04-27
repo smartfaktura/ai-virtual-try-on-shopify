@@ -1,93 +1,51 @@
-# Start & End Video — Finish Plan (UI + Wiring)
+# Fix: Models section crashed (single tile instead of two scrolling rows)
 
-Backend, prompt engine, validation, compatibility, credit pricing and the Kling edge function are already done. This plan completes the **UI layer + orchestration hook + route registration** so the workflow becomes fully usable end-to-end.
+## What's wrong
 
----
+On the homepage `Choose a model or create your own.` section, only the single "Brand Models" CTA tile is visible. The two opposite-direction scrolling marquee rows of model cards have collapsed to zero width.
 
-## What's missing (and what we'll add)
+## Root cause
 
-### 1. Route registration
-**File:** `src/App.tsx`
-- Add lazy import: `const StartEndVideo = lazy(() => import('@/pages/video/StartEndVideo'))`
-- Add route under the existing video group:
-  `<Route path="/video/start-end" element={<StartEndVideo />} />`
+Commit `1fda5a002` (Apr 26) refactored `src/components/landing/ModelShowcaseSection.tsx` to make tiles work inside the **mobile grid** by adding `w-full` to the card wrapper and changing the inner thumbnail to `aspect-[3/4] w-full`.
 
-### 2. Orchestration hook
-**File:** `src/hooks/useStartEndVideoProject.ts` (new)
+That works for the mobile `<div className="grid grid-cols-3">` (where each grid cell defines an explicit width). But the **desktop marquee row** is:
 
-Pipeline executed when user clicks **Generate Transition Video**:
-1. Run `runTransitionPreflight(startFile, endFile)` → block on errors, surface warnings
-2. Upload both images via `useFileUpload` → public URLs
-3. Call existing `analyze-video-input` edge function once per image (parallel)
-4. `resolveTransitionCompatibility(analysisStart, analysisEnd)` → tier + sharedElements
-5. `buildTransitionPrompt({ goal, refinement, preservation, tier, sharedElements, note, category })` → prompt + negativePrompt + cfgScale
-6. Insert `video_projects` row (`workflow_type: 'start_end'`, `settings_json` includes `tailImageUrl`, tier, goal)
-7. Insert two `video_inputs` rows: start (`input_role: 'main_reference'`), end (`input_role: 'end_reference'`)
-8. Call `useGenerateVideo.startGeneration({ imageUrl, tailImageUrl, prompt, negativePrompt, cfgScale, duration:'5', audioMode, aspectRatio:auto, workflowType:'startEnd' })`
-9. Expose: `pipelineStage`, `analysisStart`, `analysisEnd`, `compatibility`, `videoUrl`, `videoError`, `isAnalyzing`, `isGenerating`, `isComplete`, `reset()`
+```
+<div className="flex gap-3" style={{ width: 'max-content' }}>
+  <Link className="... flex-shrink-0 w-full"> ... </Link>   ← w-full = 0
+</div>
+```
 
-### 3. New page
-**File:** `src/pages/video/StartEndVideo.tsx` (new)
+`width: max-content` sizes the parent to its children, while `w-full` on a child resolves to `100%` of the parent's content width. That's a circular dependency: the browser falls back to a 0-width child. The `aspect-[3/4]` then computes height from width=0, so every tile collapses to nothing. Only the CTA shows a sliver because of intrinsic content padding.
 
-Mirrors `AnimateVideo.tsx` structure but slimmer (no bulk mode v1):
-- `PageHeader` (title: "Start & End Video", subtitle: "Cinematic transitions between two frames")
-- `<StartEndUploadPair>` — two upload slots
-- `<ValidationWarnings>` — preflight output
-- `<CompatibilityCard>` — appears after both analyses complete
-- `<TransitionGoalSelector>` — 8 presets
-- `<TransitionRefinementPanel>` — style, camera feel, motion strength, smoothness, realism
-- `<PreservationRulesPanel>` — reused, smart defaulted from tier + category
-- `<AudioModeSelector>` — silent / ambient
-- `Textarea` — optional Transition Note
-- `<TransitionSummaryCard>` — recap rows
-- Generate row: `<CreditEstimateBox>` + primary CTA (disabled until preflight pass + both analyses done)
-- `<VideoResultsPanel>` — reused for result + retry
-- `<NoCreditsModal>` — reused
+## Fix
 
-### 4. New components — `src/components/app/video/start-end/`
+Decouple desktop marquee sizing from mobile grid sizing. Restore intrinsic card widths on desktop while keeping the mobile grid working.
 
-- **`StartEndUploadPair.tsx`** — two `UploadSlot` cards side-by-side (desktop `grid-cols-2`) with absolute-centered chevron-right chip; stacked on mobile with arrow-down icon. Each slot supports drag/drop, paste, file picker, and "Pick from Library" (`LibraryPickerModal`). Shows per-slot upload progress + thumbnail preview + remove button.
+### Change 1 — `src/components/landing/ModelShowcaseSection.tsx`
 
-- **`CompatibilityCard.tsx`** — colored badge (Strong/Good/Risky/Weak using brand-safe variants — never alarming red), one-line reason, optional recommendation link (e.g. weak tier suggests "Try Ad Sequence instead").
+In `BrandModelCTA` and `ModelCardItem`:
 
-- **`TransitionGoalSelector.tsx`** — 2-col mobile / 4-col desktop card grid using `TRANSITION_GOALS` from `transitionMotionRecipes.ts`. Selected state matches `MotionGoalSelector` styling (ring + tinted bg).
+- Remove `w-full` from the outer wrapper `<Link>` / `<div>`.
+- Remove `aspect-[3/4] w-full` from the inner thumbnail and restore an explicit mobile width.
+- Inner card: `w-24 h-32 sm:w-32 sm:h-40 lg:w-36 lg:h-44` (the pre-regression sizing).
+- Keep `truncate max-w-full` on the name span and keep the `sizes` attribute as is — those are fine.
 
-- **`TransitionRefinementPanel.tsx`** — grouped segmented controls (2-col grid) for: Style, Camera Feel, Motion Strength (Low/Med/High → maps to `cfg_scale` 0.3/0.5/0.7), Smoothness, Realism. Each group uses `InfoTooltip`.
+This restores intrinsic 96/128/144 px tile widths everywhere. The mobile `grid-cols-3` cell is wider than 96 px on phones, so tiles still center and look correct in the mobile grid; if needed we can add `mx-auto` on the wrapper for perfect centering inside grid cells.
 
-- **`TransitionSummaryCard.tsx`** — muted-bg card with label · value rows for: Goal, Style, Motion, Camera, Audio, Tier, Note (if set), Estimated credits.
+### Change 2 — verify mobile grid still looks right
 
-### 5. Wiring details
+Mobile grid cell width at 375 px viewport ≈ (375 − 32 padding − 24 gaps) / 3 ≈ 106 px, and the card is 96 px → tiles sit slightly left-aligned. Add `items-center` (already present) + `w-24` is fine. If we want the tile to fill the grid cell on mobile only, use `w-full sm:w-32 lg:w-36` on the **inner** card and keep the wrapper intrinsic — but only when rendered inside the grid. Cleaner option: keep fixed `w-24 sm:w-32 lg:w-36` everywhere; the mobile grid still looks balanced.
 
-- `useGenerateVideo` already accepts `tailImageUrl` (done). Page passes it through.
-- `estimateStartEndCredits` already exported from `videoCreditPricing.ts` (done). Page calls it whenever refinement changes.
-- VideoHub card already links to `/app/video/start-end` (done) — only the route + page need to exist for it to work.
+## Technical notes
 
----
+- Files touched: `src/components/landing/ModelShowcaseSection.tsx` only.
+- No data, RLS, or backend changes — `mockModels`, `useModelSortOrder`, and the `model_sort_order` query are all healthy.
+- No CSS keyframe changes — `marquee-left` / `marquee-right` keyframes in `src/index.css` are intact.
+- Affects every place that renders `ModelsMarquee` (home, SEO landing pages) — they will all return to two opposite-scrolling rows of model thumbnails with the CTA card interleaved.
 
-## Acceptance criteria
+## Verification after build
 
-1. Navigating to `/app/video/start-end` renders the new page (no 404).
-2. Uploading two same-AR images shows compatibility tier + enables Generate.
-3. Different-AR images block generation with inline error from preflight.
-4. Generate triggers the pipeline; result video appears in `VideoResultsPanel` and is saved to Library.
-5. Edge function receives `image_tail` in payload (already supported); no `camera_control` is sent (already stripped).
-6. Credits are deducted via existing queue logic; failures refund via existing triggers.
-7. Mobile layout stacks slots with arrow-down divider; desktop shows side-by-side with chevron-right chip.
-
----
-
-## Files touched (final tally)
-
-**Create (7):**
-- `src/pages/video/StartEndVideo.tsx`
-- `src/hooks/useStartEndVideoProject.ts`
-- `src/components/app/video/start-end/StartEndUploadPair.tsx`
-- `src/components/app/video/start-end/CompatibilityCard.tsx`
-- `src/components/app/video/start-end/TransitionGoalSelector.tsx`
-- `src/components/app/video/start-end/TransitionRefinementPanel.tsx`
-- `src/components/app/video/start-end/TransitionSummaryCard.tsx`
-
-**Edit (1):**
-- `src/App.tsx` — add lazy import + route
-
-No DB migrations. No edge function changes. No new secrets.
+- Desktop (≥1024 px): two rows of ~144×176 tiles scrolling in opposite directions, CTA interleaved every 6 cards.
+- Tablet (640–1023 px): 128×160 tiles.
+- Mobile (<640 px): 3-column grid with 96×128 tiles, CTA in position 3.
