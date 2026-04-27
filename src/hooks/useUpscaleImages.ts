@@ -3,6 +3,7 @@ import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 
 export type UpscaleResolution = '2k' | '4k';
 
