@@ -271,20 +271,38 @@ export function gtmBeginCheckout(args: {
   value: number;          // already in major units (dollars/euros), not cents
   currency: string;       // will be uppercased
   pageLocation?: string;
-}): void {
-  const { userId, checkoutId, planName, value, currency, pageLocation } = args;
+  eventCallback?: () => void;
+  eventTimeout?: number;  // ms, default 1500
+}): { fired: boolean; reason?: string } {
+  const { userId, checkoutId, planName, value, currency, pageLocation, eventCallback, eventTimeout } = args;
   if (!userId || !checkoutId) {
+    const reason = !userId ? 'missing userId' : 'missing checkoutId';
     if (isGtmDebugEnabled() || DEBUG) {
       // eslint-disable-next-line no-console
-      console.log('[GTM DEBUG gtmBeginCheckout blocked]', {
-        reason: !userId ? 'missing userId' : 'missing checkoutId',
-        userId,
-        checkoutId,
-      });
+      console.log('[GTM DEBUG gtmBeginCheckout blocked]', { reason, userId, checkoutId });
     }
-    return;
+    if (eventCallback) {
+      try { eventCallback(); } catch { /* ignore */ }
+    }
+    return { fired: false, reason };
   }
-  const payload = {
+
+  // Dedup check (same Stripe session never re-fires)
+  const dedupKey = `checkout:${checkoutId}`;
+  const storeKey = `${STORAGE_PREFIX}${dedupKey}`;
+  if (localGet(storeKey)) {
+    if (isGtmDebugEnabled() || DEBUG) {
+      // eslint-disable-next-line no-console
+      console.log('[GTM DEBUG gtmBeginCheckout dedup-skip]', { dedupKey });
+    }
+    if (eventCallback) {
+      try { eventCallback(); } catch { /* ignore */ }
+    }
+    return { fired: false, reason: 'deduped' };
+  }
+  localSet(storeKey);
+
+  const payload: Record<string, unknown> = {
     event: 'begin_checkout',
     user_id: userId,
     checkout_id: checkoutId,
@@ -292,12 +310,29 @@ export function gtmBeginCheckout(args: {
     value,
     currency: upper(currency),
     page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
+    eventTimeout: typeof eventTimeout === 'number' ? eventTimeout : 1500,
   };
+
+  // GTM standard eventCallback: fired after all matching tags finish (or timeout)
+  let resolved = false;
+  if (eventCallback) {
+    payload.eventCallback = () => {
+      if (resolved) return;
+      resolved = true;
+      if (isGtmDebugEnabled() || DEBUG) {
+        // eslint-disable-next-line no-console
+        console.log('[GTM DEBUG gtmBeginCheckout eventCallback fired]', { checkoutId });
+      }
+      try { eventCallback(); } catch { /* ignore */ }
+    };
+  }
+
   if (isGtmDebugEnabled() || DEBUG) {
     // eslint-disable-next-line no-console
     console.log('[GTM DEBUG gtmBeginCheckout payload]', payload);
   }
-  fireOncePersistent(`checkout:${checkoutId}`, payload);
+  rawPush(payload);
+  return { fired: true };
 }
 
 /** @deprecated Use `gtmBeginCheckout` instead. Kept temporarily for backward compatibility. */
