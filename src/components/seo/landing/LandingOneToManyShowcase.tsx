@@ -1,4 +1,4 @@
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import type { LucideIcon } from 'lucide-react';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
@@ -69,10 +69,12 @@ export function LandingOneToManyShowcase({
                     return (
                       <div key={`${id}-${idx}`} className="relative overflow-hidden rounded-xl bg-muted/40">
                         <img
-                          src={getOptimizedUrl(src, { quality: 60 })}
+                          src={getOptimizedUrl(src, { width: 300, height: 300, quality: 70, resize: 'cover' })}
+                          srcSet={getResizedSrcSet(src, { widths: [200, 300, 400], aspect: [1, 1], quality: 70 })}
+                          sizes="(max-width: 1024px) 33vw, 130px"
                           alt={`${title} — example ${idx + 1}`}
-                          width={400}
-                          height={400}
+                          width={300}
+                          height={300}
                           loading="lazy"
                           decoding="async"
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
