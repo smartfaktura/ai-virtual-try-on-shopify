@@ -426,7 +426,14 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         if (typeof params.cfgScale === 'number') payload.cfg_scale = params.cfgScale;
         if (params.projectId) payload.project_id = params.projectId;
         if (params.workflowType) payload.workflow_type = params.workflowType;
-        if (params.cameraControlConfig) payload.camera_control_config = params.cameraControlConfig;
+        // Start & End workflow — Kling start+end frame interpolation.
+        // When image_tail is set, the edge function strips camera_control and uses the cfg_scale we send.
+        if (params.imageTailUrl) {
+          payload.image_tail = params.imageTailUrl;
+        } else if (params.cameraControlConfig) {
+          // Camera control is forwarded ONLY when there's no tail frame (Kling incompatibility).
+          payload.camera_control_config = params.cameraControlConfig;
+        }
 
         const result = await queue.enqueue({
           jobType: 'video' as any,

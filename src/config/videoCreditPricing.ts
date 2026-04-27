@@ -6,6 +6,11 @@ export const VIDEO_CREDIT_RULES = {
     premiumMotion: 2,   // add-on for complex motion recipes
     ambient: 4,         // ambient audio add-on
   },
+  startEnd: {
+    base5s: 12,         // slightly above animate — Kling image_tail jobs are pricier
+    ambient: 4,
+    premiumTransition: 2, // add-on for Luxury / Cinematic styles
+  },
   adSequence: {
     base2Shots: 24,
     extraShot: 8,
@@ -29,7 +34,7 @@ export const VIDEO_CREDIT_RULES = {
   },
 } as const;
 
-export type VideoWorkflowType = 'animate' | 'adSequence' | 'consistentModel';
+export type VideoWorkflowType = 'animate' | 'startEnd' | 'adSequence' | 'consistentModel';
 
 export interface CreditEstimateParams {
   workflowType: VideoWorkflowType;
@@ -38,18 +43,31 @@ export interface CreditEstimateParams {
   motionRecipe?: string;
   shotCount?: number;
   consistencyLevel?: 'standard' | 'strong' | 'maximum';
+  /** For startEnd — premium styles cost slightly more */
+  transitionStyle?: string;
 }
 
 const PREMIUM_MOTION_RECIPES = ['product_orbit', 'premium_handheld'];
+const PREMIUM_TRANSITION_STYLES = ['cinematic', 'editorial'];
 
 export function estimateCredits(params: CreditEstimateParams): number {
-  const { workflowType, duration, audioMode, motionRecipe, shotCount = 2, consistencyLevel = 'standard' } = params;
+  const { workflowType, duration, audioMode, motionRecipe, shotCount = 2, consistencyLevel = 'standard', transitionStyle } = params;
 
   if (workflowType === 'animate') {
     const rules = VIDEO_CREDIT_RULES.animate;
     let cost = duration === '10' ? rules.base10s : rules.base5s;
     if (motionRecipe && PREMIUM_MOTION_RECIPES.includes(motionRecipe)) {
       cost += rules.premiumMotion;
+    }
+    if (audioMode === 'ambient') cost += rules.ambient;
+    return cost;
+  }
+
+  if (workflowType === 'startEnd') {
+    const rules = VIDEO_CREDIT_RULES.startEnd;
+    let cost = rules.base5s;
+    if (transitionStyle && PREMIUM_TRANSITION_STYLES.includes(transitionStyle)) {
+      cost += rules.premiumTransition;
     }
     if (audioMode === 'ambient') cost += rules.ambient;
     return cost;
@@ -82,3 +100,4 @@ export function estimateBulkCredits(params: CreditEstimateParams, imageCount: nu
   const perImage = estimateCredits(params);
   return { perImage, total: perImage * imageCount };
 }
+
