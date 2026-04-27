@@ -49,6 +49,8 @@ interface UseGenerateVideoResult {
     workflowType?: string;
     cameraMotion?: string;
     cameraControlConfig?: { type: string; config: Record<string, number> };
+    /** For start_end workflow — premium styles add a surcharge backend-side. */
+    transitionStyle?: string;
   }) => void;
   reset: () => void;
   history: GeneratedVideo[];
