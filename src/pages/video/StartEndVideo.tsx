@@ -274,6 +274,37 @@ export default function StartEndVideo() {
         </span>
       </div>
 
+      {/* Recent completed transition — recovers a previous result the user navigated away from */}
+      {project.recentResult && !project.isGenerating && !project.isComplete && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] shadow-sm p-4 sm:px-5 sm:py-4 flex items-center gap-3 sm:gap-4">
+          <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Play className="h-4 w-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">Your last transition is ready</p>
+            <p className="text-[11.5px] text-muted-foreground">
+              Generated {new Date(project.recentResult.createdAt).toLocaleString()} · open it without re-running.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            className="rounded-full px-4 h-9 text-xs"
+            onClick={project.hydrateFromRecent}
+          >
+            View video
+          </Button>
+          <button
+            type="button"
+            aria-label="Dismiss recent result"
+            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 inline-flex items-center justify-center transition-colors"
+            onClick={project.dismissRecentResult}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Upload pair */}
       <StartEndUploadPair
         start={start}
