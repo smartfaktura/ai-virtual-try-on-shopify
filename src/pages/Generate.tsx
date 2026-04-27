@@ -403,6 +403,41 @@ export default function Generate() {
   const prefillProductId = searchParams.get('product');
   const prefillAppliedRef = useRef(false);
 
+  // GTM: component-level guard so first_generation_started fires at most once
+  // per page lifetime. The gtm helper itself dedupes per user_id across sessions.
+  const firstgenStartedFiredRef = useRef(false);
+  const fireFirstgenStartedOnce = useCallback((opts: {
+    jobId: string;
+    productId: string | null;
+    visualType: string;
+  }) => {
+    if (firstgenStartedFiredRef.current) return;
+    if (!user?.id || !opts.jobId) return;
+    if (isGtmDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.log('[GTM DEBUG first_generation_started]', {
+        flow: 'generate',
+        hasUser: true,
+        userId: user.id,
+        jobId: opts.jobId,
+        isError: false,
+        productId: opts.productId,
+        visualType: opts.visualType,
+        dedupKey: `gtm:firstgen-started:${user.id}`,
+        dedupExists: safeLocalGet(`gtm:firstgen-started:${user.id}`),
+        willFire: true,
+      });
+    }
+    gtmFirstGenerationStarted({
+      userId: user.id,
+      productId: opts.productId,
+      generationId: opts.jobId,
+      visualType: opts.visualType,
+    });
+    // Set ONLY after a successful jobId AND after calling the helper.
+    firstgenStartedFiredRef.current = true;
+  }, [user]);
+
   const { data: brandProfiles = [] } = useQuery({
     queryKey: ['brand-profiles'],
     queryFn: async () => {
