@@ -211,6 +211,54 @@ export function gtmPricingPageView(args: { userId?: string | null; path: string 
   });
 }
 
+// ---------- 5b. pricing_modal_view ----------
+// Fires when an in-app pricing/upgrade/buy-credits/limit modal actually opens
+// (false → true transition). Distinct from pricing_page_view (which is the
+// /pricing route). Deduped per (modal_name, path) for 15 min via sessionStorage
+// (with safe in-memory fallback). Privacy-safe payload only.
+const PRICING_MODAL_TTL_MS = 15 * 60 * 1000;
+export function gtmPricingModalView(args: {
+  userId?: string | null;
+  modalName: string;
+  source?: string | null;
+  currentPlan?: string | null;
+  pageLocation?: string;
+}): void {
+  const { userId, modalName, source, currentPlan, pageLocation } = args;
+  if (!modalName) return;
+  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const dedupKey = `pricing-modal:${modalName}:${path}`;
+  const storeKey = `${SESSION_PREFIX}${dedupKey}`;
+  const now = Date.now();
+  const last = sessionGetTs(storeKey);
+  const dedupHit = last !== null && now - last < PRICING_MODAL_TTL_MS;
+  const willFire = !dedupHit;
+
+  if (isGtmDebugEnabled() || DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log('[GTM DEBUG pricing_modal_view]', {
+      modalName,
+      source: source ?? undefined,
+      currentPlan: currentPlan ?? undefined,
+      path,
+      dedupKey,
+      dedupHit,
+      willFire,
+    });
+  }
+
+  if (!willFire) return;
+  sessionSetTs(storeKey, now);
+  rawPush({
+    event: 'pricing_modal_view',
+    ...(userId ? { user_id: userId } : {}),
+    modal_name: modalName,
+    ...(source ? { source } : {}),
+    ...(currentPlan ? { current_plan: currentPlan } : {}),
+    page_location: pageLocation || (typeof window !== 'undefined' ? window.location.href : ''),
+  });
+}
+
 // ---------- 6. checkout_started ----------
 // Caller must invoke only after Stripe has returned a session id.
 export function gtmCheckoutStarted(args: {
