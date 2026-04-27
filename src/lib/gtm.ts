@@ -260,64 +260,77 @@ export function gtmPricingModalView(args: {
 }
 
 // ---------- 6. begin_checkout ----------
-// Caller must invoke only AFTER create-checkout returns a Stripe session id
-// (i.e. data.url + data.sessionId are both present). Never fire on modal open
-// or button click. Dedup keyed by Stripe session id — same session never
-// re-fires; a new session does.
+// Fires the moment the user commits to checkout (button click → before the
+// `create-checkout` backend call). This guarantees the event reaches GTM /
+// Tag Assistant before any redirect tears down the page, and is independent
+// of Stripe session creation latency.
+//
+// Deduped per (planName + checkoutMode + path) for ~10s so double-clicks do
+// not fire twice but a real retry still works.
+const BEGIN_CHECKOUT_DEDUP_MS = 10_000;
 export function gtmBeginCheckout(args: {
-  userId: string;
-  checkoutId: string;
+  userId?: string | null;
   planName: string;
-  value: number;          // already in major units (dollars/euros), not cents
-  currency: string;       // will be uppercased
+  checkoutMode: 'subscription' | 'payment';
+  value: number;          // major units (dollars/euros), not cents
+  currency?: string;      // will be uppercased; defaults to USD
   pageLocation?: string;
 }): { fired: boolean; reason?: string } {
-  const { userId, checkoutId, planName, value, currency, pageLocation } = args;
-  if (!userId || !checkoutId) {
-    const reason = !userId ? 'missing userId' : 'missing checkoutId';
-    if (isGtmDebugEnabled() || DEBUG) {
-      // eslint-disable-next-line no-console
-      console.log('[GTM DEBUG gtmBeginCheckout blocked]', { reason, userId, checkoutId });
-    }
-    return { fired: false, reason };
+  const { userId, planName, checkoutMode, value, currency, pageLocation } = args;
+  if (!planName) {
+    return { fired: false, reason: 'missing planName' };
   }
 
-  // Dedup check (same Stripe session never re-fires)
-  const dedupKey = `checkout:${checkoutId}`;
-  const storeKey = `${STORAGE_PREFIX}${dedupKey}`;
-  if (localGet(storeKey)) {
+  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const dedupKey = `begin-checkout:${planName}:${checkoutMode}:${path}`;
+  const storeKey = `${SESSION_PREFIX}${dedupKey}`;
+  const now = Date.now();
+  const last = sessionGetTs(storeKey);
+  if (last !== null && now - last < BEGIN_CHECKOUT_DEDUP_MS) {
     if (isGtmDebugEnabled() || DEBUG) {
       // eslint-disable-next-line no-console
-      console.log('[GTM DEBUG gtmBeginCheckout dedup-skip]', { dedupKey });
+      console.log('[GTM DEBUG gtmBeginCheckout dedup-skip]', { dedupKey, sinceMs: now - last });
     }
     return { fired: false, reason: 'deduped' };
   }
-  localSet(storeKey);
+  sessionSetTs(storeKey, now);
 
   const resolvedPageLocation =
     pageLocation || (typeof window !== 'undefined' ? window.location.href : '');
-  const upperCurrency = upper(currency);
+  const upperCurrency = upper(currency || 'USD');
 
-  // Reset stale modal-only dataLayer fields so GTM Preview doesn't visually
-  // attribute pricing_modal_view fields (modal_name, source, current_plan)
-  // to this begin_checkout entry.
+  // Reset stale modal-only fields + GA4 ecommerce object before pushing.
   if (typeof window !== 'undefined') {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
       modal_name: undefined,
       source: undefined,
       current_plan: undefined,
+      ecommerce: null,
     });
   }
 
+  // GA4-recognized ecommerce shape — Tag Assistant / GTM Preview surface this
+  // reliably even when no purpose-built tag is bound to begin_checkout.
   const payload: Record<string, unknown> = {
     event: 'begin_checkout',
-    user_id: userId,
-    checkout_id: checkoutId,
+    ...(userId ? { user_id: userId } : {}),
     plan_name: planName,
-    value,
-    currency: upperCurrency,
+    checkout_mode: checkoutMode,
     page_location: resolvedPageLocation,
+    ecommerce: {
+      currency: upperCurrency,
+      value,
+      items: [
+        {
+          item_id: planName,
+          item_name: planName,
+          item_category: checkoutMode,
+          price: value,
+          quantity: 1,
+        },
+      ],
+    },
   };
 
   const dlBefore =
@@ -327,23 +340,22 @@ export function gtmBeginCheckout(args: {
 
   rawPush(payload);
 
-  // Also emit through gtag so Google Tag Assistant / GA4-style preview
-  // surfaces this event reliably (the live Google tag G-V3BBTYZXS1 is loaded
-  // in index.html and shares the same dataLayer as GTM-P29VVFW3).
+  // Also emit through gtag for GA4 / Google Ads pickup (shares the same
+  // dataLayer as GTM-P29VVFW3 via the snippet in index.html).
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
     try {
       window.gtag('event', 'begin_checkout', {
-        user_id: userId,
-        checkout_id: checkoutId,
-        transaction_id: checkoutId,
+        ...(userId ? { user_id: userId } : {}),
         plan_name: planName,
+        checkout_mode: checkoutMode,
         value,
         currency: upperCurrency,
         page_location: resolvedPageLocation,
         items: [
           {
-            item_id: checkoutId,
+            item_id: planName,
             item_name: planName,
+            item_category: checkoutMode,
             price: value,
             quantity: 1,
           },
@@ -375,15 +387,36 @@ export function gtmBeginCheckout(args: {
   return { fired: true };
 }
 
-/** @deprecated Use `gtmBeginCheckout` instead. Kept temporarily for backward compatibility. */
-export function gtmCheckoutStarted(args: {
-  userId: string;
+/** Optional debug-only signal that the Stripe session was created. Not a
+ *  marketing conversion event — never bind it to a tag. */
+export function gtmCheckoutSessionCreated(args: {
+  userId?: string | null;
   checkoutId: string;
   planName: string;
-  value: number;
-  currency: string;
 }): void {
-  gtmBeginCheckout(args);
+  if (!isGtmDebugEnabled() && !DEBUG) return;
+  rawPush({
+    event: 'checkout_session_created',
+    ...(args.userId ? { user_id: args.userId } : {}),
+    checkout_id: args.checkoutId,
+    plan_name: args.planName,
+  });
+}
+
+/** @deprecated Use `gtmBeginCheckout` instead. Kept temporarily for backward compatibility. */
+export function gtmCheckoutStarted(args: {
+  userId?: string | null;
+  planName: string;
+  value: number;
+  currency?: string;
+}): void {
+  gtmBeginCheckout({
+    userId: args.userId,
+    planName: args.planName,
+    checkoutMode: 'subscription',
+    value: args.value,
+    currency: args.currency,
+  });
 }
 
 // ---------- 7. subscription_purchase ----------
