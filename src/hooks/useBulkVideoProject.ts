@@ -6,6 +6,7 @@ import { resolveVideoStrategy, type VideoAnalysis, type WorkflowType } from '@/l
 import { CAMERA_MOTIONS } from '@/lib/videoMotionRecipes';
 import { buildVideoPrompt } from '@/lib/videoPromptTemplates';
 import { enqueueWithRetry, isEnqueueError, paceDelay, sendWake, getAuthToken } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 
 interface BulkImage {
   id: string;
@@ -67,6 +68,7 @@ export function useBulkVideoProject() {
     const batchId = crypto.randomUUID();
     let completed = 0;
     let failed = 0;
+    let firstgenFired = false;
 
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
@@ -215,6 +217,19 @@ export function useBulkVideoProject() {
           updateItem(img.id, 'failed');
           failed++;
           continue;
+        }
+
+        if (!firstgenFired && userId && result?.jobId) {
+          if (import.meta.env.DEV) {
+            console.debug('[GTM:firstgen-started] bulk_video', { jobId: result.jobId });
+          }
+          gtmFirstGenerationStarted({
+            userId,
+            productId: null,
+            generationId: result.jobId,
+            visualType: 'bulk_video',
+          });
+          firstgenFired = true;
         }
 
         updateItem(img.id, 'complete');

@@ -6,6 +6,7 @@ import { toast } from '@/lib/brandedToast';
 import { generateShotPlan, FILM_TYPE_OPTIONS } from '@/lib/shortFilmPlanner';
 import { buildShotPrompt, estimateShortFilmCredits, distributeShotDurations, TONE_PRESETS } from '@/lib/shortFilmPromptBuilder';
 import { enqueueWithRetry, isEnqueueError, getAuthToken, paceDelay, sendWake } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 import type {
   FilmType,
   StoryStructure,
@@ -94,6 +95,7 @@ function getEffectiveLayers(settings: ShortFilmSettings): AudioLayers {
 export function useShortFilmProject() {
   const { user } = useAuth();
   const { balance, refreshBalance } = useCredits();
+  const firstgenFiredRef = useRef(false);
 
   const [step, setStep] = useState<ShortFilmStep>('film_type');
   const [filmType, setFilmTypeRaw] = useState<FilmType | null>(null);
@@ -539,6 +541,19 @@ export function useShortFilmProject() {
 
       if (isEnqueueError(result)) {
         throw new Error(result.message);
+      }
+
+      if (!firstgenFiredRef.current && user?.id && result?.jobId) {
+        if (import.meta.env.DEV) {
+          console.debug('[GTM:firstgen-started] short_film', { jobId: result.jobId });
+        }
+        gtmFirstGenerationStarted({
+          userId: user.id,
+          productId: null,
+          generationId: result.jobId,
+          visualType: 'short_film',
+        });
+        firstgenFiredRef.current = true;
       }
 
       sendWake(token);
@@ -1066,6 +1081,19 @@ export function useShortFilmProject() {
 
         if (isEnqueueError(result)) {
           throw new Error(result.message);
+        }
+
+        if (!firstgenFiredRef.current && user?.id && result?.jobId) {
+          if (import.meta.env.DEV) {
+            console.debug('[GTM:firstgen-started] short_film', { jobId: result.jobId });
+          }
+          gtmFirstGenerationStarted({
+            userId: user.id,
+            productId: null,
+            generationId: result.jobId,
+            visualType: 'short_film',
+          });
+          firstgenFiredRef.current = true;
         }
 
         sendWake(token);

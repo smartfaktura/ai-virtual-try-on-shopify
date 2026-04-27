@@ -3,6 +3,7 @@ import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 
 export type UpscaleResolution = '2k' | '4k';
 
@@ -93,6 +94,18 @@ export function useUpscaleImages() {
         }
 
         jobIds.push(result.jobId);
+
+        if (jobIds.length === 1 && user?.id && result?.jobId) {
+          if (import.meta.env.DEV) {
+            console.debug('[GTM:firstgen-started] upscale', { jobId: result.jobId });
+          }
+          gtmFirstGenerationStarted({
+            userId: user.id,
+            productId: null,
+            generationId: result.jobId,
+            visualType: 'upscale',
+          });
+        }
       }
 
       if (jobIds.length > 0) {

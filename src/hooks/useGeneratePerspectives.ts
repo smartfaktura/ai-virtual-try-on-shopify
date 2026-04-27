@@ -3,6 +3,7 @@ import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 
 interface VariationInput {
   label: string;
@@ -359,6 +360,7 @@ export function useGeneratePerspectives() {
     let enqueuedCount = 0;
     const jobs: PerspectiveJobInfo[] = [];
     let lastNewBalance: number | null = null;
+    let firstgenFired = false;
 
     let shouldStop = false;
     for (const product of products) {
@@ -477,6 +479,19 @@ export function useGeneratePerspectives() {
               enqueuedCount++;
               enqueued = true;
               setProgress(Math.round((enqueuedCount / totalJobs) * 100));
+
+              if (!firstgenFired && user?.id && result?.jobId) {
+                if (import.meta.env.DEV) {
+                  console.debug('[GTM:firstgen-started] perspectives', { jobId: result.jobId, productId: product.id });
+                }
+                gtmFirstGenerationStarted({
+                  userId: user.id,
+                  productId: product.id ?? null,
+                  generationId: result.jobId,
+                  visualType: 'perspectives',
+                });
+                firstgenFired = true;
+              }
               break;
             } catch (err) {
               console.error('Enqueue error:', err);

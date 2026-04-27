@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/brandedToast';
 import { enqueueWithRetry, isEnqueueError, sendWake, getAuthToken, paceDelay } from '@/lib/enqueueGeneration';
+import { gtmFirstGenerationStarted } from '@/lib/gtm';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import {
   detectProductCategory, buildSessionLock, buildProductLookLock,
@@ -390,6 +391,18 @@ export function useCatalogGenerate() {
       }
       console.error(`[catalog] Enqueue error for ${productTitle}/${shotId}:`, result.message);
       return null;
+    }
+
+    if (user?.id && result?.jobId) {
+      if (import.meta.env.DEV) {
+        console.debug('[GTM:firstgen-started] catalog', { jobId: result.jobId, productId, shotId });
+      }
+      gtmFirstGenerationStarted({
+        userId: user.id,
+        productId: productId ?? null,
+        generationId: result.jobId,
+        visualType: 'catalog',
+      });
     }
 
     return {
