@@ -204,8 +204,7 @@ export default function VideoHub() {
           description="Create a smooth video between a start image and an end image"
           bestFor={['Product reveals', 'Before / after', 'Smooth transitions']}
           to="/app/video/start-end"
-          disabled
-          comingSoon
+          beta
         />
         <VideoWorkflowCard
           icon={Layers}
