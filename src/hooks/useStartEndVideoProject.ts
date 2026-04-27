@@ -259,6 +259,7 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
         }
 
         // 5. Trigger generation via existing hook
+        lastProjectIdRef.current = project.id;
         setPipelineStage('queued');
         generateVideo.startGeneration({
           imageUrl: params.startImageUrl,
@@ -272,7 +273,8 @@ export function useStartEndVideoProject(): UseStartEndVideoProjectResult {
           withAudio: params.audioMode === 'ambient',
           projectId: project.id,
           workflowType: 'start_end',
-        });
+          transitionStyle: params.style,
+        } as Parameters<typeof generateVideo.startGeneration>[0]);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to start transition';
         setPipelineError(msg);
