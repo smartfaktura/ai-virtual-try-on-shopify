@@ -251,7 +251,7 @@ export function BuyCreditsModal() {
                             <Button
                               variant={pack.popular ? 'default' : 'outline'}
                               className="w-full min-h-[44px] text-sm font-medium gap-2"
-                              onClick={() => handlePurchase(pack.packId, pack.stripePriceId)}
+                              onClick={() => handlePurchase(pack.packId, pack.stripePriceId, pack.credits)}
                               disabled={!!topUpLoadingId || switchLoading}
                             >
                               {topUpLoadingId === pack.packId ? (
