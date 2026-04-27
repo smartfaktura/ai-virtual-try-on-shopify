@@ -146,7 +146,12 @@ export function LandingHeroSEO({
 
   const mid = Math.ceil(resolved.length / 2);
   const row1 = resolved.slice(0, mid);
-  const row2 = resolved.slice(mid);
+  let row2 = resolved.slice(mid);
+  // Pad row2 from row1 so both rows have identical length and seam math.
+  if (row2.length < row1.length && row1.length > 0) {
+    const need = row1.length - row2.length;
+    for (let i = 0; i < need; i++) row2.push(row1[i % row1.length]);
+  }
 
   return (
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
