@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
+import { toSignedUrl } from '@/lib/signedUrl';
 import { useGenerateVideo } from '@/hooks/useGenerateVideo';
 import {
   buildTransitionPrompt,
@@ -11,6 +12,13 @@ import {
   type TransitionCompatibility,
 } from '@/lib/transitionCompatibilityResolver';
 import type { VideoAnalysis } from '@/lib/videoStrategyResolver';
+
+export interface RecentStartEndResult {
+  id: string;
+  videoUrl: string;
+  sourceImageUrl: string | null;
+  createdAt: string;
+}
 
 export type StartEndStage =
   | 'idle'
