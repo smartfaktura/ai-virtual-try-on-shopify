@@ -32,7 +32,19 @@ function calculateCreditCost(
     const dur = String(payload?.duration || "5");
     const audio = String(payload?.audioMode || "silent");
     const motion = String(payload?.cameraMotion || "");
+    const wf = String(payload?.workflow_type || "");
     if (jobType === "video_multishot") return 40; // flat rate for short film / multi-shot
+
+    // Start & End workflow: Kling image_tail jobs are slightly pricier and
+    // editorial / cinematic styles add a premium-transition surcharge.
+    if (wf === "start_end") {
+      let cost = 12; // 5s base
+      const style = String(payload?.transition_style || payload?.style || "");
+      if (["cinematic", "editorial"].includes(style)) cost += 2;
+      if (audio === "ambient") cost += 4;
+      return cost;
+    }
+
     let cost = dur === "10" ? 18 : 10;
     if (audio === "ambient") cost += 4;
     if (["product_orbit", "premium_handheld"].includes(motion)) cost += 2;
