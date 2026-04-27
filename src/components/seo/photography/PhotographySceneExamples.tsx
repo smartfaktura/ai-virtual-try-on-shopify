@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 
@@ -58,7 +58,9 @@ export function PhotographySceneExamples() {
               className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sm bg-muted/30"
             >
               <img
-                src={getOptimizedUrl(ex.src, { quality: 60 })}
+                src={getOptimizedUrl(ex.src, { width: 600, height: 800, quality: 82, resize: 'cover' })}
+                srcSet={getResizedSrcSet(ex.src, { widths: [400, 600, 800, 1000], aspect: [3, 4], quality: 82 })}
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 280px"
                 alt={ex.alt}
                 loading="lazy"
                 decoding="async"
