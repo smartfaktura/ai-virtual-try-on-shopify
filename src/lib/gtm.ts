@@ -396,9 +396,72 @@ export function gtmCheckoutStarted(args: {
   });
 }
 
-// ---------- 7. subscription_purchase ----------
-// Caller MUST verify a *new* transaction_id (preferring invoice → session →
-// subscription) — never fire just because subscription_status === 'active'.
+// ---------- 7. purchase (canonical) ----------
+// Single verified purchase event for both subscriptions and credit packs.
+// Caller MUST verify the transaction server-side (via check-subscription)
+// BEFORE calling this. Persistent dedup on transaction_id ensures the same
+// purchase never fires twice across refreshes / revisits / event names.
+export type PurchaseType = 'subscription' | 'credits';
+
+export function gtmPurchase(args: {
+  userId: string;
+  transactionId: string;
+  purchaseType: PurchaseType;
+  planName: string;
+  value: number;
+  currency: string;
+  pageLocation?: string;
+}): boolean {
+  const { userId, transactionId, purchaseType, planName, value, currency, pageLocation } = args;
+  const dedupKey = `purchase:${transactionId}`;
+  const storeKey = `${STORAGE_PREFIX}${dedupKey}`;
+  const dedupExists = !!localGet(storeKey);
+  const willFire = !!(userId && transactionId) && !dedupExists;
+
+  const resolvedPageLocation =
+    pageLocation || (typeof window !== 'undefined' ? window.location.href : '');
+
+  if (isGtmDebugEnabled() || DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log('[GTM DEBUG purchase verification]', {
+      transactionId,
+      purchaseType,
+      planName,
+      value,
+      currency,
+      dedupKey,
+      dedupExists,
+      willFire,
+    });
+  }
+
+  if (!willFire) return false;
+
+  const payload: Record<string, unknown> = {
+    event: 'purchase',
+    user_id: userId,
+    transaction_id: transactionId,
+    purchase_type: purchaseType,
+    plan_name: planName,
+    value,
+    currency: upper(currency),
+    page_location: resolvedPageLocation,
+  };
+
+  if (isGtmDebugEnabled() || DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log('[GTM DEBUG purchase payload]', payload);
+  }
+
+  localSet(storeKey);
+  rawPush(payload);
+  return true;
+}
+
+/**
+ * @deprecated Use `gtmPurchase` instead. Kept as a thin wrapper that emits
+ * the canonical `purchase` event with `purchase_type: 'subscription'`.
+ */
 export function gtmSubscriptionPurchase(args: {
   userId: string;
   transactionId: string;
@@ -406,15 +469,13 @@ export function gtmSubscriptionPurchase(args: {
   value: number;
   currency: string;
 }): void {
-  const { userId, transactionId, planName, value, currency } = args;
-  if (!userId || !transactionId) return;
-  fireOncePersistent(`purchase:${transactionId}`, {
-    event: 'subscription_purchase',
-    user_id: userId,
-    transaction_id: transactionId,
-    plan_name: planName,
-    value,
-    currency: upper(currency),
+  gtmPurchase({
+    userId: args.userId,
+    transactionId: args.transactionId,
+    purchaseType: 'subscription',
+    planName: args.planName,
+    value: args.value,
+    currency: args.currency,
   });
 }
 
