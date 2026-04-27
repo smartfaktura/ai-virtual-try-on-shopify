@@ -1,95 +1,96 @@
 ## Goal
-Replace messy purchase tracking with one verified GTM event: `purchase`. Remove URL-only firing of `gtagPurchase` and Meta `trackPurchase`. Cover both subscriptions and credit packs. No Google Ads tag in code.
 
-## Current state (from audit)
-- `CreditContext` payment-success handler does:
-  1. `trackPurchase(value, 'USD')` — Meta, URL-amount only, no dedup, no eventID
-  2. `gtagPurchase(value, 'USD')` — fires `purchase` + `ads_conversion_PURCHASE_1`, no `transaction_id`
-  3. `gtmSubscriptionPurchase(...)` after `checkSubscription` confirms `active` (verified, deduped, but only subs)
-- Credit packs are fulfilled inside `check-subscription` (`add_purchased_credits`), but no purchase event is fired and no pack-level `transaction_id` / price are returned to the client.
-- `subscription_purchase` is the only verified event today.
+Make `begin_checkout` and `purchase` dataLayer events carry stable Stripe IDs as **top-level fields** so GTM variables resolve cleanly (no more `undefined` for `checkout_id` / `transaction_id`), and put `purchase` into the same GA4 `ecommerce` shape that `begin_checkout` already uses.
+
+Dedup, verification gating, and PII rules stay exactly as they are today.
+
+---
+
+## Current state (verified by reading the code)
+
+- `begin_checkout` is pushed in **`src/lib/gtm.ts` → `gtmBeginCheckout`**, called from **`src/contexts/CreditContext.tsx` → `startCheckout`** *before* the `create-checkout` call. It already includes `ecommerce.value` / `ecommerce.currency`, but **no `checkout_id`** (Stripe session doesn't exist yet at that moment).
+- `purchase` is pushed in **`src/lib/gtm.ts` → `gtmPurchase`**, called from **`CreditContext.tsx`** inside the `?payment=success` handler, **after** `check-subscription` returns and verifies the transaction. It already sets `transaction_id`, `value`, `currency` as top-level fields and dedupes on `gtm:purchase:{transaction_id}` in localStorage — but `value` / `currency` are **not** wrapped in `ecommerce`, so GTM "Ecommerce — value" variables read `undefined`.
+- Transaction id is already chosen via `pickTransactionId` with the exact priority requested: `latest_invoice_id` (subs) → `payment_intent_id` (credit packs, via `lastCreditPackPurchase`) → `session_id` → `subscription_id`.
+- Purchase is already gated on backend verification (`subscriptionStatus === 'active'` for subs, `lastCreditPackPurchase` only set on the call that flips Stripe `metadata.fulfilled` → `true` for credit packs). Refresh ⇒ `lastCreditPackPurchase` is `null` and the dedup key blocks re-fire. ✅
+
+So the only real gaps are: **(a) attach `checkout_id` to `begin_checkout` once Stripe returns it, and (b) add the `ecommerce` block to `purchase`**.
+
+---
 
 ## Changes
 
-### 1. Backend — `supabase/functions/check-subscription/index.ts`
-Extend the response so the client can fire one verified `purchase` event for credit packs too.
+### 1. `src/lib/gtm.ts`
 
-When iterating `sessions.data` and detecting an unfulfilled paid `mode: 'payment'` session (existing loop), capture for the most recent one:
-```text
-last_credit_pack = {
-  payment_intent_id (or session.id fallback),
-  session_id,
-  amount: session.amount_total / 100,
-  currency: session.currency,
-  credits: CREDIT_PACK_AMOUNTS[priceId],
-  plan_name: `${credits} Credits`,
-}
-```
-Return as new field `last_credit_pack_purchase` (null if none new in this call). Subscription fields stay as-is.
+**`gtmBeginCheckout`**
+- Add optional `checkoutId?: string | null` arg.
+- When present, include `checkout_id: checkoutId` as a top-level field in the payload (alongside `plan_name`, `checkout_mode`, `page_location`, `ecommerce`).
+- No change to the dedup key (still `planName + checkoutMode + path`, 10s TTL) — we don't want a second push just because the session id arrived later.
 
-This means: a credit pack purchase is "verified" only on the same call where we transition the session to `fulfilled=true`, so refresh won't re-emit (Stripe metadata gate already exists).
-
-### 2. `src/lib/gtm.ts`
-Add new canonical helper:
-```ts
-gtmPurchase({
-  userId, transactionId,
-  purchaseType: 'subscription' | 'credits',
-  planName, value, currency,
-  pageLocation?
-})
-```
-- Pushes:
+**`gtmPurchase`**
+- Keep `transaction_id`, `purchase_type`, `plan_name`, `user_id`, `page_location` as top-level fields.
+- Move `value` / `currency` into a GA4-shaped `ecommerce` block (mirrors `begin_checkout`):
   ```
-  {
-    event: 'purchase',
-    user_id, transaction_id,
-    purchase_type, plan_name,
-    value, currency: UPPER,
-    page_location
+  ecommerce: {
+    transaction_id,
+    currency: UPPER,
+    value,
+    items: [{ item_id: planName, item_name: planName, item_category: purchaseType, price: value, quantity: 1 }]
   }
   ```
-- Persistent dedup key: `purchase:{transactionId}` (reuses existing `fireOncePersistent` so it shares the same dedup namespace as the old `subscription_purchase` — same `transaction_id` will not fire twice across event names).
-- Debug logs gated by `vovv_gtm_debug`:
-  - `[GTM DEBUG purchase verification]` with sessionId / paymentStatus / subscriptionStatus / txId / dedupKey / dedupExists / willFire
-  - `[GTM DEBUG purchase payload]` with the final payload
+- Push an `ecommerce: null` reset just before the event (same pattern `gtmBeginCheckout` uses) so GA4 ecommerce vars don't bleed across events.
+- Keep persistent dedup on `gtm:purchase:{transaction_id}` exactly as today.
+- No PII added. No email / product image / prompt fields.
 
-Mark `gtmSubscriptionPurchase` as `@deprecated` and re-implement it internally as a thin wrapper around `gtmPurchase({ purchaseType: 'subscription' })` so any external caller keeps working but emits the new canonical event. Remove the call from `CreditContext` (replaced below).
+**`gtmCheckoutSessionCreated`**
+- Already carries `checkout_id`. Leave as the debug-only signal it is.
 
-### 3. `src/contexts/CreditContext.tsx` — payment=success handler
-Rewrite the `?payment=success` branch:
-- Read `session_id` from URL.
-- **Remove**: `trackPurchase(value, 'USD')` and `gtagPurchase(value, 'USD')` calls. Drop the `gtagPurchase` and `trackPurchase` imports.
-- Always show toast + clean URL.
-- Wait briefly, then `await checkSubscription()` (server-side Stripe verification).
-- After verification, read `latestSubscriptionMetaRef.current` extended with `lastCreditPackPurchase`.
-- Decide event:
-  - If `lastCreditPackPurchase` exists and `returnedSessionId === lastCreditPackPurchase.session_id` (or no constraint mismatch) → fire `gtmPurchase({ purchaseType: 'credits', transactionId: pack.payment_intent_id || pack.session_id, planName: pack.plan_name, value: pack.amount, currency: pack.currency })`.
-  - Else if `meta.subscriptionStatus === 'active'` → resolve `transactionId = pickTransactionId({ invoiceId, sessionId: returnedSessionId || latestSessionId, subscriptionId })` → fire `gtmPurchase({ purchaseType: 'subscription', planName: meta.plan, value: meta.amount ?? 0, currency: meta.currency || 'USD' })`.
-  - Else: do nothing (debug-log "willFire=false, reason=unverified").
-- Dedup is enforced inside the helper via `purchase:{transaction_id}`.
+### 2. `src/contexts/CreditContext.tsx` → `startCheckout`
 
-### 4. Meta Pixel
-Choose **Option A (preferred)**: do not fire Meta `Purchase` from app code anymore. The clean `purchase` dataLayer event is the source of truth; the user wires Meta Purchase as a tag in GTM (with `transaction_id` as eventID).
+Today `gtmBeginCheckout` fires *before* `create-checkout` returns (intentional — survives the Stripe redirect). To get a real `checkout_id` on the event without firing twice:
 
-Keep `trackPurchase` in `src/lib/fbPixel.ts` exported (other callers may exist later) but no longer invoked from `CreditContext`.
+- Keep the early `gtmBeginCheckout` call exactly where it is (pre-redirect safety), but **without** `checkoutId` (it doesn't exist yet).
+- After `create-checkout` returns successfully with `data.sessionId`, call `gtmBeginCheckout` **again** with `checkoutId: data.sessionId`. The existing 10-second `(planName + checkoutMode + path)` session dedup in `gtmBeginCheckout` will drop this second call — so we need a small tweak:
+  - When `checkoutId` is provided, *bypass* the time-based dedup but still dedup on the `checkoutId` itself (`begin-checkout-id:{checkoutId}` persistent key) so the same session id can never push twice across refreshes.
+  - This guarantees: exactly one `begin_checkout` on intent (no `checkout_id`) **plus** at most one `begin_checkout` enrichment with the real `checkout_id` per Stripe session.
+- Net result for GTM: at least one `begin_checkout` with `checkout_id` populated whenever `create-checkout` succeeds; if the user closes the tab before Stripe responds, the early one still fires (without `checkout_id`).
 
-### 5. Google Ads
-No code changes. Leave `gtagPurchase` defined in `src/lib/gtag.ts` (no longer called anywhere) — could be removed in a follow-up. No `send_to` or `ads_conversion_PURCHASE_1` is added. User wires Google Ads Purchase tag in GTM bound to `purchase` event using `{{transaction_id}}`, `{{value}}`, `{{currency}}`.
+Alternative (simpler, recommended if the user is OK with it): **only push `begin_checkout` after `create-checkout` returns**, drop the pre-redirect push. That gives a single clean event with `checkout_id` always present, but loses the "fires even if Stripe is slow" safety net. I'll go with the dual-push approach above to preserve current behavior.
 
-## Files touched
-- `supabase/functions/check-subscription/index.ts` — add `last_credit_pack_purchase` to response (capture during existing fulfillment loop).
-- `src/lib/gtm.ts` — add `gtmPurchase`; wrap `gtmSubscriptionPurchase` to delegate; add debug logs.
-- `src/contexts/CreditContext.tsx` — drop `trackPurchase` + `gtagPurchase` calls/imports; extend ref + dispatch to `gtmPurchase` for both flows.
+### 3. `src/contexts/CreditContext.tsx` → payment-success handler
 
-## Final report items (delivered post-implementation)
-1. Removed: `gtagPurchase(value, 'USD')` and `trackPurchase(value, 'USD')` from `CreditContext` payment-success handler.
-2. Verifier: `supabase/functions/check-subscription` (Stripe `subscriptions.list` + `checkout.sessions.list` with `payment_status === 'paid'` + `metadata.fulfilled` gate).
-3. Subscription `transaction_id` source: `latest_invoice_id` → `session_id` (URL or latest paid) → `stripe_subscription_id` (via `pickTransactionId`).
-4. Credit pack `transaction_id` source: `payment_intent_id` → `session_id`.
-5. Final event name: `purchase`.
-6. Sample subscription payload, sample credit-pack payload, dedup confirmation, "no Google Ads tag in code", "Meta Purchase moved to GTM" — all confirmed in reply.
+No logic change. The payload going into `gtmPurchase` already has the right `transactionId` for both subs and credit packs. The `ecommerce` shape will start appearing automatically once `gtm.ts` is updated.
 
-## Notes / non-goals
-- `subscription_purchase` event will stop being emitted; if the user has GTM tags bound to it, they should be re-bound to `purchase` with a `purchase_type === 'subscription'` trigger condition. Worth flagging in the post-implementation message.
-- `begin_checkout`, `pricing_*`, `sign_up`, `product_uploaded`, `first_generation_*`, Conversion Linker, GTM base install, Stripe checkout flow, Meta base PageView — untouched.
+---
+
+## What stays the same (safety guarantees)
+
+- Purchase fires **only** after `check-subscription` verifies (`subscriptionStatus === 'active'` for subs, `lastCreditPackPurchase != null` for credit packs).
+- Refresh on success page does **not** re-fire purchase: `lastCreditPackPurchase` is null on subsequent calls, and `gtm:purchase:{transaction_id}` blocks the sub path.
+- Dedup keys: `gtm:purchase:{transaction_id}` (persistent), `gtm-session:begin-checkout:{plan}:{mode}:{path}` (10s), `gtm:begin-checkout-id:{sessionId}` (persistent, new).
+- No PII added. Only IDs, plan name, value, currency, page_location.
+- No Google Ads tag added in code — Google Ads / Meta tags continue to be wired in GTM bound to these custom events.
+
+---
+
+## QA checklist (after deploy, in GTM Preview with `localStorage.setItem('vovv_gtm_debug','1')`)
+
+**`begin_checkout`**
+- Fires on click; second push appears ~200–800 ms later with `checkout_id: cs_…` populated.
+- `ecommerce.value` / `ecommerce.currency` correct.
+- Double-clicking the buy button still fires only one `begin_checkout` (10s dedup).
+
+**`purchase` — subscription**
+- Fires once after Stripe redirect back, with `transaction_id` = invoice id (`in_…`) when available, falling back to session id (`cs_…`), then subscription id (`sub_…`).
+- `ecommerce.value` = monthly price, `ecommerce.currency` = `USD`.
+- Refreshing `?payment=success` page → no second push (dedup hit logged).
+
+**`purchase` — credit pack**
+- Fires once with `transaction_id` = payment intent id (`pi_…`), falling back to session id.
+- `purchase_type: "credits"`, `plan_name: "{N} Credits"`.
+- Refresh → no re-fire (server returns `lastCreditPackPurchase: null` after first verified call).
+
+**Reporting after implementation**
+- `begin_checkout` push site: `src/contexts/CreditContext.tsx` → `startCheckout` (helper: `src/lib/gtm.ts` → `gtmBeginCheckout`).
+- `purchase` push site: `src/contexts/CreditContext.tsx` payment-success `useEffect` (helper: `src/lib/gtm.ts` → `gtmPurchase`).
+- `transaction_id` source: `pickTransactionId({ invoiceId: latest_invoice_id, sessionId: returned_session_id || latest_session_id, subscriptionId: stripe_subscription_id })` for subs; `payment_intent_id || session_id` for credit packs.
+- Both subscriptions and credit packs covered by the same canonical `purchase` event.

@@ -275,25 +275,45 @@ export function gtmBeginCheckout(args: {
   value: number;          // major units (dollars/euros), not cents
   currency?: string;      // will be uppercased; defaults to USD
   pageLocation?: string;
+  /** Stripe Checkout Session ID (cs_…). Only available after create-checkout
+   *  returns. Pass it on the second/enrichment call so GTM gets a real
+   *  checkout_id; the first pre-redirect call legitimately omits it. */
+  checkoutId?: string | null;
 }): { fired: boolean; reason?: string } {
-  const { userId, planName, checkoutMode, value, currency, pageLocation } = args;
+  const { userId, planName, checkoutMode, value, currency, pageLocation, checkoutId } = args;
   if (!planName) {
     return { fired: false, reason: 'missing planName' };
   }
 
   const path = typeof window !== 'undefined' ? window.location.pathname : '';
-  const dedupKey = `begin-checkout:${planName}:${checkoutMode}:${path}`;
-  const storeKey = `${SESSION_PREFIX}${dedupKey}`;
   const now = Date.now();
-  const last = sessionGetTs(storeKey);
-  if (last !== null && now - last < BEGIN_CHECKOUT_DEDUP_MS) {
-    if (isGtmDebugEnabled() || DEBUG) {
-      // eslint-disable-next-line no-console
-      console.log('[GTM DEBUG gtmBeginCheckout dedup-skip]', { dedupKey, sinceMs: now - last });
+
+  if (checkoutId) {
+    // Enrichment call: bypass time-window dedup, but persistently dedup on
+    // the Stripe session id so the same session can never push twice.
+    const idKey = `${STORAGE_PREFIX}begin-checkout-id:${checkoutId}`;
+    if (localGet(idKey)) {
+      if (isGtmDebugEnabled() || DEBUG) {
+        // eslint-disable-next-line no-console
+        console.log('[GTM DEBUG gtmBeginCheckout id dedup-skip]', { checkoutId });
+      }
+      return { fired: false, reason: 'id-deduped' };
     }
-    return { fired: false, reason: 'deduped' };
+    localSet(idKey);
+  } else {
+    // Intent call: time-window dedup against double-clicks on the same plan.
+    const dedupKey = `begin-checkout:${planName}:${checkoutMode}:${path}`;
+    const storeKey = `${SESSION_PREFIX}${dedupKey}`;
+    const last = sessionGetTs(storeKey);
+    if (last !== null && now - last < BEGIN_CHECKOUT_DEDUP_MS) {
+      if (isGtmDebugEnabled() || DEBUG) {
+        // eslint-disable-next-line no-console
+        console.log('[GTM DEBUG gtmBeginCheckout dedup-skip]', { dedupKey, sinceMs: now - last });
+      }
+      return { fired: false, reason: 'deduped' };
+    }
+    sessionSetTs(storeKey, now);
   }
-  sessionSetTs(storeKey, now);
 
   const resolvedPageLocation =
     pageLocation || (typeof window !== 'undefined' ? window.location.href : '');
