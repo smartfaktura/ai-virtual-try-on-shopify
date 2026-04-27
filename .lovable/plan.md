@@ -1,65 +1,41 @@
-# Speed up image loading on the AI Photography Hub + category pages
+## Issue
 
-Same root cause as `/ai-product-photo-generator`: several components call `getOptimizedUrl(src, { quality: ... })` **with no width/height**, so Supabase serves the **full-resolution original** (~800 KB–1.5 MB each) for thumbnails that render at ~150–200 px. The hub renders these thumbs in dense 3-up collages across many cards.
+On `/ai-product-photo-generator`, the second marquee row starts visually offset (not full-bleed from the left edge), creating an awkward empty starting point.
 
-## Audit results
+## Root cause
 
-I scanned every image-rendering component used by the listed pages. Three are unsized; everything else (`PhotographyHero`, `PhotographySceneExamples`, `CategoryHero`, `CategorySceneExamples`, `CategoryBuiltForEveryCategory`) already passes proper `width + height + resize: 'cover'`.
+In `tailwind.config.ts` the marquee keyframes are:
 
-### Unsized offenders
-
-1. **`PhotographyVisualSystem.tsx`** (line 96) — used on `/ai-product-photography`. 6 cards × 3 thumbs = **18 oversized images**.
-2. **`PhotographyCategoryChooser.tsx`** (line 55) — used on `/ai-product-photography`. 10 cards × 3 thumbs = **30 oversized images**.
-3. **`CategoryRelatedCategories.tsx`** (line 79) — used on **every** category page (`/ai-product-photography/fashion`, `/footwear`, `/beauty-skincare`, `/fragrance`, `/jewelry`, `/bags-accessories`, `/home-furniture`, `/food-beverage`, etc.). ~3 related cards × 3 thumbs = **9 oversized images per category page**.
-
-So the hub alone ships **~48 unnecessarily huge JPGs** (~40 MB), and every category page ships **~9** (~10 MB) on top of its already-sized hero/examples.
-
-## Fixes
-
-### 1. `PhotographyVisualSystem.tsx` (hub)
-Switch to sized + responsive srcSet. Tiles are ~140 px × 175 px on desktop in a 4:5 grid:
-```ts
-src={getOptimizedUrl(src, { width: 320, height: 400, quality: 70, resize: 'cover' })}
-srcSet={getResizedSrcSet(src, { widths: [220, 320, 440], aspect: [4, 5], quality: 70 })}
-sizes="(max-width: 640px) 32vw, (max-width: 1024px) 24vw, 140px"
-width={320} height={400}
+```text
+marquee-left :  translateX(0)    →  translateX(-50%)
+marquee-right:  translateX(-50%) →  translateX(0)
 ```
 
-### 2. `PhotographyCategoryChooser.tsx` (hub)
-Same pattern as the already-fixed `LandingCategoryGrid` — square thumbs at ~160 px:
-```ts
-src={getOptimizedUrl(src, { width: 300, height: 300, quality: 70, resize: 'cover' })}
-srcSet={getResizedSrcSet(src, { widths: [200, 300, 400], aspect: [1, 1], quality: 70 })}
-sizes="(max-width: 640px) 40vw, 160px"
-width={300} height={300}
-```
+Row 1 uses `marquee-left`, so it starts at `translateX(0)` — the track is flush with the left edge from the very first frame.
 
-### 3. `CategoryRelatedCategories.tsx` (every category page)
-`SmartImage` already accepts `srcSet` + `sizes` props — pass them through:
-```ts
-<SmartImage
-  src={getOptimizedUrl(resolved, { width: 320, height: 320, quality: 70, resize: 'cover' })}
-  srcSet={getResizedSrcSet(resolved, { widths: [220, 320, 440], aspect: [1, 1], quality: 70 })}
-  sizes="(max-width: 640px) 32vw, (max-width: 1024px) 24vw, 160px"
-  alt={t.alt}
-  imgClassName="..."
-/>
-```
+Row 2 uses `marquee-right`, so it **starts at `translateX(-50%)`** — the track is already shifted half-width to the left. Because `LandingHeroSEO` only repeats tiles `2×` (REPEATS = 2), shifting by 50% lands exactly at the seam between the two copies. With only 5 tiles × 210 px = 1050 px per copy, on a 1310 px viewport this leaves a visible gap on the **right** at first paint, and the row appears to "start mid-line" until the animation has advanced enough to fill the viewport.
 
-### 4. Already healthy — no change
-- `PhotographyHero` — already sized (`width: 640, height: 854`)
-- `PhotographySceneExamples` — already sized + srcSet
-- `CategoryHero` — already sized (1120×1400 hero, 640×800 side tiles)
-- `CategorySceneExamples` — already sized
-- `CategoryBuiltForEveryCategory` — already sized
-- `index.html` — Supabase storage preconnect already present
+This is purely a marquee-track sizing/looping issue — not an image-loading issue (the previous optimization is unrelated).
 
-## Files to edit
-- `src/components/seo/photography/PhotographyVisualSystem.tsx`
-- `src/components/seo/photography/PhotographyCategoryChooser.tsx`
-- `src/components/seo/photography/category/CategoryRelatedCategories.tsx`
+## Fix
 
-## Expected impact
-- `/ai-product-photography` hub: image bytes ~40 MB → ~3 MB on first load.
-- Each category page: ~10 MB shaved off "Related Categories" alone.
-- No visual change at any breakpoint.
+Increase tile duplication so each translation phase always overflows the widest realistic viewport, and the seam at `translateX(-50%)` is never visible. Two complementary changes in `src/components/seo/landing/LandingHeroSEO.tsx`:
+
+1. **Bump `REPEATS` from 2 → 4** in `MarqueeRow`. With 5 tiles × 210 px × 4 = 4200 px total track (2100 px per half), the row stays seamless on viewports up to ~2000 px wide regardless of starting offset.
+2. **Guarantee a minimum tile count per row** before duplication. If `row2` ends up with fewer tiles than `row1` (odd total), pad it by cycling from `row1` so both rows have equal logical length and identical seam math.
+
+Optional polish (low risk, recommended):
+
+3. Add `will-change: transform` and `backface-visibility: hidden` to the marquee track via Tailwind utilities so the initial transform paints crisply on first frame (avoids a momentary jank when the animation registers).
+
+## Files touched
+
+- `src/components/seo/landing/LandingHeroSEO.tsx` — `MarqueeRow` (REPEATS bump, will-change), `LandingHeroSEO` (balance row1/row2 lengths).
+
+No keyframe changes needed — `tailwind.config.ts` stays as-is, so every page using these animations benefits from the fix automatically.
+
+## Verification
+
+- `/ai-product-photo-generator` — both rows full-bleed from first paint, no gap on the right of row 2.
+- `/ai-product-photography`, `/ai-photography-vs-photoshoot`, `/ai-photography-vs-studio`, `/etsy-product-photography-ai`, `/shopify-product-photography` — same hero component, confirm no regression.
+- Test at 1310 px (current viewport), 1920 px, and 768 px.

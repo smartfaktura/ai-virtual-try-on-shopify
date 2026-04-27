@@ -86,15 +86,17 @@ function MarqueeRow({
   altPrefix: string;
   eager?: boolean;
 }) {
-  // Repeat tiles enough times so each half of the marquee track is always
-  // wider than any realistic viewport. 2× is enough for a 5-tile row at 210px
-  // wide (5 × 210 = 1050px → 2× = 2100px), well beyond common viewports.
-  const REPEATS = 2;
+  // Repeat tiles enough times so each HALF of the marquee track (50% width)
+  // overflows even ultra-wide viewports. The right-scrolling row starts at
+  // translateX(-50%), so if a single half is narrower than the viewport a
+  // visible empty gap appears at first paint. 4× of 5 tiles × 210px = 4200px
+  // total (2100px per half) — safe up to ~2000px wide viewports.
+  const REPEATS = 4;
   const repeated = Array.from({ length: REPEATS }, () => tiles).flat();
   return (
     <div className="overflow-hidden w-full group/marquee">
       <div
-        className={`flex gap-3 w-max ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'} group-hover/marquee:[animation-play-state:paused]`}
+        className={`flex gap-3 w-max ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'} group-hover/marquee:[animation-play-state:paused] [will-change:transform] [backface-visibility:hidden]`}
         style={{ animationDuration: duration }}
       >
         {repeated.map((rt, i) => (
