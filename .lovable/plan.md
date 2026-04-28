@@ -1,86 +1,74 @@
-## Fix slow image loading on Shopify SEO page + 3 CTA destination tweaks
+## Goal
 
-### Part A — Why `/shopify-product-photography-ai` (and the Etsy twin) loads slowly
+Make `/app/help` feel like a genuine personal note from Tomas — backed by a team of pros who handle every reply. Use the freshly uploaded founder portrait, give it more visual presence, soften the copy, and remove the floating chat bubble that competes with the contact form.
 
-The hero marquee is the bottleneck. `LandingHeroSEO` renders **10 unique tiles repeated 4× across 2 marquee rows = 80 `<img>` elements**, each with a 3-width `srcSet`. Combined with the rest of the page (`LandingOneToManyShowcase` 6×3 = 18 imgs, `LandingCategoryGrid` 6×3 = 18 imgs, value cards' icons, footer), the page issues **~120 image requests**, far exceeding browser per-origin connection limits (~6). The result: long waterfalls and visibly slow first paint of the hero.
+---
 
-Three compounding issues:
+## Changes
 
-1. **Over-repeated marquee track** — `REPEATS = 4` was sized to fill ultra-wide viewports with only 5 tiles per row. With 5 tiles × 210px × 4 repeats = 4200px per row, but the comment says half the track must overflow the viewport. We can drop to `REPEATS = 2` for tile sets ≥ 5 (still 2100px per half, more than enough for 2000px viewports — math from the existing comment confirms this).
-2. **Eager fetch + fetchPriority='high' on multiple tiles** — currently the first image of each repeat block (so multiple per row) is eager. Should be exactly one image fetch-prioritized (the first visible LCP candidate).
-3. **`srcSet` on tiny 180–210px CSS-pixel tiles** — the marquee tiles are fixed-width carousel cells that never grow past 210px. A 3-width srcSet (360/540/720) generates extra DPR-2 fetches for marginal quality gains. For a thumbnail this small, a single optimized URL is plenty (still retina-crisp via Supabase resize).
+### 1. Add & optimize the new founder photo
 
-### Fixes in `src/components/seo/landing/LandingHeroSEO.tsx`
+- Copy `user-uploads://Tomas.png` into the project.
+- Optimize it (resize to 320×320, convert to compressed `.jpg` ~85 quality, strip metadata) — target ~30–50 KB instead of multi-MB.
+- Save as `src/assets/founder-tomas.jpg` (overwriting the current asset so existing imports stay valid). No code-side import changes elsewhere.
 
-**1. Reduce marquee repeats**
-```ts
-// before
-const REPEATS = 4;
-// after — 2 is enough for any tile set with >=5 unique tiles
-const REPEATS = tiles.length >= 5 ? 2 : 4;
-```
-Cuts hero `<img>` count from **80 → 40** (or fewer when tiles >= 10).
+### 2. Redesign the "From the team" block in `src/pages/AppHelp.tsx`
 
-**2. Drop the 3-width srcSet on marquee tiles (fixed-size thumbnails)**
-Replace:
-```tsx
-src={getOptimizedUrl(resolvedSrc, { width: 540, height: 720, quality: 78, resize: 'cover' })}
-srcSet={getResizedSrcSet(resolvedSrc, { widths: [360, 540, 720], aspect: [3, 4], quality: 78 })}
-sizes="(max-width: 640px) 180px, 210px"
-```
-with a single URL sized for retina (420×560 covers both 180px and 210px @ 2× DPR):
-```tsx
-src={getOptimizedUrl(resolvedSrc, { width: 420, height: 560, quality: 72, resize: 'cover' })}
-```
-Removes ~80 extra DPR-2 candidate URLs the browser was evaluating.
+Make the signature feel like a real introduction rather than a one-line header strip.
 
-**3. Limit eager loading to a single LCP-priority image**
-Currently `eager && i < 2` and `highPriority && i < 1` apply to **each repeat slot** (so up to 2 eagers per row across 4 repeats = 4 eager fetches). Tighten so only the very first tile of row 1 is eager + high priority; everything else lazy.
-```tsx
-// in MarqueeRow
-eager={eager && i === 0}
-highPriority={eager && i === 0}
+New layout (inside the form card, top section):
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│  ⬤⬤⬤    A NOTE FROM THE FOUNDER                           │
+│  ⬤Tom⬤                                                    │
+│  ⬤⬤⬤   "Hey — I'm Tomas, founder of VOVV.AI.             │
+│         Whatever you send here lands straight with        │
+│         our team. We'll get back to you personally,       │
+│         usually within a few hours, with a real answer    │
+│         — not a canned reply."                            │
+│                                                           │
+│         — Tomas, founder                                  │
+└──────────────────────────────────────────────────────────┘
 ```
 
-**4. Add `fetchpriority="low"` to all lazy tiles**
-This deprioritizes the 70+ marquee dupes against above-the-fold UI fetches.
+Specifics:
+- Larger circular avatar: `w-14 h-14` (was `w-9 h-9`), `ring-1 ring-border`, soft shadow.
+- Eyebrow above message: `A NOTE FROM THE FOUNDER` (`text-[11px] uppercase tracking-[0.2em] text-muted-foreground`).
+- Personal message in `text-[14px] leading-relaxed text-foreground`, written in first person. No "small team" framing — emphasis on "real answer", "personally", "our team".
+- Signature `— Tomas, founder` in `text-[12px] text-muted-foreground italic`.
+- `flex items-start gap-4` so the avatar sits beside the paragraph.
+- Bump header band padding to `py-5 sm:py-6`.
 
-### Part B — CTA destination changes
+### 3. Update page subtitle
 
-**1. `src/pages/seo/ShopifyProductPhotography.tsx` (line 80)**
-```ts
-secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
-// →
-secondaryCta={{ label: 'See examples', to: '/discover' }}
-```
+Tweak the `PageHeader` subtitle to match the warmer tone (no "small team"):
 
-**2. `src/pages/seo/EtsyProductPhotography.tsx` (line 80)**
-Same change: `to: '/ai-product-photography'` → `to: '/discover'`.
+> "A real team of pros behind every reply — usually within a few hours on weekdays"
 
-**3. `src/components/seo/photography/category/CategoryHero.tsx` (lines 70–75)**
-The "See examples" anchor on `/ai-product-photography/fashion` already points to `#scene-library`, which is the wrong section. The "Built for every fashion shot." headline lives in `CategoryBuiltForEveryCategory.tsx` (line 89). Add an `id="built-for-every"` to that section's outer `<section>` element and update the hero anchor:
-```tsx
-href="#scene-library"  →  href="#built-for-every"
-```
+(No terminal period, per brand voice.)
 
-Need to also add `scroll-mt-24` (matching `CategorySceneExamples`) to that section so the sticky nav doesn't cover the heading.
+### 4. Polish the "What to expect" expectations row
 
-### What stays
-- All page copy, layouts, JSON-LD, FAQs, hero collage tile counts.
-- The override hook (`useSeoVisualOverridesMap`) — it's already cached.
-- `LandingOneToManyShowcase` + `LandingCategoryGrid` (their imgs are already lazy and properly sized for their containers).
+- `Where it goes` → `Straight to our team`
+- Keep `Reply time` → `A few hours, weekdays`
+- Keep `Privacy` → `Stays between us`
 
-### Out of scope
-- No backend / data changes.
-- No design changes to the hero or category pages — purely image-loading tuning + CTA hrefs.
-- Not touching `getResizedSrcSet` (still correct for full-bleed cards elsewhere).
+### 5. Hide the floating StudioChat widget on `/app/help`
 
-### Files touched
-- `src/components/seo/landing/LandingHeroSEO.tsx` — marquee perf
-- `src/pages/seo/ShopifyProductPhotography.tsx` — CTA href
-- `src/pages/seo/EtsyProductPhotography.tsx` — CTA href
-- `src/components/seo/photography/category/CategoryHero.tsx` — anchor target
-- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — add `id="built-for-every"` + `scroll-mt-24`
+The global `StudioChat` floating bubble currently shows on every `/app/*` page including Help, conflicting with "do not show live customer support icon". In `src/components/app/StudioChat.tsx`, extend the existing early-return logic so it returns `null` whenever `location.pathname === '/app/help'` — on every viewport, not just mobile.
 
-### Expected impact
-Hero image count drops from 80 → ~40 with srcSet candidates removed, so total image fetches across the Shopify page drop roughly **~40-50%**. First contentful paint of the hero marquee should be visibly faster, especially on slower connections.
+This is the cleanest fix and avoids adding `data-hide-studio-chat` plumbing to the Help page.
+
+---
+
+## Files touched
+
+- `src/assets/founder-tomas.jpg` — replaced with optimized version of the new upload
+- `src/pages/AppHelp.tsx` — signature block redesign + subtitle + expectation copy
+- `src/components/app/StudioChat.tsx` — hide on `/app/help`
+
+## Out of scope
+
+- No changes to the contact form, FAQs row, footer links, or routing.
+- No changes to other pages that use `founder-tomas.jpg` (image is overwritten in place).
