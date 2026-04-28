@@ -71,20 +71,23 @@ export default function Learn() {
 
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
-      <div className="max-w-3xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="max-w-3xl mx-auto px-5 sm:px-8 lg:px-12 pt-24 lg:pt-16 pb-20 animate-in fade-in duration-500">
         {/* Hero header */}
-        <header className="mb-10">
-          <h1 className="text-4xl sm:text-5xl font-semibold tracking-[-0.03em] leading-[1.05] text-foreground">
+        <header className="mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Learn
+          </p>
+          <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]">
             Learn
           </h1>
-          <p className="text-base text-muted-foreground mt-4 max-w-xl leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground mt-4 max-w-xl leading-relaxed">
             Short, focused guides for getting more out of VOVV.AI.
           </p>
         </header>
 
         {/* Explainer video — single app walkthrough */}
         <figure className="mb-10">
-          <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-[#f0efed] bg-black shadow-sm">
+          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#f0efed] bg-black shadow-sm">
             <iframe
               src="https://www.youtube-nocookie.com/embed/lm9ywh7Ipwc?rel=0&modestbranding=1&playsinline=1"
               title="VOVV.AI app walkthrough"
@@ -118,7 +121,7 @@ export default function Learn() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search guides"
             aria-label="Search guides"
-            className="pl-12 h-12 rounded-full bg-white border border-[#f0efed] hover:border-[#e5e3df] focus-visible:bg-white focus-visible:border-foreground/20 focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:ring-offset-0 transition-colors placeholder:text-muted-foreground/70"
+            className="pl-12 h-11 rounded-full bg-white border border-[#f0efed] hover:border-[#e5e3df] focus-visible:bg-white focus-visible:border-foreground/20 focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:ring-offset-0 transition-colors placeholder:text-muted-foreground/70"
           />
         </div>
 
@@ -146,7 +149,7 @@ export default function Learn() {
                     {guides.length} {guides.length === 1 ? 'guide' : 'guides'}
                   </span>
                 </div>
-                <div className="rounded-3xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
+                <div className="rounded-2xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
                   {guides.map((g) => (
                     <LearnRow key={`${g.section}/${g.slug}`} guide={g} onOpen={handleOpen} />
                   ))}

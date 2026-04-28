@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Bug, Check, X, ShieldAlert, Zap, Sparkles, Wrench, Mail, ArrowRight } from 'lucide-react';
+import { Check, X, ShieldAlert, Zap, Sparkles, Wrench, Mail, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -94,25 +94,18 @@ Thanks!`
 
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
-      <div className="max-w-3xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="max-w-3xl mx-auto px-5 sm:px-8 lg:px-12 pt-24 lg:pt-16 pb-20 animate-in fade-in duration-500">
         {/* Hero */}
-        <header className="mb-12">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-5">
+        <header className="mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Bug Bounty
           </p>
-          <div className="flex items-start gap-5">
-            <div className="hidden sm:flex flex-shrink-0 w-14 h-14 rounded-2xl bg-white border border-[#f0efed] shadow-sm items-center justify-center">
-              <Bug className="w-7 h-7 text-primary" strokeWidth={1.75} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-4xl sm:text-5xl font-semibold tracking-[-0.03em] leading-[1.05] text-foreground">
-                Help us make VOVV.AI better
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed mt-4 max-w-[60ch]">
-                Find a real platform bug, report it, and earn credits when we confirm it
-              </p>
-            </div>
-          </div>
+          <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]">
+            Help us make VOVV.AI better
+          </h1>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed mt-4 max-w-[60ch]">
+            Find a real platform bug, report it, and earn credits when we confirm it
+          </p>
         </header>
 
         {/* How it works */}
@@ -120,7 +113,7 @@ Thanks!`
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             How it works
           </h2>
-          <ol className="rounded-3xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
+          <ol className="rounded-2xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
             {[
               { title: 'Find a bug', desc: 'Spot something on the platform that\'s genuinely broken — not a creative preference.' },
               { title: 'Report it', desc: 'Email hello@vovv.ai with steps to reproduce, a screenshot, and your account email.' },
@@ -144,7 +137,7 @@ Thanks!`
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Reward tiers
           </h2>
-          <div className="rounded-3xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
             {TIERS.map((t) => {
               const Icon = t.icon;
               return (
@@ -172,7 +165,7 @@ Thanks!`
 
         {/* Qualifies / Doesn't */}
         <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-7 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/80 mb-4 flex items-center gap-2">
               <Check className="w-3.5 h-3.5 text-primary" />
               What qualifies
@@ -186,7 +179,7 @@ Thanks!`
               ))}
             </ul>
           </div>
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-7 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
               <X className="w-3.5 h-3.5 text-muted-foreground" />
               What doesn't qualify
@@ -207,7 +200,7 @@ Thanks!`
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             What to include in your report
           </h2>
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-7 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
               {[
                 'Clear steps to reproduce',
@@ -227,21 +220,19 @@ Thanks!`
         </section>
 
         {/* CTA */}
-        <section className="mt-14">
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
-            <p className="text-[13px] font-medium text-foreground/80 mb-1">Found a bug?</p>
+        <section className="mt-12">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
+            <p className="text-[14px] font-semibold text-foreground mb-1">Found a bug?</p>
             <p className="text-[13px] text-muted-foreground mb-5">
               Send it to <span className="text-foreground font-medium">hello@vovv.ai</span> — we'll get back within a few business days.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button asChild className="gap-2 rounded-full font-medium h-[3.25rem] px-7 shadow-lg shadow-primary/25">
-                <a href={mailtoHref}>
-                  <Mail className="w-4 h-4" />
-                  Report a bug
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              </Button>
-            </div>
+            <Button asChild size="lg" className="gap-2 rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
+              <a href={mailtoHref}>
+                <Mail className="w-4 h-4" />
+                Report a bug
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </Button>
           </div>
         </section>
       </div>

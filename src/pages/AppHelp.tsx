@@ -25,38 +25,41 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 export default function AppHelp() {
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
-      <div className="max-w-2xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="max-w-2xl mx-auto px-5 sm:px-8 lg:px-12 pt-24 lg:pt-16 pb-20 animate-in fade-in duration-500">
         {/* Hero */}
-        <header className="mb-10">
+        <header className="mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            Support
+          </p>
           <div className="flex -space-x-3 mb-6">
-            <Avatar className="w-12 h-12 ring-[3px] ring-[#FAFAF8]">
+            <Avatar className="w-11 h-11 ring-[3px] ring-[#FAFAF8]">
               <AvatarImage src={avatarSophia} alt="Sophia" />
               <AvatarFallback className="text-xs">S</AvatarFallback>
             </Avatar>
-            <Avatar className="w-12 h-12 ring-[3px] ring-[#FAFAF8]">
+            <Avatar className="w-11 h-11 ring-[3px] ring-[#FAFAF8]">
               <AvatarImage src={avatarKenji} alt="Kenji" />
               <AvatarFallback className="text-xs">K</AvatarFallback>
             </Avatar>
-            <Avatar className="w-12 h-12 ring-[3px] ring-[#FAFAF8]">
+            <Avatar className="w-11 h-11 ring-[3px] ring-[#FAFAF8]">
               <AvatarImage src={avatarZara} alt="Zara" />
               <AvatarFallback className="text-xs">Z</AvatarFallback>
             </Avatar>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-semibold text-foreground tracking-[-0.03em] leading-[1.05]">
+          <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]">
             Talk to the team
           </h1>
-          <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
             Real humans, real fast. We usually reply within a few hours.
           </p>
         </header>
 
         {/* Form */}
-        <section className="mb-8 rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
+        <section className="mb-6 rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
           <ChatContactForm variant="spacious" />
         </section>
 
         {/* Quiet helpers */}
-        <section className="mb-10 rounded-3xl border border-[#f0efed] bg-white overflow-hidden shadow-sm">
+        <section className="mb-10 rounded-2xl border border-[#f0efed] bg-white overflow-hidden shadow-sm">
           <a
             href="/help"
             target="_blank"

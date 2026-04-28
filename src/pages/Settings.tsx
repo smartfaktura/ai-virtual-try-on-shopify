@@ -446,7 +446,7 @@ export default function Settings() {
           <div className="space-y-8">
         {/* ─── Current Plan ─── */}
         {!(plan === 'free' && subscriptionStatus === 'none') && (
-        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
+        <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-3">
             {/* Plan header */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -552,7 +552,7 @@ export default function Settings() {
 
         {/* Enterprise banner */}
         {enterprisePlan && (
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="rounded-xl bg-primary/10 p-3">
@@ -580,7 +580,7 @@ export default function Settings() {
         )}
 
         {/* Credit packs */}
-        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
+        <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h3 className="text-base font-semibold">Need More Credits?</h3>
@@ -630,7 +630,7 @@ export default function Settings() {
         <Separator />
 
         {/* ─── Notifications ─── */}
-        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
+        <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h2 className="text-base font-semibold">Notifications</h2>
@@ -689,9 +689,9 @@ export default function Settings() {
 
         <div className="flex justify-end pt-2">
           <Button
+            size="pill"
             onClick={handleSave}
             disabled={isSaving}
-            className="rounded-full h-[3.25rem] px-7 shadow-lg shadow-primary/25"
           >
             {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
@@ -701,7 +701,7 @@ export default function Settings() {
         {isAdmin && (
           <>
             <Separator />
-            <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
+            <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h2 className="text-base font-semibold">Asset Preview Generation</h2>
