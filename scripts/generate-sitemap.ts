@@ -1,14 +1,17 @@
 /**
  * Generates public/sitemap.xml from a single source of truth.
  *
- * - Static marketing routes are listed in MARKETING_URLS below.
- * - Blog post URLs come from src/data/blogPosts.ts
- * - SEO category URLs come from src/data/aiProductPhotographyCategoryPages.ts
+ * Sources:
+ *  - Static marketing routes from MARKETING_URLS below
+ *  - Blog post URLs from src/data/blogPosts.ts (with image entries)
+ *  - SEO category URLs from src/data/aiProductPhotographyCategoryPages.ts
+ *  - Public Discover items fetched live from the backend at build time
+ *    (with real created_at as lastmod and hero image entries)
  *
  * Wired into `npm run build` so every deploy regenerates the sitemap.
  * Run manually with: `npm run sitemap`
  */
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,15 +22,39 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://vovv.ai';
 const TODAY = new Date().toISOString().slice(0, 10);
 
+// Read backend creds from .env without bringing in a dep
+function loadEnv(): Record<string, string> {
+  try {
+    const raw = readFileSync(resolve(__dirname, '..', '.env'), 'utf8');
+    const out: Record<string, string> = {};
+    for (const line of raw.split('\n')) {
+      const m = line.match(/^([A-Z0-9_]+)\s*=\s*"?([^"\n]*)"?\s*$/);
+      if (m) out[m[1]] = m[2];
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+const ENV = loadEnv();
+const SUPABASE_URL = ENV.VITE_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '';
+const SUPABASE_KEY = ENV.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+
 type ChangeFreq =
   | 'always' | 'hourly' | 'daily' | 'weekly'
   | 'monthly' | 'yearly' | 'never';
+
+interface ImageEntry {
+  loc: string;
+  title?: string;
+}
 
 interface SitemapEntry {
   loc: string;
   lastmod?: string;
   changefreq: ChangeFreq;
   priority: number;
+  images?: ImageEntry[];
 }
 
 /** Static public routes from src/App.tsx (excluding /app/*, /auth, /onboarding,
@@ -94,14 +121,31 @@ function pickDate(value: unknown): string {
   return TODAY;
 }
 
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 const blogEntries: SitemapEntry[] = blogPosts.map((post) => {
   const raw = post as Record<string, unknown>;
   const lastmod = pickDate(raw.updatedAt ?? raw.publishedAt ?? raw.date);
+  const heroImage =
+    (typeof raw.heroImage === 'string' && raw.heroImage) ||
+    (typeof raw.coverImage === 'string' && raw.coverImage) ||
+    (typeof raw.image === 'string' && raw.image) ||
+    undefined;
   return {
     loc: `/blog/${post.slug}`,
     lastmod,
     changefreq: 'monthly',
     priority: 0.8,
+    images: heroImage
+      ? [{ loc: heroImage, title: typeof raw.title === 'string' ? raw.title : undefined }]
+      : undefined,
   };
 });
 
@@ -112,10 +156,53 @@ const categoryEntries: SitemapEntry[] = aiProductPhotographyCategoryPages.map((c
   priority: 0.85,
 }));
 
+// ───────── Discover items (live from backend) ─────────
+async function fetchDiscoverEntries(): Promise<SitemapEntry[]> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.warn('⚠ Skipping discover items — VITE_SUPABASE_URL / KEY not found');
+    return [];
+  }
+  const url =
+    `${SUPABASE_URL}/rest/v1/discover_presets` +
+    `?select=slug,created_at,image_url,title&order=created_at.desc&limit=5000`;
+  try {
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+    });
+    if (!res.ok) {
+      console.warn(`⚠ Discover fetch failed: ${res.status} ${res.statusText}`);
+      return [];
+    }
+    const rows = (await res.json()) as Array<{
+      slug: string;
+      created_at: string;
+      image_url: string | null;
+      title: string | null;
+    }>;
+    return rows
+      .filter((r) => typeof r.slug === 'string' && r.slug.length > 0)
+      .map((r) => ({
+        loc: `/discover/${r.slug}`,
+        lastmod: pickDate(r.created_at),
+        changefreq: 'monthly' as const,
+        priority: 0.7,
+        images: r.image_url
+          ? [{ loc: r.image_url, title: r.title ?? undefined }]
+          : undefined,
+      }));
+  } catch (err) {
+    console.warn('⚠ Discover fetch threw:', (err as Error).message);
+    return [];
+  }
+}
+
+const discoverEntries = await fetchDiscoverEntries();
+
 const all: SitemapEntry[] = [
   ...MARKETING_URLS.map((e) => ({ ...e, lastmod: e.lastmod ?? TODAY })),
   ...blogEntries,
   ...categoryEntries,
+  ...discoverEntries,
 ];
 
 // Dedupe by loc, keeping the highest priority entry
@@ -129,20 +216,36 @@ const sorted = Array.from(byLoc.values()).sort(
   (a, b) => b.priority - a.priority || a.loc.localeCompare(b.loc),
 );
 
+const hasImages = sorted.some((e) => e.images && e.images.length);
+
 const xml =
   `<?xml version="1.0" encoding="UTF-8"?>\n` +
-  `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+  `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"` +
+  (hasImages ? ` xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"` : ``) +
+  `>\n` +
   sorted
-    .map(
-      (e) =>
+    .map((e) => {
+      const head =
         `  <url><loc>${SITE}${e.loc}</loc><lastmod>${e.lastmod}</lastmod>` +
         `<changefreq>${e.changefreq}</changefreq>` +
-        `<priority>${e.priority.toFixed(2)}</priority></url>`,
-    )
+        `<priority>${e.priority.toFixed(2)}</priority>`;
+      const imgs = (e.images ?? [])
+        .map(
+          (im) =>
+            `<image:image><image:loc>${escapeXml(im.loc)}</image:loc>` +
+            (im.title ? `<image:title>${escapeXml(im.title)}</image:title>` : ``) +
+            `</image:image>`,
+        )
+        .join('');
+      return `${head}${imgs}</url>`;
+    })
     .join('\n') +
   `\n</urlset>\n`;
 
 const outPath = resolve(__dirname, '..', 'public', 'sitemap.xml');
 writeFileSync(outPath, xml, 'utf8');
 
-console.log(`✓ Wrote ${sorted.length} URLs to public/sitemap.xml`);
+const imageCount = sorted.reduce((n, e) => n + (e.images?.length ?? 0), 0);
+console.log(
+  `✓ Wrote ${sorted.length} URLs (${imageCount} image entries) to public/sitemap.xml`,
+);
