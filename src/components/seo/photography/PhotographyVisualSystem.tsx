@@ -101,6 +101,8 @@ export function PhotographyVisualSystem() {
                           height={400}
                           loading="lazy"
                           decoding="async"
+                          // @ts-expect-error fetchpriority is a valid HTML attribute
+                          fetchpriority="low"
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                         />
                       </div>

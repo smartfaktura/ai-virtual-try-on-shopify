@@ -53,7 +53,7 @@ function ModelCardItem({ model }: { model: { name: string; previewUrl: string } 
             srcSet={getResizedSrcSet(model.previewUrl, { widths: [240, 360, 480], aspect: [3, 4], quality: 72 })}
             sizes="(max-width: 640px) 33vw, (max-width: 1024px) 128px, 144px"
             alt={model.name}
-            loading="eager"
+            loading="lazy"
             decoding="async"
             // @ts-expect-error fetchpriority is a valid HTML attribute
             fetchpriority="low"

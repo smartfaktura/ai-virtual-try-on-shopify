@@ -28,7 +28,8 @@ const FALLBACK_TILES = [
   { label: 'Soft Volume Lean',   id: '1776691911049-gsxycu' },
 ];
 
-function Tile({ tile, eager = false }: { tile: Tile; eager?: boolean }) {
+function Tile({ tile, priority = 'low' }: { tile: Tile; priority?: 'high' | 'auto' | 'low' }) {
+  const eager = priority === 'high';
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
@@ -41,7 +42,7 @@ function Tile({ tile, eager = false }: { tile: Tile; eager?: boolean }) {
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
         // @ts-expect-error fetchpriority is a valid HTML attribute not in React types
-        fetchpriority={eager ? 'high' : 'auto'}
+        fetchpriority={priority}
         className="w-full h-full object-cover"
       />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
@@ -53,7 +54,7 @@ function Tile({ tile, eager = false }: { tile: Tile; eager?: boolean }) {
   );
 }
 
-function MarqueeRow({ tiles, direction, duration, eagerFirst = false }: { tiles: Tile[]; direction: 'left' | 'right'; duration: string; eagerFirst?: boolean }) {
+function MarqueeRow({ tiles, direction, duration, eagerCount = 0, defaultPriority = 'low' }: { tiles: Tile[]; direction: 'left' | 'right'; duration: string; eagerCount?: number; defaultPriority?: 'auto' | 'low' }) {
   const doubled = [...tiles, ...tiles];
   return (
     <div className="overflow-hidden w-full group/marquee">
@@ -62,7 +63,7 @@ function MarqueeRow({ tiles, direction, duration, eagerFirst = false }: { tiles:
         style={{ animationDuration: duration }}
       >
         {doubled.map((t, i) => (
-          <Tile key={`${t.label}-${i}`} tile={t} eager={eagerFirst && i < 6} />
+          <Tile key={`${t.label}-${i}`} tile={t} priority={i < eagerCount ? 'high' : defaultPriority} />
         ))}
       </div>
     </div>
@@ -125,8 +126,8 @@ export function PhotographyHero() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <MarqueeRow tiles={row1} direction="left" duration="50s" eagerFirst />
-        <MarqueeRow tiles={row2} direction="right" duration="55s" />
+        <MarqueeRow tiles={row1} direction="left" duration="50s" eagerCount={4} defaultPriority="auto" />
+        <MarqueeRow tiles={row2} direction="right" duration="55s" defaultPriority="low" />
       </div>
     </section>
   );

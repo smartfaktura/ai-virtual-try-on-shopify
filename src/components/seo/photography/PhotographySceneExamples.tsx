@@ -64,6 +64,8 @@ export function PhotographySceneExamples() {
                 alt={ex.alt}
                 loading="lazy"
                 decoding="async"
+                // @ts-expect-error fetchpriority is a valid HTML attribute
+                fetchpriority="low"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
               />
               <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/65 via-black/20 to-transparent">
