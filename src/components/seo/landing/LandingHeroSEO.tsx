@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 
@@ -29,7 +29,6 @@ export interface LandingHeroSEOProps {
 
 function Tile({
   tile,
-  altPrefix,
   resolvedSrc,
   resolvedAlt,
   eager = false,
@@ -42,18 +41,19 @@ function Tile({
   eager?: boolean;
   highPriority?: boolean;
 }) {
+  // Marquee tiles are fixed at 180–210 CSS px; a single 420×560 retina-grade
+  // URL is sharper than a 3-width srcSet and avoids ~80 extra Supabase render
+  // candidates the browser would otherwise evaluate per page load.
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(resolvedSrc, { width: 540, height: 720, quality: 78, resize: 'cover' })}
-        srcSet={getResizedSrcSet(resolvedSrc, { widths: [360, 540, 720], aspect: [3, 4], quality: 78 })}
-        sizes="(max-width: 640px) 180px, 210px"
+        src={getOptimizedUrl(resolvedSrc, { width: 420, height: 560, quality: 72, resize: 'cover' })}
         alt={resolvedAlt}
         width={210}
         height={280}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        {...(highPriority ? { fetchPriority: 'high' as const } : {})}
+        fetchPriority={highPriority ? 'high' : 'low'}
         className="w-full h-full object-cover"
       />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
@@ -87,11 +87,10 @@ function MarqueeRow({
   eager?: boolean;
 }) {
   // Repeat tiles enough times so each HALF of the marquee track (50% width)
-  // overflows even ultra-wide viewports. The right-scrolling row starts at
-  // translateX(-50%), so if a single half is narrower than the viewport a
-  // visible empty gap appears at first paint. 4× of 5 tiles × 210px = 4200px
-  // total (2100px per half) — safe up to ~2000px wide viewports.
-  const REPEATS = 4;
+  // overflows even ultra-wide viewports. With ≥5 unique tiles, 2 repeats =
+  // 10 × 210px = 2100px per half — comfortably wider than any viewport.
+  // Smaller tile sets keep 4 repeats so the seam math still holds.
+  const REPEATS = tiles.length >= 5 ? 2 : 4;
   const repeated = Array.from({ length: REPEATS }, () => tiles).flat();
   return (
     <div className="overflow-hidden w-full group/marquee">
@@ -106,8 +105,8 @@ function MarqueeRow({
             altPrefix={altPrefix}
             resolvedSrc={rt.src}
             resolvedAlt={rt.alt}
-            eager={eager && i < 2}
-            highPriority={eager && i < 1}
+            eager={eager && i === 0}
+            highPriority={eager && i === 0}
           />
         ))}
       </div>

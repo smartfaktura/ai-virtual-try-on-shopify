@@ -77,7 +77,7 @@ export default function ShopifyProductPhotography() {
           subheadline="Upload one product photo and create Shopify-ready product page images, lifestyle visuals, ads, banners, and campaign content in minutes."
           trustLine="Built for ecommerce brands · No photoshoot needed · Create from one product photo"
           primaryCta={{ label: 'Try it free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
+          secondaryCta={{ label: 'See examples', to: '/discover' }}
           altPrefix="AI Shopify product photography example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'PDP Hero' },

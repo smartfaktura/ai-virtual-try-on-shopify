@@ -1,67 +1,86 @@
-## Redesign `/app/help` — make it feel like real humans, not AI
+## Fix slow image loading on Shopify SEO page + 3 CTA destination tweaks
 
-The current page has two real problems:
+### Part A — Why `/shopify-product-photography-ai` (and the Etsy twin) loads slowly
 
-1. **Title is just "Help"** — should be **"Help & Support"**.
-2. **Sophia, Kenji & Zara are AI brand-model personas** (defined in `src/data/teamData.ts` as the studio crew) — using them on a support page misrepresents the team. The user is clear: real humans answer support, so the page must reflect that.
+The hero marquee is the bottleneck. `LandingHeroSEO` renders **10 unique tiles repeated 4× across 2 marquee rows = 80 `<img>` elements**, each with a 3-width `srcSet`. Combined with the rest of the page (`LandingOneToManyShowcase` 6×3 = 18 imgs, `LandingCategoryGrid` 6×3 = 18 imgs, value cards' icons, footer), the page issues **~120 image requests**, far exceeding browser per-origin connection limits (~6). The result: long waterfalls and visibly slow first paint of the hero.
 
-### Fixes in `src/pages/AppHelp.tsx`
+Three compounding issues:
 
-**1. Title & subtitle**
-- `title="Help"` → `title="Help & Support"`
-- Subtitle stays warm but specific:
-  `"Real people, real answers — typically within a few hours on weekdays"`
+1. **Over-repeated marquee track** — `REPEATS = 4` was sized to fill ultra-wide viewports with only 5 tiles per row. With 5 tiles × 210px × 4 repeats = 4200px per row, but the comment says half the track must overflow the viewport. We can drop to `REPEATS = 2` for tile sets ≥ 5 (still 2100px per half, more than enough for 2000px viewports — math from the existing comment confirms this).
+2. **Eager fetch + fetchPriority='high' on multiple tiles** — currently the first image of each repeat block (so multiple per row) is eager. Should be exactly one image fetch-prioritized (the first visible LCP candidate).
+3. **`srcSet` on tiny 180–210px CSS-pixel tiles** — the marquee tiles are fixed-width carousel cells that never grow past 210px. A 3-width srcSet (360/540/720) generates extra DPR-2 fetches for marginal quality gains. For a thumbnail this small, a single optimized URL is plenty (still retina-crisp via Supabase resize).
 
-**2. Replace the AI-persona avatar strip with a real founder card**
-Drop Sophia/Kenji/Zara from this page entirely. Replace the avatar header inside the form card with a single, honest "from the founder" strip using the existing real photo `src/assets/founder-tomas.jpg`:
+### Fixes in `src/components/seo/landing/LandingHeroSEO.tsx`
 
+**1. Reduce marquee repeats**
+```ts
+// before
+const REPEATS = 4;
+// after — 2 is enough for any tile set with >=5 unique tiles
+const REPEATS = tiles.length >= 5 ? 2 : 4;
 ```
-[Tomas photo 36px]   FROM THE TEAM
-                     Tomas & the VOVV.AI team — we read every message ourselves
+Cuts hero `<img>` count from **80 → 40** (or fewer when tiles >= 10).
+
+**2. Drop the 3-width srcSet on marquee tiles (fixed-size thumbnails)**
+Replace:
+```tsx
+src={getOptimizedUrl(resolvedSrc, { width: 540, height: 720, quality: 78, resize: 'cover' })}
+srcSet={getResizedSrcSet(resolvedSrc, { widths: [360, 540, 720], aspect: [3, 4], quality: 78 })}
+sizes="(max-width: 640px) 180px, 210px"
+```
+with a single URL sized for retina (420×560 covers both 180px and 210px @ 2× DPR):
+```tsx
+src={getOptimizedUrl(resolvedSrc, { width: 420, height: 560, quality: 72, resize: 'cover' })}
+```
+Removes ~80 extra DPR-2 candidate URLs the browser was evaluating.
+
+**3. Limit eager loading to a single LCP-priority image**
+Currently `eager && i < 2` and `highPriority && i < 1` apply to **each repeat slot** (so up to 2 eagers per row across 4 repeats = 4 eager fetches). Tighten so only the very first tile of row 1 is eager + high priority; everything else lazy.
+```tsx
+// in MarqueeRow
+eager={eager && i === 0}
+highPriority={eager && i === 0}
 ```
 
-Layout: `flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-border bg-muted/30`
-- Real circular avatar (`w-9 h-9 rounded-full ring-1 ring-border` using `founder-tomas.jpg`)
-- Eyebrow: `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground` → "From the team"
-- Line below: `text-[13px] text-foreground` → "Tomas & the VOVV.AI team — we read every message ourselves"
+**4. Add `fetchpriority="low"` to all lazy tiles**
+This deprioritizes the 70+ marquee dupes against above-the-fold UI fetches.
 
-This matches the dashboard eyebrow standard (`tracking-[0.2em]`, per memory) and removes the AI personas from the support context. The same `founder-tomas.jpg` is already used on `/about`, so it's consistent.
+### Part B — CTA destination changes
 
-**3. Add a tiny "what to expect" reassurance row above the form**
-Inside the form card body (above `<ChatContactForm />`), add a slim 3-bullet row of expectations so users feel the human commitment:
+**1. `src/pages/seo/ShopifyProductPhotography.tsx` (line 80)**
+```ts
+secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
+// →
+secondaryCta={{ label: 'See examples', to: '/discover' }}
+```
 
-- ⏱ **Reply time** — Usually within a few hours, weekdays
-- ✉️ **Where it goes** — Straight to the team's inbox
-- 🔒 **Privacy** — Your messages stay between us
+**2. `src/pages/seo/EtsyProductPhotography.tsx` (line 80)**
+Same change: `to: '/ai-product-photography'` → `to: '/discover'`.
 
-Render as a `divide-x divide-border` row of three `flex-1` cells, each with a small lucide icon (`Clock`, `Mail`, `Lock`), `text-[11px] uppercase tracking-[0.16em] text-muted-foreground` label, and `text-[13px] font-medium text-foreground` value. Wrapper: `rounded-xl border border-border bg-background mb-5 overflow-hidden`. Stacks vertically on mobile (`flex-col sm:flex-row sm:divide-y-0 divide-y`).
+**3. `src/components/seo/photography/category/CategoryHero.tsx` (lines 70–75)**
+The "See examples" anchor on `/ai-product-photography/fashion` already points to `#scene-library`, which is the wrong section. The "Built for every fashion shot." headline lives in `CategoryBuiltForEveryCategory.tsx` (line 89). Add an `id="built-for-every"` to that section's outer `<section>` element and update the hero anchor:
+```tsx
+href="#scene-library"  →  href="#built-for-every"
+```
 
-**4. Improve the "Quiet helpers" copy**
-Make descriptions less generic and more human:
-
-- **Browse FAQs** → "Quick answers to the things people ask most"
-- **Join our Discord** → "Hang out with the team and other creators"
-- **Tutorials & guides** → "Short walkthroughs for every Visual Type"
-
-Keep the same card structure / icons.
-
-**5. Footer microcopy**
-Add a single human line above the social-links footer:
-`text-xs text-muted-foreground` → "Prefer email? Write directly to hello@vovv.ai"
-
-Then the existing `Email · Discord · Twitter · Instagram` row stays beneath it.
+Need to also add `scroll-mt-24` (matching `CategorySceneExamples`) to that section so the sticky nav doesn't cover the heading.
 
 ### What stays
-- Existing `<ChatContactForm variant="spacious" />` — unchanged.
-- Card containers, spacing rhythm, soft icon tiles, divider patterns — already match dashboard.
-- Social-links footer row.
+- All page copy, layouts, JSON-LD, FAQs, hero collage tile counts.
+- The override hook (`useSeoVisualOverridesMap`) — it's already cached.
+- `LandingOneToManyShowcase` + `LandingCategoryGrid` (their imgs are already lazy and properly sized for their containers).
 
 ### Out of scope
-- No backend / form-submission changes.
-- No changes to `ChatContactForm`, About page, or marketing pages.
-- AI brand-model personas (Sophia/Kenji/Zara) remain on the marketing site — they're correct *there*, just not on the support page.
+- No backend / data changes.
+- No design changes to the hero or category pages — purely image-loading tuning + CTA hrefs.
+- Not touching `getResizedSrcSet` (still correct for full-bleed cards elsewhere).
 
 ### Files touched
-- `src/pages/AppHelp.tsx` (only)
-- New imports: `founderImg from '@/assets/founder-tomas.jpg'`, `Clock`, `Mail`, `Lock` from `lucide-react`
-- Removed imports: `Avatar*`, the three avatar URL constants, `getOptimizedUrl`, `getLandingAssetUrl` (if unused after change)
+- `src/components/seo/landing/LandingHeroSEO.tsx` — marquee perf
+- `src/pages/seo/ShopifyProductPhotography.tsx` — CTA href
+- `src/pages/seo/EtsyProductPhotography.tsx` — CTA href
+- `src/components/seo/photography/category/CategoryHero.tsx` — anchor target
+- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — add `id="built-for-every"` + `scroll-mt-24`
+
+### Expected impact
+Hero image count drops from 80 → ~40 with srcSet candidates removed, so total image fetches across the Shopify page drop roughly **~40-50%**. First contentful paint of the hero marquee should be visibly faster, especially on slower connections.

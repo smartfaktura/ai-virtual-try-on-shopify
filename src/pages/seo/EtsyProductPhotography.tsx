@@ -77,7 +77,7 @@ export default function EtsyProductPhotography() {
           subheadline="Upload one product photo and create Etsy listing images, lifestyle visuals, detail shots, shop banners, and social content in minutes."
           trustLine="Made for small shops · No studio needed · Create from one product photo"
           primaryCta={{ label: 'Try it free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
+          secondaryCta={{ label: 'See examples', to: '/discover' }}
           altPrefix="AI Etsy product photography example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'Listing Hero' },
