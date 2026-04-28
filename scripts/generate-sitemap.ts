@@ -87,6 +87,10 @@ const MARKETING_URLS: SitemapEntry[] = [
   { loc: '/ai-product-photography-vs-photoshoot', changefreq: 'monthly', priority: 0.8 },
   { loc: '/ai-product-photography-vs-studio',     changefreq: 'monthly', priority: 0.8 },
 
+  // Comparison pages
+  { loc: '/compare',                        changefreq: 'monthly', priority: 0.7 },
+  { loc: '/compare/vovv-vs-flair-ai',       changefreq: 'monthly', priority: 0.8 },
+
   // Feature pages
   { loc: '/features/workflows',             changefreq: 'monthly', priority: 0.8 },
   { loc: '/features/virtual-try-on',        changefreq: 'monthly', priority: 0.8 },

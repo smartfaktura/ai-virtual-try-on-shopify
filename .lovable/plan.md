@@ -1,111 +1,84 @@
-# Phase 7a — Image sitemap for Google Images discovery
+# Compare Hub + VOVV vs Flair AI Comparison Page
 
-## Goal
+Build a reusable, on-brand comparison page system for VOVV.AI, then ship the first comparison page (Flair AI). Reuse existing landing components so it visually matches the homepage and other SEO pages — no separate template look.
 
-Tell Google Images about every important visual on our public pages so they can appear in image search results. Right now our sitemap lists 55 page URLs with zero image annotations — Google only finds our images by chance during JS rendering.
+## What gets built
 
-## Scope
+### 1. Reusable comparison components
+New folder `src/components/seo/compare/`:
+- `ComparisonHero.tsx` — eyebrow + H1 + subheadline + dual CTA, same scale/spacing as `LandingHeroSEO`
+- `QuickVerdictCards.tsx` — two-card "Choose X if…" block
+- `ComparisonTable.tsx` — responsive table (desktop) / stacked card list (mobile), with VOVV column subtly accented
+- `UseCaseComparisonCards.tsx` — grid of use-case cards, each showing both products' angle
+- `CompetitorStrengthsSection.tsx` — neutral, factual "What X Does Well" block
+- `VOVVDifferenceSection.tsx` — bullet list block for VOVV's differentiation
+- `WhoShouldChooseWhich.tsx` — two-column decision block (wraps existing `LandingDecisionMatrix` style)
+- `ComparisonFAQ.tsx` — wraps existing `LandingFAQConfig` so structured data + accordion stay consistent
+- `ComparisonFinalCTA.tsx` — wraps `LandingFinalCTASEO`
 
-A static `sitemap-images.xml` covering the highest-value images:
+All components reuse: same `max-w-7xl` containers, `bg-[#FAFAF8]` / `soft` section variants, Inter typography scale, rounded-2xl cards, subtle borders, same button styles as the rest of the public site. No new color tokens, no new shadows.
 
-1. **Category landing page heroes** — 14 entries (one per `/ai-product-photography/[category]` page, using `heroImageId` from `aiProductPhotographyCategoryPages.ts`).
-2. **Category page featured scenes** — up to 8 representative scene previews per category (~80-100 entries).
-3. **Blog post cover images** — one per published post in `blogPosts.ts` (~10-15 entries).
-4. **Brand/marketing hero** — homepage hero, social card image (~3 entries).
+### 2. `/compare` hub page
+File: `src/pages/compare/CompareHub.tsx`. Sections:
+- Hero (eyebrow, H1, subheadline, dual CTA)
+- Intro value section ("Find the right AI visual workflow…")
+- Comparison cards grid: VOVV vs Flair AI (linked), VOVV vs Photoroom / Claid AI / Pebblely (rendered with a "Coming soon" badge, non-clickable)
+- "How we compare tools" — 4 criteria cards using `LandingValueCards` style
+- Final CTA
+- SEO: title, meta description, canonical `https://vovv.ai/compare`, BreadcrumbList JSON-LD, `CollectionPage` JSON-LD
 
-Estimated total: **~110 image entries** across **~20 page URLs**.
+### 3. `/compare/vovv-vs-flair-ai` page
+File: `src/pages/compare/VovvVsFlairAi.tsx`. Composes the reusable components in this order:
+1. `ComparisonHero`
+2. `QuickVerdictCards` (two balanced cards)
+3. `ComparisonTable` (12 rows, copy from spec; uncertain rows use "Available depending on current plan and workflow")
+4. `CompetitorStrengthsSection` — "What Flair AI Does Well"
+5. `VOVVDifferenceSection` — "Where VOVV.AI Is Different" + 6 bullets
+6. `UseCaseComparisonCards` — 4 use-case cards
+7. `WhoShouldChooseWhich`
+8. `ComparisonFAQ` — 6 FAQs from spec
+9. `ComparisonFinalCTA`
+10. Internal-link strip (subtle, near footer): `/ai-product-photography`, `/ai-product-photography/fashion`, `/ai-product-photography/jewelry`, `/discover`, `/pricing`, `/auth`
 
-## What we'll build
+SEO/meta:
+- `<title>`: `VOVV vs Flair AI: AI Product Photography Comparison for E-commerce`
+- meta description as specified
+- canonical: `https://vovv.ai/compare/vovv-vs-flair-ai`
+- OG title/description as specified, default OG image
+- JSON-LD: `WebPage`, `BreadcrumbList` (Home › Compare › VOVV vs Flair AI), `FAQPage` (auto-emitted by `ComparisonFAQ`)
 
-### 1. Generator script (`scripts/generate-image-sitemap.ts`)
+Tone: balanced, factual, never bashes Flair AI, no superlatives like "better in every way."
 
-A Node script that reads from existing data sources and emits XML. Run manually (like our current page sitemap workflow):
-
-```text
-src/data/aiProductPhotographyCategoryPages.ts  →  category hero + scenes
-src/data/blogPosts.ts                          →  blog covers
-src/lib/constants.ts (DEFAULT_OG_IMAGE)        →  homepage hero
-                  ↓
-            public/sitemap-images.xml
+### 4. Routing
+`src/App.tsx` — add two public routes near the other SEO routes:
 ```
-
-Each entry follows Google's image sitemap spec:
-```xml
-<url>
-  <loc>https://vovv.ai/ai-product-photography/fashion</loc>
-  <image:image>
-    <image:loc>https://.../scene-preview.jpg</image:loc>
-    <image:title>Editorial fashion product photography</image:title>
-    <image:caption>AI-generated on-model fashion shot, studio lighting</image:caption>
-  </image:image>
-  ... (more image entries for the same page)
-</url>
+<Route path="/compare" element={<CompareHub />} />
+<Route path="/compare/vovv-vs-flair-ai" element={<VovvVsFlairAi />} />
 ```
+Both lazy-imported, same pattern as existing pages.
 
-Captions are auto-built from the existing scene `name` + category `name` fields — no manual writing needed.
-
-### 2. Sitemap index (`public/sitemap.xml`)
-
-Convert our current single sitemap into an **index file** that points to two sub-sitemaps:
-
-```xml
-<sitemapindex>
-  <sitemap><loc>https://vovv.ai/sitemap-pages.xml</loc></sitemap>
-  <sitemap><loc>https://vovv.ai/sitemap-images.xml</loc></sitemap>
-</sitemapindex>
+### 5. Sitemap
+Edit `scripts/generate-sitemap.ts` `MARKETING_URLS`:
 ```
+{ loc: '/compare',                      changefreq: 'monthly', priority: 0.7 },
+{ loc: '/compare/vovv-vs-flair-ai',     changefreq: 'monthly', priority: 0.8 },
+```
+Sitemap regenerates automatically on build (`npm run build` runs the script). No other compare routes added yet.
 
-- Current `sitemap.xml` content moves to `sitemap-pages.xml` (no content change, just renamed).
-- This is Google's recommended pattern when splitting sitemaps; existing GSC submission keeps working.
+### 6. Footer
+Edit `src/components/landing/LandingFooter.tsx` — extend the existing `Solutions › Compare` group with a new entry:
+- "Compare VOVV.AI to Others" → `/compare`
+- "VOVV vs Flair AI" → `/compare/vovv-vs-flair-ai`
+(Keeps existing "AI vs Photoshoot" and "VOVV.AI vs Studio" entries.)
 
-### 3. `robots.txt` update
+### 7. Prerender note
+The project does not run a separate prerender pipeline (no react-snap / vite-plugin-ssg). SEO discoverability is currently provided by `react-helmet-async` (title/meta/canonical/JSON-LD) + `sitemap.xml`, the same pattern every existing SEO page uses (`/ai-product-photography-vs-photoshoot`, etc.). The new pages will follow the exact same pattern so Google/Bing receive the head tags and structured data on crawl. If you want true static prerendering added as a separate pipeline, that's a larger infra task — flag it and I'll scope it as its own plan.
 
-Already references `Sitemap: https://vovv.ai/sitemap.xml`. The index file pattern means we don't need to change robots.txt — Google follows the index automatically. But we'll add an explicit second `Sitemap:` line for `sitemap-images.xml` as a belt-and-suspenders signal (Bing handles this slightly differently).
+## Out of scope / untouched
+- `/app/*`, `/admin/*`, `/auth/*`, `/account/*`, `/checkout/*`, `/success/*`
+- No new color tokens, fonts, or design primitives
+- No backend/DB changes
+- Other comparison pages (Photoroom, Claid, Pebblely) — only "Coming soon" cards on hub
 
-## What we explicitly won't do in 7a
-
-- **Dynamic edge function** — saved for Phase 7b if traffic warrants. Static is fine for v1.
-- **Public discover/freestyle showcase library** — currently disallowed in robots.txt (`Disallow: /discover/` for item pages). Indexing those images would require allowing the URLs and confirming we have rights/labels for every showcase asset. Separate decision.
-- **Filename rename pass** on existing assets — they're already descriptive enough (e.g. `hero-product-croptop.jpg`, not `IMG_4823.jpg`).
-- **License URLs** in the image XML — we don't publish a public license page yet.
-
-## Technical scope (for the dev side)
-
-Files touched:
-- `scripts/generate-image-sitemap.ts` — new generator
-- `public/sitemap.xml` — converted to sitemap index
-- `public/sitemap-pages.xml` — new (renamed from current sitemap.xml content)
-- `public/sitemap-images.xml` — new
-- `public/robots.txt` — add second Sitemap: line
-- `.lovable/plan.md` — log Phase 7a
-
-No dependencies, no backend, no runtime change. Pure static XML.
-
-## After deploy (you do this — 5 min)
-
-1. **Google Search Console** → Sitemaps → submit `https://vovv.ai/sitemap-images.xml` as a separate entry alongside the existing one.
-2. Wait 2-4 weeks. Check **GSC → Indexing → Pages** and **Performance → Search type: Image** to see image impressions start appearing.
-
-## Estimated impact
-
-- **Google Images traffic** — currently near zero from organic image search; could become a meaningful long-tail channel for "ai fashion product photography", "fragrance product shot ai", etc.
-- **GEO** — multimodal AI (Gemini, GPT-4o, Perplexity) increasingly cites images. Image sitemaps make ours easier to discover.
-- **No risk** — no behavior change for users, no impact on existing page indexing.
-
-Approve and I'll build the generator, run it, and wire up the index in one pass.
-
----
-
-## Phase 7a — Implementation log
-
-**Discovery**: A `scripts/generate-sitemap.ts` already existed and was wired into `npm run build`. It was already emitting blog cover images and pulling Discover items live from the backend.
-
-**Change made**: Enhanced the existing generator (instead of forking a new one or building a sitemap index) to add image entries on every category page:
-- Hero image (`heroImageId` → `PREVIEW()` URL) with `heroAlt` as title
-- First 4 scene examples per category, each with its `alt` text as title
-
-**Result**: `public/sitemap.xml` went from ~7 image entries to **419 image entries across 417 URLs** in a single regenerate. Robots.txt and sitemap.xml URL unchanged — existing GSC submission keeps working.
-
-**No sitemap index needed** — single file is well under Google's 50K URL / 50MB limit.
-
-**User next step**: In Google Search Console → Indexing → Pages → confirm the sitemap shows the new image count after the next deploy. Watch Performance → Image search type for impressions over the next 2–4 weeks.
+## Final report after implementation
+Will confirm: routes created, exact title/meta/canonical, FAQPage JSON-LD present, sitemap entries added, footer updated, no private routes touched, both pages render with correct head tags.
