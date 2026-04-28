@@ -19,6 +19,7 @@ import { UseCaseComparisonCards } from '@/components/seo/compare/UseCaseComparis
 import { WhoShouldChooseWhich } from '@/components/seo/compare/WhoShouldChooseWhich';
 import { ComparisonFAQ } from '@/components/seo/compare/ComparisonFAQ';
 import { ComparisonFinalCTA } from '@/components/seo/compare/ComparisonFinalCTA';
+import { DiscoverGalleryStrip } from '@/components/seo/compare/DiscoverGalleryStrip';
 
 const PAGE_PATH = '/compare/vovv-vs-flair-ai';
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
@@ -309,6 +310,15 @@ export default function VovvVsFlairAi() {
               a: 'Flair AI may be better for users who prefer a drag-and-drop canvas and manual scene building. VOVV.AI may be better for users who want faster structured visual outputs for e-commerce workflows.',
             },
           ]}
+        />
+
+        <DiscoverGalleryStrip
+          eyebrow="Made with VOVV.AI"
+          headline="Brand-ready visuals from one product photo"
+          intro="A small selection of recent product visuals brands have generated with VOVV.AI."
+          count={8}
+          background="background"
+          cta={{ label: 'Explore more on Discover', to: '/discover' }}
         />
 
         {/* Internal-link strip */}

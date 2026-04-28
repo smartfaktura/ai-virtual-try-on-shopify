@@ -21,6 +21,7 @@ import { LandingValueCards } from '@/components/seo/landing/LandingValueCards';
 import { WhoShouldChooseWhich } from '@/components/seo/compare/WhoShouldChooseWhich';
 import { ComparisonFAQ } from '@/components/seo/compare/ComparisonFAQ';
 import { ComparisonFinalCTA } from '@/components/seo/compare/ComparisonFinalCTA';
+import { DiscoverGalleryStrip } from '@/components/seo/compare/DiscoverGalleryStrip';
 
 const PAGE_PATH = '/compare/vovv-vs-photoroom';
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
@@ -269,6 +270,15 @@ export default function VovvVsPhotoroom() {
             { q: 'Can VOVV replace product photoshoots?', a: 'VOVV can reduce the need for many traditional product photoshoots by helping brands create product visuals, lifestyle scenes, and campaign-ready assets with AI. For some use cases, brands may still combine AI visuals with traditional photography.' },
             { q: 'Who should choose VOVV?', a: 'VOVV is best for e-commerce brands, agencies, marketers, and creative teams that need more visual variety, faster campaign production, and scalable product visuals from one product photo.' },
           ]}
+        />
+
+        <DiscoverGalleryStrip
+          eyebrow="Made with VOVV.AI"
+          headline="Beyond background removal — what brands ship with VOVV.AI"
+          intro="Recent product visuals brands have generated with VOVV.AI from a single product photo."
+          count={8}
+          background="background"
+          cta={{ label: 'Explore more on Discover', to: '/discover' }}
         />
 
         {/* Internal-link strip */}
