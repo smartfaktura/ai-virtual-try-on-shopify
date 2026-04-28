@@ -36,24 +36,24 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
       {/* Close button */}
       <button
         onClick={() => onOpenChange(false)}
-        className="absolute top-4 right-4 z-10 p-1.5 rounded-full hover:bg-muted/60 transition-colors"
+        className="absolute top-4 right-4 z-10 inline-flex items-center justify-center w-7 h-7 rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-border"
         aria-label="Close"
       >
-        <X className="w-4 h-4 text-muted-foreground" />
+        <X className="w-4 h-4" />
       </button>
 
       {/* Header — left aligned, restrained */}
-      <div className="px-6 sm:px-7 pt-7 pb-5">
-        <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 mb-4">
-          <Gift className="w-5 h-5 text-primary" />
+      <div className="px-6 sm:px-7 pt-6 pb-4">
+        <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 mb-3.5">
+          <Gift className="w-[18px] h-[18px] text-primary" />
         </div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2">
           Reward
         </p>
-        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+        <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
           Earn 200 free credits
         </h2>
-        <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">
+        <p className="mt-1 text-sm text-muted-foreground">
           Share a creation on social media & tag us
         </p>
       </div>
@@ -67,15 +67,15 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
             <div className="flex items-start gap-3">
               <StepNumber num="2" />
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] text-foreground leading-snug pt-0.5">
-                  <span className="font-semibold">Post & tag</span>
-                  <span className="text-muted-foreground"> — share on Instagram or TikTok with</span>
+                <p className="text-sm font-semibold text-foreground leading-snug">Post & tag</p>
+                <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                  Share on Instagram or TikTok with the caption
                 </p>
                 <button
                   onClick={copyCaption}
-                  className="mt-2.5 flex items-center gap-2.5 px-3 py-2 rounded-xl bg-background border border-border hover:border-foreground/20 transition-colors group w-full"
+                  className="mt-2.5 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/20 transition-colors group w-full"
                 >
-                  <code className="text-[13px] font-semibold text-foreground flex-1 text-left">{CAPTION}</code>
+                  <span className="font-sans text-sm font-medium text-foreground flex-1 text-left truncate">{CAPTION}</span>
                   {copied ? (
                     <Check className="w-4 h-4 text-primary flex-shrink-0" />
                   ) : (
@@ -91,8 +91,8 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
       </div>
 
       {/* CTA */}
-      <div className="px-6 sm:px-7 pt-5 pb-3">
-        <Button asChild size="pill" className="w-full gap-2 h-11">
+      <div className="px-6 sm:px-7 pt-4 pb-2">
+        <Button asChild size="pill" className="w-full gap-2 h-11 text-sm font-medium">
           <a href={mailtoHref}>
             <Send className="w-4 h-4" />
             Claim my credits
@@ -101,7 +101,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
       </div>
 
       {/* Fine print */}
-      <p className="px-6 sm:px-7 pb-6 text-[11px] text-muted-foreground/70 text-center leading-relaxed">
+      <p className="px-6 sm:px-7 pb-6 pt-2 text-xs text-muted-foreground text-center">
         One reward per account per month · Account must be 7+ days old
       </p>
     </div>
@@ -129,7 +129,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
 /* Step number tile — soft primary tile matching /app aesthetic */
 function StepNumber({ num }: { num: string }) {
   return (
-    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-primary/10 text-primary text-[12px] font-semibold flex-shrink-0 mt-0.5 tabular-nums">
+    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10 text-primary text-[11px] font-semibold flex-shrink-0 tabular-nums">
       {num}
     </span>
   );
@@ -140,10 +140,10 @@ function Step({ num, title, desc }: { num: string; title: string; desc: string }
   return (
     <li className="flex items-start gap-3 p-4 sm:p-5">
       <StepNumber num={num} />
-      <p className="text-[14px] text-foreground leading-snug pt-0.5">
-        <span className="font-semibold">{title}</span>
-        <span className="text-muted-foreground"> — {desc}</span>
-      </p>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground leading-snug">{title}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{desc}</p>
+      </div>
     </li>
   );
 }
