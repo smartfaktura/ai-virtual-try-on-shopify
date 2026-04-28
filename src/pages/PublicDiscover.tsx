@@ -114,11 +114,16 @@ export default function PublicDiscover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+  // Track which urlItemId the user explicitly dismissed so auto-open effects
+  // do not reopen the modal after the user clicks X.
+  const dismissedItemIdRef = useRef<string | null>(null);
 
   // Fast-path: resolve the deep-linked item with ONE row fetch so the modal
   // opens before the full feed (~400+ rows across 3 RPCs) finishes loading.
   const { data: deepLinkedItem } = useDeepLinkedDiscoverItem(urlItemId);
   useEffect(() => {
+    if (!urlItemId) return;
+    if (dismissedItemIdRef.current === urlItemId) return;
     if (deepLinkedItem && !selectedItem) {
       setSelectedItem(deepLinkedItem);
       // Preload the hero image as soon as we know its URL.
@@ -136,7 +141,7 @@ export default function PublicDiscover() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deepLinkedItem]);
+  }, [deepLinkedItem, urlItemId]);
 
   useEffect(() => { setSelectedSubcategory('__all__'); }, [selectedCategory]);
 
