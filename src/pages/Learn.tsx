@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/app/PageHeader';
 import {
   LEARN_TRACKS,
   getGuidesByTrack,
@@ -16,7 +17,7 @@ function LearnRow({ guide, onOpen }: { guide: LearnGuide; onOpen: (g: LearnGuide
       type="button"
       onClick={() => onOpen(guide)}
       aria-label={`Open guide: ${guide.title}`}
-      className="group relative w-full flex items-center gap-4 py-4 px-5 text-left transition-colors hover:bg-accent/30 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:ring-inset"
+      className="group relative w-full flex items-center gap-4 py-4 px-5 text-left transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:ring-inset"
     >
       <div className="flex-1 min-w-0">
         <h3 className="text-[15px] font-medium tracking-tight text-foreground truncate">
@@ -70,95 +71,87 @@ export default function Learn() {
   const totalVisible = sections.reduce((sum, s) => sum + s.guides.length, 0);
 
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
-      <div className="max-w-3xl mx-auto px-5 sm:px-8 lg:px-12 pt-24 lg:pt-16 pb-20 animate-in fade-in duration-500">
-        {/* Hero header */}
-        <header className="mb-12 lg:mb-16">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Learn
-          </p>
-          <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]">
-            Learn
-          </h1>
-          <p className="text-base sm:text-lg text-muted-foreground mt-4 max-w-xl leading-relaxed">
-            Short, focused guides for getting more out of VOVV.AI.
-          </p>
-        </header>
+    <div className="animate-in fade-in duration-500">
+      <PageHeader
+        title="Learn"
+        subtitle="Short, focused guides for getting more out of VOVV.AI"
+      >
+        <div className="max-w-3xl space-y-6">
+          {/* Explainer video — single app walkthrough */}
+          <figure>
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border bg-black shadow-sm">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/lm9ywh7Ipwc?rel=0&modestbranding=1&playsinline=1"
+                title="VOVV.AI app walkthrough"
+                loading="lazy"
+                allow="accelerated-2d-canvas; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
+            <figcaption className="mt-2.5 flex items-center justify-between text-[12px] text-muted-foreground">
+              <span>Watch: app walkthrough</span>
+              <a
+                href="https://youtu.be/lm9ywh7Ipwc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                Open on YouTube ↗
+              </a>
+            </figcaption>
+          </figure>
 
-        {/* Explainer video — single app walkthrough */}
-        <figure className="mb-10">
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#f0efed] bg-black shadow-sm">
-            <iframe
-              src="https://www.youtube-nocookie.com/embed/lm9ywh7Ipwc?rel=0&modestbranding=1&playsinline=1"
-              title="VOVV.AI app walkthrough"
-              loading="lazy"
-              allow="accelerated-2d-canvas; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
+          {/* Search */}
+          <div className="relative">
+            <Search
+              aria-hidden
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
+            />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search guides"
+              aria-label="Search guides"
+              className="pl-11 h-11 rounded-full bg-card border-border hover:border-border focus-visible:bg-card focus-visible:border-foreground/20 focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:ring-offset-0 transition-colors placeholder:text-muted-foreground/70"
             />
           </div>
-          <figcaption className="mt-2.5 flex items-center justify-between text-[12px] text-muted-foreground">
-            <span>Watch: app walkthrough</span>
-            <a
-              href="https://youtu.be/lm9ywh7Ipwc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              Open on YouTube ↗
-            </a>
-          </figcaption>
-        </figure>
 
-        {/* Search */}
-        <div className="relative mb-10">
-          <Search
-            aria-hidden
-            className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
-          />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search guides"
-            aria-label="Search guides"
-            className="pl-12 h-11 rounded-full bg-white border border-[#f0efed] hover:border-[#e5e3df] focus-visible:bg-white focus-visible:border-foreground/20 focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:ring-offset-0 transition-colors placeholder:text-muted-foreground/70"
-          />
+          {totalVisible === 0 ? (
+            <div className="text-center py-20 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                No guides match “{query}”.
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => setQuery('')}>
+                Clear search
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sections.map(({ meta, guides }) => (
+                <section key={meta.id} aria-labelledby={`track-${meta.id}`}>
+                  <div className="flex items-baseline justify-between mb-3 px-1">
+                    <h2
+                      id={`track-${meta.id}`}
+                      className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                    >
+                      {meta.label}
+                    </h2>
+                    <span className="text-[11px] text-muted-foreground/60 tabular-nums">
+                      {guides.length} {guides.length === 1 ? 'guide' : 'guides'}
+                    </span>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden shadow-sm">
+                    {guides.map((g) => (
+                      <LearnRow key={`${g.section}/${g.slug}`} guide={g} onOpen={handleOpen} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
-
-        {totalVisible === 0 ? (
-          <div className="text-center py-20 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              No guides match “{query}”.
-            </p>
-            <Button variant="ghost" size="sm" onClick={() => setQuery('')}>
-              Clear search
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-10">
-            {sections.map(({ meta, guides }) => (
-              <section key={meta.id} aria-labelledby={`track-${meta.id}`}>
-                <div className="flex items-baseline justify-between mb-3 px-1">
-                  <h2
-                    id={`track-${meta.id}`}
-                    className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground"
-                  >
-                    {meta.label}
-                  </h2>
-                  <span className="text-[11px] text-muted-foreground/60 tabular-nums">
-                    {guides.length} {guides.length === 1 ? 'guide' : 'guides'}
-                  </span>
-                </div>
-                <div className="rounded-2xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
-                  {guides.map((g) => (
-                    <LearnRow key={`${g.section}/${g.slug}`} guide={g} onOpen={handleOpen} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
-      </div>
+      </PageHeader>
     </div>
   );
 }
