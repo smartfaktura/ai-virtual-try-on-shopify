@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useRecommendedDiscoverItems } from '@/hooks/useRecommendedDiscoverItems';
+import { useDeepLinkedDiscoverItem } from '@/hooks/useDeepLinkedDiscoverItem';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { PublicDiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
@@ -113,7 +114,32 @@ export default function PublicDiscover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+
+  // Fast-path: resolve the deep-linked item with ONE row fetch so the modal
+  // opens before the full feed (~400+ rows across 3 RPCs) finishes loading.
+  const { data: deepLinkedItem } = useDeepLinkedDiscoverItem(urlItemId);
+  useEffect(() => {
+    if (deepLinkedItem && !selectedItem) {
+      setSelectedItem(deepLinkedItem);
+      // Preload the hero image as soon as we know its URL.
+      const heroUrl =
+        deepLinkedItem.type === 'preset'
+          ? deepLinkedItem.data.image_url
+          : deepLinkedItem.data.previewUrl;
+      if (heroUrl && typeof document !== 'undefined') {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = heroUrl;
+        (link as HTMLLinkElement & { fetchPriority?: string }).fetchPriority = 'high';
+        document.head.appendChild(link);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkedItem]);
+
   useEffect(() => { setSelectedSubcategory('__all__'); }, [selectedCategory]);
+
 
   // Fetch custom scenes publicly (no auth required with new RLS)
   const { data: customScenes = [] } = useQuery({
@@ -181,21 +207,23 @@ export default function PublicDiscover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
-  // Auto-open item from URL param (supports slug, UUID, and scene- prefix)
+  // Fallback auto-open from URL param — runs after the full feed resolves.
+  // The fast-path above (useDeepLinkedDiscoverItem) usually sets selectedItem
+  // first; this only fires for cases the fast-path can't handle (e.g.
+  // scene-custom-* items which require the admin-gated RPC).
   useEffect(() => {
-    if (!urlItemId || allItems.length === 0) return;
+    if (!urlItemId || allItems.length === 0 || selectedItem) return;
     const found = allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
       }
-      // Match by slug or by raw UUID
       if (item.type === 'preset') {
         return item.data.slug === urlItemId || item.data.id === urlItemId;
       }
       return false;
     });
     if (found) setSelectedItem(found);
-  }, [urlItemId, allItems]);
+  }, [urlItemId, allItems, selectedItem]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
     return `/discover/${getItemSlug(item)}`;

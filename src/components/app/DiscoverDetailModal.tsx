@@ -203,16 +203,33 @@ export function DiscoverDetailModal({
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12" onClick={onClose}>
           {(() => {
             const ar = getDiscoverItemAspectRatio(item);
+            // LQIP painted instantly under the full-quality image so the user
+            // sees something within the first frame even before the hero
+            // download finishes. Mirrors the SceneDetailModal pattern.
+            const lqipUrl = imageUrl ? getOptimizedUrl(imageUrl, { quality: 15 }) : '';
             return (
-              <ShimmerImage
-                src={imageUrl}
-                alt={title}
-                aspectRatio={ar}
-                wrapperClassName="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] flex items-center justify-center"
-                wrapperStyle={{ aspectRatio: ar, width: 'auto', height: 'auto' }}
-                className="w-full h-full object-contain rounded-lg shadow-2xl"
-                fetchPriority="high"
-              />
+              <div
+                className="relative max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
+                style={{ aspectRatio: ar, width: 'auto', height: '100%' }}
+              >
+                {lqipUrl && (
+                  <img
+                    src={lqipUrl}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-contain rounded-lg blur-xl scale-105"
+                  />
+                )}
+                <ShimmerImage
+                  src={imageUrl}
+                  alt={title}
+                  aspectRatio={ar}
+                  wrapperClassName="relative w-full h-full flex items-center justify-center"
+                  wrapperStyle={{ aspectRatio: ar, width: '100%', height: '100%' }}
+                  className="w-full h-full object-contain rounded-lg shadow-2xl"
+                  fetchPriority="high"
+                />
+              </div>
             );
           })()}
         </div>
