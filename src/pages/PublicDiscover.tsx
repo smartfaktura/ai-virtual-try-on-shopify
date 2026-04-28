@@ -103,7 +103,7 @@ export default function PublicDiscover() {
   const navigate = useNavigate();
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
-  const { data: presets = [], isLoading } = useDiscoverPresets();
+  const { data: presets = [], isLoading: isLoadingPresets } = useDiscoverPresets();
   const { featuredMap, isFeatured } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { isSaved, toggleSave } = useSavedItems();
@@ -142,7 +142,7 @@ export default function PublicDiscover() {
 
 
   // Fetch custom scenes publicly (no auth required with new RLS)
-  const { data: customScenes = [] } = useQuery({
+  const { data: customScenes = [], isLoading: isLoadingCustom } = useQuery({
     queryKey: ['public-custom-scenes'],
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
@@ -153,7 +153,12 @@ export default function PublicDiscover() {
   });
 
   const customScenePoses = useMemo(() => customScenes.map(toTryOnPose), [customScenes]);
-  const { data: recommendedPoses = [] } = useRecommendedDiscoverItems({ mode: 'public' });
+  const { data: recommendedPoses = [], isLoading: isLoadingRecommended } = useRecommendedDiscoverItems({ mode: 'public' });
+
+  // Wait for ALL three feed sources to resolve before first paint, otherwise
+  // items visibly reshuffle as each query lands (index-based column distribution
+  // means any insert near the top shifts every later item to a different column).
+  const isLoading = isLoadingPresets || isLoadingCustom || isLoadingRecommended;
 
   // Track views when modal opens (deduplicated per session, debounced 250 ms).
   const viewedItemsRef = useRef<Set<string>>(new Set());
