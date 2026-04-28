@@ -101,6 +101,7 @@ function useColumnCount() {
 
 export default function PublicDiscover() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
@@ -110,7 +111,11 @@ export default function PublicDiscover() {
   const { isAdmin } = useIsAdmin();
   const columnCount = useColumnCount();
   const { filterVisible } = useHiddenScenes();
-  
+
+  // Pexels-style: only render grid+modal when user navigated FROM the grid.
+  // Direct URL hits, refreshes, and crawlers see the full SEO detail page.
+  const cameFromGrid = Boolean((location.state as { fromGrid?: boolean } | null)?.fromGrid);
+
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
