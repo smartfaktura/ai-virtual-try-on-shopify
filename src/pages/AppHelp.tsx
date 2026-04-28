@@ -13,7 +13,7 @@ const socialLinks = [
 
 const expectations = [
   { icon: Clock, label: 'Reply time', value: 'A few hours, weekdays' },
-  { icon: Mail, label: 'Where it goes', value: "Straight to the team" },
+  { icon: Mail, label: 'Where it goes', value: 'Straight to our team' },
   { icon: Lock, label: 'Privacy', value: 'Stays between us' },
 ];
 
