@@ -210,18 +210,26 @@ function buildSystemPrompt(pageUrl?: string): string {
   if (!pageUrl) return SYSTEM_PROMPT;
 
   const pageContextMap: Record<string, string> = {
-    '/app/': 'Dashboard — they can see their overview, recent creations, and quick actions.',
-    '/app/workflows': 'Templates page — they are browsing available templates.',
-    '/app/freestyle': 'Freestyle generation — they are creating images with custom prompts.',
+    '/app/': 'Dashboard — they see their overview, recent creations, and quick actions.',
+    '/app/workflows': 'Visual Studio — they are browsing Visual Types.',
+    '/app/freestyle': 'Create with Prompt — they are generating from a text prompt.',
     '/app/perspectives': 'Picture Perspectives — they are generating multi-angle product views.',
-    '/app/creative-drops': 'Content Calendar — they are managing scheduled content generation.',
-    '/app/products': 'Products page — they are managing their product catalog.',
-    '/app/products/new': 'Add Product page — they are uploading a new product.',
+    '/app/catalog/new': 'Catalog Studio (new run) — they are setting up a bulk catalog generation.',
+    '/app/catalog': 'Catalog Studio — they are viewing or starting bulk catalog runs.',
+    '/app/models': 'Brand Models — they are creating or browsing custom AI models.',
+    '/app/products/new': 'Add Product — they are uploading a new product.',
+    '/app/products': 'Products — they are managing their product catalog.',
     '/app/library': 'Library — they are reviewing their generated images.',
-    '/app/discover': 'Discover — they are browsing community presets and inspiration.',
-    '/app/video': 'Video Generation — they are creating videos from images.',
+    '/app/discover': 'Explore — they are browsing community presets and inspiration.',
+    '/app/video/animate': 'Animate — they are turning an image into a 5s or 10s video.',
+    '/app/video/start-end': 'Start & End — they are creating a frame-to-frame transition video.',
+    '/app/video/short-film': 'Short Film — they are building a multi-shot AI campaign film.',
+    '/app/video': 'Video Hub — they are choosing a video flow.',
     '/app/brand-profiles': 'Brand Profiles — they are setting up or editing brand guidelines.',
-    '/app/settings': 'Settings — they may be looking at plan/credit/account options.',
+    '/app/learn': 'Learn — they are reading short guides.',
+    '/app/help': 'Help & Support — they may want a real person on the team. Lean toward the human escalation CTA.',
+    '/app/pricing': 'Pricing — they are comparing plans.',
+    '/app/settings': 'Settings — they may be looking at plan, credits, or account options.',
   };
 
   // Find the best matching page
