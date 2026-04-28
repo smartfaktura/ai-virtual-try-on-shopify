@@ -78,7 +78,7 @@ export default function Learn() {
             Learn
           </p>
           <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]">
-            Get more out of VOVV.AI
+            Learn
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground mt-4 max-w-xl leading-relaxed">
             Short, focused guides for getting more out of VOVV.AI.
