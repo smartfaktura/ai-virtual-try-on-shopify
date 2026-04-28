@@ -187,30 +187,36 @@ export default function PublicDiscover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
-  // Auto-open item from URL param (supports slug, UUID, and scene- prefix)
-  useEffect(() => {
-    if (!urlItemId || allItems.length === 0) return;
-    const found = allItems.find((item) => {
+  // Resolve the item that matches the URL param (slug, UUID, or scene- prefix).
+  // This is the source of truth for both the SEO view and the modal.
+  const urlItem = useMemo<DiscoverItem | null>(() => {
+    if (!urlItemId || allItems.length === 0) return null;
+    return allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
       }
-      // Match by slug or by raw UUID
       if (item.type === 'preset') {
         return item.data.slug === urlItemId || item.data.id === urlItemId;
       }
       return false;
-    });
-    if (found) setSelectedItem(found);
+    }) ?? null;
   }, [urlItemId, allItems]);
+
+  // Auto-open modal ONLY when user navigated from the grid (Pexels-style).
+  // Direct hits / refreshes / crawlers fall through to the SEO view branch.
+  useEffect(() => {
+    if (urlItem && cameFromGrid) setSelectedItem(urlItem);
+  }, [urlItem, cameFromGrid]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
     return `/discover/${getItemSlug(item)}`;
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
-    window.history.pushState(null, '', getItemUrl(item));
+    // Use react-router so we can pass `fromGrid` state without a full reload.
+    navigate(getItemUrl(item), { state: { fromGrid: true } });
     setSelectedItem(item);
-  }, [getItemUrl]);
+  }, [getItemUrl, navigate]);
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);
