@@ -94,25 +94,18 @@ Thanks!`
 
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
-      <div className="max-w-3xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="max-w-3xl mx-auto px-5 sm:px-8 lg:px-12 pt-24 lg:pt-16 pb-20 animate-in fade-in duration-500">
         {/* Hero */}
-        <header className="mb-12">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-5">
+        <header className="mb-12 lg:mb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Bug Bounty
           </p>
-          <div className="flex items-start gap-5">
-            <div className="hidden sm:flex flex-shrink-0 w-14 h-14 rounded-2xl bg-white border border-[#f0efed] shadow-sm items-center justify-center">
-              <Bug className="w-7 h-7 text-primary" strokeWidth={1.75} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-4xl sm:text-5xl font-semibold tracking-[-0.03em] leading-[1.05] text-foreground">
-                Help us make VOVV.AI better
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed mt-4 max-w-[60ch]">
-                Find a real platform bug, report it, and earn credits when we confirm it
-              </p>
-            </div>
-          </div>
+          <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]">
+            Help us make VOVV.AI better
+          </h1>
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed mt-4 max-w-[60ch]">
+            Find a real platform bug, report it, and earn credits when we confirm it
+          </p>
         </header>
 
         {/* How it works */}
