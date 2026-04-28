@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
@@ -88,8 +89,19 @@ export function PhotographyHero() {
   const row1 = allTiles.slice(0, mid);
   const row2 = allTiles.slice(mid);
 
+  // Preload the very first hero tile so the browser starts fetching it
+  // before React hydration completes. Locks in a deterministic LCP order.
+  const firstTilePreload = row1[0]
+    ? getOptimizedUrl(row1[0].src, { width: 540, height: 720, quality: 85, resize: 'cover' })
+    : null;
+
   return (
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
+      {firstTilePreload && (
+        <Helmet>
+          <link rel="preload" as="image" href={firstTilePreload} fetchpriority="high" />
+        </Helmet>
+      )}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
           AI Product Photography
