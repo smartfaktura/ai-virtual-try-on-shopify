@@ -131,14 +131,14 @@ export default function PublicDiscover() {
         link.rel = 'preload';
         link.as = 'image';
         link.href = heroUrl;
-        // @ts-expect-error fetchPriority is a valid HTML attribute
-        link.fetchPriority = 'high';
+        (link as HTMLLinkElement & { fetchPriority?: string }).fetchPriority = 'high';
         document.head.appendChild(link);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deepLinkedItem]);
 
+  useEffect(() => { setSelectedSubcategory('__all__'); }, [selectedCategory]);
 
 
   // Fetch custom scenes publicly (no auth required with new RLS)
