@@ -440,13 +440,13 @@ export default function Settings() {
   return (
     <>
     <SEOHead title="Settings — VOVV.AI" description="Manage your VOVV.AI account settings, plan, and preferences." noindex />
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-muted/30">
       <div className="px-4 sm:px-6 lg:px-8 pt-24 lg:pt-10 pb-14 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <PageHeader title="Settings">
           <div className="space-y-8">
         {/* ─── Current Plan ─── */}
         {!(plan === 'free' && subscriptionStatus === 'none') && (
-        <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
+        <Card className="rounded-2xl border-border bg-card shadow-sm">
           <CardContent className="p-5 space-y-3">
             {/* Plan header */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -519,7 +519,7 @@ export default function Settings() {
             <h3 className="text-base font-semibold">Choose Your Plan</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
           </div>
-          <div className="inline-flex rounded-full border border-[#f0efed] bg-white p-1 shadow-sm">
+          <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
             <button
               className={`h-9 px-4 rounded-full text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setBillingPeriod('monthly')}
@@ -552,7 +552,7 @@ export default function Settings() {
 
         {/* Enterprise banner */}
         {enterprisePlan && (
-          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="rounded-xl bg-primary/10 p-3">
@@ -580,7 +580,7 @@ export default function Settings() {
         )}
 
         {/* Credit packs */}
-        <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
+        <Card className="rounded-2xl border-border bg-card shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h3 className="text-base font-semibold">Need More Credits?</h3>
@@ -630,7 +630,7 @@ export default function Settings() {
         <Separator />
 
         {/* ─── Notifications ─── */}
-        <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
+        <Card className="rounded-2xl border-border bg-card shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h2 className="text-base font-semibold">Notifications</h2>
@@ -701,7 +701,7 @@ export default function Settings() {
         {isAdmin && (
           <>
             <Separator />
-            <Card className="rounded-2xl border-[#f0efed] bg-white shadow-sm">
+            <Card className="rounded-2xl border-border bg-card shadow-sm">
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h2 className="text-base font-semibold">Asset Preview Generation</h2>
