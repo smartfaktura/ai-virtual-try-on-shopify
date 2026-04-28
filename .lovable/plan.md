@@ -1,51 +1,55 @@
-# Fix image loading order on /ai-product-photography
-
 ## Problem
 
-On `/ai-product-photography` the page paints out of order — Categories (Fashion / Footwear / Beauty…) and other lower sections appear filled in before the hero marquee finishes. Cause:
+Signup shows the generic message **"Something went wrong. Please try again."** with no actionable detail. Investigation found:
 
-1. **Hero marquee duplicates every tile** (`[...tiles, ...tiles]` x 2 rows = ~24 `<img>` requests) and only the first 6 are marked `eager` + `fetchpriority=high`. The rest are `lazy`, but because the marquee scroller is `w-max` and overflows, the browser still considers many off-screen tiles "in viewport" on a 1203px display and starts loading them at low priority, fighting the eager 6.
-2. **All other sections** (`PhotographyCategoryChooser`, `PhotographyVisualSystem`, `PhotographySceneExamples`, `HomeModels`) use plain `loading="lazy"` with **no `fetchpriority`**, so Chrome treats them at default priority. When their `<img>` tags exist far below the fold, they still get queued early because `lazy` only delays based on viewport distance heuristics — many fire as soon as they enter the ~1250px lookahead window, which on a tall page happens during initial layout.
-3. There's **no explicit priority hierarchy**: hero (high) → categories (auto, on scroll) → visual system / scene examples / models (low, on scroll). Right now everything below hero competes equally.
+1. The user in the screenshot (`zahiddiu4@gmail.com`) **already has a confirmed account** (created Apr 27, last sign-in Apr 28). Supabase is returning a real error (e.g. `User already registered`) but our handler in `src/pages/Auth.tsx` only recognizes rate-limit errors — every other error falls through to the generic message.
+2. Other signup-related errors (weak password rejected by HIBP, invalid email, password too short server-side, Lovable Cloud DB hiccups, etc.) all collapse to the same opaque string, so legitimate users have no idea what to do.
+3. The same pattern exists for **login** errors (line 210) and in `SignupSlideUp.tsx` (line 79).
+
+Backend is healthy — `handle_new_user()` trigger and `profiles` table look correct, recent signups for other emails today (`qatests609`, `umberfakhar10`) were processed and emails sent successfully. This is a **client-side error mapping** bug, not a backend failure.
 
 ## Fix
 
-### 1. Hero — guarantee the first paint wins
-- Reduce eager tiles from 6 to **4** (only the visible ones at 1200px viewport — roughly 4 fit before the right edge) and keep `fetchpriority="high"` on those.
-- Mark the **second row entirely `loading="lazy"` + `fetchpriority="low"`** since it only matters once the user scrolls a few pixels.
-- Add `<link rel="preload" as="image" href={firstTileSrc} fetchpriority="high">` for the very first tile via a small `<Helmet>` in `PhotographyHero` so the browser starts the request before React hydrates.
+Replace the catch-all "Something went wrong" with specific, friendly messages mapped from the actual Supabase error codes/messages. Apply the same mapping to login and to the slide-up signup component.
 
-### 2. Below-the-fold sections — explicitly deprioritize
-Add `fetchpriority="low"` (and keep `loading="lazy"`) to every `<img>` in:
-- `PhotographyCategoryChooser.tsx` (30 thumbs)
-- `PhotographyVisualSystem.tsx` (18 thumbs)
-- `PhotographySceneExamples.tsx` (10 tiles)
-- `HomeModels.tsx` model thumbnails (only the ones rendered on this page)
+### Changes
 
-This tells Chrome: "do not race the hero." Combined with `lazy`, they will only kick in once they actually approach the viewport, and at low TCP/HTTP priority so the hero finishes first.
+**1. `src/pages/Auth.tsx` — signup branch (lines 150–162)**
 
-### 3. Smaller initial payload for category thumbs
-`PhotographyCategoryChooser` currently asks for `width: 300, quality: 70` per thumb but renders at ~160px. Drop default request to `width: 200, quality: 65` so the initial bytes per thumb shrink by ~40%, freeing bandwidth for the hero.
+Map known errors to clear copy and switch the user to login mode when appropriate:
 
-### 4. Defer `HomeModels` images
-`HomeModels` renders dozens of model headshots and is the 4th section on the page. Wrap its image grid render in an `IntersectionObserver` (reuse `useScrollReveal` from `src/hooks/useScrollReveal.ts`) so the `<img>` tags only mount once the section is ~400px from viewport. This removes ~40+ image requests from the initial waterfall entirely.
+- `user already registered` / `email address already` / `already exists` → "An account with this email already exists. Try signing in instead." + switch to login mode and prefill email.
+- `password should be at least` / `weak password` / `pwned` / `compromised` → "Please choose a stronger password (at least 6 characters, avoid common passwords)."
+- `invalid email` / `unable to validate email` → "Please enter a valid email address."
+- `signup is disabled` → "Account signups are temporarily disabled. Please try again later."
+- `rate limit` / `over_email_send_rate_limit` (existing) → keep current behavior.
+- Network failure / fetch error → "Network problem. Please check your connection and try again."
+- Fallback: show the actual `error.message` (sentence-cased) instead of "Something went wrong" so we never hide useful info from the user again.
 
-## Files to edit
+**2. `src/pages/Auth.tsx` — login branch (lines 204–214)**
 
-```text
-src/components/seo/photography/PhotographyHero.tsx           // eager=4, second row low priority, preload first tile
-src/components/seo/photography/PhotographyCategoryChooser.tsx // fetchpriority=low, smaller default width
-src/components/seo/photography/PhotographyVisualSystem.tsx   // fetchpriority=low
-src/components/seo/photography/PhotographySceneExamples.tsx  // fetchpriority=low
-src/components/home/HomeModels.tsx                           // gate image grid with useScrollReveal
-```
+- `invalid login credentials` (existing) → keep.
+- `email not confirmed` → "Please confirm your email first. Check your inbox for the verification link." + offer "Resend confirmation".
+- `too many requests` / `rate limit` → "Too many attempts. Please wait a minute and try again."
+- Network failure → same as signup.
+- Fallback: show actual error message.
 
-## Expected result
+**3. `src/components/landing/SignupSlideUp.tsx` (line 79)**
 
-Loading order on a fresh load becomes deterministic:
-1. Hero copy + first 4 tiles render almost immediately (preload + high priority)
-2. Remaining hero tiles fill in
-3. Categories thumbs load as user scrolls past hero
-4. Visual System → Scene Examples → Models load in scroll order
+Apply the same signup error mapping helper so the homepage slide-up gives identical, specific feedback.
 
-No layout reshuffling, no "footer/categories appearing before hero" flash.
+**4. Extract a shared helper**
+
+Add `src/lib/authErrors.ts` exporting `mapAuthError(error, mode: 'signup' | 'login')` returning `{ message: string; switchToLogin?: boolean }`. Both `Auth.tsx` and `SignupSlideUp.tsx` use it. This keeps mapping consistent and easy to extend.
+
+### Out of scope
+
+- No DB migrations — `handle_new_user()` and `profiles` are working correctly.
+- No edge function changes — `auth-email-hook` and the email queue are healthy (verified via `email_send_log`: `signup` emails today completed `pending → sent` within ~4s).
+- No changes to OAuth/Google/Apple flows.
+
+### Verification after deploy
+
+1. Try to sign up with `zahiddiu4@gmail.com` again → should see "An account with this email already exists" and the form should switch to login with the email prefilled.
+2. Try to sign up with a brand-new email → should see the existing success state.
+3. Try to sign up with password `123` → should now say "Password must be at least 6 characters" instead of the generic error.
