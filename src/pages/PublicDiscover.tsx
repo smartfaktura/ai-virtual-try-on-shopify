@@ -119,6 +119,9 @@ export default function PublicDiscover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+  // Tracks the URL slug we just dismissed, so the back-nav transient render
+  // can't immediately re-open the same modal we closed (causes "double modal").
+  const justClosedSlugRef = useRef<string | null>(null);
   useEffect(() => { setSelectedSubcategory('__all__'); }, [selectedCategory]);
 
   // Fetch custom scenes publicly (no auth required with new RLS)
@@ -203,22 +206,41 @@ export default function PublicDiscover() {
   }, [urlItemId, allItems]);
 
   // Auto-open modal ONLY when user navigated from the grid (Pexels-style).
-  // Direct hits / refreshes / crawlers fall through to the SEO view branch.
+  // Skip if we just closed this same slug — prevents the transient back-nav
+  // re-render from re-opening the modal the user just dismissed.
   useEffect(() => {
-    if (urlItem && cameFromGrid) setSelectedItem(urlItem);
-  }, [urlItem, cameFromGrid]);
+    if (!urlItem || !cameFromGrid) return;
+    if (urlItemId && justClosedSlugRef.current === urlItemId) return;
+    setSelectedItem((prev) => {
+      const prevId = prev ? (prev.type === 'preset' ? prev.data.id : prev.data.poseId) : null;
+      const nextId = urlItem.type === 'preset' ? urlItem.data.id : urlItem.data.poseId;
+      return prevId === nextId ? prev : urlItem;
+    });
+  }, [urlItem, cameFromGrid, urlItemId]);
+
+  // Clear the just-closed guard whenever the user navigates to a different slug
+  // (or away from any item entirely).
+  useEffect(() => {
+    if (urlItemId !== justClosedSlugRef.current) {
+      justClosedSlugRef.current = null;
+    }
+  }, [urlItemId]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
     return `/discover/${getItemSlug(item)}`;
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
-    // Use react-router so we can pass `fromGrid` state without a full reload.
+    // Single source of truth: URL change → auto-open effect opens the modal.
+    // Don't also call setSelectedItem here (it caused duplicate state updates).
+    justClosedSlugRef.current = null;
     navigate(getItemUrl(item), { state: { fromGrid: true } });
-    setSelectedItem(item);
   }, [getItemUrl, navigate]);
 
   const handleClose = useCallback(() => {
+    // Remember which slug we're closing so the auto-open effect skips it
+    // during the transient back-navigation re-render.
+    justClosedSlugRef.current = urlItemId ?? null;
     setSelectedItem(null);
     // If we got here via grid click, browser back returns to grid + restores scroll.
     // Otherwise we're on a direct-loaded SEO page → just clear modal state.
@@ -227,7 +249,7 @@ export default function PublicDiscover() {
     } else {
       navigate('/discover', { replace: true });
     }
-  }, [cameFromGrid, navigate]);
+  }, [cameFromGrid, navigate, urlItemId]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
