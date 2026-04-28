@@ -103,7 +103,7 @@ export default function PublicDiscover() {
   const navigate = useNavigate();
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
-  const { data: presets = [], isLoading } = useDiscoverPresets();
+  const { data: presets = [], isLoading: isLoadingPresets } = useDiscoverPresets();
   const { featuredMap, isFeatured } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { isSaved, toggleSave } = useSavedItems();
