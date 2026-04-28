@@ -155,6 +155,7 @@ export default function Blog() {
         canonical={`${SITE_URL}/blog`}
       />
       <JsonLd data={blogListJsonLd} />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Blog', path: '/blog' }])} />
 
       <section className="bg-[#FAFAF8] pt-20 sm:pt-32 pb-16 sm:pb-24 overflow-x-hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
