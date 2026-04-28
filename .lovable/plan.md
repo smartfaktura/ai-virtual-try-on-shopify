@@ -1,61 +1,76 @@
-# Why publishing is failing
+# SEO audit (plain English) + proposed cleanup
 
-Your `package.json` build script is:
+## What's actually live on your public pages
 
-```
-tsx scripts/generate-sitemap.ts && vite build && tsx scripts/prerender.ts && tsx scripts/validate-prerender.ts
-```
+**Static `index.html` (served to every bot, even ones that don't run JS)**
+- Page title + meta description (homepage-style)
+- Open Graph + Twitter card tags with social image
+- Organization JSON-LD (name, logo, social links)
+- WebSite JSON-LD with SearchAction
+- Google Tag Manager + gtag analytics
+- Font + LCP image preload
+- No `<link rel="canonical">` on purpose — each route sets its own at runtime
 
-The last two steps are the blockers:
+**Per-route metadata (`SEOHead.tsx`)**
+- Used on every important public page: Home, Pricing, How it works, Why VOVV, FAQ, Blog, all `/features/*`, all `/seo/*` (Shopify, Etsy, vs Studio, vs Photoshoot, AI Product Photography + 10 category pages), Discover, Freestyle, Library, About, Team, Careers, Contact, Press, Changelog, Roadmap, Help, legal pages
+- Sets unique title, description, canonical, OG, Twitter, robots — works for Google's two-stage rendering
+- Does NOT use `react-helmet-async` (Lovable's recommendation). It writes directly to `document.head` via `useEffect`. Functionally fine for Google but less safe than Helmet (race conditions on fast route changes, no SSR-friendly output, harder to test)
 
-1. **`scripts/prerender.ts`** spins up **Puppeteer / headless Chromium**, starts a local HTTP server on port 4321, and tries to render every URL from the sitemap (~417 routes) into static HTML.
-2. **`scripts/validate-prerender.ts`** then walks `dist/` and **exits non-zero** if any route is missing a prerendered file or fails its SEO checks — which **fails the deploy**.
+**Structured data (`JsonLd.tsx`)**
+- Used on FAQ, Blog, BlogPost, Pricing, Home, How it works, Why VOVV, Roadmap, PublicFreestyle, FeaturesFreestyle, plus FAQAccordions on category/landing pages
+- Same pattern: appended at runtime via `useEffect`
 
-Lovable's deploy environment is a CSR-only build pipeline. It does **not** have Chromium available, can't open a local port reliably, and prerendering 400+ routes would time out the deploy even if it did. This is exactly the dead-end we discussed in the SEO plan: prerendering is incompatible with Lovable hosting.
+**Crawler files**
+- `robots.txt` — explicit allowlist for Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, Applebot, Bytespider, Amazonbot, Meta-ExternalAgent, etc. `/app/`, `/auth`, `/onboarding`, `/reset-password`, `/upload/` blocked. Sitemap referenced
+- `llms.txt` — clean machine-readable summary of pages, categories, comparisons, blog
+- `sitemap.xml` — auto-generated at build (~417 URLs, 369 image entries, real `lastmod` from Supabase data, image sitemap namespace)
 
-The build was passing locally only because Puppeteer is installed in your dev sandbox. On the publish pipeline either Puppeteer fails to launch or `validate-prerender` rejects the empty/partial output → publish blocked.
+## What's good (keep it)
 
-# The fix
+1. Sitemap is comprehensive, fresh on every build, includes images
+2. `robots.txt` and `llms.txt` align with Lovable's GEO guidance
+3. Per-page titles/descriptions/canonicals exist on every public route
+4. JSON-LD on the pages where it matters (FAQ, BlogPost, Organization, WebSite)
+5. Open Graph + Twitter tags are in static HTML so social previews work without JS
 
-Drop prerender + validate-prerender from the build chain. They serve no purpose on Lovable hosting (the sibling `.html` files we tried to write last week are never matched by the host — that's the whole reason we pivoted to the sitemap/JSON-LD strategy in Phase 3).
+## What's worth cleaning up or improving
 
-## Changes
+1. **Stale comment in `index.html`** still references `scripts/prerender.ts` and "prerendered routes" — that script was deleted. Misleading future readers
+2. **`SEOHead.tsx` doesn't use `react-helmet-async`** — Lovable's official SEO/GEO guide explicitly recommends it. Current DOM-mutation approach works for Google (which executes JS) but:
+   - Has a tiny race-condition window on route change before the `useEffect` runs
+   - Bots that don't execute JS see only the homepage title/description from `index.html`
+   - Switching to Helmet wraps everything in a tested abstraction, plus prepares us for any future SSR/static-HTML option
+3. **No per-page canonical on a few public pages**: I can audit and confirm every public route in `App.tsx` has `<SEOHead canonical=...>`. Flagged candidates to verify: `/about`, `/team`, `/careers`, `/contact`, `/press`, `/changelog`, `/help`, `/status`, `/privacy`, `/terms`, `/cookies`, `/discover/:slug`, `/blog/:slug`
+4. **Stale build/SEO artifacts to remove (no longer used after we dropped Puppeteer)**:
+   - `.lovable/plan.md` Phase notes about prerender (already obsolete)
+   - Comment block in `index.html` about prerender
+   - Confirm `scripts/prerender.ts` and `validate-prerender.ts` are gone (they are)
+5. **`package-lock.json`** still exists alongside `bun.lock`. The npm lockfile is stale (`@lovable.dev/cloud-auth-js@0.0.3` vs current `1.1.1`, and `tsx` is missing). Lovable uses Bun. Removing `package-lock.json` avoids future tooling confusion
+6. **JSON-LD coverage gaps** worth adding for GEO:
+   - `BreadcrumbList` on category pages and blog posts (helps Google + AI search)
+   - `Product` or `SoftwareApplication` on Pricing
+   - `Article` on Blog posts (currently has BlogPosting fields — verify schema completeness)
+7. **OG image per page** — most pages share the default social image. SEO landing pages and BlogPost should pass a more specific `ogImage` for richer social previews
 
-**`package.json`** — simplify scripts:
+## Proposed implementation plan
 
-```text
-"build":     "tsx scripts/generate-sitemap.ts && vite build"
-"build:dev": "tsx scripts/generate-sitemap.ts && vite build --mode development"
-```
+**Phase 4a — cleanup (low risk, high signal)**
+- Delete stale `package-lock.json`
+- Remove obsolete prerender comment block in `index.html`
+- Audit every route in `App.tsx`; add `<SEOHead canonical=...>` to any public page missing it
+- Update `.lovable/plan.md` to reflect current state
 
-Remove the now-unused npm scripts:
-- `"prerender"`
-- `"validate-prerender"`
+**Phase 4b — adopt `react-helmet-async` (Lovable-recommended)**
+- Add dependency, wrap `App.tsx` in `<HelmetProvider>`
+- Refactor `SEOHead.tsx` to use `<Helmet>` (same props API — no caller changes)
+- Refactor `JsonLd.tsx` to render `<script type="application/ld+json">` inside Helmet
+- Verify with View Source on a few routes
 
-Remove the dependency:
-- `"puppeteer": "^24.42.0"` (saves ~170 MB of install time on every deploy)
+**Phase 4c — schema enrichments (optional, do after 4b)**
+- Add `BreadcrumbList` JSON-LD helper, apply to `/seo/*`, `/features/*`, `/blog/:slug`
+- Verify BlogPost Article schema completeness
+- Per-page `ogImage` on top-converting routes (Home, Pricing, How it works, Why VOVV, top SEO landings)
 
-**Files to delete (no longer referenced):**
-- `scripts/prerender.ts`
-- `scripts/validate-prerender.ts`
+I'll execute this in two messages: 4a + 4b together (they're tightly related and make Lovable's recommendation real), then 4c if you want the schema enrichments.
 
-Keep `scripts/generate-sitemap.ts` — it's the Phase 3 work and still runs at build time.
-
-## What we keep working
-
-- ✅ Sitemap auto-regenerated on every build (417 URLs, image entries, real `lastmod`)
-- ✅ `public/llms.txt`, `robots.txt`, `JsonLd.tsx`, `SEOHead.tsx` — all unchanged
-- ✅ Google's two-stage CSR rendering picks up per-page titles/meta/JSON-LD via React Helmet
-- ✅ Build is back to ~30s instead of timing out on Puppeteer
-
-## What we lose
-
-- Static `.html` files in `dist/` for clean URLs — but Lovable hosting wasn't serving these anyway, so no real loss.
-
-## After publish
-
-Re-run the curl canonical check on `/pricing`. Since the homepage `index.html` is the only HTML the host serves, the canonical there will still say `https://vovv.ai/`. That's expected and matches Lovable's official SEO/GEO guidance — Google's renderer will see the per-page canonical from `SEOHead.tsx` after JS hydration.
-
-If Search Console later shows canonical confusion for non-Google bots, we can ship the runtime route-aware canonical patch we previously parked (it's a 10-line change in `index.html`'s inline script — no build implications).
-
-Approve and I'll make the edits and you can republish.
+Approve and I'll start with 4a + 4b.
