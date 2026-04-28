@@ -113,7 +113,7 @@ export default function Learn() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search guides"
               aria-label="Search guides"
-              className="pl-11 h-11 rounded-full bg-card border-border hover:border-border focus-visible:bg-card focus-visible:border-foreground/20 focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:ring-offset-0 transition-colors placeholder:text-muted-foreground/70"
+              className="pl-11 h-11 rounded-xl bg-card border-border hover:border-border focus-visible:bg-card focus-visible:border-foreground/20 focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:ring-offset-0 transition-colors placeholder:text-muted-foreground/70"
             />
           </div>
 
