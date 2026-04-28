@@ -1,81 +1,59 @@
-## What's actually happening
+# Redesign Payment Success page in homepage aesthetic
 
-Your Starter subscription IS active in Stripe (`sub_1TR9L8…`, $39/mo) and your account shows it correctly. Two real problems:
+The success page works (purchase pixel fires correctly) but the typography and layout feel generic. Align it with the homepage look used in `HomeHero` / `HomeCreateCards`.
 
-1. **No personalized post-payment experience** — Stripe just dumps you back on `/app/settings`, with only a small toast. There's no "Welcome to Starter — here's what to do next" screen.
-2. **`purchase` event isn't reliably reaching Meta / Google Ads** — Meta Test Events shows `Initiate checkout` but never `Purchase`. Two root causes in the current code:
-   - **Dedup blocks retries**: `gtmPurchase` persistently dedupes on `transaction_id` in `localStorage`. After your first test, every subsequent test on the same subscription/invoice is silently skipped — so you'll never see `Purchase` in Test Events even though everything else is wired correctly.
-   - **Webhook race with no retry**: `CreditContext` waits 2s, calls `check-subscription` once, and if `subscription_status !== 'active'` (Stripe webhook hasn't propagated yet) it silently `return`s. There's no polling. No purchase event is ever fired for that visit.
+## Homepage aesthetic reference (current source of truth)
 
-## What we'll build
+- Background: warm off-white `#FAFAF8` (not muted grey)
+- Headline: `font-semibold tracking-[-0.03em] leading-[1.08]`, sizes `text-[2rem] sm:text-5xl lg:text-[3.5rem]`
+- Eyebrow: `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground`
+- Body: `text-base sm:text-lg leading-relaxed text-muted-foreground` (max-w-xl, no period if single line)
+- Cards: `bg-white rounded-3xl border border-[#f0efed] shadow-sm`, hover `-translate-y-1 hover:shadow-md`
+- Primary CTA: pill `h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25`
+- Microcopy under CTA: `text-[11px] tracking-[0.2em] uppercase text-muted-foreground/60`
 
-### 1. Dedicated `/app/payment-success` page (new route)
+## Changes — `src/pages/PaymentSuccess.tsx` only
 
-Stripe `success_url` will redirect here instead of `/app/settings?payment=success`. The page provides:
+### 1. Page shell
+- Replace `bg-background` with `bg-[#FAFAF8]`
+- Increase vertical padding: `pt-24 pb-20 lg:pt-32 lg:pb-28`
+- Center container `max-w-3xl px-6`
 
-- Plan-aware celebration header: "You're now on **Starter**" / "Welcome to **Growth**" / "Your **500 credits** are ready"
-- Subscription summary card: plan name, billing interval, monthly credits, next renewal date
-- Three "what to do next" CTAs tailored to the plan:
-  - Create your first visual → `/app/workflows`
-  - Upload a product → `/app/products`
-  - Explore presets → `/app/explore`
-- Manage Billing button (links to Stripe Customer Portal)
-- "Receipt sent to candlerashop@gmail.com" confirmation line
-- For credit-pack purchases: "+500 credits added — new balance: 1,000"
+### 2. Hero block (replace current Check-in-circle + small h1)
+- Eyebrow above headline: `PAYMENT CONFIRMED` (uppercase, tracked, muted)
+- Big homepage-style headline:
+  - Subscription: `You're now on <span className="italic font-light">Starter</span>` rendered as `text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold tracking-[-0.03em] leading-[1.08]` — plan name keeps the same weight, no italic; matches HomeHero exactly
+  - Credits: `+1,500 credits added` in the same headline style
+  - Timeout: `Your payment is processing`
+- Subline: single sentence, `text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed`, no terminal period (per memory rule)
+  - e.g. `500 credits ready to use — receipt sent to user@email.com`
+- Drop the green check circle (feels generic). Replace with a small inline checkmark chip beside the eyebrow, or omit entirely — homepage hero has no badge icon.
 
-Same minimalist VOVV.AI aesthetic (Inter, no terminal periods in headings, fade-in).
+### 3. Plan summary card
+- Restyle to match homepage cards: `bg-white rounded-3xl border border-[#f0efed] shadow-sm` (replaces current shadcn `Card`)
+- Padding `p-8`, three-column grid `Plan / Monthly credits / Renews` with values in `text-xl font-semibold tracking-tight` and labels in the eyebrow style
+- Remove shadcn `Badge`; use a quiet pill: `inline-flex h-6 px-2.5 rounded-full bg-foreground/[0.06] text-xs font-medium`
+- Show interval (Monthly / Annual) as a second inline pill
 
-### 2. Reliable verification with polling (fixes Meta/Google not firing)
+### 4. What's next
+- Eyebrow `WHAT'S NEXT` (already correct style, just align tracking to `0.2em`)
+- Three `NextStep` cards restyled to match homepage cards: `bg-white rounded-3xl border border-[#f0efed] shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-500`, padding `p-6`, title `text-base font-semibold`, desc `text-sm text-muted-foreground leading-relaxed`
+- Icon in a small `w-9 h-9 rounded-xl bg-foreground/[0.04]` tile above the title (homepage feature-card pattern), no color tint
 
-On mount, the success page polls `check-subscription` up to ~12 times over ~24s with backoff, until either:
-- (subscription) `subscription_status === 'active'` AND we have `latest_invoice_id` / `stripe_subscription_id`, OR
-- (credit pack) `last_credit_pack_purchase` is returned
+### 5. Footer actions
+- Primary CTA pill matches homepage hero CTA exactly: `h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25`, label `Start creating`
+- Secondary `Manage billing & invoices` becomes a quiet text link, centered under the CTA, with the eyebrow microcopy treatment for the helper line
 
-Only then does it push the canonical `purchase` event to dataLayer (Meta Purchase + Google Ads conversion fire from GTM as already configured).
+### 6. Verifying state
+- Same `#FAFAF8` background, centered
+- Replace `Loader2` with a subtle dotted/pulsing dot pattern OR keep a thin spinner but in `text-foreground/40`
+- Heading uses the homepage h2 scale: `text-2xl sm:text-3xl font-semibold tracking-tight`, copy `text-muted-foreground` no period
 
-While polling: shows a "Confirming your payment…" spinner. If it eventually times out, shows "Your payment is processing — you'll get an email confirmation shortly" and still loads the celebration UI based on Stripe customer state.
-
-### 3. Fix dedup so retesting works (and production stays safe)
-
-In `src/lib/gtm.ts`, change `gtmPurchase` dedup from **persistent localStorage** to **sessionStorage with a 24h TTL**. Real users complete a purchase once per session — sessionStorage still prevents accidental double-fires from refreshes, but a fresh test in a new tab/incognito will fire cleanly. Same dedup key (`purchase:<transactionId>`).
-
-Also add a debug bypass: when `localStorage.vovv_gtm_debug === '1'`, dedup is skipped and a `[GTM DEBUG purchase] FIRED` console line is logged with the full payload.
-
-### 4. Edge function update
-
-`create-checkout/index.ts`: change `success_url` from
-`${origin}/app/settings?payment=success&session_id={CHECKOUT_SESSION_ID}&amount=…`
-to
-`${origin}/app/payment-success?session_id={CHECKOUT_SESSION_ID}`.
-
-`cancel_url` stays on `/app/settings?payment=cancelled` (or move to `/app/pricing?payment=cancelled` — your call).
-
-`check-subscription/index.ts`: no schema change needed. It already returns everything we need (`subscription_status`, `stripe_subscription_id`, `latest_invoice_id`, `latest_session_id`, `amount`, `currency`, `last_credit_pack_purchase`).
-
-### 5. Clean up `CreditContext`
-
-Remove the `?payment=success` URL handler entirely from `CreditContext.tsx` — purchase verification + GTM firing now live on the dedicated page. Keeps the `?payment=cancelled` toast.
+### 7. Animations
+- Use the same fade-in-up pattern: `animate-in fade-in slide-in-from-bottom-2 duration-700`
+- Stagger cards with `style={{ transitionDelay: ... }}` like `HomeCreateCards`
 
 ## Files touched
+- `src/pages/PaymentSuccess.tsx` — full visual rewrite, no logic changes (polling, tracking, routing all untouched)
 
-- **NEW**: `src/pages/PaymentSuccess.tsx` — the celebration page with polling + GTM purchase fire
-- **EDITED**: `src/App.tsx` (or wherever app routes live) — add `/app/payment-success` route
-- **EDITED**: `supabase/functions/create-checkout/index.ts` — new `success_url`
-- **EDITED**: `src/lib/gtm.ts` — `gtmPurchase` dedup → sessionStorage + 24h TTL + debug bypass
-- **EDITED**: `src/contexts/CreditContext.tsx` — remove `payment=success` handler block (lines ~314-408 of useEffect)
-
-## How you'll test it after the change
-
-1. Open the site with `localStorage.setItem('vovv_gtm_debug','1')` → dedup off
-2. Open Meta Events Manager → Test events tab + GTM Tag Assistant
-3. Click any plan → complete a real Stripe payment with candlerashop@gmail.com
-4. You'll be redirected to `/app/payment-success` (not Settings)
-5. Page shows "Confirming your payment…" briefly, then the celebration screen
-6. Within ~5s you should see in **Meta Test Events**: `Purchase` (eventID = `cs_…` or `in_…`), and in **Tag Assistant**: `purchase` event with full ecommerce payload
-7. Console will show `[GTM DEBUG purchase] FIRED` with payload
-
-## Notes / open questions
-
-- The page handles both **subscriptions** and **credit-pack purchases** (different copy + CTA blocks).
-- For free → paid plan upgrades, "Welcome to Starter". For paid → paid plan upgrades, "You've upgraded to Growth". Determined by comparing previous and new plan from check-subscription response.
-- I am NOT adding Stripe webhooks — staying with the polling pattern you already have, just made reliable.
+No changes to `gtm.ts`, `CreditContext.tsx`, edge functions, or routing. Pixel-firing behavior stays exactly as it is.
