@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { GraduationCap, ArrowUpRight, ArrowRight, HelpCircle } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { PageHeader } from '@/components/app/PageHeader';
 import { ChatContactForm } from '@/components/app/ChatContactForm';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -24,102 +25,99 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 
 export default function AppHelp() {
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
-      <div className="max-w-2xl mx-auto px-5 sm:px-8 lg:px-12 pt-24 lg:pt-16 pb-20 animate-in fade-in duration-500">
-        {/* Hero */}
-        <header className="mb-12 lg:mb-16">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Support
-          </p>
-          <div className="flex -space-x-3 mb-6">
-            <Avatar className="w-11 h-11 ring-[3px] ring-[#FAFAF8]">
-              <AvatarImage src={avatarSophia} alt="Sophia" />
-              <AvatarFallback className="text-xs">S</AvatarFallback>
-            </Avatar>
-            <Avatar className="w-11 h-11 ring-[3px] ring-[#FAFAF8]">
-              <AvatarImage src={avatarKenji} alt="Kenji" />
-              <AvatarFallback className="text-xs">K</AvatarFallback>
-            </Avatar>
-            <Avatar className="w-11 h-11 ring-[3px] ring-[#FAFAF8]">
-              <AvatarImage src={avatarZara} alt="Zara" />
-              <AvatarFallback className="text-xs">Z</AvatarFallback>
-            </Avatar>
+    <div className="animate-in fade-in duration-500">
+      <PageHeader
+        title="Help"
+        subtitle="Real humans, real fast — we usually reply within a few hours"
+      >
+        <div className="max-w-3xl space-y-4 sm:space-y-6">
+          {/* Team avatars — small intro chip */}
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              <Avatar className="w-8 h-8 ring-2 ring-background">
+                <AvatarImage src={avatarSophia} alt="Sophia" />
+                <AvatarFallback className="text-xs">S</AvatarFallback>
+              </Avatar>
+              <Avatar className="w-8 h-8 ring-2 ring-background">
+                <AvatarImage src={avatarKenji} alt="Kenji" />
+                <AvatarFallback className="text-xs">K</AvatarFallback>
+              </Avatar>
+              <Avatar className="w-8 h-8 ring-2 ring-background">
+                <AvatarImage src={avatarZara} alt="Zara" />
+                <AvatarFallback className="text-xs">Z</AvatarFallback>
+              </Avatar>
+            </div>
+            <p className="text-xs text-muted-foreground">Sophia, Kenji & Zara — your support crew</p>
           </div>
-          <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]">
-            Talk to the team
-          </h1>
-          <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
-            Real humans, real fast. We usually reply within a few hours.
-          </p>
-        </header>
 
-        {/* Form */}
-        <section className="mb-6 rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
-          <ChatContactForm variant="spacious" />
-        </section>
+          {/* Form */}
+          <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+            <ChatContactForm variant="spacious" />
+          </section>
 
-        {/* Quiet helpers */}
-        <section className="mb-10 rounded-2xl border border-[#f0efed] bg-white overflow-hidden shadow-sm">
-          <a
-            href="/help"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-4 px-5 sm:px-6 py-5 border-b border-[#f0efed] hover:bg-[#FAFAF8] transition-colors"
-          >
-            <HelpCircle className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
-            <div className="flex-1">
-              <div className="text-[15px] text-foreground">Browse FAQs</div>
-              <div className="text-[13px] text-muted-foreground mt-0.5">Quick answers to common questions</div>
-            </div>
-            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </a>
+          {/* Quiet helpers */}
+          <section className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+            <a
+              href="/help"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-4 px-5 py-4 border-b border-border hover:bg-muted/40 transition-colors"
+            >
+              <HelpCircle className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
+              <div className="flex-1">
+                <div className="text-[15px] text-foreground">Browse FAQs</div>
+                <div className="text-[13px] text-muted-foreground mt-0.5">Quick answers to common questions</div>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </a>
 
-          <a
-            href="https://discord.gg/ZgnSJqUyV"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-4 px-5 sm:px-6 py-5 border-b border-[#f0efed] hover:bg-[#FAFAF8] transition-colors"
-          >
-            <DiscordIcon className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
-            <div className="flex-1">
-              <div className="text-[15px] text-foreground">Join our Discord</div>
-              <div className="text-[13px] text-muted-foreground mt-0.5">Chat with the team & other creators</div>
-            </div>
-            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </a>
+            <a
+              href="https://discord.gg/ZgnSJqUyV"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-4 px-5 py-4 border-b border-border hover:bg-muted/40 transition-colors"
+            >
+              <DiscordIcon className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
+              <div className="flex-1">
+                <div className="text-[15px] text-foreground">Join our Discord</div>
+                <div className="text-[13px] text-muted-foreground mt-0.5">Chat with the team & other creators</div>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </a>
 
-          <Link
-            to="/app/learn"
-            className="group flex items-center gap-4 px-5 sm:px-6 py-5 hover:bg-[#FAFAF8] transition-colors"
-          >
-            <GraduationCap className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
-            <div className="flex-1">
-              <div className="text-[15px] text-foreground">Tutorials & guides</div>
-              <div className="text-[13px] text-muted-foreground mt-0.5">Learn VOVV.AI in minutes</div>
-            </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
-          </Link>
-        </section>
+            <Link
+              to="/app/learn"
+              className="group flex items-center gap-4 px-5 py-4 hover:bg-muted/40 transition-colors"
+            >
+              <GraduationCap className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
+              <div className="flex-1">
+                <div className="text-[15px] text-foreground">Tutorials & guides</div>
+                <div className="text-[13px] text-muted-foreground mt-0.5">Learn VOVV.AI in minutes</div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+            </Link>
+          </section>
 
-        {/* Footer */}
-        <footer className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          {socialLinks.map((link, i) => {
-            const isExternal = link.href.startsWith('http') || link.href.startsWith('mailto');
-            return (
-              <span key={link.label} className="inline-flex items-center gap-1.5">
-                {i > 0 && <span className="text-muted-foreground/40">·</span>}
-                <a
-                  href={link.href}
-                  {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  className="hover:text-foreground transition-colors"
-                >
-                  {link.label}
-                </a>
-              </span>
-            );
-          })}
-        </footer>
-      </div>
+          {/* Footer */}
+          <footer className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2">
+            {socialLinks.map((link, i) => {
+              const isExternal = link.href.startsWith('http') || link.href.startsWith('mailto');
+              return (
+                <span key={link.label} className="inline-flex items-center gap-1.5">
+                  {i > 0 && <span className="text-muted-foreground/40">·</span>}
+                  <a
+                    href={link.href}
+                    {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </span>
+              );
+            })}
+          </footer>
+        </div>
+      </PageHeader>
     </div>
   );
 }

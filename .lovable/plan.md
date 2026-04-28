@@ -1,73 +1,82 @@
-## What went wrong last time
+## What's actually wrong
 
-I oversized the headlines (`text-4xl sm:text-5xl tracking-[-0.03em]`) and used `rounded-3xl` cards — which is heavier than the actual homepage. That's why the BugBounty title now wraps to "Help us make VOVV.AI / better" and the cards feel chunky. The user's reference is the real homepage scale (HomeFAQ, HomeHowItWorks).
+The 5 pages I styled don't match the rest of the app. The **real in-app pattern** (used by Dashboard, Products, Workflows, BrandModels, VideoHub, Discover, etc.) is:
 
-## Correct homepage tokens (from `HomeFAQ.tsx` + `HomeHowItWorks.tsx`)
+- AppShell already provides: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-8 pb-4 sm:pb-6 lg:pb-8`
+- Pages render inside that — **no full-bleed `-mx-` breakouts, no off-white backgrounds**
+- Header uses `<PageHeader title subtitle>` → `text-2xl sm:text-3xl font-bold tracking-tight`
+- Background is the default app background (the page just sits in the shell)
 
-| Token | Correct value |
-|---|---|
-| Page bg | `bg-[#FAFAF8]` |
-| Section padding | `py-16 lg:py-32` (this is too much for in-app, use `pt-16 lg:pt-20 pb-20`) |
-| Eyebrow | `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4` |
-| **Headline** | `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight` (NOT `tracking-[-0.03em]`, NOT `text-5xl` on small screens) |
-| Subtitle | `text-base sm:text-lg text-muted-foreground leading-relaxed mt-4` |
-| Header → content gap | `mb-12 lg:mb-16` |
-| **Cards** | `bg-white rounded-2xl border border-[#f0efed] shadow-sm` (NOT 3xl, NOT shadow-md) |
-| Card padding | `p-5 sm:p-6` |
-| Primary CTA | `rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25` |
+What I did instead on the 5 pages:
+1. `-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8` to break out of AppShell
+2. Painted the whole area `bg-[#FAFAF8]` (off-white)
+3. Constrained to `max-w-2xl` or `max-w-3xl` (random widths)
+4. Used `text-3xl sm:text-4xl lg:text-5xl` headlines (marketing scale)
+5. Added uppercase eyebrows like a landing page
 
-Plus: pages should be **left-aligned** (per user) — homepage hero is centered but FAQ/HowItWorks center the *header block only*; for in-app utility pages, the user explicitly said left-aligned, so headers stay left.
+That's why nothing matches — they look like 5 different micro-sites embedded in the app instead of 5 in-app pages.
 
-## Scope — redo all 5 pages
+## The fix: align to the real app pattern
 
-### 1. `src/pages/BugBounty.tsx`
-- Drop the icon-tile layout next to the headline (it's competing with the eyebrow). Stack: eyebrow → headline → subtitle, left-aligned
-- Headline: `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]` so "Help us make VOVV.AI better" fits on one or two clean lines
-- Cards: `rounded-3xl` → `rounded-2xl`, padding `p-5 sm:p-6 sm:p-7` → `p-5 sm:p-6` (more uniform)
-- Container: `max-w-3xl mx-auto` (re-add `mx-auto` — left-aligned within container, not full-bleed)
-- CTA card: tighten copy block ("Found a bug?" gets `text-[14px] font-semibold text-foreground`), button uses `size="lg"` matching home
+All 5 pages adopt the **standard in-app shell** like Dashboard / Products / BrandModels:
 
-### 2. `src/pages/AppHelp.tsx`
-- Container: `max-w-2xl mx-auto` (re-add `mx-auto`)
-- Headline: drop oversize `text-4xl sm:text-5xl tracking-[-0.03em]` → `text-3xl sm:text-4xl font-semibold tracking-tight` (smaller container = smaller headline; matches HomeFAQ's `max-w-2xl` proportions)
-- Add eyebrow `Support` above headline (this is just a structural label like "FAQ" / "How it works" on home — it's a section name, not new copy)
-- Form/links cards: `rounded-3xl` → `rounded-2xl`, keep border + shadow-sm
-- Footer social row: change from centered `justify-center` to left-aligned (consistent with rest)
+- **Remove** the `-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8` breakouts
+- **Remove** the `bg-[#FAFAF8]` full-page paint (let AppShell's default bg show through)
+- **Remove** the `max-w-2xl/3xl mx-auto` containers + extra `px-5 sm:px-8 lg:px-12 pt-24 lg:pt-16` (AppShell already does padding)
+- **Use `<PageHeader>`** for title + subtitle on all 5 pages (same as Dashboard, Products, BrandModels)
+- **Drop the marketing eyebrows** ("Bug Bounty", "Support", "Learn") — PageHeader doesn't use eyebrows; nothing else in-app does either
+- **Cards**: keep `rounded-2xl border border-border bg-card shadow-sm` — but switch from the hard-coded `border-[#f0efed]` and `bg-white` to the design tokens already used by Dashboard/Products. This makes them theme-correct and consistent
+- **Content max-width inside PageHeader**: for text-heavy reading pages (BugBounty, AppHelp, Learn), wrap inner content in `<div className="max-w-3xl">` — left-aligned within the wide AppShell container, so the page feels in-app but the long-form content stays readable
 
-### 3. `src/pages/Learn.tsx`
-- Container: `max-w-3xl mx-auto`
-- Headline: `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight` (drop `-0.03em`)
-- Video figure border: `rounded-3xl` → `rounded-2xl`
-- Search: keep pill style, but use `h-11` not `h-12` (matches inputs in shadcn defaults better)
-- Track section cards: `rounded-3xl` → `rounded-2xl`
+## Per-page changes
 
-### 4. `src/pages/BrandProfiles.tsx`
-- The page uses `<PageHeader>` which already uses the right scale (`text-2xl sm:text-3xl font-bold tracking-tight`). Issue: PageHeader's `font-bold` doesn't match home's `font-semibold`. Solution: leave PageHeader untouched (shared component), but the off-white shell + cards still need fixing
-- BrandModelsBanner: `rounded-3xl` → `rounded-2xl`, keep white bg
-- Content padding: container `px-4 sm:px-6 lg:px-8 pt-24 lg:pt-10 pb-14` is fine
-- CTA: keep pill, slightly less prominent (`h-11 px-6` is right)
+### `src/pages/AppHelp.tsx`
+- Drop the wrapper `<div className="-mx-4 ... bg-[#FAFAF8]">`
+- Replace handwritten header (avatars + eyebrow + h1 + subtitle) with `<PageHeader title="Help" subtitle="Real humans, real fast — we usually reply within a few hours">`
+- Move the avatar trio into a small intro block above the form (not the page header)
+- Wrap children in `<div className="max-w-3xl space-y-6">`
+- Cards: `bg-white border-[#f0efed]` → `bg-card border-border` (semantic tokens)
 
-### 5. `src/pages/Settings.tsx`
-- Page uses `<PageHeader>` — leave header alone
-- Cards: `rounded-3xl` → `rounded-2xl`, keep border + shadow-sm (already done)
-- Monthly/Annual toggle: keep pill (correct already)
-- Save button: drop oversized `h-[3.25rem] px-7 shadow-lg` (this is a save button, not a marketing CTA). Use standard `size="pill"` like before — just keep the pill rounding
-- Section spacing: `space-y-8` is fine
+### `src/pages/BugBounty.tsx`
+- Drop the wrapper `<div className="-mx-4 ... bg-[#FAFAF8]">` and the `pt-24 lg:pt-16` (AppShell handles top padding — that's why "starts from far away")
+- Replace marketing-style hero (eyebrow + 5xl headline + subtitle) with `<PageHeader title="Bug Bounty" subtitle="Find a real platform bug, report it, and earn credits when we confirm it">`
+- Wrap children in `<div className="max-w-3xl space-y-6">`
+- Cards: `border-[#f0efed] bg-white` → `border-border bg-card`
+- Reward tier list, "How it works" steps, qualifies/doesn't qualify all keep their internal layouts — only the wrapping shell changes
 
-## Common adjustments across all pages
+### `src/pages/Learn.tsx`
+- Drop the wrapper breakout + off-white paint
+- Replace marketing eyebrow + 5xl "Learn" with `<PageHeader title="Learn" subtitle="Short, focused guides for getting more out of VOVV.AI">`
+- Wrap content in `<div className="max-w-3xl space-y-6">`
+- Video iframe stays `rounded-2xl`, but border/bg → semantic tokens
+- Search input: keep pill style but use `bg-card border-border` instead of hard-coded white/`#f0efed`
+- Track list cards: `bg-white border-[#f0efed]` → `bg-card border-border`
 
-- Replace every `rounded-3xl` (in cards I added) → `rounded-2xl`
-- Replace every `tracking-[-0.03em]` → `tracking-tight`
-- Replace every `text-4xl sm:text-5xl` (on headlines) → `text-3xl sm:text-4xl lg:text-5xl`
-- Add `mx-auto` to all containers so they sit centered in the wide app shell but content stays left-aligned within
-- Settings Save button: revert to small pill, not marketing-sized
+### `src/pages/Settings.tsx`
+- Drop the wrapper `<div className="-mx-4 ... bg-[#FAFAF8]">` — keep the inner `<PageHeader title="Settings">` exactly as it is (it's already the standard pattern)
+- Cards: `rounded-2xl border-[#f0efed] bg-white shadow-sm` → `rounded-2xl border-border bg-card shadow-sm` (preserve the radius bump from earlier — Settings cards looked OK at 2xl)
+- Save button stays small `size="pill"` (already done)
 
-## Files touched
+### `src/pages/BrandProfiles.tsx`
+- Drop the wrapper breakout + off-white paint — already uses `<PageHeader>`, just needs the shell removed so it sits inside AppShell normally
+- BrandModelsBanner: `border-[#f0efed] bg-white` → `border-border bg-card`
+- Skeleton: `border-[#f0efed]` → `border-border`
 
-- `src/pages/BugBounty.tsx`
+## Net result
+
+All 5 pages will:
+- Sit inside the same `max-w-7xl` AppShell container as every other in-app page
+- Start at the same vertical position (no extra `pt-24` stacking on top of AppShell's `pt-8`)
+- Use the same `<PageHeader>` title scale as Dashboard / Products / BrandModels
+- Use semantic card tokens (`bg-card`, `border-border`) so they react to the theme
+- Have a `max-w-3xl` inner wrapper for long-form pages (Help / Bug Bounty / Learn) so reading width stays sane on wide screens, but left-aligned within the app container
+
+## Files
+
 - `src/pages/AppHelp.tsx`
+- `src/pages/BugBounty.tsx`
 - `src/pages/Learn.tsx`
-- `src/pages/BrandProfiles.tsx`
 - `src/pages/Settings.tsx`
+- `src/pages/BrandProfiles.tsx`
 
-No content/copy changes. No shared components touched.
+No content/copy changes. No shared components touched. No new dependencies.
