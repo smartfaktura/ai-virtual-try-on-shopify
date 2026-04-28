@@ -28,23 +28,26 @@ export default function AppHelp() {
     <div className="animate-in fade-in duration-500">
       <PageHeader
         title="Help & Support"
-        subtitle="Real people, real answers — typically within a few hours on weekdays"
+        subtitle="A real team of pros behind every reply — usually within a few hours on weekdays"
       >
         <div className="max-w-3xl space-y-6">
-          {/* Form card with real founder header */}
+          {/* Form card with personal founder note */}
           <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-border bg-muted/30">
+            <div className="flex items-start gap-4 px-5 sm:px-6 py-5 sm:py-6 border-b border-border bg-muted/30">
               <img
                 src={founderImg}
                 alt="Tomas Simkus, founder of VOVV.AI"
-                className="w-9 h-9 rounded-full object-cover ring-1 ring-border shrink-0"
+                className="w-14 h-14 rounded-full object-cover ring-1 ring-border shadow-sm shrink-0"
               />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  From the team
+                  A note from the founder
                 </p>
-                <p className="text-[13px] text-foreground mt-0.5">
-                  Tomas & the VOVV.AI team — we read every message ourselves
+                <p className="text-[14px] leading-relaxed text-foreground mt-2">
+                  Hey — I'm Tomas, founder of VOVV.AI. Whatever you send here lands straight with our team of pros. We'll get back to you personally, usually within a few hours, with a real answer — not a canned reply.
+                </p>
+                <p className="text-[12px] italic text-muted-foreground mt-2">
+                  — Tomas, founder
                 </p>
               </div>
             </div>
