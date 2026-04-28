@@ -240,5 +240,6 @@ export function HomeHero() {
         <MarqueeRow cards={row2} direction="right" duration="40s" />
       </div>
     </section>
+    </>
   );
 }
