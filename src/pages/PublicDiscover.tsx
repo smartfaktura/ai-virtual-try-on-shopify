@@ -114,11 +114,16 @@ export default function PublicDiscover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+  // Track which urlItemId the user explicitly dismissed so auto-open effects
+  // do not reopen the modal after the user clicks X.
+  const dismissedItemIdRef = useRef<string | null>(null);
 
   // Fast-path: resolve the deep-linked item with ONE row fetch so the modal
   // opens before the full feed (~400+ rows across 3 RPCs) finishes loading.
   const { data: deepLinkedItem } = useDeepLinkedDiscoverItem(urlItemId);
   useEffect(() => {
+    if (!urlItemId) return;
+    if (dismissedItemIdRef.current === urlItemId) return;
     if (deepLinkedItem && !selectedItem) {
       setSelectedItem(deepLinkedItem);
       // Preload the hero image as soon as we know its URL.
@@ -136,7 +141,7 @@ export default function PublicDiscover() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deepLinkedItem]);
+  }, [deepLinkedItem, urlItemId]);
 
   useEffect(() => { setSelectedSubcategory('__all__'); }, [selectedCategory]);
 
@@ -218,6 +223,7 @@ export default function PublicDiscover() {
   // scene-custom-* items which require the admin-gated RPC).
   useEffect(() => {
     if (!urlItemId || allItems.length === 0 || selectedItem) return;
+    if (dismissedItemIdRef.current === urlItemId) return;
     const found = allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
@@ -235,14 +241,19 @@ export default function PublicDiscover() {
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
+    // A new explicit open clears any prior dismissal so future deep links work.
+    dismissedItemIdRef.current = null;
     window.history.pushState(null, '', getItemUrl(item));
     setSelectedItem(item);
   }, [getItemUrl]);
 
   const handleClose = useCallback(() => {
+    // Mark the current urlItemId as dismissed BEFORE clearing state, so the
+    // auto-open effects do not immediately reopen the modal on the next render.
+    if (urlItemId) dismissedItemIdRef.current = urlItemId;
     setSelectedItem(null);
-    window.history.replaceState(null, '', '/discover');
-  }, []);
+    navigate('/discover', { replace: true });
+  }, [urlItemId, navigate]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
