@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { mockTryOnPoses } from '@/data/mockData';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { useRecommendedDiscoverItems } from '@/hooks/useRecommendedDiscoverItems';
+import { useDeepLinkedDiscoverItem } from '@/hooks/useDeepLinkedDiscoverItem';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { PublicDiscoverCategoryBar } from '@/components/app/DiscoverCategoryBar';
