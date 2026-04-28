@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
-import { gtmBeginCheckout, gtmCheckoutSessionCreated, gtmPurchase, pickTransactionId } from '@/lib/gtm';
+import { gtmBeginCheckout, gtmCheckoutSessionCreated } from '@/lib/gtm';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
@@ -311,101 +311,29 @@ export function CreditProvider({ children }: CreditProviderProps) {
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
 
-  // Handle payment return query params
+  // Handle payment return query params.
+  // NOTE: ?payment=success on /app/settings was the old return URL.
+  // The new flow redirects Stripe to /app/payment-success which owns
+  // verification + the GTM `purchase` event. We only keep the cancelled toast
+  // here, plus a legacy redirect if anyone lands on the old URL.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
-    const returnedSessionId = params.get('session_id'); // from Stripe success_url
     if (payment === 'success') {
-      toast.success('Payment successful! Your credits are being updated…');
-
-      // Verify with Stripe server-side, then fire ONE clean `purchase` event.
-      // No URL-only gtag/Meta firing — those events are now wired in GTM from
-      // the verified dataLayer purchase event.
-      setTimeout(async () => {
-        await checkSubscription();
-        if (!user) return;
-        const meta = latestSubscriptionMetaRef.current;
-        if (!meta) return;
-
-        const debug = (() => {
-          try {
-            return typeof localStorage !== 'undefined' && localStorage.getItem('vovv_gtm_debug') === '1';
-          } catch { return false; }
-        })();
-
-        // Prefer credit pack: only present when this call just transitioned a
-        // paid one-time session to fulfilled=true (so it cannot re-emit).
-        const pack = meta.lastCreditPackPurchase;
-        if (pack) {
-          const txId = pack.payment_intent_id || pack.session_id;
-          if (debug) {
-            // eslint-disable-next-line no-console
-            console.log('[GTM DEBUG purchase verification]', {
-              sessionId: returnedSessionId,
-              purchaseType: 'credits',
-              paymentStatus: 'paid',
-              subscriptionStatus: meta.subscriptionStatus,
-              transactionId: txId,
-              planName: pack.plan_name,
-              value: pack.amount,
-              currency: pack.currency,
-            });
-          }
-          gtmPurchase({
-            userId: user.id,
-            transactionId: txId,
-            purchaseType: 'credits',
-            planName: pack.plan_name,
-            value: pack.amount,
-            currency: pack.currency,
-          });
-          return;
-        }
-
-        // Subscription path: only fire if Stripe confirms `active`.
-        if (meta.subscriptionStatus !== 'active') {
-          if (debug) {
-            // eslint-disable-next-line no-console
-            console.log('[GTM DEBUG purchase verification]', {
-              sessionId: returnedSessionId,
-              purchaseType: 'subscription',
-              subscriptionStatus: meta.subscriptionStatus,
-              willFire: false,
-              reason: 'subscription not active',
-            });
-          }
-          return;
-        }
-        const txId = pickTransactionId({
-          invoiceId: meta.latestInvoiceId,
-          sessionId: returnedSessionId || meta.latestSessionId,
-          subscriptionId: meta.stripeSubscriptionId,
-        });
-        if (!txId) return;
-        gtmPurchase({
-          userId: user.id,
-          transactionId: txId,
-          purchaseType: 'subscription',
-          planName: meta.plan,
-          value: meta.amount ?? 0,
-          currency: meta.currency || 'USD',
-        });
-      }, 2000);
-
-      // Clean URL
-      const url = new URL(window.location.href);
-      url.searchParams.delete('payment');
-      url.searchParams.delete('amount');
-      url.searchParams.delete('session_id');
-      window.history.replaceState({}, '', url.toString());
-    } else if (payment === 'cancelled') {
+      // Legacy: forward to the dedicated success page so verification + GTM
+      // purchase still fire correctly.
+      const sid = params.get('session_id') || '';
+      const url = `/app/payment-success${sid ? `?session_id=${encodeURIComponent(sid)}` : ''}`;
+      window.location.replace(url);
+      return;
+    }
+    if (payment === 'cancelled') {
       toast.info('Payment cancelled.');
       const url = new URL(window.location.href);
       url.searchParams.delete('payment');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [checkSubscription, user]);
+  }, [user]);
   
   const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
   const lowThreshold = planConfig.monthlyCredits === Infinity ? 0 : Math.min(Math.round(planConfig.monthlyCredits * 0.2), 200);

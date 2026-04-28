@@ -28,6 +28,7 @@ const Templates = lazy(() => import('@/pages/Templates'));
 const Discover = lazy(() => import('@/pages/Discover'));
 const Jobs = lazy(() => import('@/pages/Jobs'));
 const Settings = lazy(() => import('@/pages/Settings'));
+const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess'));
 const Auth = lazy(() => import('@/pages/Auth'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
@@ -270,6 +271,7 @@ const App = () => {
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                       </Suspense>
