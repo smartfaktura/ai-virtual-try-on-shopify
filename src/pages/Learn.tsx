@@ -149,7 +149,7 @@ export default function Learn() {
                     {guides.length} {guides.length === 1 ? 'guide' : 'guides'}
                   </span>
                 </div>
-                <div className="rounded-3xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
+                <div className="rounded-2xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
                   {guides.map((g) => (
                     <LearnRow key={`${g.section}/${g.slug}`} guide={g} onOpen={handleOpen} />
                   ))}

@@ -39,7 +39,7 @@ function BrandModelsBanner() {
   const sophia = TEAM_MEMBERS[0];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-[#f0efed] bg-white shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-[#f0efed] bg-white shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 sm:p-7">
         {/* Top row on mobile: avatar + CTA */}
         <div className="flex items-center gap-4 sm:contents">
@@ -135,7 +135,7 @@ export default function BrandProfiles() {
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2].map(i => (
-                  <div key={i} className="h-28 rounded-3xl bg-white border border-[#f0efed] animate-pulse" />
+                  <div key={i} className="h-28 rounded-2xl bg-white border border-[#f0efed] animate-pulse" />
                 ))}
               </div>
             ) : profiles.length === 0 ? (
