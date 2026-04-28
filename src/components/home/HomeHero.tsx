@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ArrowRight } from 'lucide-react';
 
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
