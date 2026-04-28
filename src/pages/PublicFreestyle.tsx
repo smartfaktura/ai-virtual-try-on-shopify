@@ -335,6 +335,7 @@ export default function PublicFreestyle() {
         ogType="website"
       />
       <JsonLd data={jsonLd} />
+      <h1 className="sr-only">Free AI Product Photography Generator — Freestyle Studio</h1>
       <div className="flex flex-col min-h-[calc(100vh-80px)]">
         {/* Scrollable gallery area */}
         <div className="flex-1 overflow-y-auto">

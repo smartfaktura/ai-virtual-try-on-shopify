@@ -145,10 +145,10 @@ export function FreestyleShowcaseSection() {
             Freestyle Studio
           </p>
 
-          <h2 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
+          <h1 className="text-foreground text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
             Your creative studio.{' '}
             <span className="text-[#4a5578]">No limits.</span>
-          </h2>
+          </h1>
 
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed hidden md:block">
             Describe what you want, pick your inputs, and get studio-quality images in seconds.
