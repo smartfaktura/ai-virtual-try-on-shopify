@@ -116,6 +116,7 @@ const HowItWorks = lazy(() => import('@/pages/HowItWorks'));
 const FAQ = lazy(() => import('@/pages/FAQ'));
 const CompareHub = lazy(() => import('@/pages/compare/CompareHub'));
 const VovvVsFlairAi = lazy(() => import('@/pages/compare/VovvVsFlairAi'));
+const VovvVsPhotoroom = lazy(() => import('@/pages/compare/VovvVsPhotoroom'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -185,6 +186,7 @@ const App = () => {
             {/* Comparison pages */}
             <Route path="/compare" element={<CompareHub />} />
             <Route path="/compare/vovv-vs-flair-ai" element={<VovvVsFlairAi />} />
+            <Route path="/compare/vovv-vs-photoroom" element={<VovvVsPhotoroom />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />

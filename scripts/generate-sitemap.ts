@@ -90,6 +90,7 @@ const MARKETING_URLS: SitemapEntry[] = [
   // Comparison pages
   { loc: '/compare',                        changefreq: 'monthly', priority: 0.7 },
   { loc: '/compare/vovv-vs-flair-ai',       changefreq: 'monthly', priority: 0.8 },
+  { loc: '/compare/vovv-vs-photoroom',      changefreq: 'monthly', priority: 0.8 },
 
   // Feature pages
   { loc: '/features/workflows',             changefreq: 'monthly', priority: 0.8 },
