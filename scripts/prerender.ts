@@ -147,11 +147,27 @@ async function renderPath(browser: Browser, path: string): Promise<RenderResult>
       return { path, ok: false, reason: 'Page contains password input (auth leak)' };
     }
 
-    // Write dist/<route>/index.html (root stays as dist/index.html)
-    const outDir = path === '/' ? DIST : join(DIST, path);
-    mkdirSync(outDir, { recursive: true });
-    const outFile = join(outDir, 'index.html');
-    writeFileSync(outFile, html, 'utf8');
+    // Write BOTH variants so hosting serves the prerendered HTML on clean URLs:
+    //   1. dist/<route>/index.html  — directory-style fallback
+    //   2. dist/<route>.html        — sibling-file variant. CRITICAL: Lovable
+    //      hosting matches this directly for "GET /<route>" requests. Without
+    //      it, clean URLs fall back to the root SPA index.html, which makes
+    //      every page declare the homepage as canonical and kills SEO.
+    if (path === '/') {
+      writeFileSync(join(DIST, 'index.html'), html, 'utf8');
+    } else {
+      // 1) dist/<route>/index.html
+      const outDir = join(DIST, path);
+      mkdirSync(outDir, { recursive: true });
+      writeFileSync(join(outDir, 'index.html'), html, 'utf8');
+
+      // 2) dist/<route>.html  (sibling file — served on clean URL match)
+      const segments = path.replace(/^\/+/, '').split('/');
+      const last = segments.pop()!;
+      const parentDir = segments.length === 0 ? DIST : join(DIST, ...segments);
+      mkdirSync(parentDir, { recursive: true });
+      writeFileSync(join(parentDir, `${last}.html`), html, 'utf8');
+    }
 
     return { path, ok: true, bytes: html.length };
   } catch (err) {
