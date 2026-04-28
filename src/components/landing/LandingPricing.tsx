@@ -76,7 +76,7 @@ const FEATURE_MATRIX: FeatureGroup[] = [
 
 function renderCell(val: Cell) {
   if (val === true) return <Check className="w-4 h-4 text-primary mx-auto" strokeWidth={2.5} />;
-  if (val === false) return <Minus className="w-4 h-4 text-muted-foreground/40 mx-auto" />;
+  if (val === false) return <Minus className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" />;
   return <span className="text-xs font-medium text-foreground">{val}</span>;
 }
 
@@ -156,11 +156,11 @@ export function LandingPricing() {
             Start free. Scale when you're ready. Every plan unlocks the full visual library.
           </p>
 
-          <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#f0efed] shadow-[0_1px_3px_rgba(26,26,46,0.04)]">
+          <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#f0efed] shadow-[0_1px_3px_hsl(var(--primary)/0.05)]">
             <button
               onClick={() => setAnnual(false)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
-                !annual ? 'bg-[#1a1a2e] text-white' : 'text-[#6b7280] hover:text-[#1a1a2e]'
+                !annual ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Monthly
@@ -168,11 +168,11 @@ export function LandingPricing() {
             <button
               onClick={() => setAnnual(true)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
-                annual ? 'bg-[#1a1a2e] text-white' : 'text-[#6b7280] hover:text-[#1a1a2e]'
+                annual ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Annual
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${annual ? 'bg-white text-[#1a1a2e]' : 'bg-[#1a1a2e] text-white'}`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${annual ? 'bg-white text-primary' : 'bg-primary text-primary-foreground'}`}>
                 -20%
               </span>
             </button>
@@ -209,45 +209,45 @@ export function LandingPricing() {
                 key={plan.planId}
                 className={`relative rounded-2xl border bg-white p-7 flex flex-col transition-shadow ${
                   isCurrentPlan
-                    ? 'border-[#1a1a2e]/15 ring-1 ring-[#1a1a2e]/10 shadow-[0_8px_30px_-8px_rgba(26,26,46,0.12)]'
+                    ? 'border-primary/20 ring-1 ring-primary/10 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.18)]'
                     : plan.highlighted && !user
-                      ? 'border-[#1a1a2e]/15 ring-1 ring-[#1a1a2e]/10 shadow-[0_8px_30px_-8px_rgba(26,26,46,0.12)]'
-                      : 'border-[#f0efed] hover:shadow-[0_8px_24px_-12px_rgba(26,26,46,0.10)]'
+                      ? 'border-primary/20 ring-1 ring-primary/10 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.18)]'
+                      : 'border-[#f0efed] hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.12)]'
                 }`}
               >
                 {isCurrentPlan ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white text-[11px] font-semibold px-4 py-1 rounded-full">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[11px] font-semibold px-4 py-1 rounded-full">
                     Current Plan
                   </span>
                 ) : plan.badge && !user ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white text-[11px] font-semibold px-4 py-1 rounded-full">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[11px] font-semibold px-4 py-1 rounded-full">
                     {plan.badge}
                   </span>
                 ) : null}
 
                 <div className="mb-6">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-[#1a1a2e] text-base font-semibold">{plan.name}</h3>
+                    <h3 className="text-foreground text-base font-semibold">{plan.name}</h3>
                     {isCurrentPlan && subscriptionStatus === 'canceling' && (
                       <Badge variant="destructive" className="text-[10px]">Canceling</Badge>
                     )}
                   </div>
                   <div className="mt-3 flex items-baseline gap-1">
-                    <span className="text-[#1a1a2e] text-[2.75rem] font-semibold tracking-[-0.02em] leading-none">${price}</span>
-                    <span className="text-[#9ca3af] text-sm">/mo</span>
+                    <span className="text-foreground text-[2.75rem] font-semibold tracking-[-0.02em] leading-none">${price}</span>
+                    <span className="text-muted-foreground text-sm">/mo</span>
                   </div>
-                  <p className="text-xs text-[#6b7280] mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     {typeof plan.credits === 'number'
                       ? `${plan.credits.toLocaleString()} credits / month`
                       : 'Unlimited visuals'}
                   </p>
                   {typeof plan.credits === 'number' && (
                     <>
-                      <p className="text-[10px] text-[#9ca3af] mt-0.5">
+                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
                         ≈ {Math.round(plan.credits / 5)} images
                       </p>
                       {price > 0 && plan.credits > 0 && (
-                        <p className="text-[10px] text-[#1a1a2e]/60 font-medium mt-0.5">
+                        <p className="text-[10px] text-primary/70 font-medium mt-0.5">
                           ${(price / plan.credits).toFixed(3)} per credit
                         </p>
                       )}
@@ -257,13 +257,13 @@ export function LandingPricing() {
 
                 <ul className="flex-1 space-y-3 mb-6">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-[#4b5563]">
-                      <Check className="w-4 h-4 text-[#1a1a2e] shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <li key={idx} className="flex items-start gap-2 text-sm text-foreground/75">
+                      <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" strokeWidth={2.5} />
                       {typeof feature === 'string' ? feature : (
                         <span className="inline-flex items-center gap-1.5">
                           {feature.text}
                           {feature.badge && (
-                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-[#1a1a2e] text-white">
+                            <Badge className="text-[9px] px-1.5 py-0 leading-tight bg-primary text-primary-foreground">
                               {feature.badge}
                             </Badge>
                           )}
@@ -292,8 +292,8 @@ export function LandingPricing() {
                       to={ctaRoute}
                       className={`inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full text-sm font-semibold w-full transition-colors ${
                         usePrimary
-                          ? 'bg-[#1a1a2e] text-white hover:bg-[#2a2a3e]'
-                          : 'border border-[#d4d4d4] text-[#1a1a2e] hover:bg-[#f5f5f3]'
+                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                          : 'border border-[#d4d4d4] text-foreground hover:bg-[#f5f5f3]'
                       }`}
                     >
                       {ctaLabel}
