@@ -80,12 +80,14 @@ export function DemoProductPicker({ open, onOpenChange, onSelectDemo }: DemoProd
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-hidden p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-3">
           <DialogTitle>Try a demo product</DialogTitle>
           <DialogDescription>Pick one to see how it works — instant, no credits used</DialogDescription>
         </DialogHeader>
-        {grid}
+        <div className="overflow-y-auto px-6 pb-6 max-h-[calc(85vh-7rem)]">
+          {grid}
+        </div>
       </DialogContent>
     </Dialog>
   );

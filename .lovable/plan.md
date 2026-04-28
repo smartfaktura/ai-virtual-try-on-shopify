@@ -1,44 +1,33 @@
-# Redesign 404 page in homepage aesthetic
+## Problem
 
-The 404 page currently has visual noise that doesn't match the homepage:
-- Random radial gradients + grid overlay background
-- Gigantic gradient "404" numerals
-- A red destructive dot next to "VOVV.AI" in the header (the "random circle near logo")
-- Mismatched header / different button styles / 4-column busy quick-link grid
+On `/app/generate/product-images`, the **"Try a demo product"** modal has two visual bugs when the product grid is tall enough to scroll:
 
-Align it with the homepage and the just-redesigned PaymentSuccess page.
+1. The scrollbar runs flush against the rounded corner of the dialog, so it gets visually clipped at the top/bottom edges
+2. The grid content scrolls *underneath* the absolutely-positioned `×` close button, and the scroll track sits behind/next to it — making the close button feel like it's overlapping the content
 
-## Changes — `src/pages/NotFound.tsx` only
+Root cause: the shared `DialogContent` primitive (`src/components/ui/dialog.tsx`) puts `overflow-y-auto` on the whole rounded container (with `p-6`). For a normal short dialog that's fine, but `DemoProductPicker` has a tall product grid, so the entire dialog body scrolls — including past the close button and into the rounded corners.
 
-### Remove
-- Decorative radial gradient + grid mask backgrounds
-- Custom header with the bullet dot beside the logo and the "Pricing" link
-- Giant gradient `404` text
-- The destructive red dot in the path-echo pill
-- The 4-link icon-only grid (Pricing duplicate, etc.)
-- Three-button cluster (Home + Go to App + back link)
+## Fix
 
-### New layout (same skeleton as PaymentSuccess)
-Background `bg-[#FAFAF8]`, container `max-w-3xl px-6 pt-24 pb-20 lg:pt-32 lg:pb-28`, single fade-in.
+Restructure only `src/components/app/product-images/DemoProductPicker.tsx` (do **not** touch the shared `dialog.tsx` primitive — other modals depend on its current behavior) so that:
 
-1. **Hero block, centered**
-   - Eyebrow `404 — PAGE NOT FOUND` in `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground`
-   - Headline `This page took a wrong turn` in `text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold tracking-[-0.03em] leading-[1.08]`
-   - Subline `text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed`, no terminal period
-   - Quiet path echo pill: `font-mono text-xs text-muted-foreground/70 bg-foreground/[0.04] px-3 py-1.5 rounded-full` (no red dot)
+- The dialog itself stays a fixed, non-scrolling rounded shell
+- Only the **grid area** scrolls, inside an inner container with proper padding so the scrollbar sits inside the rounded corners and away from the close button
 
-2. **Where to next** — 3 cards (drop Pricing duplicate)
-   - `Product Images`, `Video Studio`, `Explore`
-   - White rounded-3xl cards with `border-[#f0efed]`, icon tile `w-9 h-9 rounded-xl bg-foreground/[0.04]`, title + one-line description — identical to PaymentSuccess `NextStep`
-   - Eyebrow `WHERE TO NEXT`
+### Changes to `DemoProductPicker.tsx` (desktop branch only)
 
-3. **Footer actions**
-   - Primary pill CTA `Back to home` → `/` matching homepage hero CTA: `h-[3.25rem] px-8 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25`
-   - Quiet text link below: `Or go back` → `navigate(-1)` styled with the eyebrow microcopy treatment
+1. On `<DialogContent>`, add `max-h-[85vh] overflow-hidden p-0` so the outer card no longer scrolls and the rounded corners cleanly contain the inner scroll area
+2. Wrap the header in its own non-scrolling block with `px-6 pt-6 pb-3` (keeps the close `×` aligned and away from scroll content)
+3. Wrap the grid in a scroll container: `<div className="overflow-y-auto px-6 pb-6 max-h-[calc(85vh-7rem)]">` so only the products scroll, with horizontal padding that keeps the scrollbar visually inside the rounded shape
+4. Bump `sm:max-w-2xl` → `sm:max-w-3xl` slightly so the 3-column grid breathes a bit more on desktop (optional polish, matches the screenshot density)
 
-### Keep
-- `useEffect` console.error log for debugging
-- `SEOHead` with `noindex`
+Mobile (Drawer) branch already handles this correctly (`overflow-y-auto` on an inner div) — no changes needed there.
 
-## Files touched
-- `src/pages/NotFound.tsx` — full visual rewrite, no routing changes
+### Files touched
+
+- `src/components/app/product-images/DemoProductPicker.tsx` — single file, ~10 lines changed
+
+### Out of scope
+
+- No change to `src/components/ui/dialog.tsx` (would affect every modal in the app)
+- No change to demo product data, selection logic, or mobile drawer
