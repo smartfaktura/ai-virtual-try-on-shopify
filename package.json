@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "sitemap": "tsx scripts/generate-sitemap.ts",
-    "build": "tsx scripts/generate-sitemap.ts && vite build",
+    "prerender": "tsx scripts/prerender.ts",
+    "validate-prerender": "tsx scripts/validate-prerender.ts",
+    "build": "tsx scripts/generate-sitemap.ts && vite build && tsx scripts/prerender.ts && tsx scripts/validate-prerender.ts",
     "build:dev": "tsx scripts/generate-sitemap.ts && vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
