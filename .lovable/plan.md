@@ -1,99 +1,70 @@
-## Phase 4b: Migrate to react-helmet-async
+## Phase 5: Complete Lovable's SEO checklist
 
-This is the cleanup Lovable's docs recommend for SPAs like ours. Goal: make every page reliably set its own `<title>`, `<meta>`, and structured data — without the fragile direct-DOM hacks we use today.
-
----
-
-## Plain-English summary
-
-**Today**: Two components (`SEOHead.tsx` and `JsonLd.tsx`) reach into the page's `<head>` and manually edit tags using `document.querySelector(...)` and `document.head.appendChild(...)`. This works but is fragile.
-
-**After**: Same two components, but rebuilt on top of a small, well-trusted React library called `react-helmet-async` that does this properly. React tracks the tags, no race conditions, no leftover stale tags when you switch pages.
-
-**What changes for the user**: Nothing visual. Same site, same speed. Just more reliable metadata for Google and a cleaner foundation.
-
-**What changes for the 52 files that use `<SEOHead>` and `<JsonLd>` today**: Nothing. They keep working with zero edits — we only swap the engine inside.
+Phases 4a + 4b handled the foundation (sitemap, robots, canonicals, helmet). This phase fills in the remaining gaps from Lovable's official SEO/GEO guide — focused on what actually moves rankings and rich results in Google.
 
 ---
 
-## Honest expectations
+## What we're adding (in order of impact)
 
-| Improves | Doesn't fix |
+### Step 1 — BreadcrumbList JSON-LD on category & blog pages (highest ROI)
+When Google sees breadcrumb schema, it replaces the raw URL in search results with a clean breadcrumb trail (e.g. *Home › AI Product Photography › Fashion*). Higher CTR with minimal effort.
+
+Add to:
+- All 10 `/ai-product-photography/:category` pages → Home › AI Product Photography › [Category]
+- All 8 `/blog/:slug` pages → Home › Blog › [Post title]
+- All 10 `/features/*` pages → Home › Features › [Feature]
+- The 4 comparison pages (`/etsy-product-photography-ai`, `/shopify-product-photography-ai`, `/ai-product-photography-vs-photoshoot`, `/ai-product-photography-vs-studio`)
+
+Implementation: a tiny helper `src/lib/seo/breadcrumbs.ts` that builds the schema, used via the existing `<JsonLd>` component. No new dependencies.
+
+### Step 2 — Audit & fix per-page JSON-LD coverage
+Go through all 22 pages that currently use `<JsonLd>` and verify they emit the right schema type. Fix anything mismatched, specifically:
+- Blog posts → `BlogPosting` (with `headline`, `datePublished`, `author`, `image`)
+- Blog index → `Blog`
+- FAQ pages → `FAQPage` with question/answer pairs
+- Pricing → keep current
+- Home → keep current
+
+Then add basic `WebPage` + `description` schema to the ~12 pages that have none today (about, careers, contact, team, press, help, status, changelog, roadmap, cookies, privacy, terms).
+
+### Step 3 — H1 & internal linking audit
+Lovable's checklist says: **one H1 per page** containing the primary keyword, and `<a>` tags (not `onClick`) for internal navigation.
+
+I'll run a scan across all 55 public pages and list any violations:
+- Pages with zero H1s
+- Pages with multiple H1s
+- Internal navigation buttons that should be `<a>` / `<Link>` tags
+
+Then fix anything found. Most pages are likely fine — this is a quality pass.
+
+### Step 4 — Verification & docs
+After deploying:
+- Run Lovable's three browser console checks from the docs (canonical, title length, H1 count) on 5 sample pages
+- Provide you with the exact URLs to:
+  1. Submit `https://vovv.ai/sitemap.xml` to Google Search Console
+  2. Test 3 key pages (homepage, a category page, a blog post) in Google's Rich Results Test
+- Document what to expect
+
+---
+
+## What I'm NOT doing in this phase (and why)
+
+- **Per-page Open Graph images** — would require designing/generating ~50 unique social preview images. Big design project, separate decision.
+- **Server-side rendering / true link previews on LinkedIn/Slack/X** — Lovable doesn't offer SSR for SPAs. The honest fix needs a different hosting setup. Worth a separate conversation if social previews matter to you.
+- **Content/keyword optimization** — that's a copywriting task, not a code task. I can flag obvious gaps if you want, but won't rewrite copy without your input.
+- **Submitting to Google Search Console** — requires your account, you'd do this manually (I'll give you exact steps).
+
+---
+
+## Estimated impact
+
+| Change | Likely SEO impact |
 |---|---|
-| Reliable per-page title/meta for Google, Bing, ChatGPT crawlers (they run JS) | LinkedIn / Slack / X link previews — these need server-rendering, separate project |
-| Cleanup of stale tags between route changes | Initial HTML still shows the default home title to non-JS scrapers |
-| Structured data (JsonLd) per page works cleanly | Indexing speed (still depends on Google's render queue) |
-| Foundation for future SSR/prerender if ever needed | |
+| Breadcrumb schema | Medium-high — visible in Google results within ~2 weeks of crawl |
+| BlogPosting / FAQPage schema | Medium — eligible for rich results |
+| H1 / `<a>` tag fixes | Low-medium — long-term ranking hygiene |
+| Verification | Catches issues before they cost you traffic |
 
 ---
 
-## The plan (4 small steps)
-
-### Step 1 — Install the library
-Add `react-helmet-async` (~5 KB, maintained by the React community, the official Lovable recommendation).
-
-### Step 2 — Wrap the app
-In `src/App.tsx`, wrap the existing `<BrowserRouter>` tree with `<HelmetProvider>`. This is a one-line change that lets Helmet manage the head globally.
-
-```text
-<HelmetProvider>
-  <BrowserRouter>
-    ...everything we already have...
-  </BrowserRouter>
-</HelmetProvider>
-```
-
-### Step 3 — Rebuild `SEOHead.tsx` internally
-Same props (`title`, `description`, `canonical`, `ogImage`, `ogType`, `noindex`) — same call sites everywhere. Inside, replace the `useEffect` + `document.querySelector` code with a `<Helmet>` block:
-
-```text
-<Helmet>
-  <title>{title}</title>
-  <meta name="description" content={description} />
-  <link rel="canonical" href={canonical} />
-  <meta property="og:title" content={title} />
-  ...etc
-  {noindex && <meta name="robots" content="noindex, follow" />}
-</Helmet>
-```
-
-All 50+ pages that import `<SEOHead>` keep working with no edits.
-
-### Step 4 — Rebuild `JsonLd.tsx` internally
-Same prop (`data`). Inside, replace `document.createElement('script')` with:
-
-```text
-<Helmet>
-  <script type="application/ld+json">{JSON.stringify(data)}</script>
-</Helmet>
-```
-
----
-
-## Safety / rollback
-
-- Pure refactor — no API/data/database changes.
-- No visual or behavioral changes for users.
-- Public component signatures stay identical → 52 caller files untouched.
-- If anything misbehaves, we revert Steps 1–4 and we're back to today's state instantly.
-- No conflict with the static `<title>`, `<meta>`, OG tags, or JSON-LD already in `index.html` — Helmet replaces or adds tags as needed and respects the static fallbacks for non-JS scrapers.
-
----
-
-## What we'll verify after
-
-- Home page still shows its title in the browser tab
-- Navigating Home → Pricing → About correctly updates the tab title each time
-- View Source on a public page shows Helmet-managed tags in the head
-- No console errors
-- Robots noindex still emits on `/discover/:itemId` and `/freestyle/:itemId` (from Phase 4a)
-
----
-
-## Out of scope (saved for later if you want)
-
-- Server-side rendering / prerender for true social-preview support (big project)
-- Per-page Open Graph images (currently we use one default site-wide image)
-- Adding more JSON-LD schema types (Article, Product, FAQ, etc.) — easy to add once Helmet is in
-
-Approve and I'll execute Steps 1–4 in one pass.
+Approve and I'll work through Steps 1–4 in one pass. Step 3 may surface fixes I can't predict in advance — I'll flag anything significant before changing it.
