@@ -24,44 +24,44 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 
 export default function AppHelp() {
   return (
-    <div className="min-h-full">
-      <div className="max-w-xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
+      <div className="max-w-2xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {/* Hero */}
-        <header className="mb-14">
+        <header className="mb-10">
           <div className="flex -space-x-3 mb-6">
-            <Avatar className="w-12 h-12 ring-[3px] ring-background">
+            <Avatar className="w-12 h-12 ring-[3px] ring-[#FAFAF8]">
               <AvatarImage src={avatarSophia} alt="Sophia" />
               <AvatarFallback className="text-xs">S</AvatarFallback>
             </Avatar>
-            <Avatar className="w-12 h-12 ring-[3px] ring-background">
+            <Avatar className="w-12 h-12 ring-[3px] ring-[#FAFAF8]">
               <AvatarImage src={avatarKenji} alt="Kenji" />
               <AvatarFallback className="text-xs">K</AvatarFallback>
             </Avatar>
-            <Avatar className="w-12 h-12 ring-[3px] ring-background">
+            <Avatar className="w-12 h-12 ring-[3px] ring-[#FAFAF8]">
               <AvatarImage src={avatarZara} alt="Zara" />
               <AvatarFallback className="text-xs">Z</AvatarFallback>
             </Avatar>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-semibold text-foreground tracking-[-0.03em] leading-[1.05]">
             Talk to the team
           </h1>
-          <p className="mt-3 text-base text-muted-foreground">
+          <p className="mt-4 text-base text-muted-foreground leading-relaxed">
             Real humans, real fast. We usually reply within a few hours.
           </p>
         </header>
 
         {/* Form */}
-        <section className="mb-16">
+        <section className="mb-8 rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
           <ChatContactForm variant="spacious" />
         </section>
 
         {/* Quiet helpers */}
-        <section className="mb-14 border-t border-border/60">
+        <section className="mb-10 rounded-3xl border border-[#f0efed] bg-white overflow-hidden shadow-sm">
           <a
             href="/help"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-4 py-5 border-b border-border/60 -mx-2 px-2 rounded-lg hover:bg-muted/40 transition-colors"
+            className="group flex items-center gap-4 px-5 sm:px-6 py-5 border-b border-[#f0efed] hover:bg-[#FAFAF8] transition-colors"
           >
             <HelpCircle className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
             <div className="flex-1">
@@ -75,7 +75,7 @@ export default function AppHelp() {
             href="https://discord.gg/ZgnSJqUyV"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-4 py-5 border-b border-border/60 -mx-2 px-2 rounded-lg hover:bg-muted/40 transition-colors"
+            className="group flex items-center gap-4 px-5 sm:px-6 py-5 border-b border-[#f0efed] hover:bg-[#FAFAF8] transition-colors"
           >
             <DiscordIcon className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
             <div className="flex-1">
@@ -87,7 +87,7 @@ export default function AppHelp() {
 
           <Link
             to="/app/learn"
-            className="group flex items-center gap-4 py-5 border-b border-border/60 -mx-2 px-2 rounded-lg hover:bg-muted/40 transition-colors"
+            className="group flex items-center gap-4 px-5 sm:px-6 py-5 hover:bg-[#FAFAF8] transition-colors"
           >
             <GraduationCap className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
             <div className="flex-1">
@@ -99,7 +99,7 @@ export default function AppHelp() {
         </section>
 
         {/* Footer */}
-        <footer className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+        <footer className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {socialLinks.map((link, i) => {
             const isExternal = link.href.startsWith('http') || link.href.startsWith('mailto');
             return (

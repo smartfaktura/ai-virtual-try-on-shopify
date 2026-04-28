@@ -440,11 +440,13 @@ export default function Settings() {
   return (
     <>
     <SEOHead title="Settings — VOVV.AI" description="Manage your VOVV.AI account settings, plan, and preferences." noindex />
-    <PageHeader title="Settings">
-      <div className="space-y-6">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
+      <div className="px-4 sm:px-6 lg:px-8 pt-24 lg:pt-10 pb-14 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <PageHeader title="Settings">
+          <div className="space-y-8">
         {/* ─── Current Plan ─── */}
         {!(plan === 'free' && subscriptionStatus === 'none') && (
-        <Card>
+        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-3">
             {/* Plan header */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -517,15 +519,15 @@ export default function Settings() {
             <h3 className="text-base font-semibold">Choose Your Plan</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
           </div>
-          <div className="flex rounded-lg border border-border overflow-hidden">
+          <div className="inline-flex rounded-full border border-[#f0efed] bg-white p-1 shadow-sm">
             <button
-              className={`h-10 px-4 text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setBillingPeriod('monthly')}
             >
               Monthly
             </button>
             <button
-              className={`h-10 px-4 text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setBillingPeriod('annual')}
             >
               Annual (Save 20%)
@@ -550,7 +552,7 @@ export default function Settings() {
 
         {/* Enterprise banner */}
         {enterprisePlan && (
-          <div className="rounded-2xl border bg-card p-6 sm:p-8">
+          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="rounded-xl bg-primary/10 p-3">
@@ -578,7 +580,7 @@ export default function Settings() {
         )}
 
         {/* Credit packs */}
-        <Card>
+        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h3 className="text-base font-semibold">Need More Credits?</h3>
@@ -628,7 +630,7 @@ export default function Settings() {
         <Separator />
 
         {/* ─── Notifications ─── */}
-        <Card>
+        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h2 className="text-base font-semibold">Notifications</h2>
@@ -685,8 +687,12 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Button size="pill" onClick={handleSave} disabled={isSaving}>
+        <div className="flex justify-end pt-2">
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="rounded-full h-[3.25rem] px-7 shadow-lg shadow-primary/25"
+          >
             {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
         </div>
@@ -695,7 +701,7 @@ export default function Settings() {
         {isAdmin && (
           <>
             <Separator />
-            <Card>
+            <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h2 className="text-base font-semibold">Asset Preview Generation</h2>
@@ -733,10 +739,12 @@ export default function Settings() {
           </>
         )}
 
-        {/* Feedback Banner */}
-        <FeedbackBanner />
+            {/* Feedback Banner */}
+            <FeedbackBanner />
+          </div>
+        </PageHeader>
       </div>
-    </PageHeader>
+    </div>
 
      <PlanChangeDialog
       open={dialogOpen}
