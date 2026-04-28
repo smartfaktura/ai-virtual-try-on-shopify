@@ -29,6 +29,7 @@ import { SITE_URL } from '@/lib/constants';
 import { getItemSlug } from '@/lib/slugUtils';
 import { MasonrySkeletonGrid } from '@/components/app/MasonrySkeletonGrid';
 import { DiscoverItemSEOView } from '@/components/discover/DiscoverItemSEOView';
+import { DiscoverItemDetailSkeleton } from '@/components/discover/DiscoverItemDetailSkeleton';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
