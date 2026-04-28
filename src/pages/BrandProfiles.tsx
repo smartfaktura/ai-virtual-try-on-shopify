@@ -113,56 +113,54 @@ export default function BrandProfiles() {
   });
 
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-muted/30">
-      <div className="px-4 sm:px-6 lg:px-8 pt-24 lg:pt-10 pb-14 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <PageHeader
-          title="Brand Profiles"
-          subtitle="Define your brand's visual identity for consistent image generation"
-        >
-          <div className="space-y-6">
-            {/* Actions */}
-            <div className="flex justify-end">
-              <Button
-                onClick={() => navigate('/app/brand-profiles/new')}
-                className="rounded-full h-11 px-6 shadow-md shadow-primary/20"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Profile
-              </Button>
-            </div>
-
-            {/* Content */}
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2].map(i => (
-                  <div key={i} className="h-28 rounded-2xl bg-card border border-border animate-pulse" />
-                ))}
-              </div>
-            ) : profiles.length === 0 ? (
-              <EmptyStateCard
-                heading="No brand profiles yet"
-                description="Create your first Brand Profile to ensure every generated image matches your brand's visual identity"
-                action={{ content: 'Create Brand Profile', onAction: () => navigate('/app/brand-profiles/new') }}
-                icon={<Palette className="w-10 h-10 text-muted-foreground" />}
-              />
-            ) : (
-              <div className="space-y-3">
-                {profiles.map(profile => (
-                  <BrandProfileCard
-                    key={profile.id}
-                    profile={profile}
-                    onEdit={() => navigate(`/app/brand-profiles/${profile.id}/edit`)}
-                    onDelete={() => deleteMutation.mutate(profile.id)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Brand Models CTA Banner — after profiles */}
-            <BrandModelsBanner />
+    <div className="animate-in fade-in duration-500">
+      <PageHeader
+        title="Brand Profiles"
+        subtitle="Define your brand's visual identity for consistent image generation"
+      >
+        <div className="space-y-6">
+          {/* Actions */}
+          <div className="flex justify-end">
+            <Button
+              onClick={() => navigate('/app/brand-profiles/new')}
+              size="pill"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Profile
+            </Button>
           </div>
-        </PageHeader>
-      </div>
+
+          {/* Content */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map(i => (
+                <div key={i} className="h-28 rounded-2xl bg-card border border-border animate-pulse" />
+              ))}
+            </div>
+          ) : profiles.length === 0 ? (
+            <EmptyStateCard
+              heading="No brand profiles yet"
+              description="Create your first Brand Profile to ensure every generated image matches your brand's visual identity"
+              action={{ content: 'Create Brand Profile', onAction: () => navigate('/app/brand-profiles/new') }}
+              icon={<Palette className="w-10 h-10 text-muted-foreground" />}
+            />
+          ) : (
+            <div className="space-y-3">
+              {profiles.map(profile => (
+                <BrandProfileCard
+                  key={profile.id}
+                  profile={profile}
+                  onEdit={() => navigate(`/app/brand-profiles/${profile.id}/edit`)}
+                  onDelete={() => deleteMutation.mutate(profile.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Brand Models CTA Banner — after profiles */}
+          <BrandModelsBanner />
+        </div>
+      </PageHeader>
     </div>
   );
 }
