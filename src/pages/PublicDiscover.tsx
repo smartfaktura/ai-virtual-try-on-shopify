@@ -432,6 +432,16 @@ export default function PublicDiscover() {
   // see the grid + modal.
   const showSeoView = !!urlItem && !cameFromGrid && urlItem.type === 'preset';
 
+  // Direct hit on /discover/:slug while presets are still loading.
+  // Render a detail-shaped skeleton instead of flashing the Explore grid.
+  if (urlItemId && !cameFromGrid && isLoading && !urlItem) {
+    return (
+      <PageLayout>
+        <DiscoverItemDetailSkeleton />
+      </PageLayout>
+    );
+  }
+
   if (showSeoView && urlItem.type === 'preset') {
     return (
       <PageLayout>
