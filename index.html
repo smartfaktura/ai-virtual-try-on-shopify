@@ -10,11 +10,9 @@
     <link rel="manifest" href="/site.webmanifest" />
     <!--
       No static <link rel="canonical"> here on purpose.
-      Each prerendered route writes its own canonical at build time
-      (scripts/prerender.ts) and SEOHead.tsx sets it at runtime for
-      client-side navigations. A hardcoded root canonical here would
-      override every per-page canonical for any bot that doesn't
-      execute JS — which was killing rankings on every non-root page.
+      Each route sets its own canonical at runtime via SEOHead.tsx.
+      A hardcoded root canonical would override every per-page
+      canonical for any bot that doesn't execute JS.
     -->
     <title>AI Product Visuals &amp; Videos for E-commerce Brands | VOVV.AI</title>
     <meta name="description" content="VOVV.AI helps e-commerce brands create brand-ready product visuals and videos from one product photo. Generate visuals for ads, websites, and campaigns faster.">
