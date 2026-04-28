@@ -99,7 +99,7 @@ export function PhotographyHero() {
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {firstTilePreload && (
         <Helmet>
-          <link rel="preload" as="image" href={firstTilePreload} fetchpriority="high" />
+          <link rel="preload" as="image" href={firstTilePreload} fetchPriority="high" />
         </Helmet>
       )}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
