@@ -1,65 +1,73 @@
-## Goal
+## What went wrong last time
 
-Bring five in-app pages — `/app/help`, `/app/bug-bounty`, `/app/settings`, `/app/learn`, `/app/brand-profiles` — visually in line with the **homepage aesthetic** (HomeHero / HomeCreateCards / PaymentSuccess style), while keeping the **content unchanged** and the layout **left-aligned** (not centered hero). No copy edits, no removed sections, no behavior changes.
+I oversized the headlines (`text-4xl sm:text-5xl tracking-[-0.03em]`) and used `rounded-3xl` cards — which is heavier than the actual homepage. That's why the BugBounty title now wraps to "Help us make VOVV.AI / better" and the cards feel chunky. The user's reference is the real homepage scale (HomeFAQ, HomeHowItWorks).
 
-## Reference aesthetic (from Home + PaymentSuccess + Contact)
+## Correct homepage tokens (from `HomeFAQ.tsx` + `HomeHowItWorks.tsx`)
 
-- Off-white surface: `bg-[#FAFAF8]` page background, white `rounded-3xl` cards with `border-[#f0efed]` (a.k.a. `border-foreground/10`)
-- Typography: tight `tracking-[-0.03em]` headlines, `font-semibold` (not `font-bold`), uppercase eyebrow `text-[11px] tracking-[0.2em] text-muted-foreground`
-- Vertical rhythm: generous `py-12 sm:py-16`, sections separated by `space-y-10` / `space-y-12`
-- Buttons: pill CTA — `rounded-full h-[3.25rem] px-7 shadow-lg shadow-primary/25` for primary; ghost/outline pills (`rounded-full`) for secondary
-- Subtle `animate-in fade-in slide-in-from-bottom-2 duration-500` on hero block
-- No drop shadows on body cards beyond the soft `shadow-sm`; rely on borders + off-white contrast
+| Token | Correct value |
+|---|---|
+| Page bg | `bg-[#FAFAF8]` |
+| Section padding | `py-16 lg:py-32` (this is too much for in-app, use `pt-16 lg:pt-20 pb-20`) |
+| Eyebrow | `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4` |
+| **Headline** | `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight` (NOT `tracking-[-0.03em]`, NOT `text-5xl` on small screens) |
+| Subtitle | `text-base sm:text-lg text-muted-foreground leading-relaxed mt-4` |
+| Header → content gap | `mb-12 lg:mb-16` |
+| **Cards** | `bg-white rounded-2xl border border-[#f0efed] shadow-sm` (NOT 3xl, NOT shadow-md) |
+| Card padding | `p-5 sm:p-6` |
+| Primary CTA | `rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25` |
 
-## Scope (5 files, content untouched)
+Plus: pages should be **left-aligned** (per user) — homepage hero is centered but FAQ/HowItWorks center the *header block only*; for in-app utility pages, the user explicitly said left-aligned, so headers stay left.
 
-### 1. `src/pages/AppHelp.tsx`
-- Wrap content in `bg-[#FAFAF8]` shell with `py-14 sm:py-20`
-- Switch container from `max-w-xl mx-auto` (centered) → `max-w-2xl` left-aligned (remove `mx-auto`, keep responsive padding)
-- Replace `text-3xl/4xl font-semibold tracking-tight` headline → `text-4xl sm:text-5xl font-semibold tracking-[-0.03em]`
-- Add uppercase eyebrow "Support" above the headline (matches homepage section labels) — this is a structural label, not new copy
-- Wrap the existing form section and the helper-links section each in a `rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8` card
-- Keep avatars, FAQ/Discord/Tutorials links, and footer social row exactly as-is
+## Scope — redo all 5 pages
 
-### 2. `src/pages/BugBounty.tsx`
-- Same shell wrapper (`bg-[#FAFAF8]` + `py-14 sm:py-20`), container `max-w-3xl` left-aligned (remove `mx-auto` — currently centered)
-- Hero: keep eyebrow `Bug Bounty`, restyle headline to `text-4xl sm:text-5xl font-semibold tracking-[-0.03em]`, swap the icon tile from `bg-primary/10 rounded-2xl` → `bg-white border border-[#f0efed] rounded-2xl shadow-sm` for the cleaner home look
-- Convert all section cards (`How it works`, `Reward tiers`, `Qualifies/Doesn't`, `What to include`, CTA) from `bg-card/30 border-border/50 rounded-2xl` → `bg-white border border-[#f0efed] rounded-3xl` with consistent `p-6 sm:p-8`
-- Final CTA: pill button already uses `rounded-full` — bump to `h-[3.25rem] px-7 shadow-lg shadow-primary/25` to match homepage primary CTA
+### 1. `src/pages/BugBounty.tsx`
+- Drop the icon-tile layout next to the headline (it's competing with the eyebrow). Stack: eyebrow → headline → subtitle, left-aligned
+- Headline: `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.08]` so "Help us make VOVV.AI better" fits on one or two clean lines
+- Cards: `rounded-3xl` → `rounded-2xl`, padding `p-5 sm:p-6 sm:p-7` → `p-5 sm:p-6` (more uniform)
+- Container: `max-w-3xl mx-auto` (re-add `mx-auto` — left-aligned within container, not full-bleed)
+- CTA card: tighten copy block ("Found a bug?" gets `text-[14px] font-semibold text-foreground`), button uses `size="lg"` matching home
 
-### 3. `src/pages/Settings.tsx` (lightest touch — large file, content stays)
-- Wrap the existing `<PageHeader>` + content in a `bg-[#FAFAF8]` shell `py-10 sm:py-14` (the page currently inherits whatever the AppLayout gives it)
-- Update `PageHeader` consumption is local — no changes to the shared component. Instead, after PageHeader, restyle each `<Card>` to `rounded-3xl border-[#f0efed] bg-white shadow-none` via a small className override on each (5–6 cards)
-- Replace `Separator` divider lines between sections with empty whitespace (`mt-12`) for the home-style airy rhythm
-- Plan-tier toggle (Monthly/Annual): change from boxy `rounded-lg border` → pill `rounded-full border` to match home buttons
-- Final "Save Settings" button: keep `size="pill"` but match the home primary CTA proportions (`h-[3.25rem] px-7 shadow-lg shadow-primary/25`)
-- All copy, all logic, all admin sections, all checkboxes preserved
+### 2. `src/pages/AppHelp.tsx`
+- Container: `max-w-2xl mx-auto` (re-add `mx-auto`)
+- Headline: drop oversize `text-4xl sm:text-5xl tracking-[-0.03em]` → `text-3xl sm:text-4xl font-semibold tracking-tight` (smaller container = smaller headline; matches HomeFAQ's `max-w-2xl` proportions)
+- Add eyebrow `Support` above headline (this is just a structural label like "FAQ" / "How it works" on home — it's a section name, not new copy)
+- Form/links cards: `rounded-3xl` → `rounded-2xl`, keep border + shadow-sm
+- Footer social row: change from centered `justify-center` to left-aligned (consistent with rest)
 
-### 4. `src/pages/Learn.tsx`
-- Page shell `bg-[#FAFAF8]` + `py-14 sm:py-20`, container `max-w-3xl` left-aligned (drop `mx-auto`, keep on mobile via padding)
-- Add uppercase eyebrow "Learn"; headline → `text-4xl sm:text-5xl font-semibold tracking-[-0.03em]`
-- Video figure: keep, but switch container to `rounded-3xl border-[#f0efed]` (currently `rounded-xl border-border/50`)
-- Search input: pill style `rounded-full h-12 bg-white border border-[#f0efed]` (currently `bg-muted/50 border-transparent`)
-- Track section cards: change list container from `rounded-xl border-border/60 bg-card/40` → `rounded-3xl border-[#f0efed] bg-white` with `divide-[#f0efed]`
-- Keep all guides, sections, search behavior, empty state
+### 3. `src/pages/Learn.tsx`
+- Container: `max-w-3xl mx-auto`
+- Headline: `text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight` (drop `-0.03em`)
+- Video figure border: `rounded-3xl` → `rounded-2xl`
+- Search: keep pill style, but use `h-11` not `h-12` (matches inputs in shadcn defaults better)
+- Track section cards: `rounded-3xl` → `rounded-2xl`
 
-### 5. `src/pages/BrandProfiles.tsx`
-- The page currently uses `<PageHeader>` (good). Wrap output in `bg-[#FAFAF8]` shell + `py-10 sm:py-14`
-- "Create Profile" button: bump to pill primary CTA matching home (`rounded-full h-11 px-6 shadow-md shadow-primary/20`)
-- BrandModelsBanner: convert from `rounded-2xl bg-gradient-to-r from-primary/5` → `rounded-3xl bg-white border border-[#f0efed]` (drop the gradient — feels more premium-restrained, matches HomeCreateCards style); keep avatar, copy, CTA pill
-- Profile cards left as-is (handled by `BrandProfileCard` component — out of scope)
-- EmptyStateCard left as-is
+### 4. `src/pages/BrandProfiles.tsx`
+- The page uses `<PageHeader>` which already uses the right scale (`text-2xl sm:text-3xl font-bold tracking-tight`). Issue: PageHeader's `font-bold` doesn't match home's `font-semibold`. Solution: leave PageHeader untouched (shared component), but the off-white shell + cards still need fixing
+- BrandModelsBanner: `rounded-3xl` → `rounded-2xl`, keep white bg
+- Content padding: container `px-4 sm:px-6 lg:px-8 pt-24 lg:pt-10 pb-14` is fine
+- CTA: keep pill, slightly less prominent (`h-11 px-6` is right)
 
-## Out of scope
+### 5. `src/pages/Settings.tsx`
+- Page uses `<PageHeader>` — leave header alone
+- Cards: `rounded-3xl` → `rounded-2xl`, keep border + shadow-sm (already done)
+- Monthly/Annual toggle: keep pill (correct already)
+- Save button: drop oversized `h-[3.25rem] px-7 shadow-lg` (this is a save button, not a marketing CTA). Use standard `size="pill"` like before — just keep the pill rounding
+- Section spacing: `space-y-8` is fine
 
-- No content/copy changes (per user request)
-- No changes to `PageHeader.tsx`, `BrandProfileCard.tsx`, `EmptyStateCard.tsx`, `ChatContactForm.tsx`, `PlanCard.tsx`, `CreditPackCard.tsx`, or any shared component
-- No new routes, no logic changes, no removed sections
+## Common adjustments across all pages
+
+- Replace every `rounded-3xl` (in cards I added) → `rounded-2xl`
+- Replace every `tracking-[-0.03em]` → `tracking-tight`
+- Replace every `text-4xl sm:text-5xl` (on headlines) → `text-3xl sm:text-4xl lg:text-5xl`
+- Add `mx-auto` to all containers so they sit centered in the wide app shell but content stays left-aligned within
+- Settings Save button: revert to small pill, not marketing-sized
 
 ## Files touched
 
-- `src/pages/AppHelp.tsx`
 - `src/pages/BugBounty.tsx`
-- `src/pages/Settings.tsx` (className-only edits on existing JSX)
+- `src/pages/AppHelp.tsx`
 - `src/pages/Learn.tsx`
 - `src/pages/BrandProfiles.tsx`
+- `src/pages/Settings.tsx`
+
+No content/copy changes. No shared components touched.
