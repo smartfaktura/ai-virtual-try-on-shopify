@@ -99,10 +99,10 @@ Thanks!`
         title="Bug Bounty"
         subtitle="Find a real platform bug, report it, and earn credits when we confirm it"
       >
-        <div className="max-w-3xl space-y-8">
+        <div className="max-w-3xl space-y-6">
           {/* How it works */}
           <section>
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2.5 px-1">
               How it works
             </h2>
             <ol className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden shadow-sm">
@@ -111,8 +111,8 @@ Thanks!`
                 { title: 'Report it', desc: 'Email hello@vovv.ai with steps to reproduce, a screenshot, and your account email.' },
                 { title: 'Get rewarded', desc: 'Once we confirm and triage, we\'ll add credits to your account within a few business days.' },
               ].map((s, i) => (
-                <li key={i} className="flex items-start gap-4 p-5">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full border border-border bg-muted/50 text-foreground/70 text-[12px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">
+                <li key={i} className="flex items-start gap-4 p-5 sm:p-6">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary/10 text-primary text-[13px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0 pt-0.5">
@@ -126,16 +126,16 @@ Thanks!`
 
           {/* Reward tiers */}
           <section>
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2.5 px-1">
               Reward tiers
             </h2>
             <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden shadow-sm">
               {TIERS.map((t) => {
                 const Icon = t.icon;
                 return (
-                  <div key={t.label} className="flex items-start gap-4 p-5">
-                    <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mt-0.5">
-                      <Icon className="w-[18px] h-[18px] text-primary" strokeWidth={1.75} />
+                  <div key={t.label} className="flex items-start gap-4 p-5 sm:p-6">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mt-0.5">
+                      <Icon className="w-5 h-5 text-primary" strokeWidth={1.75} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline justify-between gap-3">
@@ -157,28 +157,28 @@ Thanks!`
 
           {/* Qualifies / Doesn't */}
           <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/80 mb-4 flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-primary" />
                 What qualifies
               </p>
               <ul className="space-y-3">
                 {QUALIFIES.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-[14px] text-foreground/90 leading-relaxed">
+                  <li key={i} className="flex items-start gap-3 text-[14px] text-foreground/90 leading-relaxed">
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
                 <X className="w-3.5 h-3.5 text-muted-foreground" />
                 What doesn't qualify
               </p>
               <ul className="space-y-3">
                 {DOES_NOT_QUALIFY.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-[14px] text-muted-foreground leading-relaxed">
+                  <li key={i} className="flex items-start gap-3 text-[14px] text-muted-foreground leading-relaxed">
                     <X className="w-4 h-4 text-muted-foreground/70 mt-0.5 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
@@ -189,10 +189,10 @@ Thanks!`
 
           {/* How to submit */}
           <section>
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2.5 px-1">
               What to include in your report
             </h2>
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                 {[
                   'Clear steps to reproduce',
@@ -213,14 +213,18 @@ Thanks!`
 
           {/* CTA */}
           <section>
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <p className="text-[14px] font-semibold text-foreground mb-1">Found a bug?</p>
-              <p className="text-[13px] text-muted-foreground mb-5">
-                Send it to <span className="text-foreground font-medium">hello@vovv.ai</span> — we'll get back within a few business days.
-              </p>
-              <Button asChild size="pill" className="gap-2">
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-semibold text-foreground">Found a bug?</p>
+                <p className="text-[13px] text-muted-foreground mt-0.5">
+                  Send it to <span className="text-foreground font-medium">hello@vovv.ai</span> — we'll get back within a few business days.
+                </p>
+              </div>
+              <Button asChild size="pill" className="gap-2 shrink-0 sm:ml-auto">
                 <a href={mailtoHref}>
-                  <Mail className="w-4 h-4" />
                   Report a bug
                   <ArrowRight className="w-4 h-4" />
                 </a>
