@@ -3,6 +3,8 @@ import { ArrowRight, Shirt, Users, ScanFace, Maximize, Sparkles, Camera, Activit
 import { Button } from '@/components/ui/button';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { FaqSection, WhyVovvSection, FinalCtaDark } from './PerspectivesFeature';
@@ -51,6 +53,8 @@ export default function VirtualTryOnFeature() {
         description="AI-powered virtual try-on with 40+ diverse models. Upload a garment, get realistic on-model photography in minutes. Skip the photoshoot."
         canonical={`${SITE_URL}/features/virtual-try-on`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Virtual Try-On', path: '/features/virtual-try-on' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Virtual Try-On', description: 'AI-powered virtual try-on with 40+ diverse models. Upload a garment, get realistic on-model photography in minutes.', path: '/features/virtual-try-on' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

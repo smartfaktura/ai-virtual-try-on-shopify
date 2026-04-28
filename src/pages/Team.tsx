@@ -2,6 +2,8 @@ import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { ArrowRight, Upload, ScanSearch, Wand2, Zap } from 'lucide-react';
@@ -58,6 +60,8 @@ export default function Team() {
         description="10 AI professionals, zero overhead. Meet the virtual creative team powering your e-commerce product photography at VOVV.AI."
         canonical={`${SITE_URL}/team`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Team', path: '/team' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Meet the VOVV.AI Team', description: '10 AI professionals, zero overhead. Meet the virtual creative team powering your e-commerce product photography.', path: '/team' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

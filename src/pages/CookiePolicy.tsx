@@ -1,6 +1,8 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { Cookie } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 
 const cookieTypes = [
@@ -34,6 +36,8 @@ export default function CookiePolicy() {
   return (
     <PageLayout>
       <SEOHead title="Cookie Policy — VOVV.AI" description="Learn about the cookies VOVV.AI uses and how to manage your cookie preferences." canonical={`${SITE_URL}/cookies`} />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Cookie Policy', path: '/cookies' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Cookie Policy', description: 'Learn about the cookies VOVV.AI uses and how to manage your cookie preferences.', path: '/cookies' })} />
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">

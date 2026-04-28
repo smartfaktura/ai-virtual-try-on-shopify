@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
 import { SITE_URL } from '@/lib/constants';
@@ -80,6 +82,8 @@ export default function ShopifyImageGenerator() {
         description="Generate stunning AI product photos for your Shopify store. 50+ diverse models, 30+ scenes. Create professional listing images without photoshoots — try free."
         canonical={`${SITE_URL}/features/shopify-image-generator`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Shopify Image Generator', path: '/features/shopify-image-generator' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Shopify Product Image Generator', description: 'Generate stunning AI product photos for your Shopify store. 50+ diverse models, 30+ scenes.', path: '/features/shopify-image-generator' })} />
 
       {/* Hero */}
       <section className="py-20 sm:py-28">

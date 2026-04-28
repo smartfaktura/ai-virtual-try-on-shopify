@@ -3,6 +3,8 @@ import { ArrowRight, RotateCcw, Camera, Eye, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 
@@ -57,6 +59,8 @@ export default function PerspectivesFeature() {
         description="Generate every angle from one product photo. 8 perspective types with matching lighting and backgrounds. 6 credits per angle."
         canonical={`${SITE_URL}/features/perspectives`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Perspectives', path: '/features/perspectives' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Product Perspectives', description: 'Generate every angle from one product photo. 8 perspective types with matching lighting and backgrounds.', path: '/features/perspectives' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

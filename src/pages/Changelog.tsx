@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { History, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -102,6 +104,8 @@ export default function Changelog() {
   return (
     <PageLayout>
       <SEOHead title="Changelog — VOVV.AI Product Updates" description="A timeline of everything we've shipped. Follow along as VOVV.AI builds the future of AI product photography." canonical={`${SITE_URL}/changelog`} />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Changelog', path: '/changelog' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Product Changelog', description: 'A timeline of everything we\'ve shipped. Follow along as VOVV.AI builds the future of AI product photography.', path: '/changelog' })} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

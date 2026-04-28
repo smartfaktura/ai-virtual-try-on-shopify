@@ -1,5 +1,7 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { Download, Palette, ArrowRight } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
@@ -48,6 +50,8 @@ export default function Press() {
         description="Download VOVV.AI brand assets, logos, and color palette. Media inquiries welcome."
         canonical={`${SITE_URL}/press`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Press', path: '/press' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Press & Media Resources', description: 'Download VOVV.AI brand assets, logos, and color palette. Media inquiries welcome.', path: '/press' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}
