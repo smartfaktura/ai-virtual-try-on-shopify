@@ -93,3 +93,19 @@ No dependencies, no backend, no runtime change. Pure static XML.
 - **No risk** — no behavior change for users, no impact on existing page indexing.
 
 Approve and I'll build the generator, run it, and wire up the index in one pass.
+
+---
+
+## Phase 7a — Implementation log
+
+**Discovery**: A `scripts/generate-sitemap.ts` already existed and was wired into `npm run build`. It was already emitting blog cover images and pulling Discover items live from the backend.
+
+**Change made**: Enhanced the existing generator (instead of forking a new one or building a sitemap index) to add image entries on every category page:
+- Hero image (`heroImageId` → `PREVIEW()` URL) with `heroAlt` as title
+- First 4 scene examples per category, each with its `alt` text as title
+
+**Result**: `public/sitemap.xml` went from ~7 image entries to **419 image entries across 417 URLs** in a single regenerate. Robots.txt and sitemap.xml URL unchanged — existing GSC submission keeps working.
+
+**No sitemap index needed** — single file is well under Google's 50K URL / 50MB limit.
+
+**User next step**: In Google Search Console → Indexing → Pages → confirm the sitemap shows the new image count after the next deploy. Watch Performance → Image search type for impressions over the next 2–4 weeks.
