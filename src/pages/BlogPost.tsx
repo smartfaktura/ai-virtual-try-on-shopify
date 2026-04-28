@@ -160,6 +160,7 @@ export default function BlogPost() {
         description={post.metaDescription}
         canonical={`${SITE_URL}/blog/${post.slug}`}
         ogType="article"
+        ogImage={post.coverImage || defaultImage}
       />
       <JsonLd data={articleJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />

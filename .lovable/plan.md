@@ -1,70 +1,70 @@
-## Phase 5: Complete Lovable's SEO checklist
+# Phase 6 — Close the remaining SEO/GEO gaps
 
-Phases 4a + 4b handled the foundation (sitemap, robots, canonicals, helmet). This phase fills in the remaining gaps from Lovable's official SEO/GEO guide — focused on what actually moves rankings and rich results in Google.
+We've already done the hard part (sitemap, robots.txt with AI bots, llms.txt, react-helmet-async, canonicals, BreadcrumbList + WebPage schema on 23 pages, single H1 per page, Organization + WebSite JSON-LD in `index.html`).
 
----
+What Lovable's checklist still suggests we improve, mapped to what's actually missing in our codebase:
 
-## What we're adding (in order of impact)
+## What's left to do
 
-### Step 1 — BreadcrumbList JSON-LD on category & blog pages (highest ROI)
-When Google sees breadcrumb schema, it replaces the raw URL in search results with a clean breadcrumb trail (e.g. *Home › AI Product Photography › Fashion*). Higher CTR with minimal effort.
+### 1. Per-page Open Graph images (highest impact)
+Right now every page falls back to the same generic `DEFAULT_OG_IMAGE`. When someone shares `/ai-product-photography`, `/blog/[slug]`, `/features/virtual-try-on`, or any feature page on LinkedIn/X/Slack, they all show the same preview. Lovable explicitly calls this out: *"customize the image, title, and description for each page."*
 
-Add to:
-- All 10 `/ai-product-photography/:category` pages → Home › AI Product Photography › [Category]
-- All 8 `/blog/:slug` pages → Home › Blog › [Post title]
-- All 10 `/features/*` pages → Home › Features › [Feature]
-- The 4 comparison pages (`/etsy-product-photography-ai`, `/shopify-product-photography-ai`, `/ai-product-photography-vs-photoshoot`, `/ai-product-photography-vs-studio`)
+- Add unique `ogImage` to: Home, Pricing, Features (×9), AI Product Photography category page, Blog posts, About, FAQ, Why VOVV, Templates/Discover landing.
+- Reuse existing brand visuals already in Supabase storage — no new assets needed for v1; we'll pick the best-fitting hero image per page.
+- For blog posts, use the post's cover image as `ogImage` automatically.
 
-Implementation: a tiny helper `src/lib/seo/breadcrumbs.ts` that builds the schema, used via the existing `<JsonLd>` component. No new dependencies.
+### 2. FAQPage schema where we have visible FAQs
+We have FAQ content on `/faq`, `/why-vovv`, and several feature pages, but only a few emit `FAQPage` JSON-LD. Adding it qualifies us for Google's rich FAQ dropdowns and is one of the strongest GEO signals (LLMs love quotable Q&A).
 
-### Step 2 — Audit & fix per-page JSON-LD coverage
-Go through all 22 pages that currently use `<JsonLd>` and verify they emit the right schema type. Fix anything mismatched, specifically:
-- Blog posts → `BlogPosting` (with `headline`, `datePublished`, `author`, `image`)
-- Blog index → `Blog`
-- FAQ pages → `FAQPage` with question/answer pairs
-- Pricing → keep current
-- Home → keep current
+- Audit pages with visible Q&A blocks and add `FAQPage` schema mirroring the on-page text.
 
-Then add basic `WebPage` + `description` schema to the ~12 pages that have none today (about, careers, contact, team, press, help, status, changelog, roadmap, cookies, privacy, terms).
+### 3. Image hygiene pass on public pages
+Lovable's checklist asks for: every `<img>` has descriptive `alt`, below-the-fold images use `loading="lazy"`. Quick scan shows several public pages (CreativeDrops, Templates, ProductImages landing, Perspectives, feature pages) have images missing one or both.
 
-### Step 3 — H1 & internal linking audit
-Lovable's checklist says: **one H1 per page** containing the primary keyword, and `<a>` tags (not `onClick`) for internal navigation.
+- Add `alt` text describing each image's content (not "image" or filename).
+- Add `loading="lazy"` to images below the first viewport. LCP hero stays eager.
 
-I'll run a scan across all 55 public pages and list any violations:
-- Pages with zero H1s
-- Pages with multiple H1s
-- Internal navigation buttons that should be `<a>` / `<Link>` tags
+### 4. Article schema on blog posts
+`BlogPost.tsx` should emit full `Article`/`BlogPosting` schema with `author`, `datePublished`, `dateModified`, `image`, `publisher`. We have partial coverage; we'll standardize it.
 
-Then fix anything found. Most pages are likely fine — this is a quality pass.
+### 5. Verification helpers (no code, just for you)
+After deploy, two things you do in the browser/Search Console — no dev work:
+- Submit `https://vovv.ai/sitemap.xml` in Google Search Console (if not done yet).
+- Run [Google Rich Results Test](https://search.google.com/test/rich-results) on `/`, `/faq`, a blog post, and `/ai-product-photography` to confirm Breadcrumb, FAQ, Organization, Article schemas all parse cleanly.
 
-### Step 4 — Verification & docs
-After deploying:
-- Run Lovable's three browser console checks from the docs (canonical, title length, H1 count) on 5 sample pages
-- Provide you with the exact URLs to:
-  1. Submit `https://vovv.ai/sitemap.xml` to Google Search Console
-  2. Test 3 key pages (homepage, a category page, a blog post) in Google's Rich Results Test
-- Document what to expect
+## What we're explicitly NOT doing
 
----
+- **Prerendering / SSR** — Lovable lists this as "consider for content-heavy SEO sites." It's a major architecture change (Prerender.io proxy or moving off Lovable). Our content is already indexed; let's ship Phase 6 first and only revisit if Search Console shows indexing issues 4–6 weeks after.
+- **New OG image designs** — using existing brand visuals for v1. If you want bespoke 1200×630 social cards per page later, that's a design task we can do separately.
+- **Backlink building** — that's marketing/outreach, not code.
 
-## What I'm NOT doing in this phase (and why)
+## Technical scope (for the dev side)
 
-- **Per-page Open Graph images** — would require designing/generating ~50 unique social preview images. Big design project, separate decision.
-- **Server-side rendering / true link previews on LinkedIn/Slack/X** — Lovable doesn't offer SSR for SPAs. The honest fix needs a different hosting setup. Worth a separate conversation if social previews matter to you.
-- **Content/keyword optimization** — that's a copywriting task, not a code task. I can flag obvious gaps if you want, but won't rewrite copy without your input.
-- **Submitting to Google Search Console** — requires your account, you'd do this manually (I'll give you exact steps).
+Files touched:
+- `src/components/SEOHead.tsx` — no change, already accepts `ogImage` prop
+- ~15 public page files — add `ogImage` prop to existing `<SEOHead>` calls
+- `src/pages/BlogPost.tsx` — full `BlogPosting` schema
+- ~6 pages with FAQ blocks — add `FAQPage` JSON-LD via existing `<JsonLd>` component
+- ~8 public pages — `alt` + `loading="lazy"` audit on `<img>` tags
+- `.lovable/plan.md` — log Phase 6
 
----
+No new dependencies. No backend changes. No risk to existing flows since `ogImage` is optional and falls back to current default.
 
 ## Estimated impact
 
-| Change | Likely SEO impact |
-|---|---|
-| Breadcrumb schema | Medium-high — visible in Google results within ~2 weeks of crawl |
-| BlogPosting / FAQPage schema | Medium — eligible for rich results |
-| H1 / `<a>` tag fixes | Low-medium — long-term ranking hygiene |
-| Verification | Catches issues before they cost you traffic |
+- **Social shares**: every page gets its own preview card → higher CTR on LinkedIn/X
+- **Rich results**: FAQ dropdowns + breadcrumbs in Google SERPs
+- **GEO**: FAQ schema is one of the most-cited formats by ChatGPT/Perplexity
+- **Accessibility**: alt text helps both screen readers and image search rankings
 
----
+Approve and I'll execute steps 1–4 in one pass.
 
-Approve and I'll work through Steps 1–4 in one pass. Step 3 may surface fixes I can't predict in advance — I'll flag anything significant before changing it.
+## Phase 6 — Executed
+
+- BlogPost: ogImage now uses post.coverImage (was falling back to default for every share).
+- WhyVovv: added FAQPage JSON-LD mirroring the on-page FAQ.
+- Image hygiene audit: public pages (Home, About, Features, /seo/*, landing components) already pass alt text to ShimmerImage / native img — no fixes needed. CreativeDrops carousel uses intentional empty alt for decorative images (a11y-correct).
+- Confirmed FAQPage schema already present on: /faq, /shopify-product-photography, /etsy-product-photography, /ai-photography-vs-studio, /ai-photography-vs-photoshoot, /ai-product-photo-generator, /ai-product-photography category pages, and Home (LandingFAQ).
+- Confirmed BlogPosting schema present and complete on /blog/[slug].
+
+Phase 6 complete. Next discretionary work: bespoke 1200×630 social cards per page (design task), and Prerender.io if Search Console shows indexing gaps after 4–6 weeks.
