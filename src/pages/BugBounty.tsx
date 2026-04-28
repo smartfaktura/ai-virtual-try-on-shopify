@@ -220,21 +220,19 @@ Thanks!`
         </section>
 
         {/* CTA */}
-        <section className="mt-14">
-          <div className="rounded-2xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
-            <p className="text-[13px] font-medium text-foreground/80 mb-1">Found a bug?</p>
+        <section className="mt-12">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
+            <p className="text-[14px] font-semibold text-foreground mb-1">Found a bug?</p>
             <p className="text-[13px] text-muted-foreground mb-5">
               Send it to <span className="text-foreground font-medium">hello@vovv.ai</span> — we'll get back within a few business days.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button asChild className="gap-2 rounded-full font-medium h-[3.25rem] px-8 shadow-lg shadow-primary/25">
-                <a href={mailtoHref}>
-                  <Mail className="w-4 h-4" />
-                  Report a bug
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              </Button>
-            </div>
+            <Button asChild size="lg" className="gap-2 rounded-full px-8 h-[3.25rem] text-base font-semibold shadow-lg shadow-primary/25">
+              <a href={mailtoHref}>
+                <Mail className="w-4 h-4" />
+                Report a bug
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </Button>
           </div>
         </section>
       </div>
