@@ -99,6 +99,9 @@ export function StudioChat() {
 
   if (isProductImagesPage) return null;
 
+  // Hide on Help page — the page itself is a contact form, no need for floating widget
+  if (location.pathname === '/app/help') return null;
+
   if (hideOnMobile) return null;
 
   if (hiddenByPage) return null;
