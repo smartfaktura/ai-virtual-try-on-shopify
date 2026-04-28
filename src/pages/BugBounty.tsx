@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Check, X, ShieldAlert, Zap, Sparkles, Wrench, Mail, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/app/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 
 const TIERS = [
