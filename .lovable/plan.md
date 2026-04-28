@@ -58,3 +58,13 @@ No new dependencies. No backend changes. No risk to existing flows since `ogImag
 - **Accessibility**: alt text helps both screen readers and image search rankings
 
 Approve and I'll execute steps 1–4 in one pass.
+
+## Phase 6 — Executed
+
+- BlogPost: ogImage now uses post.coverImage (was falling back to default for every share).
+- WhyVovv: added FAQPage JSON-LD mirroring the on-page FAQ.
+- Image hygiene audit: public pages (Home, About, Features, /seo/*, landing components) already pass alt text to ShimmerImage / native img — no fixes needed. CreativeDrops carousel uses intentional empty alt for decorative images (a11y-correct).
+- Confirmed FAQPage schema already present on: /faq, /shopify-product-photography, /etsy-product-photography, /ai-photography-vs-studio, /ai-photography-vs-photoshoot, /ai-product-photo-generator, /ai-product-photography category pages, and Home (LandingFAQ).
+- Confirmed BlogPosting schema present and complete on /blog/[slug].
+
+Phase 6 complete. Next discretionary work: bespoke 1200×630 social cards per page (design task), and Prerender.io if Search Console shows indexing gaps after 4–6 weeks.
