@@ -16,21 +16,24 @@ const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'),
 const avatarZara = getOptimizedUrl(getLandingAssetUrl('team/avatar-zara.jpg'), { quality: 60 });
 
 const PAGE_CHIPS: Record<string, string[]> = {
-  '/app/': ['What should I create first?', 'How do credits work?', 'Show me Visual Types'],
-  '/app/workflows': ['Which Visual Type fits my product?', 'Try-on vs Product Listing?', 'How much does it cost?'],
-  '/app/freestyle': ['Help me write a prompt', 'What quality should I pick?', 'Tips for better results'],
-  '/app/perspectives': ['How do perspectives work?', 'Best source image tips?', 'How many credits per angle?'],
-  '/app/creative-drops': ['How does the Content Calendar work?', 'Set up my first drop', 'How much does a drop cost?'],
+  '/app/': ['What should I create first?', 'How do credits work?', 'Tour Visual Studio'],
+  '/app/workflows': ['Which Visual Type fits my product?', 'Try-On vs Product Listing?', 'How much per image?'],
+  '/app/freestyle': ['Help me write a prompt', 'What quality should I pick?', 'Tips for sharper results'],
+  '/app/perspectives': ['How do perspectives work?', 'Best source image tips?', 'Cost per angle?'],
+  '/app/catalog': ['What is Catalog Studio?', 'Best for bulk shoots?', 'How is it priced?'],
+  '/app/models': ['What is a Brand Model?', 'Public vs private models?', 'Cost to train?'],
   '/app/products': ['How do I upload products?', 'Can I import from Shopify?', 'Upload from my phone'],
-  '/app/library': ['How do I upscale?', 'Can I generate video from this?', 'Submit to Explore'],
-  '/app/discover': ['How do I use a preset?', 'What are featured items?', 'Save to my collection'],
-  '/app/video': ['How much does video cost?', 'Best images for video?', 'What lengths are available?'],
-  '/app/brand-profiles': ['What goes in a brand profile?', 'How does it affect my images?', 'Set up my brand'],
+  '/app/library': ['How do I upscale?', 'Animate this image', 'Submit to Explore'],
+  '/app/discover': ['How do I use a preset?', 'Save to my collection', 'What is featured?'],
+  '/app/video': ['Animate vs Short Film?', 'What length should I pick?', 'Cost per video?'],
+  '/app/brand-profiles': ['What goes in a brand profile?', 'How does it shape my images?', 'Set up my brand'],
+  '/app/learn': ['Where do I start?', 'Best guide for fashion?', 'How long are guides?'],
+  '/app/pricing': ['Which plan fits me?', 'How do top-ups work?', 'Compare plans'],
   '/app/settings': ['Which plan is right for me?', 'How do top-ups work?', 'Compare plans'],
 };
 
 const DEFAULT_CHIPS = [
-  'What style works for skincare?',
+  'Best Visual Type for skincare?',
   'Best shots for fashion brands?',
   'How much does it cost?',
 ];
@@ -47,7 +50,7 @@ function getChipsForPage(pathname: string): string[] {
 }
 
 const WELCOME_MESSAGE =
-  "Hey! 👋 The VOVV.AI studio team is here. Tell us about your product and we'll suggest the perfect visual strategy — or ask us about credits, plans, and features. What are you working on?";
+  "Hey 👋 The VOVV.AI team is here. Tell us what you're working on — products, scenes, video, Brand Models — and we'll point you to the right spot. What can we help with?";
 
 export function StudioChat() {
   const [isOpen, setIsOpen] = useState(false);
