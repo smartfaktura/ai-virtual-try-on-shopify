@@ -151,12 +151,13 @@ export default function Auth() {
     if (mode === 'signup') {
       const { data, error } = await signUp(email, password, displayName);
       if (error) {
-        const msg = error.message?.toLowerCase() || '';
-        if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
-          setFormError('Verification email already sent. Check your inbox or wait a moment.');
+        const mapped = mapAuthError(error, 'signup');
+        setFormError(mapped.message);
+        if (mapped.switchToLogin) {
+          setMode('login');
+          // Email is already in state — keep it prefilled.
+        } else if (mapped.rateLimited) {
           setSignupComplete(true);
-        } else {
-          setFormError('Something went wrong. Please try again.');
         }
       } else if (!data?.user?.identities?.length) {
         setFormError('An account with this email already exists. Try signing in instead.');
