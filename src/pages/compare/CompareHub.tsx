@@ -8,6 +8,7 @@ import { LandingFooter } from '@/components/landing/LandingFooter';
 import { ComparisonHero } from '@/components/seo/compare/ComparisonHero';
 import { LandingValueCards } from '@/components/seo/landing/LandingValueCards';
 import { ComparisonFinalCTA } from '@/components/seo/compare/ComparisonFinalCTA';
+import { DiscoverGalleryStrip } from '@/components/seo/compare/DiscoverGalleryStrip';
 
 const PAGE_PATH = '/compare';
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
@@ -178,6 +179,16 @@ export default function CompareHub() {
             </div>
           </div>
         </section>
+
+        <DiscoverGalleryStrip
+          eyebrow="Made with VOVV.AI"
+          headline="A glimpse of what brands create"
+          intro="Real product visuals generated from a single product photo — straight from the VOVV.AI Discover feed."
+          count={12}
+          gridClassName="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+          background="background"
+          cta={{ label: 'Explore all examples', to: '/discover' }}
+        />
 
         {/* How we compare tools */}
         <LandingValueCards
