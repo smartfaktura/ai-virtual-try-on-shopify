@@ -114,7 +114,32 @@ export default function PublicDiscover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
-  useEffect(() => { setSelectedSubcategory('__all__'); }, [selectedCategory]);
+
+  // Fast-path: resolve the deep-linked item with ONE row fetch so the modal
+  // opens before the full feed (~400+ rows across 3 RPCs) finishes loading.
+  const { data: deepLinkedItem } = useDeepLinkedDiscoverItem(urlItemId);
+  useEffect(() => {
+    if (deepLinkedItem && !selectedItem) {
+      setSelectedItem(deepLinkedItem);
+      // Preload the hero image as soon as we know its URL.
+      const heroUrl =
+        deepLinkedItem.type === 'preset'
+          ? deepLinkedItem.data.image_url
+          : deepLinkedItem.data.previewUrl;
+      if (heroUrl && typeof document !== 'undefined') {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = heroUrl;
+        // @ts-expect-error fetchPriority is a valid HTML attribute
+        link.fetchPriority = 'high';
+        document.head.appendChild(link);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkedItem]);
+
+
 
   // Fetch custom scenes publicly (no auth required with new RLS)
   const { data: customScenes = [] } = useQuery({
