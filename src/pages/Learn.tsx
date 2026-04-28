@@ -74,14 +74,11 @@ export default function Learn() {
       <div className="max-w-3xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {/* Hero header */}
         <header className="mb-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-5">
-            Learn
-          </p>
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-[-0.03em] leading-[1.05] text-foreground">
-            Short, focused guides
+            Learn
           </h1>
           <p className="text-base text-muted-foreground mt-4 max-w-xl leading-relaxed">
-            Everything you need to get more out of VOVV.AI — in minutes, not hours.
+            Short, focused guides for getting more out of VOVV.AI.
           </p>
         </header>
 
