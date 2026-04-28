@@ -1,37 +1,70 @@
-## Improve "Message Our Team" Dialog
+## Cleanup unused routes + auto-generate sitemap
 
-Refinements to `src/components/app/ContactFormDialog.tsx` so the modal feels calmer, more premium, and consistent with the new founder-led "team of pros" voice we just rolled out on `/app/help`.
+### A. Delete unused pages and routes
 
-### 1. Stop auto-focusing the first field
-Radix `Dialog` auto-focuses the first focusable child on open, which makes the Name input look pre-selected with a blue ring the moment the modal appears (visible in the screenshot). 
+**Delete files**
+- `src/pages/Landing.tsx` (only consumed by `/home` and `/landing` routes — both being removed)
+- `src/pages/seo/AIProductPhotographyEcommerce.tsx`
 
-- Add `onOpenAutoFocus={(e) => e.preventDefault()}` to `DialogContent` so the dialog opens in a neutral state. Focus only appears when the user actually clicks into a field.
+`src/pages/Home.tsx` stays only because it powers `/` (the marketing homepage). The `/home` *route* is gone.
 
-### 2. Softer, more rounded inputs
-Current inputs use `rounded-lg` + `h-10` + `bg-muted/50` and feel boxy.
+**Edit `src/App.tsx`**
+- Remove `import Landing from '@/pages/Landing'`
+- Remove `const AIProductPhotographyEcommerce = lazy(...)`
+- Remove three routes:
+  - `<Route path="/home" element={<Landing />} />`
+  - `<Route path="/landing" element={<Landing />} />`
+  - `<Route path="/ai-product-photography-for-ecommerce" element={<AIProductPhotographyEcommerce />} />`
 
-- Inputs and textarea: `rounded-2xl`, `h-11`, `px-4`, `bg-muted/40`, `border-border/60`, focus state switches to `focus:bg-background focus:border-foreground/20 focus:ring-1 focus:ring-foreground/10` (single subtle ring instead of the loud 2px primary ring).
-- Textarea: `rounded-2xl`, `px-4 py-3`, same focus treatment, `min-h-[112px]`.
-- Labels: keep small uppercase-ish style but tighten — `text-[11px] tracking-[0.12em] uppercase text-muted-foreground/80`.
-- Submit button: already `rounded-full` — bump to `h-11` so it matches input height and add `shadow-sm`.
-- Error banner: `rounded-2xl` to match.
+**Edit `src/components/landing/LandingNav.tsx`** (lines 93–105) — drop the `/home` and `/landing` branches in the scroll-to-anchor handler so it just compares against `/`:
+```ts
+const handleHashClick = (href: string) => {
+  setMobileOpen(false);
+  if (location.pathname === '/') {
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    navigate('/' + href);
+  }
+};
+```
 
-### 3. Replace persona avatars with founder-led header
-The dialog still shows three fictional persona avatars (Sophia, Kenji, Zara) which conflicts with the recently approved direction (real team, founder Tomas).
+### B. Auto-generated sitemap (single source of truth)
 
-- Drop the three persona avatars and the `landingAssets` imports.
-- Show a single larger avatar using the existing `src/assets/founder-tomas.jpg` (already optimized) at `w-11 h-11 rounded-full ring-2 ring-background`.
-- Update copy:
-  - Title: `Message our team` (sentence case, no terminal period — matches Core memory rule)
-  - Description: `Tomas and the team — usually a few hours on weekdays`
-- Header padding tightened to `px-6 pt-6 pb-3`.
+**New file `scripts/generate-sitemap.ts`** — Node ESM script that:
+1. Imports `blogPosts` from `src/data/blogPosts.ts` and `aiProductPhotographyCategoryPages` from `src/data/aiProductPhotographyCategoryPages.ts` (TS imports work via `tsx`).
+2. Holds a typed `MARKETING_URLS` array — one entry per public route in `App.tsx` (post-cleanup), each with `priority` + `changefreq`.
+3. Writes `public/sitemap.xml` using today's date as `lastmod` (per-entry override when a post/category supplies its own date).
+4. Logs `✓ Wrote N URLs to public/sitemap.xml`.
 
-### 4. Small consistency tidy
-- Dialog container: add `rounded-2xl` to `DialogContent` className so the modal corners match the new inputs (current shadcn default is `rounded-lg`).
-- Body spacing: `space-y-3.5` instead of `space-y-4` for a tighter rhythm.
-- Success state: change wording to drop the period in the heading (`Message sent` instead of `Message sent!`) to stay aligned with the minimalist tone, keep the body sentence as-is (multi-clause copy keeps punctuation per memory rule).
+Marketing URLs included (matches public routes after cleanup):
+- `/` (1.0 / weekly)
+- `/pricing`, `/why-vovv`, `/how-it-works`, `/faq`, `/roadmap` (0.8–0.9 / monthly)
+- `/discover`, `/freestyle`, `/product-visual-library` (0.9 / weekly)
+- `/ai-product-photography`, `/ai-product-photo-generator`, `/shopify-product-photography-ai`, `/etsy-product-photography-ai`, `/ai-product-photography-vs-photoshoot`, `/ai-product-photography-vs-studio` (0.85 / monthly)
+- `/features/{workflows,virtual-try-on,creative-drops,brand-profiles,ai-models-backgrounds,shopify-image-generator,upscale,perspectives,real-estate-staging,freestyle}` (0.7 / monthly)
+- `/about`, `/team`, `/careers`, `/contact`, `/help`, `/press`, `/blog` (0.5–0.7 / monthly; blog index daily)
+- `/changelog`, `/status` (0.4–0.5)
+- `/privacy`, `/terms`, `/cookies` (0.3 / yearly)
+- `/try` — currently missing from sitemap (0.8 / monthly)
+
+Dynamic URLs:
+- `/blog/{slug}` for every entry in `blogPosts`
+- `/ai-product-photography/{slug}` for every entry in `aiProductPhotographyCategoryPages`
+
+Excluded (per `robots.txt`): `/auth`, `/onboarding`, `/reset-password`, `/upload/*`, `/app/*`, `/tryshot/*`.
+
+**Wire to build** in `package.json`:
+- Add devDep `tsx` (~9 MB, runs TS directly with no config)
+- New scripts:
+  - `"sitemap": "tsx scripts/generate-sitemap.ts"`
+  - `"build": "tsx scripts/generate-sitemap.ts && vite build"`
+  - `"build:dev": "tsx scripts/generate-sitemap.ts && vite build --mode development"`
+
+**Regenerate `public/sitemap.xml`** by running the script once during this implementation so the committed file is fresh and no longer contains `/ai-product-photography-for-ecommerce`.
 
 ### Files touched
-- `src/components/app/ContactFormDialog.tsx` (only file)
+- Delete: `src/pages/Landing.tsx`, `src/pages/seo/AIProductPhotographyEcommerce.tsx`
+- Edit: `src/App.tsx`, `src/components/landing/LandingNav.tsx`, `package.json`, `public/sitemap.xml` (regenerated by the script)
+- New: `scripts/generate-sitemap.ts`
 
-No DB, edge function, or routing changes. No new dependencies.
+No DB / edge function / auth changes.
