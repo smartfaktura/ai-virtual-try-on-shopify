@@ -1,54 +1,67 @@
-## Polish Earn Credits modal typography & sizing
+## Redesign `/app/help` — make it feel like real humans, not AI
 
-The modal aesthetic is right, but the type scale and a few elements drift from the `/app` dashboard standard. The most jarring issue is the **caption box rendering in monospace** (because it uses a `<code>` element with no font override), which is why "Made with @VOVV.AI" looks like a different typeface than everything else. Other text is also slightly oversized relative to dashboard cards (which use `text-sm` / `text-xs`, not arbitrary `[14px]`).
+The current page has two real problems:
 
-### Fixes in `src/components/app/EarnCreditsModal.tsx`
+1. **Title is just "Help"** — should be **"Help & Support"**.
+2. **Sophia, Kenji & Zara are AI brand-model personas** (defined in `src/data/teamData.ts` as the studio crew) — using them on a support page misrepresents the team. The user is clear: real humans answer support, so the page must reflect that.
 
-**1. Caption box (the obvious mismatch)**
-- Replace `<code class="text-[13px] font-semibold">` with `<span class="text-sm font-medium font-sans">` so it renders in Inter, matching the rest of the UI.
-- Reduce weight from `semibold` → `medium` (codeblocks shouldn't shout).
-- Bump padding to `px-3 py-2.5` to match dashboard input height rhythm.
+### Fixes in `src/pages/AppHelp.tsx`
 
-**2. Step body text — align to dashboard scale**
-- Step title: `text-[14px]` → `text-sm font-semibold` (same as Settings section titles).
-- Step description: keep on the same line but as `text-sm text-muted-foreground` (currently mixed inline at 14px). Consider stacking title above description like Settings rows for cleaner rhythm:
-  - Title row: `text-sm font-semibold text-foreground`
-  - Description row: `text-xs text-muted-foreground mt-0.5`
-- Removes the awkward "—" inline separator and matches the divided-row pattern used in BugBounty's "How it works".
+**1. Title & subtitle**
+- `title="Help"` → `title="Help & Support"`
+- Subtitle stays warm but specific:
+  `"Real people, real answers — typically within a few hours on weekdays"`
 
-**3. Heading & subtitle**
-- Headline: `text-xl sm:text-2xl` → `text-lg sm:text-xl font-semibold tracking-tight` (matches dashboard modal/card headers).
-- Subtitle: `text-[13px] leading-relaxed` → `text-sm text-muted-foreground` (drop `leading-relaxed` on a one-liner; it adds dead space).
-- No terminal period on subtitle (already correct, per memory rule).
+**2. Replace the AI-persona avatar strip with a real founder card**
+Drop Sophia/Kenji/Zara from this page entirely. Replace the avatar header inside the form card with a single, honest "from the founder" strip using the existing real photo `src/assets/founder-tomas.jpg`:
 
-**4. Step number tiles**
-- `w-7 h-7 rounded-xl text-[12px]` → `w-6 h-6 rounded-lg text-[11px]` to feel proportional to `text-sm` body copy and match the smaller numerical tiles used in BugBounty.
+```
+[Tomas photo 36px]   FROM THE TEAM
+                     Tomas & the VOVV.AI team — we read every message ourselves
+```
 
-**5. Header icon tile**
-- `w-10 h-10` → `w-9 h-9` and icon `w-5 h-5` → `w-[18px] h-[18px]` (dashboard soft tiles are typically 36px, not 40px).
-- Reduce bottom margin `mb-4` → `mb-3.5`.
+Layout: `flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-border bg-muted/30`
+- Real circular avatar (`w-9 h-9 rounded-full ring-1 ring-border` using `founder-tomas.jpg`)
+- Eyebrow: `text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground` → "From the team"
+- Line below: `text-[13px] text-foreground` → "Tomas & the VOVV.AI team — we read every message ourselves"
 
-**6. Fine print**
-- `text-[11px] text-muted-foreground/70 text-center` → `text-xs text-muted-foreground text-center` (dashboard uses standard `text-xs`; the `/70` opacity makes it look washed compared to other muted copy).
+This matches the dashboard eyebrow standard (`tracking-[0.2em]`, per memory) and removes the AI personas from the support context. The same `founder-tomas.jpg` is already used on `/about`, so it's consistent.
 
-**7. Close button — kill the blue focus ring**
-- Add `focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0` so it doesn't render the default browser blue ring visible in the screenshot. Or simply `focus:outline-none focus-visible:ring-1 focus-visible:ring-border`.
-- Swap the icon container to `w-7 h-7` for a properly clickable hit area.
+**3. Add a tiny "what to expect" reassurance row above the form**
+Inside the form card body (above `<ChatContactForm />`), add a slim 3-bullet row of expectations so users feel the human commitment:
 
-**8. CTA button**
-- Already uses `<Button size="pill" h-11>` — keep, but ensure `text-sm font-medium` is inherited (it is by default via the Button component). No change needed unless audit reveals a size override.
+- ⏱ **Reply time** — Usually within a few hours, weekdays
+- ✉️ **Where it goes** — Straight to the team's inbox
+- 🔒 **Privacy** — Your messages stay between us
 
-**9. Spacing rhythm**
-- Header padding `pt-7 pb-5` → `pt-6 pb-4` (tighter, matches Settings card `p-5 sm:p-6`).
-- CTA wrapper `pt-5 pb-3` → `pt-4 pb-2` for better vertical balance with reduced fine-print spacing.
+Render as a `divide-x divide-border` row of three `flex-1` cells, each with a small lucide icon (`Clock`, `Mail`, `Lock`), `text-[11px] uppercase tracking-[0.16em] text-muted-foreground` label, and `text-[13px] font-medium text-foreground` value. Wrapper: `rounded-xl border border-border bg-background mb-5 overflow-hidden`. Stacks vertically on mobile (`flex-col sm:flex-row sm:divide-y-0 divide-y`).
+
+**4. Improve the "Quiet helpers" copy**
+Make descriptions less generic and more human:
+
+- **Browse FAQs** → "Quick answers to the things people ask most"
+- **Join our Discord** → "Hang out with the team and other creators"
+- **Tutorials & guides** → "Short walkthroughs for every Visual Type"
+
+Keep the same card structure / icons.
+
+**5. Footer microcopy**
+Add a single human line above the social-links footer:
+`text-xs text-muted-foreground` → "Prefer email? Write directly to hello@vovv.ai"
+
+Then the existing `Email · Discord · Twitter · Instagram` row stays beneath it.
 
 ### What stays
-- Left-aligned layout, `rounded-2xl border bg-card divide-y` steps card, `bg-primary/10` soft tiles, modal width `440px`, `shadow-xl` — all already on-brand.
-- `Reward` eyebrow with `tracking-[0.2em]` — confirmed as the dashboard standard.
+- Existing `<ChatContactForm variant="spacious" />` — unchanged.
+- Card containers, spacing rhythm, soft icon tiles, divider patterns — already match dashboard.
+- Social-links footer row.
 
 ### Out of scope
-- No changes to logic, copy strings, or the mailto flow.
-- No changes to other pages — only the modal.
+- No backend / form-submission changes.
+- No changes to `ChatContactForm`, About page, or marketing pages.
+- AI brand-model personas (Sophia/Kenji/Zara) remain on the marketing site — they're correct *there*, just not on the support page.
 
 ### Files touched
-- `src/components/app/EarnCreditsModal.tsx` (only)
+- `src/pages/AppHelp.tsx` (only)
+- New imports: `founderImg from '@/assets/founder-tomas.jpg'`, `Clock`, `Mail`, `Lock` from `lucide-react`
+- Removed imports: `Avatar*`, the three avatar URL constants, `getOptimizedUrl`, `getLandingAssetUrl` (if unused after change)

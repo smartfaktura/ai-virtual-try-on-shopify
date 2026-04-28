@@ -1,20 +1,20 @@
 import { Link } from 'react-router-dom';
-import { GraduationCap, ArrowUpRight, ArrowRight, HelpCircle } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { GraduationCap, ArrowUpRight, ArrowRight, HelpCircle, Clock, Mail, Lock } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { ChatContactForm } from '@/components/app/ChatContactForm';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-
-const avatarSophia = getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 });
-const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 });
-const avatarZara = getOptimizedUrl(getLandingAssetUrl('team/avatar-zara.jpg'), { quality: 60 });
+import founderImg from '@/assets/founder-tomas.jpg';
 
 const socialLinks = [
   { label: 'Email', href: 'mailto:hello@vovv.ai' },
   { label: 'Discord', href: 'https://discord.gg/ZgnSJqUyV' },
   { label: 'Twitter', href: 'https://twitter.com/vovvai' },
   { label: 'Instagram', href: 'https://instagram.com/vovv.ai' },
+];
+
+const expectations = [
+  { icon: Clock, label: 'Reply time', value: 'A few hours, weekdays' },
+  { icon: Mail, label: 'Where it goes', value: "Straight to the team" },
+  { icon: Lock, label: 'Privacy', value: 'Stays between us' },
 ];
 
 const DiscordIcon = ({ className }: { className?: string }) => (
@@ -27,30 +27,48 @@ export default function AppHelp() {
   return (
     <div className="animate-in fade-in duration-500">
       <PageHeader
-        title="Help"
-        subtitle="Real humans, real fast — we usually reply within a few hours"
+        title="Help & Support"
+        subtitle="Real people, real answers — typically within a few hours on weekdays"
       >
         <div className="max-w-3xl space-y-6">
-          {/* Form card with team header */}
+          {/* Form card with real founder header */}
           <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-border bg-muted/30">
-              <div className="flex -space-x-2">
-                <Avatar className="w-8 h-8 ring-2 ring-card">
-                  <AvatarImage src={avatarSophia} alt="Sophia" />
-                  <AvatarFallback className="text-xs">S</AvatarFallback>
-                </Avatar>
-                <Avatar className="w-8 h-8 ring-2 ring-card">
-                  <AvatarImage src={avatarKenji} alt="Kenji" />
-                  <AvatarFallback className="text-xs">K</AvatarFallback>
-                </Avatar>
-                <Avatar className="w-8 h-8 ring-2 ring-card">
-                  <AvatarImage src={avatarZara} alt="Zara" />
-                  <AvatarFallback className="text-xs">Z</AvatarFallback>
-                </Avatar>
+              <img
+                src={founderImg}
+                alt="Tomas Simkus, founder of VOVV.AI"
+                className="w-9 h-9 rounded-full object-cover ring-1 ring-border shrink-0"
+              />
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  From the team
+                </p>
+                <p className="text-[13px] text-foreground mt-0.5">
+                  Tomas & the VOVV.AI team — we read every message ourselves
+                </p>
               </div>
-              <p className="text-[12px] text-muted-foreground">Sophia, Kenji & Zara — your support crew</p>
             </div>
+
             <div className="p-5 sm:p-6">
+              {/* What to expect */}
+              <div className="rounded-xl border border-border bg-background mb-5 overflow-hidden">
+                <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
+                  {expectations.map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex-1 flex items-center gap-3 px-4 py-3">
+                      <Icon className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.75} />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          {label}
+                        </p>
+                        <p className="text-[13px] font-medium text-foreground mt-0.5 truncate">
+                          {value}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <ChatContactForm variant="spacious" />
             </div>
           </section>
@@ -67,8 +85,8 @@ export default function AppHelp() {
                 <HelpCircle className="w-[18px] h-[18px] text-primary" strokeWidth={1.75} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-medium text-foreground">Browse FAQs</div>
-                <div className="text-[12.5px] text-muted-foreground mt-0.5">Quick answers to common questions</div>
+                <div className="text-sm font-medium text-foreground">Browse FAQs</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Quick answers to the things people ask most</div>
               </div>
               <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </a>
@@ -83,8 +101,8 @@ export default function AppHelp() {
                 <DiscordIcon className="w-[18px] h-[18px] text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-medium text-foreground">Join our Discord</div>
-                <div className="text-[12.5px] text-muted-foreground mt-0.5">Chat with the team & other creators</div>
+                <div className="text-sm font-medium text-foreground">Join our Discord</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Hang out with the team and other creators</div>
               </div>
               <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </a>
@@ -97,30 +115,38 @@ export default function AppHelp() {
                 <GraduationCap className="w-[18px] h-[18px] text-primary" strokeWidth={1.75} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-medium text-foreground">Tutorials & guides</div>
-                <div className="text-[12.5px] text-muted-foreground mt-0.5">Learn VOVV.AI in minutes</div>
+                <div className="text-sm font-medium text-foreground">Tutorials & guides</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Short walkthroughs for every Visual Type</div>
               </div>
               <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
             </Link>
           </section>
 
           {/* Footer */}
-          <footer className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2">
-            {socialLinks.map((link, i) => {
-              const isExternal = link.href.startsWith('http') || link.href.startsWith('mailto');
-              return (
-                <span key={link.label} className="inline-flex items-center gap-1.5">
-                  {i > 0 && <span className="text-muted-foreground/40">·</span>}
-                  <a
-                    href={link.href}
-                    {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </span>
-              );
-            })}
+          <footer className="space-y-2 pt-2">
+            <p className="text-xs text-muted-foreground">
+              Prefer email? Write directly to{' '}
+              <a href="mailto:hello@vovv.ai" className="text-foreground hover:underline underline-offset-2">
+                hello@vovv.ai
+              </a>
+            </p>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {socialLinks.map((link, i) => {
+                const isExternal = link.href.startsWith('http') || link.href.startsWith('mailto');
+                return (
+                  <span key={link.label} className="inline-flex items-center gap-1.5">
+                    {i > 0 && <span className="text-muted-foreground/40">·</span>}
+                    <a
+                      href={link.href}
+                      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className="hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </span>
+                );
+              })}
+            </div>
           </footer>
         </div>
       </PageHeader>
