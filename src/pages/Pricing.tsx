@@ -30,10 +30,11 @@ const pricingJsonLd = {
 };
 
 export default function Pricing() {
+  const { user } = useAuth();
   useEffect(() => {
     gtagViewItem('Pricing', 'pricing_page');
-    gtmPricingPageView({ path: '/pricing' });
-  }, []);
+    gtmPricingPageView({ userId: user?.id, path: '/pricing' });
+  }, [user?.id]);
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <SEOHead title="Pricing & Plans — VOVV.AI" description="Free credits to start. Scale with flexible plans from Starter to Enterprise. AI product photography pricing for every e-commerce brand." canonical={`${SITE_URL}/pricing`} />
