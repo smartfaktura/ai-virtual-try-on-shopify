@@ -1,70 +1,111 @@
-# Phase 6 — Close the remaining SEO/GEO gaps
+# Phase 7a — Image sitemap for Google Images discovery
 
-We've already done the hard part (sitemap, robots.txt with AI bots, llms.txt, react-helmet-async, canonicals, BreadcrumbList + WebPage schema on 23 pages, single H1 per page, Organization + WebSite JSON-LD in `index.html`).
+## Goal
 
-What Lovable's checklist still suggests we improve, mapped to what's actually missing in our codebase:
+Tell Google Images about every important visual on our public pages so they can appear in image search results. Right now our sitemap lists 55 page URLs with zero image annotations — Google only finds our images by chance during JS rendering.
 
-## What's left to do
+## Scope
 
-### 1. Per-page Open Graph images (highest impact)
-Right now every page falls back to the same generic `DEFAULT_OG_IMAGE`. When someone shares `/ai-product-photography`, `/blog/[slug]`, `/features/virtual-try-on`, or any feature page on LinkedIn/X/Slack, they all show the same preview. Lovable explicitly calls this out: *"customize the image, title, and description for each page."*
+A static `sitemap-images.xml` covering the highest-value images:
 
-- Add unique `ogImage` to: Home, Pricing, Features (×9), AI Product Photography category page, Blog posts, About, FAQ, Why VOVV, Templates/Discover landing.
-- Reuse existing brand visuals already in Supabase storage — no new assets needed for v1; we'll pick the best-fitting hero image per page.
-- For blog posts, use the post's cover image as `ogImage` automatically.
+1. **Category landing page heroes** — 14 entries (one per `/ai-product-photography/[category]` page, using `heroImageId` from `aiProductPhotographyCategoryPages.ts`).
+2. **Category page featured scenes** — up to 8 representative scene previews per category (~80-100 entries).
+3. **Blog post cover images** — one per published post in `blogPosts.ts` (~10-15 entries).
+4. **Brand/marketing hero** — homepage hero, social card image (~3 entries).
 
-### 2. FAQPage schema where we have visible FAQs
-We have FAQ content on `/faq`, `/why-vovv`, and several feature pages, but only a few emit `FAQPage` JSON-LD. Adding it qualifies us for Google's rich FAQ dropdowns and is one of the strongest GEO signals (LLMs love quotable Q&A).
+Estimated total: **~110 image entries** across **~20 page URLs**.
 
-- Audit pages with visible Q&A blocks and add `FAQPage` schema mirroring the on-page text.
+## What we'll build
 
-### 3. Image hygiene pass on public pages
-Lovable's checklist asks for: every `<img>` has descriptive `alt`, below-the-fold images use `loading="lazy"`. Quick scan shows several public pages (CreativeDrops, Templates, ProductImages landing, Perspectives, feature pages) have images missing one or both.
+### 1. Generator script (`scripts/generate-image-sitemap.ts`)
 
-- Add `alt` text describing each image's content (not "image" or filename).
-- Add `loading="lazy"` to images below the first viewport. LCP hero stays eager.
+A Node script that reads from existing data sources and emits XML. Run manually (like our current page sitemap workflow):
 
-### 4. Article schema on blog posts
-`BlogPost.tsx` should emit full `Article`/`BlogPosting` schema with `author`, `datePublished`, `dateModified`, `image`, `publisher`. We have partial coverage; we'll standardize it.
+```text
+src/data/aiProductPhotographyCategoryPages.ts  →  category hero + scenes
+src/data/blogPosts.ts                          →  blog covers
+src/lib/constants.ts (DEFAULT_OG_IMAGE)        →  homepage hero
+                  ↓
+            public/sitemap-images.xml
+```
 
-### 5. Verification helpers (no code, just for you)
-After deploy, two things you do in the browser/Search Console — no dev work:
-- Submit `https://vovv.ai/sitemap.xml` in Google Search Console (if not done yet).
-- Run [Google Rich Results Test](https://search.google.com/test/rich-results) on `/`, `/faq`, a blog post, and `/ai-product-photography` to confirm Breadcrumb, FAQ, Organization, Article schemas all parse cleanly.
+Each entry follows Google's image sitemap spec:
+```xml
+<url>
+  <loc>https://vovv.ai/ai-product-photography/fashion</loc>
+  <image:image>
+    <image:loc>https://.../scene-preview.jpg</image:loc>
+    <image:title>Editorial fashion product photography</image:title>
+    <image:caption>AI-generated on-model fashion shot, studio lighting</image:caption>
+  </image:image>
+  ... (more image entries for the same page)
+</url>
+```
 
-## What we're explicitly NOT doing
+Captions are auto-built from the existing scene `name` + category `name` fields — no manual writing needed.
 
-- **Prerendering / SSR** — Lovable lists this as "consider for content-heavy SEO sites." It's a major architecture change (Prerender.io proxy or moving off Lovable). Our content is already indexed; let's ship Phase 6 first and only revisit if Search Console shows indexing issues 4–6 weeks after.
-- **New OG image designs** — using existing brand visuals for v1. If you want bespoke 1200×630 social cards per page later, that's a design task we can do separately.
-- **Backlink building** — that's marketing/outreach, not code.
+### 2. Sitemap index (`public/sitemap.xml`)
+
+Convert our current single sitemap into an **index file** that points to two sub-sitemaps:
+
+```xml
+<sitemapindex>
+  <sitemap><loc>https://vovv.ai/sitemap-pages.xml</loc></sitemap>
+  <sitemap><loc>https://vovv.ai/sitemap-images.xml</loc></sitemap>
+</sitemapindex>
+```
+
+- Current `sitemap.xml` content moves to `sitemap-pages.xml` (no content change, just renamed).
+- This is Google's recommended pattern when splitting sitemaps; existing GSC submission keeps working.
+
+### 3. `robots.txt` update
+
+Already references `Sitemap: https://vovv.ai/sitemap.xml`. The index file pattern means we don't need to change robots.txt — Google follows the index automatically. But we'll add an explicit second `Sitemap:` line for `sitemap-images.xml` as a belt-and-suspenders signal (Bing handles this slightly differently).
+
+## What we explicitly won't do in 7a
+
+- **Dynamic edge function** — saved for Phase 7b if traffic warrants. Static is fine for v1.
+- **Public discover/freestyle showcase library** — currently disallowed in robots.txt (`Disallow: /discover/` for item pages). Indexing those images would require allowing the URLs and confirming we have rights/labels for every showcase asset. Separate decision.
+- **Filename rename pass** on existing assets — they're already descriptive enough (e.g. `hero-product-croptop.jpg`, not `IMG_4823.jpg`).
+- **License URLs** in the image XML — we don't publish a public license page yet.
 
 ## Technical scope (for the dev side)
 
 Files touched:
-- `src/components/SEOHead.tsx` — no change, already accepts `ogImage` prop
-- ~15 public page files — add `ogImage` prop to existing `<SEOHead>` calls
-- `src/pages/BlogPost.tsx` — full `BlogPosting` schema
-- ~6 pages with FAQ blocks — add `FAQPage` JSON-LD via existing `<JsonLd>` component
-- ~8 public pages — `alt` + `loading="lazy"` audit on `<img>` tags
-- `.lovable/plan.md` — log Phase 6
+- `scripts/generate-image-sitemap.ts` — new generator
+- `public/sitemap.xml` — converted to sitemap index
+- `public/sitemap-pages.xml` — new (renamed from current sitemap.xml content)
+- `public/sitemap-images.xml` — new
+- `public/robots.txt` — add second Sitemap: line
+- `.lovable/plan.md` — log Phase 7a
 
-No new dependencies. No backend changes. No risk to existing flows since `ogImage` is optional and falls back to current default.
+No dependencies, no backend, no runtime change. Pure static XML.
+
+## After deploy (you do this — 5 min)
+
+1. **Google Search Console** → Sitemaps → submit `https://vovv.ai/sitemap-images.xml` as a separate entry alongside the existing one.
+2. Wait 2-4 weeks. Check **GSC → Indexing → Pages** and **Performance → Search type: Image** to see image impressions start appearing.
 
 ## Estimated impact
 
-- **Social shares**: every page gets its own preview card → higher CTR on LinkedIn/X
-- **Rich results**: FAQ dropdowns + breadcrumbs in Google SERPs
-- **GEO**: FAQ schema is one of the most-cited formats by ChatGPT/Perplexity
-- **Accessibility**: alt text helps both screen readers and image search rankings
+- **Google Images traffic** — currently near zero from organic image search; could become a meaningful long-tail channel for "ai fashion product photography", "fragrance product shot ai", etc.
+- **GEO** — multimodal AI (Gemini, GPT-4o, Perplexity) increasingly cites images. Image sitemaps make ours easier to discover.
+- **No risk** — no behavior change for users, no impact on existing page indexing.
 
-Approve and I'll execute steps 1–4 in one pass.
+Approve and I'll build the generator, run it, and wire up the index in one pass.
 
-## Phase 6 — Executed
+---
 
-- BlogPost: ogImage now uses post.coverImage (was falling back to default for every share).
-- WhyVovv: added FAQPage JSON-LD mirroring the on-page FAQ.
-- Image hygiene audit: public pages (Home, About, Features, /seo/*, landing components) already pass alt text to ShimmerImage / native img — no fixes needed. CreativeDrops carousel uses intentional empty alt for decorative images (a11y-correct).
-- Confirmed FAQPage schema already present on: /faq, /shopify-product-photography, /etsy-product-photography, /ai-photography-vs-studio, /ai-photography-vs-photoshoot, /ai-product-photo-generator, /ai-product-photography category pages, and Home (LandingFAQ).
-- Confirmed BlogPosting schema present and complete on /blog/[slug].
+## Phase 7a — Implementation log
 
-Phase 6 complete. Next discretionary work: bespoke 1200×630 social cards per page (design task), and Prerender.io if Search Console shows indexing gaps after 4–6 weeks.
+**Discovery**: A `scripts/generate-sitemap.ts` already existed and was wired into `npm run build`. It was already emitting blog cover images and pulling Discover items live from the backend.
+
+**Change made**: Enhanced the existing generator (instead of forking a new one or building a sitemap index) to add image entries on every category page:
+- Hero image (`heroImageId` → `PREVIEW()` URL) with `heroAlt` as title
+- First 4 scene examples per category, each with its `alt` text as title
+
+**Result**: `public/sitemap.xml` went from ~7 image entries to **419 image entries across 417 URLs** in a single regenerate. Robots.txt and sitemap.xml URL unchanged — existing GSC submission keeps working.
+
+**No sitemap index needed** — single file is well under Google's 50K URL / 50MB limit.
+
+**User next step**: In Google Search Console → Indexing → Pages → confirm the sitemap shows the new image count after the next deploy. Watch Performance → Image search type for impressions over the next 2–4 weeks.
