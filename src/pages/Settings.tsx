@@ -6,7 +6,7 @@ import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { AdminFeedbackPanel } from '@/components/app/AdminFeedbackPanel';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
