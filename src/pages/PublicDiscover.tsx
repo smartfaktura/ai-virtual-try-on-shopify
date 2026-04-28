@@ -303,27 +303,29 @@ export default function PublicDiscover() {
     return stableColumns.map((col) => col.slice(0, itemsPerCol));
   }, [stableColumns, visibleCount, columnCount]);
 
-  // Related items for modal
+  // Related items — used by both the modal AND the SEO detail view.
+  // Falls back to urlItem so direct-loaded SEO pages still get related grid.
   const relatedItems = useMemo(() => {
-    if (!selectedItem) return [];
+    const target = selectedItem ?? urlItem;
+    if (!target) return [];
 
     // Prioritize same scene_name for presets
-    if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
+    if (target.type === 'preset' && target.data.scene_name) {
       const sameScene = allItems.filter((i) =>
         i.type === 'preset' &&
-        i.data.scene_name === selectedItem.data.scene_name &&
-        i.data.id !== selectedItem.data.id
+        i.data.scene_name === target.data.scene_name &&
+        i.data.id !== target.data.id
       );
       if (sameScene.length >= 3) return sameScene.slice(0, 9);
     }
 
     // Fast-path for recommended scenes: match by scene_ref or scene title
-    const selData = selectedItem.data as any;
+    const selData = target.data as any;
     const selSceneRef = selData.scene_ref as string | undefined;
-    const selSceneTitle = selectedItem.type === 'scene' ? selData.name : null;
+    const selSceneTitle = target.type === 'scene' ? selData.name : null;
     if (selSceneRef || selSceneTitle) {
       const sameSceneRef = allItems.filter((i) => {
-        if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
+        if (i.type === target.type && getItemId(i) === getItemId(target)) return false;
         const d = i.data as any;
         if (selSceneRef && d.scene_ref && d.scene_ref === selSceneRef) return true;
         if (selSceneTitle && i.type === 'preset' && d.scene_name === selSceneTitle) return true;
@@ -340,23 +342,23 @@ export default function PublicDiscover() {
       if (Array.isArray(cats) && cats.length > 1) return String(cats[1]).toLowerCase();
       return null;
     };
-    const selColl = getColl(selectedItem);
+    const selColl = getColl(target);
     if (selColl) {
       const sameColl = allItems
-        .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
+        .filter((i) => !(i.type === target.type && getItemId(i) === getItemId(target)))
         .filter((i) => getColl(i) === selColl)
         .slice(0, 9);
       if (sameColl.length >= 1) return sameColl;
     }
 
-    const selCat = resolveCategory(getItemCategory(selectedItem));
+    const selCat = resolveCategory(getItemCategory(target));
     return allItems
       .filter((i) => {
-        if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
+        if (i.type === target.type && getItemId(i) === getItemId(target)) return false;
         return resolveCategory(getItemCategory(i)) === selCat;
       })
       .slice(0, 9);
-  }, [allItems, selectedItem]);
+  }, [allItems, selectedItem, urlItem]);
 
   // Handlers for authenticated users
   const handleUseItem = useCallback((item: DiscoverItem) => {
