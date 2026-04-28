@@ -519,15 +519,15 @@ export default function Settings() {
             <h3 className="text-base font-semibold">Choose Your Plan</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
           </div>
-          <div className="flex rounded-lg border border-border overflow-hidden">
+          <div className="inline-flex rounded-full border border-[#f0efed] bg-white p-1 shadow-sm">
             <button
-              className={`h-10 px-4 text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setBillingPeriod('monthly')}
             >
               Monthly
             </button>
             <button
-              className={`h-10 px-4 text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setBillingPeriod('annual')}
             >
               Annual (Save 20%)
