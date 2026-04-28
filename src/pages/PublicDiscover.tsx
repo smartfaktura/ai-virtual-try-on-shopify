@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
@@ -28,6 +28,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
 import { getItemSlug } from '@/lib/slugUtils';
 import { MasonrySkeletonGrid } from '@/components/app/MasonrySkeletonGrid';
+import { DiscoverItemSEOView } from '@/components/discover/DiscoverItemSEOView';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
@@ -100,6 +101,7 @@ function useColumnCount() {
 
 export default function PublicDiscover() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
@@ -109,7 +111,11 @@ export default function PublicDiscover() {
   const { isAdmin } = useIsAdmin();
   const columnCount = useColumnCount();
   const { filterVisible } = useHiddenScenes();
-  
+
+  // Pexels-style: only render grid+modal when user navigated FROM the grid.
+  // Direct URL hits, refreshes, and crawlers see the full SEO detail page.
+  const cameFromGrid = Boolean((location.state as { fromGrid?: boolean } | null)?.fromGrid);
+
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
@@ -181,35 +187,47 @@ export default function PublicDiscover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
-  // Auto-open item from URL param (supports slug, UUID, and scene- prefix)
-  useEffect(() => {
-    if (!urlItemId || allItems.length === 0) return;
-    const found = allItems.find((item) => {
+  // Resolve the item that matches the URL param (slug, UUID, or scene- prefix).
+  // This is the source of truth for both the SEO view and the modal.
+  const urlItem = useMemo<DiscoverItem | null>(() => {
+    if (!urlItemId || allItems.length === 0) return null;
+    return allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
       }
-      // Match by slug or by raw UUID
       if (item.type === 'preset') {
         return item.data.slug === urlItemId || item.data.id === urlItemId;
       }
       return false;
-    });
-    if (found) setSelectedItem(found);
+    }) ?? null;
   }, [urlItemId, allItems]);
+
+  // Auto-open modal ONLY when user navigated from the grid (Pexels-style).
+  // Direct hits / refreshes / crawlers fall through to the SEO view branch.
+  useEffect(() => {
+    if (urlItem && cameFromGrid) setSelectedItem(urlItem);
+  }, [urlItem, cameFromGrid]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
     return `/discover/${getItemSlug(item)}`;
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
-    window.history.pushState(null, '', getItemUrl(item));
+    // Use react-router so we can pass `fromGrid` state without a full reload.
+    navigate(getItemUrl(item), { state: { fromGrid: true } });
     setSelectedItem(item);
-  }, [getItemUrl]);
+  }, [getItemUrl, navigate]);
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);
-    window.history.replaceState(null, '', '/discover');
-  }, []);
+    // If we got here via grid click, browser back returns to grid + restores scroll.
+    // Otherwise we're on a direct-loaded SEO page → just clear modal state.
+    if (cameFromGrid && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/discover', { replace: true });
+    }
+  }, [cameFromGrid, navigate]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
@@ -285,27 +303,29 @@ export default function PublicDiscover() {
     return stableColumns.map((col) => col.slice(0, itemsPerCol));
   }, [stableColumns, visibleCount, columnCount]);
 
-  // Related items for modal
+  // Related items — used by both the modal AND the SEO detail view.
+  // Falls back to urlItem so direct-loaded SEO pages still get related grid.
   const relatedItems = useMemo(() => {
-    if (!selectedItem) return [];
+    const target = selectedItem ?? urlItem;
+    if (!target) return [];
 
     // Prioritize same scene_name for presets
-    if (selectedItem.type === 'preset' && selectedItem.data.scene_name) {
+    if (target.type === 'preset' && target.data.scene_name) {
       const sameScene = allItems.filter((i) =>
         i.type === 'preset' &&
-        i.data.scene_name === selectedItem.data.scene_name &&
-        i.data.id !== selectedItem.data.id
+        i.data.scene_name === target.data.scene_name &&
+        i.data.id !== target.data.id
       );
       if (sameScene.length >= 3) return sameScene.slice(0, 9);
     }
 
     // Fast-path for recommended scenes: match by scene_ref or scene title
-    const selData = selectedItem.data as any;
+    const selData = target.data as any;
     const selSceneRef = selData.scene_ref as string | undefined;
-    const selSceneTitle = selectedItem.type === 'scene' ? selData.name : null;
+    const selSceneTitle = target.type === 'scene' ? selData.name : null;
     if (selSceneRef || selSceneTitle) {
       const sameSceneRef = allItems.filter((i) => {
-        if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
+        if (i.type === target.type && getItemId(i) === getItemId(target)) return false;
         const d = i.data as any;
         if (selSceneRef && d.scene_ref && d.scene_ref === selSceneRef) return true;
         if (selSceneTitle && i.type === 'preset' && d.scene_name === selSceneTitle) return true;
@@ -322,23 +342,23 @@ export default function PublicDiscover() {
       if (Array.isArray(cats) && cats.length > 1) return String(cats[1]).toLowerCase();
       return null;
     };
-    const selColl = getColl(selectedItem);
+    const selColl = getColl(target);
     if (selColl) {
       const sameColl = allItems
-        .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
+        .filter((i) => !(i.type === target.type && getItemId(i) === getItemId(target)))
         .filter((i) => getColl(i) === selColl)
         .slice(0, 9);
       if (sameColl.length >= 1) return sameColl;
     }
 
-    const selCat = resolveCategory(getItemCategory(selectedItem));
+    const selCat = resolveCategory(getItemCategory(target));
     return allItems
       .filter((i) => {
-        if (i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)) return false;
+        if (i.type === target.type && getItemId(i) === getItemId(target)) return false;
         return resolveCategory(getItemCategory(i)) === selCat;
       })
       .slice(0, 9);
-  }, [allItems, selectedItem]);
+  }, [allItems, selectedItem, urlItem]);
 
   // Handlers for authenticated users
   const handleUseItem = useCallback((item: DiscoverItem) => {
@@ -383,6 +403,27 @@ export default function PublicDiscover() {
     const itemId = getItemId(selectedItem);
     toggleFeatured.mutate({ itemType: selectedItem.type, itemId, currentlyFeatured: isFeatured(selectedItem.type, itemId) });
   }, [selectedItem, toggleFeatured, isFeatured]);
+
+  // Pexels-style SEO branch: direct hits / refreshes / crawlers see a full
+  // SEO page (with H1, hero, prompt, related grid). Modal users continue to
+  // see the grid + modal.
+  const showSeoView = !!urlItem && !cameFromGrid && urlItem.type === 'preset';
+
+  if (showSeoView && urlItem.type === 'preset') {
+    return (
+      <PageLayout>
+        <DiscoverItemSEOView
+          preset={urlItem.data}
+          relatedItems={relatedItems}
+          isAuthenticated={!!user}
+          onRelatedClick={(item) => {
+            navigate(getItemUrl(item), { state: { fromGrid: true } });
+            setSelectedItem(item);
+          }}
+        />
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
