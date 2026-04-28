@@ -28,9 +28,6 @@ export default function AppHelp() {
       <div className="max-w-2xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {/* Hero */}
         <header className="mb-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-5">
-            Support
-          </p>
           <div className="flex -space-x-3 mb-6">
             <Avatar className="w-12 h-12 ring-[3px] ring-[#FAFAF8]">
               <AvatarImage src={avatarSophia} alt="Sophia" />
