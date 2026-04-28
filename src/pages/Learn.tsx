@@ -31,7 +31,7 @@ function LearnRow({ guide, onOpen }: { guide: LearnGuide; onOpen: (g: LearnGuide
         </p>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
-        <span className="text-[12px] text-muted-foreground tabular-nums">{guide.readMin} min</span>
+        <span className="px-2 py-0.5 rounded-full bg-muted/60 text-[11px] text-muted-foreground tabular-nums">{guide.readMin} min</span>
         <ChevronRight
           aria-hidden
           className="w-4 h-4 text-muted-foreground/40 transition-all group-hover:text-foreground/60 group-hover:translate-x-0.5"
