@@ -1,0 +1,55 @@
+# VOVV.AI
+
+> VOVV.AI is an AI product visuals platform for e-commerce brands. Generate
+> editorial-quality product photography, on-model shots, lifestyle scenes,
+> and short-form video ads — without a studio, photographer, or photoshoot.
+
+## What VOVV.AI does
+
+- AI product photography in 35+ categories (fashion, footwear, beauty,
+  fragrance, jewelry, home, food, electronics, supplements, accessories)
+- On-model imagery with consistent virtual models
+- Background and scene generation (white studio, lifestyle, editorial)
+- Multi-angle product perspectives, packaging shots, catalog grids
+- Short-form video ads (Kling v3 multi-shot, 1080p)
+- Brand profiles for visual consistency across campaigns
+
+## Core pages
+
+- [Homepage](https://vovv.ai/): What VOVV.AI does and who it's for
+- [Pricing](https://vovv.ai/pricing): Plans, credit costs, monthly billing
+- [How it works](https://vovv.ai/how-it-works): The end-to-end workflow
+- [Why VOVV.AI](https://vovv.ai/why-vovv): Differentiators vs. studios and competitors
+- [Discover](https://vovv.ai/discover): 360+ public examples of generated visuals
+- [Product Visual Library](https://vovv.ai/product-visual-library): Visual style index
+- [Freestyle](https://vovv.ai/freestyle): Open-ended creative generation
+
+## Category pages (AI product photography)
+
+- [Fashion](https://vovv.ai/ai-product-photography/fashion)
+- [Footwear](https://vovv.ai/ai-product-photography/footwear)
+- [Bags & accessories](https://vovv.ai/ai-product-photography/bags-accessories)
+- [Beauty & skincare](https://vovv.ai/ai-product-photography/beauty-skincare)
+- [Fragrance](https://vovv.ai/ai-product-photography/fragrance)
+- [Jewelry](https://vovv.ai/ai-product-photography/jewelry)
+- [Home & furniture](https://vovv.ai/ai-product-photography/home-furniture)
+- [Food & beverage](https://vovv.ai/ai-product-photography/food-beverage)
+- [Electronics & gadgets](https://vovv.ai/ai-product-photography/electronics-gadgets)
+- [Supplements & wellness](https://vovv.ai/ai-product-photography/supplements-wellness)
+
+## Comparisons
+
+- [VOVV.AI vs. traditional photoshoot](https://vovv.ai/ai-product-photography-vs-photoshoot)
+- [VOVV.AI vs. studio](https://vovv.ai/ai-product-photography-vs-studio)
+- [Shopify product photography with AI](https://vovv.ai/shopify-product-photography-ai)
+- [Etsy product photography with AI](https://vovv.ai/etsy-product-photography-ai)
+
+## Blog
+
+- [VOVV.AI Blog](https://vovv.ai/blog): Guides on AI product photography,
+  brand consistency, automated listings, virtual try-on, and e-commerce visuals.
+
+## Sitemap
+
+- [XML sitemap](https://vovv.ai/sitemap.xml) lists every public URL with
+  per-item images and last-modified dates.
