@@ -34,8 +34,9 @@
     <!-- Preload the actual font file to skip CSS→font chain -->
     <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2" />
 
-    <!-- Preload LCP hero image -->
-    <link rel="preload" as="image" href="https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/landing-assets/hero/hero-product-croptop.jpg?quality=70" />
+    <!-- LCP hero image preload is injected at runtime via Helmet from
+         src/components/home/HomeHero.tsx so the hashed asset URL always matches. -->
+
 
     <!-- Google tag (gtag.js) - deferred -->
     <script>

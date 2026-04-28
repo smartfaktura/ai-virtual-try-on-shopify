@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ArrowRight } from 'lucide-react';
 
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
@@ -189,7 +190,14 @@ function HeroTypewriter() {
 /* ── Main component ── */
 export function HomeHero() {
   return (
-    <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
+    <>
+      {/* Preload the LCP hero image (hashed asset URL resolved at build).
+          Helmet hoists this <link> into <head> at runtime so Lighthouse and
+          the browser preload scanner can discover it from the initial document. */}
+      <Helmet>
+        <link rel="preload" as="image" href={originalDress} fetchPriority="high" />
+      </Helmet>
+      <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {/* ── Centered copy ── */}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
         <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-semibold text-foreground tracking-[-0.03em] leading-[1.08] mb-6">
@@ -232,5 +240,6 @@ export function HomeHero() {
         <MarqueeRow cards={row2} direction="right" duration="40s" />
       </div>
     </section>
+    </>
   );
 }
