@@ -1,47 +1,51 @@
-# Fix /pricing — restore primary blue, clean table greys, full-width final CTA
+# Fix image loading order on /ai-product-photography
 
-## What's wrong today
+## Problem
 
-Looking at `src/components/landing/LandingPricing.tsx`:
+On `/ai-product-photography` the page paints out of order — Categories (Fashion / Footwear / Beauty…) and other lower sections appear filled in before the hero marquee finishes. Cause:
 
-1. **CTAs and accents render near-black, not the brand blue.** Almost every accent on the page is hardcoded to `#1a1a2e` (a cold violet-grey). The design token `--primary` is `hsl(217 33% 17%)` — a proper dark navy blue (~`#1d2939`). The hardcoded `#1a1a2e` reads as flat black; the intended `--primary` reads as deep blue. 23 hits in this file.
-2. **Table looks "muddy grey".** The table uses 5 different grey washes stacked together: `bg-[#FAFAF8]` header row, `bg-[#FAFAF8]` group label rows, `bg-foreground/[0.03]` recommended-column wash, `hover:bg-[#FAFAF8]/60` row hover, plus a `border-foreground/30` ring on the recommended column. Combined with the page bg (also `#FAFAF8`) this creates the flat, washed-out grey look the user is complaining about. Same issue on the "Replaces a studio" table (zebra striping `#FAFAF8/60`).
-3. **Final CTA is constrained.** The "Start with 20 free credits" / "Go to Studio" card is wrapped in `max-w-3xl`, so it sits as a narrow box. The user wants it as a full-width band. The button itself (white pill on dark card) is fine in shape but should also use the proper primary blue, not `#1a1a2e`.
+1. **Hero marquee duplicates every tile** (`[...tiles, ...tiles]` x 2 rows = ~24 `<img>` requests) and only the first 6 are marked `eager` + `fetchpriority=high`. The rest are `lazy`, but because the marquee scroller is `w-max` and overflows, the browser still considers many off-screen tiles "in viewport" on a 1203px display and starts loading them at low priority, fighting the eager 6.
+2. **All other sections** (`PhotographyCategoryChooser`, `PhotographyVisualSystem`, `PhotographySceneExamples`, `HomeModels`) use plain `loading="lazy"` with **no `fetchpriority`**, so Chrome treats them at default priority. When their `<img>` tags exist far below the fold, they still get queued early because `lazy` only delays based on viewport distance heuristics — many fire as soon as they enter the ~1250px lookahead window, which on a tall page happens during initial layout.
+3. There's **no explicit priority hierarchy**: hero (high) → categories (auto, on scroll) → visual system / scene examples / models (low, on scroll). Right now everything below hero competes equally.
 
-## Plan
+## Fix
 
-### A. Restore the primary blue everywhere on the page
-Replace every hardcoded `#1a1a2e` / `#2a2a3e` (and the `rgba(26,26,46,...)` shadows) with the design system token:
-- backgrounds: `bg-primary`
-- text: `text-primary` or `text-primary-foreground` for on-dark
-- text on secondary text colors (`#6b7280`, `#9ca3af`, `#4b5563`): switch to `text-muted-foreground` / `text-foreground/75` so the page stays consistent with the rest of the site
-- shadows: `shadow-[...hsl(var(--primary)/0.15)]`
-- hover state on primary CTA: `hover:bg-primary/90` (instead of the current "lighter black" `#2a2a3e`)
+### 1. Hero — guarantee the first paint wins
+- Reduce eager tiles from 6 to **4** (only the visible ones at 1200px viewport — roughly 4 fit before the right edge) and keep `fetchpriority="high"` on those.
+- Mark the **second row entirely `loading="lazy"` + `fetchpriority="low"`** since it only matters once the user scrolls a few pixels.
+- Add `<link rel="preload" as="image" href={firstTileSrc} fetchpriority="high">` for the very first tile via a small `<Helmet>` in `PhotographyHero` so the browser starts the request before React hydrates.
 
-Net effect: every CTA, badge, monthly/annual toggle, "Recommended" pill, plan price, plan name, and check icon goes back to the brand dark navy blue instead of looking flat black.
+### 2. Below-the-fold sections — explicitly deprioritize
+Add `fetchpriority="low"` (and keep `loading="lazy"`) to every `<img>` in:
+- `PhotographyCategoryChooser.tsx` (30 thumbs)
+- `PhotographyVisualSystem.tsx` (18 thumbs)
+- `PhotographySceneExamples.tsx` (10 tiles)
+- `HomeModels.tsx` model thumbnails (only the ones rendered on this page)
 
-### B. Clean up the comparison table
-- Remove the muddy zebra/grey washes on the main feature matrix:
-  - Plan headers: keep white card background; only the "Recommended" column gets a very subtle `bg-primary/[0.025]` accent (not grey).
-  - Group label rows (`Generation`, `Video`, …): drop the `#FAFAF8` background, use a thin `border-t border-[#eceae6]` divider with the label sitting on white in tiny tracked uppercase.
-  - Feature rows: drop `hover:bg-[#FAFAF8]/60` hover; rely on row separators only.
-  - Cell `Minus` icon: lighter (`text-muted-foreground/30`) so empty cells recede.
-  - Recommended column gets a soft top accent bar in `bg-primary` (already present) — keep, since that's color, not grey.
-- Same cleanup for the "Replaces a studio" table:
-  - Remove the alternating `bg-[#FAFAF8]/60` zebra; all rows white, separated by `border-[#eceae6]`.
-  - The summary / total row gets a single subtle `bg-primary/[0.04]` band so the eye lands there.
+This tells Chrome: "do not race the hero." Combined with `lazy`, they will only kick in once they actually approach the viewport, and at low TCP/HTTP priority so the hero finishes first.
 
-### C. Final CTA → full-width band
-Restructure the "Start with 20 free credits" block:
-- Pull it out of the `max-w-6xl` container so it spans the full viewport width (full-bleed `bg-primary` band).
-- Section padding stays generous (`py-20 lg:py-28`).
-- Inner content stays centered and capped at ~`max-w-3xl` for readability, but the colored band itself goes edge-to-edge.
-- Button refinement: keep white-on-primary pill, but use design tokens (`bg-white text-primary hover:bg-white/95`) and add a subtle inner shadow so it feels intentional rather than a generic pill. Same height/spacing.
+### 3. Smaller initial payload for category thumbs
+`PhotographyCategoryChooser` currently asks for `width: 300, quality: 70` per thumb but renders at ~160px. Drop default request to `width: 200, quality: 65` so the initial bytes per thumb shrink by ~40%, freeing bandwidth for the hero.
 
-### D. Files touched
-- `src/components/landing/LandingPricing.tsx` — color and structure changes only (no copy changes, no schema changes).
-- No changes to `index.css`, no token changes, no migrations.
+### 4. Defer `HomeModels` images
+`HomeModels` renders dozens of model headshots and is the 4th section on the page. Wrap its image grid render in an `IntersectionObserver` (reuse `useScrollReveal` from `src/hooks/useScrollReveal.ts`) so the `<img>` tags only mount once the section is ~400px from viewport. This removes ~40+ image requests from the initial waterfall entirely.
 
-## Out of scope
-- Homepage, /app/pricing, comparison pages — left as-is.
-- Plan data, copy, FAQ content, schema/SEO — unchanged.
+## Files to edit
+
+```text
+src/components/seo/photography/PhotographyHero.tsx           // eager=4, second row low priority, preload first tile
+src/components/seo/photography/PhotographyCategoryChooser.tsx // fetchpriority=low, smaller default width
+src/components/seo/photography/PhotographyVisualSystem.tsx   // fetchpriority=low
+src/components/seo/photography/PhotographySceneExamples.tsx  // fetchpriority=low
+src/components/home/HomeModels.tsx                           // gate image grid with useScrollReveal
+```
+
+## Expected result
+
+Loading order on a fresh load becomes deterministic:
+1. Hero copy + first 4 tiles render almost immediately (preload + high priority)
+2. Remaining hero tiles fill in
+3. Categories thumbs load as user scrolls past hero
+4. Visual System → Scene Examples → Models load in scroll order
+
+No layout reshuffling, no "footer/categories appearing before hero" flash.

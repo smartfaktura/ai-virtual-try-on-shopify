@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
@@ -28,7 +29,8 @@ const FALLBACK_TILES = [
   { label: 'Soft Volume Lean',   id: '1776691911049-gsxycu' },
 ];
 
-function Tile({ tile, eager = false }: { tile: Tile; eager?: boolean }) {
+function Tile({ tile, priority = 'low' }: { tile: Tile; priority?: 'high' | 'auto' | 'low' }) {
+  const eager = priority === 'high';
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
@@ -41,7 +43,7 @@ function Tile({ tile, eager = false }: { tile: Tile; eager?: boolean }) {
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
         // @ts-expect-error fetchpriority is a valid HTML attribute not in React types
-        fetchpriority={eager ? 'high' : 'auto'}
+        fetchpriority={priority}
         className="w-full h-full object-cover"
       />
       <div className="absolute bottom-0 inset-x-0 p-2.5 bg-gradient-to-t from-black/55 to-transparent">
@@ -53,7 +55,7 @@ function Tile({ tile, eager = false }: { tile: Tile; eager?: boolean }) {
   );
 }
 
-function MarqueeRow({ tiles, direction, duration, eagerFirst = false }: { tiles: Tile[]; direction: 'left' | 'right'; duration: string; eagerFirst?: boolean }) {
+function MarqueeRow({ tiles, direction, duration, eagerCount = 0, defaultPriority = 'low' }: { tiles: Tile[]; direction: 'left' | 'right'; duration: string; eagerCount?: number; defaultPriority?: 'auto' | 'low' }) {
   const doubled = [...tiles, ...tiles];
   return (
     <div className="overflow-hidden w-full group/marquee">
@@ -62,7 +64,7 @@ function MarqueeRow({ tiles, direction, duration, eagerFirst = false }: { tiles:
         style={{ animationDuration: duration }}
       >
         {doubled.map((t, i) => (
-          <Tile key={`${t.label}-${i}`} tile={t} eager={eagerFirst && i < 6} />
+          <Tile key={`${t.label}-${i}`} tile={t} priority={i < eagerCount ? 'high' : defaultPriority} />
         ))}
       </div>
     </div>
@@ -87,8 +89,19 @@ export function PhotographyHero() {
   const row1 = allTiles.slice(0, mid);
   const row2 = allTiles.slice(mid);
 
+  // Preload the very first hero tile so the browser starts fetching it
+  // before React hydration completes. Locks in a deterministic LCP order.
+  const firstTilePreload = row1[0]
+    ? getOptimizedUrl(row1[0].src, { width: 540, height: 720, quality: 85, resize: 'cover' })
+    : null;
+
   return (
     <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
+      {firstTilePreload && (
+        <Helmet>
+          <link rel="preload" as="image" href={firstTilePreload} fetchPriority="high" />
+        </Helmet>
+      )}
       <div className="max-w-3xl mx-auto px-6 text-center mb-10">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
           AI Product Photography
@@ -125,8 +138,8 @@ export function PhotographyHero() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <MarqueeRow tiles={row1} direction="left" duration="50s" eagerFirst />
-        <MarqueeRow tiles={row2} direction="right" duration="55s" />
+        <MarqueeRow tiles={row1} direction="left" duration="50s" eagerCount={4} defaultPriority="auto" />
+        <MarqueeRow tiles={row2} direction="right" duration="55s" defaultPriority="low" />
       </div>
     </section>
   );

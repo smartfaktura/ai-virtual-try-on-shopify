@@ -52,14 +52,16 @@ export function PhotographyCategoryChooser() {
                         className={`relative overflow-hidden rounded-lg sm:rounded-xl bg-muted/40 ${idx === 2 ? 'hidden sm:block' : ''}`}
                       >
                         <img
-                          src={getOptimizedUrl(src, { width: 300, height: 300, quality: 70, resize: 'cover' })}
-                          srcSet={getResizedSrcSet(src, { widths: [200, 300, 400], aspect: [1, 1], quality: 70 })}
+                          src={getOptimizedUrl(src, { width: 220, height: 220, quality: 65, resize: 'cover' })}
+                          srcSet={getResizedSrcSet(src, { widths: [180, 260, 360], aspect: [1, 1], quality: 65 })}
                           sizes="(max-width: 640px) 40vw, 160px"
                           alt={`${cat.name} AI product photography example`}
-                          width={300}
-                          height={300}
+                          width={220}
+                          height={220}
                           loading="lazy"
                           decoding="async"
+                          // @ts-expect-error fetchpriority is a valid HTML attribute
+                          fetchpriority="low"
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
                         />
                       </div>
