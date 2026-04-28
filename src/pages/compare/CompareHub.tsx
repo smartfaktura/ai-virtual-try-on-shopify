@@ -44,6 +44,7 @@ const COMPARISONS: ComparisonCard[] = [
     competitor: 'Pebblely',
     tagline:
       'Template-based product backgrounds vs category-specific visual systems.',
+    to: '/compare/vovv-vs-pebblely',
   },
 ];
 
