@@ -127,7 +127,7 @@ export default function BlogPost() {
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: post.title,
     description: post.metaDescription,
     image: post.coverImage || defaultImage,
