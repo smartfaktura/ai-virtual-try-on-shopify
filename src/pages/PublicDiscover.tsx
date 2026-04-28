@@ -404,6 +404,27 @@ export default function PublicDiscover() {
     toggleFeatured.mutate({ itemType: selectedItem.type, itemId, currentlyFeatured: isFeatured(selectedItem.type, itemId) });
   }, [selectedItem, toggleFeatured, isFeatured]);
 
+  // Pexels-style SEO branch: direct hits / refreshes / crawlers see a full
+  // SEO page (with H1, hero, prompt, related grid). Modal users continue to
+  // see the grid + modal.
+  const showSeoView = !!urlItem && !cameFromGrid && urlItem.type === 'preset';
+
+  if (showSeoView && urlItem.type === 'preset') {
+    return (
+      <PageLayout>
+        <DiscoverItemSEOView
+          preset={urlItem.data}
+          relatedItems={relatedItems}
+          isAuthenticated={!!user}
+          onRelatedClick={(item) => {
+            navigate(getItemUrl(item), { state: { fromGrid: true } });
+            setSelectedItem(item);
+          }}
+        />
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout>
       <SEOHead title="Explore AI Product Photography — VOVV.AI" description="All images on this page were generated with VOVV.AI. Explore AI fashion photography styles, scenes and prompts — start generating for free." canonical={`${SITE_URL}/discover`} />
