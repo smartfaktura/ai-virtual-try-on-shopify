@@ -32,6 +32,7 @@ import { toast } from '@/lib/brandedToast';
 import { cn } from '@/lib/utils';
 import { getItemSlug } from '@/lib/slugUtils';
 import { MasonrySkeletonGrid } from '@/components/app/MasonrySkeletonGrid';
+import { SEOHead } from '@/components/SEOHead';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -629,6 +630,12 @@ export default function Discover() {
       title="Explore"
       subtitle="Discover product visuals created across different categories"
     >
+      {/* /app/* routes are private — block crawlers even if URL leaks. */}
+      <SEOHead
+        title="Explore — VOVV.AI"
+        description="Private discover page for authenticated users."
+        noindex
+      />
       {isAdmin && adminPendingCount > 0 && (
         <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium w-fit">
           {adminPendingCount} pending
