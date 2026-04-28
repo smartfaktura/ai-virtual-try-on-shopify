@@ -58,7 +58,7 @@ export function SEOHead({ title, description, canonical, ogImage, ogType = 'webs
 
     // Robots
     if (noindex) {
-      setMeta('robots', 'noindex, nofollow');
+      setMeta('robots', 'noindex, follow');
     } else {
       const robotsMeta = document.querySelector('meta[name="robots"]');
       if (robotsMeta) robotsMeta.remove();

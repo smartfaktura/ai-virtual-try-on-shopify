@@ -333,6 +333,7 @@ export default function PublicFreestyle() {
         description="Create stunning AI product photos for free. Choose from 50+ AI models, 100+ scenes, and custom styles. No camera needed — generate e-commerce images in seconds with VOVV.AI Freestyle."
         canonical={`${SITE_URL}/freestyle`}
         ogType="website"
+        noindex={!!urlItemId}
       />
       <JsonLd data={jsonLd} />
       <h1 className="sr-only">Free AI Product Photography Generator — Freestyle Studio</h1>
