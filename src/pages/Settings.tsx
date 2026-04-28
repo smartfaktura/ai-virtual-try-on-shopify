@@ -446,7 +446,7 @@ export default function Settings() {
           <div className="space-y-8">
         {/* ─── Current Plan ─── */}
         {!(plan === 'free' && subscriptionStatus === 'none') && (
-        <Card>
+        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-3">
             {/* Plan header */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -580,7 +580,7 @@ export default function Settings() {
         )}
 
         {/* Credit packs */}
-        <Card>
+        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h3 className="text-base font-semibold">Need More Credits?</h3>
@@ -630,7 +630,7 @@ export default function Settings() {
         <Separator />
 
         {/* ─── Notifications ─── */}
-        <Card>
+        <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
               <h2 className="text-base font-semibold">Notifications</h2>
@@ -697,7 +697,7 @@ export default function Settings() {
         {isAdmin && (
           <>
             <Separator />
-            <Card>
+            <Card className="rounded-3xl border-[#f0efed] bg-white shadow-sm">
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h2 className="text-base font-semibold">Asset Preview Generation</h2>
