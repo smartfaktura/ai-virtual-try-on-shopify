@@ -660,17 +660,15 @@ export function LandingPricing() {
       </div>
     </section>
 
-    {/* ═══ BAND 6 · Enterprise + Start Free CTA crescendo (off-white) ═══ */}
-    <section className="bg-[#FAFAF8] py-20 lg:py-28">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-
-        {/* ── Enterprise Banner ───────────────────────────────────── */}
-        {enterprisePlan && (
-          <div className="rounded-2xl border border-[#f0efed] bg-white p-7 sm:p-8">
+    {/* ═══ BAND 6 · Enterprise (off-white, contained) ═══ */}
+    {enterprisePlan && (
+      <section className="bg-[#FAFAF8] pt-20 lg:pt-28 pb-16 lg:pb-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl border border-[#eceae6] bg-white p-7 sm:p-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
               <div className="flex items-center gap-3 shrink-0">
-                <div className="w-11 h-11 rounded-xl bg-foreground/[0.06] flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-foreground" />
+                <div className="w-11 h-11 rounded-xl bg-primary/[0.08] flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="text-foreground text-lg font-semibold">{enterprisePlan.name}</h3>
@@ -681,7 +679,7 @@ export function LandingPricing() {
               <ul className="flex-1 flex flex-wrap gap-x-6 gap-y-2">
                 {enterprisePlan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-sm text-foreground/80">
-                    <Check className="w-4 h-4 text-foreground shrink-0" strokeWidth={2.5} />
+                    <Check className="w-4 h-4 text-primary shrink-0" strokeWidth={2.5} />
                     {typeof feature === 'string' ? feature : feature.text}
                   </li>
                 ))}
@@ -696,28 +694,32 @@ export function LandingPricing() {
               </Link>
             </div>
           </div>
-        )}
-
-        {/* ── Start Free CTA (page-ending crescendo) ─────────────── */}
-        <div className="max-w-3xl mx-auto rounded-2xl bg-[#1a1a2e] p-10 sm:p-14 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-4">
-            Get started
-          </p>
-          <h3 className="text-white text-3xl sm:text-4xl font-semibold tracking-[-0.02em] mb-4">
-            Start with 20 free credits
-          </h3>
-          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
-            No credit card required. Try every Visual Type and see the quality before committing to a plan.
-          </p>
-          <Link
-            to={user ? '/app' : '/auth'}
-            className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#1a1a2e] text-base font-semibold hover:bg-white/90 transition-colors"
-          >
-            {user ? 'Go to Studio' : 'Get started free'}
-            <ArrowRight size={16} />
-          </Link>
         </div>
+      </section>
+    )}
 
+    {/* ═══ BAND 7 · Start Free CTA · full-bleed crescendo ═══ */}
+    <section className="bg-primary py-24 sm:py-28 lg:py-36 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/50 mb-5">
+          Get started
+        </p>
+        <h3 className="text-primary-foreground text-4xl sm:text-5xl lg:text-[3.5rem] font-semibold tracking-[-0.025em] leading-[1.05] mb-5">
+          Start with 20 free credits
+        </h3>
+        <p className="text-primary-foreground/65 text-base sm:text-lg leading-relaxed mb-10 max-w-lg mx-auto">
+          No credit card required. Try every Visual Type and see the quality before committing to a plan.
+        </p>
+        <Link
+          to={user ? '/app' : '/auth'}
+          className="inline-flex items-center justify-center gap-2 h-[3.5rem] px-9 rounded-full bg-white text-primary text-base font-semibold shadow-[0_10px_40px_-10px_rgba(0,0,0,0.35)] hover:bg-white/95 hover:-translate-y-px transition-all"
+        >
+          {user ? 'Open Visual Studio' : 'Get started free'}
+          <ArrowRight size={16} />
+        </Link>
+        <p className="mt-6 text-[11px] tracking-[0.12em] uppercase text-primary-foreground/40 font-medium">
+          Cancel anytime · No commitment
+        </p>
       </div>
     </section>
     </>
