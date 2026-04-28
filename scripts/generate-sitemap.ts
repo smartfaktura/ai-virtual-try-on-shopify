@@ -16,7 +16,10 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { blogPosts } from '../src/data/blogPosts';
-import { aiProductPhotographyCategoryPages } from '../src/data/aiProductPhotographyCategoryPages';
+import {
+  aiProductPhotographyCategoryPages,
+  PREVIEW,
+} from '../src/data/aiProductPhotographyCategoryPages';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://vovv.ai';
@@ -149,12 +152,31 @@ const blogEntries: SitemapEntry[] = blogPosts.map((post) => {
   };
 });
 
-const categoryEntries: SitemapEntry[] = aiProductPhotographyCategoryPages.map((cat) => ({
-  loc: `/ai-product-photography/${cat.slug}`,
-  lastmod: TODAY,
-  changefreq: 'monthly',
-  priority: 0.85,
-}));
+const categoryEntries: SitemapEntry[] = aiProductPhotographyCategoryPages.map((cat) => {
+  // Hero image first, then up to 4 scene previews per page.
+  // Google supports up to 1,000 image entries per URL — we cap at 5 to stay
+  // focused on the strongest visuals and keep the file readable.
+  const images: ImageEntry[] = [];
+  if (cat.heroImageId) {
+    images.push({
+      loc: PREVIEW(cat.heroImageId),
+      title: cat.heroAlt || `${cat.h1Lead} ${cat.h1Highlight}`,
+    });
+  }
+  for (const scene of cat.sceneExamples.slice(0, 4)) {
+    images.push({
+      loc: PREVIEW(scene.imageId),
+      title: scene.alt || `${scene.label} — ${scene.collectionLabel}`,
+    });
+  }
+  return {
+    loc: `/ai-product-photography/${cat.slug}`,
+    lastmod: TODAY,
+    changefreq: 'monthly',
+    priority: 0.85,
+    images: images.length ? images : undefined,
+  };
+});
 
 // ───────── Discover items (live from backend) ─────────
 async function fetchDiscoverEntries(): Promise<SitemapEntry[]> {
