@@ -99,6 +99,16 @@ const breadcrumbJsonLd = {
   ],
 };
 
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
 export default function WhyVovv() {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
@@ -110,6 +120,7 @@ export default function WhyVovv() {
       />
       <JsonLd data={webPageJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={faqJsonLd} />
 
       <LandingNav />
 
