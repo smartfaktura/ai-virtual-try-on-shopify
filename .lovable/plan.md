@@ -1,75 +1,65 @@
-# Add `/compare/vovv-vs-photoroom`
+## Plan: VOVV vs Claid AI comparison page
 
-Build the second comparison page using the existing reusable compare components — same design system as the homepage and the Flair AI page. Per your guidance, the footer will **not** get an entry for this individual comparison; only the `/compare` hub link stays in the footer.
+Reuse the existing comparison design system (same components used by `/compare/vovv-vs-photoroom` and `/compare/vovv-vs-flair-ai`) so the new page automatically inherits the homepage aesthetic — typography, spacing, gradients, soft backgrounds, rounded cards, and CTA styling.
 
-## What gets built
+### 1. New page: `src/pages/compare/VovvVsClaidAi.tsx`
 
-### 1. New page — `src/pages/compare/VovvVsPhotoroom.tsx`
-Composes the existing `seo/compare/*` components (no new design primitives) in this order:
+Compose the page from existing reusable parts:
+- `SEOHead` — title, meta description, canonical
+- `JsonLd` — BreadcrumbList + WebPage + FAQPage (FAQPage emitted by `ComparisonFAQ`)
+- `LandingNav` / `LandingFooter`
+- `ComparisonHero` — eyebrow "VOVV vs Claid AI", headline "image enhancement or full product visual creation?", primary CTA → `/auth`, secondary → `/ai-product-photography`
+- Hero comparison cards strip (Claid AI card + dark VOVV card) — same visual treatment as Photoroom page
+- `QuickVerdictCards` — "The short answer" with two stacked cards
+- `ComparisonTable` — 13 rows (image upscaling, enhancement, background generation, cleanup, API automation, product page visuals, social, ads, campaign/editorial, on-model, category scenes, one-photo-to-set, best fit)
+- `LandingValueCards` — "Why brands choose VOVV" 4-card grid
+- `CompetitorStrengthsSection` — "When Claid AI is a good choice"
+- `VOVVDifferenceSection` — "When VOVV is the better fit"
+- Dark positioning section — "Claid AI enhances product images. VOVV creates product visual systems."
+- `WhoShouldChooseWhich` — decision split
+- `ComparisonFAQ` — 5 FAQs (auto-emits FAQPage JSON-LD)
+- Internal-link strip → `/ai-product-photography`, `/pricing`, `/compare`, `/app/generate/product-images`
+- `ComparisonFinalCTA`
 
-1. `ComparisonHero` — eyebrow "VOVV vs Photoroom", H1 headline (with line-break styling matching the Flair page), subheadline, primary CTA "Try VOVV Free" → `/auth`, secondary "See AI Product Visuals" → `/ai-product-photography`.
-2. **Hero comparison cards strip** — two cards (Photoroom + VOVV, VOVV accented dark) overlapping the hero with a `-mt-10` lift, mirroring the homepage's hero card pattern.
-3. `QuickVerdictCards` — "The short answer", two cards. (Spec asks for 3 cards but two are "VOVV"; the two-card layout reads cleaner and matches the existing Quick Verdict component. The intro copy mentions all three angles: quick edits → Photoroom; visual generation + brand campaigns → VOVV.)
-4. `ComparisonTable` — 11 rows from spec, Photoroom on the left, VOVV.AI accented on the right.
-5. `LandingValueCards` (4 cards) — "Why e-commerce brands choose VOVV over simple editing workflows".
-6. `CompetitorStrengthsSection` — "When Photoroom may be the better fit" (positive, factual, no attacks).
-7. `VOVVDifferenceSection` — "When VOVV is the better fit" with 6 bullets.
-8. **Positioning block** (dark `#1a1a2e` band, matches `LandingFinalCTASEO` aesthetic) — "Photoroom edits product photos. VOVV builds product visual systems." + CTA "Create Your First Product Visual".
-9. `WhoShouldChooseWhich` — two-column decision matrix.
-10. `ComparisonFAQ` — all 5 FAQs, auto-emits `FAQPage` JSON-LD.
-11. Internal-link strip — `/ai-product-photography`, `/pricing`, `/compare`, `/app/generate/product-images`.
-12. `ComparisonFinalCTA` — "Create more than edited product photos".
+All copy taken verbatim from the brief.
 
-### 2. SEO
-- `<title>`: `VOVV vs Photoroom: Which AI Product Visual Tool Is Best for E-commerce Brands?`
-- meta description: as specified
-- canonical: `https://vovv.ai/compare/vovv-vs-photoroom`
-- OG title/description/image via `SEOHead`
-- JSON-LD: `WebPage`, `BreadcrumbList` (Home › Compare › VOVV vs Photoroom), `FAQPage` (auto from `ComparisonFAQ`)
+### 2. Routing: `src/App.tsx`
 
-### 3. Routing
-`src/App.tsx` — add lazy import + `<Route path="/compare/vovv-vs-photoroom" element={<VovvVsPhotoroom />} />` next to the existing Flair route.
-
-### 4. Sitemap
-`scripts/generate-sitemap.ts` — add:
+Add a lazy-loaded route:
 ```
-{ loc: '/compare/vovv-vs-photoroom', changefreq: 'monthly', priority: 0.8 },
+/compare/vovv-vs-claid-ai → VovvVsClaidAi
 ```
-Sitemap regenerates on next build (and I'll run `npm run sitemap` to verify the URL appears).
+
+### 3. Hub: `src/pages/compare/CompareHub.tsx`
+
+Flip the existing "Claid AI — Coming soon" card to a live link pointing at the new route. No layout changes.
+
+### 4. Sitemap: `scripts/generate-sitemap.ts` + `public/sitemap.xml`
+
+Add `/compare/vovv-vs-claid-ai` to the static URL list and regenerate `public/sitemap.xml`.
 
 ### 5. Footer
-**No change.** Per your instruction, the footer keeps only:
-- "Compare VOVV.AI to Others" → `/compare`
-- "VOVV.AI vs Flair AI" → `/compare/vovv-vs-flair-ai` *(already added previously)*
 
-I will **not** add the Photoroom entry to the footer to avoid clutter. The `/compare` hub will list it.
+Per the user's instruction, do NOT add an individual link to `LandingFooter`. The existing "Compare VOVV.AI to Others" hub link in the footer already covers discovery.
 
-### 6. Hub page
-The existing `/compare` hub already shows a "VOVV vs Photoroom" card marked "Coming soon". I'll flip that card to a live link by giving it a `to: '/compare/vovv-vs-photoroom'` value in `src/pages/compare/CompareHub.tsx`.
+### SEO details
 
-## Assumptions
-- "Try VOVV Free" CTA points to `/auth` (matches the pattern used on the Flair page and other public landings — there's no separate `/signup` route).
-- "See AI Product Visuals" → `/ai-product-photography` (existing SEO pillar page).
-- The Quick Verdict section uses two cards (Photoroom vs VOVV) instead of three — the third option in your spec ("Best for brand campaigns: VOVV") is folded into the VOVV card title and intro copy. This keeps visual symmetry with the existing comparison component.
-- No new images, no new color tokens, no design-system additions — pure composition of existing primitives.
+- **Title**: `VOVV vs Claid AI: Which AI Product Image Tool Is Best for E-commerce Brands?`
+- **Meta description**: `Compare VOVV and Claid AI for AI product photography, image enhancement, upscaling, product page visuals, social content, ads, and campaign-ready e-commerce creative.`
+- **Canonical**: `https://vovv.ai/compare/vovv-vs-claid-ai`
+- **JSON-LD**: BreadcrumbList (Home → Compare → VOVV vs Claid AI), WebPage, FAQPage (5 Q&A)
+- Indexable (no `noindex`); inherits the standard prerender path used by the other `/compare/*` pages.
 
-## Files that will change
-- **new** `src/pages/compare/VovvVsPhotoroom.tsx`
-- **edit** `src/App.tsx` (lazy import + route)
-- **edit** `scripts/generate-sitemap.ts` (one URL)
-- **edit** `src/pages/compare/CompareHub.tsx` (flip Photoroom card to a live link)
-- **regenerated** `public/sitemap.xml` (via `npm run sitemap`)
+### Files changed
 
-## Untouched
-- Homepage, all `/app/*`, `/admin/*`, `/auth/*`, `/account/*`, `/checkout/*`, `/success/*`
-- Footer
-- Existing comparison components (reused as-is)
-- Backend / DB / design tokens
+- create `src/pages/compare/VovvVsClaidAi.tsx`
+- edit `src/App.tsx` (add route)
+- edit `src/pages/compare/CompareHub.tsx` (activate Claid AI card)
+- edit `scripts/generate-sitemap.ts` (add URL)
+- regenerate `public/sitemap.xml`
 
-## Final report (delivered after implementation)
-- files changed
-- route created
-- exact title / meta description / canonical
-- JSON-LD schemas confirmed (`WebPage`, `BreadcrumbList`, `FAQPage`)
-- sitemap status (URL count + grep confirmation)
-- assumptions (mirrored above)
+### Assumptions
+
+- Claid AI card already exists in `CompareHub` as a "Coming soon" placeholder (matches the previous Photoroom flow).
+- Reusable `compare/*` components are stable and need no modification.
+- Standard prerendering automatically picks up new `/compare/*` routes (consistent with prior pages).
