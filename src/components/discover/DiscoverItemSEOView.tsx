@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
+import { Button } from '@/components/ui/button';
 import { SITE_URL } from '@/lib/constants';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { DiscoverBreadcrumbs } from './DiscoverBreadcrumbs';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { FAMILY_ID_TO_NAME } from '@/lib/discoverTaxonomy';
-import { getItemSlug, getItemUrlPath } from '@/lib/slugUtils';
+import { getItemUrlPath } from '@/lib/slugUtils';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 
 interface DiscoverItemSEOViewProps {
@@ -25,6 +27,17 @@ function truncateAtWord(s: string, maxLen: number): string {
   return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim() + '…';
 }
 
+/** Convert slug-like strings ("beauty-skincare") into "Beauty Skincare". */
+function humanize(s: string): string {
+  return s
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+    .join(' ');
+}
+
 function buildMetaDescription(preset: DiscoverPreset): string {
   const familyLabel = FAMILY_ID_TO_NAME[preset.category] || preset.category;
   const tmpl =
@@ -37,6 +50,8 @@ function buildPageTitle(preset: DiscoverPreset): string {
   const familyLabel = FAMILY_ID_TO_NAME[preset.category] || preset.category;
   return `${preset.title} — AI ${familyLabel} Visual | VOVV.AI`;
 }
+
+const PROMPT_CLAMP = 280;
 
 export function DiscoverItemSEOView({
   preset,
@@ -51,15 +66,18 @@ export function DiscoverItemSEOView({
     ? `/app/discover/${slug}`
     : `/auth?redirect=${encodeURIComponent(`/app/discover/${slug}`)}`;
 
-  // Build chip metadata (only render entries with values)
+  const [promptExpanded, setPromptExpanded] = useState(false);
+
+  // Build chip metadata (only render entries with values). Quality removed per UX direction.
   const chips: Array<{ label: string; value: string }> = [
     { label: 'Category', value: familyLabel },
-    ...(preset.subcategory ? [{ label: 'Sub-type', value: preset.subcategory }] : []),
+    ...(preset.subcategory
+      ? [{ label: 'Sub-type', value: humanize(preset.subcategory) }]
+      : []),
     ...(preset.scene_name ? [{ label: 'Scene', value: preset.scene_name }] : []),
     ...(preset.model_name ? [{ label: 'Model', value: preset.model_name }] : []),
     ...(preset.workflow_name ? [{ label: 'Workflow', value: preset.workflow_name }] : []),
     { label: 'Aspect ratio', value: preset.aspect_ratio },
-    { label: 'Quality', value: preset.quality },
   ];
 
   const breadcrumbs = [
@@ -101,6 +119,12 @@ export function DiscoverItemSEOView({
   };
 
   const heroImage = getOptimizedUrl(preset.image_url, { quality: 90 });
+  const promptText = preset.prompt ?? '';
+  const isPromptLong = promptText.length > PROMPT_CLAMP;
+  const visiblePrompt =
+    !isPromptLong || promptExpanded
+      ? promptText
+      : truncateAtWord(promptText, PROMPT_CLAMP);
 
   return (
     <>
@@ -114,7 +138,7 @@ export function DiscoverItemSEOView({
       <JsonLd data={imageObjectLd} />
       <JsonLd data={breadcrumbLd} />
 
-      <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
         {/* Breadcrumbs */}
         <DiscoverBreadcrumbs items={breadcrumbs} />
 
@@ -128,14 +152,14 @@ export function DiscoverItemSEOView({
           </h1>
         </header>
 
-        {/* Hero image */}
-        <figure className="rounded-2xl overflow-hidden bg-muted/30">
+        {/* Hero image — fits the viewport like Pexels; info appears on scroll */}
+        <figure className="rounded-2xl overflow-hidden bg-muted/30 flex items-center justify-center max-h-[calc(100vh-12rem)]">
           <img
             src={heroImage}
             alt={`${preset.title} — AI ${familyLabel} visual generated with VOVV.AI`}
             loading="eager"
             decoding="async"
-            className="w-full h-auto block"
+            className="w-auto h-auto max-w-full max-h-[calc(100vh-12rem)] object-contain block"
           />
         </figure>
 
@@ -155,18 +179,27 @@ export function DiscoverItemSEOView({
           </div>
         </section>
 
-        {/* About this visual (prompt) */}
-        {preset.prompt && (
-          <section aria-labelledby="about-visual" className="space-y-3">
+        {/* Prompt (truncated with Show more) */}
+        {promptText && (
+          <section aria-labelledby="visual-prompt" className="space-y-3">
             <h2
-              id="about-visual"
+              id="visual-prompt"
               className="text-xl font-semibold tracking-tight text-foreground"
             >
-              About this visual
+              Prompt
             </h2>
-            <div className="prose prose-sm max-w-none text-foreground/85 leading-relaxed whitespace-pre-wrap">
-              {preset.prompt}
+            <div className="rounded-lg bg-muted/40 border border-border/40 p-4 sm:p-5 text-sm font-mono leading-relaxed whitespace-pre-wrap text-foreground/85">
+              {visiblePrompt}
             </div>
+            {isPromptLong && (
+              <button
+                type="button"
+                onClick={() => setPromptExpanded((v) => !v)}
+                className="text-xs font-medium text-foreground/70 hover:text-foreground underline underline-offset-4"
+              >
+                {promptExpanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
           </section>
         )}
 
@@ -193,23 +226,31 @@ export function DiscoverItemSEOView({
           </section>
         )}
 
-        {/* CTA */}
-        <section className="rounded-2xl border border-border/60 bg-muted/30 p-6 sm:p-8 space-y-3 text-center">
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-            Generate visuals like this for your products
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Open this style in Visual Studio and apply it to your own product photos
-          </p>
-          <div className="pt-2">
-            <Link
-              to={ctaHref}
-              className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-6 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
+        {/* CTA — branded button matching public discover modal */}
+        <section className="space-y-3 text-center">
+          <div className="max-w-md mx-auto">
+            <Button
+              asChild
+              className="w-full h-[3.25rem] rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              Open in Visual Studio
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+              <Link to={ctaHref}>
+                {isAuthenticated ? (
+                  'Open in Visual Studio'
+                ) : (
+                  <>
+                    <span className="sm:hidden">Try this for free</span>
+                    <span className="hidden sm:inline">Create account to recreate this</span>
+                  </>
+                )}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
           </div>
+          <p className="text-[13px] text-muted-foreground/75 leading-relaxed max-w-md mx-auto">
+            {isAuthenticated
+              ? 'Open this style in Visual Studio and apply it to your own product photos'
+              : 'Sign up to access prompts, scenes and generate AI fashion photography'}
+          </p>
         </section>
 
         {/* Related visuals */}
