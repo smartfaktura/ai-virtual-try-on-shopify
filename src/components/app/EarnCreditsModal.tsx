@@ -4,6 +4,7 @@ import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { Gift, Send, Copy, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 interface EarnCreditsModalProps {
   open: boolean;
@@ -36,58 +37,71 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
       <button
         onClick={() => onOpenChange(false)}
         className="absolute top-4 right-4 z-10 p-1.5 rounded-full hover:bg-muted/60 transition-colors"
+        aria-label="Close"
       >
         <X className="w-4 h-4 text-muted-foreground" />
       </button>
 
-      {/* Header */}
-      <div className="px-6 pt-7 pb-5 text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-3">
-          <Gift className="w-6 h-6 text-primary" />
+      {/* Header — left aligned, restrained */}
+      <div className="px-6 sm:px-7 pt-7 pb-5">
+        <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 mb-4">
+          <Gift className="w-5 h-5 text-primary" />
         </div>
-        <h2 className="text-lg font-bold tracking-tight text-foreground">
-          Earn 200 Free Credits
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+          Reward
+        </p>
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+          Earn 200 free credits
         </h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">
           Share a creation on social media & tag us
         </p>
       </div>
 
-      {/* Steps — clean numbered list */}
-      <div className="px-6 space-y-4">
-        <Step num="1" title="Create" desc="Generate an image with any VOVV.AI tool." />
-        
-        <div>
-          <Step num="2" title="Post & tag" desc="Share on Instagram or TikTok with:" />
-          <button
-            onClick={copyCaption}
-            className="mt-2 ml-9 flex items-center gap-2.5 px-3.5 py-2 rounded-lg bg-muted/50 border border-border/40 hover:bg-muted transition-colors group w-[calc(100%-2.25rem)]"
-          >
-            <code className="text-[13px] font-semibold text-foreground flex-1 text-left">{CAPTION}</code>
-            {copied ? (
-              <Check className="w-4 h-4 text-primary flex-shrink-0" />
-            ) : (
-              <Copy className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
-            )}
-          </button>
-        </div>
+      {/* Steps — bordered card, divided rows */}
+      <div className="px-6 sm:px-7">
+        <ol className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+          <Step num="1" title="Create" desc="Generate an image with any VOVV.AI tool" />
 
-        <Step num="3" title="Email us the link" desc="We'll add 200 credits within 24h." />
+          <li className="p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <StepNumber num="2" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] text-foreground leading-snug pt-0.5">
+                  <span className="font-semibold">Post & tag</span>
+                  <span className="text-muted-foreground"> — share on Instagram or TikTok with</span>
+                </p>
+                <button
+                  onClick={copyCaption}
+                  className="mt-2.5 flex items-center gap-2.5 px-3 py-2 rounded-xl bg-background border border-border hover:border-foreground/20 transition-colors group w-full"
+                >
+                  <code className="text-[13px] font-semibold text-foreground flex-1 text-left">{CAPTION}</code>
+                  {copied ? (
+                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <Step num="3" title="Email us the link" desc="We'll add 200 credits within 24h" />
+        </ol>
       </div>
 
       {/* CTA */}
-      <div className="px-6 pt-5 pb-4">
-        <a
-          href={mailtoHref}
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm transition-colors"
-        >
-          Claim My Credits
-          <Send className="w-4 h-4" />
-        </a>
+      <div className="px-6 sm:px-7 pt-5 pb-3">
+        <Button asChild size="pill" className="w-full gap-2 h-11">
+          <a href={mailtoHref}>
+            <Send className="w-4 h-4" />
+            Claim my credits
+          </a>
+        </Button>
       </div>
 
       {/* Fine print */}
-      <p className="px-6 pb-5 text-[10px] text-muted-foreground/50 text-center leading-relaxed">
+      <p className="px-6 sm:px-7 pb-6 text-[11px] text-muted-foreground/70 text-center leading-relaxed">
         One reward per account per month · Account must be 7+ days old
       </p>
     </div>
@@ -96,7 +110,7 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[85vh] overflow-y-auto pb-2">
+        <DrawerContent className="max-h-[90vh] overflow-y-auto pb-2">
           {content}
         </DrawerContent>
       </Drawer>
@@ -105,24 +119,31 @@ export function EarnCreditsModal({ open, onOpenChange }: EarnCreditsModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] p-0 gap-0 border-border/50 bg-card overflow-hidden rounded-2xl top-[50%] translate-y-[-50%] [&>button]:hidden">
+      <DialogContent className="sm:max-w-[440px] p-0 gap-0 border border-border bg-card overflow-hidden rounded-2xl shadow-xl top-[50%] translate-y-[-50%] [&>button]:hidden">
         {content}
       </DialogContent>
     </Dialog>
   );
 }
 
-/* Tiny step row */
+/* Step number tile — soft primary tile matching /app aesthetic */
+function StepNumber({ num }: { num: string }) {
+  return (
+    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-primary/10 text-primary text-[12px] font-semibold flex-shrink-0 mt-0.5 tabular-nums">
+      {num}
+    </span>
+  );
+}
+
+/* Tiny step row inside the bordered card */
 function Step({ num, title, desc }: { num: string; title: string; desc: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex-shrink-0 mt-0.5">
-        {num}
-      </span>
-      <p className="text-sm text-foreground leading-snug">
+    <li className="flex items-start gap-3 p-4 sm:p-5">
+      <StepNumber num={num} />
+      <p className="text-[14px] text-foreground leading-snug pt-0.5">
         <span className="font-semibold">{title}</span>
         <span className="text-muted-foreground"> — {desc}</span>
       </p>
-    </div>
+    </li>
   );
 }
