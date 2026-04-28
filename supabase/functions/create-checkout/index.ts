@@ -77,10 +77,9 @@ serve(async (req) => {
     const priceAmount = priceObj.unit_amount ? (priceObj.unit_amount / 100).toFixed(2) : "0";
     logStep("Price amount resolved", { priceAmount });
 
-    // Include {CHECKOUT_SESSION_ID} placeholder so the frontend can match the
-    // post-payment return to the actual Stripe checkout session for GTM purchase
-    // attribution. Stripe interpolates this server-side.
-    const defaultSuccessUrl = `${origin}/app/settings?payment=success&session_id={CHECKOUT_SESSION_ID}&amount=${priceAmount}`;
+    // Dedicated post-checkout page handles celebration + verified GTM purchase fire.
+    // {CHECKOUT_SESSION_ID} is interpolated by Stripe server-side.
+    const defaultSuccessUrl = `${origin}/app/payment-success?session_id={CHECKOUT_SESSION_ID}&amount=${priceAmount}`;
     const defaultCancelUrl = `${origin}/app/settings?payment=cancelled`;
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
