@@ -330,11 +330,11 @@ export function LandingPricing() {
         </div>
 
         {/* Desktop table */}
-        <div className="hidden md:block rounded-2xl border border-[#f0efed] overflow-hidden bg-card">
+        <div className="hidden md:block rounded-2xl border border-[#eceae6] overflow-hidden bg-white">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
               <thead>
-                <tr className="bg-[#FAFAF8] border-b border-[#f0efed]">
+                <tr className="bg-white border-b border-[#eceae6]">
                   <th className="text-left px-5 py-5 align-bottom w-[28%]">
                     <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                       Plans
@@ -349,18 +349,18 @@ export function LandingPricing() {
                     return (
                       <th
                         key={p.planId}
-                        className={`px-3 py-5 align-bottom min-w-[150px] relative ${isRec ? 'bg-foreground/[0.03]' : ''}`}
+                        className={`px-3 py-5 align-bottom min-w-[150px] relative ${isRec ? 'bg-primary/[0.025]' : ''}`}
                       >
-                        {isRec && <div className="absolute top-0 left-0 right-0 h-0.5 bg-foreground" aria-hidden />}
+                        {isRec && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />}
                         <div className="flex flex-col items-center gap-2 text-center">
                           {isRec ? (
-                            <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#1a1a2e] text-white font-semibold whitespace-nowrap">
+                            <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
                               Recommended
                             </span>
                           ) : (
                             <span className="h-[18px]" aria-hidden />
                           )}
-                          <span className={`text-sm font-semibold ${isRec ? 'text-foreground' : 'text-foreground'}`}>
+                          <span className="text-sm font-semibold text-foreground">
                             {p.name}
                           </span>
                           <div className="flex flex-col items-center">
@@ -374,7 +374,7 @@ export function LandingPricing() {
                               {credits > 0 ? `${credits.toLocaleString()} credits/mo` : 'trial credits'}
                             </span>
                             {annual && annualSavings > 0 && (
-                              <span className="text-[10px] text-foreground font-semibold mt-0.5">Save ${annualSavings}/yr</span>
+                              <span className="text-[10px] text-primary font-semibold mt-0.5">Save ${annualSavings}/yr</span>
                             )}
                           </div>
                           <Button
@@ -392,20 +392,20 @@ export function LandingPricing() {
                 </tr>
               </thead>
               <tbody>
-                {FEATURE_MATRIX.map((group) => (
+                {FEATURE_MATRIX.map((group, gi) => (
                   <Fragment key={group.title}>
-                    <tr className="bg-[#FAFAF8] border-t border-[#f0efed]">
-                      <td colSpan={mainPlans.length + 1} className="px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    <tr className={gi === 0 ? '' : 'border-t border-[#eceae6]'}>
+                      <td colSpan={mainPlans.length + 1} className="px-5 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/80">
                         {group.title}
                       </td>
                     </tr>
                     {group.rows.map((row) => (
-                      <tr key={row.label} className="border-t border-[#f0efed] hover:bg-[#FAFAF8]/60 transition-colors">
-                        <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
+                      <tr key={row.label} className="border-t border-[#f3f1ed]">
+                        <td className="px-5 py-3 text-[13px] text-foreground/85">{row.label}</td>
                         {mainPlans.map((p) => {
                           const isRec = p.planId === 'growth';
                           return (
-                            <td key={p.planId} className={`px-3 py-3 text-center ${isRec ? 'bg-foreground/[0.03]' : ''}`}>
+                            <td key={p.planId} className={`px-3 py-3 text-center ${isRec ? 'bg-primary/[0.025]' : ''}`}>
                               {renderCell(row.values[p.planId] ?? false)}
                             </td>
                           );
@@ -429,14 +429,14 @@ export function LandingPricing() {
             return (
               <div
                 key={p.planId}
-                className={`rounded-2xl border bg-card p-4 ${isRec ? 'border-foreground/30 ring-1 ring-foreground/10' : 'border-[#f0efed]'}`}
+                className={`rounded-2xl border bg-card p-4 ${isRec ? 'border-primary/25 ring-1 ring-primary/10' : 'border-[#f0efed]'}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-base font-semibold text-foreground">{p.name}</span>
                       {isRec && (
-                        <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#1a1a2e] text-white font-semibold">
+                        <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold">
                           Recommended
                         </span>
                       )}
@@ -509,34 +509,34 @@ export function LandingPricing() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[#f0efed] overflow-hidden bg-white">
+          <div className="rounded-2xl border border-[#eceae6] overflow-hidden bg-white">
             {/* Header */}
-            <div className="grid grid-cols-3 bg-[#FAFAF8] text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="grid grid-cols-3 bg-white text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground border-b border-[#eceae6]">
               <div className="px-5 py-3.5">Role</div>
               <div className="px-5 py-3.5 text-center">Traditional</div>
-              <div className="px-5 py-3.5 text-center text-foreground">VOVV.AI</div>
+              <div className="px-5 py-3.5 text-center text-primary">VOVV.AI</div>
             </div>
-            {TEAM_COMPARISON.map((row, i) => (
+            {TEAM_COMPARISON.map((row) => (
               <div
                 key={row.role}
-                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF8]/60'} border-t border-[#f0efed]`}
+                className="grid grid-cols-3 text-sm bg-white border-t border-[#f3f1ed]"
               >
                 <div className="px-5 py-3.5 font-medium text-foreground">{row.role}</div>
                 <div className="px-5 py-3.5 text-center text-muted-foreground flex items-center justify-center gap-1.5">
-                  <X className="w-3.5 h-3.5 text-muted-foreground/70 shrink-0" />
+                  <X className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
                   {row.traditional}
                 </div>
                 <div className="px-5 py-3.5 text-center font-medium text-foreground flex items-center justify-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
+                  <Check className="w-3.5 h-3.5 text-primary shrink-0" strokeWidth={2.5} />
                   {row.vovv}
                 </div>
               </div>
             ))}
             {/* Total */}
-            <div className="grid grid-cols-3 border-t border-[#f0efed] bg-[#FAFAF8] font-semibold text-sm">
+            <div className="grid grid-cols-3 border-t border-[#eceae6] bg-primary/[0.04] font-semibold text-sm">
               <div className="px-5 py-4 text-foreground">Total per shoot</div>
               <div className="px-5 py-4 text-center text-muted-foreground">$4,500–22,000+</div>
-              <div className="px-5 py-4 text-center text-foreground text-base font-semibold">From $0/mo</div>
+              <div className="px-5 py-4 text-center text-primary text-base font-semibold">From $0/mo</div>
             </div>
           </div>
         </div>
