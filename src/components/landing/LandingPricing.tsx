@@ -559,7 +559,7 @@ export function LandingPricing() {
             {PLATFORM_FEATURES.map((feat) => (
               <div
                 key={feat.title}
-                className="rounded-2xl border border-[#f0efed] bg-white p-6 transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(26,26,46,0.10)]"
+                className="rounded-2xl border border-[#f0efed] bg-white p-6 transition-shadow hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.12)]"
               >
                 <div className="w-9 h-9 rounded-xl bg-foreground/[0.06] flex items-center justify-center mb-4">
                   <feat.icon className="w-4 h-4 text-foreground" />
