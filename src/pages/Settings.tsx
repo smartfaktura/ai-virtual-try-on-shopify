@@ -440,8 +440,10 @@ export default function Settings() {
   return (
     <>
     <SEOHead title="Settings — VOVV.AI" description="Manage your VOVV.AI account settings, plan, and preferences." noindex />
-    <PageHeader title="Settings">
-      <div className="space-y-6">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
+      <div className="px-4 sm:px-6 lg:px-8 pt-24 lg:pt-10 pb-14 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <PageHeader title="Settings">
+          <div className="space-y-8">
         {/* ─── Current Plan ─── */}
         {!(plan === 'free' && subscriptionStatus === 'none') && (
         <Card>
