@@ -39,13 +39,13 @@ function BrandModelsBanner() {
   const sophia = TEAM_MEMBERS[0];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-r from-primary/5 via-background to-primary/5">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-6">
+    <div className="relative overflow-hidden rounded-3xl border border-[#f0efed] bg-white shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 sm:p-7">
         {/* Top row on mobile: avatar + CTA */}
         <div className="flex items-center gap-4 sm:contents">
           {/* Avatar */}
           <div className="shrink-0">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-[#f0efed] shadow-sm">
               <img
                 src={getOptimizedUrl(sophia.avatar, { quality: 70 })}
                 alt={sophia.name}
@@ -56,10 +56,10 @@ function BrandModelsBanner() {
 
           {/* Copy — on mobile sits next to avatar */}
           <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               {sophia.name} · {sophia.expertiseTag}
             </p>
-            <p className="text-sm sm:text-base font-semibold text-foreground leading-snug">
+            <p className="text-sm sm:text-base font-semibold text-foreground leading-snug tracking-[-0.01em]">
               Complete your brand identity with <span className="text-primary">Brand Models</span>
             </p>
             <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
@@ -71,7 +71,7 @@ function BrandModelsBanner() {
         {/* CTA — full width on mobile */}
         <Button
           size="sm"
-          className="shrink-0 gap-1.5 w-full sm:w-auto"
+          className="shrink-0 gap-1.5 w-full sm:w-auto rounded-full h-10 px-5 shadow-md shadow-primary/20"
           onClick={() => navigate('/app/models')}
         >
           Create Brand Model
@@ -113,49 +113,56 @@ export default function BrandProfiles() {
   });
 
   return (
-    <PageHeader
-      title="Brand Profiles"
-      subtitle="Define your brand's visual identity for consistent image generation"
-    >
-      <div className="space-y-6">
-        {/* Actions */}
-        <div className="flex justify-end">
-          <Button onClick={() => navigate('/app/brand-profiles/new')}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Profile
-          </Button>
-        </div>
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
+      <div className="px-4 sm:px-6 lg:px-8 pt-24 lg:pt-10 pb-14 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <PageHeader
+          title="Brand Profiles"
+          subtitle="Define your brand's visual identity for consistent image generation"
+        >
+          <div className="space-y-6">
+            {/* Actions */}
+            <div className="flex justify-end">
+              <Button
+                onClick={() => navigate('/app/brand-profiles/new')}
+                className="rounded-full h-11 px-6 shadow-md shadow-primary/20"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Profile
+              </Button>
+            </div>
 
-        {/* Content */}
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2].map(i => (
-              <div key={i} className="h-28 rounded-xl bg-muted/50 animate-pulse" />
-            ))}
-          </div>
-        ) : profiles.length === 0 ? (
-          <EmptyStateCard
-            heading="No brand profiles yet"
-            description="Create your first Brand Profile to ensure every generated image matches your brand's visual identity"
-            action={{ content: 'Create Brand Profile', onAction: () => navigate('/app/brand-profiles/new') }}
-            icon={<Palette className="w-10 h-10 text-muted-foreground" />}
-          />
-        ) : (
-          <div className="space-y-3">
-            {profiles.map(profile => (
-              <BrandProfileCard
-                key={profile.id}
-                profile={profile}
-                onEdit={() => navigate(`/app/brand-profiles/${profile.id}/edit`)}
-                onDelete={() => deleteMutation.mutate(profile.id)}
+            {/* Content */}
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => (
+                  <div key={i} className="h-28 rounded-3xl bg-white border border-[#f0efed] animate-pulse" />
+                ))}
+              </div>
+            ) : profiles.length === 0 ? (
+              <EmptyStateCard
+                heading="No brand profiles yet"
+                description="Create your first Brand Profile to ensure every generated image matches your brand's visual identity"
+                action={{ content: 'Create Brand Profile', onAction: () => navigate('/app/brand-profiles/new') }}
+                icon={<Palette className="w-10 h-10 text-muted-foreground" />}
               />
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="space-y-3">
+                {profiles.map(profile => (
+                  <BrandProfileCard
+                    key={profile.id}
+                    profile={profile}
+                    onEdit={() => navigate(`/app/brand-profiles/${profile.id}/edit`)}
+                    onDelete={() => deleteMutation.mutate(profile.id)}
+                  />
+                ))}
+              </div>
+            )}
 
-        {/* Brand Models CTA Banner — after profiles */}
-        <BrandModelsBanner />
+            {/* Brand Models CTA Banner — after profiles */}
+            <BrandModelsBanner />
+          </div>
+        </PageHeader>
       </div>
-    </PageHeader>
+    </div>
   );
 }
