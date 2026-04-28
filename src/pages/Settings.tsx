@@ -6,7 +6,7 @@ import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { AdminFeedbackPanel } from '@/components/app/AdminFeedbackPanel';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -445,8 +445,7 @@ export default function Settings() {
         <div className="space-y-6">
         {/* ─── Current Plan ─── */}
         {!(plan === 'free' && subscriptionStatus === 'none') && (
-        <Card className="rounded-2xl border-border bg-card shadow-sm">
-          <CardContent className="p-5 space-y-3">
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-3">
             {/* Plan header */}
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-base font-semibold">Current Plan</h3>
@@ -508,8 +507,7 @@ export default function Settings() {
                 View past invoices
               </button>
             )}
-          </CardContent>
-        </Card>
+        </div>
         )}
 
         {/* ─── Choose Your Plan ─── */}
@@ -579,19 +577,17 @@ export default function Settings() {
         )}
 
         {/* Credit packs */}
-        <Card className="rounded-2xl border-border bg-card shadow-sm">
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h3 className="text-base font-semibold">Need More Credits?</h3>
-              <p className="text-sm text-muted-foreground">Purchase additional credits anytime • Credits never expire</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {creditPacks.map(pack => (
-                <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} isLoading={topUpLoadingId === pack.packId} disabled={!!topUpLoadingId} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-4">
+          <div>
+            <h3 className="text-base font-semibold">Need More Credits?</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">Purchase additional credits anytime • Credits never expire</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {creditPacks.map(pack => (
+              <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} isLoading={topUpLoadingId === pack.packId} disabled={!!topUpLoadingId} />
+            ))}
+          </div>
+        </div>
 
         {/* Cancel subscription link */}
         {plan !== 'free' && subscriptionStatus !== 'canceling' && (
@@ -629,64 +625,63 @@ export default function Settings() {
         <Separator />
 
         {/* ─── Notifications ─── */}
-        <Card className="rounded-2xl border-border bg-card shadow-sm">
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">Notifications</h2>
-              <p className="text-sm text-muted-foreground">Manage how you receive updates</p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Email Notifications</h3>
-              {([
-                { key: 'emailOnComplete' as const, label: 'Generation complete', help: 'Receive email when image generation finishes' },
-                { key: 'emailOnFailed' as const, label: 'Generation failed', help: 'Receive email if generation encounters an error' },
-                { key: 'emailLowCredits' as const, label: 'Low credits warning', help: "Get notified when credits drop below 10%" },
-                
-              ] as const).map(n => (
-                <div key={n.key} className="flex items-start space-x-2">
-                  <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} />
-                  <div>
-                    <Label htmlFor={n.key}>{n.label}</Label>
-                    <p className="text-xs text-muted-foreground">{n.help}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Separator />
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Marketing & Promotions</h3>
-              <div className="flex items-start space-x-2">
-                <Checkbox id="marketingOptIn" checked={marketingOptIn} onCheckedChange={v => setMarketingOptIn(!!v)} />
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-5">
+          <div>
+            <h2 className="text-base font-semibold">Notifications</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Manage how you receive updates</p>
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Email Notifications</h3>
+            {([
+              { key: 'emailOnComplete' as const, label: 'Generation complete', help: 'Receive email when image generation finishes' },
+              { key: 'emailOnFailed' as const, label: 'Generation failed', help: 'Receive email if generation encounters an error' },
+              { key: 'emailLowCredits' as const, label: 'Low credits warning', help: "Get notified when credits drop below 10%" },
+            ] as const).map(n => (
+              <div key={n.key} className="flex items-start space-x-2">
+                <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} />
                 <div>
-                  <Label htmlFor="marketingOptIn">News, tips & special offers</Label>
-                  <p className="text-xs text-muted-foreground">Receive product updates, tips, and occasional promotions via email</p>
+                  <Label htmlFor={n.key}>{n.label}</Label>
+                  <p className="text-xs text-muted-foreground">{n.help}</p>
                 </div>
               </div>
+            ))}
+          </div>
+          <Separator />
+          <div className="space-y-3">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Marketing & Promotions</h3>
+            <div className="flex items-start space-x-2">
+              <Checkbox id="marketingOptIn" checked={marketingOptIn} onCheckedChange={v => setMarketingOptIn(!!v)} />
+              <div>
+                <Label htmlFor="marketingOptIn">News, tips & special offers</Label>
+                <p className="text-xs text-muted-foreground">Receive product updates, tips, and occasional promotions via email</p>
+              </div>
             </div>
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">In-App Notifications</h3>
-              {([
-                { key: 'inAppComplete' as const, label: 'Show generation complete' },
-                { key: 'inAppFailed' as const, label: 'Show generation errors' },
-                { key: 'inAppTips' as const, label: 'Show tips and suggestions', help: 'Occasional tips to improve your generations' },
-              ] as const).map(n => (
-                <div key={n.key} className="flex items-start space-x-2">
-                  <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} />
-                  <div>
-                    <Label htmlFor={n.key}>{n.label}</Label>
-                    {'help' in n && n.help && <p className="text-xs text-muted-foreground">{n.help}</p>}
-                  </div>
+          </div>
+          <Separator />
+          <div className="space-y-3">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">In-App Notifications</h3>
+            {([
+              { key: 'inAppComplete' as const, label: 'Show generation complete' },
+              { key: 'inAppFailed' as const, label: 'Show generation errors' },
+              { key: 'inAppTips' as const, label: 'Show tips and suggestions', help: 'Occasional tips to improve your generations' },
+            ] as const).map(n => (
+              <div key={n.key} className="flex items-start space-x-2">
+                <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} />
+                <div>
+                  <Label htmlFor={n.key}>{n.label}</Label>
+                  {'help' in n && n.help && <p className="text-xs text-muted-foreground">{n.help}</p>}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-            {/* Content Preferences */}
-            <Separator className="my-4" />
-            <ContentPreferencesSection />
-          </CardContent>
-        </Card>
+        {/* Content Preferences — own card */}
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+          <ContentPreferencesSection />
+        </div>
 
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-end pt-4 border-t border-border">
           <Button
             size="pill"
             onClick={handleSave}
@@ -700,33 +695,31 @@ export default function Settings() {
         {isAdmin && (
           <>
             <Separator />
-            <Card className="rounded-2xl border-border bg-card shadow-sm">
-              <CardContent className="p-5 space-y-4">
-                <div>
-                  <h2 className="text-base font-semibold">Asset Preview Generation</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Generate high-quality AI preview images for poses and scenes using Gemini 3 Pro
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-4">
+              <div>
+                <h2 className="text-base font-semibold">Asset Preview Generation</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Generate high-quality AI preview images for poses and scenes using Gemini 3 Pro
+                </p>
+              </div>
+              {isGenerating && (
+                <div className="space-y-2">
+                  <Progress value={(genProgress.processed / genProgress.total) * 100} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {genProgress.processed} / {genProgress.total} assets generated
                   </p>
                 </div>
-                {isGenerating && (
-                  <div className="space-y-2">
-                    <Progress value={(genProgress.processed / genProgress.total) * 100} className="h-2" />
-                    <p className="text-xs text-muted-foreground">
-                      {genProgress.processed} / {genProgress.total} assets generated
-                    </p>
-                  </div>
-                )}
-                <Button
-                  size="pill"
-                  onClick={handleGenerateAssetPreviews}
-                  disabled={isGenerating}
-                  variant="secondary"
-                >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-                  {isGenerating ? 'Generating…' : 'Regenerate All Previews'}
-                </Button>
-              </CardContent>
-            </Card>
+              )}
+              <Button
+                size="pill"
+                onClick={handleGenerateAssetPreviews}
+                disabled={isGenerating}
+                variant="secondary"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+                {isGenerating ? 'Generating…' : 'Regenerate All Previews'}
+              </Button>
+            </div>
           </>
         )}
 

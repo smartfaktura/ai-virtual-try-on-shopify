@@ -30,29 +30,29 @@ export default function AppHelp() {
         title="Help"
         subtitle="Real humans, real fast — we usually reply within a few hours"
       >
-        <div className="max-w-3xl space-y-4 sm:space-y-6">
-          {/* Team avatars — small intro chip */}
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              <Avatar className="w-8 h-8 ring-2 ring-background">
-                <AvatarImage src={avatarSophia} alt="Sophia" />
-                <AvatarFallback className="text-xs">S</AvatarFallback>
-              </Avatar>
-              <Avatar className="w-8 h-8 ring-2 ring-background">
-                <AvatarImage src={avatarKenji} alt="Kenji" />
-                <AvatarFallback className="text-xs">K</AvatarFallback>
-              </Avatar>
-              <Avatar className="w-8 h-8 ring-2 ring-background">
-                <AvatarImage src={avatarZara} alt="Zara" />
-                <AvatarFallback className="text-xs">Z</AvatarFallback>
-              </Avatar>
+        <div className="max-w-3xl space-y-6">
+          {/* Form card with team header */}
+          <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-border bg-muted/30">
+              <div className="flex -space-x-2">
+                <Avatar className="w-8 h-8 ring-2 ring-card">
+                  <AvatarImage src={avatarSophia} alt="Sophia" />
+                  <AvatarFallback className="text-xs">S</AvatarFallback>
+                </Avatar>
+                <Avatar className="w-8 h-8 ring-2 ring-card">
+                  <AvatarImage src={avatarKenji} alt="Kenji" />
+                  <AvatarFallback className="text-xs">K</AvatarFallback>
+                </Avatar>
+                <Avatar className="w-8 h-8 ring-2 ring-card">
+                  <AvatarImage src={avatarZara} alt="Zara" />
+                  <AvatarFallback className="text-xs">Z</AvatarFallback>
+                </Avatar>
+              </div>
+              <p className="text-[12px] text-muted-foreground">Sophia, Kenji & Zara — your support crew</p>
             </div>
-            <p className="text-xs text-muted-foreground">Sophia, Kenji & Zara — your support crew</p>
-          </div>
-
-          {/* Form */}
-          <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-            <ChatContactForm variant="spacious" />
+            <div className="p-5 sm:p-6">
+              <ChatContactForm variant="spacious" />
+            </div>
           </section>
 
           {/* Quiet helpers */}
@@ -61,12 +61,14 @@ export default function AppHelp() {
               href="/help"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 px-5 py-4 border-b border-border hover:bg-muted/40 transition-colors"
+              className="group flex items-center gap-4 px-5 sm:px-6 py-4 border-b border-border hover:bg-muted/40 transition-colors"
             >
-              <HelpCircle className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
-              <div className="flex-1">
-                <div className="text-[15px] text-foreground">Browse FAQs</div>
-                <div className="text-[13px] text-muted-foreground mt-0.5">Quick answers to common questions</div>
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <HelpCircle className="w-[18px] h-[18px] text-primary" strokeWidth={1.75} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[14px] font-medium text-foreground">Browse FAQs</div>
+                <div className="text-[12.5px] text-muted-foreground mt-0.5">Quick answers to common questions</div>
               </div>
               <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </a>
@@ -75,24 +77,28 @@ export default function AppHelp() {
               href="https://discord.gg/ZgnSJqUyV"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 px-5 py-4 border-b border-border hover:bg-muted/40 transition-colors"
+              className="group flex items-center gap-4 px-5 sm:px-6 py-4 border-b border-border hover:bg-muted/40 transition-colors"
             >
-              <DiscordIcon className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
-              <div className="flex-1">
-                <div className="text-[15px] text-foreground">Join our Discord</div>
-                <div className="text-[13px] text-muted-foreground mt-0.5">Chat with the team & other creators</div>
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <DiscordIcon className="w-[18px] h-[18px] text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[14px] font-medium text-foreground">Join our Discord</div>
+                <div className="text-[12.5px] text-muted-foreground mt-0.5">Chat with the team & other creators</div>
               </div>
               <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </a>
 
             <Link
               to="/app/learn"
-              className="group flex items-center gap-4 px-5 py-4 hover:bg-muted/40 transition-colors"
+              className="group flex items-center gap-4 px-5 sm:px-6 py-4 hover:bg-muted/40 transition-colors"
             >
-              <GraduationCap className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.75} />
-              <div className="flex-1">
-                <div className="text-[15px] text-foreground">Tutorials & guides</div>
-                <div className="text-[13px] text-muted-foreground mt-0.5">Learn VOVV.AI in minutes</div>
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-[18px] h-[18px] text-primary" strokeWidth={1.75} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[14px] font-medium text-foreground">Tutorials & guides</div>
+                <div className="text-[12.5px] text-muted-foreground mt-0.5">Learn VOVV.AI in minutes</div>
               </div>
               <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
             </Link>

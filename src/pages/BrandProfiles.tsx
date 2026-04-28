@@ -40,12 +40,12 @@ function BrandModelsBanner() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 sm:p-7">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 sm:p-6">
         {/* Top row on mobile: avatar + CTA */}
         <div className="flex items-center gap-4 sm:contents">
           {/* Avatar */}
           <div className="shrink-0">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-border shadow-sm">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border border-border shadow-sm">
               <img
                 src={getOptimizedUrl(sophia.avatar, { quality: 70 })}
                 alt={sophia.name}
@@ -117,24 +117,22 @@ export default function BrandProfiles() {
       <PageHeader
         title="Brand Profiles"
         subtitle="Define your brand's visual identity for consistent image generation"
+        actions={
+          <Button
+            onClick={() => navigate('/app/brand-profiles/new')}
+            size="pill"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Profile
+          </Button>
+        }
       >
         <div className="space-y-6">
-          {/* Actions */}
-          <div className="flex justify-end">
-            <Button
-              onClick={() => navigate('/app/brand-profiles/new')}
-              size="pill"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Profile
-            </Button>
-          </div>
-
           {/* Content */}
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2].map(i => (
-                <div key={i} className="h-28 rounded-2xl bg-card border border-border animate-pulse" />
+                <div key={i} className="h-24 rounded-2xl bg-card border border-border animate-pulse" />
               ))}
             </div>
           ) : profiles.length === 0 ? (

@@ -70,11 +70,11 @@ export function ChatContactForm({ onSent, variant = 'compact' }: ChatContactForm
       );
     }
 
-    const fieldClass = "w-full h-12 bg-transparent border-b border-border/80 px-0 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50";
-    const labelClass = "block text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5";
+    const fieldClass = "w-full h-11 rounded-xl bg-background border border-border px-3.5 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground/40 focus:ring-1 focus:ring-ring/20 transition-colors disabled:opacity-50";
+    const labelClass = "block text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2";
 
     return (
-      <div className="space-y-7">
+      <div className="space-y-5">
         <div>
           <label className={labelClass}>Name</label>
           <input
@@ -109,7 +109,7 @@ export function ChatContactForm({ onSent, variant = 'compact' }: ChatContactForm
             onChange={(e) => setMessage(e.target.value)}
             maxLength={2000}
             rows={5}
-            className="w-full bg-transparent border-b border-border/80 px-0 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground transition-colors resize-none disabled:opacity-50"
+            className="w-full rounded-xl bg-background border border-border px-3.5 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-foreground/40 focus:ring-1 focus:ring-ring/20 transition-colors resize-none disabled:opacity-50"
             disabled={state === 'sending'}
           />
         </div>
@@ -121,14 +121,14 @@ export function ChatContactForm({ onSent, variant = 'compact' }: ChatContactForm
           </div>
         )}
 
-        <div className="pt-2">
+        <div className="flex justify-end pt-1">
           <button
             onClick={handleSubmit}
             disabled={state === 'sending' || !isValid}
             className={cn(
-              "w-full h-12 inline-flex items-center justify-center gap-2 rounded-full text-[15px] font-medium transition-all",
+              "inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full text-sm font-semibold transition-all",
               isValid && state !== 'sending'
-                ? "bg-foreground text-background hover:opacity-90 active:scale-[0.99]"
+                ? "bg-foreground text-background hover:opacity-90 active:scale-[0.99] shadow-sm"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
             )}
           >
@@ -136,8 +136,8 @@ export function ChatContactForm({ onSent, variant = 'compact' }: ChatContactForm
               'Sending…'
             ) : (
               <>
-                Send message
                 <Send className="w-4 h-4" />
+                Send message
               </>
             )}
           </button>
