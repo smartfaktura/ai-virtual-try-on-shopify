@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 
 const benefits = [
@@ -48,6 +50,8 @@ export default function CreativeDropsFeature() {
   return (
     <PageLayout>
       <SEOHead title="Content Calendar — Automated Visual Content Delivery | VOVV.AI" description="Fresh product visuals on autopilot. Schedule your Content Calendar and receive curated batches of AI-generated images monthly or biweekly." canonical={`${SITE_URL}/features/creative-drops`} />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Content Calendar', path: '/features/creative-drops' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Content Calendar', description: 'Fresh product visuals on autopilot. Schedule your Content Calendar and receive curated batches of AI-generated images monthly or biweekly.', path: '/features/creative-drops' })} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

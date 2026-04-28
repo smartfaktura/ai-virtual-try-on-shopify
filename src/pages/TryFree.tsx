@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { PageLayout } from '@/components/landing/PageLayout';
 
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
@@ -45,6 +47,8 @@ export default function TryFree() {
         description="Upload one product photo and get studio-quality visuals with AI models and professional scenes. No credit card required. 20 free credits to start."
         canonical={`${SITE_URL}/try`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Try Free', path: '/try' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Try VOVV.AI Free', description: 'Upload one product photo and get studio-quality visuals with AI models and professional scenes. No credit card required.', path: '/try' })} />
 
       {/* Hero */}
       <section className="relative py-20 lg:py-28 overflow-hidden">

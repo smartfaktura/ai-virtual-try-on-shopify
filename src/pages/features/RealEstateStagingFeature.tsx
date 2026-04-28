@@ -4,6 +4,8 @@ import { ArrowRight, Home, DollarSign, Clock, Palette, Camera, Building2, Sofa, 
 import { Button } from '@/components/ui/button';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
@@ -61,6 +63,8 @@ export default function RealEstateStagingFeature() {
         description="Stage any empty room with AI in seconds. Generate Japandi, Contemporary and Eclectic interiors from one photo. Save thousands vs physical staging."
         canonical={`${SITE_URL}/features/real-estate-staging`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Real Estate Staging', path: '/features/real-estate-staging' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'AI Virtual Staging', description: 'Stage any empty room with AI in seconds. Generate Japandi, Contemporary and Eclectic interiors from one photo.', path: '/features/real-estate-staging' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { Mail, Send, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -57,6 +59,8 @@ export default function Contact() {
         description="Have a question about AI product photography? Contact the VOVV.AI team for support, partnerships, or feature requests."
         canonical={`${SITE_URL}/contact`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Contact', path: '/contact' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Contact VOVV.AI', description: 'Get in touch with the VOVV.AI team for support, partnerships, or feature requests.', path: '/contact' })} />
 
       {/* HERO — editorial cream, matches Library / Home */}
       <section className="bg-[#FAFAF8]">

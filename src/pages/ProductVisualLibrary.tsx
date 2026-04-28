@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SITE_URL } from '@/lib/constants';
 import {
@@ -111,6 +113,8 @@ export default function ProductVisualLibrary() {
         description="Browse AI product visual ideas across fashion, footwear, beauty, jewelry, food, home, tech, accessories and more. Upload one product photo and create brand-ready visuals with VOVV.AI."
         canonical={`${SITE_URL}/product-visual-library`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Product Visual Library', path: '/product-visual-library' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'AI Product Visual Library', description: 'Browse AI product visual ideas across fashion, footwear, beauty, jewelry, food, home, tech, accessories and more.', path: '/product-visual-library' })} />
 
       <script
         type="application/ld+json"

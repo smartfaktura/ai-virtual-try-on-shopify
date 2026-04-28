@@ -1,5 +1,7 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { Rocket, Users, Palette, ArrowRight } from 'lucide-react';
 
@@ -75,6 +77,8 @@ export default function Careers() {
         description="Join the VOVV.AI team. We're hiring engineers, designers, and marketers to build the future of AI-powered e-commerce photography."
         canonical={`${SITE_URL}/careers`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Careers', path: '/careers' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Careers at VOVV.AI', description: 'Join the VOVV.AI team. We\'re hiring engineers, designers, and marketers to build the future of AI-powered e-commerce photography.', path: '/careers' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

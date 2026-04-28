@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
 import { SITE_URL } from '@/lib/constants';
@@ -80,6 +82,8 @@ export default function AIModelsBackgroundsFeature() {
         description="Add AI models and scene backgrounds to your product photos. 50+ diverse models, 30+ environments. Create premium brand visuals without photoshoots."
         canonical={`${SITE_URL}/features/ai-models-backgrounds`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'AI Models & Backgrounds', path: '/features/ai-models-backgrounds' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'AI Models & Backgrounds', description: 'Add AI models and scene backgrounds to your product photos. 50+ diverse models, 30+ environments.', path: '/features/ai-models-backgrounds' })} />
 
       {/* Hero */}
       <section className="py-20 sm:py-28">

@@ -18,6 +18,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 
 const wizardSteps = [
@@ -68,6 +70,8 @@ export default function WorkflowsFeature() {
         description="Product Images is the AI photo studio at the core of VOVV. Surrounded by Brand Models, Virtual Try-On, Catalog Studio, Short Film, Upscaling and more — every visual your brand needs in one place."
         canonical={`${SITE_URL}/features/workflows`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Workflows', path: '/features/workflows' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'The VOVV Studio', description: 'Product Images is the AI photo studio at the core of VOVV. Surrounded by Brand Models, Virtual Try-On, Catalog Studio, Short Film, Upscaling and more.', path: '/features/workflows' })} />
 
       {/* Hero */}
       <section className="pt-24 pb-16 sm:pt-32 sm:pb-20">

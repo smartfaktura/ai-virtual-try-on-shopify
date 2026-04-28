@@ -3,6 +3,8 @@ import { ArrowRight, Palette, Paintbrush, BookmarkCheck, Users2 } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { FaqSection, WhyVovvSection, FinalCtaDark } from './PerspectivesFeature';
@@ -52,6 +54,8 @@ export default function BrandProfilesFeature() {
         description="Define your brand's visual identity once. Every AI-generated image automatically matches your lighting, colors, composition and tone."
         canonical={`${SITE_URL}/features/brand-profiles`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Brand Profiles', path: '/features/brand-profiles' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Brand Profiles', description: 'Define your brand\'s visual identity once. Every AI-generated image automatically matches your lighting, colors, composition and tone.', path: '/features/brand-profiles' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

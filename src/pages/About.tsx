@@ -5,6 +5,8 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import founderImg from '@/assets/founder-tomas.jpg';
 
@@ -37,6 +39,8 @@ export default function About() {
         description="Meet the team building the future of e-commerce visual content with AI-powered photography and automation."
         canonical={`${SITE_URL}/about`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'About', path: '/about' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'About VOVV.AI', description: 'Meet the team building the future of e-commerce visual content with AI-powered photography and automation.', path: '/about' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

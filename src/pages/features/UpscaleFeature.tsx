@@ -3,6 +3,8 @@ import { ArrowRight, Maximize2, Sparkles, Grid3X3, Image as ImageIcon, Printer, 
 import { Button } from '@/components/ui/button';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { FaqSection, WhyVovvSection, FinalCtaDark } from './PerspectivesFeature';
@@ -51,6 +53,8 @@ export default function UpscaleFeature() {
         description="Upscale product images to 2K or 4K with AI texture recovery. Batch up to 10 at a time. Sharper details, richer textures, print-ready quality."
         canonical={`${SITE_URL}/features/upscale`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Features', path: '/features/workflows' }, { name: 'Image Upscaling', path: '/features/upscale' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'AI Image Upscaling', description: 'Upscale product images to 2K or 4K with AI texture recovery. Batch up to 10 at a time.', path: '/features/upscale' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* Hero */}

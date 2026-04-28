@@ -1,5 +1,7 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '@/lib/seo/schema';
 import { SITE_URL } from '@/lib/constants';
 import { Search, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -31,6 +33,8 @@ export default function HelpCenter() {
         description="Find answers to common questions about VOVV.AI. Learn about Visual Studio, credits, brand profiles, and getting started with AI product photography."
         canonical={`${SITE_URL}/help`}
       />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Help Center', path: '/help' }])} />
+      <JsonLd data={buildWebPageJsonLd({ name: 'Help Center', description: 'Find answers to common questions about VOVV.AI. Learn about Visual Studio, credits, brand profiles, and getting started.', path: '/help' })} />
 
       <div className="bg-[#FAFAF8]">
         {/* ── Hero ── */}

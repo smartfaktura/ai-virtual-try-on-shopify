@@ -159,6 +159,7 @@ export default function FreestyleFeature() {
       />
 
       {/* Hero — animated showcase reused from homepage */}
+      <h1 className="sr-only">Freestyle Studio — Open AI Image Studio for E-commerce Brands</h1>
       <FreestyleShowcaseSection />
 
       {/* Capabilities grid */}
