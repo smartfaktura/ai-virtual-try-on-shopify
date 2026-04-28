@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Bug, Check, X, ShieldAlert, Zap, Sparkles, Wrench, Mail, ArrowRight } from 'lucide-react';
+import { Check, X, ShieldAlert, Zap, Sparkles, Wrench, Mail, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
