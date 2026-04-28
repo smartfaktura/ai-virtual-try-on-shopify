@@ -220,8 +220,14 @@ export default function PublicDiscover() {
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);
-    window.history.replaceState(null, '', '/discover');
-  }, []);
+    // If we got here via grid click, browser back returns to grid + restores scroll.
+    // Otherwise we're on a direct-loaded SEO page → just clear modal state.
+    if (cameFromGrid && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/discover', { replace: true });
+    }
+  }, [cameFromGrid, navigate]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
