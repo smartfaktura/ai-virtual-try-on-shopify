@@ -113,7 +113,7 @@ Thanks!`
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             How it works
           </h2>
-          <ol className="rounded-3xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
+          <ol className="rounded-2xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
             {[
               { title: 'Find a bug', desc: 'Spot something on the platform that\'s genuinely broken — not a creative preference.' },
               { title: 'Report it', desc: 'Email hello@vovv.ai with steps to reproduce, a screenshot, and your account email.' },
@@ -137,7 +137,7 @@ Thanks!`
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             Reward tiers
           </h2>
-          <div className="rounded-3xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white divide-y divide-[#f0efed] overflow-hidden shadow-sm">
             {TIERS.map((t) => {
               const Icon = t.icon;
               return (
@@ -165,7 +165,7 @@ Thanks!`
 
         {/* Qualifies / Doesn't */}
         <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-7 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/80 mb-4 flex items-center gap-2">
               <Check className="w-3.5 h-3.5 text-primary" />
               What qualifies
@@ -179,7 +179,7 @@ Thanks!`
               ))}
             </ul>
           </div>
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-7 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
               <X className="w-3.5 h-3.5 text-muted-foreground" />
               What doesn't qualify
@@ -200,7 +200,7 @@ Thanks!`
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             What to include in your report
           </h2>
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-7 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-5 sm:p-6 shadow-sm">
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
               {[
                 'Clear steps to reproduce',
@@ -221,13 +221,13 @@ Thanks!`
 
         {/* CTA */}
         <section className="mt-14">
-          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
+          <div className="rounded-2xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
             <p className="text-[13px] font-medium text-foreground/80 mb-1">Found a bug?</p>
             <p className="text-[13px] text-muted-foreground mb-5">
               Send it to <span className="text-foreground font-medium">hello@vovv.ai</span> — we'll get back within a few business days.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button asChild className="gap-2 rounded-full font-medium h-[3.25rem] px-7 shadow-lg shadow-primary/25">
+              <Button asChild className="gap-2 rounded-full font-medium h-[3.25rem] px-8 shadow-lg shadow-primary/25">
                 <a href={mailtoHref}>
                   <Mail className="w-4 h-4" />
                   Report a bug
