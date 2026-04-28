@@ -114,6 +114,8 @@ const AIPhotographyVsStudio = lazy(() => import('@/pages/seo/AIPhotographyVsStud
 const ProductVisualLibrary = lazy(() => import('@/pages/ProductVisualLibrary'));
 const HowItWorks = lazy(() => import('@/pages/HowItWorks'));
 const FAQ = lazy(() => import('@/pages/FAQ'));
+const CompareHub = lazy(() => import('@/pages/compare/CompareHub'));
+const VovvVsFlairAi = lazy(() => import('@/pages/compare/VovvVsFlairAi'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -179,6 +181,10 @@ const App = () => {
             <Route path="/product-visual-library" element={<ProductVisualLibrary />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/faq" element={<FAQ />} />
+
+            {/* Comparison pages */}
+            <Route path="/compare" element={<CompareHub />} />
+            <Route path="/compare/vovv-vs-flair-ai" element={<VovvVsFlairAi />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
