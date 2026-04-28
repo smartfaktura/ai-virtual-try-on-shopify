@@ -32,6 +32,7 @@ const COMPARISONS: ComparisonCard[] = [
     competitor: 'Photoroom',
     tagline:
       'Quick photo editing & background removal vs full product visual generation.',
+    to: '/compare/vovv-vs-photoroom',
   },
   {
     competitor: 'Claid AI',
