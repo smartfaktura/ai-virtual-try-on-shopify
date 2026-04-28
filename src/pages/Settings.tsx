@@ -445,8 +445,7 @@ export default function Settings() {
         <div className="space-y-6">
         {/* ─── Current Plan ─── */}
         {!(plan === 'free' && subscriptionStatus === 'none') && (
-        <Card className="rounded-2xl border-border bg-card shadow-sm">
-          <CardContent className="p-5 space-y-3">
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-3">
             {/* Plan header */}
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-base font-semibold">Current Plan</h3>
@@ -508,8 +507,7 @@ export default function Settings() {
                 View past invoices
               </button>
             )}
-          </CardContent>
-        </Card>
+        </div>
         )}
 
         {/* ─── Choose Your Plan ─── */}
