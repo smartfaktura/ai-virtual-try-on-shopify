@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
-import { trackPageView } from '@/lib/fbPixel';
 import { gtagPageView } from '@/lib/gtag';
 
 export function ScrollToTop() {
@@ -15,8 +14,7 @@ export function ScrollToTop() {
   }, []);
 
   useEffect(() => {
-    // Always track the page view.
-    trackPageView();
+    // Always track the page view (Meta tracking handled in GTM via dataLayer).
     gtagPageView();
 
     // Back/forward — let the browser/restored position win.

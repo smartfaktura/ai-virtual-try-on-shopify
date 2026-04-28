@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
-import { trackCompleteRegistration } from '@/lib/fbPixel';
 import { gtagSignUp } from '@/lib/gtag';
 import { gtmSignUp } from '@/lib/gtm';
 
@@ -106,7 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (!error && data?.user) {
-      trackCompleteRegistration('email');
       gtagSignUp('email');
       gtmSignUp(data.user.id, 'email');
     }
