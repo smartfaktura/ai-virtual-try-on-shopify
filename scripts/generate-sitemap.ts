@@ -133,10 +133,50 @@ const categoryEntries: SitemapEntry[] = aiProductPhotographyCategoryPages.map((c
   priority: 0.85,
 }));
 
+// =============================================================
+// Discover pilot — validate each slug exists in the database
+// before emitting it. Build fails loudly on any mismatch.
+// =============================================================
+async function buildDiscoverEntries(): Promise<SitemapEntry[]> {
+  if (PILOT_DISCOVER_SLUGS.length === 0) return [];
+
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://azwiljtrbtaupofwmpzb.supabase.co';
+  const SUPABASE_KEY =
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6d2lsanRyYnRhdXBvZndtcHpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3OTkzNzEsImV4cCI6MjA4NTM3NTM3MX0.w8Flgj4nld44gT4w-S_TSqzZ-FRPt4xTFiHm1U_c5VY';
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data, error } = await supabase
+    .from('discover_presets')
+    .select('slug')
+    .in('slug', PILOT_DISCOVER_SLUGS);
+
+  if (error) {
+    throw new Error(`Failed to validate discover pilot slugs: ${error.message}`);
+  }
+
+  const found = new Set((data ?? []).map((r) => r.slug));
+  const missing = PILOT_DISCOVER_SLUGS.filter((s) => !found.has(s));
+  if (missing.length > 0) {
+    throw new Error(`Discover pilot slug(s) not found in DB: ${missing.join(', ')}`);
+  }
+
+  return PILOT_DISCOVER_SLUGS.map((slug) => ({
+    loc: `/discover/${slug}`,
+    lastmod: TODAY,
+    changefreq: 'monthly',
+    priority: 0.7,
+  }));
+}
+
+const discoverEntries = await buildDiscoverEntries();
+
 const all: SitemapEntry[] = [
   ...MARKETING_URLS.map((e) => ({ ...e, lastmod: e.lastmod ?? TODAY })),
   ...blogEntries,
   ...categoryEntries,
+  ...discoverEntries,
 ];
 
 // Dedupe by loc, keeping the highest priority entry
@@ -149,6 +189,13 @@ for (const e of all) {
 const sorted = Array.from(byLoc.values()).sort(
   (a, b) => b.priority - a.priority || a.loc.localeCompare(b.loc),
 );
+
+// HARD ASSERTION — no /app/* URL can ever be emitted in the public sitemap.
+for (const e of sorted) {
+  if (e.loc.startsWith('/app/') || e.loc === '/app') {
+    throw new Error(`FORBIDDEN: /app/ URL leaked into sitemap: ${e.loc}`);
+  }
+}
 
 const xml =
   `<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -166,4 +213,5 @@ const xml =
 const outPath = resolve(__dirname, '..', 'public', 'sitemap.xml');
 writeFileSync(outPath, xml, 'utf8');
 
-console.log(`✓ Wrote ${sorted.length} URLs to public/sitemap.xml`);
+console.log(`✓ Wrote ${sorted.length} URLs to public/sitemap.xml (${discoverEntries.length} discover pilots)`);
+
