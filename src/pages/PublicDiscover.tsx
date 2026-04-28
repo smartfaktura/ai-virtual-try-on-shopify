@@ -223,6 +223,7 @@ export default function PublicDiscover() {
   // scene-custom-* items which require the admin-gated RPC).
   useEffect(() => {
     if (!urlItemId || allItems.length === 0 || selectedItem) return;
+    if (dismissedItemIdRef.current === urlItemId) return;
     const found = allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
@@ -240,14 +241,19 @@ export default function PublicDiscover() {
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
+    // A new explicit open clears any prior dismissal so future deep links work.
+    dismissedItemIdRef.current = null;
     window.history.pushState(null, '', getItemUrl(item));
     setSelectedItem(item);
   }, [getItemUrl]);
 
   const handleClose = useCallback(() => {
+    // Mark the current urlItemId as dismissed BEFORE clearing state, so the
+    // auto-open effects do not immediately reopen the modal on the next render.
+    if (urlItemId) dismissedItemIdRef.current = urlItemId;
     setSelectedItem(null);
-    window.history.replaceState(null, '', '/discover');
-  }, []);
+    navigate('/discover', { replace: true });
+  }, [urlItemId, navigate]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
