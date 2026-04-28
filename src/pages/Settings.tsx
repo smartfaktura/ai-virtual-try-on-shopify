@@ -735,10 +735,12 @@ export default function Settings() {
           </>
         )}
 
-        {/* Feedback Banner */}
-        <FeedbackBanner />
+            {/* Feedback Banner */}
+            <FeedbackBanner />
+          </div>
+        </PageHeader>
       </div>
-    </PageHeader>
+    </div>
 
      <PlanChangeDialog
       open={dialogOpen}
