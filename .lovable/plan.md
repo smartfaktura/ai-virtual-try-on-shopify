@@ -1,43 +1,33 @@
-## Refine `/discover/{slug}` SEO page (Pexels-style hero + cleaner meta)
+## Fix `/discover` modal "appears twice on close" + spacing
 
-Tighten the public detail page so the hero image fits the screen on first paint (Pexels behavior), reformat metadata, truncate the long prompt, and use the branded modal CTA style.
+### Bug: closing modal needs two clicks / second modal flashes
 
-### Scope
+**Root cause** in `src/pages/PublicDiscover.tsx`:
 
-Single file: `src/components/discover/DiscoverItemSEOView.tsx`. No routing, no DB, no SEO meta/JSON-LD changes (titles, canonical, ImageObject, BreadcrumbList all stay identical so indexing is unaffected).
+1. `handleCardClick` (line 215) currently does **both** `navigate(...)` + `setSelectedItem(item)` — opens modal once via state.
+2. The auto-open `useEffect` (line 207) then fires when `urlItem` resolves and `cameFromGrid=true` → calls `setSelectedItem(urlItem)` **again** with the same item.
+3. On X click, `handleClose` runs `setSelectedItem(null)` + `navigate(-1)`. The back-navigation triggers React-Router to update `location` and re-render. During that transient render, `urlItem` may briefly still resolve to the previous item before the URL fully settles, and the auto-open effect re-fires → modal re-appears → user has to click X again.
+4. The `cameFromGrid` flag is captured once from `location.state` at render time. After `navigate(-1)`, on the next forward nav into a card it stays referencing the new state, but the transient "ghost" reopen during back-nav is what users see.
 
-### Changes
+### Fix (one file: `src/pages/PublicDiscover.tsx`)
 
-**1. Hero image fits viewport (Pexels-style)**
-- Wrap hero in a container constrained to roughly viewport height: `max-h-[calc(100vh-9rem)]` (accounts for top nav + breadcrumbs + H1 above).
-- Image becomes `object-contain`, `mx-auto`, `w-auto h-auto max-h-full max-w-full` so portrait shots fit by height and landscape by width — never overflow.
-- Center the figure on a soft `bg-muted/30` rounded canvas so letterboxing looks intentional.
-- Info sections (chips, prompt, tags, CTA, related) remain below — appear as user scrolls, exactly like Pexels.
+1. **Remove redundant `setSelectedItem(item)` from `handleCardClick`** — let the auto-open `useEffect` be the single source of truth (URL → modal).
+2. **Add a `justClosedSlugRef` ref** — set to current URL slug inside `handleClose`. The auto-open `useEffect` checks this ref and skips re-opening the same slug once. Cleared whenever `urlItemId` changes to a different value.
+3. **Auto-open `useEffect` improvement** — guard with both `cameFromGrid` AND `urlItemId !== justClosedSlugRef.current`, and skip if the resolved item already equals `selectedItem`.
+4. **`handleClose`** — record the slug being closed in the ref before calling `navigate(-1)`.
 
-**2. Remove Quality pill**
-- Drop `{ label: 'Quality', value: preset.quality }` from the chips array.
+This is purely behavioral (no UI change), routing/SEO untouched.
 
-**3. Humanize Sub-type value**
-- Add a small helper `humanize(s)` that converts `beauty-skincare` → `Beauty Skincare` (split on `-`/`_`, capitalize each word).
-- Apply to `preset.subcategory` chip value only. Other chips already use display-ready strings.
+### Spacing fix
 
-**4. Truncate long prompt with "Show more"**
-- Rename heading from "About this visual" to "Prompt" (matches user's "promt" wording, clearer signal of what the text is).
-- Render in a styled muted code-like block (`rounded-lg bg-muted/40 p-4 text-sm font-mono leading-relaxed whitespace-pre-wrap`) to read as a prompt artifact.
-- If `prompt.length > 280`, clamp via local `useState` (`expanded`) — show truncated text + "Show more" / "Show less" toggle button styled as a subtle text link.
+In `src/components/discover/DiscoverItemSEOView.tsx`:
 
-**5. Branded CTA matching public modal**
-- Replace the current outline-card CTA section with the same button used in `PublicDiscoverDetailModal`:
-  - Pill button: `h-[3.25rem] rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20`
-  - Label logic mirrors modal: authenticated → "Open in Visual Studio", unauthenticated → "Try this for free" (mobile) / "Create account to recreate this" (desktop)
-  - Trailing `ArrowRight` icon
-  - Constrain width with `max-w-md mx-auto` so it doesn't span full width
-- Keep the short caption underneath ("Sign up to access prompts, scenes and generate AI fashion photography" for guests; "Open this style in Visual Studio…" for signed-in users).
+- Change article wrapper padding from `py-6` to `pt-10 sm:pt-14 pb-8` so the breadcrumbs get clear breathing room below the top navigation.
 
-### Out of scope (unchanged)
-- `<SEOHead>`, JSON-LD (ImageObject + BreadcrumbList), canonical URL, prerender pipeline, sitemap, `/app/discover` noindex.
-- Modal flow in `PublicDiscover.tsx`.
-- Related visuals grid stays as-is.
+### Out of scope
+
+- The two console warnings (`forwardRef` on `DiscoverCard`, `fetchPriority` casing on `ShimmerImage`) are pre-existing and unrelated to this bug — happy to fix in a follow-up if you want, but they don't cause the double-modal issue.
+- No SEO, JSON-LD, sitemap, prerender, or `/app/discover` changes.
 
 ### Risk
-Low — purely presentational changes inside one component. SEO-critical markup (h1, meta, JSON-LD, hero `<img alt>`, breadcrumbs) untouched.
+Very low — bug fix is one component file, behavioral only. Spacing is one className change.

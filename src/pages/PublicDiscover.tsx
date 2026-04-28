@@ -119,6 +119,9 @@ export default function PublicDiscover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('__all__');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
+  // Tracks the URL slug we just dismissed, so the back-nav transient render
+  // can't immediately re-open the same modal we closed (causes "double modal").
+  const justClosedSlugRef = useRef<string | null>(null);
   useEffect(() => { setSelectedSubcategory('__all__'); }, [selectedCategory]);
 
   // Fetch custom scenes publicly (no auth required with new RLS)
