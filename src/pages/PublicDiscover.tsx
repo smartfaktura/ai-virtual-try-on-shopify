@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
@@ -28,6 +28,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
 import { getItemSlug } from '@/lib/slugUtils';
 import { MasonrySkeletonGrid } from '@/components/app/MasonrySkeletonGrid';
+import { DiscoverItemSEOView } from '@/components/discover/DiscoverItemSEOView';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
