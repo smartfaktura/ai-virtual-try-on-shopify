@@ -11,6 +11,7 @@
 import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createClient } from '@supabase/supabase-js';
 
 import { blogPosts } from '../src/data/blogPosts';
 import { aiProductPhotographyCategoryPages } from '../src/data/aiProductPhotographyCategoryPages';
@@ -18,6 +19,26 @@ import { aiProductPhotographyCategoryPages } from '../src/data/aiProductPhotogra
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://vovv.ai';
 const TODAY = new Date().toISOString().slice(0, 10);
+
+// =============================================================
+// PILOT — Discover SEO pages
+// First 10 hand-picked Discover items get a dedicated SEO URL.
+// Each slug must exist in `discover_presets.slug` — validated
+// at build time below. After Search Console reports healthy
+// indexing, scale to 30, then 100+.
+// =============================================================
+const PILOT_DISCOVER_SLUGS: string[] = [
+  'beyond-the-red-room-e4d48b',                      // bags-accessories
+  'el-vane-crystal-renewal-night-treatment-d5b827',  // beauty-fragrance
+  'frozen-aura-sunglasses-e105db',                   // eyewear
+  'tennis-court-chic-17aff8',                        // fashion
+  'kyoto-matcha-tea-ceremony-c8176c',                // food-drink
+  'leopard-strides-af33ef',                          // footwear
+  'architectural-trench-b91198',                     // home
+  'diamond-hoop-earrings-2b9ca4',                    // jewelry
+  'aurenx-series-one-wireless-earbuds-b7fd11',       // tech
+  'v-anor-bio-balance-synbiotic-complex-5da369',     // wellness
+];
 
 type ChangeFreq =
   | 'always' | 'hourly' | 'daily' | 'weekly'
