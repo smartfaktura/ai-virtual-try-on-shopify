@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SEOHead } from '@/components/SEOHead';
-import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
 import { Building2, Check, ExternalLink, Loader2, RefreshCw, RotateCcw } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
@@ -232,7 +231,7 @@ export default function Settings() {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
 
-  useEffect(() => { trackViewContent('Pricing', 'pricing_page'); gtagViewItem('Settings', 'settings_page'); }, []);
+  useEffect(() => { gtagViewItem('Settings', 'settings_page'); }, []);
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal } = useCredits();
 
   const [portalLoading, setPortalLoading] = useState(false);

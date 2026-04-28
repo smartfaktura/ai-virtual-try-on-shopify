@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
-import { trackInitiateCheckout } from '@/lib/fbPixel';
 import { gtmBeginCheckout, gtmCheckoutSessionCreated, gtmPurchase, pickTransactionId } from '@/lib/gtm';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 
@@ -199,10 +198,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, [user]);
 
   const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment', planName?: string) => {
-    // TODO: Meta Pixel InitiateCheckout currently fires before Stripe session
-    // is created. Move it after data.url returns in a follow-up PR.
-    trackInitiateCheckout();
-
+    // Meta InitiateCheckout now fires from GTM via the begin_checkout dataLayer event.
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error('Please log in to continue.');

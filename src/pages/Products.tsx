@@ -21,7 +21,6 @@ import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { trackViewContent } from '@/lib/fbPixel';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { gtagViewItem } from '@/lib/gtag';
 
@@ -70,7 +69,7 @@ export default function Products() {
     setAddOpen(true);
   };
 
-  useEffect(() => { trackViewContent('Products', 'product_library'); gtagViewItem('Products', 'product_library'); }, []);
+  useEffect(() => { gtagViewItem('Products', 'product_library'); }, []);
 
   // Window-level drag-and-drop: open drawer with files when user drops anywhere on the page
   useEffect(() => {

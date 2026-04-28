@@ -3,7 +3,6 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { SignupSlideUp } from '@/components/landing/SignupSlideUp';
 import { LandingPricing } from '@/components/landing/LandingPricing';
-import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
 import { gtmPricingPageView } from '@/lib/gtm';
 import { SEOHead } from '@/components/SEOHead';
@@ -31,7 +30,6 @@ const pricingJsonLd = {
 
 export default function Pricing() {
   useEffect(() => {
-    trackViewContent('Pricing', 'pricing_page');
     gtagViewItem('Pricing', 'pricing_page');
     gtmPricingPageView({ path: '/pricing' });
   }, []);
