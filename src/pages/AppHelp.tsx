@@ -24,8 +24,8 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 
 export default function AppHelp() {
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
-      <div className="max-w-2xl px-5 sm:px-8 lg:px-12 py-14 sm:py-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24 lg:-mt-8 -mb-4 sm:-mb-6 lg:-mb-8 min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8]">
+      <div className="max-w-2xl px-5 sm:px-8 lg:px-12 pt-24 lg:pt-14 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {/* Hero */}
         <header className="mb-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-5">
