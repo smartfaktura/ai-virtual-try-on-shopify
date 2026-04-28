@@ -5,6 +5,8 @@ Disallow: /auth
 Disallow: /onboarding
 Disallow: /reset-password
 Disallow: /upload/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Bingbot
 Allow: /
@@ -13,6 +15,8 @@ Disallow: /auth
 Disallow: /onboarding
 Disallow: /reset-password
 Disallow: /upload/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Twitterbot
 Allow: /
@@ -23,86 +27,124 @@ Allow: /
 # ───────── AI / LLM crawlers — explicit allow ─────────
 # Listing each agent explicitly signals intent and protects against
 # future restrictive defaults. /app/ is the private product surface.
+# /discover/ and /freestyle/ item pages are CSR-only and excluded
+# from indexing; their index pages (/discover, /freestyle) remain crawlable.
 
 User-agent: GPTBot
 Allow: /
 Disallow: /app/
 Disallow: /auth
 Disallow: /onboarding
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /app/
 Disallow: /auth
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /app/
 Disallow: /auth
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /app/
 Disallow: /auth
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Claude-Web
 Allow: /
 Disallow: /app/
 Disallow: /auth
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: anthropic-ai
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /app/
 Disallow: /auth
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Perplexity-User
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /app/
 Disallow: /auth
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Applebot
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Applebot-Extended
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Bytespider
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Amazonbot
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: Meta-ExternalAgent
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: cohere-ai
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: DuckAssistBot
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: YouBot
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: MistralAI-User
 Allow: /
 Disallow: /app/
+Disallow: /discover/
+Disallow: /freestyle/
 
 User-agent: *
 Allow: /
@@ -111,5 +153,7 @@ Disallow: /auth
 Disallow: /onboarding
 Disallow: /reset-password
 Disallow: /upload/
+Disallow: /discover/
+Disallow: /freestyle/
 
 Sitemap: https://vovv.ai/sitemap.xml
