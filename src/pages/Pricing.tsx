@@ -9,6 +9,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
 import { SITE_URL } from '@/lib/constants';
 import { pricingPlans } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
 
 const pricingJsonLd = {
   '@context': 'https://schema.org',
