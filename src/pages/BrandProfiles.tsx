@@ -117,24 +117,22 @@ export default function BrandProfiles() {
       <PageHeader
         title="Brand Profiles"
         subtitle="Define your brand's visual identity for consistent image generation"
+        actions={
+          <Button
+            onClick={() => navigate('/app/brand-profiles/new')}
+            size="pill"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Profile
+          </Button>
+        }
       >
         <div className="space-y-6">
-          {/* Actions */}
-          <div className="flex justify-end">
-            <Button
-              onClick={() => navigate('/app/brand-profiles/new')}
-              size="pill"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Profile
-            </Button>
-          </div>
-
           {/* Content */}
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2].map(i => (
-                <div key={i} className="h-28 rounded-2xl bg-card border border-border animate-pulse" />
+                <div key={i} className="h-24 rounded-2xl bg-card border border-border animate-pulse" />
               ))}
             </div>
           ) : profiles.length === 0 ? (
