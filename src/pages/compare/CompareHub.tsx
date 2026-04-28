@@ -38,6 +38,7 @@ const COMPARISONS: ComparisonCard[] = [
     competitor: 'Claid AI',
     tagline:
       'Image enhancement & retouching vs end-to-end product visual creation.',
+    to: '/compare/vovv-vs-claid-ai',
   },
   {
     competitor: 'Pebblely',
