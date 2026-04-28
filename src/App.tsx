@@ -118,6 +118,7 @@ const CompareHub = lazy(() => import('@/pages/compare/CompareHub'));
 const VovvVsFlairAi = lazy(() => import('@/pages/compare/VovvVsFlairAi'));
 const VovvVsPhotoroom = lazy(() => import('@/pages/compare/VovvVsPhotoroom'));
 const VovvVsClaidAi = lazy(() => import('@/pages/compare/VovvVsClaidAi'));
+const VovvVsPebblely = lazy(() => import('@/pages/compare/VovvVsPebblely'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -189,6 +190,7 @@ const App = () => {
             <Route path="/compare/vovv-vs-flair-ai" element={<VovvVsFlairAi />} />
             <Route path="/compare/vovv-vs-photoroom" element={<VovvVsPhotoroom />} />
             <Route path="/compare/vovv-vs-claid-ai" element={<VovvVsClaidAi />} />
+            <Route path="/compare/vovv-vs-pebblely" element={<VovvVsPebblely />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
