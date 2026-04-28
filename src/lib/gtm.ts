@@ -421,9 +421,12 @@ export function gtmCheckoutStarted(args: {
 // ---------- 7. purchase (canonical) ----------
 // Single verified purchase event for both subscriptions and credit packs.
 // Caller MUST verify the transaction server-side (via check-subscription)
-// BEFORE calling this. Persistent dedup on transaction_id ensures the same
-// purchase never fires twice across refreshes / revisits / event names.
+// BEFORE calling this. Dedup uses sessionStorage with a 24h TTL so the same
+// purchase never fires twice in one session, but a fresh test in a new
+// session/incognito will fire cleanly. Set localStorage.vovv_gtm_debug='1'
+// to bypass dedup entirely while testing.
 export type PurchaseType = 'subscription' | 'credits';
+const PURCHASE_DEDUP_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 export function gtmPurchase(args: {
   userId: string;
@@ -435,15 +438,19 @@ export function gtmPurchase(args: {
   pageLocation?: string;
 }): boolean {
   const { userId, transactionId, purchaseType, planName, value, currency, pageLocation } = args;
+  const debug = isGtmDebugEnabled() || DEBUG;
   const dedupKey = `purchase:${transactionId}`;
-  const storeKey = `${STORAGE_PREFIX}${dedupKey}`;
-  const dedupExists = !!localGet(storeKey);
-  const willFire = !!(userId && transactionId) && !dedupExists;
+  const storeKey = `${SESSION_PREFIX}${dedupKey}`;
+  const now = Date.now();
+  const last = sessionGetTs(storeKey);
+  const dedupHit = last !== null && now - last < PURCHASE_DEDUP_TTL_MS;
+  // Debug mode bypasses dedup so re-tests on the same transaction fire.
+  const willFire = !!(userId && transactionId) && (debug || !dedupHit);
 
   const resolvedPageLocation =
     pageLocation || (typeof window !== 'undefined' ? window.location.href : '');
 
-  if (isGtmDebugEnabled() || DEBUG) {
+  if (debug) {
     // eslint-disable-next-line no-console
     console.log('[GTM DEBUG purchase verification]', {
       transactionId,
@@ -452,7 +459,8 @@ export function gtmPurchase(args: {
       value,
       currency,
       dedupKey,
-      dedupExists,
+      dedupHit,
+      debugBypass: debug && dedupHit,
       willFire,
     });
   }
@@ -483,18 +491,18 @@ export function gtmPurchase(args: {
     },
   };
 
-  if (isGtmDebugEnabled() || DEBUG) {
-    // eslint-disable-next-line no-console
-    console.log('[GTM DEBUG purchase payload]', payload);
-  }
-
-  localSet(storeKey);
+  sessionSetTs(storeKey, now);
   // Reset stale ecommerce object so GA4 ecommerce vars don't bleed across events.
   if (typeof window !== 'undefined') {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ ecommerce: null });
   }
   rawPush(payload);
+
+  if (debug) {
+    // eslint-disable-next-line no-console
+    console.log('[GTM DEBUG purchase] FIRED', payload);
+  }
   return true;
 }
 
