@@ -195,7 +195,7 @@ export function HomeHero() {
           Helmet hoists this <link> into <head> at runtime so Lighthouse and
           the browser preload scanner can discover it from the initial document. */}
       <Helmet>
-        <link rel="preload" as="image" href={originalDress} fetchpriority="high" />
+        <link rel="preload" as="image" href={originalDress} fetchPriority="high" />
       </Helmet>
       <section className="pt-28 pb-6 lg:pt-36 lg:pb-10 bg-[#FAFAF8] overflow-hidden">
       {/* ── Centered copy ── */}
