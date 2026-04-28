@@ -13,8 +13,6 @@ import { AppShell } from '@/components/app/AppShell';
 import { AppShellLoading } from '@/components/app/AppShellLoading';
 import { checkAppVersion } from '@/lib/versionCheck';
 import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
-import Landing from '@/pages/Landing';
-
 const TryShot = lazy(() => import('@/pages/TryShot'));
 const Home = lazy(() => import('@/pages/Home'));
 
@@ -104,7 +102,7 @@ const FreestyleFeature = lazy(() => import('@/pages/features/FreestyleFeature'))
 const RealEstateStagingFeature = lazy(() => import('@/pages/features/RealEstateStagingFeature'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const TryFree = lazy(() => import('@/pages/TryFree'));
-const AIProductPhotographyEcommerce = lazy(() => import('@/pages/seo/AIProductPhotographyEcommerce'));
+
 const AIProductPhotography = lazy(() => import('@/pages/seo/AIProductPhotography'));
 const AIProductPhotographyCategory = lazy(() => import('@/pages/seo/AIProductPhotographyCategory'));
 const ShopifyProductPhotography = lazy(() => import('@/pages/seo/ShopifyProductPhotography'));
@@ -143,8 +141,6 @@ const App = () => {
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Landing />} />
-            <Route path="/landing" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -170,7 +166,7 @@ const App = () => {
             <Route path="/features/real-estate-staging" element={<RealEstateStagingFeature />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/try" element={<TryFree />} />
-            <Route path="/ai-product-photography-for-ecommerce" element={<AIProductPhotographyEcommerce />} />
+            
             <Route path="/ai-product-photography" element={<AIProductPhotography />} />
             <Route path="/ai-product-photography/:slug" element={<AIProductPhotographyCategory />} />
             <Route path="/shopify-product-photography-ai" element={<ShopifyProductPhotography />} />

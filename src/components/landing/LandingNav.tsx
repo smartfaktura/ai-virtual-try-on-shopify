@@ -92,15 +92,10 @@ export function LandingNav() {
 
   const handleHashClick = (href: string) => {
     setMobileOpen(false);
-    const onLanding =
-      location.pathname === '/' ||
-      location.pathname === '/landing' ||
-      location.pathname === '/home';
-    if (onLanding) {
-      const el = document.querySelector(href);
-      el?.scrollIntoView({ behavior: 'smooth' });
+    if (location.pathname === '/') {
+      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
     } else {
-      navigate('/home' + href);
+      navigate('/' + href);
     }
   };
 
