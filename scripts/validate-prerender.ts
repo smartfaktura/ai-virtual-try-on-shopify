@@ -22,8 +22,7 @@ const JSONLD_REQUIRED = (path: string): boolean =>
   path === '/blog' ||
   path.startsWith('/blog/') ||
   path.startsWith('/ai-product-photography') ||
-  path.startsWith('/features/') ||
-  /^\/discover\/.+/.test(path);
+  path.startsWith('/features/');
 
 const JSONLD_OPTIONAL_OK = new Set([
   '/contact', '/status', '/privacy', '/terms', '/cookies',
