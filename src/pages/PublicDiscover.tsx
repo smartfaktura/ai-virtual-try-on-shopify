@@ -29,6 +29,7 @@ import { SITE_URL } from '@/lib/constants';
 import { getItemSlug } from '@/lib/slugUtils';
 import { MasonrySkeletonGrid } from '@/components/app/MasonrySkeletonGrid';
 import { DiscoverItemSEOView } from '@/components/discover/DiscoverItemSEOView';
+import { DiscoverItemDetailSkeleton } from '@/components/discover/DiscoverItemDetailSkeleton';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
@@ -430,6 +431,16 @@ export default function PublicDiscover() {
   // SEO page (with H1, hero, prompt, related grid). Modal users continue to
   // see the grid + modal.
   const showSeoView = !!urlItem && !cameFromGrid && urlItem.type === 'preset';
+
+  // Direct hit on /discover/:slug while presets are still loading.
+  // Render a detail-shaped skeleton instead of flashing the Explore grid.
+  if (urlItemId && !cameFromGrid && isLoading && !urlItem) {
+    return (
+      <PageLayout>
+        <DiscoverItemDetailSkeleton />
+      </PageLayout>
+    );
+  }
 
   if (showSeoView && urlItem.type === 'preset') {
     return (
