@@ -2,13 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.ico" sizes="48x48">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="canonical" href="https://vovv.ai" />
+    <!--
+      No static <link rel="canonical"> here on purpose.
+      Each prerendered route writes its own canonical at build time
+      (scripts/prerender.ts) and SEOHead.tsx sets it at runtime for
+      client-side navigations. A hardcoded root canonical here would
+      override every per-page canonical for any bot that doesn't
+      execute JS — which was killing rankings on every non-root page.
+    -->
     <title>AI Product Visuals &amp; Videos for E-commerce Brands | VOVV.AI</title>
     <meta name="description" content="VOVV.AI helps e-commerce brands create brand-ready product visuals and videos from one product photo. Generate visuals for ads, websites, and campaigns faster.">
     <meta name="author" content="VOVV.AI" />
