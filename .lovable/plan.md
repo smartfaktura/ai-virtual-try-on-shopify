@@ -1,69 +1,99 @@
-## Goal
+## Phase 4b: Migrate to react-helmet-async
 
-Remove the 362 dynamic item URLs (`/discover/:slug`, `/freestyle/:itemId`) from SEO/indexing scope so we can finish Phase 4a cleanly with just the static public pages, then move to Phase 4b (react-helmet-async).
-
-The routes themselves stay working — users can still open and share them — they're just no longer advertised to search engines.
+This is the cleanup Lovable's docs recommend for SPAs like ours. Goal: make every page reliably set its own `<title>`, `<meta>`, and structured data — without the fragile direct-DOM hacks we use today.
 
 ---
 
-## Why this is the right call
+## Plain-English summary
 
-- **362 of 417 sitemap URLs (87%)** are dynamic items. Each one currently canonicalizes back to its parent (`/discover` or `/freestyle`), which conflicts with the sitemap and creates duplicate-content signals.
-- These pages depend on Supabase data fetched client-side — exactly the CSR-indexing weakness the Lovable docs warn about. Crawlers often see an empty shell.
-- The static public pages (Home, Pricing, About, Blog posts, Features, etc.) are where real SEO value lives and where we can do a proper job.
-- We can revisit dynamic-item SEO later with a proper SSR/prerender solution if needed.
+**Today**: Two components (`SEOHead.tsx` and `JsonLd.tsx`) reach into the page's `<head>` and manually edit tags using `document.querySelector(...)` and `document.head.appendChild(...)`. This works but is fragile.
+
+**After**: Same two components, but rebuilt on top of a small, well-trusted React library called `react-helmet-async` that does this properly. React tracks the tags, no race conditions, no leftover stale tags when you switch pages.
+
+**What changes for the user**: Nothing visual. Same site, same speed. Just more reliable metadata for Google and a cleaner foundation.
+
+**What changes for the 52 files that use `<SEOHead>` and `<JsonLd>` today**: Nothing. They keep working with zero edits — we only swap the engine inside.
 
 ---
 
-## Changes (Phase 4a, revised)
+## Honest expectations
 
-### 1. Sitemap — strip dynamic items
-`public/sitemap.xml`: remove all 362 `/discover/<slug>` and `/freestyle/<id>` entries. Keep:
-- `/discover` (index)
-- `/freestyle` (index)
-- `/features/freestyle`
-- All marketing/blog/static URLs (~55 entries)
+| Improves | Doesn't fix |
+|---|---|
+| Reliable per-page title/meta for Google, Bing, ChatGPT crawlers (they run JS) | LinkedIn / Slack / X link previews — these need server-rendering, separate project |
+| Cleanup of stale tags between route changes | Initial HTML still shows the default home title to non-JS scrapers |
+| Structured data (JsonLd) per page works cleanly | Indexing speed (still depends on Google's render queue) |
+| Foundation for future SSR/prerender if ever needed | |
 
-### 2. Robots — disallow dynamic item paths
-`public/robots.txt`: add
+---
+
+## The plan (4 small steps)
+
+### Step 1 — Install the library
+Add `react-helmet-async` (~5 KB, maintained by the React community, the official Lovable recommendation).
+
+### Step 2 — Wrap the app
+In `src/App.tsx`, wrap the existing `<BrowserRouter>` tree with `<HelmetProvider>`. This is a one-line change that lets Helmet manage the head globally.
+
+```text
+<HelmetProvider>
+  <BrowserRouter>
+    ...everything we already have...
+  </BrowserRouter>
+</HelmetProvider>
 ```
-Disallow: /discover/
-Disallow: /freestyle/
-Allow: /discover$
-Allow: /freestyle$
+
+### Step 3 — Rebuild `SEOHead.tsx` internally
+Same props (`title`, `description`, `canonical`, `ogImage`, `ogType`, `noindex`) — same call sites everywhere. Inside, replace the `useEffect` + `document.querySelector` code with a `<Helmet>` block:
+
+```text
+<Helmet>
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <meta property="og:title" content={title} />
+  ...etc
+  {noindex && <meta name="robots" content="noindex, follow" />}
+</Helmet>
 ```
-(Keeps the index pages crawlable, blocks every item URL.)
 
-### 3. Noindex on the dynamic item pages
-`src/pages/PublicDiscover.tsx` and `src/pages/PublicFreestyle.tsx`: when `itemId` is present in the URL, pass `noIndex` to `<SEOHead>` so the rendered page emits `<meta name="robots" content="noindex,follow">`.
-(I'll confirm `SEOHead` already supports this prop; if not, it's a 2-line addition.)
+All 50+ pages that import `<SEOHead>` keep working with no edits.
 
-### 4. Stale references cleanup
-- `index.html`: remove the obsolete `scripts/prerender.ts` comment block.
-- (`package-lock.json` was already deleted.)
+### Step 4 — Rebuild `JsonLd.tsx` internally
+Same prop (`data`). Inside, replace `document.createElement('script')` with:
 
-### 5. Canonical audit on the remaining static pages
-Quick pass on every page still in the sitemap to confirm each has an explicit, self-referencing `<SEOHead canonical={...}>`. Any missing one gets added. This is a small list now (~20 pages).
-
----
-
-## What this leaves us with
-
-- A focused sitemap of ~55 high-value static URLs
-- Clean robots directives
-- No duplicate-canonical conflicts
-- Item pages still fully functional for sharing — just not competing in search
-
-## Then Phase 4b (separate approval)
-
-Install `react-helmet-async`, wrap `App.tsx` in `<HelmetProvider>`, refactor `SEOHead.tsx` + `JsonLd.tsx` to use `<Helmet>`. No caller changes. This finally gives each route real per-route `<title>`/`<meta>` instead of the current direct-DOM approach.
+```text
+<Helmet>
+  <script type="application/ld+json">{JSON.stringify(data)}</script>
+</Helmet>
+```
 
 ---
 
-## Technical notes
+## Safety / rollback
 
-- React Router routes for `/discover/:itemId` and `/freestyle/:itemId` stay registered — only their SEO surface changes.
-- `noindex,follow` (not `noindex,nofollow`) so link equity still flows to the index pages.
-- Sitemap edit is a single mechanical pass; I'll regenerate from the kept-list rather than line-deleting.
+- Pure refactor — no API/data/database changes.
+- No visual or behavioral changes for users.
+- Public component signatures stay identical → 52 caller files untouched.
+- If anything misbehaves, we revert Steps 1–4 and we're back to today's state instantly.
+- No conflict with the static `<title>`, `<meta>`, OG tags, or JSON-LD already in `index.html` — Helmet replaces or adds tags as needed and respects the static fallbacks for non-JS scrapers.
 
-Approve to execute Phase 4a (revised). Phase 4b will be a separate approval afterward.
+---
+
+## What we'll verify after
+
+- Home page still shows its title in the browser tab
+- Navigating Home → Pricing → About correctly updates the tab title each time
+- View Source on a public page shows Helmet-managed tags in the head
+- No console errors
+- Robots noindex still emits on `/discover/:itemId` and `/freestyle/:itemId` (from Phase 4a)
+
+---
+
+## Out of scope (saved for later if you want)
+
+- Server-side rendering / prerender for true social-preview support (big project)
+- Per-page Open Graph images (currently we use one default site-wide image)
+- Adding more JSON-LD schema types (Article, Product, FAQ, etc.) — easy to add once Helmet is in
+
+Approve and I'll execute Steps 1–4 in one pass.

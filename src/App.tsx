@@ -3,6 +3,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CreditProvider } from '@/contexts/CreditContext';
@@ -132,6 +133,7 @@ const App = () => {
 
   return (
   <ErrorBoundary>
+  <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <Toaster position="top-right" richColors closeButton />
     <AuthProvider>
@@ -285,6 +287,7 @@ const App = () => {
         </BrowserRouter>
     </AuthProvider>
   </QueryClientProvider>
+  </HelmetProvider>
   </ErrorBoundary>
   );
 };

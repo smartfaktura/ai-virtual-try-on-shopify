@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/constants';
+import { Helmet } from 'react-helmet-async';
+import { DEFAULT_OG_IMAGE } from '@/lib/constants';
 
 interface SEOHeadProps {
   title: string;
@@ -10,64 +10,43 @@ interface SEOHeadProps {
   noindex?: boolean;
 }
 
-function setMeta(name: string, content: string, attr: 'name' | 'property' = 'name') {
-  let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
-  if (!el) {
-    el = document.createElement('meta');
-    el.setAttribute(attr, name);
-    document.head.appendChild(el);
-  }
-  el.setAttribute('content', content);
-}
+export function SEOHead({
+  title,
+  description,
+  canonical,
+  ogImage,
+  ogType = 'website',
+  noindex,
+}: SEOHeadProps) {
+  const resolvedImage = ogImage || DEFAULT_OG_IMAGE;
+  // Avoid SSR-unsafe window access; fall back to canonical or undefined.
+  const resolvedUrl =
+    canonical ||
+    (typeof window !== 'undefined' ? window.location.href : undefined);
 
-function setLink(rel: string, href: string) {
-  let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
-  if (!el) {
-    el = document.createElement('link');
-    el.setAttribute('rel', rel);
-    document.head.appendChild(el);
-  }
-  el.setAttribute('href', href);
-}
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
 
-export function SEOHead({ title, description, canonical, ogImage, ogType = 'website', noindex }: SEOHeadProps) {
-  useEffect(() => {
-    document.title = title;
-    setMeta('description', description);
+      {/* Open Graph */}
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:image" content={resolvedImage} />
+      {resolvedUrl && <meta property="og:url" content={resolvedUrl} />}
+      <meta property="og:site_name" content="VOVV.AI" />
 
-    const resolvedImage = ogImage || DEFAULT_OG_IMAGE;
-    const resolvedUrl = canonical || window.location.href;
+      {canonical && <link rel="canonical" href={canonical} />}
 
-    // Open Graph
-    setMeta('og:title', title, 'property');
-    setMeta('og:description', description, 'property');
-    setMeta('og:type', ogType, 'property');
-    setMeta('og:image', resolvedImage, 'property');
-    setMeta('og:url', resolvedUrl, 'property');
-    setMeta('og:site_name', 'VOVV.AI', 'property');
+      {/* Twitter / X */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={resolvedImage} />
 
-    if (canonical) {
-      setLink('canonical', canonical);
-    }
-
-    // Twitter / X
-    setMeta('twitter:card', 'summary_large_image', 'name');
-    setMeta('twitter:title', title, 'name');
-    setMeta('twitter:description', description, 'name');
-    setMeta('twitter:image', resolvedImage, 'name');
-
-    // Robots
-    if (noindex) {
-      setMeta('robots', 'noindex, follow');
-    } else {
-      const robotsMeta = document.querySelector('meta[name="robots"]');
-      if (robotsMeta) robotsMeta.remove();
-    }
-
-    return () => {
-      document.title = 'VOVV.AI | Automated Visual Studio for E-commerce';
-    };
-  }, [title, description, canonical, ogImage, ogType, noindex]);
-
-  return null;
+      {/* Robots */}
+      {noindex && <meta name="robots" content="noindex, follow" />}
+    </Helmet>
+  );
 }
