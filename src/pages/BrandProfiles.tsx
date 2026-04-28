@@ -40,12 +40,12 @@ function BrandModelsBanner() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 sm:p-7">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 sm:p-6">
         {/* Top row on mobile: avatar + CTA */}
         <div className="flex items-center gap-4 sm:contents">
           {/* Avatar */}
           <div className="shrink-0">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-border shadow-sm">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border border-border shadow-sm">
               <img
                 src={getOptimizedUrl(sophia.avatar, { quality: 70 })}
                 alt={sophia.name}
