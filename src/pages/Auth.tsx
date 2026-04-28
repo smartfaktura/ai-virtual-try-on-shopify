@@ -205,12 +205,8 @@ export default function Auth() {
     } else {
       const { error } = await signIn(email, password);
       if (error) {
-        const msg = error.message?.toLowerCase() || '';
-        if (msg.includes('invalid login credentials')) {
-          setFormError('Incorrect email or password. Please try again.');
-        } else {
-          setFormError('Something went wrong. Please try again.');
-        }
+        const mapped = mapAuthError(error, 'login');
+        setFormError(mapped.message);
       } else {
         navigate('/app', { replace: true });
       }
