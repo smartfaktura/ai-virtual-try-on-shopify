@@ -207,21 +207,23 @@ export default function PublicDiscover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
-  // Auto-open item from URL param (supports slug, UUID, and scene- prefix)
+  // Fallback auto-open from URL param — runs after the full feed resolves.
+  // The fast-path above (useDeepLinkedDiscoverItem) usually sets selectedItem
+  // first; this only fires for cases the fast-path can't handle (e.g.
+  // scene-custom-* items which require the admin-gated RPC).
   useEffect(() => {
-    if (!urlItemId || allItems.length === 0) return;
+    if (!urlItemId || allItems.length === 0 || selectedItem) return;
     const found = allItems.find((item) => {
       if (urlItemId.startsWith('scene-')) {
         return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
       }
-      // Match by slug or by raw UUID
       if (item.type === 'preset') {
         return item.data.slug === urlItemId || item.data.id === urlItemId;
       }
       return false;
     });
     if (found) setSelectedItem(found);
-  }, [urlItemId, allItems]);
+  }, [urlItemId, allItems, selectedItem]);
 
   const getItemUrl = useCallback((item: DiscoverItem): string => {
     return `/discover/${getItemSlug(item)}`;
