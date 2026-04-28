@@ -1,67 +1,39 @@
-## Plan: Footer trim + Discover gallery on /compare pages
+# Fix: Discover gallery stuck on skeletons on /compare
 
-### 1. Footer cleanup — `src/components/landing/LandingFooter.tsx`
+## What's actually happening
 
-In the **Compare** group:
-- Rename `Compare VOVV.AI to Others` → `VOVV.AI to Others` (still links to `/compare`).
-- Remove the standalone `VOVV.AI vs Flair AI` link.
+The gallery on `/compare` (and the four `/compare/vovv-vs-*` pages) shows only skeleton placeholders because the Supabase REST request the component makes is extremely slow / sometimes times out for anonymous visitors:
 
-Resulting Compare list:
-- `VOVV.AI to Others` → `/compare`
-- `AI vs Photoshoot` → `/ai-product-photography-vs-photoshoot`
-- `VOVV.AI vs Studio` → `/ai-product-photography-vs-studio`
+- Component query: `from('discover_presets').select('id,title,image_url,slug').order('sort_order').limit(12)`
+- Browser network log: returned **HTTP 500** with Postgres error `57014 — canceling statement due to statement timeout`
+- Reproduced from the sandbox: same anon request takes **7–22 seconds** to return when it doesn't time out
+- Same query run server-side (no anon, no PostgREST) executes in **~140 ms**
 
-(Individual `vs-*` pages stay discoverable via the hub.)
+Root causes:
+1. `discover_presets` has **no index on `sort_order`** (and every row has `sort_order = 0`), so PostgREST does a sequential scan + sort on every anon request.
+2. The table has **two overlapping SELECT RLS policies** (one for `anon`, one for `public` checking `auth.role() = 'authenticated'`). PostgREST evaluates both per row, amplifying latency on the anon path.
+3. The component has no error fallback — when the request errors or stays pending, it just renders skeletons indefinitely.
 
-### 2. New reusable component — `src/components/seo/compare/DiscoverGalleryStrip.tsx`
+## Plan
 
-A premium, lazy-loaded image grid that pulls live featured imagery from the `discover_presets` table (publicly readable, same source as `/discover`). Tiles deep-link to `/discover/{slug}` so SEO juice flows back to the public Discover page.
+### 1. Database migration
+- Add index: `CREATE INDEX IF NOT EXISTS idx_discover_presets_sort_created ON public.discover_presets (sort_order ASC, created_at DESC);`
+- Drop the redundant `Authenticated users can view discover presets` SELECT policy. The existing `Anyone can view discover presets publicly` policy (anon, USING true) already covers all read access, including authenticated users (anon role is granted to everyone). This removes duplicate per-row evaluation.
 
-Props:
-- `eyebrow`, `headline`, `intro`, `count` (default 8), `gridClassName`, `background` (`soft` | `background` | `transparent`), `cta`, `tileAspect` (default `aspect-[4/5]`).
+### 2. Make `DiscoverGalleryStrip` resilient (`src/components/seo/compare/DiscoverGalleryStrip.tsx`)
+- Order by `created_at DESC` instead of `sort_order` (more meaningful — newest first — and uses the new composite index).
+- Read `error` and `isLoading` from `useQuery`; render skeletons only while `isLoading`, render the static fallback if `error` or empty data.
+- Add a small **curated static fallback array** of 8–12 known-good Discover image URLs + slugs (taken from the live Discover feed) so the section always shows real visuals even if the API is unavailable. Each fallback tile still deep-links to `/discover/{slug}`.
+- Tighten React Query options: `retry: 1`, `staleTime: 30 min`, `gcTime: 60 min`, `refetchOnWindowFocus: false`.
 
-Visual treatment matches the homepage / compare aesthetic — Inter type, rounded-2xl tiles, subtle border + shadow, soft hover lift, no harsh shadows. Skeletons render during fetch so the section never shows empty.
+### 3. No changes to
+- Homepage, `/app/*` routes, the Discover page itself, or the comparison page copy.
+- Existing RLS for non-SELECT operations (admin insert/update/delete policies stay).
 
-Data source: `supabase.from('discover_presets').select('id, title, image_url, slug').order('sort_order').limit(count)` — reuses the same public pipeline as `useDiscoverPresets`.
+## Files touched
+- New SQL migration (index + drop redundant policy)
+- `src/components/seo/compare/DiscoverGalleryStrip.tsx`
 
-### 3. `/compare` (CompareHub.tsx)
-
-Insert a **larger** gallery section (12 tiles, 3-col / 4-col responsive) after the comparison cards grid and before "How we compare tools":
-
-- Eyebrow: `Made with VOVV.AI`
-- Headline: `A glimpse of what brands create`
-- Intro: `Real product visuals generated from a single product photo — straight from the VOVV.AI Discover feed.`
-- CTA: `Explore all examples` → `/discover`
-
-### 4. Each `/compare/vovv-vs-{flair-ai,photoroom,claid-ai,pebblely}` page
-
-Insert a **compact** gallery strip (8 tiles, 2/4 col) just before the "Internal-link strip" section. Matches each page's tone:
-
-- **vs-flair-ai**: "Brand-ready visuals from one product photo"
-- **vs-photoroom**: "Beyond background removal — what brands ship with VOVV.AI"
-- **vs-claid-ai**: "More than enhanced photos — visuals brands actually publish"
-- **vs-pebblely**: "From product scenes to full visual systems"
-
-All CTAs → `/discover`. Tiles deep-link into Discover.
-
-### 5. Out of scope
-
-- Homepage untouched.
-- `/app` routes untouched.
-- No DB / RLS / sitemap changes (gallery uses an existing public table).
-- No new copy claims; intros stay factual.
-
-### Files changed
-
-- edit `src/components/landing/LandingFooter.tsx`
-- create `src/components/seo/compare/DiscoverGalleryStrip.tsx`
-- edit `src/pages/compare/CompareHub.tsx`
-- edit `src/pages/compare/VovvVsFlairAi.tsx`
-- edit `src/pages/compare/VovvVsPhotoroom.tsx`
-- edit `src/pages/compare/VovvVsClaidAi.tsx`
-- edit `src/pages/compare/VovvVsPebblely.tsx`
-
-### Assumptions
-
-- `discover_presets` is publicly readable (confirmed — already used by `/discover` for anonymous visitors and rows include public Supabase storage URLs).
-- Sort order in the table reflects editorial curation; pulling top N by `sort_order` gives the strongest visuals — same priority used on `/discover`.
+## Outcome
+- Anon REST request becomes consistently fast (single policy + indexed sort).
+- Even if the API is temporarily slow, `/compare` and the four comparison pages immediately render real Discover imagery from the static fallback instead of empty skeletons.
