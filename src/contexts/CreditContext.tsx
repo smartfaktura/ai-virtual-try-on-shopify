@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
-import { gtmBeginCheckout, gtmCheckoutSessionCreated, gtmPurchase, pickTransactionId } from '@/lib/gtm';
+import { gtmBeginCheckout, gtmCheckoutSessionCreated } from '@/lib/gtm';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
