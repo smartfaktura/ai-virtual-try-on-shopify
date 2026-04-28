@@ -138,7 +138,7 @@ export function DiscoverItemSEOView({
       <JsonLd data={imageObjectLd} />
       <JsonLd data={breadcrumbLd} />
 
-      <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+      <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-8 space-y-10">
         {/* Breadcrumbs */}
         <DiscoverBreadcrumbs items={breadcrumbs} />
 
