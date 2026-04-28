@@ -39,8 +39,7 @@ const solutionsGroups: FooterGroup[] = [
   {
     subheading: 'Compare',
     links: [
-      { label: 'Compare VOVV.AI to Others', to: '/compare' },
-      { label: 'VOVV.AI vs Flair AI', to: '/compare/vovv-vs-flair-ai' },
+      { label: 'VOVV.AI to Others', to: '/compare' },
       { label: 'AI vs Photoshoot', to: '/ai-product-photography-vs-photoshoot' },
       { label: 'VOVV.AI vs Studio', to: '/ai-product-photography-vs-studio' },
     ],
