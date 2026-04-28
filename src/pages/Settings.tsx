@@ -552,7 +552,7 @@ export default function Settings() {
 
         {/* Enterprise banner */}
         {enterprisePlan && (
-          <div className="rounded-2xl border bg-card p-6 sm:p-8">
+          <div className="rounded-3xl border border-[#f0efed] bg-white p-6 sm:p-8 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="rounded-xl bg-primary/10 p-3">
@@ -687,8 +687,12 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Button size="pill" onClick={handleSave} disabled={isSaving}>
+        <div className="flex justify-end pt-2">
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="rounded-full h-[3.25rem] px-7 shadow-lg shadow-primary/25"
+          >
             {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
         </div>
