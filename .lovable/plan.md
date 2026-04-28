@@ -1,33 +1,34 @@
-## Fix `/discover` modal "appears twice on close" + spacing
+## Fix `/discover/:slug` flash + confirm SEO indexing
 
-### Bug: closing modal needs two clicks / second modal flashes
+### Problem
+When you open `https://vovv.ai/discover/diamond-hoop-earrings-2b9ca4` directly, the Explore grid (header + skeleton tiles) flashes for 300-800ms before the SEO detail page renders. Cause: `urlItem` is `null` until `useDiscoverPresets` resolves, so `showSeoView` is `false` and the grid branch wins on first paint.
 
-**Root cause** in `src/pages/PublicDiscover.tsx`:
+### Plan
 
-1. `handleCardClick` (line 215) currently does **both** `navigate(...)` + `setSelectedItem(item)` — opens modal once via state.
-2. The auto-open `useEffect` (line 207) then fires when `urlItem` resolves and `cameFromGrid=true` → calls `setSelectedItem(urlItem)` **again** with the same item.
-3. On X click, `handleClose` runs `setSelectedItem(null)` + `navigate(-1)`. The back-navigation triggers React-Router to update `location` and re-render. During that transient render, `urlItem` may briefly still resolve to the previous item before the URL fully settles, and the auto-open effect re-fires → modal re-appears → user has to click X again.
-4. The `cameFromGrid` flag is captured once from `location.state` at render time. After `navigate(-1)`, on the next forward nav into a card it stays referencing the new state, but the transient "ghost" reopen during back-nav is what users see.
+**1. New skeleton component** — `src/components/discover/DiscoverItemDetailSkeleton.tsx`
+- Mirrors `DiscoverItemSEOView` structure: breadcrumb row, hero image block (4:5), H1 lines, chip row, prompt block, related grid placeholder.
+- Pure shimmer (`bg-muted animate-pulse`), no data, no network.
+- Same `pt-10 sm:pt-14` top padding so layout doesn't jump when real content swaps in.
 
-### Fix (one file: `src/pages/PublicDiscover.tsx`)
+**2. Early-return branch in `src/pages/PublicDiscover.tsx`**
+- Before the existing grid render, add: if `urlItemId && !cameFromGrid && isLoading && !urlItem` → return `<PageLayout><DiscoverItemDetailSkeleton /></PageLayout>`.
+- Keeps current `showSeoView` branch unchanged for the resolved state.
+- Grid users (`cameFromGrid === true`) keep current behavior — modal opens over their grid, no skeleton swap.
 
-1. **Remove redundant `setSelectedItem(item)` from `handleCardClick`** — let the auto-open `useEffect` be the single source of truth (URL → modal).
-2. **Add a `justClosedSlugRef` ref** — set to current URL slug inside `handleClose`. The auto-open `useEffect` checks this ref and skips re-opening the same slug once. Cleared whenever `urlItemId` changes to a different value.
-3. **Auto-open `useEffect` improvement** — guard with both `cameFromGrid` AND `urlItemId !== justClosedSlugRef.current`, and skip if the resolved item already equals `selectedItem`.
-4. **`handleClose`** — record the slug being closed in the ref before calling `navigate(-1)`.
+### Will SEO crawlers index these pages correctly?
 
-This is purely behavioral (no UI change), routing/SEO untouched.
+**Yes — and this fix actually improves it.** Details:
 
-### Spacing fix
+- **Routing**: `/discover/:itemId` is a real React Router route served by SPA fallback (Lovable hosting auto-rewrites unknown paths to `index.html`). Googlebot renders JS, so it executes the route and sees the SEO view.
+- **No `cameFromGrid` for bots**: Crawlers arrive without `location.state`, so `cameFromGrid === false` → they hit the `showSeoView` branch (full `<h1>`, hero `<img>`, prompt text, related links), not the modal.
+- **Per-page metadata**: `DiscoverItemSEOView` already renders `<SEOHead>` (title, description, canonical) and `<JsonLd>` (structured data) via React Helmet. Each slug gets unique tags.
+- **Canonical URLs**: Set to `${SITE_URL}/discover/${slug}` — points to the clean slug version, dedupes UUID variants.
+- **Internal links**: Related grid uses real `<a href="/discover/...">` (via `Link` from react-router) so crawlers can discover sibling items.
+- **Loading skeleton is safe**: Googlebot waits for JS render before snapshotting; the skeleton is only a visual transition for humans on slow networks. It does not replace the indexed content.
 
-In `src/components/discover/DiscoverItemSEOView.tsx`:
+**One thing to verify after merge** (not part of this code change, just a check):
+- `public/sitemap.xml` (or sitemap route) should list every `/discover/<slug>` URL so Google can discover them without crawling the grid. If it doesn't exist yet, that's a separate follow-up.
 
-- Change article wrapper padding from `py-6` to `pt-10 sm:pt-14 pb-8` so the breadcrumbs get clear breathing room below the top navigation.
-
-### Out of scope
-
-- The two console warnings (`forwardRef` on `DiscoverCard`, `fetchPriority` casing on `ShimmerImage`) are pre-existing and unrelated to this bug — happy to fix in a follow-up if you want, but they don't cause the double-modal issue.
-- No SEO, JSON-LD, sitemap, prerender, or `/app/discover` changes.
-
-### Risk
-Very low — bug fix is one component file, behavioral only. Spacing is one className change.
+### Files
+- **New**: `src/components/discover/DiscoverItemDetailSkeleton.tsx`
+- **Edit**: `src/pages/PublicDiscover.tsx` (one early-return block, ~5 lines)
