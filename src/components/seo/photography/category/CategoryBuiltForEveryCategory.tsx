@@ -77,7 +77,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   return (
     <section
       id="scenes"
-      className="py-16 lg:py-32 bg-background overflow-hidden"
+      className="py-16 lg:py-32 bg-background overflow-hidden scroll-mt-24"
     >
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Heading — adaptive */}
