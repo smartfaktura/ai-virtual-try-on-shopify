@@ -1,42 +1,42 @@
 ## Goal
 
-Fully remove Meta Pixel from the website/app code. After this change, **all Meta tracking will fire exclusively from GTM** (using the existing dataLayer events: `page_view`, `begin_checkout`, `purchase`, etc.). Google Ads, GA4, GTM, and dataLayer pushes remain untouched.
+Fire `begin_checkout` exactly once per checkout attempt — only **after** Stripe Checkout Session is created, always carrying `checkout_id = session.id`. This makes Meta InitiateCheckout (fired from GTM) emit a single event with a real `eventID`, eliminating the "Deduplicated with eventID = undefined" entry.
 
-## Files to change
+## Root cause
 
-### 1. `index.html` — remove Meta Pixel base + PageView + noscript fallback
-- Remove the entire `<!-- Meta Pixel Code - deferred -->` block (lines ~48–61): the IIFE loader, `fbq('init', '1556554718768756')`, and `fbq('track', 'PageView')`.
-- Remove the `<link rel="dns-prefetch" href="https://connect.facebook.net" />` line (no longer needed).
-- Remove the `<noscript><img ... facebook.com/tr?id=...&ev=PageView&noscript=1 /></noscript>` fallback in `<body>`.
-- Keep: GTM script + GTM `<noscript>` iframe, gtag.js, all social profile links (`facebook.com/vovvaistudio`) — those are just brand links, not tracking.
+`src/contexts/CreditContext.tsx` → `startCheckout()` currently pushes `begin_checkout` twice:
 
-### 2. `src/lib/fbPixel.ts` — delete file
-The whole helper module is removed (`trackPageView`, `trackPurchase`, `trackViewContent`, `trackInitiateCheckout`, `trackCompleteRegistration` and the `window.fbq` global declaration).
+1. Line 234 — **intent push without `checkout_id`** (fires on click, before backend).
+2. Line 275 — **enrichment push with `checkout_id`** (fires after `create-checkout` returns).
 
-### 3. Remove all imports + call sites of the deleted helpers
+GTM forwards both to Meta. Without a shared `eventID`, Meta treats them as two separate InitiateCheckout events.
 
-| File | Remove |
-|---|---|
-| `src/components/ScrollToTop.tsx` | `import { trackPageView } from '@/lib/fbPixel'` and the `trackPageView()` call. Keep `gtagPageView()`. |
-| `src/contexts/AuthContext.tsx` | `import { trackCompleteRegistration } from '@/lib/fbPixel'` and the `trackCompleteRegistration('email')` call. |
-| `src/contexts/CreditContext.tsx` | `import { trackInitiateCheckout } from '@/lib/fbPixel'` and the `trackInitiateCheckout()` call. The `dataLayer.push({ event: 'begin_checkout', ... })` stays — GTM uses it to fire Meta InitiateCheckout. |
-| `src/pages/Pricing.tsx` | `import { trackViewContent } from '@/lib/fbPixel'` and the `trackViewContent('Pricing', 'pricing_page')` call. |
-| `src/pages/Products.tsx` | Remove the `trackViewContent` import and call; keep `gtagViewItem(...)`. |
-| `src/pages/Settings.tsx` | Remove the `trackViewContent` import and call; keep `gtagViewItem(...)`. |
+## Changes
 
-### 4. Old URL-only Meta Purchase
-Confirmed there is **no** code that fires a Meta Purchase based on a `payment=success` URL or any other URL pattern (`trackPurchase` is defined in `fbPixel.ts` but never called anywhere). Deleting `fbPixel.ts` removes it entirely.
+### 1. `src/contexts/CreditContext.tsx` (the only fix)
 
-## After the change
+In `startCheckout()`:
 
-- `window.fbq` will be `undefined` (no base script loaded).
-- No requests to `connect.facebook.net/en_US/fbevents.js` or `facebook.com/tr`.
-- GTM container continues to receive `page_view`, `begin_checkout` (with `checkout_id`), `purchase` (with `transaction_id`, `value`, `currency`), etc. → Meta tags inside GTM trigger from there.
-- TypeScript build clean (no dangling imports of `@/lib/fbPixel`).
+- **Delete the intent push** (lines ~232–251), including its debug log block.
+- Keep the enrichment push (line 275) as the **single** `begin_checkout` call. It already contains `userId`, `checkoutId: data.sessionId`, `planName`, `checkoutMode`, `value`, `currency`, `pageLocation` — matching the expected payload exactly.
+- Keep `gtmCheckoutSessionCreated` (debug-only) and the 250 ms pre-redirect hold.
+- Update the leading comment to: `// Meta InitiateCheckout fires from GTM via the single begin_checkout dataLayer event pushed AFTER Stripe session creation.`
 
-## Reporting back (after implementation)
+No other files need edits.
 
-I will report:
-- Files where Meta Pixel was removed (the 8 files above).
-- A repo-wide grep confirming **0** remaining matches for `fbq`, `fbPixel`, `fbevents`, `connect.facebook.net`, `trackPurchase`, `trackInitiateCheckout`, `trackViewContent`, `trackCompleteRegistration`, `trackPageView`, and the pixel ID `1556554718768756`.
-- Confirmation that no URL-based Meta Purchase trigger exists in code (it never did — only the unused `trackPurchase` helper, now deleted).
+### 2. Optional cleanup (low priority, not required to fix the bug)
+
+- In `src/lib/gtm.ts`, the time-window dedup branch in `gtmBeginCheckout` (the `else` block when `checkoutId` is absent) becomes dead code for the checkout flow once the intent push is removed. Leaving it in place is harmless — keep it so external/future callers without an ID still get protection.
+
+## Verification after implementation
+
+- Repo grep for `gtmBeginCheckout(` → exactly **one** call site (the enrichment push).
+- Repo grep for `fbq(`, `InitiateCheckout` (excluding comments/binaries), `fbPixel`, `connect.facebook.net` → **zero** matches in `src/`, `index.html`, `public/*.html`.
+- Manual: click any pricing CTA → exactly one `begin_checkout` in dataLayer / GTM Preview, with `checkout_id = cs_live_…` and full `ecommerce` block.
+- Meta Test Events → one InitiateCheckout with `eventID = cs_live_…`, no second "Deduplicated, eventID = undefined" row.
+
+## Report deliverable (after fix)
+
+- Files where `begin_checkout` fires: `src/contexts/CreditContext.tsx` (one call), via `src/lib/gtm.ts:gtmBeginCheckout`.
+- `fbq('track', 'InitiateCheckout')` remaining: **none**.
+- One `begin_checkout` push per checkout attempt: **confirmed**.

@@ -198,7 +198,10 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, [user]);
 
   const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment', planName?: string) => {
-    // Meta InitiateCheckout now fires from GTM via the begin_checkout dataLayer event.
+    // Meta InitiateCheckout fires from GTM via the SINGLE begin_checkout
+    // dataLayer event pushed AFTER Stripe Checkout Session is created. This
+    // guarantees every InitiateCheckout carries a real eventID = cs_… so Meta
+    // never sees a duplicate with eventID=undefined.
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error('Please log in to continue.');
@@ -206,8 +209,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
     }
     const sessionUserId = session.user?.id || user?.id || null;
 
-    // Resolve plan name + value from local catalog so the GTM event has full
-    // commerce context BEFORE we hit the backend.
+    // Resolve plan name + value from local catalog as a fallback in case the
+    // backend response omits amount/currency.
     const plan = pricingPlans.find(
       (p) => p.stripePriceIdMonthly === priceId || p.stripePriceIdAnnual === priceId
     );
@@ -229,27 +232,6 @@ export function CreditProvider({ children }: CreditProviderProps) {
       } catch { return false; }
     })();
 
-    // Fire begin_checkout IMMEDIATELY on user intent — before the backend call
-    // and before any redirect can tear down the page.
-    const beginResult = gtmBeginCheckout({
-      userId: sessionUserId,
-      planName: resolvedPlanName,
-      checkoutMode: mode,
-      value: resolvedValue,
-      currency: 'USD',
-      pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
-    });
-    if (debug) {
-      // eslint-disable-next-line no-console
-      console.log('[GTM DEBUG begin_checkout fired]', {
-        beginResult,
-        sessionUserId,
-        planName: resolvedPlanName,
-        mode,
-        value: resolvedValue,
-      });
-    }
-
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId, mode },
@@ -269,9 +251,10 @@ export function CreditProvider({ children }: CreditProviderProps) {
       }
 
       if (data?.sessionId) {
-        // Enrichment push: same begin_checkout event, now with the real
-        // Stripe checkout_id. Persistent dedup on the session id ensures it
-        // can never push twice across refreshes.
+        // SINGLE begin_checkout push, with the real Stripe checkout_id.
+        // Persistent dedup on the session id ensures it can never push twice
+        // across refreshes. Meta InitiateCheckout (fired by GTM) inherits
+        // eventID = cs_… from this event.
         gtmBeginCheckout({
           userId: sessionUserId,
           planName: resolvedPlanName,
