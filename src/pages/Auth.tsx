@@ -18,6 +18,7 @@ import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { AuthHeroGallery } from '@/components/app/AuthHeroGallery';
 import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
+import { mapAuthError } from '@/lib/authErrors';
 
 export default function Auth() {
   const navigate = useNavigate();
