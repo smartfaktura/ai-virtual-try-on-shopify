@@ -689,9 +689,9 @@ export default function Settings() {
 
         <div className="flex justify-end pt-2">
           <Button
+            size="pill"
             onClick={handleSave}
             disabled={isSaving}
-            className="rounded-full h-[3.25rem] px-7 shadow-lg shadow-primary/25"
           >
             {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
