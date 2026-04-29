@@ -597,9 +597,9 @@ export default function Jobs() {
                   </div>
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {columns.map((col, i) => (
-                  <div key={i} className="flex-1 flex flex-col gap-2">
+                  <div key={i} className="flex-1 flex flex-col gap-3">
                     {col.map(item => (
                       <LibraryImageCard
                         key={item.id}
