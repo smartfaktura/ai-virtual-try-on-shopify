@@ -70,6 +70,10 @@ const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
 const LoadingLab = lazy(() => import('@/pages/admin/LoadingLab'));
 const SceneUsage = lazy(() => import('@/pages/admin/SceneUsage'));
 const SeoPageVisuals = lazy(() => import('@/pages/admin/SeoPageVisuals'));
+const AdminCampaigns = lazy(() => import('@/pages/admin/Campaigns'));
+const CampaignComposer = lazy(() => import('@/pages/admin/CampaignComposer'));
+const AutomationComposer = lazy(() => import('@/pages/admin/AutomationComposer'));
+const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
