@@ -90,56 +90,69 @@ function ContentPreferencesSection() {
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
-    // Drop sub-picks no longer reachable (e.g. user removed the parent family),
-    // re-add single-sub-type auto-includes, then normalise via cleanSubs (lowercase / dedup / valid-slug only).
-    const validSubSlugs = new Set(
-      multiSubFamilies.flatMap(fam => (SUB_TYPES_BY_FAMILY[fam] ?? []).map(t => t.slug)),
-    );
-    const finalSubs = cleanSubs([
-      ...subs.filter(s => validSubSlugs.has(s)),
-      ...getAutoIncludedSlugs(singleSubFamilies),
-    ]);
+    try {
+      // Drop sub-picks no longer reachable (e.g. user removed the parent family),
+      // re-add single-sub-type auto-includes, then normalise via cleanSubs (lowercase / dedup / valid-slug only).
+      const validSubSlugs = new Set(
+        multiSubFamilies.flatMap(fam => (SUB_TYPES_BY_FAMILY[fam] ?? []).map(t => t.slug)),
+      );
+      const finalSubs = cleanSubs([
+        ...subs.filter(s => validSubSlugs.has(s)),
+        ...getAutoIncludedSlugs(singleSubFamilies),
+      ]);
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ product_categories: cats, product_subcategories: finalSubs } as any)
-      .eq('user_id', user.id);
-    if (error) toast.error('Failed to save');
-    else {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ product_categories: cats, product_subcategories: finalSubs } as any)
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast.error('Failed to save');
+        return;
+      }
+
       setSubs(finalSubs);
       setOriginal({ cats, subs: finalSubs });
       toast.success('Preferences saved');
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('marketing_emails_opted_in, plan, credits_balance, first_name')
-        .eq('user_id', user.id)
-        .single();
-      if (profile) {
-        const familyLabels = cats
-          .map(id => PRODUCT_CATEGORIES.find(c => c.id === id)?.label ?? id);
-        supabase.functions.invoke('sync-resend-contact', {
-          body: {
-            email: user.email,
-            first_name: profile.first_name,
-            opted_in: profile.marketing_emails_opted_in,
-            properties: {
-              plan: profile.plan,
-              credits_balance: profile.credits_balance,
-              // Legacy keys
-              product_categories: familyLabels.join(', '),
-              product_subcategories: finalSubs.join(', '),
-              // New explicit, segmentable fields
-              families: familyNames,
-              subtypes: finalSubs,
-              primary_family: familyNames[0] ?? null,
-              primary_subtype: finalSubs[0] ?? null,
+      // Fire-and-forget Resend sync — never block the UI on this
+      void (async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('marketing_emails_opted_in, plan, credits_balance, first_name')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          if (!profile) return;
+          const familyLabels = cats
+            .map(id => PRODUCT_CATEGORIES.find(c => c.id === id)?.label ?? id);
+          supabase.functions.invoke('sync-resend-contact', {
+            body: {
+              email: user.email,
+              first_name: profile.first_name,
+              opted_in: profile.marketing_emails_opted_in,
+              properties: {
+                plan: profile.plan,
+                credits_balance: profile.credits_balance,
+                product_categories: familyLabels.join(', '),
+                product_subcategories: finalSubs.join(', '),
+                families: familyNames,
+                subtypes: finalSubs,
+                primary_family: familyNames[0] ?? null,
+                primary_subtype: finalSubs[0] ?? null,
+              },
             },
-          },
-        }).catch(() => {});
-      }
+          }).catch(() => {});
+        } catch {
+          /* non-critical */
+        }
+      })();
+    } catch (err) {
+      console.error('Preferences save failed:', err);
+      toast.error('Failed to save');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   return (
@@ -288,52 +301,64 @@ export default function Settings() {
   const handleSave = async () => {
     if (!user) return;
     setIsSaving(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        settings: JSON.parse(JSON.stringify(settings)),
-        marketing_emails_opted_in: marketingOptIn,
-      })
-      .eq('user_id', user.id);
-
-    if (error) {
-      toast.error('Failed to save settings');
-    } else {
-      // Sync marketing preference + categories to Resend audience.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { resolveFamilyNames } =
-        require('@/lib/onboardingTaxonomy') as typeof import('@/lib/onboardingTaxonomy');
-      const { data: profileData } = await supabase
+    try {
+      const { error } = await supabase
         .from('profiles')
-        .select('product_categories, product_subcategories, first_name')
-        .eq('user_id', user.id)
-        .single();
-      const cats = ((profileData?.product_categories as string[]) ?? []);
-      const subs = (((profileData as any)?.product_subcategories as string[]) ?? []);
-      const familyLabels = cats.map(id => PRODUCT_CATEGORIES.find(c => c.id === id)?.label ?? id);
-      const familyNames = resolveFamilyNames(cats);
-      supabase.functions.invoke('sync-resend-contact', {
-        body: {
-          email: user.email,
-          first_name: profileData?.first_name,
-          opted_in: marketingOptIn,
-          properties: {
-            plan,
-            credits_balance: balance,
-            has_generated: true,
-            signup_date: user.created_at || new Date().toISOString(),
-            product_categories: familyLabels.join(', '),
-            product_subcategories: subs.join(', '),
-            families: familyNames,
-            subtypes: subs,
-            primary_family: familyNames[0] ?? null,
-            primary_subtype: subs[0] ?? null,
-          },
-        },
-      }).catch(() => {});
+        .update({
+          settings: JSON.parse(JSON.stringify(settings)),
+          marketing_emails_opted_in: marketingOptIn,
+        })
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast.error('Failed to save settings');
+        return;
+      }
+
       toast.success('Settings saved successfully!');
+
+      // Fire-and-forget Resend sync — never block the UI on this
+      void (async () => {
+        try {
+          const { resolveFamilyNames } = await import('@/lib/onboardingTaxonomy');
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('product_categories, product_subcategories, first_name')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          const cats = ((profileData?.product_categories as string[]) ?? []);
+          const subs = (((profileData as any)?.product_subcategories as string[]) ?? []);
+          const familyLabels = cats.map(id => PRODUCT_CATEGORIES.find(c => c.id === id)?.label ?? id);
+          const familyNames = resolveFamilyNames(cats);
+          supabase.functions.invoke('sync-resend-contact', {
+            body: {
+              email: user.email,
+              first_name: profileData?.first_name,
+              opted_in: marketingOptIn,
+              properties: {
+                plan,
+                credits_balance: balance,
+                has_generated: true,
+                signup_date: user.created_at || new Date().toISOString(),
+                product_categories: familyLabels.join(', '),
+                product_subcategories: subs.join(', '),
+                families: familyNames,
+                subtypes: subs,
+                primary_family: familyNames[0] ?? null,
+                primary_subtype: subs[0] ?? null,
+              },
+            },
+          }).catch(() => {});
+        } catch {
+          /* non-critical */
+        }
+      })();
+    } catch (err) {
+      console.error('Settings save failed:', err);
+      toast.error('Failed to save settings');
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
