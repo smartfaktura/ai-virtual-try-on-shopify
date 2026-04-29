@@ -84,7 +84,6 @@ Deno.serve(async (req) => {
         event_type: event,
         payload: {
           attributes: body.attributes ?? null,
-          upsert_status: upsertStatus,
           event_status: eventStatus,
         },
         status: eventOk ? "ok" : "failed",
