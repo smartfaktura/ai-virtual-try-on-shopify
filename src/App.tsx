@@ -282,6 +282,11 @@ const App = () => {
                         <Route path="/admin/loading-lab" element={<LoadingLab />} />
                         <Route path="/admin/scene-performance" element={<SceneUsage />} />
                         <Route path="/admin/seo-page-visuals" element={<SeoPageVisuals />} />
+                        <Route path="/admin/campaigns" element={<AdminCampaigns />} />
+                        <Route path="/admin/campaigns/new" element={<CampaignComposer />} />
+                        <Route path="/admin/campaigns/automations/new" element={<AutomationComposer />} />
+                        <Route path="/admin/campaigns/automations/:id" element={<AutomationComposer />} />
+                        <Route path="/admin/campaigns/:id" element={<CampaignComposer />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
