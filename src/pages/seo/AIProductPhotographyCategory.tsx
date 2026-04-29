@@ -18,27 +18,45 @@ import { CategoryUseCases } from '@/components/seo/photography/category/Category
 import { CategoryRelatedCategories } from '@/components/seo/photography/category/CategoryRelatedCategories';
 import { CategoryFAQ } from '@/components/seo/photography/category/CategoryFAQ';
 import { getCategoryPage, PREVIEW } from '@/data/aiProductPhotographyCategoryPages';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 
 /**
- * Inject a <link rel="preload" as="image"> for the LCP hero tile so the
- * browser starts downloading it during HTML parse rather than after React
- * mounts. Cleans up on unmount/route change to avoid stale preloads.
+ * Inject a <link rel="preload" as="image"> for the LCP hero image, matching
+ * the EXACT URL/srcset the hero <img> will request so the browser can satisfy
+ * the request from the preload (no double download). Also sets fetchPriority
+ * high so the LCP candidate is prioritized during HTML parse.
  */
-function HeroPreload({ url }: { url: string }) {
+function HeroPreload({ url, isCollage }: { url: string; isCollage: boolean }) {
   useEffect(() => {
     if (!url) return;
     const link = document.createElement('link');
     link.rel = 'preload';
     link.as = 'image';
-    // Quality-only: width transforms crop/zoom these editorial images server-side.
-    link.href = getOptimizedUrl(url, { quality: 60 });
     link.fetchPriority = 'high';
+
+    if (isCollage) {
+      // Mirror HeroTile: 4:5 tile, w=640 h=800 q=85, srcSet 360/540/720
+      link.href = getOptimizedUrl(url, { width: 640, height: 800, quality: 85, resize: 'cover' });
+      link.setAttribute(
+        'imagesrcset',
+        getResizedSrcSet(url, { widths: [360, 540, 720], aspect: [4, 5], quality: 85 }),
+      );
+      link.setAttribute('imagesizes', '(max-width: 1024px) 45vw, 280px');
+    } else {
+      // Mirror single-image hero: 4:5, w=1120 h=1400 q=85, srcSet 640/900/1120/1400
+      link.href = getOptimizedUrl(url, { width: 1120, height: 1400, quality: 85, resize: 'cover' });
+      link.setAttribute(
+        'imagesrcset',
+        getResizedSrcSet(url, { widths: [640, 900, 1120, 1400], aspect: [4, 5], quality: 85 }),
+      );
+      link.setAttribute('imagesizes', '(max-width: 1024px) 92vw, 560px');
+    }
+
     document.head.appendChild(link);
     return () => {
       link.remove();
     };
-  }, [url]);
+  }, [url, isCollage]);
   return null;
 }
 
