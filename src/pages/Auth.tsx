@@ -174,6 +174,7 @@ export default function Auth() {
           supabase.functions.invoke('sync-resend-contact', {
             body: {
               email,
+              user_id: data.user.id,
               first_name: displayName || email.split('@')[0],
               opted_in: marketingOptIn,
               properties: {
