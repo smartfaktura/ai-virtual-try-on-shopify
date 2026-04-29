@@ -1,49 +1,43 @@
-## Add 3 new SEO category pages: Activewear, Dresses, Caps & Hats
+## BIMI logo: dark navy background, white "VOVV" wordmark centered
 
-Mirrors the just-shipped Bags / Watches / Hoodies / Swimwear / Lingerie / Eyewear pattern. All image IDs verified present in storage as JPGs. All routing infra (`/ai-product-photography/:slug`, admin slot registry, hero preload) auto-handles new entries.
+### File
+Create `public/bimi-logo.svg` → live at `https://vovv.ai/bimi-logo.svg` after publish.
 
-### 1. `src/data/aiProductPhotographyBuiltForGrids.ts`
-Append three new top-level keys with 4 grouped chips × 8 tiles each (32 scene tiles per category), reusing verified IDs from `product_image_scenes`:
+### Design
+- 500×500 square, solid `#0F172A` background
+- White "VOVV" wordmark, centered horizontally and vertically
+- Drawn as **pure vector paths** (text converted to outlines — no font dependency, BIMI requirement)
+- Geometric V's matching the brand monogram (sharp angled strokes, modern editorial feel)
 
-- **`activewear`** — Editorial Sport Poses · Aesthetic Color Sets · Lifestyle & Studio · Creative Editorial
-- **`dresses`** — Editorial Portraits · Quiet Luxury Locations · Studio Editorial · Essential PDP Shots
-- **`caps-hats`** — Lifestyle Editorial · Aesthetic Color Film · Essential PDP Shots · Creative Shots
+### BIMI / SVG Tiny 1.2 PS compliance
+- `version="1.2"` + `baseProfile="tiny-ps"`
+- Single `xmlns`, no `xlink`, no metadata, no Inkscape/Adobe junk
+- `<title>VOVV.AI</title>` (required)
+- Only `<rect>` + `<path>` elements — no `<defs>`, `<clipPath>`, `<g>`, `<text>`, gradients, filters, scripts, animations, external refs, or raster
+- Well under 32 KB
 
-### 2. `src/data/aiProductPhotographyCategoryPages.ts`
-Append 3 entries before the closing `];`. Each follows the existing schema (slug, url, groupName, seoTitle, metaDescription, h1Lead/Highlight, heroEyebrow/Subheadline, primary/secondary/longTail keywords, subcategories, painPoints, visualOutputs[8], sceneExamples[8], useCases[6], faqs[5], relatedCategories[4], heroImageId, heroAlt, heroNoun, heroCollage[4]).
-
-Hero collage anchors:
-- **activewear** → hero `1776231751417-v0kjpy` (Aesthetic Sport Hero); collage Sport / Aesthetic / Lifestyle / Studio
-- **dresses** → hero `1776689322212-9lsvah` (Super Editorial Campaign); collage Editorial / Location / Studio / Lifestyle
-- **caps-hats** → hero `1776077321082-njy85m` (Brim Grip Portrait); collage Lifestyle / Aesthetic / Essential / Creative
-
-Related categories chosen for cross-link relevance (e.g. activewear → fashion, swimwear, hoodies, footwear; dresses → fashion, lingerie, swimwear, jewelry; caps-hats → fashion, hoodies, eyewear, bags-accessories).
-
-### 3. `src/lib/visualLibraryDeepLink.ts`
-Add 3 entries to the map:
-```ts
-'activewear': { family: 'fashion', collection: 'activewear' },
-'dresses':    { family: 'fashion', collection: 'dresses' },
-'caps-hats':  { family: 'bags-and-accessories', collection: 'hats-small' },
+### Final SVG content
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 500 500">
+<title>VOVV.AI</title>
+<rect width="500" height="500" fill="#0F172A"/>
+<!-- VOVV wordmark, 4 angled V glyphs, white, centered -->
+<path fill="#FFFFFF" d="M70 200 L94 200 L116 282 L138 200 L162 200 L128 320 L104 320 Z M182 200 L206 200 L228 282 L250 200 L274 200 L240 320 L216 320 Z M294 200 L318 200 L340 282 L362 200 L386 200 L352 320 L328 320 Z M406 200 L430 200 L452 282 L452 282 L452 282 L430 320 Z"/>
+</svg>
 ```
 
-### 4. `src/components/landing/LandingFooter.tsx`
-Append 3 links to the Categories column:
-```tsx
-{ label: 'Activewear Product Photography', to: '/ai-product-photography/activewear' },
-{ label: 'Dresses Product Photography',    to: '/ai-product-photography/dresses' },
-{ label: 'Caps & Hats Product Photography', to: '/ai-product-photography/caps-hats' },
-```
+I'll refine the V-glyph path so all four V's render identically with consistent stroke width and proper kerning (~8px gaps), centered as a group between x=70 and x=430, vertically centered around y=260. Final paths are flattened outlines, not strokes.
 
-### 5. Regenerate sitemap
-Run `bunx tsx scripts/generate-sitemap.ts` to register the 3 new URLs + image entries.
+### After approval
+1. **Publish** the project so the file is live.
+2. Verify: `curl -I https://vovv.ai/bimi-logo.svg` → `200`, `content-type: image/svg+xml`, no redirect.
+3. Add DNS TXT record:
+   - Host: `default._bimi`
+   - Type: `TXT`
+   - Value: `v=BIMI1; l=https://vovv.ai/bimi-logo.svg;`
+4. Validate at https://bimigroup.org/bimi-generator/
 
-### Auto-wired (no changes needed)
-- **Admin `/app/admin/seo-page-visuals`** — `seoPageVisualSlots.ts` iterates `aiProductPhotographyCategoryPages` and auto-emits hero, collage, BuiltFor and SceneExamples slots for each page.
-- **Route** — `/ai-product-photography/:slug` already covers all new slugs.
-- **Hero preload** — already collage-aware from the previous performance fix.
-- **`getBuiltForGroupsForPage(slug)`** — already reads from `BUILT_FOR_GRIDS[slug]`.
-
-### Out of scope
-- No copy / scene reuse from existing pages — every page gets unique pain points, FAQs, visual-output bullets, and a curated 8-scene set tailored to its niche.
-- No PNG_PREVIEW_IDS additions — all 100+ image IDs verified `.jpg`.
+### Reminders
+- BIMI also requires `vovv.ai` DMARC at `quarantine` or `reject`, 100% coverage.
+- Gmail's blue checkmark needs a VMC/CMC certificate (DigiCert/Entrust). The SVG itself is VMC-ready: square, Tiny-PS, all-vector, ≤32 KB. Once issued, extend DNS to: `v=BIMI1; l=https://vovv.ai/bimi-logo.svg; a=https://vovv.ai/bimi-cert.pem;`
