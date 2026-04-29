@@ -129,6 +129,7 @@ function ContentPreferencesSection() {
           supabase.functions.invoke('sync-resend-contact', {
             body: {
               email: user.email,
+              user_id: user.id,
               first_name: profile.first_name,
               opted_in: profile.marketing_emails_opted_in,
               properties: {
@@ -140,6 +141,21 @@ function ContentPreferencesSection() {
                 subtypes: finalSubs,
                 primary_family: familyNames[0] ?? null,
                 primary_subtype: finalSubs[0] ?? null,
+              },
+            },
+          }).catch(() => {});
+
+          // Custom Event for automations triggered on category/profile updates
+          supabase.functions.invoke('track-resend-event', {
+            body: {
+              email: user.email,
+              user_id: user.id,
+              event: 'profile.updated',
+              attributes: {
+                plan: profile.plan,
+                families: familyNames,
+                primary_family: familyNames[0] ?? null,
+                subtypes: finalSubs,
               },
             },
           }).catch(() => {});
