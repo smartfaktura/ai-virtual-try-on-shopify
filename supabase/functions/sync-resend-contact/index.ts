@@ -100,7 +100,9 @@ Deno.serve(async (req) => {
       action = patchRes.ok ? "updated" : "failed";
     }
 
-    // Log
+    // Log (include incoming properties for debugging — Resend audience contacts
+    // only support first_name/last_name/unsubscribed natively, so other fields
+    // live in the log + Custom Events).
     await admin.from("resend_event_log").insert({
       user_id: body.user_id ?? null,
       email,
@@ -108,8 +110,10 @@ Deno.serve(async (req) => {
       payload: {
         action,
         first_name: firstName,
-        plan: profile?.plan,
-        product_categories: profile?.product_categories,
+        last_name: lastName,
+        plan: body.properties?.plan ?? profile?.plan,
+        product_categories: body.properties?.product_categories ?? profile?.product_categories,
+        properties: body.properties ?? null,
         unsubscribed,
       },
       status: action === "failed" ? "failed" : "ok",
