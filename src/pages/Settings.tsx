@@ -253,8 +253,6 @@ export default function Settings() {
     try { await openCustomerPortal(); } finally { setPortalLoading(false); }
   };
 
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [genProgress, setGenProgress] = useState({ processed: 0, total: 19 });
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
