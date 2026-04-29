@@ -168,15 +168,41 @@ export function DashboardDiscoverSection() {
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
-      navigate(`/app/freestyle?scene=${item.data.poseId}`);
+      // Scene-type Discover items always belong to product-images workflow
+      const sp = new URLSearchParams();
+      const sceneRef = (item.data as any).scene_ref as string | undefined;
+      if (sceneRef) {
+        sp.set('sceneRef', sceneRef);
+      } else {
+        // Legacy fallback for items not yet linked
+        if (item.data.name) sp.set('scene', item.data.name);
+        if (item.data.previewUrl) sp.set('sceneImage', item.data.previewUrl);
+        if (item.data.name) sp.set('sceneName', item.data.name);
+        const sceneCat = (item.data as any).category;
+        if (sceneCat) sp.set('sceneCategory', sceneCat);
+      }
+      sp.set('fromDiscover', '1');
+      navigate(`/app/generate/product-images?${sp.toString()}`);
     } else {
       const d = item.data;
+      // Route product-images presets directly to the wizard with sceneRef
+      if (d.workflow_slug === 'product-images') {
+        const params = new URLSearchParams();
+        if (d.scene_ref) params.set('sceneRef', d.scene_ref);
+        params.set('fromDiscover', '1');
+        navigate(`/app/generate/product-images?${params.toString()}`);
+        return;
+      }
+      // Other workflow presets → Generate page with model/scene pre-filled
       if (d.workflow_slug) {
         const params = new URLSearchParams();
         if (d.model_name) params.set('model', d.model_name);
         if (d.scene_name) params.set('scene', d.scene_name);
+        if (d.scene_image_url) params.set('sceneImage', d.scene_image_url);
+        params.set('fromDiscover', '1');
         navigate(`/app/generate/${d.workflow_slug}?${params.toString()}`);
       } else {
+        // Free-form prompt presets stay on Freestyle (intentional)
         const params = new URLSearchParams({
           prompt: d.prompt,
           ratio: d.aspect_ratio,
