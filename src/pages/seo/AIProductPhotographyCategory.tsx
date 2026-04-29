@@ -116,7 +116,7 @@ export default function AIProductPhotographyCategory() {
         canonical={PAGE_URL}
         ogImage={ogImage}
       />
-      <HeroPreload url={lcpUrl} />
+      <HeroPreload url={lcpUrl} isCollage={Boolean(page.heroCollage && page.heroCollage.length >= 4)} />
       <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={collectionJsonLd} />
 
