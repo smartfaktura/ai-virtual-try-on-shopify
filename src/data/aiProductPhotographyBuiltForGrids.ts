@@ -2099,5 +2099,405 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         }
       ]
     }
+  ],
+  "bags": [
+    {
+      "subCategory": "Bags · Editorial Studio",
+      "cards": [
+        { "label": "Sculptural Bag Studio Hero", "imageId": "1776239449949-ygljai" },
+        { "label": "Hardware & Craft Closeup",   "imageId": "1776749772492-j9qpsv" },
+        { "label": "Luxury Couch Bag Still",     "imageId": "1776239439946-komlla" },
+        { "label": "Vintage Car Bag Still",      "imageId": "1776239461462-cykje2" },
+        { "label": "Monochrome Colorbox Bag",    "imageId": "1776239442117-kllo1p" },
+        { "label": "Display Dome Bag Statement", "imageId": "1776239425806-v6xegn" }
+      ]
+    },
+    {
+      "subCategory": "Bags · On-Body Editorial",
+      "cards": [
+        { "label": "Architectural On-Body Editorial", "imageId": "1776239415973-p3m8bq" },
+        { "label": "Close Body Bag Portrait",         "imageId": "1776239422417-a959mo" },
+        { "label": "Winter Bokeh Detail",             "imageId": "1776749562121-bqgti4" },
+        { "label": "Retro Car Editorial",             "imageId": "1776749545971-gv6zst" },
+        { "label": "City Icon Portrait",              "imageId": "1776749519182-i9w68k" },
+        { "label": "Alpine Minimalism",               "imageId": "1776749510995-txj24j" },
+        { "label": "Lakeside Quiet Luxury",           "imageId": "1776749534061-yvcf06" },
+        { "label": "Windblown Studio Edge",           "imageId": "1776749560624-xw3yec" }
+      ]
+    },
+    {
+      "subCategory": "Bags · Campaign Statements",
+      "cards": [
+        { "label": "Wind Shoulder Editorial",      "imageId": "1776749559127-ra3hur" },
+        { "label": "Alpine Carry Motion",          "imageId": "1776749505968-dxsavu" },
+        { "label": "Desert Depth Carry",           "imageId": "1776749521938-mh0bhs" },
+        { "label": "Distant Horizon Campaign",     "imageId": "1776749523574-vyjz0j" },
+        { "label": "Vintage Cinematic Bag Campaign", "imageId": "1776239462616-qs3ut8" },
+        { "label": "Super Editorial Bag Campaign", "imageId": "1776239458153-wzp51p" },
+        { "label": "Soft Motion Carry Editorial",  "imageId": "1776749550097-x6afn4" },
+        { "label": "Misty Lake Still",             "imageId": "1776749538873-3xu16l" }
+      ]
+    },
+    {
+      "subCategory": "Bags · Essential Shots",
+      "cards": [
+        { "label": "Front View",            "imageId": "1776239427925-pwgn3u" },
+        { "label": "Angle View",            "imageId": "1776239414811-nvmu94" },
+        { "label": "Side View",             "imageId": "1776239451433-7djvm9" },
+        { "label": "In-Hand Studio",        "imageId": "1776239434540-tt9f6t" },
+        { "label": "Reclined Studio Editorial", "imageId": "1776749544620-sn4eh1" },
+        { "label": "Mid Portrait Hold",     "imageId": "1776239441102-rgbtr9" },
+        { "label": "Hardware Close-Up",     "imageId": "1776239431078-3zb6n1" },
+        { "label": "Sculptural Product Still", "imageId": "1776749548695-11dzfk" }
+      ]
+    },
+    {
+      "subCategory": "Bags · Everyday UGC",
+      "cards": [
+        { "label": "Luxury Bag Mirror Selfie", "imageId": "1776239438796-99x31m" },
+        { "label": "Cafe Errand Bag Look",     "imageId": "1776239420140-re6sqe" },
+        { "label": "Casual City Carry",        "imageId": "1776749517351-v1bwbf" },
+        { "label": "Quiet UGC Carry",          "imageId": "1776749541887-kmmh8g" },
+        { "label": "Street Carry Casual",      "imageId": "1776239455851-wzwprl" },
+        { "label": "Travel Lobby Bag Moment",  "imageId": "1776239460299-dc2da3" },
+        { "label": "Weekend Outing Bag Look",  "imageId": "1776239463832-lm4m95" },
+        { "label": "Soft Home Carry Story",    "imageId": "1776239452459-amq2zx" }
+      ]
+    }
+  ],
+  "watches": [
+    {
+      "subCategory": "Watches · Editorial Studio",
+      "cards": [
+        { "label": "Motion Blur Watch Hero",      "imageId": "1776596240525-wafgtx" },
+        { "label": "Dial & Hardware Closeup",     "imageId": "1776247090415-yfk1rr" },
+        { "label": "Sky Reflection Watch Hero",   "imageId": "1776596656361-sax8tc" },
+        { "label": "Jewelry Watch Statement",     "imageId": "1776247116958-qmfsoq" },
+        { "label": "Editorial Motion Slice",      "imageId": "1776596761580-awqwnw" },
+        { "label": "Dark Shadow Product Study",   "imageId": "1776247111139-gpav7x" },
+        { "label": "Shadow Streak Wrist Editorial", "imageId": "1776596637561-qd7o4v" }
+      ]
+    },
+    {
+      "subCategory": "Watches · On-Wrist Portraits",
+      "cards": [
+        { "label": "Wrist Beauty Portrait",       "imageId": "1776596675195-dlyony" },
+        { "label": "Low-Angle Fashion Watch",     "imageId": "1776596155856-vxwj0v" },
+        { "label": "Silhouette Wrist Shadow",     "imageId": "1776596648578-flabzb" },
+        { "label": "Library Wrist Editorial",     "imageId": "1776596769796-ktfl28" },
+        { "label": "Daily Luxury Shirt Cuff",     "imageId": "1776596750163-gsmxno" },
+        { "label": "Super Editorial Watch Campaign", "imageId": "1776596661196-cho5wb" },
+        { "label": "Vintage Cinematic Watch Campaign", "imageId": "1776596670211-5oi25j" }
+      ]
+    },
+    {
+      "subCategory": "Watches · Creative",
+      "cards": [
+        { "label": "Earthy Glow Stage",        "imageId": "1776856607319-693vtg" },
+        { "label": "Frozen Aura",              "imageId": "1776856609329-7k8ow1" },
+        { "label": "Dynamic Water Splash",     "imageId": "1776856606480-9xz95i" },
+        { "label": "Reflective Floral Display", "imageId": "1776856613338-h5sdvq" },
+        { "label": "Volcanic Sunset",          "imageId": "1776856616175-63q2ly" },
+        { "label": "Natural Woodscape",        "imageId": "1776856612341-i879np" },
+        { "label": "Botanical Oasis",          "imageId": "1776856603977-sm8siv" },
+        { "label": "Elegant Vanity Setup",     "imageId": "1776856608308-v7h4hj" }
+      ]
+    },
+    {
+      "subCategory": "Watches · Essential Shots",
+      "cards": [
+        { "label": "Front View",        "imageId": "1776247092505-0ugq0d" },
+        { "label": "Angle View",        "imageId": "1776596689365-pf1c97" },
+        { "label": "Side View",         "imageId": "1776596642031-wqv2yx" },
+        { "label": "On-Wrist Studio",   "imageId": "1776596629281-anqgf5" },
+        { "label": "Close-Up Detail",   "imageId": "1776247088202-e612sc" },
+        { "label": "Hard Shadow Hero",  "imageId": "1776247093519-s8oold" },
+        { "label": "Flat Lay Styled",   "imageId": "1776247091482-4lken5" },
+        { "label": "Texture Detail",    "imageId": "1776247104640-v8gg45" }
+      ]
+    }
+  ],
+  "hoodies": [
+    {
+      "subCategory": "Hoodies · Essential Shots",
+      "cards": [
+        { "label": "Ghost Mannequin Shot",  "imageId": "1776847998023-tof7el" },
+        { "label": "Front View Flat Lay",   "imageId": "1776242087075-iw1a72" },
+        { "label": "On-Model Front",        "imageId": "1776671572076-fbjmnt" },
+        { "label": "On-Model Back",         "imageId": "1776671569905-zm7nt9" },
+        { "label": "On-Model Editorial",    "imageId": "1776671570762-oohd54" },
+        { "label": "Movement Shot",         "imageId": "1776242092934-rldhea" },
+        { "label": "Close-Up Detail",       "imageId": "1776242077758-vsh3kf" },
+        { "label": "Texture Detail",        "imageId": "1776242107654-bxjb62" }
+      ]
+    },
+    {
+      "subCategory": "Hoodies · Everyday UGC",
+      "cards": [
+        { "label": "Luxury Door Statement",   "imageId": "1776673938938-1zmw4x" },
+        { "label": "Paris Curb Side Pose",    "imageId": "1776686520744-c29uw3" },
+        { "label": "Outfit Mirror Selfie",    "imageId": "1776685070814-eqm8jp" },
+        { "label": "Soft Volume Lean",        "imageId": "1776673220757-bpsws9" },
+        { "label": "Side Lean Attitude Pose", "imageId": "1776673219681-qg2zkb" },
+        { "label": "Cafe Errand Outfit Moment", "imageId": "1776685103728-0qpfkm" },
+        { "label": "Minimal Mirror Pose",     "imageId": "1776686519476-xkp9za" },
+        { "label": "Elevated Mirror UGC Pose", "imageId": "1776673957321-uo25m1" }
+      ]
+    },
+    {
+      "subCategory": "Hoodies · Cozy Lifestyle",
+      "cards": [
+        { "label": "Boucle Lounge",        "imageId": "1776242075476-w5yrr8" },
+        { "label": "Soft Standing",        "imageId": "1776685688936-v7f2a6" },
+        { "label": "Reading Floor",        "imageId": "1776242101123-tuyg2g" },
+        { "label": "Wall Sit",             "imageId": "1776685696903-fszsh6" },
+        { "label": "Color Lounge",         "imageId": "1776685641936-brkzbt" },
+        { "label": "Color Outdoors",       "imageId": "1776673192169-6ykfu2" },
+        { "label": "Color Home",           "imageId": "1776242078958-lfifvx" },
+        { "label": "Color Transit",        "imageId": "1776242082143-10igwh" }
+      ]
+    },
+    {
+      "subCategory": "Hoodies · Graphic Campaigns",
+      "cards": [
+        { "label": "Graphic Hero",       "imageId": "1776242087950-i4jr4d" },
+        { "label": "Yacht Graphic",      "imageId": "1776685706552-yk6q6b" },
+        { "label": "Sport Knit",         "imageId": "1776671572972-mlr1nj" },
+        { "label": "Back Graphic",       "imageId": "1776685653569-m0rdau" }
+      ]
+    },
+    {
+      "subCategory": "Hoodies · Travel & Transit",
+      "cards": [
+        { "label": "Window Comfort",      "imageId": "1776242110829-hqrmwr" },
+        { "label": "Jet Lounge",          "imageId": "1776242090975-39q3iu" },
+        { "label": "Tarmac Walk",         "imageId": "1776242106807-8v7wjr" },
+        { "label": "Hotel Arrival",       "imageId": "1776671568828-60lc2o" },
+        { "label": "Crosswalk View",      "imageId": "1776685634752-jsc5q5" },
+        { "label": "Stairwell Off-Duty",  "imageId": "1776242105052-bbfbbi" },
+        { "label": "Travel Mirror",       "imageId": "1776673228558-lg8pl3" },
+        { "label": "Cafe Lounge",         "imageId": "1776242076676-0hztgg" }
+      ]
+    },
+    {
+      "subCategory": "Hoodies · Folded & Hanger Stills",
+      "cards": [
+        { "label": "Rail Still",     "imageId": "1776685681186-tgc29n" },
+        { "label": "Folded Grid",    "imageId": "1776242086175-mhgkfn" },
+        { "label": "Fabric Detail",  "imageId": "1776242084108-raqgsf" }
+      ]
+    }
+  ],
+  "swimwear": [
+    {
+      "subCategory": "Swimwear · Resort Editorial",
+      "cards": [
+        { "label": "Sunlit Arch Swim Editorial",   "imageId": "1776522810241-oh3lyd" },
+        { "label": "Sun Lounger Resort Pose",      "imageId": "1776246328634-fw8s9o" },
+        { "label": "On-Model Lifestyle",           "imageId": "1776522776954-akr8x6" },
+        { "label": "Poolside Standing Hero",       "imageId": "1776246322011-4gzbpx" },
+        { "label": "Resort Bokeh Swim Editorial",  "imageId": "1776522789403-pnvcux" },
+        { "label": "Seated Balcony Resort Portrait", "imageId": "1776246325971-mrh821" },
+        { "label": "Cabana Curtain Movement",      "imageId": "1776522770222-za8n2n" },
+        { "label": "Yacht Deck Editorial Pose",    "imageId": "1776246335378-kw9z8c" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Aesthetic Color",
+      "cards": [
+        { "label": "Color-Washed Resort Wall",         "imageId": "1776246306554-a1y4nz" },
+        { "label": "Aesthetic Color Poolside Story",   "imageId": "1776246296252-lf70sc" },
+        { "label": "Aesthetic Color Towel and Fabric Story", "imageId": "1776246299612-uidzat" },
+        { "label": "Aesthetic Color Sunset Resort Mood", "imageId": "1776246298538-xb12wj" },
+        { "label": "Aesthetic Color Resort Editorial Hero", "imageId": "1776246297359-aecrip" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Beach UGC",
+      "cards": [
+        { "label": "Towel Wrap After Swim",         "imageId": "1776246331485-jyrtgf" },
+        { "label": "Sun-Dried Swimwear",            "imageId": "1776522793804-125kin" },
+        { "label": "Floating Pool Product Shot",    "imageId": "1776522770907-dwn2ay" },
+        { "label": "Palm Shadow Swim Editorial",    "imageId": "1776522783936-8h56rb" },
+        { "label": "Walking Along Pool Edge",       "imageId": "1776522832053-f1h9ck" },
+        { "label": "Beach Towel Sitting Moment",    "imageId": "1776246304639-tjof8z" },
+        { "label": "Beach Bag and Essentials",      "imageId": "1776246303699-b50y33" },
+        { "label": "Shoreline Walk Pause",          "imageId": "1776246326918-ofopok" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Stills",
+      "cards": [
+        { "label": "Folded on Towel Hero Still",   "imageId": "1776246310078-jeoctl" },
+        { "label": "Sandy Towel Surface Detail",   "imageId": "1776246325029-44re6c" },
+        { "label": "Water Reflection Still Life",  "imageId": "1776246333620-ntl6rn" },
+        { "label": "Resort Essentials Flat",       "imageId": "1776246329554-uvtjp1" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Essential Shots",
+      "cards": [
+        { "label": "Ghost Mannequin Shot", "imageId": "1776523219756-c5vnc7" },
+        { "label": "On-Model Front",       "imageId": "1776246318297-apxkit" },
+        { "label": "On-Model Back",        "imageId": "1776246316545-ge07py" },
+        { "label": "On-Model Editorial",   "imageId": "1776246317384-rtaqcj" },
+        { "label": "Movement Shot",        "imageId": "1776246314604-0psi6v" },
+        { "label": "Texture Detail",       "imageId": "1776523395800-pxcl00" },
+        { "label": "Product + Packaging",  "imageId": "1776523394657-7rfvtd" }
+      ]
+    }
+  ],
+  "lingerie": [
+    {
+      "subCategory": "Lingerie · Clean Studio",
+      "cards": [
+        { "label": "Soft Standing Silhouette", "imageId": "1776242906373-w3xwua" },
+        { "label": "Seated Contour Studio",    "imageId": "1776242903426-bcb29g" },
+        { "label": "Cinematic Body Study",     "imageId": "1776751554344-84vyl3" },
+        { "label": "Soft Editorial Layers",    "imageId": "1776751578641-aycg4t" },
+        { "label": "Side Profile Drape",       "imageId": "1776242905537-mxddo5" },
+        { "label": "Floor Folded Legs Studio", "imageId": "1776751561034-4oka0i" }
+      ]
+    },
+    {
+      "subCategory": "Lingerie · Editorial Boudoir",
+      "cards": [
+        { "label": "Bed Edge Morning Shadow", "imageId": "1776751553442-og7kuy" },
+        { "label": "Sheet Wrap Portrait",     "imageId": "1776242904436-yknift" },
+        { "label": "Curtain Light Corner",    "imageId": "1776242885392-x34abt" },
+        { "label": "Vanity Mirror Minimal",   "imageId": "1776751584282-ha8r9w" },
+        { "label": "Flash Salon Elegance",    "imageId": "1776751560164-j7dxvq" },
+        { "label": "Flash Room Intimacy",     "imageId": "1776751559396-d4a4n9" }
+      ]
+    },
+    {
+      "subCategory": "Lingerie · Soft Lifestyle",
+      "cards": [
+        { "label": "Morning Mirror Lifestyle", "imageId": "1776242896728-sk9xrg" },
+        { "label": "Coffee in Bed",            "imageId": "1776242884530-hqf2md" },
+        { "label": "Robe Layer Transition",    "imageId": "1776242901351-380sl3" },
+        { "label": "Morning Hotel Intimacy",   "imageId": "1776751567693-1bthah" },
+        { "label": "Premium Linen Recline",    "imageId": "1776751575198-ddioz2" },
+        { "label": "Reading on Rug / Sofa",    "imageId": "1776751834921-jprgmf" },
+        { "label": "Resort Hallway Ease",      "imageId": "1776751576865-wsxsgi" },
+        { "label": "Morning UGC Moment",       "imageId": "1776751568891-mfnd6c" }
+      ]
+    },
+    {
+      "subCategory": "Lingerie · Campaign Sensual",
+      "cards": [
+        { "label": "Sunlit Skin Hero",          "imageId": "1776242908181-27a0zd" },
+        { "label": "Sunlit Editorial Attitude", "imageId": "1776751581958-35xr36" },
+        { "label": "Deep Shadow Statement",     "imageId": "1776751558538-4bf03r" },
+        { "label": "Sunlit Shadow Editorial",   "imageId": "1776751582879-p76j53" },
+        { "label": "Cloud Studio Intimacy",     "imageId": "1776751556773-14mj5e" },
+        { "label": "Silk Movement Hero",        "imageId": "1776751577753-m1y0kx" },
+        { "label": "Tropical Noir Recline",     "imageId": "1776751833707-qrkpkn" },
+        { "label": "Iconic Final Campaign Portrait", "imageId": "1776242893938-p7i7q8" }
+      ]
+    },
+    {
+      "subCategory": "Lingerie · Stills",
+      "cards": [
+        { "label": "Folded Lace on Linen",       "imageId": "1776242889108-a90oy8" },
+        { "label": "Drawer / Hanger Editorial Still", "imageId": "1776242886199-4s2ufx" },
+        { "label": "Macro Fabric Detail",        "imageId": "1776242895810-qo2rz2" },
+        { "label": "Gift Tissue / Box Composition", "imageId": "1776242891327-mihmol" }
+      ]
+    },
+    {
+      "subCategory": "Lingerie · Essential Shots",
+      "cards": [
+        { "label": "Front View Flat Lay", "imageId": "1776751562172-vlyt1y" },
+        { "label": "On-Model Front",      "imageId": "1776751573366-7spsf6" },
+        { "label": "Soft Studio Intimacy", "imageId": "1776751579914-hzwvl8" },
+        { "label": "On-Model Back",       "imageId": "1776751571047-0ybo8a" },
+        { "label": "Minimal Tension Detail", "imageId": "1776751566586-9l66o4" },
+        { "label": "On-Model Editorial",  "imageId": "1776751572196-tjdqsp" },
+        { "label": "Movement Shot",       "imageId": "1776751570067-29y3u6" },
+        { "label": "Hard Shadow Hero",    "imageId": "1776751563262-egh0tj" }
+      ]
+    }
+  ],
+  "eyewear": [
+    {
+      "subCategory": "Eyewear · Editorial Portraits",
+      "cards": [
+        { "label": "Beauty Closeup",   "imageId": "beauty-closeup-oversized-eyewear-1776150210659" },
+        { "label": "Lip Touch",        "imageId": "1776102189149-tr6e2q" },
+        { "label": "Handheld Frame",   "imageId": "1776102186144-xrnwnc" },
+        { "label": "Sun Shadow",       "imageId": "1776102203261-ncu7xm" },
+        { "label": "Chair Still",      "imageId": "1776102178984-ppt0z2" },
+        { "label": "Sleek Black",      "imageId": "1776102198082-xi72z6" }
+      ]
+    },
+    {
+      "subCategory": "Eyewear · Aesthetic Color",
+      "cards": [
+        { "label": "Beauty Closeup",  "imageId": "aesthetic-beauty-closeup-eyewear-1776148096014" },
+        { "label": "Golden Hour",     "imageId": "1776102185057-0ulf1m" },
+        { "label": "Office Flash",    "imageId": "editorial-office-flash-eyewear-1776150153576" },
+        { "label": "Lounge Selfie",   "imageId": "1776102190563-dioke2" },
+        { "label": "Car Still",       "imageId": "1776102177642-wf3hqt" },
+        { "label": "Minimal Still",   "imageId": "1776102191905-wo8qfc" }
+      ]
+    },
+    {
+      "subCategory": "Eyewear · Vintage Film",
+      "cards": [
+        { "label": "Flash Candy",     "imageId": "1776102183733-g1twvv" },
+        { "label": "Cafe Film",       "imageId": "1776102174244-t76i6k" },
+        { "label": "Bedroom Flash",   "imageId": "1776102169917-uiog3f" },
+        { "label": "Office Film",     "imageId": "1776102194379-tuhreu" }
+      ]
+    },
+    {
+      "subCategory": "Eyewear · Color Vintage",
+      "cards": [
+        { "label": "Candy Flash",     "imageId": "1776102176417-iih747" },
+        { "label": "Sunset Drive",    "imageId": "1776102204479-9rlc0n" },
+        { "label": "Dessert Table",   "imageId": "1776102181320-jisnae" },
+        { "label": "Hotel Flash",     "imageId": "1776102187711-askbvg" },
+        { "label": "Office Story",    "imageId": "1776102196841-qahufa" },
+        { "label": "Summer Wall",     "imageId": "pool-wall-vintage-summer-eyewear-1776150336684" }
+      ]
+    },
+    {
+      "subCategory": "Eyewear · Brutalist UGC",
+      "cards": [
+        { "label": "Stair Selfie",   "imageId": "concrete-stair-selfie-eyewear-1776149876284" },
+        { "label": "Elevator Glass", "imageId": "1776102182562-sdsk2y" },
+        { "label": "Stone Mirror",   "imageId": "stone-wall-mirror-vibe-eyewear-1776149860810" },
+        { "label": "Bench Side",     "imageId": "1776102172131-vq969w" },
+        { "label": "Window Corner",  "imageId": "1776102209873-5s7c5t" },
+        { "label": "Deck Look",      "imageId": "1776102180045-8c771t" }
+      ]
+    },
+    {
+      "subCategory": "Eyewear · Creative",
+      "cards": [
+        { "label": "Volcanic Sunset",        "imageId": "1776847680436-3svy5f" },
+        { "label": "Beach Basket Essentials", "imageId": "1776847671621-kvpli8" },
+        { "label": "Natural Light Backdrop", "imageId": "1776847677374-s9c8tc" },
+        { "label": "Concrete Shadow Play",   "imageId": "1776847673313-2kad0g" },
+        { "label": "Reflective Floral Display", "imageId": "1776847678915-bxu3g4" },
+        { "label": "Amber Glow Studio",      "imageId": "1776847802605-e1qdom" },
+        { "label": "Earthy Glow Stage",      "imageId": "1776847675634-k7g5c2" },
+        { "label": "Sunny Shadows",          "imageId": "1776847679607-8ke78r" }
+      ]
+    },
+    {
+      "subCategory": "Eyewear · Essential Shots",
+      "cards": [
+        { "label": "Front View",        "imageId": "1776147803881-1qrc1v" },
+        { "label": "Angle View",        "imageId": "1776147799693-pwsfbg" },
+        { "label": "Side View",         "imageId": "1776147810937-95rlhs" },
+        { "label": "In-Hand Studio",    "imageId": "1776147806384-itp7m0" },
+        { "label": "Top View",          "imageId": "1776147812507-hpwlod" },
+        { "label": "Worn Portrait",     "imageId": "1776147813309-o9scor" },
+        { "label": "Close-Up Detail",   "imageId": "1776147801748-nk0xgm" },
+        { "label": "On-Body Lifestyle", "imageId": "1776147808939-s9tsgf" }
+      ]
+    }
   ]
 };
