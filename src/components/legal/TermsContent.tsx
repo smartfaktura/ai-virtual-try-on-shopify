@@ -39,7 +39,7 @@ export function TermsContent() {
 
       <h2>2. Acceptance of Terms</h2>
       <p>
-        By using the Service, you agree to these Terms and our Privacy Policy. If you do not agree, you must not use the Service.
+        By using the Service, you agree to these Terms and our {privacyLink}. If you do not agree, you must not use the Service.
       </p>
 
       <h2>3. Eligibility</h2>
