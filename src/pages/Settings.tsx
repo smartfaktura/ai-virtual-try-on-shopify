@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { gtagViewItem } from '@/lib/gtag';
-import { Building2, Check, ExternalLink, Loader2, RefreshCw, RotateCcw } from 'lucide-react';
+import { Building2, Check, ExternalLink, Loader2, RotateCcw } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
@@ -253,8 +253,6 @@ export default function Settings() {
     try { await openCustomerPortal(); } finally { setPortalLoading(false); }
   };
 
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [genProgress, setGenProgress] = useState({ processed: 0, total: 19 });
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
@@ -419,46 +417,6 @@ export default function Settings() {
       } catch {
         setTopUpLoadingId(null);
       }
-    }
-  };
-
-  const handleGenerateAssetPreviews = async () => {
-    setIsGenerating(true);
-    setGenProgress({ processed: 0, total: 19 });
-    let nextIndex: number | null = 0;
-
-    try {
-      while (nextIndex !== null) {
-        const { data, error } = await supabase.functions.invoke('generate-asset-previews', {
-          body: { start_index: nextIndex, batch_size: 2 },
-        });
-
-        if (error) {
-          toast.error(`Generation failed: ${error.message}`);
-          break;
-        }
-
-        setGenProgress({ processed: data.processed, total: data.total });
-
-        const failed = data.results?.filter((r: any) => !r.success) || [];
-        if (failed.length > 0) {
-          failed.forEach((f: any) => toast.error(`Failed: ${f.path} — ${f.error}`));
-        }
-
-        const succeeded = data.results?.filter((r: any) => r.success) || [];
-        if (succeeded.length > 0) {
-          toast.success(`Generated ${succeeded.map((s: any) => s.path.split('/').pop()).join(', ')}`);
-        }
-
-        nextIndex = data.next_index;
-      }
-
-      toast.success('All asset previews generated!');
-    } catch (err) {
-      toast.error('Generation process failed');
-      console.error(err);
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -711,37 +669,6 @@ export default function Settings() {
           <ContentPreferencesSection />
         </div>
 
-        {/* ─── Admin: Asset Preview Generation ─── */}
-        {isAdmin && (
-          <>
-            <Separator />
-            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-4">
-              <div>
-                <h2 className="text-base font-semibold">Asset Preview Generation</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Generate high-quality AI preview images for poses and scenes using Gemini 3 Pro
-                </p>
-              </div>
-              {isGenerating && (
-                <div className="space-y-2">
-                  <Progress value={(genProgress.processed / genProgress.total) * 100} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    {genProgress.processed} / {genProgress.total} assets generated
-                  </p>
-                </div>
-              )}
-              <Button
-                size="pill"
-                onClick={handleGenerateAssetPreviews}
-                disabled={isGenerating}
-                variant="secondary"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-                {isGenerating ? 'Generating…' : 'Regenerate All Previews'}
-              </Button>
-            </div>
-          </>
-        )}
 
         {/* Admin: User Feedback */}
         {isAdmin && (
