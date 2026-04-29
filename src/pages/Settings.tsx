@@ -699,21 +699,16 @@ export default function Settings() {
               </div>
             ))}
           </div>
+          <div className="flex justify-end pt-2">
+            <Button size="pill" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving…' : 'Save preferences'}
+            </Button>
+          </div>
         </div>
 
         {/* Content Preferences — own card */}
         <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
           <ContentPreferencesSection />
-        </div>
-
-        <div className="flex justify-end pt-4 border-t border-border">
-          <Button
-            size="pill"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? 'Saving…' : 'Save Settings'}
-          </Button>
         </div>
 
         {/* ─── Admin: Asset Preview Generation ─── */}
