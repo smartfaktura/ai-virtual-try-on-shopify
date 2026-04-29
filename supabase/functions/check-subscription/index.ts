@@ -241,6 +241,37 @@ serve(async (req) => {
         p_new_plan: plan,
         p_new_credits: planInfo.credits,
       });
+
+      // Fire subscription.started event to Resend
+      try {
+        await supabaseAdmin.functions.invoke("track-resend-event", {
+          body: {
+            email: userEmail,
+            user_id: userId,
+            event: "subscription.started",
+            attributes: { plan, billing_interval: billingInterval },
+          },
+        });
+      } catch (e) {
+        logStep("resend subscription.started event failed", { error: (e as Error).message });
+      }
+    }
+
+    // Detect downgrade to free (cancellation)
+    if (currentProfile?.plan && currentProfile.plan !== "free" && plan === "free") {
+      logStep("Subscription canceled (downgrade to free)", { from: currentProfile.plan });
+      try {
+        await supabaseAdmin.functions.invoke("track-resend-event", {
+          body: {
+            email: userEmail,
+            user_id: userId,
+            event: "subscription.canceled",
+            attributes: { previous_plan: currentProfile.plan },
+          },
+        });
+      } catch (e) {
+        logStep("resend subscription.canceled event failed", { error: (e as Error).message });
+      }
     }
 
     // Detect billing cycle rollover → reset credits (use-it-or-lose-it)
