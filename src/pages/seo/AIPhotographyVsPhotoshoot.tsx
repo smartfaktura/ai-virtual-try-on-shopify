@@ -88,7 +88,7 @@ export default function AIPhotographyVsPhotoshoot() {
           subheadline="See when AI product photography is faster, more flexible, and more scalable — and when a traditional photoshoot still makes sense."
           trustLine="Compare cost · Speed · Flexibility · Creative output"
           primaryCta={{ label: 'Try VOVV.AI free', to: '/app/generate/product-images' }}
-          secondaryCta={{ label: 'See examples', to: '/ai-product-photography' }}
+          secondaryCta={{ label: 'See examples', to: '/discover' }}
           altPrefix="AI vs traditional photoshoot example"
           tiles={[
             { id: '1776770347820-s3qwmr', label: 'Studio Hero' },
