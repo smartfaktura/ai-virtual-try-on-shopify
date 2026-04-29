@@ -2499,5 +2499,167 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "On-Body Lifestyle", "imageId": "1776147808939-s9tsgf" }
       ]
     }
+  ],
+  "activewear": [
+    {
+      "subCategory": "Activewear · Editorial Sport Poses",
+      "cards": [
+        { "label": "Editorial Floor Stretch",   "imageId": "1776192312181-3v0u0t" },
+        { "label": "Standing Elongation Pose",  "imageId": "1776768268121-ceu2p2" },
+        { "label": "Chair Core Editorial",      "imageId": "1776768259697-cby6gb" },
+        { "label": "Window Light Pilates Pose", "imageId": "1776231822346-2f1iqc" },
+        { "label": "Balance Pose Sport Editorial", "imageId": "1776192305310-dz9fum" },
+        { "label": "Body Detail Activewear Crop",  "imageId": "1776192307137-x9lzi8" },
+        { "label": "Studio Motion Sculpt",      "imageId": "1776762654624-dkgdzn" },
+        { "label": "Sunlit Active Pause",       "imageId": "1776769937151-gknduq" }
+      ]
+    },
+    {
+      "subCategory": "Activewear · Aesthetic Color Sets",
+      "cards": [
+        { "label": "Aesthetic Sport Hero",      "imageId": "1776231751417-v0kjpy" },
+        { "label": "Aesthetic UGC Mirror",      "imageId": "1776231776420-wmermo" },
+        { "label": "Aesthetic Soft Gym",        "imageId": "1776231757981-usjij7" },
+        { "label": "Aesthetic Sport Portrait",  "imageId": "1776192619880-x6dzyw" },
+        { "label": "Aesthetic Court Story",     "imageId": "1776231764246-5z17rq" },
+        { "label": "Aesthetic Set Flat Lay",    "imageId": "1776192607172-frcgm7" },
+        { "label": "Sunlit Flow",               "imageId": "1776762658046-8ef77l" },
+        { "label": "Sunlit Sculpt",             "imageId": "1776762659292-qsg7ox" }
+      ]
+    },
+    {
+      "subCategory": "Activewear · Lifestyle & Studio",
+      "cards": [
+        { "label": "City Corner Ease",          "imageId": "1776762630614-7u9sik" },
+        { "label": "Soft Lounge Glow",          "imageId": "1776762649571-3lu1dt" },
+        { "label": "Sculpted Leg Light",        "imageId": "1776762648432-zw9525" },
+        { "label": "Sunlit Floor Ease",         "imageId": "1776762656752-dpc9i6" },
+        { "label": "Warm Café Focus",           "imageId": "1776768270444-9up29q" },
+        { "label": "Waistband Fit Closeup",     "imageId": "1776768269222-mp7its" },
+        { "label": "Tennis Court",              "imageId": "1776838051066-9iqjlv" },
+        { "label": "Track Field",               "imageId": "1776838111866-4ec0ee" }
+      ]
+    },
+    {
+      "subCategory": "Activewear · Creative Editorial",
+      "cards": [
+        { "label": "Studio Chair Pose",         "imageId": "1776838047362-pkx5rp" },
+        { "label": "Pilates Studio Glow",       "imageId": "1776838044202-kb4bib" },
+        { "label": "Court Lines Golden",        "imageId": "1776838042880-aahpqn" },
+        { "label": "Urban Concrete",            "imageId": "1776838086063-vtd5sy" },
+        { "label": "Skatepark Golden Hour",     "imageId": "1776838045580-te7r49" },
+        { "label": "Translucent White Studio",  "imageId": "1776838212008-p6ja81" },
+        { "label": "Hoop Dream Sky",            "imageId": "1776838032013-3ey0au" },
+        { "label": "Stadium Seating Fashion",   "imageId": "1776838070796-mpggs5" }
+      ]
+    }
+  ],
+  "dresses": [
+    {
+      "subCategory": "Dresses · Editorial Portraits",
+      "cards": [
+        { "label": "Side Lean Attitude Pose",   "imageId": "1776689321496-nclkyc" },
+        { "label": "Flash Glamour Portrait",    "imageId": "1776689317300-luvmhd" },
+        { "label": "Desert Tailored Walk",      "imageId": "1776689316419-90khdg" },
+        { "label": "Luxury Door Statement",     "imageId": "1776689319074-0908hd" },
+        { "label": "Power Mirror Statement Selfie", "imageId": "1776689320622-0lnst1" },
+        { "label": "Shadowed Wall Evening",     "imageId": "1776688422095-zu7d6c" },
+        { "label": "Old Money Outdoor Portrait","imageId": "1776689319922-8yiolc" },
+        { "label": "Mini Dress Studio Look",    "imageId": "1776688404914-wwy92r" }
+      ]
+    },
+    {
+      "subCategory": "Dresses · Quiet Luxury Locations",
+      "cards": [
+        { "label": "Seaside Terrace Dress",     "imageId": "1776688418783-twv612" },
+        { "label": "Renaissance Dress",         "imageId": "1776688415791-80vl3l" },
+        { "label": "Quiet Luxury Residential Street", "imageId": "1776688414572-szxxt3" },
+        { "label": "Roman Fountain Noon",       "imageId": "1776688417308-bhyzj1" },
+        { "label": "Quiet Luxury Museum Staircase", "imageId": "1776688413055-z73arv" },
+        { "label": "Golden Coast Dress",        "imageId": "1776688403670-i0t3r6" },
+        { "label": "Dusk Stone Dress",          "imageId": "1776688399076-0n2cku" },
+        { "label": "Open-Back Pose",            "imageId": "1776688411543-89ys3f" }
+      ]
+    },
+    {
+      "subCategory": "Dresses · Studio Editorial",
+      "cards": [
+        { "label": "Sunlit Sheer Knit",         "imageId": "1776688426422-2njaxi" },
+        { "label": "Front Portrait Dress Hero", "imageId": "1776688400941-q8cin9" },
+        { "label": "Seated Dress Legline Portrait", "imageId": "1776688420397-yz4gq0" },
+        { "label": "Side Profile Dress Study",  "imageId": "1776688423793-2i75mh" },
+        { "label": "Standing Dress Leg Accent", "imageId": "1776688425138-l3h7za" },
+        { "label": "Super Editorial Campaign",  "imageId": "1776689322212-9lsvah" },
+        { "label": "Flash Night Fashion Campaign", "imageId": "1776689318257-yahkye" },
+        { "label": "Ghost Mannequin Shot",      "imageId": "1776688402417-ejlbft" }
+      ]
+    },
+    {
+      "subCategory": "Dresses · Essential PDP Shots",
+      "cards": [
+        { "label": "On-Model Front",            "imageId": "1776688965090-edaogg" },
+        { "label": "On-Model Back",             "imageId": "1776688963595-j220mh" },
+        { "label": "On-Model Editorial",        "imageId": "1776688964471-eu2q1w" },
+        { "label": "Movement Shot",             "imageId": "1776688962670-9gfjjt" },
+        { "label": "Front Flat Lay",            "imageId": "1776688401695-jqz1lj" },
+        { "label": "Texture Detail",            "imageId": "1776688427092-tt9bum" },
+        { "label": "Front Portrait Dress Hero", "imageId": "1776688400941-q8cin9" },
+        { "label": "Mini Dress Studio Look",    "imageId": "1776688404914-wwy92r" }
+      ]
+    }
+  ],
+  "caps-hats": [
+    {
+      "subCategory": "Caps & Hats · Lifestyle Editorial",
+      "cards": [
+        { "label": "Brim Grip Portrait",        "imageId": "1776077321082-njy85m" },
+        { "label": "City Coffee Look",          "imageId": "1776077324651-jdqinw" },
+        { "label": "Smile Lean Portrait",       "imageId": "1776077340948-klir56" },
+        { "label": "Court Crouch",              "imageId": "1776077325824-fslqfw" },
+        { "label": "Sky Hold",                  "imageId": "1776077339685-7eikuh" },
+        { "label": "Hoodie Close Portrait",     "imageId": "1776077330201-hkh0z3" },
+        { "label": "Knit Pull Play",            "imageId": "1776077331235-siaz5c" },
+        { "label": "Street Fisheye",            "imageId": "1776077342039-fl3sec" }
+      ]
+    },
+    {
+      "subCategory": "Caps & Hats · Aesthetic Color Film",
+      "cards": [
+        { "label": "Mirror Peek",               "imageId": "1776077333467-wopowe" },
+        { "label": "Beach Crop",                "imageId": "1776077319717-svyant" },
+        { "label": "Desert Lounge",             "imageId": "1776077326937-u6phcv" },
+        { "label": "Sun Stairs",                "imageId": "1776077345651-mjwtsd" },
+        { "label": "Lounge Knit",               "imageId": "1776077332381-zizmo4" },
+        { "label": "Overhead Selfie",           "imageId": "1776077334900-zb2tt5" },
+        { "label": "Shadow Brim",               "imageId": "1776077337412-gzgx8m" },
+        { "label": "Shadow Crop",               "imageId": "1776077338489-kymmza" }
+      ]
+    },
+    {
+      "subCategory": "Caps & Hats · Essential PDP Shots",
+      "cards": [
+        { "label": "Front View",                "imageId": "1776077505500-87jrxi" },
+        { "label": "Angle View",                "imageId": "1776077500652-pojxax" },
+        { "label": "Side View",                 "imageId": "1776077514371-toi3ra" },
+        { "label": "Back View",                 "imageId": "1776077502292-7e89ab" },
+        { "label": "Top View",                  "imageId": "1776077516426-245p4e" },
+        { "label": "Worn Portrait",             "imageId": "1776077517342-xjig04" },
+        { "label": "In-Hand Studio",            "imageId": "1776077509571-u9jayk" },
+        { "label": "Close-Up Detail",           "imageId": "1776077503446-9hmmtk" }
+      ]
+    },
+    {
+      "subCategory": "Caps & Hats · Creative Shots",
+      "cards": [
+        { "label": "Volcanic Sunset",           "imageId": "1776844273629-b1c2cs" },
+        { "label": "Dynamic Water Splash",      "imageId": "1776844268218-ox7976" },
+        { "label": "Earthy Glow Stage",         "imageId": "1776844271995-2xbakf" },
+        { "label": "Sunny Shadows",             "imageId": "1776844270090-n4bgjo" },
+        { "label": "Amber Glow Studio",         "imageId": "1776844271075-c18iol" },
+        { "label": "Reflective Floral Display", "imageId": "1776844269126-zb2ctp" },
+        { "label": "Frozen Aura",               "imageId": "1776844272929-fup9p5" },
+        { "label": "Negative Space Hero",       "imageId": "1776077511477-279x0w" }
+      ]
+    }
   ]
 };
