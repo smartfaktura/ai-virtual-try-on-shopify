@@ -347,6 +347,7 @@ export default function Settings() {
           supabase.functions.invoke('sync-resend-contact', {
             body: {
               email: user.email,
+              user_id: user.id,
               first_name: profileData?.first_name,
               opted_in: marketingOptIn,
               properties: {
@@ -360,6 +361,20 @@ export default function Settings() {
                 subtypes: subs,
                 primary_family: familyNames[0] ?? null,
                 primary_subtype: subs[0] ?? null,
+              },
+            },
+          }).catch(() => {});
+
+          supabase.functions.invoke('track-resend-event', {
+            body: {
+              email: user.email,
+              user_id: user.id,
+              event: 'profile.updated',
+              attributes: {
+                plan,
+                families: familyNames,
+                primary_family: familyNames[0] ?? null,
+                subtypes: subs,
               },
             },
           }).catch(() => {});
