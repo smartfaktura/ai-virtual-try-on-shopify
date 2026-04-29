@@ -70,9 +70,7 @@ const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
 const LoadingLab = lazy(() => import('@/pages/admin/LoadingLab'));
 const SceneUsage = lazy(() => import('@/pages/admin/SceneUsage'));
 const SeoPageVisuals = lazy(() => import('@/pages/admin/SeoPageVisuals'));
-const AdminCampaigns = lazy(() => import('@/pages/admin/Campaigns'));
-const CampaignComposer = lazy(() => import('@/pages/admin/CampaignComposer'));
-const AutomationComposer = lazy(() => import('@/pages/admin/AutomationComposer'));
+const EmailMarketing = lazy(() => import('@/pages/admin/EmailMarketing'));
 const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
@@ -283,11 +281,8 @@ const App = () => {
                         <Route path="/admin/loading-lab" element={<LoadingLab />} />
                         <Route path="/admin/scene-performance" element={<SceneUsage />} />
                         <Route path="/admin/seo-page-visuals" element={<SeoPageVisuals />} />
-                        <Route path="/admin/campaigns" element={<AdminCampaigns />} />
-                        <Route path="/admin/campaigns/new" element={<CampaignComposer />} />
-                        <Route path="/admin/campaigns/automations/new" element={<AutomationComposer />} />
-                        <Route path="/admin/campaigns/automations/:id" element={<AutomationComposer />} />
-                        <Route path="/admin/campaigns/:id" element={<CampaignComposer />} />
+                        <Route path="/admin/email-marketing" element={<EmailMarketing />} />
+                        <Route path="/admin/campaigns" element={<EmailMarketing />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
