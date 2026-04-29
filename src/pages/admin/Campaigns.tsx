@@ -31,7 +31,7 @@ interface Automation {
 }
 
 export default function AdminCampaigns() {
-  const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [automations, setAutomations] = useState<Automation[]>([]);
