@@ -699,7 +699,7 @@ export default function Settings() {
               </div>
             ))}
           </div>
-          <div className="flex justify-end pt-2">
+          <div className="flex pt-2">
             <Button size="pill" onClick={handleSave} disabled={isSaving}>
               {isSaving ? 'Saving…' : 'Save preferences'}
             </Button>
