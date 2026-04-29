@@ -1,77 +1,49 @@
-# Fix: "Saving…" button stuck on Settings page
+## Goal
 
-## What's happening
+You're right — the global "Save Settings" button at the bottom is redundant and confusing:
 
-On `/app/settings`, the **Save Settings** button at the bottom can get stuck on "Saving…" forever (visible as the gray pill in the bottom-right of your screenshot). Reload is the only way out.
+- **Content Preferences** already has its own "Save preferences" button (saves categories/subcategories)
+- **Notifications + Marketing** are the only things the global button actually saves — but it sits below an unrelated card, so users don't know what it applies to (and it's currently the one stuck on "Saving…")
 
-## Root cause
+Solution: remove the bottom global button, and move a scoped "Save" button **inside the Notifications card** so each section owns its own save action — matching the Content Preferences pattern.
 
-In `src/pages/Settings.tsx`, both save handlers do `setIsSaving(true)` → multiple `await`s → `setIsSaving(false)` with **no `try/catch/finally`**. If any awaited call throws (network blip, RLS rejection, `.single()` returning zero rows, or the Resend sync hanging), the final `setIsSaving(false)` is never reached and the button stays disabled with the "Saving…" label.
+## Changes (one file: `src/pages/Settings.tsx`)
 
-Two affected functions:
-- `Settings.handleSave` (lines 288–337) — main Save Settings button
-- `ContentPreferencesSection.handleSave` (lines 90–143) — Save preferences button
+### 1. Move the save button into the Notifications card
 
-## Fix
+At the end of the Notifications card body (after the "In-App Notifications" block, around line 701, **inside** the card div that closes on line 702), add a right-aligned save button:
 
-Wrap both handlers in `try / catch / finally` so the loading state is **always** cleared:
-
-1. Move `setIsSaving(false)` / `setSaving(false)` into a `finally` block — guarantees the button unfreezes no matter what.
-2. Add `catch` blocks that show `toast.error('Failed to save settings')` and `console.error` the cause — user gets feedback instead of a silent freeze.
-3. Make the secondary `select().single()` + `sync-resend-contact` call **fire-and-forget** (no `await` blocking the UI). The actual save has already succeeded by that point, so a slow Resend sync or a missing-profile edge case won't trap the button.
-4. Use `.maybeSingle()` instead of `.single()` for the secondary profile lookup — tolerates the rare zero-row case without throwing.
-
-## Technical change (illustrative)
-
-```ts
-const handleSave = async () => {
-  if (!user) return;
-  setIsSaving(true);
-  try {
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        settings: JSON.parse(JSON.stringify(settings)),
-        marketing_emails_opted_in: marketingOptIn,
-      })
-      .eq('user_id', user.id);
-
-    if (error) {
-      toast.error('Failed to save settings');
-      return;
-    }
-
-    toast.success('Settings saved successfully!');
-
-    // Fire-and-forget: never block the UI on Resend sync
-    void (async () => {
-      try {
-        const { resolveFamilyNames } = await import('@/lib/onboardingTaxonomy');
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('product_categories, product_subcategories, first_name')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        // ...build payload, invoke sync-resend-contact (already .catch(() => {}))
-      } catch { /* swallow — non-critical */ }
-    })();
-  } catch (err) {
-    console.error('Settings save failed:', err);
-    toast.error('Failed to save settings');
-  } finally {
-    setIsSaving(false);
-  }
-};
+```tsx
+<div className="flex justify-end pt-2">
+  <Button size="pill" onClick={handleSave} disabled={isSaving}>
+    {isSaving ? 'Saving…' : 'Save preferences'}
+  </Button>
+</div>
 ```
 
-Apply the equivalent `try/catch/finally` pattern to `ContentPreferencesSection.handleSave`.
+This button saves exactly what `handleSave` already saves: notification settings + marketing opt-in. Scope now matches the card it lives in.
 
-## Files to edit
+### 2. Delete the standalone global save block
 
-- `src/pages/Settings.tsx` — both save handlers
+Remove lines 709–717 entirely:
 
-## Out of scope
+```tsx
+<div className="flex justify-end pt-4 border-t border-border">
+  <Button size="pill" onClick={handleSave} disabled={isSaving}>
+    {isSaving ? 'Saving…' : 'Save Settings'}
+  </Button>
+</div>
+```
 
-- No backend / RLS / edge function changes
-- No UI redesign
-- No DB migrations
+This kills the orphan button (and the stuck "Saving…" pill in your screenshot).
+
+### 3. Keep `handleSave` and `isSaving` as-is
+
+No logic changes — same handler, just relocated and relabeled. Content Preferences keeps its own independent save button and handler. Admin sections below remain untouched.
+
+## Result
+
+- Notifications card → its own "Save preferences" button (scoped, clear)
+- Content Preferences card → its own "Save preferences" button (already exists)
+- No more floating global button
+- No more confusing "Saving…" pill hovering below an unrelated card
