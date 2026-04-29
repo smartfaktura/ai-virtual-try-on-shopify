@@ -104,7 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { display_name: displayName || email.split('@')[0] },
       },
     });
-    if (!error && data?.user) {
+    // Only fire signup analytics for genuinely new accounts.
+    // Supabase returns a user with empty `identities` when the email already exists
+    // (to avoid user enumeration) — don't count those as signups.
+    if (!error && data?.user && (data.user.identities?.length ?? 0) > 0) {
       gtagSignUp('email');
       gtmSignUp(data.user.id, 'email');
     }

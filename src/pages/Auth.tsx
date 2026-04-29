@@ -155,13 +155,17 @@ export default function Auth() {
         setFormError(mapped.message);
         if (mapped.switchToLogin) {
           setMode('login');
-          // Email is already in state — keep it prefilled.
+          // Clear password fields so the user enters their existing-account password
+          setPassword('');
+          setConfirmPassword('');
         } else if (mapped.rateLimited) {
           setSignupComplete(true);
         }
       } else if (!data?.user?.identities?.length) {
-        setFormError('An account with this email already exists. Try signing in instead.');
+        setFormError('An account with this email already exists. Sign in below — if you forgot your password, use Reset.');
         setMode('login');
+        setPassword('');
+        setConfirmPassword('');
       } else if (data?.user && !data.user.confirmed_at) {
         // Save marketing preference after profile is auto-created
         if (data.user.id) {
