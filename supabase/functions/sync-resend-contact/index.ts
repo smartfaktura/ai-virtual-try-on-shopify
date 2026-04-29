@@ -92,8 +92,8 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            first_name: firstName ?? undefined,
-            last_name: lastName ?? undefined,
+            firstName: firstName ?? undefined,
+            lastName: lastName ?? undefined,
             unsubscribed,
           }),
         }
