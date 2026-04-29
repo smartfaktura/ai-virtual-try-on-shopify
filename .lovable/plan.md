@@ -1,26 +1,22 @@
-## Tight scope — only the residual gaps
+## Library selection spacing fix
 
-The core consistency fix (mapped error messages + auto-switch on existing account) is already shipped. Three small gaps remain that match exactly what the bug describes.
+**Root cause:** `src/components/app/LibraryImageCard.tsx` line 99 applies `ring-2 ring-primary ring-offset-2 ring-offset-background` when a card is selected. The grid layout in `src/pages/Jobs.tsx` (line 600-602) uses `gap-2` (8px). The 2px ring + 2px offset extends 4px outside the card on every side, eating most of the gap and visually "attaching" two adjacent selected cards.
 
-### 1. Clear password on auto-switch — `src/pages/Auth.tsx`
-When signup detects "account already exists" and switches to login mode, also clear the password field and surface a helper note. This prevents the immediate second error ("Incorrect email or password") that the bug report calls out as "another error is shown".
+### Single change
+Switch the selection indicator to an **inset ring** so it stays inside the card bounds — no offset, no overflow, gap remains intact.
 
-- In the `mapped.switchToLogin` branch (line 156-158) and the empty-`identities` branch (line 162-164):
-  - `setPassword('')`
-  - `setConfirmPassword('')`
-  - Keep `formError` set to the friendly message ("An account with this email already exists. Sign in below — if you forgot your password, use Reset.")
+`src/components/app/LibraryImageCard.tsx` line 99:
 
-### 2. Stop firing signup analytics for ghost signups — `src/contexts/AuthContext.tsx`
-Line 107-110 currently fires `gtagSignUp` / `gtmSignUp` for any returned `data.user`, including the "user already exists" ghost user. Guard with `data.user.identities && data.user.identities.length > 0` so analytics only count real new accounts.
+```diff
+- selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
++ selected && "ring-[3px] ring-primary ring-inset"
+```
 
-### 3. Apply `mapAuthError` to the marketing popup — `src/components/landing/SignupSlideUp.tsx`
-Replace the generic "Something went wrong. Please try again." fallback (line 79-83) with `mapAuthError(err, 'signup').message` so this surface is consistent with the main auth page.
+### Why this approach
+- `ring-inset` draws inward, never expanding the card's footprint
+- Slightly thicker (3px) keeps the selected state clearly visible despite being inside
+- Preserves the existing `gap-2` masonry rhythm — no layout shift between selected and unselected states
+- No changes needed to `Jobs.tsx`, the bulk-action bar, or other selection consumers
 
----
-
-## Files touched
-- `src/pages/Auth.tsx` — clear password fields on auto-switch, refine helper copy
-- `src/contexts/AuthContext.tsx` — guard analytics on real new identity
-- `src/components/landing/SignupSlideUp.tsx` — use `mapAuthError`
-
-No DB / RLS / edge function / dependency changes.
+### Files touched
+- `src/components/app/LibraryImageCard.tsx` (1 line)
