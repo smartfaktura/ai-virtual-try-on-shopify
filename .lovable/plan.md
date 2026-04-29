@@ -1,22 +1,21 @@
-## Library selection spacing fix
+## Library grid spacing — proper fix
 
-**Root cause:** `src/components/app/LibraryImageCard.tsx` line 99 applies `ring-2 ring-primary ring-offset-2 ring-offset-background` when a card is selected. The grid layout in `src/pages/Jobs.tsx` (line 600-602) uses `gap-2` (8px). The 2px ring + 2px offset extends 4px outside the card on every side, eating most of the gap and visually "attaching" two adjacent selected cards.
+The previous inset ring helped but the grid's `gap-2` (8px) is too tight: when two neighboring cards are both selected, their dark inset rings sit only 8px apart and read as a single merged block in the screenshot.
 
 ### Single change
-Switch the selection indicator to an **inset ring** so it stays inside the card bounds — no offset, no overflow, gap remains intact.
+Bump the masonry gap from `gap-2` → `gap-3` (12px) in both axes.
 
-`src/components/app/LibraryImageCard.tsx` line 99:
+`src/pages/Jobs.tsx` lines 600-602:
 
 ```diff
-- selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-+ selected && "ring-[3px] ring-primary ring-inset"
+- <div className="flex gap-2">
++ <div className="flex gap-3">
+    {columns.map((col, i) => (
+-     <div key={i} className="flex-1 flex flex-col gap-2">
++     <div key={i} className="flex-1 flex flex-col gap-3">
 ```
 
-### Why this approach
-- `ring-inset` draws inward, never expanding the card's footprint
-- Slightly thicker (3px) keeps the selected state clearly visible despite being inside
-- Preserves the existing `gap-2` masonry rhythm — no layout shift between selected and unselected states
-- No changes needed to `Jobs.tsx`, the bulk-action bar, or other selection consumers
+That gives a clear 12px channel of background between every card, so adjacent selected rings are visibly separated. Inset ring stays as is (no overflow risk).
 
 ### Files touched
-- `src/components/app/LibraryImageCard.tsx` (1 line)
+- `src/pages/Jobs.tsx` (2 class swaps)
