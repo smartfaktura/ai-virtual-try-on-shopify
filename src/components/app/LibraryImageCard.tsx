@@ -96,7 +96,7 @@ export function LibraryImageCard({
     <div
       className={cn(
         "group relative rounded-xl overflow-hidden cursor-pointer bg-muted transition-all",
-        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+        selected && "ring-[3px] ring-primary ring-inset"
       )}
       onClick={onClick}
     >
