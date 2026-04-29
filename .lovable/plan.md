@@ -1,21 +1,18 @@
-## Library grid spacing — proper fix
+## Step 1 search input — soften focus state
 
-The previous inset ring helped but the grid's `gap-2` (8px) is too tight: when two neighboring cards are both selected, their dark inset rings sit only 8px apart and read as a single merged block in the screenshot.
+**Cause:** The shared `Input` component (`src/components/ui/input.tsx` line 11) applies `focus-visible:ring-2 ring-ring ring-offset-2` on focus. On the Step 1 search box (`src/pages/ProductImages.tsx` line 1345), this thick dark ring + 2px offset reads like an error highlight and visually overflows around the rounded pill.
 
 ### Single change
-Bump the masonry gap from `gap-2` → `gap-3` (12px) in both axes.
+Override the focus styles on this one Input to a subtle, design-system-aligned focus (no offset, thinner soft ring, gentle border tint).
 
-`src/pages/Jobs.tsx` lines 600-602:
+`src/pages/ProductImages.tsx` line 1345:
 
 ```diff
-- <div className="flex gap-2">
-+ <div className="flex gap-3">
-    {columns.map((col, i) => (
--     <div key={i} className="flex-1 flex flex-col gap-2">
-+     <div key={i} className="flex-1 flex flex-col gap-3">
+- className="h-10 rounded-full text-sm pl-9"
++ className="h-10 rounded-full text-sm pl-9 focus-visible:ring-1 focus-visible:ring-ring/30 focus-visible:ring-offset-0 focus-visible:border-ring/40"
 ```
 
-That gives a clear 12px channel of background between every card, so adjacent selected rings are visibly separated. Inset ring stays as is (no overflow risk).
+This keeps a clear (but quiet) focus indicator, removes the heavy dark ring, and removes the 2px offset so the input no longer appears to overflow its container on focus.
 
 ### Files touched
-- `src/pages/Jobs.tsx` (2 class swaps)
+- `src/pages/ProductImages.tsx` (1 line)
