@@ -4,7 +4,7 @@ import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
-  TrendingUp, BookOpen, Clock, Camera, GraduationCap, LifeBuoy, Bug, Star,
+  TrendingUp, BookOpen, Clock, Camera, GraduationCap, LifeBuoy, Bug, Star, Mail,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
