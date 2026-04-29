@@ -49,43 +49,27 @@ Deno.serve(async (req) => {
 
     const auth = { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" };
 
-    // Step A: ensure contact exists in audience (best-effort, ignore failure).
-    let upsertStatus: number | null = null;
-    try {
-      const upsertRes = await fetch(
-        `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`,
-        {
-          method: "POST",
-          headers: auth,
-          body: JSON.stringify({ email, unsubscribed: false }),
-        }
-      );
-      upsertStatus = upsertRes.status;
-      // Drain body to avoid leaks
-      await upsertRes.text().catch(() => "");
-    } catch (e) {
-      console.warn("[track-resend-event] contact upsert failed", e);
-    }
-
-    // Step B: send the actual Custom Event to Resend so automation triggers fire.
-    // Endpoint: POST /audiences/{audience_id}/contacts/{email}/events
+    // Send the Custom Event to Resend so automation triggers fire.
+    // Correct endpoint: POST /events/send
+    // Docs: https://resend.com/docs/api-reference/events/send-event
+    // (If contact doesn't exist, Resend creates it automatically when the
+    // automation runs — no pre-upsert needed.)
     let eventStatus: number | null = null;
     let eventResp: any = null;
     let eventOk = false;
     try {
-      const eventRes = await fetch(
-        `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}/events`,
-        {
-          method: "POST",
-          headers: auth,
-          body: JSON.stringify({
-            name: event,
-            data: body.attributes ?? {},
-          }),
-        }
-      );
+      const eventRes = await fetch(`${RESEND_API}/events/send`, {
+        method: "POST",
+        headers: auth,
+        body: JSON.stringify({
+          event,
+          email,
+          payload: body.attributes ?? {},
+        }),
+      });
       eventStatus = eventRes.status;
       eventResp = await eventRes.json().catch(() => ({}));
+      // Resend returns 202 Accepted on success
       eventOk = eventRes.ok;
     } catch (e) {
       console.warn("[track-resend-event] event POST failed", e);
@@ -100,7 +84,6 @@ Deno.serve(async (req) => {
         event_type: event,
         payload: {
           attributes: body.attributes ?? null,
-          upsert_status: upsertStatus,
           event_status: eventStatus,
         },
         status: eventOk ? "ok" : "failed",

@@ -1,148 +1,79 @@
-## Tikslas
+## Diagnosis (confirmed from logs + official Resend docs)
 
-Sutvarkyti Resend integraciją taip, kad:
-- Kontaktai turėtų pilną `first_name` / `last_name`
-- Tikri Resend **Custom Events** (`user.signup`, `subscription.started`, `credits.low`, etc.) realiai pasiektų Resend dashboard'ą
-- Tavo automacijos (screenshot'e matytos) pradėtų veikti
+I queried `resend_event_log` and pulled the official Resend API reference. Two distinct bugs are confirmed:
 
-**Aukščiausias prioritetas: NIEKAS aplikacijoje neturi sulūžti.**
-
----
-
-## Saugumo principai (visi pakeitimai laikosi šių taisyklių)
-
-1. **Jokių breaking changes egzistuojančiuose API kontrakto laukuose** — visi dabartiniai client iškvietimai į `sync-resend-contact` ir `track-resend-event` toliau veiks be jokių pakeitimų. Naujas funkcionalumas pridedamas **adityviai**.
-2. **Kiekvienas Resend API call apgaubtas try/catch** — jei Resend nepasiekiamas, lūžta tik logas, ne user flow.
-3. **Jokių pakeitimų signup / login / Stripe / generation / credits logikoje** — tik Resend sinchronizacijos vidiniai veikimas.
-4. **Jokių DB schema migracijų** — tik edge funkcijų ir client kodo pakeitimai. (Vienintelis DB pakeitimas — neprivalomas: supaprastinti `handle_new_user` trigger, BET tik jei tu aprovinsi atskirai. Default'as = nediliam.)
-5. **Backwards compatible**: jei naujas event'ų siuntimas kažkur sugenda, kontaktas vis tiek bus sukurtas/atnaujintas (kaip dabar).
-6. **Visos funkcijos paleidžiamos asinchroniškai (`fire-and-forget`)** klient'e su `.catch(() => {})` — niekada neblokuoja UI.
-7. **Visi resend event'ai logiamiimi į `resend_event_log`** kad galėtum debugint be Resend dashboard'o.
-
----
-
-## Ką darom — 3 etapai (po kiekvieno gali testuoti)
-
-### Etapas 1 — Sutvarkyti `sync-resend-contact` (saugiausias, jokio rizikos)
-
-**Kas keičiasi:** edge funkcija dabar priims ir naudos visus laukus, kuriuos client jau siunčia (bet ji ignoruoja).
-
-- ✅ Priimti `body.first_name`, `body.last_name`, `body.display_name` ir naudoti **prieš** profilio fallback
-- ✅ Jei `user_id` neperduotas — surasti profilį pagal `email`
-- ✅ Jei vardas vis tiek tuščias — fallback į `email.split('@')[0]`
-- ✅ Logginti pilną payload į `resend_event_log` (geresnis debug)
-- ✅ **NICE-TO-HAVE**: jei perduotas `properties.plan` — pridėti į log payload (Resend audience metadata API tų laukų nepriima, tai tik logas)
-
-**Rizika:** Nulis. Funkcija toliau priima tą patį payload formatą, tiesiog dabar **naudoja** laukus, kurie anksčiau buvo ignoruojami.
-
-**Test:** užregistruok testinį user'į → eik į Resend Audience → matysi pilną vardą.
-
----
-
-### Etapas 2 — Sukurti tikrą Custom Events siuntimą `track-resend-event`
-
-**Kas keičiasi:** funkcija dabar siųs realų event'ą į Resend Contact Events endpoint'ą.
-
-- ✅ Step A: užtikrinti kad kontaktas egzistuoja audience'e (PUT/POST upsert) — **jei sugenda, eina toliau**, nes Resend grąžins „contact not found" prie event call'o ir mes vis tiek loginsim
-- ✅ Step B: `POST /audiences/{id}/contacts/{email}/events` su `{ name: event, data: attributes }`
-- ✅ Step C: log į `resend_event_log` su `status: 'sent' | 'failed'` ir Resend response
-
-**Saugumo apsaugos:**
-- Visa logika apgaubta **outer try/catch** — funkcija visada grąžina `200 { ok: true|false }`, niekada nemeta error'o caller'iui
-- Caller'iai (DB triggeriai per `_invoke_edge_function`, `check-subscription`, `enqueue_generation`) jau dabar `try/catch` apgaubti — net jei kas nors mestų, jie ignoruoja
-- **Resend API URL ir endpoint pavadinimas patikrintas pagal oficialią dokumentaciją** prieš deploy'ą
-
-**Rizika:** Praktiškai nulis. Blogiausiu atveju event'ai nepasiekia Resend, bet:
-- App'as veikia normaliai
-- Kontaktas vis tiek sukuriamas
-- Klaidą matom `resend_event_log` lentelėje
-- Jokios user-facing pasekmės
-
-**Test:**
-1. Naujas signup → Onboarding complete
-2. Resend → Audience → contact → Activity tab → matysi `Custom event: user.signup`
-3. Aktyvuok automaciją Resend dashboard'e su trigger'iu „Custom event: user.signup"
-4. Po sekančio test signup'o automacija realiai išsiųs welcome email'ą
-
----
-
-### Etapas 3 — Patobulinti client iškvietimus (minimalūs pakeitimai)
-
-**Kas keičiasi tik 3 vietose** — visos pridedam praleistus laukus, jokių esamų laukų nešalinam:
-
-#### `Auth.tsx` (po sėkmingo signup)
-- Pridedame `user_id` į payload (jau yra, tik įsitikinam)
-- **Rizika:** nulis — tai tik naujas papildomas laukas
-
-#### `Onboarding.tsx` (po onboarding complete)
-- Pridedam **antrą** iškvietimą po `sync-resend-contact`: `track-resend-event` su `event: 'user.signup_completed'` ir pilnu profilio payload (plan, families, categories)
-- **Rizika:** nulis — naujas adityvus iškvietimas, fire-and-forget, su `.catch(() => {})`
-- **Kodėl ne `user.signup`?** Nes DB trigger'is `handle_new_user` jau iškviečia `sync-resend-contact` su `event: user.signup` signup'o metu. Naujasis `signup_completed` yra atskiras event'as kuris reiškia „profilis pilnai užpildytas" — tinka automacijoms su pilnais duomenimis
-
-#### `Settings.tsx` (po profilio/kategorijų save)
-- Pridedam `track-resend-event` su `event: 'profile.updated'` šalia esamo `sync-resend-contact`
-- **Rizika:** nulis — naujas adityvus iškvietimas
-
-**NIEKAS nešalinam, NIEKAS nepervadinam.**
-
----
-
-## Ko **NEDARYSIM** (apsisaugojimas nuo lūžimo)
-
-❌ **Nediliam** `handle_new_user` DB triggerio. Jis lieka kaip yra. Užtenka kad jis iškviečia `sync-resend-contact` (nieko kito jis nedaro Resend pusėje).
-
-❌ **Nekeičiame** jokios kitos DB funkcijos (`enqueue_generation`, `deduct_credits`, `change_user_plan`).
-
-❌ **Nekeičiame** Stripe webhook ar `check-subscription` logikos — jis jau iškviečia `track-resend-event` ir po Etapo 2 tas event'as **automatiškai pradės veikti**.
-
-❌ **Negeneruojame** DB migracijų.
-
-❌ **Negaminame** naujų lentelių.
-
-❌ **Nekeičiame** `resend_event_log` lentelės schemos.
-
-❌ **Neatliekame** backfill'o esamiems user'iams automatiškai. (Tai galėsi padaryti rankiniu būdu iš Admin → Email Marketing → Resync, jau egzistuoja.)
-
----
-
-## Failai, kuriuos liečiam
-
-```text
-supabase/functions/sync-resend-contact/index.ts   ← Etapas 1: praplečiam, suderinama
-supabase/functions/track-resend-event/index.ts    ← Etapas 2: pridedam realų event call
-src/pages/Auth.tsx                                 ← Etapas 3: patikrinam payload (mažas)
-src/pages/Onboarding.tsx                           ← Etapas 3: +1 fire-and-forget call
-src/pages/Settings.tsx                             ← Etapas 3: +1 fire-and-forget call
+### Bug 1 — First Name / Last Name empty in Resend
+Our `sync-resend-contact` sends snake_case to Resend's REST API:
+```json
+{ "email": "...", "first_name": "Tomas", "last_name": "Simkus" }
 ```
+But Resend's REST contact endpoint expects **camelCase**: `firstName`, `lastName`. (Verified in [docs](https://resend.com/docs/api-reference/contacts/create-contact).) Resend silently ignores unknown snake_case fields, returns `201 Created`, and stores no name. That's why the screenshot shows `FIRST NAME: -` even though our log says `status: ok` with `first_name: Tomas`.
 
-**Iš viso 5 failai. Jokių schema migracijų. Jokių lentelių. Jokių trigger'ių keitimų.**
-
----
-
-## Rollback planas (jei kas vis dėlto nepatiks)
-
-- Edge funkcijos versionuojamos automatiškai → galima atstatyti vienu spustelėjimu
-- Client kodo pakeitimai = 3 mažos `.catch(() => {})` apgaubtos vietos → trivialu atšaukti
-- Niekas DB neliečiama → nieko neperregresuoti
-
----
-
-## Po implementacijos — ką pamatysi
-
-1. **Resend Audience kontaktai**: pilnas First Name / Last Name (ne tuščias)
-2. **Resend → Audience → konkretus kontaktas → Activity tab**: matysi:
-   - `Custom event: user.signup` (iš DB trigger)
-   - `Custom event: user.signup_completed` (po onboarding)
-   - `Custom event: subscription.started` (kai paima planą)
-   - `Custom event: credits.low` (kai balansas <10)
-   - `Custom event: profile.updated` (kai keičia kategorijas)
-3. **Resend → Automations**: tavo screenshot'e matyta „Sign Up - Welcome Email" automacija su trigger'iu „Custom event: user.signup" **realiai suveiks**
-4. **Tavo Admin → Email Marketing**: log'ai rodys `status: ok` visiems event'ams
+### Bug 2 — Custom Events return 405 Method Not Allowed
+Our `track-resend-event` POSTs to:
+```
+POST /audiences/{id}/contacts/{email}/events
+```
+This URL **does not exist** in Resend's API. The log shows `event_status: 405, name: method_not_allowed`. The actual endpoint (verified in [docs](https://resend.com/docs/api-reference/events/send-event)) is:
+```
+POST /events/send
+Body: { event: "user.signup", email: "x@y.z", payload: {...} }
+```
+Returns `202 Accepted`. This means **zero** custom events have ever reached Resend — the Activity tab is correctly empty.
 
 ---
 
-## Aprovinimas
+## Fix plan (2 edge function edits, zero schema changes, zero client changes)
 
-Aprovink šį planą ir paleisiu **iškart visus 3 etapus** (jie saugūs ir nepriklausomi). Po deploy'o tu testuoji vieną signup, patikrini Resend dashboard'e ir patvirtini ar matosi event'ai.
+### File 1: `supabase/functions/sync-resend-contact/index.ts`
+Rename the JSON body fields sent to Resend from `first_name`/`last_name` → `firstName`/`lastName` for **both** the POST (create) and PATCH (update) calls. Keep our internal variable names and our `resend_event_log` payload unchanged. Five-line diff.
 
-Jei nori — galiu paleisti **tik Etapą 1 ir Etapą 2 pirma** (be client pakeitimų), o Etapą 3 daryti atskirame žingsnyje. Pasakyk savo preferenciją aprov'inime.
+### File 2: `supabase/functions/track-resend-event/index.ts`
+Replace the broken endpoint with the correct one:
+```ts
+// OLD (returns 405):
+POST /audiences/{AUDIENCE_ID}/contacts/{email}/events
+   body: { name, data }
+
+// NEW (correct):
+POST /events/send
+   body: { event, email, payload }
+```
+Also drop the unnecessary "ensure contact exists" pre-call — the docs explicitly state: *"If no contact with this email exists in your Audience, one will be created automatically when the automation runs."* Simpler, fewer failure points.
+
+Keep all existing safety: outer try/catch, always-200 responses, full logging to `resend_event_log` with `event_status` and Resend response body.
+
+---
+
+## Safety guarantees
+
+- **No DB migrations**, no schema changes, no trigger changes
+- **No client/UI changes** — `Auth.tsx`, `Onboarding.tsx`, `Settings.tsx` stay exactly as they are
+- **No new files**, no new env vars
+- Edge functions remain `200 OK` even on Resend failures → app cannot crash
+- Backwards compatible payload contract — callers send the same body
+- Rollback = revert the two files (Lovable auto-versions edge functions)
+
+---
+
+## Expected result after deploy
+
+1. Next signup → `hello@xyz.com` contact appears in Resend with **First Name: Tomas, Last Name: Simkus** populated
+2. Activity tab shows **`Custom event: user.signup`** and **`user.signup_completed`** entries
+3. `resend_event_log` rows for events flip from `status: failed (405)` → `status: ok (202)`
+4. Your "Sign Up – Welcome Email" automation in Resend (with trigger "Custom event: user.signup") will actually fire
+
+---
+
+## Test steps (you run after deploy)
+
+1. Sign up a fresh test email → complete onboarding
+2. Resend → Audience → open the new contact → confirm First/Last Name filled
+3. Same contact → Activity tab → confirm `user.signup_completed` appears
+4. (Optional) Run this in your DB to confirm 202s:
+   ```sql
+   SELECT created_at, event_type, status, payload->'event_status'
+   FROM resend_event_log ORDER BY created_at DESC LIMIT 5;
+   ```
+
+Approve and I'll deploy both edge function fixes immediately.
