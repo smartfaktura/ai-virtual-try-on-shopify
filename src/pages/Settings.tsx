@@ -420,46 +420,6 @@ export default function Settings() {
     }
   };
 
-  const handleGenerateAssetPreviews = async () => {
-    setIsGenerating(true);
-    setGenProgress({ processed: 0, total: 19 });
-    let nextIndex: number | null = 0;
-
-    try {
-      while (nextIndex !== null) {
-        const { data, error } = await supabase.functions.invoke('generate-asset-previews', {
-          body: { start_index: nextIndex, batch_size: 2 },
-        });
-
-        if (error) {
-          toast.error(`Generation failed: ${error.message}`);
-          break;
-        }
-
-        setGenProgress({ processed: data.processed, total: data.total });
-
-        const failed = data.results?.filter((r: any) => !r.success) || [];
-        if (failed.length > 0) {
-          failed.forEach((f: any) => toast.error(`Failed: ${f.path} — ${f.error}`));
-        }
-
-        const succeeded = data.results?.filter((r: any) => r.success) || [];
-        if (succeeded.length > 0) {
-          toast.success(`Generated ${succeeded.map((s: any) => s.path.split('/').pop()).join(', ')}`);
-        }
-
-        nextIndex = data.next_index;
-      }
-
-      toast.success('All asset previews generated!');
-    } catch (err) {
-      toast.error('Generation process failed');
-      console.error(err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   return (
     <>
     <SEOHead title="Settings — VOVV.AI" description="Manage your VOVV.AI account settings, plan, and preferences." noindex />
