@@ -1,27 +1,29 @@
 ## Goal
 
-Remove the `{{balance}}` merge tag from `03-credits-low.html` so the template works as a plain Resend broadcast with no live-data sync required.
+Replace the body content of both legal documents with the finalized, EU + US-safe versions you provided. Keep page chrome, routing, SEO, and styling untouched — only the section content changes.
 
-## Change
+## Files to update
 
-**File:** `/mnt/documents/resend-templates/03-credits-low.html`
+1. **`src/components/legal/TermsContent.tsx`** — Full rewrite of the body using your 24-section Terms of Service.
+2. **`src/components/legal/PrivacyContent.tsx`** — Full rewrite of the body using your 16-section Privacy Policy.
+3. **`src/pages/TermsOfService.tsx`** — Update "Last updated: March 2026" → "Last updated: April 2026".
+4. **`src/pages/PrivacyPolicy.tsx`** — Update "Last updated: March 2026" → "Last updated: April 2026".
 
-Replace the lead line:
+## Content rules
 
-> You have **{{balance}} credits** left. Refill so your next campaign doesn't pause mid-shoot.
-
-With:
-
-> Your credit balance is running low — refill before your next campaign so generation doesn't pause mid-shoot.
-
-Also sweep the rest of the file to ensure no other `{{balance}}` references remain (subject line, preview text, body). Keep `{{first_name}}` and `{{unsubscribe_url}}` as-is (Resend handles those natively from contact fields).
+- Keep the existing Tailwind `prose` wrapper and heading classes in both `*Content.tsx` components — only swap inner `<h2>/<h3>/<p>/<ul>` content.
+- Use **VOVV.AI** uppercase everywhere.
+- Hyperlink every `hello@vovv.ai` mention with `<a href="mailto:hello@vovv.ai" className="text-primary hover:underline">`.
+- Add the **Company Information** section to both docs (MB 123PRESETS, code 306675527, VAT LT100016637411, Lithuania).
+- Terms: include all 24 sections exactly as you wrote them (Definitions → Acceptance → Eligibility → Account → Service Description → Experimental Features → Availability → Credits & Payments incl. EU 14-day withdrawal → Acceptable Use → Your Responsibility → AI Limitations → AI Transparency (EU AI Act) → IP → Confidentiality → Third-Party → Indemnification → Limitation of Liability → Disclaimer → Copyright Complaints → DSA Compliance → Termination → Governing Law → Changes → Company Info).
+- Privacy: include all 16 sections (Introduction → Company Info → Roles → Data Collected → Legal Basis → Use → Subprocessors → AI Data Use → International Transfers → Retention → Security → Breach Notification → Rights → Cookies → Automated Processing → Changes).
 
 ## Untouched
 
-- All other 7 templates stay as they are
-- Spacing, VOVV.AI branding, community section, CTAs unchanged
-- File name and structure unchanged — just copy/paste the updated HTML into Resend
+- Routes (`/terms`, `/privacy`), SEO components, JSON-LD, breadcrumbs, hero/icon styling
+- The signup modal that imports these same components (auto-inherits the new copy)
+- All other pages and templates
 
 ## Result
 
-Template 03 becomes safe to send as a one-shot Resend broadcast to any segment (e.g. "users with < 10 credits") without needing an edge function or live DB sync.
+Both `/terms` and `/privacy` (plus the in-modal versions used at signup) display the finalized EU + US-safe legal text dated April 2026, with consistent VOVV.AI branding and the MB 123PRESETS company details.
