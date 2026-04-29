@@ -1,79 +1,49 @@
-## Diagnosis (confirmed from logs + official Resend docs)
+# Fix "Steal the Look" → routes to Freestyle instead of Product Visuals
 
-I queried `resend_event_log` and pulled the official Resend API reference. Two distinct bugs are confirmed:
+## Root cause
 
-### Bug 1 — First Name / Last Name empty in Resend
-Our `sync-resend-contact` sends snake_case to Resend's REST API:
-```json
-{ "email": "...", "first_name": "Tomas", "last_name": "Simkus" }
-```
-But Resend's REST contact endpoint expects **camelCase**: `firstName`, `lastName`. (Verified in [docs](https://resend.com/docs/api-reference/contacts/create-contact).) Resend silently ignores unknown snake_case fields, returns `201 Created`, and stores no name. That's why the screenshot shows `FIRST NAME: -` even though our log says `status: ok` with `first_name: Tomas`.
+The dashboard's "Steal the Look" section uses its **own** `handleUseItem` function in `src/components/app/DashboardDiscoverSection.tsx` (lines 169–193), which is an **outdated copy** of the Discover page logic.
 
-### Bug 2 — Custom Events return 405 Method Not Allowed
-Our `track-resend-event` POSTs to:
-```
-POST /audiences/{id}/contacts/{email}/events
-```
-This URL **does not exist** in Resend's API. The log shows `event_status: 405, name: method_not_allowed`. The actual endpoint (verified in [docs](https://resend.com/docs/api-reference/events/send-event)) is:
-```
-POST /events/send
-Body: { event: "user.signup", email: "x@y.z", payload: {...} }
-```
-Returns `202 Accepted`. This means **zero** custom events have ever reached Resend — the Activity tab is correctly empty.
+The dashboard version:
+- Sends **scene-type** items to `/app/freestyle?scene=<poseId>` ❌
+- For **preset** items, never checks `workflow_slug === 'product-images'` and never forwards `sceneRef`, so most cards fall through to `/app/freestyle?...` ❌
 
----
+The canonical `/app/discover` page (`src/pages/Discover.tsx` lines 560–610) already does the right thing — it routes scene items and product-images presets to **`/app/generate/product-images?sceneRef=...&fromDiscover=1`**.
 
-## Fix plan (2 edge function edits, zero schema changes, zero client changes)
+That's why `/discover` works correctly and the dashboard does not.
 
-### File 1: `supabase/functions/sync-resend-contact/index.ts`
-Rename the JSON body fields sent to Resend from `first_name`/`last_name` → `firstName`/`lastName` for **both** the POST (create) and PATCH (update) calls. Keep our internal variable names and our `resend_event_log` payload unchanged. Five-line diff.
+## Fix
 
-### File 2: `supabase/functions/track-resend-event/index.ts`
-Replace the broken endpoint with the correct one:
-```ts
-// OLD (returns 405):
-POST /audiences/{AUDIENCE_ID}/contacts/{email}/events
-   body: { name, data }
+Replace `handleUseItem` in `src/components/app/DashboardDiscoverSection.tsx` with the exact same logic used on the Discover page. Do **not** touch `/app/discover` itself.
 
-// NEW (correct):
-POST /events/send
-   body: { event, email, payload }
-```
-Also drop the unnecessary "ensure contact exists" pre-call — the docs explicitly state: *"If no contact with this email exists in your Audience, one will be created automatically when the automation runs."* Simpler, fewer failure points.
+Routing rules after the fix:
 
-Keep all existing safety: outer try/catch, always-200 responses, full logging to `resend_event_log` with `event_status` and Resend response body.
+1. **Scene-type item** → `/app/generate/product-images`
+   - Prefer `sceneRef` (from `item.data.scene_ref`)
+   - Legacy fallback params: `scene`, `sceneImage`, `sceneName`, `sceneCategory`
+   - Always append `fromDiscover=1`
 
----
+2. **Preset with `workflow_slug === 'product-images'`** → `/app/generate/product-images?sceneRef=...&fromDiscover=1`
 
-## Safety guarantees
+3. **Preset with another `workflow_slug`** → `/app/generate/{slug}` with `model`, `scene`, `sceneImage`, `fromDiscover=1`
 
-- **No DB migrations**, no schema changes, no trigger changes
-- **No client/UI changes** — `Auth.tsx`, `Onboarding.tsx`, `Settings.tsx` stay exactly as they are
-- **No new files**, no new env vars
-- Edge functions remain `200 OK` even on Resend failures → app cannot crash
-- Backwards compatible payload contract — callers send the same body
-- Rollback = revert the two files (Lovable auto-versions edge functions)
+4. **Free-form prompt preset (no `workflow_slug`)** → keep existing `/app/freestyle?...` route (intentional — these are free-form prompt cards).
 
----
+## Files touched
 
-## Expected result after deploy
+- `src/components/app/DashboardDiscoverSection.tsx` — only the `handleUseItem` function body.
 
-1. Next signup → `hello@xyz.com` contact appears in Resend with **First Name: Tomas, Last Name: Simkus** populated
-2. Activity tab shows **`Custom event: user.signup`** and **`user.signup_completed`** entries
-3. `resend_event_log` rows for events flip from `status: failed (405)` → `status: ok (202)`
-4. Your "Sign Up – Welcome Email" automation in Resend (with trigger "Custom event: user.signup") will actually fire
+## Safety
 
----
+- One function rewrite, ~30 lines.
+- `/app/discover` is **not modified**.
+- No DB / RLS / edge-function / auth changes.
+- No new deps, hooks, or types.
+- Card click (modal open), category bar, save, recommended hooks — all untouched.
+- Logic is already battle-tested in production on `/app/discover`, so risk of regression is minimal.
 
-## Test steps (you run after deploy)
+## Verification
 
-1. Sign up a fresh test email → complete onboarding
-2. Resend → Audience → open the new contact → confirm First/Last Name filled
-3. Same contact → Activity tab → confirm `user.signup_completed` appears
-4. (Optional) Run this in your DB to confirm 202s:
-   ```sql
-   SELECT created_at, event_type, status, payload->'event_status'
-   FROM resend_event_log ORDER BY created_at DESC LIMIT 5;
-   ```
-
-Approve and I'll deploy both edge function fixes immediately.
+1. Dashboard → "Steal the Look" → click **Recreate this** on any Fashion card → lands on `/app/generate/product-images?sceneRef=...` with the scene pre-applied (not Freestyle).
+2. Open the detail modal → click **Use** → same Product Visuals destination.
+3. `/app/discover` Recreate behavior is unchanged.
