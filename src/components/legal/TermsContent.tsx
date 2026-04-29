@@ -2,7 +2,29 @@
  * Shared Terms of Service body — used by both /terms route and the in-page
  * Auth signup modal. Keep purely presentational; no page chrome.
  */
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PrivacyContent } from './PrivacyContent';
+
 export function TermsContent() {
+  const privacyLink = (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="underline underline-offset-2 text-foreground hover:text-primary transition-colors font-medium"
+        >
+          Privacy Policy
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Privacy Policy</DialogTitle>
+        </DialogHeader>
+        <PrivacyContent />
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="prose prose-sm max-w-none text-muted-foreground [&_h2]:text-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-foreground [&_h3]:font-medium [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:mb-4 [&_ul]:space-y-1 [&_li]:ml-4">
 
@@ -17,7 +39,7 @@ export function TermsContent() {
 
       <h2>2. Acceptance of Terms</h2>
       <p>
-        By using the Service, you agree to these Terms and our Privacy Policy. If you do not agree, you must not use the Service.
+        By using the Service, you agree to these Terms and our {privacyLink}. If you do not agree, you must not use the Service.
       </p>
 
       <h2>3. Eligibility</h2>
