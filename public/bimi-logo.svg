@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 500 500">
+<title>VOVV.AI</title>
+<rect width="500" height="500" fill="#0F172A"/>
+<path fill="#FFFFFF" d="M58 200 L92 200 L120 290 L148 200 L182 200 L138 320 L102 320 Z M212 200 L246 200 L274 290 L302 200 L336 200 L292 320 L256 320 Z M352 200 L386 200 L414 290 L442 200 L476 200 L432 320 L396 320 Z"/>
+<path fill="#FFFFFF" d="M125 200 L159 200 L187 290 L215 200 L249 200 L205 320 L169 320 Z" transform="translate(-48 0)"/>
+</svg>
