@@ -593,270 +593,6 @@ export type Database = {
           },
         ]
       }
-      email_automation_log: {
-        Row: {
-          automation_id: string
-          email: string
-          error_message: string | null
-          id: string
-          resend_message_id: string | null
-          sent_at: string | null
-          status: string
-          triggered_at: string
-          user_id: string | null
-        }
-        Insert: {
-          automation_id: string
-          email: string
-          error_message?: string | null
-          id?: string
-          resend_message_id?: string | null
-          sent_at?: string | null
-          status?: string
-          triggered_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          automation_id?: string
-          email?: string
-          error_message?: string | null
-          id?: string
-          resend_message_id?: string | null
-          sent_at?: string | null
-          status?: string
-          triggered_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "email_automation_log_automation_id_fkey"
-            columns: ["automation_id"]
-            isOneToOne: false
-            referencedRelation: "email_automations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      email_automation_queue: {
-        Row: {
-          attempts: number
-          automation_id: string
-          created_at: string
-          email: string
-          error_message: string | null
-          id: string
-          processed_at: string | null
-          send_at: string
-          status: string
-          user_id: string | null
-        }
-        Insert: {
-          attempts?: number
-          automation_id: string
-          created_at?: string
-          email: string
-          error_message?: string | null
-          id?: string
-          processed_at?: string | null
-          send_at?: string
-          status?: string
-          user_id?: string | null
-        }
-        Update: {
-          attempts?: number
-          automation_id?: string
-          created_at?: string
-          email?: string
-          error_message?: string | null
-          id?: string
-          processed_at?: string | null
-          send_at?: string
-          status?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "email_automation_queue_automation_id_fkey"
-            columns: ["automation_id"]
-            isOneToOne: false
-            referencedRelation: "email_automations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      email_automations: {
-        Row: {
-          audience_filter: Json
-          body_html: string
-          created_at: string
-          created_by: string | null
-          cta_label: string | null
-          cta_url: string | null
-          delay_minutes: number
-          description: string | null
-          frequency_cap: number
-          id: string
-          is_active: boolean
-          name: string
-          sent_count: number
-          subject: string
-          trigger_config: Json
-          trigger_event: string
-          updated_at: string
-        }
-        Insert: {
-          audience_filter?: Json
-          body_html: string
-          created_at?: string
-          created_by?: string | null
-          cta_label?: string | null
-          cta_url?: string | null
-          delay_minutes?: number
-          description?: string | null
-          frequency_cap?: number
-          id?: string
-          is_active?: boolean
-          name: string
-          sent_count?: number
-          subject: string
-          trigger_config?: Json
-          trigger_event: string
-          updated_at?: string
-        }
-        Update: {
-          audience_filter?: Json
-          body_html?: string
-          created_at?: string
-          created_by?: string | null
-          cta_label?: string | null
-          cta_url?: string | null
-          delay_minutes?: number
-          description?: string | null
-          frequency_cap?: number
-          id?: string
-          is_active?: boolean
-          name?: string
-          sent_count?: number
-          subject?: string
-          trigger_config?: Json
-          trigger_event?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      email_campaign_recipients: {
-        Row: {
-          campaign_id: string
-          clicked_at: string | null
-          created_at: string
-          email: string
-          error_message: string | null
-          id: string
-          opened_at: string | null
-          resend_message_id: string | null
-          sent_at: string | null
-          status: string
-          user_id: string | null
-        }
-        Insert: {
-          campaign_id: string
-          clicked_at?: string | null
-          created_at?: string
-          email: string
-          error_message?: string | null
-          id?: string
-          opened_at?: string | null
-          resend_message_id?: string | null
-          sent_at?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Update: {
-          campaign_id?: string
-          clicked_at?: string | null
-          created_at?: string
-          email?: string
-          error_message?: string | null
-          id?: string
-          opened_at?: string | null
-          resend_message_id?: string | null
-          sent_at?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "email_campaign_recipients_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "email_campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      email_campaigns: {
-        Row: {
-          audience_filter: Json
-          body_html: string
-          clicked_count: number
-          created_at: string
-          created_by: string | null
-          cta_label: string | null
-          cta_url: string | null
-          failed_count: number
-          id: string
-          name: string
-          opened_count: number
-          recipient_count: number
-          scheduled_at: string | null
-          sent_at: string | null
-          sent_count: number
-          status: string
-          subject: string
-          updated_at: string
-        }
-        Insert: {
-          audience_filter?: Json
-          body_html: string
-          clicked_count?: number
-          created_at?: string
-          created_by?: string | null
-          cta_label?: string | null
-          cta_url?: string | null
-          failed_count?: number
-          id?: string
-          name: string
-          opened_count?: number
-          recipient_count?: number
-          scheduled_at?: string | null
-          sent_at?: string | null
-          sent_count?: number
-          status?: string
-          subject: string
-          updated_at?: string
-        }
-        Update: {
-          audience_filter?: Json
-          body_html?: string
-          clicked_count?: number
-          created_at?: string
-          created_by?: string | null
-          cta_label?: string | null
-          cta_url?: string | null
-          failed_count?: number
-          id?: string
-          name?: string
-          opened_count?: number
-          recipient_count?: number
-          scheduled_at?: string | null
-          sent_at?: string | null
-          sent_count?: number
-          status?: string
-          subject?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       email_send_log: {
         Row: {
           created_at: string
@@ -2050,6 +1786,39 @@ export type Database = {
           },
         ]
       }
+      resend_event_log: {
+        Row: {
+          created_at: string
+          email: string
+          event_type: string
+          id: string
+          payload: Json
+          response: Json | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_type: string
+          id?: string
+          payload?: Json
+          response?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          response?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       saved_discover_items: {
         Row: {
           created_at: string
@@ -2877,6 +2646,10 @@ export type Database = {
       }
     }
     Functions: {
+      _invoke_edge_function: {
+        Args: { p_function: string; p_payload: Json }
+        Returns: undefined
+      }
       add_purchased_credits: {
         Args: { p_amount: number; p_user_id: string }
         Returns: number
@@ -3015,15 +2788,6 @@ export type Database = {
       reset_plan_credits: {
         Args: { p_plan_credits: number; p_user_id: string }
         Returns: Json
-      }
-      resolve_email_audience: {
-        Args: { p_filter: Json }
-        Returns: {
-          display_name: string
-          email: string
-          plan: string
-          user_id: string
-        }[]
       }
       toggle_scene_featured: { Args: { p_scene_id: string }; Returns: number }
       try_acquire_dispatch_lock: {

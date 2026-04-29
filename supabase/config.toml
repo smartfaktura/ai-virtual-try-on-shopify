@@ -83,11 +83,9 @@ project_id = "azwiljtrbtaupofwmpzb"
     verify_jwt = false
   [functions.kling-lip-sync]
     verify_jwt = false
-  [functions.send-campaign]
-    verify_jwt = false
-  [functions.schedule-campaigns-tick]
-    verify_jwt = false
-  [functions.process-automation-queue]
-    verify_jwt = false
   [functions.handle-marketing-unsubscribe]
+    verify_jwt = false
+  [functions.sync-resend-contact]
+    verify_jwt = false
+  [functions.track-resend-event]
     verify_jwt = false

@@ -49,6 +49,15 @@ Deno.serve(async (req) => {
       reason: "unsubscribed",
     }, { onConflict: "email" });
 
+    // Mark as unsubscribed in Resend audience (best-effort)
+    try {
+      await admin.functions.invoke("sync-resend-contact", {
+        body: { email: normalized, user_id: profile?.user_id ?? null, unsubscribed: true, event: "user.unsubscribed" },
+      });
+    } catch (e) {
+      console.warn("[handle-marketing-unsubscribe] resend sync failed", e);
+    }
+
     return json({ ok: true });
   } catch (e) {
     console.error("[handle-marketing-unsubscribe]", e);
