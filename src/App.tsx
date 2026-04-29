@@ -162,6 +162,7 @@ const App = () => {
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
             <Route path="/tryshot" element={<TryShot />} />
             <Route path="/tryshot/:domain" element={<TryShot />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
 
             {/* Feature pages */}
