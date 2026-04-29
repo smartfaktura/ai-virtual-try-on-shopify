@@ -1,117 +1,74 @@
-## Plan: Move all marketing/automation to Resend, keep app lean
+## Branded Resend templates for VOVV.AI
 
-We delete our in-app campaign composer + automation builder, and instead push events + audience data to Resend so you manage everything (broadcasts, automations, segments) from the Resend dashboard.
+I'll generate **8 production-ready HTML email files** matching the VOVV.AI homepage aesthetic, ready to copy-paste into Resend → Templates. No code changes to the app — the existing `track-resend-event` triggers will fire these templates inside Resend's automation builder.
 
----
+## Brand system applied to every template
 
-### What gets removed (no longer needed)
+Pulled directly from `src/index.css` and `_shared/email-render.ts` so emails feel like a continuation of the website:
 
-**Pages**
-- `src/pages/admin/Campaigns.tsx`
-- `src/pages/admin/CampaignComposer.tsx`
-- `src/pages/admin/AutomationComposer.tsx`
-- Routes for `/app/admin/campaigns/*` and `/app/admin/automations/*` in `src/App.tsx`
-- Sidebar entries in `src/components/app/AppShell.tsx`
+- **Background**: Warm Stone `#FAFAF8` (matches homepage `bg-[#FAFAF8]`)
+- **Surface card**: Pure white `#FFFFFF` with subtle border `#E7E5E4`
+- **Primary text**: Navy `#0F172A` (homepage foreground)
+- **Muted text**: `#64748B`
+- **CTA button**: Navy `#1E293B`, 8px radius, 14px 32px padding, white text
+- **Wordmark**: "VOVV.AI" — Inter 700, 20px, letter-spacing -0.03em (matches `LandingNav`)
+- **Body type**: Inter 400/500/600, 15px, line-height 1.6, antialiased
+- **Hero image**: 560×320 cover image from `landing-assets` bucket (e.g. `auth/auth-hero.jpg`, `showcase/fashion-camel-coat.png`) optimized at q=80
+- **Footer**: 12px muted, marketing-unsubscribe link + "© 2026 VOVV.AI · A product by 123Presets"
+- **Width**: 560px max, centered, mobile-responsive
+- **Subject lines**: No terminal periods on short headers (memory rule), sentence case, conversion-tested
 
-**Edge functions**
-- `send-campaign`
-- `schedule-campaigns-tick`
-- `process-automation-queue`
+## The 8 templates
 
-**Database (migration to drop)**
-- Tables: `email_campaigns`, `email_campaign_recipients`, `email_automations`, `email_automation_queue`
-- RPC: `resolve_email_audience` (replaced by Resend audience sync)
-- Keep `marketing_unsubscribes` (still needed for compliance + sync to Resend)
+Each file = standalone HTML, table-based for Outlook/Gmail compatibility, uses Resend merge tags (`{{first_name}}`, `{{balance}}`, `{{plan}}`, `{{unsubscribe_url}}`).
 
----
+| # | File | Trigger event | Subject |
+|---|------|---------------|---------|
+| 1 | `01-welcome.html` | `user.signup` (new contact added) | Welcome to VOVV.AI |
+| 2 | `02-first-generation.html` | `user.first_generation` | Your first visual is live |
+| 3 | `03-credits-low.html` | `credits.low` (balance <10) | Your credits are running low |
+| 4 | `04-subscription-started.html` | `subscription.started` | You're in. Let's make great visuals |
+| 5 | `05-subscription-canceled.html` | `subscription.canceled` | We'd love to have you back |
+| 6 | `06-abandoned-checkout.html` | `checkout.abandoned` (1h delay) | Your VOVV.AI plan is one click away |
+| 7 | `07-weekly-inspiration.html` | Manual broadcast | This week in VOVV.AI |
+| 8 | `08-reengagement.html` | 30 days inactive | Your studio is waiting |
 
-### What stays / gets added
+Each template includes:
+- VOVV.AI wordmark (top-left, no logo image needed — pure type)
+- One hero image pulled from your existing `landing-assets` bucket (no new uploads needed)
+- One H1 (24px, weight 600, navy)
+- 1-2 paragraphs of warm, restrained copy (no exclamation marks, no emojis)
+- One primary CTA button to `https://vovv.ai/app/...`
+- Unsubscribe footer
 
-**1. Resend Audience sync (the contact list Resend uses for broadcasts + automations)**
+## Copy direction (sample — Welcome email)
 
-New edge function: `sync-resend-contact`
-- Called from `handle_new_user` trigger → adds new signup to Resend audience with metadata (plan, signup date, display_name, product_categories)
-- Called from `check-subscription` when plan changes → updates contact metadata
-- Called from `handle-marketing-unsubscribe` → marks contact as `unsubscribed: true` in Resend
-- Uses `RESEND_AUDIENCE_ID` (already in your secrets ✓)
+> **Welcome to VOVV.AI**
+>
+> Your studio is ready. Upload a product photo and you'll have editorial-quality visuals in under a minute — no photographer, no set, no waiting.
+>
+> Most brands start with their bestseller. Try yours next.
+>
+> [ Open your studio → ]
+>
+> Need a walkthrough? Our [Learn hub](https://vovv.ai/app/learn) has 2-minute guides.
 
-**2. Event forwarding (so Resend automations have triggers to fire on)**
+Same restrained tone across all 8.
 
-New edge function: `track-resend-event`
-Sends contact-level events Resend can use as automation triggers:
-| Event sent to Resend | Fires from |
-|---|---|
-| `user.signup` | `handle_new_user` trigger |
-| `user.first_generation` | `enqueue_generation` (when `is_first_generation = true`) |
-| `credits.low` | `deduct_credits` (when balance < 10) |
-| `subscription.started` | `check-subscription` (on first paid detection) |
-| `subscription.canceled` | `check-subscription` (on downgrade to free) |
-| `checkout.abandoned` | New `handle-checkout-abandoned` function called 1h after `create-checkout` if not fulfilled |
+## Delivery
 
-These events are sent as **contact attribute updates + tags** in Resend (e.g. tag `event:first_generation`, attribute `last_event_at`). Resend automations trigger off tag added or attribute changed.
+I'll write all 8 HTML files to `/mnt/documents/resend-templates/` and emit `presentation-artifact` tags so you can preview/download each one. Then you:
 
-**3. Keep one-click unsubscribe handling**
-- `handle-marketing-unsubscribe` stays (List-Unsubscribe header compliance)
-- Now also calls Resend API to mark contact unsubscribed there
+1. Open Resend → Templates → New Template
+2. Paste the HTML, set the subject (provided in a comment at the top of each file)
+3. In Automations, link the template to the matching event/audience tag (already firing from our edge functions)
 
-**4. Admin UI — single thin page**
+## Technical section
 
-Replace Campaigns admin page with `src/pages/admin/EmailMarketing.tsx`:
-- Big button "Open Resend Dashboard" → opens `https://resend.com/audiences/{RESEND_AUDIENCE_ID}` in new tab
-- Stats card: total contacts synced, total unsubscribes, last sync status
-- Manual "Resync all contacts" button (calls a `resync-resend-audience` function that batch-uploads all profiles)
-- Recent events log (last 50 events sent to Resend)
+- Output dir: `/mnt/documents/resend-templates/`
+- Hero images: referenced via existing public Supabase Storage URLs (`landing-assets` bucket) — no new asset work
+- Merge tags: Resend syntax `{{first_name | default: "there"}}`, `{{unsubscribe_url}}`
+- A `README.md` in the same folder will list each template, its trigger, subject line, and Resend automation step-by-step
+- No app code changes, no migrations, no edge function changes — purely artifact generation
 
-**5. New tiny table: `resend_event_log`**
-Stores what we sent to Resend, when, and the response — for debugging and the admin stats card.
-
----
-
-### What you do in Resend (one-time, manual)
-
-1. **Audience**: already exists (`RESEND_AUDIENCE_ID`)
-2. **Broadcasts**: compose in Resend, send to audience or filtered segments
-3. **Automations**: create once in Resend's automation builder using the tags/attributes we sync:
-   - Trigger: tag `event:signup` added → Welcome email
-   - Trigger: tag `event:first_generation` added → Congrats + tips
-   - Trigger: tag `event:credits_low` added → Top-up nudge
-   - Trigger: tag `event:checkout_abandoned` added → Recovery email
-   - Trigger: tag `event:subscription_canceled` added → Win-back
-4. **Segments**: filter by attributes we sync (`plan`, `signup_date`, `product_categories`) for targeted broadcasts
-
----
-
-### Technical details
-
-**Resend API calls used**
-- `POST /audiences/{id}/contacts` — add contact
-- `PATCH /audiences/{id}/contacts/{email}` — update attributes/unsubscribe
-- `DELETE /audiences/{id}/contacts/{email}` — hard remove (not used; we soft-unsubscribe)
-- Events sent as contact updates with `data: { tags: [...], attributes: {...} }`
-
-**Auth**: All new functions use `RESEND_API_KEY` (already configured ✓)
-
-**No cron jobs.** The only delayed event is `checkout.abandoned` — handled by enqueueing into existing `pgmq` queue with a 1h visibility timeout, processed by the already-running `process-email-queue` cron (no new cron added).
-
-**Files to create**
-- `supabase/functions/sync-resend-contact/index.ts`
-- `supabase/functions/track-resend-event/index.ts`
-- `supabase/functions/resync-resend-audience/index.ts`
-- `supabase/functions/handle-checkout-abandoned/index.ts`
-- `src/pages/admin/EmailMarketing.tsx`
-- Migration: drop unused tables, add `resend_event_log`, update triggers
-
-**Files to edit**
-- `src/App.tsx` — swap routes
-- `src/components/app/AppShell.tsx` — sidebar label "Email Marketing"
-- `supabase/functions/check-subscription/index.ts` — fire subscription events
-- `supabase/functions/create-checkout/index.ts` — schedule abandonment check
-- `handle_new_user` trigger — call sync function
-- `enqueue_generation` RPC — fire first_generation event
-- `deduct_credits` RPC — fire credits_low event (already has email logic, just add Resend tag)
-
-**Cost**: Resend free tier covers 3000 emails/month, 100/day. You only pay for emails actually sent. No infrastructure cost on our side beyond a few API calls per user event.
-
----
-
-Reply "go" and I'll execute this cleanup + sync layer in one pass.
+Reply "go" and I'll generate all 8 files plus the README in one pass.
