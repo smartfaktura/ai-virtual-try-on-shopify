@@ -14,6 +14,13 @@ export function getVisualLibraryHrefForCategory(slug?: string): string {
     'food-beverage': { family: 'food-and-drink' },
     'supplements-wellness': { family: 'wellness' },
     'electronics-gadgets': { family: 'tech' },
+    // Sub-niche category pages
+    'bags':     { family: 'bags-and-accessories', collection: 'bags' },
+    'watches':  { family: 'bags-and-accessories', collection: 'watches' },
+    'eyewear':  { family: 'bags-and-accessories', collection: 'eyewear' },
+    'hoodies':  { family: 'fashion', collection: 'hoodies' },
+    'swimwear': { family: 'fashion', collection: 'swimwear' },
+    'lingerie': { family: 'fashion', collection: 'lingerie' },
   };
   const m = map[slug];
   if (!m) return '/product-visual-library';
