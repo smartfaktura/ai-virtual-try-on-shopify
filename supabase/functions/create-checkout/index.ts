@@ -102,6 +102,20 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id });
 
+    // Track checkout start for abandoned-checkout automations (best-effort, non-blocking)
+    try {
+      await supabaseClient.from("checkout_sessions").insert({
+        user_id: userId,
+        email: userEmail,
+        stripe_session_id: session.id,
+        plan: priceObj.nickname || null,
+        amount_cents: priceObj.unit_amount || null,
+        metadata: { mode: checkoutMode, price_id: priceId },
+      });
+    } catch (trackErr) {
+      logStep("checkout_sessions insert failed", { error: (trackErr as Error).message });
+    }
+
     return new Response(JSON.stringify({
       url: session.url,
       sessionId: session.id,
