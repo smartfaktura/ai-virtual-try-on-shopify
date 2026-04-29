@@ -40,6 +40,9 @@ const solutionsGroups: FooterGroup[] = [
       { label: 'Swimwear Product Photography', to: '/ai-product-photography/swimwear' },
       { label: 'Lingerie Product Photography', to: '/ai-product-photography/lingerie' },
       { label: 'Eyewear Product Photography', to: '/ai-product-photography/eyewear' },
+      { label: 'Activewear Product Photography', to: '/ai-product-photography/activewear' },
+      { label: 'Dresses Product Photography', to: '/ai-product-photography/dresses' },
+      { label: 'Caps & Hats Product Photography', to: '/ai-product-photography/caps-hats' },
     ],
   },
   {
