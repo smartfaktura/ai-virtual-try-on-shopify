@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
     // Check unsubscribe flag — if user is unsubscribed, mark in Resend
     const unsubscribed = !!body.unsubscribed;
 
-    // Pull profile metadata if not provided
+    // Pull profile metadata. Try by user_id first, then by email as fallback
+    // (handles race conditions where profile row isn't created yet during signup).
     let profile: any = null;
     if (body.user_id) {
       const { data } = await admin
@@ -39,9 +40,26 @@ Deno.serve(async (req) => {
         .maybeSingle();
       profile = data;
     }
+    if (!profile) {
+      const { data } = await admin
+        .from("profiles")
+        .select("first_name, last_name, display_name, plan, product_categories, created_at")
+        .eq("email", email)
+        .maybeSingle();
+      profile = data;
+    }
 
-    const firstName = body.display_name || profile?.first_name || profile?.display_name || null;
-    const lastName = profile?.last_name || null;
+    // Priority: explicit body fields > profile DB fields > email prefix fallback.
+    // This fixes race conditions where the profile row hasn't been written yet
+    // but the client already knows the user's name (e.g. signup form input).
+    const firstName =
+      body.first_name ||
+      body.display_name ||
+      profile?.first_name ||
+      profile?.display_name ||
+      email.split("@")[0] ||
+      null;
+    const lastName = body.last_name || profile?.last_name || null;
 
     // Try POST first (create); on 409/conflict, PATCH
     const createRes = await fetch(`${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
