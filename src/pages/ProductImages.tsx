@@ -1335,27 +1335,29 @@ export default function ProductImages() {
             <div className="space-y-3">
               {/* Toolbar */}
               {userProducts.length > 0 && (
-              <div className="flex gap-3 items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center min-w-0">
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   <Input
                     placeholder={`Search ${userProducts.length} products…`}
                     value={productSearch}
                     onChange={e => setProductSearch(e.target.value)}
-                    className="h-10 rounded-full text-sm pl-9 focus-visible:ring-1 focus-visible:ring-ring/30 focus-visible:ring-offset-0 focus-visible:border-ring/40"
+                    className="h-10 w-full rounded-full text-sm pl-9 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground/40 focus-visible:shadow-[0_0_0_1px_hsl(var(--muted-foreground)/0.18)]"
                   />
                 </div>
 
-                <Button size="default" variant="outline" onClick={() => {
-                  const filtered = userProducts.filter(p =>
-                    p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-                    p.product_type.toLowerCase().includes(productSearch.toLowerCase())
-                  );
-                  setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
-                }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
-                {selectedProductIds.size > 0 && (
-                  <Button size="default" variant="outline" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
-                )}
+                <div className="flex gap-2 shrink-0">
+                  <Button size="default" variant="outline" onClick={() => {
+                    const filtered = userProducts.filter(p =>
+                      p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
+                      p.product_type.toLowerCase().includes(productSearch.toLowerCase())
+                    );
+                    setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
+                  }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
+                  {selectedProductIds.size > 0 && (
+                    <Button size="default" variant="outline" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
+                  )}
+                </div>
               </div>
               )}
 
