@@ -162,6 +162,16 @@ serve(async (req) => {
         await stripe.checkout.sessions.update(session.id, {
           metadata: { ...session.metadata, fulfilled: "true" },
         });
+
+        // Mark our checkout_sessions row as completed (for abandoned-checkout automations)
+        try {
+          await supabaseAdmin
+            .from("checkout_sessions")
+            .update({ completed_at: new Date().toISOString() })
+            .eq("stripe_session_id", session.id);
+        } catch (e) {
+          logStep("checkout_sessions update failed", { error: (e as Error).message });
+        }
       }
     }
 
