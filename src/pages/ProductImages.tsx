@@ -1342,7 +1342,7 @@ export default function ProductImages() {
                     placeholder={`Search ${userProducts.length} products…`}
                     value={productSearch}
                     onChange={e => setProductSearch(e.target.value)}
-                    className="h-10 rounded-full text-sm pl-9"
+                    className="h-10 rounded-full text-sm pl-9 focus-visible:ring-1 focus-visible:ring-ring/30 focus-visible:ring-offset-0 focus-visible:border-ring/40"
                   />
                 </div>
 
