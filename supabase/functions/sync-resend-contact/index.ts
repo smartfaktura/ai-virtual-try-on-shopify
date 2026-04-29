@@ -61,7 +61,9 @@ Deno.serve(async (req) => {
       null;
     const lastName = body.last_name || profile?.last_name || null;
 
-    // Try POST first (create); on 409/conflict, PATCH
+    // Try POST first (create); on 409/conflict, PATCH.
+    // NOTE: Resend REST API expects camelCase: firstName / lastName
+    // (snake_case is silently ignored — that's why dashboard showed empty names).
     const createRes = await fetch(`${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
       method: "POST",
       headers: {
@@ -70,8 +72,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         email,
-        first_name: firstName ?? undefined,
-        last_name: lastName ?? undefined,
+        firstName: firstName ?? undefined,
+        lastName: lastName ?? undefined,
         unsubscribed,
       }),
     });
