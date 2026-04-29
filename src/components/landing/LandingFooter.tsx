@@ -34,6 +34,12 @@ const solutionsGroups: FooterGroup[] = [
       { label: 'Food & Beverage', to: '/ai-product-photography/food-beverage' },
       { label: 'Home & Furniture', to: '/ai-product-photography/home-furniture' },
       { label: 'Electronics & Gadgets', to: '/ai-product-photography/electronics-gadgets' },
+      { label: 'Bags Product Photography', to: '/ai-product-photography/bags' },
+      { label: 'Watches Product Photography', to: '/ai-product-photography/watches' },
+      { label: 'Hoodies Product Photography', to: '/ai-product-photography/hoodies' },
+      { label: 'Swimwear Product Photography', to: '/ai-product-photography/swimwear' },
+      { label: 'Lingerie Product Photography', to: '/ai-product-photography/lingerie' },
+      { label: 'Eyewear Product Photography', to: '/ai-product-photography/eyewear' },
     ],
   },
   {
