@@ -135,8 +135,8 @@ function HeroTile({
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
       <SmartImage
-        src={getOptimizedUrl(src, { width: 640, height: 800, quality: 85, resize: 'cover' })}
-        srcSet={getResizedSrcSet(src, { widths: [360, 540, 720, 900], aspect: [4, 5], quality: 85 })}
+        src={getOptimizedUrl(src, { width: 640, height: 800, quality: 75, resize: 'cover' })}
+        srcSet={getResizedSrcSet(src, { widths: [360, 540, 720], aspect: [4, 5], quality: 75 })}
         sizes="(max-width: 1024px) 45vw, 280px"
         alt={alt}
         priority={priority}

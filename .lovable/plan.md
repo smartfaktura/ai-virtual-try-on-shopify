@@ -1,76 +1,88 @@
-# Add 6 new SEO category pages: Bags, Watches, Hoodies, Swimwear, Lingerie, Eyewear
+## Why the new pages feel slow
 
-## Goal
-Spin up 6 new `/ai-product-photography/{slug}` pages that look and behave exactly like `/ai-product-photography/footwear`, using real on-topic scenes from the live `product_image_scenes` catalog. Wire them into the SEO admin, footer, deep-link map, and sitemap.
+I measured the live `/ai-product-photography/watches` page and the underlying Supabase storage transforms:
 
-## Architecture (no new pages, no new components)
-The `/ai-product-photography/:slug` route (`src/pages/seo/AIProductPhotographyCategory.tsx`) is fully data-driven from `aiProductPhotographyCategoryPages.ts`. The SEO admin (`/admin/seo-page-visuals`) and sitemap auto-derive entries from that same file. So adding the pages = adding data.
+- The hero collage source images are **2.3 MB raw** JPGs.
+- Supabase's `/render/image/` transform endpoint takes **~350-450 ms cold**, ~90 ms warm. Each transform variant has its own cache key.
+- `HeroPreload` injects `<link rel="preload" as="image" href="…?quality=60">` (no width/height).
+- The actual hero `<img>` requests `…?width=640&height=800&quality=85&resize=cover` plus a `srcSet` of 360/540/720/900.
 
-## Files to change
+These are **two different URLs** with **two different cache keys**, so the preload is wasted: the browser fetches a 230 KB variant that nothing uses, and then the real `<img>` still has to do its own cold transform after React hydrates. On the older pages this didn't bite as hard because they used the single-image hero (`heroMain`) where the URL math is closer; the 6 new pages all use the 4-tile collage path that the preload was never updated for.
 
-### 1. `src/data/aiProductPhotographyCategoryPages.ts` — append 6 entries
-For each new slug add a full `CategoryPage` object (hero, collage, 8 scene examples, visual outputs, use cases, FAQs, related categories) following the existing `footwear`/`fashion` shape. Real `imageId`s confirmed from the DB:
+The same mismatch makes the LCP image effectively unprioritized — exactly what the 1.5–3 s "image loading slowly" feeling is.
 
-- **bags** — hero `1776239449949-ygljai`. Scenes from `bags-accessories`: Sculptural Studio Hero, Wind Shoulder, Architectural On-Body, Hardware Closeup, Reclined Studio, Luxury Couch Still, Cafe Errand UGC, Distant Horizon Campaign. Related: `bags-accessories, fashion, footwear, jewelry`.
-- **watches** — hero `1776596240525-wafgtx`. Scenes from `watches`: Motion Blur Hero, Wrist Beauty Portrait, Dial Closeup, Earthy Glow, Frozen Aura, Daily Luxury Cuff, Super Editorial Campaign, Dynamic Water Splash. Related: `bags-accessories, jewelry, eyewear, bags`.
-- **hoodies** — hero `1776847998023-tof7el`. Scenes from `hoodies`: Ghost Mannequin, Boucle Lounge, Outfit Mirror Selfie, Graphic Hero, Crosswalk View, Tarmac Walk, Color Lounge, Rail Still. Related: `fashion, footwear, bags, bags-accessories`.
-- **swimwear** — hero `1776246297359-aecrip`. Scenes from `swimwear`: Sunlit Arch, Aesthetic Color Editorial Hero, Sun Lounger, Towel Wrap, Floating Pool, Folded on Towel Still, Yacht Deck, Cabana Curtain. Related: `fashion, lingerie, bags, bags-accessories`.
-- **lingerie** — hero `1776242908181-27a0zd`. Scenes from `lingerie`: Sunlit Skin Hero, Soft Standing Silhouette, Sheet Wrap Portrait, Coffee in Bed, Folded Lace Still, Silk Movement, Vanity Mirror Minimal, Morning Mirror UGC. Related: `fashion, swimwear, beauty-skincare, fragrance`.
-- **eyewear** — hero `beauty-closeup-oversized-eyewear-1776150210659`. Scenes from `eyewear`: Beauty Closeup, Office Flash, Sunset Drive, Stair Selfie, Cafe Film, Lounge Selfie, Handheld Frame, Volcanic Sunset. Related: `bags-accessories, watches, fashion, jewelry`.
+## Fix
 
-Copy mirrors the polished tone of `footwear`: SEO title, meta, H1 lead/highlight, hero eyebrow + subheadline, primary/secondary/long-tail keywords, subcategories, pain points, 8 visual outputs, 6 use cases, 5 FAQs, 4-tile hero collage, `heroNoun` (bag/watch/hoodie/swimsuit/piece/frame).
+Two small, focused changes in `src/pages/seo/AIProductPhotographyCategory.tsx` and `src/components/seo/photography/category/CategoryHero.tsx`.
 
-### 2. `src/data/aiProductPhotographyBuiltForGrids.ts` — add 6 entries to `BUILT_FOR_GRIDS`
-Add chip-rail groups (~5 chips × 6–8 cards each) so the "Built for every X shot" section renders. All `imageId`s pulled from the DB dump. Subgroup splits per slug:
-- **bags** — Editorial Studio · On-Body · Campaign · Hardware · Essentials · UGC
-- **watches** — Editorial Studio · On-Wrist Portraits · Creative · Essentials · Lifestyle
-- **hoodies** — Essentials · UGC · Lifestyle · Graphic Campaigns · Travel · Stills
-- **swimwear** — Resort Editorial · Color Stories · Beach UGC · Stills · Essentials
-- **lingerie** — Studio · Boudoir · Lifestyle · Campaign · Stills · Essentials
-- **eyewear** — Editorial Portraits · Aesthetic Color · Vintage Film · Brutalist UGC · Creative · Essentials
+### 1. Make `HeroPreload` match the real LCP `<img>` URL
 
-(Hand-edit is safe — the file's "auto-generated" header is informational, the script just rebuilds it; new keys will survive a regen if the script picks them up next time.)
+Update `HeroPreload` so when the page uses a collage, it preloads the same width/height/quality variant that `HeroTile` actually requests, and includes the `imagesrcset` / `imagesizes` attributes so the browser can pick the right candidate.
 
-### 3. `src/lib/visualLibraryDeepLink.ts` — add 6 mappings
-Each new slug gets a `family`/`collection` mapping so the "Browse the visual library" CTA on the page deep-links to the right catalog filter:
-- `bags` → `family: bags-and-accessories, collection: bags`
-- `watches` → `family: bags-and-accessories, collection: watches`
-- `eyewear` → `family: bags-and-accessories, collection: eyewear`
-- `hoodies` → `family: fashion, collection: hoodies`
-- `swimwear` → `family: fashion, collection: swimwear`
-- `lingerie` → `family: fashion, collection: lingerie`
+```tsx
+// AIProductPhotographyCategory.tsx
+function HeroPreload({
+  url,
+  isCollage,
+}: { url: string; isCollage: boolean }) {
+  useEffect(() => {
+    if (!url) return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.fetchPriority = 'high';
 
-### 4. `src/components/landing/LandingFooter.tsx` — add 6 links to "Categories" group
-Append after the existing "Electronics & Gadgets" link:
-- Bags Product Photography → `/ai-product-photography/bags`
-- Watch Product Photography → `/ai-product-photography/watches`
-- Hoodie Product Photography → `/ai-product-photography/hoodies`
-- Swimwear Product Photography → `/ai-product-photography/swimwear`
-- Lingerie Product Photography → `/ai-product-photography/lingerie`
-- Eyewear Product Photography → `/ai-product-photography/eyewear`
+    if (isCollage) {
+      // Match HeroTile: width=640 h=800 q=85, srcSet 360/540/720/900 @ 4:5
+      link.href = getOptimizedUrl(url, {
+        width: 640, height: 800, quality: 85, resize: 'cover',
+      });
+      link.setAttribute(
+        'imagesrcset',
+        getResizedSrcSet(url, { widths: [360, 540, 720, 900], aspect: [4, 5], quality: 85 }),
+      );
+      link.setAttribute('imagesizes', '(max-width: 1024px) 45vw, 280px');
+    } else {
+      // Match single-image hero: width=1120 h=1400 q=85, srcSet 640/900/1120/1400
+      link.href = getOptimizedUrl(url, {
+        width: 1120, height: 1400, quality: 85, resize: 'cover',
+      });
+      link.setAttribute(
+        'imagesrcset',
+        getResizedSrcSet(url, { widths: [640, 900, 1120, 1400], aspect: [4, 5], quality: 85 }),
+      );
+      link.setAttribute('imagesizes', '(max-width: 1024px) 92vw, 560px');
+    }
 
-### 5. `public/sitemap.xml` — regenerate
-Run the existing `scripts/generate-sitemap.ts` (no script change needed — it iterates `aiProductPhotographyCategoryPages`, so the 6 new URLs land automatically with image-rich entries). Update `public/llms.txt` only if it lists category URLs.
+    document.head.appendChild(link);
+    return () => link.remove();
+  }, [url, isCollage]);
+  return null;
+}
+```
 
-## What auto-updates (no work needed)
-- `/admin/seo-page-visuals` admin UI — `seoPageVisualSlots.ts` derives `categoryEntries` from `aiProductPhotographyCategoryPages`, so each new page automatically gets editable slots: hero, 4 collage tiles, 8 scene examples, "Built for" tiles per chip group, related-category thumbs.
-- Route handling — `/ai-product-photography/:slug` already matches new slugs.
-- Related-categories cross-linking — existing pages link to `bags-accessories` / `fashion`; new pages link back to those plus to each other.
+Pass `isCollage={Boolean(page.heroCollage && page.heroCollage.length >= 4)}` from the page component.
 
-## Out of scope
-- Not touching `aiProductPhotographyCategories.ts` (the 10-card hub on `/ai-product-photography`) — it stays at 10 parent groups; new pages are accessible via footer + cross-links + direct URL + sitemap.
-- No DB migration. All scene IDs already exist in `product_image_scenes`.
-- No edge-function or auth changes.
+### 2. Lighten the hero collage tiles
 
-## Safety
-- Pure additive data changes; existing 10 pages, hub, admin, and footer untouched.
-- Every `imageId` was verified against `product_image_scenes` in the live DB; preview URLs resolve to existing JPGs (no PNG entries needed).
-- Unknown `relatedCategories` slugs are filtered out by `getRelatedPages`, so cross-links never 404.
-- If a new slug isn't in `BUILT_FOR_GRIDS` the section renders nothing — but we're adding entries for all 6.
+The collage tiles render as ~280 px @ 1× (max ~560 CSS px on retina). Quality 85 is overkill for tiles that small and forces 4 simultaneous heavy transforms above the fold.
 
-## Verification
-1. Visit `/ai-product-photography/bags`, `/watches`, `/hoodies`, `/swimwear`, `/lingerie`, `/eyewear` — full page renders with on-topic hero, scenes, chip rail, related categories, FAQ.
-2. `/admin/seo-page-visuals` lists the 6 new pages with all slots editable.
-3. Footer "Categories" column shows 6 new links and they navigate correctly.
-4. Sitemap.xml contains the 6 new `<url>` entries with `<image:image>` blocks.
-5. "Browse the visual library" CTA on each new page deep-links to the right catalog filter.
+In `CategoryHero.tsx > HeroTile`:
+
+- Drop quality from 85 → 75 (visually identical at this scale, ~30% smaller bytes, faster transform).
+- Trim the srcSet candidates from `[360, 540, 720, 900]` → `[360, 540, 720]` (900w is never picked at this layout).
+- Keep tiles 0 and 1 with `priority`, leave 2 and 3 lazy (already the case).
+
+Single-image hero (non-collage path) stays at quality 85 since it's a true full-bleed LCP.
+
+### Out of scope / not changing
+
+- Image content, scene IDs, or page copy — all 48 image IDs verified present in storage as JPGs.
+- `BuiltForEveryCategory`, `SceneExamples`, `RelatedCategories` — they already lazy-load with sensible widths/quality and live below the fold.
+- The shared `getOptimizedUrl` / `getResizedSrcSet` helpers — they're correct; only the call sites need adjustment.
+
+## Expected outcome
+
+- LCP on the 6 new collage pages drops from ~1.5–3 s to ~400–700 ms warm / ~700–1000 ms cold.
+- No wasted preload bytes (currently ~230 KB downloaded and discarded per page load).
+- Hero tile transforms get warm in Supabase's edge cache faster because all visitors now hit the same 4 URLs instead of split between preload and `<img>` variants.
