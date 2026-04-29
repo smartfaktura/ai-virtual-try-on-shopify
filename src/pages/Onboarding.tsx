@@ -128,7 +128,9 @@ export default function Onboarding() {
     supabase.functions.invoke('sync-resend-contact', {
       body: {
         email: user.email,
+        user_id: user.id,
         first_name: firstName.trim(),
+        last_name: lastName.trim() || null,
         opted_in: marketingOptIn,
         properties: {
           plan: 'free',
@@ -143,6 +145,24 @@ export default function Onboarding() {
           subtypes: finalSubcategories,
           primary_family: familyNamesForResend[0] ?? null,
           primary_subtype: finalSubcategories[0] ?? null,
+        },
+      },
+    }).catch(() => {});
+
+    // Fire Custom Event so Resend automations with "user.signup_completed"
+    // trigger receive a fully-populated profile (name + categories + plan).
+    supabase.functions.invoke('track-resend-event', {
+      body: {
+        email: user.email,
+        user_id: user.id,
+        event: 'user.signup_completed',
+        attributes: {
+          plan: 'free',
+          first_name: firstName.trim(),
+          families: familyNamesForResend,
+          primary_family: familyNamesForResend[0] ?? null,
+          subtypes: finalSubcategories,
+          marketing_opted_in: marketingOptIn,
         },
       },
     }).catch(() => {});
