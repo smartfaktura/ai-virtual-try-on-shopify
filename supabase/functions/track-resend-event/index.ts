@@ -8,10 +8,14 @@ const corsHeaders = {
 const RESEND_API = "https://api.resend.com";
 
 /**
- * Forward a contact-level event to Resend.
- * Resend doesn't have a true "events" endpoint for audiences; instead we update
- * the contact's attributes / unsubscribed flag so Resend's automations can
- * trigger off attribute changes. We also log every event for debugging.
+ * Forward a contact-level event to Resend so automations with
+ * "Custom event" triggers (e.g. user.signup, subscription.started, credits.low)
+ * actually fire in the Resend dashboard.
+ *
+ * SAFETY: every Resend call is wrapped in try/catch. The function ALWAYS
+ * returns 200 with { ok: true|false }, so callers (DB triggers, edge fns,
+ * client) never crash if Resend is unreachable. The local
+ * `resend_event_log` table is the source of truth for debugging.
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -19,11 +23,8 @@ Deno.serve(async (req) => {
   try {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const RESEND_AUDIENCE_ID = Deno.env.get("RESEND_AUDIENCE_ID");
-    if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) {
-      return json({ error: "Resend not configured" }, 500);
-    }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const email = String(body.email || "").toLowerCase().trim();
     const event = String(body.event || "").trim();
     if (!email || !event) return json({ error: "email + event required" }, 400);
@@ -33,41 +34,88 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // PATCH contact with last-event metadata. Resend stores first_name/last_name/unsubscribed
-    // natively. We squeeze the event marker into first_name suffix? No — instead we
-    // rely on Resend Broadcasts being filtered manually. The event log is our source
-    // of truth for who-did-what.
-    //
-    // We simply ensure the contact exists in the audience (create-or-patch).
-    const upsertRes = await fetch(
-      `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
+    if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) {
+      // Still log so we can see attempts even if Resend isn't configured
+      await admin.from("resend_event_log").insert({
+        user_id: body.user_id ?? null,
+        email,
+        event_type: event,
+        payload: { attributes: body.attributes ?? null, reason: "resend_not_configured" },
+        status: "failed",
+        response: null,
+      }).then(() => {}, () => {});
+      return json({ ok: false, error: "Resend not configured" });
+    }
+
+    const auth = { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" };
+
+    // Step A: ensure contact exists in audience (best-effort, ignore failure).
+    let upsertStatus: number | null = null;
+    try {
+      const upsertRes = await fetch(
+        `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`,
+        {
+          method: "POST",
+          headers: auth,
+          body: JSON.stringify({ email, unsubscribed: false }),
+        }
+      );
+      upsertStatus = upsertRes.status;
+      // Drain body to avoid leaks
+      await upsertRes.text().catch(() => "");
+    } catch (e) {
+      console.warn("[track-resend-event] contact upsert failed", e);
+    }
+
+    // Step B: send the actual Custom Event to Resend so automation triggers fire.
+    // Endpoint: POST /audiences/{audience_id}/contacts/{email}/events
+    let eventStatus: number | null = null;
+    let eventResp: any = null;
+    let eventOk = false;
+    try {
+      const eventRes = await fetch(
+        `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}/events`,
+        {
+          method: "POST",
+          headers: auth,
+          body: JSON.stringify({
+            name: event,
+            data: body.attributes ?? {},
+          }),
+        }
+      );
+      eventStatus = eventRes.status;
+      eventResp = await eventRes.json().catch(() => ({}));
+      eventOk = eventRes.ok;
+    } catch (e) {
+      console.warn("[track-resend-event] event POST failed", e);
+      eventResp = { error: String(e) };
+    }
+
+    // Step C: log everything for debugging
+    try {
+      await admin.from("resend_event_log").insert({
+        user_id: body.user_id ?? null,
+        email,
+        event_type: event,
+        payload: {
+          attributes: body.attributes ?? null,
+          upsert_status: upsertStatus,
+          event_status: eventStatus,
         },
-        body: JSON.stringify({ email, unsubscribed: false }),
-      }
-    );
-    const resendResp = await upsertRes.json().catch(() => ({}));
+        status: eventOk ? "ok" : "failed",
+        response: eventResp,
+      });
+    } catch (logErr) {
+      console.warn("[track-resend-event] log insert failed", logErr);
+    }
 
-    await admin.from("resend_event_log").insert({
-      user_id: body.user_id ?? null,
-      email,
-      event_type: event,
-      payload: {
-        attributes: body.attributes ?? null,
-        upsert_status: upsertRes.status,
-      },
-      status: upsertRes.ok || upsertRes.status === 409 ? "ok" : "failed",
-      response: resendResp,
-    });
-
-    return json({ ok: true });
+    // Always 200 — never break callers.
+    return json({ ok: eventOk });
   } catch (e) {
-    console.error("[track-resend-event]", e);
-    return json({ error: (e as Error).message }, 500);
+    console.error("[track-resend-event] outer error", e);
+    // Still return 200 so caller doesn't crash
+    return json({ ok: false, error: (e as Error).message });
   }
 });
 
