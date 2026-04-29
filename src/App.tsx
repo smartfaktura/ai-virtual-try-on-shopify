@@ -70,6 +70,10 @@ const AdminUIAudit = lazy(() => import('@/pages/AdminUIAudit'));
 const LoadingLab = lazy(() => import('@/pages/admin/LoadingLab'));
 const SceneUsage = lazy(() => import('@/pages/admin/SceneUsage'));
 const SeoPageVisuals = lazy(() => import('@/pages/admin/SeoPageVisuals'));
+const AdminCampaigns = lazy(() => import('@/pages/admin/Campaigns'));
+const CampaignComposer = lazy(() => import('@/pages/admin/CampaignComposer'));
+const AutomationComposer = lazy(() => import('@/pages/admin/AutomationComposer'));
+const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
@@ -158,6 +162,7 @@ const App = () => {
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
             <Route path="/tryshot" element={<TryShot />} />
             <Route path="/tryshot/:domain" element={<TryShot />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
 
             {/* Feature pages */}
@@ -278,6 +283,11 @@ const App = () => {
                         <Route path="/admin/loading-lab" element={<LoadingLab />} />
                         <Route path="/admin/scene-performance" element={<SceneUsage />} />
                         <Route path="/admin/seo-page-visuals" element={<SeoPageVisuals />} />
+                        <Route path="/admin/campaigns" element={<AdminCampaigns />} />
+                        <Route path="/admin/campaigns/new" element={<CampaignComposer />} />
+                        <Route path="/admin/campaigns/automations/new" element={<AutomationComposer />} />
+                        <Route path="/admin/campaigns/automations/:id" element={<AutomationComposer />} />
+                        <Route path="/admin/campaigns/:id" element={<CampaignComposer />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
