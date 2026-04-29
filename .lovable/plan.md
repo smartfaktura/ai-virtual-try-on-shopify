@@ -1,39 +1,26 @@
-## Goal
+Fix overflow on the Settings → Choose Your Plan cards (`/app/settings`) so CTA buttons and the "Most Popular" / "Current" / "Monthly" pills fit cleanly at every breakpoint.
 
-Remove the admin-only "Asset Preview Generation" block from `/app/settings`. It's a one-off maintenance tool that doesn't belong in user settings and could cause issues if accidentally clicked.
+## Problems observed
+1. CTA buttons (`Downgrade to Starter`, `Upgrade to Growth`, etc.) get clipped because the shared `Button` component sets `whitespace-nowrap` and a fixed height.
+2. The "Most Popular" badge above the Growth card wraps onto two lines and breaks out of the pill.
+3. On the current plan card, "Pro", "Current", and "Monthly" badges crowd each other on narrow widths.
 
-## Changes (one file: `src/pages/Settings.tsx`)
+## Changes (single file: `src/components/app/PlanCard.tsx`)
 
-### 1. Remove the JSX block (lines 714–744)
+1. CTA button — allow two-line labels
+   - Remove the nowrap constraint and let the label wrap to two lines when needed.
+   - Replace fixed `min-h-[44px]` with auto height + comfortable vertical padding so a 2-line label still looks balanced.
+   - Tighten the line-height and slightly reduce the font size at narrow widths so labels like "Downgrade to Starter" fit on one line at md+ but wrap gracefully on small cards.
 
-Delete the entire `{/* ─── Admin: Asset Preview Generation ─── */}` block including the `<Separator />` and the card.
+2. "Most Popular" badge — keep on one line
+   - Add `whitespace-nowrap` to the badge so it never breaks across lines.
+   - Slightly reduce the horizontal padding so it fits comfortably above narrower cards.
 
-### 2. Remove the handler (lines 425–463)
+3. Header row badges (Plan name + "Current" + "Monthly")
+   - Allow the row to wrap (`flex-wrap`) so badges drop under the plan name on narrow widths instead of overflowing.
+   - Make badges shrink-resistant with `whitespace-nowrap` so each pill stays intact.
+   - Reduce gap/padding slightly on small screens.
 
-Delete `handleGenerateAssetPreviews` function entirely — no longer referenced.
-
-### 3. Remove unused state (lines 256–257)
-
-```tsx
-const [isGenerating, setIsGenerating] = useState(false);
-const [genProgress, setGenProgress] = useState({ processed: 0, total: 19 });
-```
-
-### 4. Clean up unused import
-
-Remove `RefreshCw` from the lucide-react import on line 4 (only used by this block):
-
-```tsx
-// Before
-import { Building2, Check, ExternalLink, Loader2, RefreshCw, RotateCcw } from 'lucide-react';
-// After
-import { Building2, Check, ExternalLink, Loader2, RotateCcw } from 'lucide-react';
-```
-
-`Progress` import stays as-is (used elsewhere — actually let me leave it untouched to be safe; the linter will flag if truly unused).
-
-## Result
-
-- Admin block gone — no risk of accidental triggers
-- Admin Feedback Panel below it stays untouched
-- The edge function `generate-asset-previews` itself is **not** deleted — it remains available if needed later via direct invocation, just not exposed in the Settings UI
+## Out of scope
+- No copy changes, no pricing changes, no layout changes to the surrounding Settings page.
+- No changes to the shared `Button` component (other cards rely on `whitespace-nowrap`).

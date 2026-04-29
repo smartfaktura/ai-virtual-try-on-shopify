@@ -54,7 +54,7 @@ export function PlanCard({
     <div className={`relative h-full ${isCurrentPlan ? 'ring-2 ring-primary rounded-2xl' : ''}`}>
       {plan.badge && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-          <Badge className="bg-primary text-primary-foreground text-[10px] tracking-wide px-3 py-0.5">
+          <Badge className="bg-primary text-primary-foreground text-[10px] tracking-wide px-2.5 py-0.5 whitespace-nowrap">
             {plan.badge}
           </Badge>
         </div>
@@ -63,14 +63,16 @@ export function PlanCard({
         <CardContent className={compact ? 'p-4 sm:p-5 space-y-3' : 'p-5 sm:p-6 space-y-5'}>
           {/* Plan Header */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-1.5 flex-wrap">
               <h3 className={`${compact ? 'text-base' : 'text-lg'} font-bold tracking-tight`}>{plan.name}</h3>
-              {isCurrentPlan && <Badge variant="secondary" className="text-[10px]">Current</Badge>}
-              {isCurrentPlan && plan.planId !== 'free' && (
-                <Badge variant="outline" className="text-[10px]">
-                  {billingInterval === 'annual' ? 'Annual' : 'Monthly'}
-                </Badge>
-              )}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {isCurrentPlan && <Badge variant="secondary" className="text-[10px] whitespace-nowrap">Current</Badge>}
+                {isCurrentPlan && plan.planId !== 'free' && (
+                  <Badge variant="outline" className="text-[10px] whitespace-nowrap">
+                    {billingInterval === 'annual' ? 'Annual' : 'Monthly'}
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {plan.isEnterprise ? (
@@ -125,7 +127,7 @@ export function PlanCard({
           {/* CTA */}
           <Button
             variant={isCurrentPlan ? 'secondary' : (PLAN_ORDER.indexOf(plan.planId) > PLAN_ORDER.indexOf(currentPlanId || 'free') ? 'default' : 'outline')}
-            className="w-full min-h-[44px]"
+            className="w-full h-auto min-h-[44px] py-2.5 px-3 whitespace-normal text-center leading-tight text-xs sm:text-sm"
             onClick={() => onSelect(plan.planId)}
             disabled={isDisabled}
           >
