@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { ArrowRight } from 'lucide-react';
 
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
+import { LazyVideo } from '@/components/ui/LazyVideo';
 import originalDress from '@/assets/home-hero-original-dress.jpg';
 import productVideoLoop from '@/assets/home-create-product-videos.mp4';
 
