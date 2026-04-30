@@ -7,6 +7,28 @@ const corsHeaders = {
 
 const RESEND_API = "https://api.resend.com";
 
+// Resend's properties API requires string values. Stringify everything safely.
+function toPropString(v: unknown): string | undefined {
+  if (v === null || v === undefined) return undefined;
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (Array.isArray(v)) return v.length ? v.join(", ") : undefined;
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return undefined;
+  }
+}
+
+function buildProperties(input: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(input)) {
+    const s = toPropString(v);
+    if (s !== undefined && s !== "") out[k] = s;
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -26,7 +48,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Check unsubscribe flag — if user is unsubscribed, mark in Resend
     const unsubscribed = !!body.unsubscribed;
 
     // Pull profile metadata. Try by user_id first, then by email as fallback
@@ -35,7 +56,7 @@ Deno.serve(async (req) => {
     if (body.user_id) {
       const { data } = await admin
         .from("profiles")
-        .select("first_name, last_name, display_name, plan, product_categories, created_at")
+        .select("first_name, last_name, display_name, plan, product_categories, credits_balance, created_at")
         .eq("user_id", body.user_id)
         .maybeSingle();
       profile = data;
@@ -43,15 +64,13 @@ Deno.serve(async (req) => {
     if (!profile) {
       const { data } = await admin
         .from("profiles")
-        .select("first_name, last_name, display_name, plan, product_categories, created_at")
+        .select("first_name, last_name, display_name, plan, product_categories, credits_balance, created_at")
         .eq("email", email)
         .maybeSingle();
       profile = data;
     }
 
     // Priority: explicit body fields > profile DB fields > email prefix fallback.
-    // This fixes race conditions where the profile row hasn't been written yet
-    // but the client already knows the user's name (e.g. signup form input).
     const firstName =
       body.first_name ||
       body.display_name ||
@@ -61,28 +80,61 @@ Deno.serve(async (req) => {
       null;
     const lastName = body.last_name || profile?.last_name || null;
 
-    // Try POST first (create); on 409/conflict, PATCH.
-    // NOTE: Resend REST API expects camelCase: firstName / lastName
-    // (snake_case is silently ignored — that's why dashboard showed empty names).
+    // Build custom properties payload (kept for log/debug + future migration to
+    // Resend's new /contacts API). NOTE: the legacy /audiences/{id}/contacts
+    // endpoint does NOT support custom properties — they are silently dropped.
+    // We still log them locally so resend_event_log keeps a complete record.
+    const incomingProps = (body.properties ?? {}) as Record<string, unknown>;
+    const properties = buildProperties({
+      plan: incomingProps.plan ?? profile?.plan,
+      primary_family: incomingProps.primary_family,
+      primary_subtype: incomingProps.primary_subtype,
+      families: incomingProps.families,
+      subtypes: incomingProps.subtypes,
+      product_categories: incomingProps.product_categories ?? profile?.product_categories,
+      product_subcategories: incomingProps.product_subcategories,
+      signup_date:
+        incomingProps.signup_date ??
+        (profile?.created_at ? new Date(profile.created_at).toISOString() : undefined),
+      has_generated: incomingProps.has_generated,
+      credits_balance: incomingProps.credits_balance ?? profile?.credits_balance,
+      marketing_opted_in: incomingProps.marketing_opted_in,
+    });
+
+    // IMPORTANT: The Resend audiences REST endpoint expects snake_case
+    // (first_name / last_name). The Node SDK accepts camelCase but converts
+    // internally — raw REST does NOT. Sending camelCase results in 200 OK
+    // but silently dropped name fields. Only first_name / last_name /
+    // unsubscribed are persisted by the legacy audiences endpoint.
+    const payload: Record<string, unknown> = {
+      email,
+      first_name: firstName ?? undefined,
+      last_name: lastName ?? undefined,
+      unsubscribed,
+    };
+
+    // Try POST first (create); on conflict, PATCH.
     const createRes = await fetch(`${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        email,
-        firstName: firstName ?? undefined,
-        lastName: lastName ?? undefined,
-        unsubscribed,
-      }),
+      body: JSON.stringify(payload),
     });
 
     let resendResp: any = await createRes.json().catch(() => ({}));
     let action = "created";
 
     if (!createRes.ok) {
-      // Try update via PATCH on email
+      // Update existing contact via PATCH (don't include email field on update)
+      const patchPayload: Record<string, unknown> = {
+        first_name: firstName ?? undefined,
+        last_name: lastName ?? undefined,
+        unsubscribed,
+      };
+      if (Object.keys(properties).length > 0) patchPayload.properties = properties;
+
       const patchRes = await fetch(
         `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
         {
@@ -91,20 +143,13 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            firstName: firstName ?? undefined,
-            lastName: lastName ?? undefined,
-            unsubscribed,
-          }),
+          body: JSON.stringify(patchPayload),
         }
       );
       resendResp = await patchRes.json().catch(() => ({}));
       action = patchRes.ok ? "updated" : "failed";
     }
 
-    // Log (include incoming properties for debugging — Resend audience contacts
-    // only support first_name/last_name/unsubscribed natively, so other fields
-    // live in the log + Custom Events).
     await admin.from("resend_event_log").insert({
       user_id: body.user_id ?? null,
       email,
@@ -113,16 +158,14 @@ Deno.serve(async (req) => {
         action,
         first_name: firstName,
         last_name: lastName,
-        plan: body.properties?.plan ?? profile?.plan,
-        product_categories: body.properties?.product_categories ?? profile?.product_categories,
-        properties: body.properties ?? null,
+        properties,
         unsubscribed,
       },
       status: action === "failed" ? "failed" : "ok",
       response: resendResp,
     });
 
-    return json({ ok: action !== "failed", action });
+    return json({ ok: action !== "failed", action, properties_sent: Object.keys(properties).length });
   } catch (e) {
     console.error("[sync-resend-contact]", e);
     return json({ error: (e as Error).message }, 500);
