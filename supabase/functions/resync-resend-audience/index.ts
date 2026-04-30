@@ -7,8 +7,26 @@ const corsHeaders = {
 
 const RESEND_API = "https://api.resend.com";
 
+function toPropString(v: unknown): string | undefined {
+  if (v === null || v === undefined) return undefined;
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (Array.isArray(v)) return v.length ? v.join(", ") : undefined;
+  try { return JSON.stringify(v); } catch { return undefined; }
+}
+
+function buildProperties(input: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(input)) {
+    const s = toPropString(v);
+    if (s !== undefined && s !== "") out[k] = s;
+  }
+  return out;
+}
+
 /**
  * Admin-only: bulk push all opted-in profiles to the Resend audience.
+ * Hydrates names AND custom properties (plan, product_categories, signup_date, credits_balance).
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -23,7 +41,6 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Auth: must be admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
 
@@ -43,7 +60,7 @@ Deno.serve(async (req) => {
 
     const { data: profiles, error: pErr } = await admin
       .from("profiles")
-      .select("user_id, email, first_name, last_name, display_name")
+      .select("user_id, email, first_name, last_name, display_name, plan, product_categories, credits_balance, created_at")
       .eq("marketing_emails_opted_in", true);
     if (pErr) throw pErr;
 
@@ -52,7 +69,27 @@ Deno.serve(async (req) => {
     let failed = 0;
 
     for (const p of profiles ?? []) {
-      const firstName = p.first_name || p.display_name || null;
+      const email = String(p.email || "").toLowerCase().trim();
+      if (!email) { failed++; continue; }
+
+      const firstName = p.first_name || p.display_name || email.split("@")[0] || null;
+      const lastName = p.last_name || null;
+
+      const properties = buildProperties({
+        plan: p.plan,
+        product_categories: p.product_categories,
+        signup_date: p.created_at ? new Date(p.created_at).toISOString() : undefined,
+        credits_balance: p.credits_balance,
+      });
+
+      const payload: Record<string, unknown> = {
+        email,
+        first_name: firstName ?? undefined,
+        last_name: lastName ?? undefined,
+        unsubscribed: false,
+      };
+      if (Object.keys(properties).length > 0) payload.properties = properties;
+
       const res = await fetch(
         `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`,
         {
@@ -61,38 +98,37 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email: p.email,
-            first_name: firstName ?? undefined,
-            last_name: p.last_name ?? undefined,
-            unsubscribed: false,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
       if (res.ok) {
         added++;
-      } else if (res.status === 409) {
-        // Already exists — patch
+      } else {
+        // Any non-OK response: try PATCH (covers 409, 422, and other "exists" responses)
+        const patchPayload: Record<string, unknown> = {
+          first_name: firstName ?? undefined,
+          last_name: lastName ?? undefined,
+          unsubscribed: false,
+        };
+        if (Object.keys(properties).length > 0) patchPayload.properties = properties;
+
         const patchRes = await fetch(
-          `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(p.email)}`,
+          `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
           {
             method: "PATCH",
             headers: {
               Authorization: `Bearer ${RESEND_API_KEY}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              first_name: firstName ?? undefined,
-              last_name: p.last_name ?? undefined,
-              unsubscribed: false,
-            }),
+            body: JSON.stringify(patchPayload),
           }
         );
         if (patchRes.ok) updated++;
-        else failed++;
-      } else {
-        failed++;
+        else {
+          failed++;
+          console.error(`Failed for ${email}: POST ${res.status} / PATCH ${patchRes.status}`);
+        }
       }
     }
 
