@@ -46,25 +46,17 @@ function MarqueeCard({ label, src, alt, isOriginal, isVideo, eager }: HeroCard &
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       {isVideo ? (
-        <video
-          src={src}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          className="w-full h-full object-cover"
-        />
+        <LazyVideo src={src} className="w-full h-full" />
       ) : (
         <img
           src={isOriginal ? src : getOptimizedUrl(src, { width: 480, height: 640, quality: 85, resize: 'cover' })}
           srcSet={isOriginal ? undefined : getResizedSrcSet(src, { widths: [320, 480, 640, 840], aspect: [3, 4], quality: 85 })}
           sizes="(max-width: 640px) 180px, 210px"
           alt={alt ?? label}
-          loading={eager ? 'eager' : 'lazy'}
+          loading={eager || isOriginal ? 'eager' : 'lazy'}
           decoding="async"
           // @ts-expect-error fetchpriority is valid HTML
-          fetchpriority={eager ? 'high' : 'auto'}
+          fetchpriority={isOriginal ? 'high' : eager ? 'auto' : 'low'}
           className="w-full h-full object-cover"
         />
       )}
