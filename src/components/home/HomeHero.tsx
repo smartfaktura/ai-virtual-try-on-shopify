@@ -91,12 +91,10 @@ function MarqueeRow({ cards, direction, duration, eagerFirst }: {
         {cards.map((card, i) => (
           <MarqueeCard key={`a-${card.label}-${i}`} {...card} eager={eagerFirst && i === 0} />
         ))}
-        {/* Visual duplicate for seamless loop — never eager, hidden from a11y */}
-        <div className="flex gap-3" aria-hidden="true">
-          {cards.map((card, i) => (
-            <MarqueeCard key={`b-${card.label}-${i}`} {...card} />
-          ))}
-        </div>
+        {/* Visual duplicate for seamless loop — never eager */}
+        {cards.map((card, i) => (
+          <MarqueeCard key={`b-${card.label}-${i}`} {...card} />
+        ))}
       </div>
     </div>
   );
