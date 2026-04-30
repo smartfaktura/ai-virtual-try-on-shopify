@@ -81,16 +81,22 @@ function MarqueeRow({ cards, direction, duration, eagerFirst }: {
   duration: string;
   eagerFirst?: boolean;
 }) {
-  const doubled = [...cards, ...cards];
   return (
-    <div className="overflow-hidden w-full group/marquee">
+    <div className="overflow-hidden w-full group/marquee" style={{ contain: 'content' }}>
       <div
         className={`flex gap-3 w-max ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'} group-hover/marquee:[animation-play-state:paused]`}
         style={{ animationDuration: duration }}
       >
-        {doubled.map((card, i) => (
-          <MarqueeCard key={`${card.label}-${i}`} {...card} eager={eagerFirst && i === 0} />
+        {/* First copy — only the very first image (Original on row 1) is eager */}
+        {cards.map((card, i) => (
+          <MarqueeCard key={`a-${card.label}-${i}`} {...card} eager={eagerFirst && i === 0} />
         ))}
+        {/* Visual duplicate for seamless loop — never eager, hidden from a11y */}
+        <div className="flex gap-3" aria-hidden="true">
+          {cards.map((card, i) => (
+            <MarqueeCard key={`b-${card.label}-${i}`} {...card} />
+          ))}
+        </div>
       </div>
     </div>
   );
