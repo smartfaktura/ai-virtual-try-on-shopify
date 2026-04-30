@@ -80,8 +80,10 @@ Deno.serve(async (req) => {
       null;
     const lastName = body.last_name || profile?.last_name || null;
 
-    // Build custom properties payload — sources: explicit body.properties first,
-    // then profile fallbacks. Only sends non-empty values.
+    // Build custom properties payload (kept for log/debug + future migration to
+    // Resend's new /contacts API). NOTE: the legacy /audiences/{id}/contacts
+    // endpoint does NOT support custom properties — they are silently dropped.
+    // We still log them locally so resend_event_log keeps a complete record.
     const incomingProps = (body.properties ?? {}) as Record<string, unknown>;
     const properties = buildProperties({
       plan: incomingProps.plan ?? profile?.plan,
@@ -102,14 +104,14 @@ Deno.serve(async (req) => {
     // IMPORTANT: The Resend audiences REST endpoint expects snake_case
     // (first_name / last_name). The Node SDK accepts camelCase but converts
     // internally — raw REST does NOT. Sending camelCase results in 200 OK
-    // but silently dropped name fields.
+    // but silently dropped name fields. Only first_name / last_name /
+    // unsubscribed are persisted by the legacy audiences endpoint.
     const payload: Record<string, unknown> = {
       email,
       first_name: firstName ?? undefined,
       last_name: lastName ?? undefined,
       unsubscribed,
     };
-    if (Object.keys(properties).length > 0) payload.properties = properties;
 
     // Try POST first (create); on conflict, PATCH.
     const createRes = await fetch(`${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
