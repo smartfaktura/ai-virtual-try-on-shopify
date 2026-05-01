@@ -1716,6 +1716,8 @@ export default function ProductImages() {
                   sceneExtraRefs={sceneExtraRefs}
                   onSceneExtraRefsChange={setSceneExtraRefs}
                   analyses={analyses}
+                  isFree={isFree}
+                  onUpgradeClick={() => setUpgradeModalOpen(true)}
                 />
               </div>
             )}
