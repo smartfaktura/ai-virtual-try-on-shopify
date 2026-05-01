@@ -1833,6 +1833,11 @@ export default function ProductImages() {
         onClose={() => setNoCreditsModalOpen(false)}
         category="fallback"
       />
+      <UpgradePlanModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        source="product_images_free_cap"
+      />
     </div>
   );
 }
