@@ -48,7 +48,7 @@ import { toast } from '@/lib/brandedToast';
    Model Picker with Brand / Library sections
    ══════════════════════════════════════════════ */
 
-function ModelPickerSections({ userModels, globalModels, selectedModelId, selectedModelIds, onSelect, onMultiSelect, previewImages }: {
+function ModelPickerSections({ userModels, globalModels, selectedModelId, selectedModelIds, onSelect, onMultiSelect, previewImages, isFree, freeLimitReached, onFreeLimitHit, onUpgradeClick }: {
   userModels: ModelProfile[];
   globalModels: ModelProfile[];
   selectedModelId?: string;
@@ -56,6 +56,10 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   onSelect: (id: string) => void;
   onMultiSelect?: (ids: string[]) => void;
   previewImages?: string[];
+  isFree?: boolean;
+  freeLimitReached?: boolean;
+  onFreeLimitHit?: () => void;
+  onUpgradeClick?: () => void;
 }) {
   const navigate = useNavigate();
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
