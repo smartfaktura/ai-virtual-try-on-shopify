@@ -1,38 +1,38 @@
+## Migrate all emails to Resend via vovv.ai
 
-# Improve Auth Email Subject Lines, Preheaders & Fix Signup Template
+Google sign-in is unaffected — it uses OAuth redirects, not emails.
 
-## 1. Update subject lines in `auth-email-hook/index.ts`
+### 1. Disable Lovable Emails
+Already done. Auth emails currently fall back to default Lovable templates until the hook is redeployed with Resend.
 
-Current → New:
-| Type | Current Subject | New Subject |
-|------|----------------|-------------|
-| signup | Your VOVV.AI verification code | Confirm your VOVV.AI account |
-| invite | You've been invited | You're invited to VOVV.AI |
-| magiclink | Your login link | Your VOVV.AI sign-in link |
-| recovery | Reset your password | Reset your VOVV.AI password |
-| email_change | Confirm your new email | Confirm your new email — VOVV.AI |
-| reauthentication | Your verification code | VOVV.AI security code |
+### 2. Rewrite `auth-email-hook/index.ts` — send via Resend directly
+- Remove Lovable queue logic (`enqueue_email` RPC)
+- Send rendered HTML directly via Resend API (`https://api.resend.com/emails`)
+- From address: `VOVV.AI <noreply@vovv.ai>` (root domain)
+- Keep all 6 React Email templates, branded subjects, and preview endpoint
+- Still log to `email_send_log` for audit trail (pending → sent/failed)
 
-## 2. Update `<Preview>` preheaders in each template
+### 3. Fix "VOVV.AI" auto-linking in all 6 email templates
+Email clients detect `.AI` as a TLD and auto-hyperlink it. Fix: insert a zero-width non-joiner (`\u200C`) in the brand `<Text>` — renders identically but breaks auto-link detection.
 
-| Template | Current Preheader | New Preheader |
-|----------|------------------|---------------|
-| signup.tsx | Your VOVV.AI verification code | Confirm your email to start creating with VOVV.AI |
-| recovery.tsx | Reset your password for {siteName} | Reset your VOVV.AI password and get back to creating |
-| magic-link.tsx | Your login link for {siteName} | One click to sign in to VOVV.AI |
-| invite.tsx | You've been invited to join {siteName} | You're invited to create with VOVV.AI |
-| email-change.tsx | Confirm your email change for {siteName} | Confirm your new email address for VOVV.AI |
-| reauthentication.tsx | Your verification code | Enter this code to verify your VOVV.AI identity |
+Templates updated:
+- `signup.tsx` — brand text + Preview text
+- `recovery.tsx` — brand text + Preview text
+- `magic-link.tsx` — brand text + Preview text
+- `invite.tsx` — brand text + Preview text
+- `email-change.tsx` — brand text + Preview text
+- `reauthentication.tsx` — brand text + Preview text
 
-## 3. Fix signup template for link-only flow
+### 4. Update From addresses in other email functions
+- `send-email/index.ts`: change `notifications@vovv.ai` → `noreply@vovv.ai`
+- `_shared/email-render.ts`: change `RESEND_FROM` → `VOVV.AI <noreply@vovv.ai>`
 
-Since we removed OTP from the auth screen, the signup email should no longer show a verification code. Changes to `signup.tsx`:
-- Remove the `{token && <Text style={codeStyle}>...` line
-- Change heading from "Your verification code" to "Confirm your email"
-- Update body text: "Click the button below to verify your email and start creating with VOVV.AI"
-- Change button text from "Verify Email" to "Confirm My Account"
-- Remove unused `codeStyle` constant
+### 5. Deploy
+Redeploy `auth-email-hook` and `send-email` edge functions.
 
-## 4. Deploy
-
-Redeploy `auth-email-hook` edge function to apply all changes.
+### What stays unchanged
+- Google OAuth sign-in (completely separate)
+- Resend audience functions (`sync-resend-contact`, `track-resend-event`)
+- `email_send_log` table (still used for audit)
+- All template designs, subjects, and copy
+- `RESEND_API_KEY` secret (already configured)
