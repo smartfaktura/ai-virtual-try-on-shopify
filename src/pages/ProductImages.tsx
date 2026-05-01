@@ -1677,6 +1677,9 @@ export default function ProductImages() {
                 onUpgradeClick={() => setUpgradeModalOpen(true)}
                 limitHintActive={sceneLimitHint}
                 freeSceneLimit={FREE_SCENE_LIMIT}
+                selectedProducts={selectedProducts}
+                productAnalyses={analyses}
+                perCategoryScenes={perCategoryScenes}
                 onPerCategoryScenesChange={setPerCategoryScenes}
                 categoryGroups={categoryGroups}
                 hasMultipleCategories={hasMultipleCategories}
