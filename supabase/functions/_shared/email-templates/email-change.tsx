@@ -30,10 +30,10 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your new email address for VOVV.AI</Preview>
+    <Preview>Confirm your new email address for VOVV.{"‌"}AI</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>VOVV.AI</Text>
+        <Text style={brand}>VOVV.{"‌"}AI</Text>
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
           You requested to change your email address for {siteName} from{' '}

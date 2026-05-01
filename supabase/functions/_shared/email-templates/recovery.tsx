@@ -24,10 +24,10 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Reset your VOVV.AI password and get back to creating</Preview>
+    <Preview>Reset your VOVV.{"‌"}AI password and get back to creating</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>VOVV.AI</Text>
+        <Text style={brand}>VOVV.{"‌"}AI</Text>
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>
           We received a request to reset your password for {siteName}. Click
