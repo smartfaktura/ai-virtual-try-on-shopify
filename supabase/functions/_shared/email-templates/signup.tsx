@@ -31,10 +31,10 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email to start creating with VOVV.{"200C"}AI</Preview>
+    <Preview>Confirm your email to start creating with VOVV.{"‌"}AI</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>VOVV.{"200C"}AI</Text>
+        <Text style={brand}>VOVV.{"‌"}AI</Text>
         <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
           Click the button below to verify your email and start creating with{' '}

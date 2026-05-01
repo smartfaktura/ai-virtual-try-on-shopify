@@ -27,10 +27,10 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You're invited to create with VOVV.{"200C"}AI</Preview>
+    <Preview>You're invited to create with VOVV.{"‌"}AI</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>VOVV.{"200C"}AI</Text>
+        <Text style={brand}>VOVV.{"‌"}AI</Text>
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
           You've been invited to join{' '}
