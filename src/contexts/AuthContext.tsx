@@ -31,6 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+
+      // Flag recovery so ResetPassword can detect it even after the event fires
+      if (_event === 'PASSWORD_RECOVERY') {
+        try { sessionStorage.setItem('password_recovery', '1'); } catch {}
+      }
+
       if (session?.user) {
         localStorage.setItem('has_account', 'true');
 

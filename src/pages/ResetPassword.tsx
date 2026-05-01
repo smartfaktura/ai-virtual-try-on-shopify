@@ -13,22 +13,62 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // Listen for PASSWORD_RECOVERY event
+    let cancelled = false;
+
+    // 1. Check sessionStorage flag (set by AuthProvider on PASSWORD_RECOVERY)
+    try {
+      if (sessionStorage.getItem('password_recovery') === '1') {
+        sessionStorage.removeItem('password_recovery');
+        if (!cancelled) { setIsRecovery(true); setChecked(true); }
+        return;
+      }
+    } catch {}
+
+    // 2. Check URL hash (before Supabase strips it)
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      if (!cancelled) { setIsRecovery(true); setChecked(true); }
+      return;
+    }
+
+    // 3. Listen for PASSWORD_RECOVERY event (may still fire if auth is processing)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === 'PASSWORD_RECOVERY' && !cancelled) {
+        sessionStorage.removeItem('password_recovery');
         setIsRecovery(true);
+        setChecked(true);
       }
     });
 
-    // Check if we already have a recovery session from the URL hash
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setIsRecovery(true);
-    }
+    // 4. Fallback: if we have a valid session on /reset-password, the user
+    //    arrived here via a recovery link and the event already fired.
+    //    Give it a brief delay for the auth state to settle, then check.
+    const fallbackTimer = setTimeout(async () => {
+      if (cancelled) return;
+      try {
+        // Re-check sessionStorage (AuthProvider may have set it by now)
+        if (sessionStorage.getItem('password_recovery') === '1') {
+          sessionStorage.removeItem('password_recovery');
+          if (!cancelled) { setIsRecovery(true); setChecked(true); }
+          return;
+        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && !cancelled) {
+          // User has a valid session on /reset-password — show the form
+          setIsRecovery(true);
+        }
+      } catch {}
+      if (!cancelled) setChecked(true);
+    }, 1500);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,9 +101,13 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-md text-center space-y-4">
           <KeyRound className="w-12 h-12 text-muted-foreground mx-auto" />
-          <h1 className="text-2xl font-bold text-foreground">Verifying recovery link…</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {checked ? 'Recovery link expired' : 'Verifying recovery link…'}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            If you're not redirected, your link may have expired.
+            {checked
+              ? 'This link may have expired or already been used. Request a new one from the sign-in page.'
+              : "If you're not redirected, your link may have expired."}
           </p>
           <Button variant="outline" onClick={() => navigate('/auth')} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
