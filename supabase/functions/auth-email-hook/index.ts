@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Your VOVV.AI verification code',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'Confirm your VOVV.AI account',
+  invite: "You're invited to VOVV.AI",
+  magiclink: 'Your VOVV.AI sign-in link',
+  recovery: 'Reset your VOVV.AI password',
+  email_change: 'Confirm your new email — VOVV.AI',
+  reauthentication: 'VOVV.AI security code',
 }
 
 // Template mapping

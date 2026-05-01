@@ -19,7 +19,7 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Enter this code to verify your VOVV.AI identity</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>VOVV.AI</Text>

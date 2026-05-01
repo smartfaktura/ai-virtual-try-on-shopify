@@ -31,21 +31,19 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your VOVV.AI verification code</Preview>
+    <Preview>Confirm your email to start creating with VOVV.AI</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>VOVV.AI</Text>
-        <Heading style={h1}>Your verification code</Heading>
-        {token && <Text style={codeStyle}>{token}</Text>}
+        <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
-          Use this code to verify your email for{' '}
+          Click the button below to verify your email and start creating with{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          , or click the button below:
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Verify Email
+          Confirm My Account
         </Button>
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
@@ -63,6 +61,5 @@ const brand = { fontSize: '18px', fontWeight: 'bold' as const, color: '#242f3d',
 const h1 = { fontSize: '24px', fontWeight: '600' as const, color: '#1a1a2e', margin: '0 0 16px', letterSpacing: '-0.01em' }
 const text = { fontSize: '15px', color: '#6b7280', lineHeight: '1.6', margin: '0 0 28px' }
 const link = { color: 'inherit', textDecoration: 'underline' }
-const codeStyle = { fontFamily: "'SF Mono', Courier, monospace", fontSize: '28px', fontWeight: 'bold' as const, color: '#242f3d', letterSpacing: '0.15em', margin: '0 0 24px' }
 const button = { backgroundColor: '#242f3d', color: '#ffffff', fontSize: '15px', borderRadius: '8px', padding: '12px 24px', textDecoration: 'none', fontWeight: '500' as const }
 const footer = { fontSize: '13px', color: '#9ca3af', margin: '36px 0 0', lineHeight: '1.5' }
