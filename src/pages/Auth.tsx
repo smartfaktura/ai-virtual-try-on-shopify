@@ -372,14 +372,13 @@ export default function Auth() {
           {signupComplete ? (
             renderCheckInbox({
               title: 'Check your inbox',
-              description: 'We sent a confirmation code to',
+              description: 'We sent a confirmation link to',
               showOtp: true,
               onBack: () => {
                 setSignupComplete(false);
                 setMode('login');
                 setPassword('');
                 setConfirmPassword('');
-                setOtpCode('');
               },
               onResend: handleResendSignup,
             })
