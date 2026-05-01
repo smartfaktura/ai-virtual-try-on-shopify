@@ -2486,7 +2486,10 @@ export function ProductImagesStep3Refine({
                 )}
                 <BackgroundSwatchSelector
                   value={details.backgroundTone || ''}
-                  onChange={v => update({ backgroundTone: v })}
+                  onChange={v => {
+                    const next = isFree ? (v.split(',').filter(Boolean).pop() || '') : v;
+                    update({ backgroundTone: next });
+                  }}
                   details={details}
                   update={update}
                   savedColors={savedColors}
@@ -2495,6 +2498,15 @@ export function ProductImagesStep3Refine({
                   onSaveGradient={(from, to) => saveGradient({ from, to })}
                   onDeleteSavedColor={deleteColor}
                 />
+                {isFree && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border text-[11px]">
+                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                    <span className="text-muted-foreground">Free plan: 1 background per batch</span>
+                    {onUpgradeClick && (
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline">Upgrade</button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
