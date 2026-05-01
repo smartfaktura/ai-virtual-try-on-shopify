@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ── VOVV.AI Brand Colors ──────────────────────────────────────────────────
+// ── VOVV.‌AI Brand Colors ──────────────────────────────────────────────────
 const BRAND = {
   navy: "#0f172a",        // Primary text
   navyCta: "#1e293b",     // CTA button
@@ -33,7 +33,7 @@ function emailWrapper(content: string): string {
           <!-- Wordmark -->
           <tr>
             <td style="padding-bottom:32px;">
-              <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:20px;letter-spacing:-0.03em;color:${BRAND.navy};">VOVV.AI</span>
+              <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:20px;letter-spacing:-0.03em;color:${BRAND.navy};">VOVV.‌AI</span>
             </td>
           </tr>
           <!-- Content -->
@@ -46,7 +46,7 @@ function emailWrapper(content: string): string {
           <tr>
             <td style="padding-top:40px;border-top:1px solid ${BRAND.border};margin-top:40px;">
               <p style="font-family:'Inter',sans-serif;font-size:12px;color:${BRAND.muted};margin:16px 0 0 0;line-height:1.5;">
-                &copy; 2026 VOVV.AI. All rights reserved.
+                &copy; 2026 VOVV.‌AI. All rights reserved.
               </p>
               <p style="font-family:'Inter',sans-serif;font-size:12px;color:${BRAND.muted};margin:4px 0 0 0;">
                 A product by 123Presets
@@ -80,7 +80,7 @@ function welcomeEmail(data: { displayName?: string }): string {
   const name = data.displayName || "there";
   return emailWrapper(`
     <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
-      Welcome to VOVV.AI
+      Welcome to VOVV.‌AI
     </h1>
     <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.navy};line-height:1.6;margin:0 0 8px 0;">
       Hey ${name},
@@ -313,27 +313,27 @@ serve(async (req) => {
 
     switch (type) {
       case "welcome":
-        subject = "Welcome to VOVV.AI";
+        subject = "Welcome to VOVV.‌AI";
         html = welcomeEmail(data || {});
         break;
       case "generation_complete":
-        subject = "Your images are ready — VOVV.AI";
+        subject = "Your images are ready — VOVV.‌AI";
         html = generationCompleteEmail(data || {});
         break;
       case "low_credits":
-        subject = "Running low on credits — VOVV.AI";
+        subject = "Running low on credits — VOVV.‌AI";
         html = lowCreditsEmail(data || {});
         break;
       case "generation_failed":
-        subject = "Generation failed — VOVV.AI";
+        subject = "Generation failed — VOVV.‌AI";
         html = generationFailedEmail(data || {});
         break;
       case "contact_form":
-        subject = `[VOVV.AI Contact] Message from ${(data?.name || "a user")}`;
+        subject = `[VOVV.‌AI Contact] Message from ${(data?.name || "a user")}`;
         html = contactFormEmail(data || {});
         break;
       case "lead_welcome":
-        subject = "You're in — VOVV.AI";
+        subject = "You're in — VOVV.‌AI";
         html = leadWelcomeEmail();
         break;
       default:
@@ -352,7 +352,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "VOVV.AI <noreply@vovv.ai>",
+        from: "VOVV.‌AI <noreply@vovv.ai>",
         to: [to],
         ...(replyTo ? { reply_to: replyTo } : {}),
         subject,
