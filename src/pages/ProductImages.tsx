@@ -1558,15 +1558,21 @@ export default function ProductImages() {
 
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
-                        const isDisabled = !isSelected && selectedProductIds.size >= MAX_PRODUCTS;
+                        const isDisabled = !isSelected && !isFree && selectedProductIds.size >= MAX_PRODUCTS;
+                        const handleToggle = () => {
+                          if (isDisabled) return;
+                          if (isFree) {
+                            // Single-select swap: deselect if same, otherwise replace
+                            setSelectedProductIds(isSelected ? new Set() : new Set([up.id]));
+                            return;
+                          }
+                          const s = new Set(selectedProductIds);
+                          if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
+                          setSelectedProductIds(s);
+                        };
                         return (
-                          <div key={up.id} role="button" tabIndex={0} onClick={() => {
-                             if (isDisabled) return;
-                             const s = new Set(selectedProductIds);
-                             if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id);
-                             setSelectedProductIds(s);
-                           }} onKeyDown={(e) => {
-                             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isDisabled) return; const s = new Set(selectedProductIds); if (s.has(up.id)) s.delete(up.id); else if (s.size < MAX_PRODUCTS) s.add(up.id); setSelectedProductIds(s); }
+                          <div key={up.id} role="button" tabIndex={0} onClick={handleToggle} onKeyDown={(e) => {
+                             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggle(); }
                            }} className={cn(
                              'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left cursor-pointer',
                              isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
