@@ -290,7 +290,7 @@ export default function Auth() {
   const renderCheckInbox = (options: {
     title: string;
     description: string;
-    showOtp: boolean;
+    isSignup?: boolean;
     onBack: () => void;
     onResend?: () => void;
   }) => (
@@ -306,7 +306,7 @@ export default function Auth() {
       </div>
 
       <p className="text-sm text-muted-foreground max-w-sm">
-        Click the link in your email to {options.showOtp ? 'activate your account' : 'sign in'}. Check your spam folder if you don't see it.
+        Click the link in your email to {options.isSignup ? 'activate your account' : 'sign in'}. Check your spam folder if you don't see it.
       </p>
 
       {/* Resend button with countdown */}
@@ -373,7 +373,7 @@ export default function Auth() {
             renderCheckInbox({
               title: 'Check your inbox',
               description: 'We sent a confirmation link to',
-              showOtp: true,
+              isSignup: true,
               onBack: () => {
                 setSignupComplete(false);
                 setMode('login');
@@ -386,7 +386,7 @@ export default function Auth() {
             renderCheckInbox({
               title: 'Check your email',
               description: 'We sent a sign-in link to',
-              showOtp: false,
+              isSignup: false,
               onBack: () => {
                 setMagicLinkSent(false);
               },
