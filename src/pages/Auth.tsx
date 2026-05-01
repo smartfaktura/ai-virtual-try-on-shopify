@@ -305,47 +305,9 @@ export default function Auth() {
         </p>
       </div>
 
-      {options.showOtp && (
-        <div className="w-full max-w-sm space-y-5">
-          <p className="text-sm text-muted-foreground">
-           Enter the 6-digit code from your email, or click the link to activate your account.
-          </p>
-          <div className="flex justify-center">
-             <InputOTP
-               maxLength={6}
-               value={otpCode}
-               onChange={(val) => {
-                 setOtpCode(val);
-                 if (val.length === 6) handleVerifyOtp(val);
-               }}
-               disabled={otpLoading}
-             >
-               <InputOTPGroup className="gap-1 sm:gap-2">
-                 <InputOTPSlot index={0} />
-                 <InputOTPSlot index={1} />
-                 <InputOTPSlot index={2} />
-               </InputOTPGroup>
-               <div className="flex items-center px-1 sm:px-2">
-                 <span className="text-lg sm:text-xl text-muted-foreground">-</span>
-               </div>
-               <InputOTPGroup className="gap-1 sm:gap-2">
-                 <InputOTPSlot index={3} />
-                 <InputOTPSlot index={4} />
-                 <InputOTPSlot index={5} />
-               </InputOTPGroup>
-             </InputOTP>
-          </div>
-          {otpLoading && (
-            <p className="text-sm text-muted-foreground">Verifying...</p>
-          )}
-        </div>
-      )}
-
-      {!options.showOtp && (
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Click the link in your email to sign in. Check your spam folder if you don't see it.
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground max-w-sm">
+        Click the link in your email to {options.showOtp ? 'activate your account' : 'sign in'}. Check your spam folder if you don't see it.
+      </p>
 
       {/* Resend button with countdown */}
       <div className="text-sm text-muted-foreground">
