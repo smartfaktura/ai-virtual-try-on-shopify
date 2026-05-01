@@ -48,7 +48,7 @@ import { toast } from '@/lib/brandedToast';
    Model Picker with Brand / Library sections
    ══════════════════════════════════════════════ */
 
-function ModelPickerSections({ userModels, globalModels, selectedModelId, selectedModelIds, onSelect, onMultiSelect, previewImages }: {
+function ModelPickerSections({ userModels, globalModels, selectedModelId, selectedModelIds, onSelect, onMultiSelect, previewImages, isFree, freeLimitReached, onFreeLimitHit, onUpgradeClick }: {
   userModels: ModelProfile[];
   globalModels: ModelProfile[];
   selectedModelId?: string;
@@ -56,6 +56,10 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   onSelect: (id: string) => void;
   onMultiSelect?: (ids: string[]) => void;
   previewImages?: string[];
+  isFree?: boolean;
+  freeLimitReached?: boolean;
+  onFreeLimitHit?: () => void;
+  onUpgradeClick?: () => void;
 }) {
   const navigate = useNavigate();
   const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male'>('all');
@@ -71,6 +75,11 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   }, [selectedModelIds, selectedModelId]);
 
   const toggleModel = useCallback((id: string) => {
+    // Free plan: refuse second pick (don't silently swap)
+    if (isFree && freeLimitReached && !activeIds.has(id)) {
+      onFreeLimitHit?.();
+      return;
+    }
     if (onMultiSelect) {
       const next = new Set(activeIds);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -78,7 +87,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
     } else {
       onSelect(id);
     }
-  }, [activeIds, onMultiSelect, onSelect]);
+  }, [activeIds, onMultiSelect, onSelect, isFree, freeLimitReached, onFreeLimitHit]);
 
   const filteredUser = useMemo(() =>
     genderFilter === 'all' ? userModels : userModels.filter(m => m.gender === genderFilter),
@@ -164,7 +173,13 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
           </div>
         ) : (
           <button
-            onClick={() => navigate('/app/models')}
+            onClick={() => {
+              if (isFree && onUpgradeClick) {
+                onUpgradeClick();
+              } else {
+                navigate('/app/models');
+              }
+            }}
             className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-4 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <div className="flex items-center gap-3">
@@ -183,7 +198,18 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
       {/* Library Models — inline preview */}
       {filteredGlobal.length > 0 && (
         <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
+            {isFree && (
+              <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-primary" />
+                Free plan: 1 model per generation
+                {onUpgradeClick && (
+                  <button type="button" onClick={onUpgradeClick} className="text-primary font-medium hover:underline">Upgrade</button>
+                )}
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {inlineModels.map(m => (
               <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
@@ -514,7 +540,7 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'gradient-cool', label: 'Forest', fill: 'linear-gradient(135deg, #0F570F, #EAFBE9)', isGradient: true },
 ];
 
-function BackgroundSwatchSelector({ value, onChange, details, update, savedColors, canSave, onSaveColor, onSaveGradient, onDeleteSavedColor }: {
+function BackgroundSwatchSelector({ value, onChange, details, update, savedColors, canSave, onSaveColor, onSaveGradient, onDeleteSavedColor, isFree, maxSelections, onLimitReached, onUpgradeClick }: {
   value: string;
   onChange: (v: string) => void;
   details: DetailSettings;
@@ -524,6 +550,10 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
   onSaveColor: (hex: string) => void;
   onSaveGradient: (from: string, to: string) => void;
   onDeleteSavedColor: (id: string) => void;
+  isFree?: boolean;
+  maxSelections?: number;
+  onLimitReached?: () => void;
+  onUpgradeClick?: () => void;
 }) {
   const [gradFrom, setGradFrom] = useState(details.backgroundCustomGradient?.from || '#F8F8F8');
   const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
@@ -557,6 +587,11 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
     if (current.has(sVal)) {
       current.delete(sVal);
     } else {
+      // Free plan: refuse adding a second swatch
+      if (typeof maxSelections === 'number' && current.size >= maxSelections) {
+        onLimitReached?.();
+        return;
+      }
       if (sVal === 'custom') current.delete('gradient-custom');
       if (sVal === 'gradient-custom') current.delete('custom');
       current.add(sVal);
@@ -635,6 +670,16 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
         onSaveColor={onSaveColor}
         onSaveGradient={onSaveGradient}
       />
+
+      {isFree && (
+        <div className="flex items-center justify-end gap-1.5 -mb-1">
+          <Sparkles className="w-3 h-3 text-primary" />
+          <span className="text-[10px] text-muted-foreground">Free plan: 1 background per generation</span>
+          {onUpgradeClick && (
+            <button type="button" onClick={onUpgradeClick} className="text-[10px] text-primary font-medium hover:underline">Upgrade</button>
+          )}
+        </div>
+      )}
 
       {/* Swatch grid — square aspect cards, 8 per row */}
       <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
@@ -1831,6 +1876,23 @@ export function ProductImagesStep3Refine({
   const pendingSceneIdRef = useRef<string | null>(null);
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
+
+  // Free-plan inline limit hints (transient, auto-dismiss)
+  const [modelLimitHintAt, setModelLimitHintAt] = useState<number | null>(null);
+  const [bgLimitHintAt, setBgLimitHintAt] = useState<number | null>(null);
+  useEffect(() => {
+    if (modelLimitHintAt == null) return;
+    const t = setTimeout(() => setModelLimitHintAt(null), 3500);
+    return () => clearTimeout(t);
+  }, [modelLimitHintAt]);
+  useEffect(() => {
+    if (bgLimitHintAt == null) return;
+    const t = setTimeout(() => setBgLimitHintAt(null), 3500);
+    return () => clearTimeout(t);
+  }, [bgLimitHintAt]);
+  const flashModelLimit = useCallback(() => setModelLimitHintAt(Date.now()), []);
+  const flashBgLimit = useCallback(() => setBgLimitHintAt(Date.now()), []);
+  const modelFreeLimitReached = isFree && ((details.selectedModelIds?.length || 0) >= 1 || !!details.selectedModelId);
   const allSceneIds = Array.from(selectedSceneIds);
   const [aestheticPickerOpen, setAestheticPickerOpen] = useState(false);
   const { allScenes: dbScenes } = useProductImageScenes();
@@ -2497,13 +2559,17 @@ export function ProductImagesStep3Refine({
                   onSaveColor={(hex) => saveColor({ hex })}
                   onSaveGradient={(from, to) => saveGradient({ from, to })}
                   onDeleteSavedColor={deleteColor}
+                  isFree={isFree}
+                  maxSelections={isFree ? 1 : undefined}
+                  onLimitReached={flashBgLimit}
+                  onUpgradeClick={onUpgradeClick}
                 />
-                {isFree && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border text-[11px]">
+                {isFree && bgLimitHintAt != null && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
                     <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-muted-foreground">Free plan: 1 background per batch</span>
+                    <span className="text-foreground">Free plan limit — 1 background per generation.</span>
                     {onUpgradeClick && (
-                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline">Upgrade</button>
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
                     )}
                   </div>
                 )}
@@ -2554,15 +2620,6 @@ export function ProductImagesStep3Refine({
                     <p className="text-xs text-muted-foreground mt-0.5">Needed for {scenesNeedingModel.length} selected shot{scenesNeedingModel.length !== 1 ? 's' : ''}.</p>
                   </div>
                 </div>
-                {isFree && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border text-[11px]">
-                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-muted-foreground">Free plan: 1 model per batch</span>
-                    {onUpgradeClick && (
-                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline">Upgrade</button>
-                    )}
-                  </div>
-                )}
                 <ModelPickerSections
                   userModels={userModels}
                   globalModels={globalModels}
@@ -2583,7 +2640,20 @@ export function ProductImagesStep3Refine({
                     update({ selectedModelIds: next, selectedModelId: next[0] || undefined });
                   }}
                   previewImages={globalModels.slice(0, 3).map(m => m.previewUrl).filter(Boolean)}
+                  isFree={isFree}
+                  freeLimitReached={modelFreeLimitReached}
+                  onFreeLimitHit={flashModelLimit}
+                  onUpgradeClick={onUpgradeClick}
                 />
+                {isFree && modelLimitHintAt != null && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Free plan limit — 1 model per generation.</span>
+                    {onUpgradeClick && (
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
