@@ -24,10 +24,10 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>One click to sign in to VOVV.&#x200C;AI</Preview>
+    <Preview>One click to sign in to VOVV.{"200C"}AI</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>VOVV.&#x200C;AI</Text>
+        <Text style={brand}>VOVV.{"200C"}AI</Text>
         <Heading style={h1}>Your login link</Heading>
         <Text style={text}>
           Click the button below to log in to {siteName}. This link will expire
