@@ -1876,6 +1876,23 @@ export function ProductImagesStep3Refine({
   const pendingSceneIdRef = useRef<string | null>(null);
   const { colors: savedColors, canSave, saveColor, saveGradient, deleteColor } = useUserSavedColors();
   const update = (partial: Partial<DetailSettings>) => onDetailsChange({ ...details, ...partial });
+
+  // Free-plan inline limit hints (transient, auto-dismiss)
+  const [modelLimitHintAt, setModelLimitHintAt] = useState<number | null>(null);
+  const [bgLimitHintAt, setBgLimitHintAt] = useState<number | null>(null);
+  useEffect(() => {
+    if (modelLimitHintAt == null) return;
+    const t = setTimeout(() => setModelLimitHintAt(null), 3500);
+    return () => clearTimeout(t);
+  }, [modelLimitHintAt]);
+  useEffect(() => {
+    if (bgLimitHintAt == null) return;
+    const t = setTimeout(() => setBgLimitHintAt(null), 3500);
+    return () => clearTimeout(t);
+  }, [bgLimitHintAt]);
+  const flashModelLimit = useCallback(() => setModelLimitHintAt(Date.now()), []);
+  const flashBgLimit = useCallback(() => setBgLimitHintAt(Date.now()), []);
+  const modelFreeLimitReached = isFree && ((details.selectedModelIds?.length || 0) >= 1 || !!details.selectedModelId);
   const allSceneIds = Array.from(selectedSceneIds);
   const [aestheticPickerOpen, setAestheticPickerOpen] = useState(false);
   const { allScenes: dbScenes } = useProductImageScenes();
