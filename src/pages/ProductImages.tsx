@@ -1379,6 +1379,20 @@ export default function ProductImages() {
         {step === 1 && (
           <>
             <div className="space-y-3">
+              {isFree && userProducts.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border text-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <span className="text-muted-foreground">
+                    Free plan: select 1 product at a time. Upgrade to generate visuals for multiple products in one batch
+                  </span>
+                  <button
+                    onClick={() => setUpgradeModalOpen(true)}
+                    className="ml-auto text-primary font-medium hover:underline whitespace-nowrap"
+                  >
+                    Upgrade
+                  </button>
+                </div>
+              )}
               {/* Toolbar */}
               {userProducts.length > 0 && (
               <div className="flex flex-col sm:flex-row gap-3 sm:items-center min-w-0">
