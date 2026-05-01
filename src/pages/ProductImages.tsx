@@ -1672,10 +1672,11 @@ export default function ProductImages() {
               return (
               <ProductImagesStep2Scenes
                 selectedSceneIds={selectedSceneIds}
-                onSelectionChange={setSelectedSceneIds}
-                selectedProducts={selectedProducts}
-                productAnalyses={analyses}
-                perCategoryScenes={perCategoryScenes}
+                onSelectionChange={setSelectedSceneIdsCapped}
+                isFree={isFree}
+                onUpgradeClick={() => setUpgradeModalOpen(true)}
+                limitHintActive={sceneLimitHint}
+                freeSceneLimit={FREE_SCENE_LIMIT}
                 onPerCategoryScenesChange={setPerCategoryScenes}
                 categoryGroups={categoryGroups}
                 hasMultipleCategories={hasMultipleCategories}
