@@ -117,7 +117,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
         <div key={productId} className="space-y-3">
           <div className="flex items-center gap-2 min-w-0">
             <h3 className="text-sm font-semibold truncate">{productName}</h3>
-            <Badge variant="secondary" className="text-[10px] flex-shrink-0 whitespace-nowrap">{images.length} images</Badge>
+            <Badge variant="secondary" className="text-[10px] flex-shrink-0 whitespace-nowrap">{images.length} image{images.length !== 1 ? 's' : ''}</Badge>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {images.map((img, i) => (
