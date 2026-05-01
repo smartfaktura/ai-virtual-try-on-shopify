@@ -2620,15 +2620,6 @@ export function ProductImagesStep3Refine({
                     <p className="text-xs text-muted-foreground mt-0.5">Needed for {scenesNeedingModel.length} selected shot{scenesNeedingModel.length !== 1 ? 's' : ''}.</p>
                   </div>
                 </div>
-                {isFree && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border text-[11px]">
-                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-muted-foreground">Free plan: 1 model per batch</span>
-                    {onUpgradeClick && (
-                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline">Upgrade</button>
-                    )}
-                  </div>
-                )}
                 <ModelPickerSections
                   userModels={userModels}
                   globalModels={globalModels}
@@ -2649,7 +2640,20 @@ export function ProductImagesStep3Refine({
                     update({ selectedModelIds: next, selectedModelId: next[0] || undefined });
                   }}
                   previewImages={globalModels.slice(0, 3).map(m => m.previewUrl).filter(Boolean)}
+                  isFree={isFree}
+                  freeLimitReached={modelFreeLimitReached}
+                  onFreeLimitHit={flashModelLimit}
+                  onUpgradeClick={onUpgradeClick}
                 />
+                {isFree && modelLimitHintAt != null && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Free plan limit — 1 model per generation.</span>
+                    {onUpgradeClick && (
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
