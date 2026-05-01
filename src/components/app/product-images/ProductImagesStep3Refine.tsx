@@ -1598,6 +1598,8 @@ interface Step3RefineProps {
   sceneExtraRefs?: Record<string, string>;
   onSceneExtraRefsChange?: (refs: Record<string, string>) => void;
   analyses?: Record<string, import('./types').ProductAnalysis>;
+  isFree?: boolean;
+  onUpgradeClick?: () => void;
 }
 
 /* ══════════════════════════════════════════════
@@ -1819,6 +1821,8 @@ export function ProductImagesStep3Refine({
   sceneExtraRefs = {},
   onSceneExtraRefsChange,
   analyses = {},
+  isFree = false,
+  onUpgradeClick,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -2482,7 +2486,10 @@ export function ProductImagesStep3Refine({
                 )}
                 <BackgroundSwatchSelector
                   value={details.backgroundTone || ''}
-                  onChange={v => update({ backgroundTone: v })}
+                  onChange={v => {
+                    const next = isFree ? (v.split(',').filter(Boolean).pop() || '') : v;
+                    update({ backgroundTone: next });
+                  }}
                   details={details}
                   update={update}
                   savedColors={savedColors}
@@ -2491,6 +2498,15 @@ export function ProductImagesStep3Refine({
                   onSaveGradient={(from, to) => saveGradient({ from, to })}
                   onDeleteSavedColor={deleteColor}
                 />
+                {isFree && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border text-[11px]">
+                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                    <span className="text-muted-foreground">Free plan: 1 background per batch</span>
+                    {onUpgradeClick && (
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline">Upgrade</button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -2520,12 +2536,12 @@ export function ProductImagesStep3Refine({
                         })()}
                       </div>
                       <span className="text-sm font-semibold">Choose model</span>
-                      {(details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) > 0 && (
+                      {!isFree && (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) > 0 && (
                         <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
                           <Check className="w-2.5 h-2.5 mr-0.5" />{details.selectedModelIds?.length || 1} selected
                         </Badge>
                       )}
-                      {(details.selectedModelIds?.length || 0) > 0 && (
+                      {!isFree && (details.selectedModelIds?.length || 0) > 0 && (
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); update({ selectedModelIds: [], selectedModelId: undefined }); }}
@@ -2538,17 +2554,34 @@ export function ProductImagesStep3Refine({
                     <p className="text-xs text-muted-foreground mt-0.5">Needed for {scenesNeedingModel.length} selected shot{scenesNeedingModel.length !== 1 ? 's' : ''}.</p>
                   </div>
                 </div>
+                {isFree && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border text-[11px]">
+                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                    <span className="text-muted-foreground">Free plan: 1 model per batch</span>
+                    {onUpgradeClick && (
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline">Upgrade</button>
+                    )}
+                  </div>
+                )}
                 <ModelPickerSections
                   userModels={userModels}
                   globalModels={globalModels}
                   selectedModelId={details.selectedModelId}
                   selectedModelIds={details.selectedModelIds}
                   onSelect={(id) => {
+                    if (isFree) {
+                      const same = details.selectedModelId === id;
+                      update({ selectedModelIds: same ? [] : [id], selectedModelId: same ? undefined : id });
+                      return;
+                    }
                     const current = details.selectedModelIds || (details.selectedModelId ? [details.selectedModelId] : []);
                     const next = current.includes(id) ? current.filter(x => x !== id) : [...current, id];
                     update({ selectedModelIds: next, selectedModelId: next[0] || undefined });
                   }}
-                  onMultiSelect={(ids) => update({ selectedModelIds: ids, selectedModelId: ids[0] || undefined })}
+                  onMultiSelect={(ids) => {
+                    const next = isFree ? ids.slice(0, 1) : ids;
+                    update({ selectedModelIds: next, selectedModelId: next[0] || undefined });
+                  }}
                   previewImages={globalModels.slice(0, 3).map(m => m.previewUrl).filter(Boolean)}
                 />
               </CardContent>

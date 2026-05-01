@@ -45,6 +45,11 @@ interface Step2Props {
   discoverScene?: { sceneId: string; title: string } | null;
   /** Full scene object resolved at the page level — lets the From Explore card render instantly. */
   discoverSceneFull?: ProductImageScene | null;
+  /** Free-plan gating: when true, hide bulk Select-All actions and show upgrade banner. Caps are enforced by the wrapped onSelectionChange from the page. */
+  isFree?: boolean;
+  onUpgradeClick?: () => void;
+  limitHintActive?: boolean;
+  freeSceneLimit?: number;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -903,8 +908,38 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
 }
 
 
+function FreeSceneBanner({ isFree, onUpgradeClick, limit, current }: { isFree?: boolean; onUpgradeClick?: () => void; limit: number; current: number }) {
+  if (!isFree) return null;
+  const atLimit = current >= limit;
+  return (
+    <div className={cn(
+      'flex items-center gap-2 px-3 py-2 rounded-lg border text-xs',
+      atLimit ? 'bg-primary/[0.04] border-primary/20' : 'bg-muted/40 border-border'
+    )}>
+      <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+      <span className="text-muted-foreground">
+        Free plan: up to {limit} shots per generation ({current}/{limit} selected). Upgrade for bulk shot selection
+      </span>
+      {onUpgradeClick && (
+        <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline whitespace-nowrap">
+          Upgrade
+        </button>
+      )}
+    </div>
+  );
+}
+
+function FreeLimitToast({ active, message }: { active?: boolean; message: string }) {
+  if (!active) return null;
+  return (
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in">
+      {message}
+    </div>
+  );
+}
+
 export function ProductImagesStep2Scenes(props: Step2Props) {
-  const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed, discoverScene, discoverSceneFull } = props;
+  const { hasMultipleCategories, perCategoryScenes, onPerCategoryScenesChange, categoryGroups, selectedProducts, selectedSceneIds, onSelectionChange, productAnalyses, forcedActiveCategoryId, onForcedActiveCategoryIdConsumed, discoverScene, discoverSceneFull, isFree, onUpgradeClick, limitHintActive, freeSceneLimit = 3 } = props;
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -922,7 +957,13 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
   }, [forcedActiveCategoryId, isMultiCategory, onForcedActiveCategoryIdConsumed]);
 
   if (!isMultiCategory) {
-    return <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} discoverScene={discoverScene} discoverSceneFull={discoverSceneFull} />;
+    return (
+      <>
+        <FreeSceneBanner isFree={isFree} onUpgradeClick={onUpgradeClick} limit={freeSceneLimit} current={selectedSceneIds.size} />
+        <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} discoverScene={discoverScene} discoverSceneFull={discoverSceneFull} />
+        <FreeLimitToast active={limitHintActive} message={`${freeSceneLimit} shot limit on Free — upgrade for unlimited`} />
+      </>
+    );
   }
 
   const categoryIds = Array.from(categoryGroups.keys());
@@ -971,6 +1012,8 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
 
   return (
     <div className="space-y-4">
+      <FreeSceneBanner isFree={isFree} onUpgradeClick={onUpgradeClick} limit={freeSceneLimit} current={selectedSceneIds.size} />
+      <FreeLimitToast active={limitHintActive} message={`${freeSceneLimit} shot limit on Free — upgrade for unlimited`} />
       {/* Category group tabs */}
       {/* Category group tabs — vertical on mobile, flex-wrap on desktop */}
       <div ref={tabsRef} className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-2">
