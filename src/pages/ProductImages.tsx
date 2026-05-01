@@ -107,6 +107,45 @@ export default function ProductImages() {
   const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
   const prevProductIdsRef = useRef<string | null>(null);
 
+  // Free-plan caps: wrap setters so every code path (toggle, bulk, deep-link) is gated.
+  // Existing selections are never trimmed — caps only block ADDITIONS, so a user who
+  // upgrades mid-session keeps their state, and downgrades don't lose data.
+  const setSelectedProductIdsCapped = useCallback((updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+    setSelectedProductIds(prev => {
+      const next = typeof updater === 'function' ? (updater as (p: Set<string>) => Set<string>)(prev) : updater;
+      if (!isFree) return next;
+      if (next.size <= FREE_PRODUCT_LIMIT) return next;
+      // Keep only the newly added id (last difference) so click-to-swap behaves intuitively
+      const added = Array.from(next).find(id => !prev.has(id));
+      return new Set(added ? [added] : Array.from(next).slice(0, FREE_PRODUCT_LIMIT));
+    });
+  }, [isFree]);
+
+  const flashSceneLimitHint = useCallback(() => {
+    setSceneLimitHint(true);
+    if (sceneLimitTimerRef.current) clearTimeout(sceneLimitTimerRef.current);
+    sceneLimitTimerRef.current = setTimeout(() => setSceneLimitHint(false), 2500);
+  }, []);
+
+  const setSelectedSceneIdsCapped = useCallback((updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+    setSelectedSceneIds(prev => {
+      const next = typeof updater === 'function' ? (updater as (p: Set<string>) => Set<string>)(prev) : updater;
+      if (!isFree) return next;
+      if (next.size <= FREE_SCENE_LIMIT) return next;
+      // Keep the previously selected ones + as many new additions as fit
+      const kept = new Set<string>();
+      prev.forEach(id => { if (next.has(id) && kept.size < FREE_SCENE_LIMIT) kept.add(id); });
+      Array.from(next).forEach(id => { if (!kept.has(id) && kept.size < FREE_SCENE_LIMIT) kept.add(id); });
+      flashSceneLimitHint();
+      return kept;
+    });
+  }, [isFree, flashSceneLimitHint]);
+
+  useEffect(() => () => {
+    if (sceneLimitTimerRef.current) clearTimeout(sceneLimitTimerRef.current);
+  }, []);
+
+
   // Discover Recreate resolver. Match priority:
   //   1. ?sceneRef (text scene_id from product_image_scenes — deterministic, hard-stop on miss)
   //   2. ?sceneId (UUID — legacy)
