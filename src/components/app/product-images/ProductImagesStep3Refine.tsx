@@ -1821,6 +1821,8 @@ export function ProductImagesStep3Refine({
   sceneExtraRefs = {},
   onSceneExtraRefsChange,
   analyses = {},
+  isFree = false,
+  onUpgradeClick,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
