@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 const SITE_NAME = "VOVV.AI"
 const ROOT_DOMAIN = "vovv.ai"
-const FROM_ADDRESS = `VOVV.AI <noreply@${ROOT_DOMAIN}>`
+const FROM_ADDRESS = `VOVV.AI <hello@${ROOT_DOMAIN}>`
 
 const SAMPLE_PROJECT_URL = "https://vovvai.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
