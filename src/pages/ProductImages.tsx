@@ -1393,12 +1393,13 @@ export default function ProductImages() {
                 </div>
 
                 <div className="flex gap-2 shrink-0">
-                  <Button size="default" variant="outline" onClick={() => {
+                  <Button size="default" variant="outline" disabled={isFree} onClick={() => {
+                    if (isFree) { setUpgradeModalOpen(true); return; }
                     const filtered = userProducts.filter(p =>
                       p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
                       p.product_type.toLowerCase().includes(productSearch.toLowerCase())
                     );
-                    setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
+                    setSelectedProductIdsCapped(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
                   }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
                   {selectedProductIds.size > 0 && (
                     <Button size="default" variant="outline" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
