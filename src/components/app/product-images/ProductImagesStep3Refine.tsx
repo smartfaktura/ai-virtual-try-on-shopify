@@ -671,6 +671,16 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
         onSaveGradient={onSaveGradient}
       />
 
+      {isFree && (
+        <div className="flex items-center justify-end gap-1.5 -mb-1">
+          <Sparkles className="w-3 h-3 text-primary" />
+          <span className="text-[10px] text-muted-foreground">Free plan: 1 background per generation</span>
+          {onUpgradeClick && (
+            <button type="button" onClick={onUpgradeClick} className="text-[10px] text-primary font-medium hover:underline">Upgrade</button>
+          )}
+        </div>
+      )}
+
       {/* Swatch grid — square aspect cards, 8 per row */}
       <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
         {/* Preset cards */}
