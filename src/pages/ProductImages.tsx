@@ -63,7 +63,13 @@ export default function ProductImages() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const { balance, setBalanceFromServer, refreshBalance } = useCredits();
+  const { balance, setBalanceFromServer, refreshBalance, plan } = useCredits();
+  const isFree = plan === 'free';
+  const FREE_PRODUCT_LIMIT = 1;
+  const FREE_SCENE_LIMIT = 3;
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [sceneLimitHint, setSceneLimitHint] = useState(false);
+  const sceneLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryClient = useQueryClient();
   const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds } = useProductAnalysis();
   const { allScenes: baseScenes, fetchSceneById } = useProductImageScenes();
