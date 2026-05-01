@@ -1598,6 +1598,8 @@ interface Step3RefineProps {
   sceneExtraRefs?: Record<string, string>;
   onSceneExtraRefsChange?: (refs: Record<string, string>) => void;
   analyses?: Record<string, import('./types').ProductAnalysis>;
+  isFree?: boolean;
+  onUpgradeClick?: () => void;
 }
 
 /* ══════════════════════════════════════════════
