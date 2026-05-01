@@ -352,7 +352,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "VOVV.AI <notifications@vovv.ai>",
+        from: "VOVV.AI <noreply@vovv.ai>",
         to: [to],
         ...(replyTo ? { reply_to: replyTo } : {}),
         subject,
