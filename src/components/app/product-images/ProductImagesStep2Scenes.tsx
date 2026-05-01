@@ -45,6 +45,11 @@ interface Step2Props {
   discoverScene?: { sceneId: string; title: string } | null;
   /** Full scene object resolved at the page level — lets the From Explore card render instantly. */
   discoverSceneFull?: ProductImageScene | null;
+  /** Free-plan gating: when true, hide bulk Select-All actions and show upgrade banner. Caps are enforced by the wrapped onSelectionChange from the page. */
+  isFree?: boolean;
+  onUpgradeClick?: () => void;
+  limitHintActive?: boolean;
+  freeSceneLimit?: number;
 }
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
