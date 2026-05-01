@@ -1,31 +1,32 @@
-## Problem
+I checked the current auth/email flow and found two important issues:
 
-The password recovery flow has a race condition that prevents the "Set new password" form from appearing. When a user clicks the recovery link:
+1. The password reset request is reaching the backend and returns success, but no recent recovery email is being logged or queued. Signup emails are still logging/sending, so the email domain itself is verified and working.
+2. The account you appear to be testing with was created through Google only and has no email/password identity attached. For Google-only accounts, a password reset link may not create a normal password login path the way users expect.
 
-1. Supabase client in `AuthProvider` processes the URL hash fragment (`#access_token=...&type=recovery`) via `getSession()` and fires the `PASSWORD_RECOVERY` event
-2. The `ResetPassword` component mounts and subscribes to `onAuthStateChange` — but the event has already fired and been consumed
-3. The hash fragment has already been stripped from the URL, so `window.location.hash.includes('type=recovery')` also fails
-4. The user is stuck on "Verifying recovery link..." with no form
+I already redeployed the auth email handler once to refresh the backend routing, but because recovery emails still are not appearing in the send log, I want to make the app safer and clearer rather than showing a misleading “sent” success every time.
 
-## Fix (single file: `src/pages/ResetPassword.tsx`)
+Plan:
 
-**Replace the detection logic** with a more robust approach:
+1. Improve forgot-password behavior in `src/pages/Auth.tsx`
+   - Normalize the reset email before sending.
+   - Keep the current “check inbox” success for privacy, but update copy so it does not imply delivery is guaranteed.
+   - Add clearer guidance for Google-only accounts: “If you signed up with Google, continue with Google instead.”
+   - Add a direct “Continue with Google” action in the reset dialog.
 
-1. **Check for an active session immediately** — if the user arrived via a recovery link, Supabase will have already established a session. Call `supabase.auth.getSession()` on mount and check if there's an active session. Combined with the URL origin (`/reset-password`), this is sufficient to show the form.
+2. Make email/password login safer for unverified users
+   - If login fails because the email is not confirmed, show the existing verification guidance and keep the user on the right path.
+   - Avoid suggesting a password reset as the primary fix for accounts that may not yet have an email/password login.
 
-2. **Keep the `PASSWORD_RECOVERY` event listener** as a secondary trigger (for cases where the session hasn't been processed yet on mount).
+3. Refresh/redeploy the auth email handler after the UI changes
+   - Deploy the existing auth email handler again so the live backend uses the latest version.
+   - Check backend logs and the email send log after you test another reset request.
 
-3. **Add a `sessionStorage` flag set by `AuthProvider`** — update `AuthProvider` to set `sessionStorage.setItem('password_recovery', '1')` when it detects the `PASSWORD_RECOVERY` event, so `ResetPassword` can read it even if the event already fired.
+4. If recovery emails still do not appear in the log after the above
+   - Re-run the managed email infrastructure setup to refresh the email queue/automation connection.
+   - Re-deploy the auth email handler.
+   - Re-check the log for a new `recovery` email entry.
 
-4. **Prevent `AuthProvider` from auto-navigating** during recovery — the `Auth.tsx` page has `if (!isLoading && user) navigate('/app')`, but since `/reset-password` is a separate route this isn't the issue. However, if a user is already logged in and clicks a recovery link, they should still see the form.
-
-### Concrete changes
-
-**`src/contexts/AuthContext.tsx`**: In the `onAuthStateChange` handler, when `event === 'PASSWORD_RECOVERY'`, set `sessionStorage.setItem('password_recovery', '1')`.
-
-**`src/pages/ResetPassword.tsx`**: Rewrite the `useEffect` to:
-- Check `sessionStorage.getItem('password_recovery')` — if set, show form and clear the flag
-- Check `window.location.hash` for `type=recovery` (keep as fallback)
-- Call `supabase.auth.getSession()` — if a valid session exists and we're on `/reset-password`, show the form
-- Keep `onAuthStateChange` listener for `PASSWORD_RECOVERY` as the final fallback
-- Add a 3-second timeout: if nothing triggered `isRecovery` but we do have a valid session, show the form anyway (the user is clearly here from a recovery email)
+What this will fix:
+- Users will no longer be falsely assured that an email definitely arrived when the backend did not actually enqueue one.
+- Google-only users won’t be pushed into a broken password reset path.
+- The recovery email pipeline will be refreshed and verified from logs after testing.
