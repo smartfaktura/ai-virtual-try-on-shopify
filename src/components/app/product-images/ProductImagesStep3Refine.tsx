@@ -2559,13 +2559,17 @@ export function ProductImagesStep3Refine({
                   onSaveColor={(hex) => saveColor({ hex })}
                   onSaveGradient={(from, to) => saveGradient({ from, to })}
                   onDeleteSavedColor={deleteColor}
+                  isFree={isFree}
+                  maxSelections={isFree ? 1 : undefined}
+                  onLimitReached={flashBgLimit}
+                  onUpgradeClick={onUpgradeClick}
                 />
-                {isFree && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border text-[11px]">
+                {isFree && bgLimitHintAt != null && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
                     <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-muted-foreground">Free plan: 1 background per batch</span>
+                    <span className="text-foreground">Free plan limit — 1 background per generation.</span>
                     {onUpgradeClick && (
-                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-medium hover:underline">Upgrade</button>
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
                     )}
                   </div>
                 )}
