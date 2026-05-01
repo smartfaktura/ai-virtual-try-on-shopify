@@ -75,6 +75,11 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   }, [selectedModelIds, selectedModelId]);
 
   const toggleModel = useCallback((id: string) => {
+    // Free plan: refuse second pick (don't silently swap)
+    if (isFree && freeLimitReached && !activeIds.has(id)) {
+      onFreeLimitHit?.();
+      return;
+    }
     if (onMultiSelect) {
       const next = new Set(activeIds);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -82,7 +87,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
     } else {
       onSelect(id);
     }
-  }, [activeIds, onMultiSelect, onSelect]);
+  }, [activeIds, onMultiSelect, onSelect, isFree, freeLimitReached, onFreeLimitHit]);
 
   const filteredUser = useMemo(() =>
     genderFilter === 'all' ? userModels : userModels.filter(m => m.gender === genderFilter),
