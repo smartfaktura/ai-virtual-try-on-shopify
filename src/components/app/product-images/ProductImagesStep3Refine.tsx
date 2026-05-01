@@ -587,6 +587,11 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
     if (current.has(sVal)) {
       current.delete(sVal);
     } else {
+      // Free plan: refuse adding a second swatch
+      if (typeof maxSelections === 'number' && current.size >= maxSelections) {
+        onLimitReached?.();
+        return;
+      }
       if (sVal === 'custom') current.delete('gradient-custom');
       if (sVal === 'gradient-custom') current.delete('custom');
       current.add(sVal);
