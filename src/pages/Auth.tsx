@@ -6,7 +6,7 @@ import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { TermsContent } from '@/components/legal/TermsContent';
 import { PrivacyContent } from '@/components/legal/PrivacyContent';
@@ -90,8 +90,6 @@ export default function Auth() {
   const [signupComplete, setSignupComplete] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [otpLoading, setOtpLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -250,23 +248,6 @@ export default function Auth() {
     }
   };
 
-  const handleVerifyOtp = async (code: string) => {
-    if (code.length !== 6) return;
-    setOtpLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
-      type: 'signup',
-    });
-    setOtpLoading(false);
-    if (error) {
-      toast.error('Invalid or expired code. Please try again.');
-      setOtpCode('');
-    } else {
-      toast.success('Email confirmed! Redirecting...');
-      navigate('/app', { replace: true });
-    }
-  };
 
   const handleResendSignup = async () => {
     setResendLoading(true);
