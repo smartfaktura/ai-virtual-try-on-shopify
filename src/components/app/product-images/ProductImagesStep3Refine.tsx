@@ -540,7 +540,7 @@ const BG_SWATCH_OPTIONS: { value: string; label: string; fill: string; isGradien
   { value: 'gradient-cool', label: 'Forest', fill: 'linear-gradient(135deg, #0F570F, #EAFBE9)', isGradient: true },
 ];
 
-function BackgroundSwatchSelector({ value, onChange, details, update, savedColors, canSave, onSaveColor, onSaveGradient, onDeleteSavedColor }: {
+function BackgroundSwatchSelector({ value, onChange, details, update, savedColors, canSave, onSaveColor, onSaveGradient, onDeleteSavedColor, isFree, maxSelections, onLimitReached, onUpgradeClick }: {
   value: string;
   onChange: (v: string) => void;
   details: DetailSettings;
@@ -550,6 +550,10 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
   onSaveColor: (hex: string) => void;
   onSaveGradient: (from: string, to: string) => void;
   onDeleteSavedColor: (id: string) => void;
+  isFree?: boolean;
+  maxSelections?: number;
+  onLimitReached?: () => void;
+  onUpgradeClick?: () => void;
 }) {
   const [gradFrom, setGradFrom] = useState(details.backgroundCustomGradient?.from || '#F8F8F8');
   const [gradTo, setGradTo] = useState(details.backgroundCustomGradient?.to || '#EEEEEE');
