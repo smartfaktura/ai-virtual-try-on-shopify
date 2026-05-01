@@ -31,6 +31,7 @@ import { ProductImagesStickyBar } from '@/components/app/product-images/ProductI
 import { DemoProductPicker } from '@/components/app/product-images/DemoProductPicker';
 import { DiscoverPreselectedCard } from '@/components/app/product-images/DiscoverPreselectedCard';
 import type { DemoProduct } from '@/data/demoProducts';
+import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 
 // Lazy-load step components for faster initial render
 const step2Loader = () => import('@/components/app/product-images/ProductImagesStep2Scenes');
