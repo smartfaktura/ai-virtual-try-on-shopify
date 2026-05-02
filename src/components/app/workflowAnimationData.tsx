@@ -138,7 +138,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: showcase1,
     objectPosition: 'center',
-    interval: 750,
+    interval: 3000,
     backgrounds: [showcase1, showcase2, showcase3, showcase5, showcase6, showcase7],
     recipe: [
       { image: listingProduct, label: 'Product' },
