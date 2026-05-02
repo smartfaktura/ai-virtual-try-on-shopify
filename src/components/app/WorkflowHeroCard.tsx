@@ -27,12 +27,14 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
   const img2 = pvImages[(idx + 1) % pvImages.length];
   const img3 = pvImages[(idx + 2) % pvImages.length];
 
+  const description = (workflow.description || '').replace('1000+', '1600+');
+
   return (
     <Card className="group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/[0.04] to-transparent transition-shadow duration-300 hover:shadow-xl">
-      <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 bg-primary text-primary-foreground text-[9px] sm:text-[10px] gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-0.5">
-        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-        <span className="hidden sm:inline">RECOMMENDED</span>
-        <span className="sm:hidden">REC</span>
+      {/* Desktop badge */}
+      <Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px] gap-1 hidden sm:flex">
+        <Sparkles className="w-3 h-3" />
+        RECOMMENDED
       </Badge>
 
       {/* Desktop: horizontal | Mobile: stacked */}
@@ -82,11 +84,17 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
 
         {/* Content */}
         <div className="flex flex-col justify-center flex-1 px-5 pb-5 sm:p-8 lg:p-10 gap-3">
+          {/* Mobile badge — below collage, above title */}
+          <Badge className="sm:hidden bg-primary text-primary-foreground text-[10px] gap-1 w-fit">
+            <Sparkles className="w-3 h-3" />
+            RECOMMENDED
+          </Badge>
+
           <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
             {displayName || workflow.name}
           </h3>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md">
-            {workflow.description}
+            {description}
           </p>
           <div className="hidden sm:flex flex-wrap gap-2 pt-1">
             {['1600+ Scenes', 'Full Control', 'AI Models'].map((tag) => (
