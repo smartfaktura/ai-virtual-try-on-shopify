@@ -1,41 +1,18 @@
 
-## Goal
-
-Redesign the "Create Product Visuals" hero card with a 3-image collage layout, increase container height, remove grid layout toggle buttons, and add section dividers between the hero and the remaining Visual Types grid.
-
 ## Changes
 
-### 1. Redesign `WorkflowHeroCard` (`src/components/app/WorkflowHeroCard.tsx`)
+### 1. Fix RECOMMENDED badge on mobile (`src/components/app/WorkflowHeroCard.tsx`)
 
-Replace the single animated thumbnail with a **3-image collage** using the `pvImages` URLs from `workflowAnimationData.tsx`:
+The badge at `absolute top-3 right-3` overlaps the collage images on mobile. Move it inside the collage area or reposition it so it doesn't clip. Options:
+- Reduce badge size on mobile: smaller text, less padding
+- Position it inside the image grid (bottom-right of the third image) on mobile
+- Or hide badge text on mobile, show only the sparkle icon
 
-**Desktop layout** (horizontal):
-- Left side (~50%): 3-image collage grid -- one large image on the left (2/3 height), two smaller stacked on the right. Images auto-rotate every 3s.
-- Right side: title, description, pills, CTA. Min-height increased (~380px on lg).
+Proposed fix: make the badge smaller on mobile with `text-[9px] sm:text-[10px]` and tighter padding, and shift it slightly: `top-2 right-2 sm:top-3 sm:right-3`.
 
-**Mobile layout** (stacked):
-- Top: 3-image collage in a horizontal row (3 equal columns, `aspect-[4/5]` each) -- NOT portrait full-width.
-- Below: title, description, full-width CTA button.
-- No duplicate tag pills on mobile.
+### 2. Update scene count (`src/components/app/WorkflowHeroCard.tsx`)
 
-Import `pvImages` array from `workflowAnimationData.tsx` (export it). Use 3 images that rotate with a cycling index.
-
-### 2. Export pvImages from animation data (`src/components/app/workflowAnimationData.tsx`)
-
-Add `export` to the existing `pvImages` array so the hero card can import it.
-
-### 3. Update Workflows page layout (`src/pages/Workflows.tsx`)
-
-- **Remove** the grid layout toggle (`ToggleGroup` block with rows/2col/3col).
-- **Remove** `LayoutList, Grid2X2, Grid3X3` imports and `layout`/`effectiveLayout` state (simplify to always use compact grid: 2col on mobile, 3col on desktop).
-- **Add section divider** between hero card and grid: a subtle line with "Explore More Visual Types" label.
-- Clean up unused imports (`ToggleGroup`, `ToggleGroupItem`).
-
-### 4. Simplified grid rendering (`src/pages/Workflows.tsx`)
-
-Always render `WorkflowCardCompact` in a fixed `grid-cols-2 md:grid-cols-3` grid (no layout switching). Remove `WorkflowCard` row layout rendering and its import.
+Change the tag pill from `'1000+ Scenes'` to `'1600+ Scenes'` (line 91).
 
 ### Files changed
-- `src/components/app/WorkflowHeroCard.tsx` -- collage layout, taller container
-- `src/components/app/workflowAnimationData.tsx` -- export pvImages
-- `src/pages/Workflows.tsx` -- remove toggle, add divider, simplify grid
+- `src/components/app/WorkflowHeroCard.tsx`
