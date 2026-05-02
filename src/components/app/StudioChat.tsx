@@ -91,7 +91,7 @@ export function StudioChat() {
     ? [{ role: 'assistant' as const, content: WELCOME_MESSAGE }]
     : messages;
 
-  const showChips = messages.length === 0;
+  
 
   const isCatalogPage = location.pathname.startsWith('/app/catalog');
 
@@ -205,20 +205,6 @@ export function StudioChat() {
               </div>
             )}
 
-            {/* Starter chips */}
-            {showChips && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {getChipsForPage(location.pathname).map((chip) => (
-                  <button
-                    key={chip}
-                    onClick={() => handleChip(chip)}
-                    className="text-xs px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted text-foreground transition-colors"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </ScrollArea>
 
