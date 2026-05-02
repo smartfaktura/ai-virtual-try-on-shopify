@@ -97,7 +97,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: pvImages[0],
     objectPosition: 'center',
-    interval: 750,
+    interval: 3000,
     backgrounds: pvImages,
     elements: [
       {
@@ -115,7 +115,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: tryonShowcase1,
     objectPosition: 'center',
-    interval: 750,
+    interval: 3000,
     backgrounds: [tryonShowcase1, tryonShowcase2, tryonShowcase3, tryonShowcase4, tryonShowcase5, tryonShowcase6],
     recipe: [
       { image: tryonProduct, label: 'Product' },
@@ -138,7 +138,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: showcase1,
     objectPosition: 'center',
-    interval: 750,
+    interval: 3000,
     backgrounds: [showcase1, showcase2, showcase3, showcase5, showcase6, showcase7],
     recipe: [
       { image: listingProduct, label: 'Product' },
@@ -160,7 +160,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: ugcResult1,
     objectPosition: 'center',
-    interval: 750,
+    interval: 3000,
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
     recipe: [
       { image: ugcProduct, label: 'Product' },

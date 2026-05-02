@@ -1,30 +1,17 @@
+## Findings
+
+**Images**: All 24 pvImages URLs in `workflowAnimationData.tsx` use the correct Supabase storage paths with `getOptimizedUrl` quality optimization. No console errors related to image loading. No conflicts between the hero card and compact card — they use independent component state.
+
+**Rotation speed mismatch**: The "Explore More Visual Types" compact cards use `interval: 750` (0.75s) from the scene data, while the hero card rotates at 3000ms. The 750ms interval is extremely fast for browsing.
 
 ## Changes
 
-### 1. Replace `pvImages` with 8 new curated batches (`src/components/app/workflowAnimationData.tsx`)
+### 1. Update rotation interval for all carousel scenes (`src/components/app/workflowAnimationData.tsx`)
 
-Replace the existing `pvRaw` array with the 24 new images (8 batches × 3). The collage rotates through batches of 3, so each batch forms one "slide". Use `getOptimizedUrl` with `quality: 60` as before. Use the `/object/public/` URLs (not `/render/`).
+Change `interval: 750` to `interval: 3000` for the following scenes:
+- Product Visuals (line 100)
+- Virtual Try-On Set (line 118)
+- Product Listing Set (line 141)
+- Selfie / UGC Set (line 163)
 
-### 2. Fix mobile RECOMMENDED badge (`src/components/app/WorkflowHeroCard.tsx`)
-
-- Remove the absolute-positioned badge that overlaps images
-- On mobile: place full "RECOMMENDED" pill below the collage, above the title (inside the content section)
-- On desktop: keep absolute positioned badge on the card as-is
-
-### 3. Override description to say 1600+ (`src/components/app/WorkflowHeroCard.tsx`)
-
-The `workflow.description` comes from the DB and says "1000+". Override it in the component: if description contains "1000+", replace with "1600+".
-
-### 4. Update other 1000+ references
-
-Update references in `HomeTransformStrip.tsx`, `HomeHowItWorks.tsx`, `HomeFAQ.tsx`, `learnContent.ts`, `ProductVisualsGuide.tsx`, and `mockData.ts` from 1000+ to 1600+.
-
-### Files changed
-- `src/components/app/workflowAnimationData.tsx`
-- `src/components/app/WorkflowHeroCard.tsx`
-- `src/components/home/HomeTransformStrip.tsx`
-- `src/components/home/HomeHowItWorks.tsx`
-- `src/components/home/HomeFAQ.tsx`
-- `src/data/learnContent.ts`
-- `src/components/app/learn/ProductVisualsGuide.tsx`
-- `src/data/mockData.ts`
+This makes all carousel thumbnails rotate at the same 3-second pace as the hero card.
