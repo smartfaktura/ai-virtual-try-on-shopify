@@ -24,9 +24,10 @@ interface Props {
   subtitle?: string;
   comingSoon?: boolean;
   beta?: boolean;
+  featured?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon, beta }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon, beta, featured }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
