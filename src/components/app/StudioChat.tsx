@@ -15,39 +15,6 @@ const avatarSophia = getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'
 const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 });
 const avatarZara = getOptimizedUrl(getLandingAssetUrl('team/avatar-zara.jpg'), { quality: 60 });
 
-const PAGE_CHIPS: Record<string, string[]> = {
-  '/app/': ['What should I create first?', 'How do credits work?', 'Tour Visual Studio'],
-  '/app/workflows': ['Which Visual Type fits my product?', 'Try-On vs Product Listing?', 'How much per image?'],
-  '/app/freestyle': ['Help me write a prompt', 'What quality should I pick?', 'Tips for sharper results'],
-  '/app/perspectives': ['How do perspectives work?', 'Best source image tips?', 'Cost per angle?'],
-  '/app/catalog': ['What is Catalog Studio?', 'Best for bulk shoots?', 'How is it priced?'],
-  '/app/models': ['What is a Brand Model?', 'Public vs private models?', 'Cost to train?'],
-  '/app/products': ['How do I upload products?', 'Can I import from Shopify?', 'Upload from my phone'],
-  '/app/library': ['How do I upscale?', 'Animate this image', 'Submit to Explore'],
-  '/app/discover': ['How do I use a preset?', 'Save to my collection', 'What is featured?'],
-  '/app/video': ['Animate vs Short Film?', 'What length should I pick?', 'Cost per video?'],
-  '/app/brand-profiles': ['What goes in a brand profile?', 'How does it shape my images?', 'Set up my brand'],
-  '/app/learn': ['Where do I start?', 'Best guide for fashion?', 'How long are guides?'],
-  '/app/pricing': ['Which plan fits me?', 'How do top-ups work?', 'Compare plans'],
-  '/app/settings': ['Which plan is right for me?', 'How do top-ups work?', 'Compare plans'],
-  '/app/generate/product-images': ['Best scenes for my product?', 'How to control model outfit?', 'What goes in Additional Note?'],
-};
-
-const DEFAULT_CHIPS = [
-  'Best Visual Type for skincare?',
-  'Best shots for fashion brands?',
-  'How much does it cost?',
-];
-
-function getChipsForPage(pathname: string): string[] {
-  if (PAGE_CHIPS[pathname]) return PAGE_CHIPS[pathname];
-  const sortedKeys = Object.keys(PAGE_CHIPS).sort((a, b) => b.length - a.length);
-  for (const key of sortedKeys) {
-    if (pathname.startsWith(key) && key !== '/app/') return PAGE_CHIPS[key];
-  }
-  if (pathname.startsWith('/app/')) return PAGE_CHIPS['/app/'] || DEFAULT_CHIPS;
-  return DEFAULT_CHIPS;
-}
 
 const WELCOME_MESSAGE =
   "Hey 👋 I'm the VOVV.AI AI assistant — trained on everything about our platform. I can help you pick the right Visual Type, explain features, troubleshoot, and more.\n\nFor anything I can't resolve, hit **Talk to VOVV.AI Team** below to reach a real person.";
