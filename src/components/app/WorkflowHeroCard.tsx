@@ -29,9 +29,10 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
 
   return (
     <Card className="group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/[0.04] to-transparent transition-shadow duration-300 hover:shadow-xl">
-      <Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px] gap-1">
-        <Sparkles className="w-3 h-3" />
-        RECOMMENDED
+      <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 bg-primary text-primary-foreground text-[9px] sm:text-[10px] gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-0.5">
+        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+        <span className="hidden sm:inline">RECOMMENDED</span>
+        <span className="sm:hidden">REC</span>
       </Badge>
 
       {/* Desktop: horizontal | Mobile: stacked */}
@@ -88,7 +89,7 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
             {workflow.description}
           </p>
           <div className="hidden sm:flex flex-wrap gap-2 pt-1">
-            {['1000+ Scenes', 'Full Control', 'AI Models'].map((tag) => (
+            {['1600+ Scenes', 'Full Control', 'AI Models'].map((tag) => (
               <span
                 key={tag}
                 className="text-[11px] px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium"

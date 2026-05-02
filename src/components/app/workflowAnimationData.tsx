@@ -77,7 +77,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     backgrounds: pvImages,
     elements: [
       {
-        type: 'badge', label: '1000+ Scenes', icon: <Sparkles className="w-3 h-3" />,
+        type: 'badge', label: '1600+ Scenes', icon: <Sparkles className="w-3 h-3" />,
         position: { bottom: '14%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
       {
