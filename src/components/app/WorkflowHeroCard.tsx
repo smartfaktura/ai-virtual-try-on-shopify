@@ -1,15 +1,10 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
-import { workflowScenes } from '@/components/app/workflowAnimationData';
+import { pvImages } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/types/workflow';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-
-const imgFallback = getLandingAssetUrl('templates/universal-clean.jpg');
 
 interface WorkflowHeroCardProps {
   workflow: Workflow;
@@ -18,48 +13,74 @@ interface WorkflowHeroCardProps {
 }
 
 export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHeroCardProps) {
-  const scene = workflowScenes[workflow.name];
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [idx, setIdx] = useState(0);
 
+  // Rotate images every 3s, cycling through sets of 3
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.2 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    const timer = setInterval(() => {
+      setIdx((prev) => (prev + 3) % pvImages.length);
+    }, 3000);
+    return () => clearInterval(timer);
   }, []);
 
+  const img1 = pvImages[idx % pvImages.length];
+  const img2 = pvImages[(idx + 1) % pvImages.length];
+  const img3 = pvImages[(idx + 2) % pvImages.length];
+
   return (
-    <Card
-      ref={ref}
-      className="group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/[0.04] to-transparent transition-shadow duration-300 hover:shadow-xl"
-    >
+    <Card className="group relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/[0.04] to-transparent transition-shadow duration-300 hover:shadow-xl">
       <Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px] gap-1">
         <Sparkles className="w-3 h-3" />
         RECOMMENDED
       </Badge>
 
       {/* Desktop: horizontal | Mobile: stacked */}
-      <div className="flex flex-col sm:flex-row">
-        {/* Thumbnail */}
-        <div className="relative w-full sm:w-[45%] aspect-[3/4] sm:aspect-auto overflow-hidden">
-          {scene ? (
-            <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact={false} />
-          ) : (
-            <img
-              src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { quality: 70 })}
-              alt={workflow.name}
-              className="w-full h-full object-cover bg-muted/50"
-            />
-          )}
+      <div className="flex flex-col sm:flex-row sm:min-h-[380px]">
+        {/* ── Collage: Mobile = 3 equal columns, Desktop = 1 large + 2 stacked ── */}
+        <div className="w-full sm:w-[50%] p-3 sm:p-4">
+          {/* Mobile: 3 equal columns */}
+          <div className="grid grid-cols-3 gap-2 h-full sm:hidden">
+            {[img1, img2, img3].map((src, i) => (
+              <div key={i} className="relative rounded-xl overflow-hidden aspect-[3/4]">
+                <img
+                  src={src}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: masonry-style — 1 large left + 2 stacked right */}
+          <div className="hidden sm:grid grid-cols-5 gap-2.5 h-full">
+            <div className="col-span-3 relative rounded-xl overflow-hidden">
+              <img
+                src={img1}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+              />
+            </div>
+            <div className="col-span-2 grid grid-rows-2 gap-2.5">
+              <div className="relative rounded-xl overflow-hidden">
+                <img
+                  src={img2}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                />
+              </div>
+              <div className="relative rounded-xl overflow-hidden">
+                <img
+                  src={img3}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex flex-col justify-center flex-1 p-5 sm:p-8 lg:p-10 gap-3">
+        <div className="flex flex-col justify-center flex-1 px-5 pb-5 sm:p-8 lg:p-10 gap-3">
           <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
             {displayName || workflow.name}
           </h3>

@@ -3,16 +3,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/lib/brandedToast';
 import { PageHeader } from '@/components/app/PageHeader';
-import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { WorkflowHeroCard } from '@/components/app/WorkflowHeroCard';
 import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
 import { WorkflowActivityCard } from '@/components/app/WorkflowActivityCard';
 import { FreestylePromptCard } from '@/components/app/FreestylePromptCard';
 import { WorkflowRecentRow } from '@/components/app/WorkflowRecentRow';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, LayoutList, Grid2X2, Grid3X3 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,25 +28,6 @@ export default function Workflows() {
   const prevActiveCountRef = useRef(0);
   const isMobile = useIsMobile();
 
-  // ── Layout preference ──
-  type LayoutMode = 'rows' | '2col' | '3col';
-  const [layout, setLayout] = useState<LayoutMode>(() => {
-    try {
-      const saved = localStorage.getItem('workflow-layout') as LayoutMode | null;
-      if (saved && ['rows', '2col', '3col'].includes(saved)) return saved;
-    } catch {}
-    return '3col';
-  });
-
-  const handleLayoutChange = (value: string) => {
-    if (!value) return;
-    const v = value as LayoutMode;
-    setLayout(v);
-    localStorage.setItem('workflow-layout', v);
-  };
-
-  // On mobile/tablet, clamp to 2col max
-  const effectiveLayout = isMobile ? (layout === '3col' ? '2col' : layout) : layout;
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
@@ -513,87 +492,47 @@ export default function Workflows() {
               />
             )}
 
-            {/* ── Other Visual Types grid ── */}
-            <section className="relative">
-              <div className="hidden sm:block absolute -top-14 right-0 z-10">
-                <ToggleGroup
-                  type="single"
-                  value={effectiveLayout}
-                  onValueChange={(v) => v && setLayout(v as LayoutMode)}
-                  className="gap-1 rounded-lg border bg-card p-1 shadow-sm"
-                >
-                  <ToggleGroupItem value="rows" aria-label="Row layout" className="h-8 w-8 p-0">
-                    <LayoutList className="w-3.5 h-3.5" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-8 w-8 p-0">
-                    <Grid2X2 className="w-3.5 h-3.5" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-8 w-8 p-0">
-                    <Grid3X3 className="w-3.5 h-3.5" />
-                  </ToggleGroupItem>
-                </ToggleGroup>
+            {/* ── Divider ── */}
+            {otherWorkflows.length > 0 && (
+              <div className="flex items-center gap-4 py-2">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+                  Explore More Visual Types
+                </span>
+                <div className="flex-1 h-px bg-border" />
               </div>
+            )}
 
+            {/* ── Other Visual Types grid ── */}
+            <section>
               {isLoading ? (
-                effectiveLayout === 'rows' ? (
-                  <div className="space-y-6">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="rounded-lg border overflow-hidden">
-                        <div className="flex flex-col lg:flex-row">
-                          <Skeleton className="w-full lg:w-[45%] aspect-[4/3] lg:aspect-[3/4]" />
-                          <div className="flex-1 p-6 lg:p-10 space-y-4">
-                            <Skeleton className="h-7 w-48" />
-                            <Skeleton className="h-4 w-full max-w-md" />
-                            <Skeleton className="h-4 w-full max-w-sm" />
-                            <Skeleton className="h-11 w-36 rounded-full" />
-                          </div>
-                        </div>
+                <div className="grid gap-2.5 sm:gap-4 grid-cols-2 md:grid-cols-3">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="rounded-lg border overflow-hidden">
+                      <Skeleton className={`w-full ${isMobile ? 'aspect-[2/3]' : 'aspect-square'}`} />
+                      <div className="p-4 space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-8 w-full rounded-full" />
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={`grid auto-rows-fr ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="rounded-lg border overflow-hidden">
-                        <Skeleton className={`w-full ${isMobile && effectiveLayout === '2col' ? 'aspect-[2/3]' : 'aspect-square'}`} />
-                        <div className="p-4 space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-full" />
-                          <Skeleton className="h-8 w-full rounded-full" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )
-              ) : effectiveLayout === 'rows' ? (
-                <div className="space-y-6">
-                  {otherWorkflows.map((workflow, index) => (
-                    <WorkflowCard
-                      key={workflow.id}
-                      id={`workflow-${workflow.id}`}
-                      workflow={workflow}
-                      onSelect={() => handleCreateVisualSet(workflow)}
-                      reversed={index % 2 !== 0}
-                      beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
-                    />
+                    </div>
                   ))}
-                  <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
                 </div>
               ) : (
-                <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
+                <div className="grid gap-2.5 sm:gap-4 grid-cols-2 md:grid-cols-3">
                   {otherWorkflows.map((workflow) => (
                     <WorkflowCardCompact
                       key={workflow.id}
                       id={`workflow-${workflow.id}`}
                       workflow={workflow}
                       onSelect={() => handleCreateVisualSet(workflow)}
-                      mobileCompact={isMobile && effectiveLayout === '2col'}
+                      mobileCompact={isMobile}
                       beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
                     />
                   ))}
                   <FreestylePromptCard
                     onSelect={() => navigate('/app/freestyle')}
-                    mobileCompact={isMobile && effectiveLayout === '2col'}
+                    mobileCompact={isMobile}
                   />
                 </div>
               )}
