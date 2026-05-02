@@ -125,7 +125,10 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
         featured && "ring-2 ring-primary/30 border-primary/40 shadow-md"
       )}
     >
-      {beta && (
+      {featured && (
+        <Badge className="absolute top-4 right-4 z-10 bg-primary text-primary-foreground text-[10px]">RECOMMENDED</Badge>
+      )}
+      {beta && !featured && (
         <Badge className="absolute top-4 right-4 z-10 bg-primary text-primary-foreground text-[10px]">BETA</Badge>
       )}
       <div
