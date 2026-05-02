@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/lib/brandedToast';
 import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
+import { WorkflowHeroCard } from '@/components/app/WorkflowHeroCard';
 import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
 import { WorkflowActivityCard } from '@/components/app/WorkflowActivityCard';
 import { FreestylePromptCard } from '@/components/app/FreestylePromptCard';
@@ -497,93 +498,109 @@ export default function Workflows() {
         />
       )}
 
-      {/* ── Workflow catalog (heading + grid grouped tight) ── */}
-      <section className="relative">
-        <div className="hidden sm:block absolute -top-14 right-0 z-10">
-          <ToggleGroup
-            type="single"
-            value={effectiveLayout}
-            onValueChange={(v) => v && setLayout(v as LayoutMode)}
-            className="gap-1 rounded-lg border bg-card p-1 shadow-sm"
-          >
-            <ToggleGroupItem value="rows" aria-label="Row layout" className="h-8 w-8 p-0">
-              <LayoutList className="w-3.5 h-3.5" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-8 w-8 p-0">
-              <Grid2X2 className="w-3.5 h-3.5" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-8 w-8 p-0">
-              <Grid3X3 className="w-3.5 h-3.5" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+      {/* ── Featured hero card ── */}
+      {(() => {
+        const featuredWorkflow = workflows.find(w => w.slug === 'product-images');
+        const otherWorkflows = workflows.filter(w => w.slug !== 'product-images');
 
-        {isLoading ? (
-          effectiveLayout === 'rows' ? (
-            <div className="space-y-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-lg border overflow-hidden">
-                  <div className="flex flex-col lg:flex-row">
-                    <Skeleton className="w-full lg:w-[45%] aspect-[4/3] lg:aspect-[3/4]" />
-                    <div className="flex-1 p-6 lg:p-10 space-y-4">
-                      <Skeleton className="h-7 w-48" />
-                      <Skeleton className="h-4 w-full max-w-md" />
-                      <Skeleton className="h-4 w-full max-w-sm" />
-                      <Skeleton className="h-11 w-36 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className={`grid auto-rows-fr ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="rounded-lg border overflow-hidden">
-                  <Skeleton className={`w-full ${isMobile && effectiveLayout === '2col' ? 'aspect-[2/3]' : 'aspect-square'}`} />
-                  <div className="p-4 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-8 w-full rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        ) : effectiveLayout === 'rows' ? (
-          <div className="space-y-6">
-            {workflows.map((workflow, index) => (
-              <WorkflowCard
-                key={workflow.id}
-                id={`workflow-${workflow.id}`}
-                workflow={workflow}
-                onSelect={() => handleCreateVisualSet(workflow)}
-                reversed={index % 2 !== 0}
-                beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
-                featured={workflow.slug === 'product-images'}
+        return (
+          <>
+            {featuredWorkflow && (
+              <WorkflowHeroCard
+                workflow={featuredWorkflow}
+                onSelect={() => handleCreateVisualSet(featuredWorkflow)}
+                displayName="Create Product Visuals"
               />
-            ))}
-            <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
-          </div>
-        ) : (
-          <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
-            {workflows.map((workflow) => (
-              <WorkflowCardCompact
-                key={workflow.id}
-                id={`workflow-${workflow.id}`}
-                workflow={workflow}
-                onSelect={() => handleCreateVisualSet(workflow)}
-                mobileCompact={isMobile && effectiveLayout === '2col'}
-                beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
-                featured={workflow.slug === 'product-images'}
-              />
-            ))}
-            <FreestylePromptCard
-              onSelect={() => navigate('/app/freestyle')}
-              mobileCompact={isMobile && effectiveLayout === '2col'}
-            />
-          </div>
-        )}
-      </section>
+            )}
+
+            {/* ── Other Visual Types grid ── */}
+            <section className="relative">
+              <div className="hidden sm:block absolute -top-14 right-0 z-10">
+                <ToggleGroup
+                  type="single"
+                  value={effectiveLayout}
+                  onValueChange={(v) => v && setLayout(v as LayoutMode)}
+                  className="gap-1 rounded-lg border bg-card p-1 shadow-sm"
+                >
+                  <ToggleGroupItem value="rows" aria-label="Row layout" className="h-8 w-8 p-0">
+                    <LayoutList className="w-3.5 h-3.5" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="2col" aria-label="Two column layout" className="h-8 w-8 p-0">
+                    <Grid2X2 className="w-3.5 h-3.5" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="3col" aria-label="Three column layout" className="h-8 w-8 p-0">
+                    <Grid3X3 className="w-3.5 h-3.5" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              {isLoading ? (
+                effectiveLayout === 'rows' ? (
+                  <div className="space-y-6">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="rounded-lg border overflow-hidden">
+                        <div className="flex flex-col lg:flex-row">
+                          <Skeleton className="w-full lg:w-[45%] aspect-[4/3] lg:aspect-[3/4]" />
+                          <div className="flex-1 p-6 lg:p-10 space-y-4">
+                            <Skeleton className="h-7 w-48" />
+                            <Skeleton className="h-4 w-full max-w-md" />
+                            <Skeleton className="h-4 w-full max-w-sm" />
+                            <Skeleton className="h-11 w-36 rounded-full" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={`grid auto-rows-fr ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="rounded-lg border overflow-hidden">
+                        <Skeleton className={`w-full ${isMobile && effectiveLayout === '2col' ? 'aspect-[2/3]' : 'aspect-square'}`} />
+                        <div className="p-4 space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-full" />
+                          <Skeleton className="h-8 w-full rounded-full" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : effectiveLayout === 'rows' ? (
+                <div className="space-y-6">
+                  {otherWorkflows.map((workflow, index) => (
+                    <WorkflowCard
+                      key={workflow.id}
+                      id={`workflow-${workflow.id}`}
+                      workflow={workflow}
+                      onSelect={() => handleCreateVisualSet(workflow)}
+                      reversed={index % 2 !== 0}
+                      beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
+                    />
+                  ))}
+                  <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
+                </div>
+              ) : (
+                <div className={`grid ${isMobile && effectiveLayout === '2col' ? 'gap-2.5' : 'gap-4'} ${effectiveLayout === '3col' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
+                  {otherWorkflows.map((workflow) => (
+                    <WorkflowCardCompact
+                      key={workflow.id}
+                      id={`workflow-${workflow.id}`}
+                      workflow={workflow}
+                      onSelect={() => handleCreateVisualSet(workflow)}
+                      mobileCompact={isMobile && effectiveLayout === '2col'}
+                      beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
+                    />
+                  ))}
+                  <FreestylePromptCard
+                    onSelect={() => navigate('/app/freestyle')}
+                    mobileCompact={isMobile && effectiveLayout === '2col'}
+                  />
+                </div>
+              )}
+            </section>
+          </>
+        );
+      })()}
 
       {/* ── Recent Creations (heading + row grouped tight) ── */}
       {(recentJobs.length > 0 || isLoadingRecent) && (
