@@ -135,6 +135,7 @@ Use this exact syntax inline: [[Button Label|/app/route]]
 
 Approved CTAs (use these exact labels):
 - [[Open Visual Studio|/app/workflows]]
+- [[Start Product Visuals|/app/generate/product-images]]
 - [[Create with Prompt|/app/freestyle]]
 - [[Generate Perspectives|/app/perspectives]]
 - [[Open Catalog Studio|/app/catalog]]
