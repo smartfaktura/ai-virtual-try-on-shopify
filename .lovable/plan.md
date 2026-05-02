@@ -1,27 +1,36 @@
 
-## What changes
+## Changes to `src/components/app/StudioChat.tsx`
 
-Three improvements to the studio livechat (edge function `studio-chat/index.ts`):
+### 1. Remove fake team member personas
+- Remove the three avatar imports (Sophia, Kenji, Zara) and the stacked avatar display
+- Replace with a single Sparkles icon avatar representing the AI assistant
 
-### 1. Brand Models require Growth plan (not Starter)
+### 2. Update header
+- Title: "VOVV.AI Assistant" (was "VOVV.AI Studio")
+- Subtitle: "AI-powered · instant answers" (was "Online · replies instantly")
+- Remove the UserRound icon button from header (moving contact to footer)
 
-Add an explicit rule in the SYSTEM_PROMPT under PLANS or BRAND MODELS section:
+### 3. Update loading state
+- Remove "Sophia is thinking..." text — keep only the bouncing dots
 
-> Brand Models (creating your own) require the **Growth** plan or higher. Starter does not include Brand Models. If a user on Free or Starter asks about creating a Brand Model, guide them to upgrade to Growth. Public (VOVV.AI) Brand Models are free to use on any plan.
+### 4. Update welcome message
+- New: "Hey, I'm the VOVV.AI assistant — I can help you find the right Visual Type, explain features, or troubleshoot. Ask me anything! Need a human? Hit **Talk to Team** below anytime."
 
-### 2. Outfit / clothing visibility guidance via Additional Note
+### 5. Persistent "Talk to Team" strip
+- Add a footer strip below the input area with a Mail icon + "Talk to Team" text
+- Always visible, opens the existing ContactFormDialog
+- Styled as a subtle border-top button
 
-Add a new knowledge block in the SYSTEM_PROMPT that teaches the chatbot about the "Additional note" field in the Product Visuals workflow (Step 3 — Setup / Refine). When users ask about controlling what a model wears (e.g. "how do I make sure the model isn't wearing a jacket?"), the chatbot should:
+### 6. Update placeholder text
+- Input placeholder: "Ask the AI assistant..." (was "Ask your studio team...")
 
-- Explain that in the Product Visuals flow, Step 3 has an **"Additional note"** text field (labeled "Anything important to keep in mind?")
-- Suggest writing specific instructions there, e.g.: *"Model should not wear any outerwear — no jacket, blazer, or coat. The top/product must be fully visible and unobstructed."*
-- Also mention the Outfit section if the scene includes a person (where they can pick specific clothing items)
-- Provide a CTA to the workflow if they're not already there
+### 7. Add product-images page chips
+- Add `/app/generate/product-images` entry to PAGE_CHIPS with relevant suggestions like "How to control model outfit?" and "What goes in Additional Note?"
 
-### 3. Product Visuals page context
-
-Add `/app/generate/product-images` to the `pageContextMap` so when users open the chat while on the Product Visuals workflow, the chatbot knows they're actively creating product images and can offer contextual tips — including mentioning the Additional Note field.
+### 8. Update SYSTEM_PROMPT (edge function)
+- Add a line instructing the AI to identify itself as an AI assistant, not a human
+- Mention that users can always reach the real team via "Talk to Team"
 
 ### Files changed
-
-- `supabase/functions/studio-chat/index.ts` — all three changes in the SYSTEM_PROMPT and pageContextMap
+- `src/components/app/StudioChat.tsx` — all UI changes
+- `supabase/functions/studio-chat/index.ts` — SYSTEM_PROMPT update for AI identity

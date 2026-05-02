@@ -1,19 +1,13 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { MessageCircle, X, Send, RotateCcw, UserRound } from 'lucide-react';
+import { MessageCircle, X, Send, RotateCcw, Sparkles, Mail } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useStudioChat } from '@/hooks/useStudioChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChatMessageBubble } from './ChatMessageBubble';
 import { ContactFormDialog } from './ContactFormDialog';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-
-const avatarSophia = getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 });
-const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 });
-const avatarZara = getOptimizedUrl(getLandingAssetUrl('team/avatar-zara.jpg'), { quality: 60 });
 
 const PAGE_CHIPS: Record<string, string[]> = {
   '/app/': ['What should I create first?', 'How do credits work?', 'Tour Visual Studio'],
@@ -30,6 +24,7 @@ const PAGE_CHIPS: Record<string, string[]> = {
   '/app/learn': ['Where do I start?', 'Best guide for fashion?', 'How long are guides?'],
   '/app/pricing': ['Which plan fits me?', 'How do top-ups work?', 'Compare plans'],
   '/app/settings': ['Which plan is right for me?', 'How do top-ups work?', 'Compare plans'],
+  '/app/generate/product-images': ['Best scenes for my product?', 'How to control model outfit?', 'What goes in Additional Note?'],
 };
 
 const DEFAULT_CHIPS = [
@@ -39,7 +34,6 @@ const DEFAULT_CHIPS = [
 ];
 
 function getChipsForPage(pathname: string): string[] {
-  // Try exact match first, then prefix match
   if (PAGE_CHIPS[pathname]) return PAGE_CHIPS[pathname];
   const sortedKeys = Object.keys(PAGE_CHIPS).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
@@ -50,7 +44,7 @@ function getChipsForPage(pathname: string): string[] {
 }
 
 const WELCOME_MESSAGE =
-  "Hey 👋 The VOVV.AI team is here. Tell us what you're working on — products, scenes, video, Brand Models — and we'll point you to the right spot. What can we help with?";
+  "Hey 👋 I'm the VOVV.AI assistant — I can help you find the right Visual Type, explain features, or troubleshoot. Ask me anything!\n\nNeed a human? Hit **Talk to Team** below anytime.";
 
 export function StudioChat() {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,21 +59,18 @@ export function StudioChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 200);
     }
   }, [isOpen]);
 
-  // Watch body attribute to hide widget when a page requests it (e.g. pricing sticky bar)
   useEffect(() => {
     const update = () => setHiddenByPage(document.body.hasAttribute('data-hide-studio-chat'));
     update();
@@ -88,7 +79,6 @@ export function StudioChat() {
     return () => observer.disconnect();
   }, []);
 
-  // Auto-close panel when hidden by page request
   useEffect(() => {
     if (hiddenByPage && isOpen) setIsOpen(false);
   }, [hiddenByPage, isOpen]);
@@ -101,12 +91,8 @@ export function StudioChat() {
   );
 
   if (isProductImagesPage) return null;
-
-  // Hide on Help page — the page itself is a contact form, no need for floating widget
   if (location.pathname === '/app/help') return null;
-
   if (hideOnMobile) return null;
-
   if (hiddenByPage) return null;
 
   const handleSend = () => {
@@ -150,43 +136,21 @@ export function StudioChat() {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/50 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              <Avatar className="w-7 h-7 ring-2 ring-popover">
-                <AvatarImage src={avatarSophia} alt="Sophia" />
-                <AvatarFallback className="text-[10px]">SC</AvatarFallback>
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <Avatar className="w-8 h-8">
+                <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
+                  <Sparkles className="w-4 h-4" />
+                </AvatarFallback>
               </Avatar>
-              <Avatar className="w-7 h-7 ring-2 ring-popover">
-                <AvatarImage src={avatarKenji} alt="Kenji" />
-                <AvatarFallback className="text-[10px]">KN</AvatarFallback>
-              </Avatar>
-              <Avatar className="w-7 h-7 ring-2 ring-popover">
-                <AvatarImage src={avatarZara} alt="Zara" />
-                <AvatarFallback className="text-[10px]">ZW</AvatarFallback>
-              </Avatar>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-popover" />
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight">VOVV.AI Studio</p>
-              <div className="flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-                <p className="text-[10px] text-muted-foreground leading-tight">Online · replies instantly</p>
-              </div>
+              <p className="text-sm font-semibold leading-tight">VOVV.AI Assistant</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">AI-powered · instant answers</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowContactForm(prev => !prev)}
-              className={cn(
-                "p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors",
-                showContactForm && "bg-muted text-foreground"
-              )}
-              title="Talk to a human"
-            >
-              <UserRound className="w-3.5 h-3.5" />
-            </button>
             {messages.length > 0 && (
               <button
                 onClick={clearChat}
@@ -212,8 +176,9 @@ export function StudioChat() {
               <div key={i} className={cn('flex gap-2.5', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                 {msg.role === 'assistant' && (
                   <Avatar className="w-7 h-7 flex-shrink-0 mt-0.5">
-                    <AvatarImage src={avatarSophia} alt="Team" />
-                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">V</AvatarFallback>
+                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </AvatarFallback>
                   </Avatar>
                 )}
                 <div
@@ -234,15 +199,15 @@ export function StudioChat() {
               </div>
             ))}
 
-            {/* Loading indicator when no assistant message yet */}
+            {/* Loading indicator */}
             {isLoading && (messages.length === 0 || messages[messages.length - 1]?.role === 'user') && (
               <div className="flex gap-2.5">
                 <Avatar className="w-7 h-7 flex-shrink-0 mt-0.5">
-                  <AvatarImage src={avatarSophia} alt="Team" />
-                  <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">V</AvatarFallback>
+                  <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </AvatarFallback>
                 </Avatar>
                 <div className="bg-muted rounded-2xl rounded-bl-md px-3.5 py-3">
-                  <p className="text-[10px] text-muted-foreground mb-1.5">Sophia is thinking…</p>
                   <div className="flex gap-1">
                     <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -266,32 +231,40 @@ export function StudioChat() {
                 ))}
               </div>
             )}
-
-            {/* Contact form dialog rendered outside scroll area */}
           </div>
         </ScrollArea>
 
-        {/* Input */}
-        <div className="px-3 py-3 border-t border-border flex-shrink-0">
-          <div className="flex items-end gap-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask your studio team..."
-              rows={1}
-              className="flex-1 resize-none bg-muted rounded-xl px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring max-h-24 min-h-[40px]"
-              style={{ height: 'auto', overflow: 'auto' }}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading || isThrottled}
-              className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+        {/* Footer: Input + Talk to Team */}
+        <div className="border-t border-border flex-shrink-0">
+          <div className="px-3 py-3">
+            <div className="flex items-end gap-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask the AI assistant..."
+                rows={1}
+                className="flex-1 resize-none bg-muted rounded-xl px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring max-h-24 min-h-[40px]"
+                style={{ height: 'auto', overflow: 'auto' }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading || isThrottled}
+                className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
           </div>
+          {/* Persistent Talk to Team strip */}
+          <button
+            onClick={() => setShowContactForm(true)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 border-t border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            Talk to Team
+          </button>
         </div>
       </div>
 
