@@ -97,7 +97,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     mode: 'carousel',
     background: pvImages[0],
     objectPosition: 'center',
-    interval: 750,
+    interval: 3000,
     backgrounds: pvImages,
     elements: [
       {
