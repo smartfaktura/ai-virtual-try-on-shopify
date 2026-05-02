@@ -24,9 +24,10 @@ interface Props {
   subtitle?: string;
   comingSoon?: boolean;
   beta?: boolean;
+  featured?: boolean;
 }
 
-export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon, beta }: Props) {
+export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, modalCompact, mobileRow, displayName, subtitle, comingSoon, beta, featured }: Props) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(!!modalCompact);
@@ -114,10 +115,14 @@ export function WorkflowCardCompact({ workflow, onSelect, id, mobileCompact, mod
       ref={ref}
       className={cn(
         "group relative overflow-hidden transition-shadow duration-300 flex flex-col rounded-2xl",
-        modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg"
+        modalCompact ? "border-0 shadow-none" : "border hover:shadow-lg",
+        featured && !modalCompact && "ring-2 ring-primary/30 border-primary/40 shadow-md"
       )}
     >
-      {beta && (
+      {featured && !modalCompact && (
+        <Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px]">RECOMMENDED</Badge>
+      )}
+      {beta && !featured && (
         <Badge className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-[10px]">BETA</Badge>
       )}
       {/* Thumbnail */}
