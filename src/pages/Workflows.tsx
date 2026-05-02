@@ -21,6 +21,16 @@ import { WorkflowRequestBanner } from '@/components/app/WorkflowRequestBanner';
 
 export type { Workflow } from '@/types/workflow';
 
+/** Polished display names for workflow cards (keyed by slug) */
+const DISPLAY_NAMES: Record<string, string> = {
+  'selfie-ugc-set': 'Selfie / UGC Visuals',
+  'flat-lay-set': 'Flatlay Visuals',
+  'mirror-selfie-set': 'Mirror Selfie Visuals',
+  'interior-exterior-staging': 'Interior Staging Visuals',
+  'picture-perspectives': 'Picture Perspectives Generator',
+  'image-upscaling': 'Image Upscaling Tool',
+};
+
 export default function Workflows() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -527,6 +537,7 @@ export default function Workflows() {
                       workflow={workflow}
                       onSelect={() => handleCreateVisualSet(workflow)}
                       mobileCompact={isMobile}
+                      displayName={DISPLAY_NAMES[workflow.slug ?? '']}
                       beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
                     />
                   ))}

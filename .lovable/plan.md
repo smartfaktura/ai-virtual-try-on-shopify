@@ -1,17 +1,26 @@
-## Findings
 
-**Images**: All 24 pvImages URLs in `workflowAnimationData.tsx` use the correct Supabase storage paths with `getOptimizedUrl` quality optimization. No console errors related to image loading. No conflicts between the hero card and compact card — they use independent component state.
+## Rename Workflow Cards with Better Display Names
 
-**Rotation speed mismatch**: The "Explore More Visual Types" compact cards use `interval: 750` (0.75s) from the scene data, while the hero card rotates at 3000ms. The 750ms interval is extremely fast for browsing.
+The workflow cards currently show database names directly. We'll add a display name map in `Workflows.tsx` to pass polished names to each `WorkflowCardCompact` via its existing `displayName` prop.
 
-## Changes
+### Proposed Name Changes
 
-### 1. Update rotation interval for all carousel scenes (`src/components/app/workflowAnimationData.tsx`)
+| Current (DB) | New Display Name |
+|---|---|
+| Selfie / UGC | Selfie / UGC Visuals |
+| Picture Perspectives | Picture Perspectives Generator |
+| Image Upscaling | Image Upscaling Tool |
+| Interior / Exterior Staging | Interior Staging Visuals |
+| Mirror Selfie | Mirror Selfie Visuals |
+| Flat Lay | Flatlay Visuals |
+| Virtual Try-On | *(hidden, filtered out)* |
+| Product Listing | *(hidden, filtered out)* |
+| Catalog Studio | *(keep as-is or rename?)* |
 
-Change `interval: 750` to `interval: 3000` for the following scenes:
-- Product Visuals (line 100)
-- Virtual Try-On Set (line 118)
-- Product Listing Set (line 141)
-- Selfie / UGC Set (line 163)
+### Changes
 
-This makes all carousel thumbnails rotate at the same 3-second pace as the hero card.
+**`src/pages/Workflows.tsx`**
+- Add a `DISPLAY_NAMES` map keyed by workflow slug
+- Pass the override as `displayName` prop to each `WorkflowCardCompact`
+
+This is a code-only change — no database migration needed. The `WorkflowCardCompact` component already accepts a `displayName` prop.
