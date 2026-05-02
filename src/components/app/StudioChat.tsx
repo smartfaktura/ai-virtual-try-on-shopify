@@ -82,10 +82,6 @@ export function StudioChat() {
     }
   };
 
-  const handleChip = (text: string) => {
-    if (isLoading) return;
-    sendMessage(text);
-  };
 
   const displayMessages = messages.length === 0
     ? [{ role: 'assistant' as const, content: WELCOME_MESSAGE }]
