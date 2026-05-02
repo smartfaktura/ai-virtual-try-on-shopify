@@ -537,6 +537,7 @@ export default function Workflows() {
                       workflow={workflow}
                       onSelect={() => handleCreateVisualSet(workflow)}
                       mobileCompact={isMobile}
+                      displayName={DISPLAY_NAMES[workflow.slug ?? '']}
                       beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
                     />
                   ))}
