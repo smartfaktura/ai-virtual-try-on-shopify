@@ -219,6 +219,7 @@ function buildSystemPrompt(pageUrl?: string): string {
 
   const pageContextMap: Record<string, string> = {
     '/app/': 'Dashboard — they see their overview, recent creations, and quick actions.',
+    '/app/generate/product-images': 'Product Visuals — they are actively creating product images. They have access to the Additional Note field and Outfit picker in the Setup step. Offer tips relevant to scene selection, styling, and the Additional Note field for specific instructions.',
     '/app/workflows': 'Visual Studio — they are browsing Visual Types.',
     '/app/freestyle': 'Create with Prompt — they are generating from a text prompt.',
     '/app/perspectives': 'Picture Perspectives — they are generating multi-angle product views.',
