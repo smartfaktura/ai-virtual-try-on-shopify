@@ -1,13 +1,19 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { MessageCircle, X, Send, RotateCcw, Sparkles, Mail } from 'lucide-react';
+import { MessageCircle, X, Send, RotateCcw, Sparkles, ArrowRight } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useStudioChat } from '@/hooks/useStudioChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChatMessageBubble } from './ChatMessageBubble';
 import { ContactFormDialog } from './ContactFormDialog';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const avatarSophia = getOptimizedUrl(getLandingAssetUrl('team/avatar-sophia.jpg'), { quality: 60 });
+const avatarKenji = getOptimizedUrl(getLandingAssetUrl('team/avatar-kenji.jpg'), { quality: 60 });
+const avatarZara = getOptimizedUrl(getLandingAssetUrl('team/avatar-zara.jpg'), { quality: 60 });
 
 const PAGE_CHIPS: Record<string, string[]> = {
   '/app/': ['What should I create first?', 'How do credits work?', 'Tour Visual Studio'],
@@ -44,7 +50,7 @@ function getChipsForPage(pathname: string): string[] {
 }
 
 const WELCOME_MESSAGE =
-  "Hey 👋 I'm the VOVV.AI assistant — I can help you find the right Visual Type, explain features, or troubleshoot. Ask me anything!\n\nNeed a human? Hit **Talk to Team** below anytime.";
+  "Hey 👋 I'm the VOVV.AI AI assistant — trained on everything about our platform. I can help you pick the right Visual Type, explain features, troubleshoot, and more.\n\nFor anything I can't resolve, hit **Talk to VOVV.AI Team** below to reach a real person.";
 
 export function StudioChat() {
   const [isOpen, setIsOpen] = useState(false);
@@ -137,17 +143,32 @@ export function StudioChat() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/50 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="relative">
-              <Avatar className="w-8 h-8">
-                <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
-                  <Sparkles className="w-4 h-4" />
-                </AvatarFallback>
+            <div className="flex -space-x-2">
+              <Avatar className="w-7 h-7 ring-2 ring-popover">
+                <AvatarImage src={avatarSophia} alt="VOVV.AI" />
+                <AvatarFallback className="text-[10px]">V</AvatarFallback>
               </Avatar>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-popover" />
+              <Avatar className="w-7 h-7 ring-2 ring-popover">
+                <AvatarImage src={avatarKenji} alt="VOVV.AI" />
+                <AvatarFallback className="text-[10px]">V</AvatarFallback>
+              </Avatar>
+              <Avatar className="w-7 h-7 ring-2 ring-popover">
+                <AvatarImage src={avatarZara} alt="VOVV.AI" />
+                <AvatarFallback className="text-[10px]">V</AvatarFallback>
+              </Avatar>
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight">VOVV.AI Assistant</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">AI-powered · instant answers</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-semibold leading-tight">VOVV.AI</p>
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary leading-none">AI</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                <p className="text-[10px] text-muted-foreground leading-tight">AI assistant · instant replies</p>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -243,7 +264,7 @@ export function StudioChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask the AI assistant..."
+                placeholder="Ask anything..."
                 rows={1}
                 className="flex-1 resize-none bg-muted rounded-xl px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring max-h-24 min-h-[40px]"
                 style={{ height: 'auto', overflow: 'auto' }}
@@ -257,13 +278,12 @@ export function StudioChat() {
               </button>
             </div>
           </div>
-          {/* Persistent Talk to Team strip */}
           <button
             onClick={() => setShowContactForm(true)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 border-t border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2 border-t border-border text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors group"
           >
-            <Mail className="w-3.5 h-3.5" />
-            Talk to Team
+            <span>Talk to VOVV.AI Team</span>
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </div>
