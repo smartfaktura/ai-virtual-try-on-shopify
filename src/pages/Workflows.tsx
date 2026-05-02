@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/lib/brandedToast';
 import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
+import { WorkflowHeroCard } from '@/components/app/WorkflowHeroCard';
 import { WorkflowCardCompact } from '@/components/app/WorkflowCardCompact';
 import { WorkflowActivityCard } from '@/components/app/WorkflowActivityCard';
 import { FreestylePromptCard } from '@/components/app/FreestylePromptCard';
