@@ -58,7 +58,7 @@ export default function Workflows() {
         .select('*')
         .order('sort_order');
       if (error) throw error;
-      return (data as unknown as Workflow[]).filter(w => w.slug !== 'product-listing-set');
+      return (data as unknown as Workflow[]).filter(w => w.slug !== 'product-listing-set' && w.slug !== 'virtual-try-on-set');
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
@@ -559,6 +559,7 @@ export default function Workflows() {
                 onSelect={() => handleCreateVisualSet(workflow)}
                 reversed={index % 2 !== 0}
                 beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
+                featured={workflow.slug === 'product-images'}
               />
             ))}
             <FreestylePromptCard onSelect={() => navigate('/app/freestyle')} />
@@ -573,6 +574,7 @@ export default function Workflows() {
                 onSelect={() => handleCreateVisualSet(workflow)}
                 mobileCompact={isMobile && effectiveLayout === '2col'}
                 beta={workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio'}
+                featured={workflow.slug === 'product-images'}
               />
             ))}
             <FreestylePromptCard
