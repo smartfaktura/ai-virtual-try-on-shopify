@@ -20,6 +20,7 @@ interface WorkflowRowProps {
   id?: string;
   comingSoon?: boolean;
   beta?: boolean;
+  featured?: boolean;
 }
 
 const featureMap: Record<string, string[]> = {
@@ -74,7 +75,7 @@ const featureMap: Record<string, string[]> = {
   ],
 };
 
-export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, beta }: WorkflowRowProps) {
+export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, beta, featured }: WorkflowRowProps) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -119,7 +120,10 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
     <Card
       id={id}
       ref={ref}
-      className="group relative overflow-hidden border hover:shadow-lg transition-shadow duration-300"
+      className={cn(
+        "group relative overflow-hidden border hover:shadow-lg transition-shadow duration-300",
+        featured && "ring-2 ring-primary/30 border-primary/40 shadow-md"
+      )}
     >
       {beta && (
         <Badge className="absolute top-4 right-4 z-10 bg-primary text-primary-foreground text-[10px]">BETA</Badge>
