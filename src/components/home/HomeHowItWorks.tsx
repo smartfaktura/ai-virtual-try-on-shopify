@@ -45,14 +45,14 @@ function StepUpload() {
   );
 }
 
-/* ── Step 2: Choose shots — dense 6×6 grid hinting at "1000+" library ── */
+/* ── Step 2: Choose shots — dense 6×6 grid hinting at "1600+" library ── */
 function StepChoose() {
   const SELECTED = new Set([8, 15]);
   return (
     <div className="w-full aspect-[4/5] rounded-3xl bg-white border border-border/60 shadow-sm shadow-foreground/[0.04] p-5 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground bg-muted px-2.5 py-1 rounded-full whitespace-nowrap">
-          1000+ shots
+          1600+ shots
         </span>
         <div className="flex-1 h-7 rounded-full bg-muted/60 border border-border/50 flex items-center px-3 gap-2 overflow-hidden">
           <Search size={12} className="text-muted-foreground/70 shrink-0" />

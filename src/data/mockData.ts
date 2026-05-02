@@ -1443,7 +1443,7 @@ export const pricingPlans: PricingPlan[] = [
     features: [
       '20 credits / month',
       '~4 images',
-      '1000+ scenes',
+      '1600+ scenes',
       'Freestyle creation',
       'Up to 5 products',
     ],

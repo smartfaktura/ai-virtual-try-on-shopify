@@ -37,7 +37,7 @@ const STEPS = [
   {
     n: '02',
     name: 'Shots',
-    what: 'Browse 1000+ scenes by category and aesthetic.',
+    what: 'Browse 1600+ scenes by category and aesthetic.',
     why: 'Start with 2–3 to compare looks cleanly.',
     visual: 'thumbs',
   },

@@ -384,7 +384,7 @@ export function HomeTransformStrip() {
         {/* CTA */}
         <div className="flex flex-col items-center gap-4 mt-10 lg:mt-14">
           <p className="text-sm text-foreground/70 tracking-wide">
-            35+ categories · 1000+ scenes · one upload
+            35+ categories · 1600+ scenes · one upload
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
