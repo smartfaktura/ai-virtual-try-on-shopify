@@ -66,7 +66,7 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md">
             {workflow.description}
           </p>
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="hidden sm:flex flex-wrap gap-2 pt-1">
             {['1000+ Scenes', 'Full Control', 'AI Models'].map((tag) => (
               <span
                 key={tag}
