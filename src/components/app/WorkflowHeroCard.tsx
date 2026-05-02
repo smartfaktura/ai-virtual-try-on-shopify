@@ -79,7 +79,7 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
           <div className="pt-2">
             <Button
               size="lg"
-              className="rounded-full font-semibold gap-2 shadow-lg shadow-primary/25 px-8"
+              className="rounded-full font-semibold gap-2 shadow-lg shadow-primary/25 px-8 w-full sm:w-auto"
               onClick={onSelect}
             >
               Start Creating
