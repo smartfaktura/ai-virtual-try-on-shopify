@@ -46,7 +46,7 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
       {/* Desktop: horizontal | Mobile: stacked */}
       <div className="flex flex-col sm:flex-row">
         {/* Thumbnail */}
-        <div className="relative w-full sm:w-[45%] aspect-[16/10] sm:aspect-auto overflow-hidden">
+        <div className="relative w-full sm:w-[45%] aspect-[3/4] sm:aspect-auto overflow-hidden">
           {scene ? (
             <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact={false} />
           ) : (
