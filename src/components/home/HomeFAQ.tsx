@@ -28,7 +28,7 @@ export const homeFaqs = [
   },
   {
     q: 'Which product categories does VOVV.AI support?',
-    a: 'Fashion, footwear, beauty and skincare, fragrance, jewelry, bags and accessories, home and furniture, food and beverage, supplements and wellness, electronics, and more — 35+ categories with 1000+ ready-made shots.',
+    a: 'Fashion, footwear, beauty and skincare, fragrance, jewelry, bags and accessories, home and furniture, food and beverage, supplements and wellness, electronics, and more — 35+ categories with 1600+ ready-made shots.',
   },
   {
     q: 'Can I use the visuals on Shopify, ads and marketplaces?',
@@ -36,7 +36,7 @@ export const homeFaqs = [
   },
   {
     q: 'Do I need design or photography skills?',
-    a: 'None. If you can upload an image, you can use VOVV. Our 1000+ ready-made shots do the art-directing for you.',
+    a: 'None. If you can upload an image, you can use VOVV. Our 1600+ ready-made shots do the art-directing for you.',
   },
   {
     q: 'Is there a free way to try it?',

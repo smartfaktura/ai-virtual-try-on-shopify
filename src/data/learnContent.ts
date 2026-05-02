@@ -75,7 +75,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
     ],
     quickStart: [
       { label: 'Product', detail: 'Add or pick a product. Wait for analysis.' },
-      { label: 'Shots', detail: 'Browse 1000+ scenes. Start with 2–3.' },
+      { label: 'Shots', detail: 'Browse 1600+ scenes. Start with 2–3.' },
       { label: 'Setup', detail: 'Pick models, colors, fine-tune the scene.' },
       { label: 'Generate', detail: 'Run a batch across products and scenes.' },
     ],
