@@ -46,7 +46,7 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
       {/* Desktop: horizontal | Mobile: stacked */}
       <div className="flex flex-col sm:flex-row">
         {/* Thumbnail */}
-        <div className="relative w-full sm:w-[45%] aspect-[16/10] sm:aspect-auto overflow-hidden">
+        <div className="relative w-full sm:w-[45%] aspect-[3/4] sm:aspect-auto overflow-hidden">
           {scene ? (
             <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} compact={false} />
           ) : (
@@ -66,7 +66,7 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md">
             {workflow.description}
           </p>
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="hidden sm:flex flex-wrap gap-2 pt-1">
             {['1000+ Scenes', 'Full Control', 'AI Models'].map((tag) => (
               <span
                 key={tag}
@@ -79,7 +79,7 @@ export function WorkflowHeroCard({ workflow, onSelect, displayName }: WorkflowHe
           <div className="pt-2">
             <Button
               size="lg"
-              className="rounded-full font-semibold gap-2 shadow-lg shadow-primary/25 px-8"
+              className="rounded-full font-semibold gap-2 shadow-lg shadow-primary/25 px-8 w-full sm:w-auto"
               onClick={onSelect}
             >
               Start Creating

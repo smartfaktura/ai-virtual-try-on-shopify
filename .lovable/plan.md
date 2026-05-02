@@ -1,31 +1,16 @@
 
-## Goal
+## Fix WorkflowHeroCard mobile layout
 
-Promote the **Product Visuals** workflow to a full-width hero card at the top of the Visual Studio page (both mobile and desktop), rename it to **"Create Product Visuals"**, and keep the remaining workflows in the existing grid below.
+Two issues visible in the screenshot:
 
-## Changes
+### 1. Thumbnail aspect ratio (`src/components/app/WorkflowHeroCard.tsx`)
+Change the mobile thumbnail from `aspect-[16/10]` (horizontal) to `aspect-[3/4]` (vertical) so the animated scenes display properly without awkward cropping. Keep `sm:aspect-auto` for desktop.
 
-### 1. Separate Product Visuals from the grid (`src/pages/Workflows.tsx`)
+### 2. Hide duplicate tag pills on mobile
+The animated thumbnail already shows "1000+ Scenes" and "Full Control" overlay badges. The tag pills below the description repeat this info. Add `hidden sm:flex` to the pills container so they only show on desktop where the thumbnail is side-by-side.
 
-- Split `workflows` into two: `featuredWorkflow` (slug `product-images`) and `otherWorkflows` (everything else).
-- Render `featuredWorkflow` above the grid as a dedicated full-width hero card using a new `WorkflowHeroCard` component.
-- Pass `displayName="Create Product Visuals"` to the hero card.
-- Remove the `featured` prop from the grid cards (no longer needed).
+### 3. Full-width CTA on mobile
+Make the "Start Creating" button `w-full sm:w-auto` so it spans the card width on mobile.
 
-### 2. Create `WorkflowHeroCard` component (`src/components/app/WorkflowHeroCard.tsx`)
-
-A full-row card with:
-- **Desktop**: horizontal layout -- animated thumbnail on the left (~45%), text + CTA on the right. Prominent primary CTA button "Start Creating".
-- **Mobile**: stacked layout -- thumbnail on top (aspect 16:9), title + short description + CTA below.
-- Subtle `ring-1 ring-primary/20` border with `bg-gradient-to-r from-primary/5 to-transparent` background.
-- "RECOMMENDED" badge in the top-right corner.
-- Reuses `WorkflowAnimatedThumbnail` for the animated preview.
-- Accepts `workflow`, `onSelect`, `displayName` props.
-
-### 3. Minor cleanup
-
-- Remove `featured` prop usage from `WorkflowCard` and `WorkflowCardCompact` render calls in `Workflows.tsx` (the hero card replaces this visual treatment). The prop itself stays in the components for potential reuse.
-
-### Files changed
-- `src/components/app/WorkflowHeroCard.tsx` (new)
-- `src/pages/Workflows.tsx` (split workflows, render hero card first)
+### File changed
+- `src/components/app/WorkflowHeroCard.tsx`
