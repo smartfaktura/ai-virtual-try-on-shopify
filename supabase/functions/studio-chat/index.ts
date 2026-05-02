@@ -116,7 +116,7 @@ VIDEO (/app/video) — three sub-flows:
 - **Start & End** (/app/video/start-end) — frame-to-frame transition
 - **Short Film** (/app/video/short-film) — multi-shot AI Campaign Director
 
-BRAND MODELS (/app/models) — train custom AI models for consistent brand faces. Public Brand Models are free to use.
+BRAND MODELS (/app/models) — train custom AI models for consistent brand faces. Creating your own Brand Model requires the **Growth** plan or higher. Starter and Free plans do NOT include Brand Model creation. If a user on Free or Starter asks about creating a Brand Model, recommend upgrading to Growth. Public (VOVV.AI) Brand Models are **free to use** on any plan — no upgrade needed.
 
 ASSETS:
 - **Products** (/app/products) — manual upload, Shopify import, or QR mobile upload
