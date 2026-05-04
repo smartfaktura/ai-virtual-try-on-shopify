@@ -2998,7 +2998,7 @@ export function ProductImagesStep3Refine({
                                         {source === 'scene' && !perSceneCfg && (
                                           <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                            Built-in look
+                                            Curated · tap to override
                                           </span>
                                         )}
                                         {(source === 'custom' || (source === 'scene' && perSceneCfg) || (source === 'ai' && perSceneCfg)) && (
