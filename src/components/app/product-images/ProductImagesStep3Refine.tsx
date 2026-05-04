@@ -3032,20 +3032,28 @@ export function ProductImagesStep3Refine({
                                     </div>
 
                                      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                                       {perSceneCfg && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleResetSceneOutfit(scene.id);
-                                              toast.success('Outfit cleared');
-                                            }}
-                                            className="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                                            title="Clear outfit"
-                                          >
-                                            <X className="w-3.5 h-3.5" />
-                                          </button>
-                                        )}
+                                       {(perSceneCfg || (isManualOutfitMode && manualAcceptedHints.has(scene.id))) && (
+                                           <button
+                                             type="button"
+                                             onClick={(e) => {
+                                               e.stopPropagation();
+                                               if (perSceneCfg) {
+                                                 handleResetSceneOutfit(scene.id);
+                                               }
+                                               if (manualAcceptedHints.has(scene.id)) {
+                                                 setManualAcceptedHints(prev => {
+                                                   const next = new Set(prev);
+                                                   next.delete(scene.id);
+                                                   return next;
+                                                 });
+                                               }
+                                             }}
+                                             className="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                                             title="Clear outfit"
+                                           >
+                                             <X className="w-3.5 h-3.5" />
+                                           </button>
+                                         )}
                                        {!perSceneCfg && source !== 'scene' && (
                                           <button
                                             type="button"
