@@ -2154,12 +2154,16 @@ export function ProductImagesStep3Refine({
     return parts.slice(0, 3).join(', ');
   }, []);
 
-  const handleApplyToAll = useCallback((cfg: OutfitConfig) => {
+  const handleApplyToAll = useCallback((cfg: OutfitConfig, presetName?: string) => {
     const map: Record<string, OutfitConfig> = {};
     for (const scene of modelShots) {
       map[scene.id] = cfg;
     }
-    update({ outfitConfigByScene: map });
+    // CRITICAL: merge outfitConfigByScene + appliedPresetName in ONE update call
+    // to avoid the second update() overwriting the first via stale closure.
+    const patch: Partial<DetailSettings> & { appliedPresetName?: string } = { outfitConfigByScene: map };
+    if (presetName) (patch as any).appliedPresetName = presetName;
+    update(patch);
     setApplyToAllOpen(false);
     toast.success(`Applied outfit to ${modelShots.length} shots`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
