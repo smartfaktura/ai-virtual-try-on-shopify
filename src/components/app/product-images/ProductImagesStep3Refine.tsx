@@ -41,7 +41,7 @@ import {
   JEWELRY_NECKLACES, JEWELRY_EARRINGS, JEWELRY_BRACELETS, JEWELRY_RINGS, JEWELRY_METALS,
   pickDefaultPreset, pickDefaultPresetPerProduct,
 } from '@/lib/outfitVocabulary';
-import { AiStylistCard } from './AiStylistCard';
+// AiStylistCard removed — replaced by per-scene outfit direction
 import { toast } from '@/lib/brandedToast';
 
 /* ══════════════════════════════════════════════
