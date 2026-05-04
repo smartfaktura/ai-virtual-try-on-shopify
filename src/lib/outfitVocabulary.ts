@@ -34,10 +34,13 @@ export const OUTFIT_COLORS: Array<{ hex: string; label: string }> = [
 export const TOP_TYPES: GarmentTypeOption[] = [
   { id: 't-shirt', label: 'T-shirt', subtypes: ['crew', 'v-neck', 'ribbed', 'baby-tee', 'oversized', 'henley'], materials: ['cotton', 'linen', 'jersey'] },
   { id: 'crop-top', label: 'Crop top', subtypes: ['ribbed', 'fitted', 'square-neck', 'halter', 'tube'], materials: ['cotton', 'jersey', 'silk'] },
+  { id: 'sports-bra', label: 'Sports bra', subtypes: ['racerback', 'longline', 'strappy', 'high-impact'], materials: ['lycra', 'mesh', 'nylon'] },
   { id: 'shirt', label: 'Shirt', subtypes: ['poplin', 'oxford', 'linen', 'silk', 'oversized', 'cropped', 'sheer', 'striped'], materials: ['cotton', 'linen', 'silk'] },
   { id: 'blouse', label: 'Blouse', subtypes: ['silk', 'pussybow', 'puff-sleeve', 'sheer'], materials: ['silk', 'satin', 'chiffon'] },
   { id: 'knit', label: 'Knit', subtypes: ['crewneck', 'turtleneck', 'cardigan', 'vest', 'polo-knit'], materials: ['wool', 'cashmere', 'cotton', 'mohair'] },
+  { id: 'sweatshirt', label: 'Sweatshirt', subtypes: ['crewneck', 'oversized', 'cropped', 'quarter-zip'], materials: ['cotton', 'fleece'] },
   { id: 'hoodie', label: 'Hoodie', subtypes: ['pullover', 'zip-up', 'oversized', 'cropped'], materials: ['cotton', 'fleece'] },
+  { id: 'polo', label: 'Polo', subtypes: ['classic', 'slim', 'oversized', 'knit'], materials: ['cotton', 'piqué'] },
   { id: 'tank', label: 'Tank', subtypes: ['ribbed', 'fitted', 'racerback'], materials: ['cotton', 'jersey'] },
   { id: 'bodysuit', label: 'Bodysuit', subtypes: ['scoop', 'square', 'turtleneck', 'long-sleeve'], materials: ['jersey', 'mesh'] },
 ];
@@ -47,8 +50,10 @@ export const BOTTOM_TYPES: GarmentTypeOption[] = [
   { id: 'trousers', label: 'Trousers', subtypes: ['wide-leg', 'tapered', 'straight', 'pleated', 'tailored', 'jogger', 'parachute', 'cargo'], materials: ['wool', 'cotton', 'linen', 'leather'] },
   { id: 'jeans', label: 'Jeans', subtypes: ['raw indigo', 'light wash', 'mid wash', 'dark wash', 'distressed', 'baggy', 'slim', 'bootcut', 'mom-fit', 'black', 'white'], materials: ['denim'] },
   { id: 'skirt', label: 'Skirt', subtypes: ['mini', 'midi', 'maxi', 'pencil', 'pleated', 'a-line', 'wrap', 'cargo'], materials: ['cotton', 'wool', 'denim', 'leather', 'silk'] },
-  { id: 'shorts', label: 'Shorts', subtypes: ['tailored', 'denim', 'bermuda', 'micro', 'cargo'], materials: ['cotton', 'denim', 'linen'] },
-  { id: 'leggings', label: 'Leggings', subtypes: ['high-waist', 'flared', 'cropped'], materials: ['lycra', 'cotton'] },
+  { id: 'shorts', label: 'Shorts', subtypes: ['tailored', 'denim', 'bermuda', 'micro', 'cargo', 'running', 'gym', 'biker'], materials: ['cotton', 'denim', 'linen', 'nylon'] },
+  { id: 'sweatpants', label: 'Sweatpants', subtypes: ['tapered', 'straight', 'wide-leg', 'cropped'], materials: ['cotton', 'fleece'] },
+  { id: 'biker-shorts', label: 'Biker shorts', subtypes: ['mid-thigh', 'knee-length', 'seamless'], materials: ['lycra', 'nylon'] },
+  { id: 'leggings', label: 'Leggings', subtypes: ['high-waist', 'flared', 'cropped', 'seamless', '7/8', 'stirrup'], materials: ['lycra', 'cotton', 'nylon'] },
 ];
 
 // ── Outerwear ──
@@ -57,6 +62,8 @@ export const OUTERWEAR_TYPES: GarmentTypeOption[] = [
   { id: 'jacket', label: 'Jacket', subtypes: ['denim', 'leather biker', 'bomber', 'varsity', 'suede', 'harrington', 'puffer'], materials: ['denim', 'leather', 'nylon', 'wool'] },
   { id: 'blazer', label: 'Blazer', subtypes: ['oversized', 'tailored', 'double-breasted', 'cropped'], materials: ['wool', 'linen', 'cotton'] },
   { id: 'coat', label: 'Coat', subtypes: ['trench', 'wool overcoat', 'puffer', 'parka', 'pea coat', 'duster'], materials: ['wool', 'cashmere', 'cotton', 'nylon'] },
+  { id: 'windbreaker', label: 'Windbreaker', subtypes: ['pullover', 'zip-up', 'cropped'], materials: ['nylon', 'polyester'] },
+  { id: 'track-jacket', label: 'Track jacket', subtypes: ['zip-up', 'retro', 'cropped'], materials: ['nylon', 'polyester', 'jersey'] },
   { id: 'cardigan', label: 'Cardigan', subtypes: ['cropped', 'long', 'chunky knit', 'fine knit'], materials: ['wool', 'cashmere', 'cotton'] },
 ];
 
@@ -65,16 +72,18 @@ export const DRESS_TYPES: GarmentTypeOption[] = [
   { id: 'none', label: 'None' },
   { id: 'dress', label: 'Dress', subtypes: ['mini', 'midi', 'maxi', 'slip', 'wrap', 'shirt-dress', 'knit', 'evening', 'tea'], materials: ['silk', 'cotton', 'linen', 'satin', 'knit'] },
   { id: 'jumpsuit', label: 'Jumpsuit', subtypes: ['wide-leg', 'tapered', 'cropped'], materials: ['cotton', 'linen', 'satin'] },
+  { id: 'romper', label: 'Romper', subtypes: ['fitted', 'relaxed', 'athletic'], materials: ['cotton', 'jersey', 'linen'] },
 ];
 
 // ── Shoes ──
 export const SHOE_TYPES: GarmentTypeOption[] = [
   { id: 'none', label: 'Barefoot' },
-  { id: 'sneaker', label: 'Sneaker', subtypes: ['low-top', 'high-top', 'chunky', 'minimal', 'retro runner'], materials: ['leather', 'canvas', 'mesh'] },
+  { id: 'sneaker', label: 'Sneaker', subtypes: ['low-top', 'high-top', 'chunky', 'minimal', 'retro runner', 'running', 'training'], materials: ['leather', 'canvas', 'mesh'] },
   { id: 'loafer', label: 'Loafer', subtypes: ['penny', 'horsebit', 'tassel', 'chunky'], materials: ['leather', 'suede'] },
   { id: 'boot', label: 'Boot', subtypes: ['chelsea', 'combat', 'cowboy', 'knee-high', 'ankle'], materials: ['leather', 'suede'] },
   { id: 'heel', label: 'Heel', subtypes: ['kitten', 'stiletto', 'block', 'platform', 'mule'], materials: ['leather', 'satin', 'patent'] },
   { id: 'sandal', label: 'Sandal', subtypes: ['flat', 'thong', 'slide', 'gladiator', 'heeled'], materials: ['leather', 'suede'] },
+  { id: 'slide', label: 'Slide', subtypes: ['pool', 'sport', 'platform'], materials: ['rubber', 'foam', 'leather'] },
   { id: 'mule', label: 'Mule', subtypes: ['flat', 'heeled', 'pointed'], materials: ['leather', 'suede'] },
 ];
 
