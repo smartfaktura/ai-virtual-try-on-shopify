@@ -80,6 +80,7 @@ export function ProductSpecsCard({
   const [openProductId, setOpenProductId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastSavedSpecs, setLastSavedSpecs] = useState<Record<string, string>>({});
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
 
   const productsNeedingSpecs = useMemo(() => {
     return allProducts.filter(p => {
