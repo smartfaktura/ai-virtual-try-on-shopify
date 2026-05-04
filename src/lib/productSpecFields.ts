@@ -73,16 +73,16 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
   ],
   'shoes': [
     { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '40' },
-    { key: 'heel', label: 'Heel Height', type: 'input', placeholder: '2', unit: 'cm' },
+    { key: 'heel', label: 'Heel Height', type: 'input', placeholder: '2', placeholderImperial: '0.8', unit: 'cm' },
   ],
   'boots': [
     { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '41' },
     { key: 'shaft', label: 'Shaft', type: 'select', options: ['Ankle', 'Mid-calf', 'Knee-high', 'Over-the-knee'] },
-    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '5', unit: 'cm' },
+    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '5', placeholderImperial: '2', unit: 'cm' },
   ],
   'high-heels': [
     { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '38' },
-    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '10', unit: 'cm' },
+    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '10', placeholderImperial: '4', unit: 'cm' },
   ],
 
   // ── Bags ──
