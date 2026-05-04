@@ -1,30 +1,17 @@
 
-# Expand Outfit Vocabulary
+## Changes to `ProductImagesStep3Refine.tsx`
 
-Add missing garment types that are essential for activewear, swimwear, loungewear, and modern fashion styling.
+### 1. Swap card order: Model first, Background second
 
-## Changes (single file: `src/lib/outfitVocabulary.ts`)
+Move the "Choose model" card block (lines ~2572-2700+) **above** the "Background style" card block (lines ~2518-2568). This makes the user pick their model first, then select background color — matching the logical flow.
 
-### TOP_TYPES — add 3 new entries
-- **Sports bra**: subtypes [racerback, longline, strappy, high-impact], materials [lycra, mesh, nylon]
-- **Sweatshirt**: subtypes [crewneck, oversized, cropped, quarter-zip], materials [cotton, fleece]
-- **Polo**: subtypes [classic, slim, oversized, knit], materials [cotton, piqué]
+### 2. Add scene thumbnail strip to Background style card
 
-### BOTTOM_TYPES — add 2 new entries + expand existing
-- **Sweatpants**: subtypes [tapered, straight, wide-leg, cropped], materials [cotton, fleece]
-- **Biker shorts**: subtypes [mid-thigh, knee-length, seamless], materials [lycra, nylon]
-- Expand **Leggings** subtypes: add 'seamless', '7/8', 'stirrup'
-- Expand **Shorts** subtypes: add 'running', 'gym', 'biker'
+Add a scene thumbnails strip to the Background style card, matching the same pattern used by the Aesthetic color card (lines ~3031-3057). This will show small previews of the scenes that require a background color, so the user clearly understands which shots are affected.
 
-### OUTERWEAR_TYPES — add 2 new entries
-- **Windbreaker**: subtypes [pullover, zip-up, cropped], materials [nylon, polyester]
-- **Track jacket**: subtypes [zip-up, retro, cropped], materials [nylon, polyester, jersey]
+The strip will display each `bgScene` with its preview image and title, styled identically to the aesthetic color card's thumbnail row (52px wide cards with scene name below).
 
-### DRESS_TYPES — add 1 new entry
-- **Romper**: subtypes [fitted, relaxed, athletic], materials [cotton, jersey, linen]
+### Result
 
-### SHOE_TYPES — add 1 new entry + expand
-- **Slide**: subtypes [pool, sport, platform], materials [rubber, foam, leather]
-- Expand **Sneaker** subtypes: add 'running', 'training'
-
-These additions cover the most common activewear, athleisure, and loungewear garments that are currently missing from the selection UI.
+- Users first pick their model, then scroll to background color — a more natural sequence
+- Background style card will show scene thumbnails so users immediately see which shots need a background, removing ambiguity
