@@ -135,7 +135,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                     alt={`${productName} - ${img.sceneName} - ${i + 1}`}
                     loading={i < 4 ? 'eager' : 'lazy'}
                     fetchPriority={i < 4 ? 'high' : 'auto'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
                 <div className="px-2 py-1.5 bg-card border-t border-border flex items-center gap-1.5">
