@@ -3049,11 +3049,16 @@ export function ProductImagesStep3Refine({
                                        {!perSceneCfg && source !== 'scene' && (
                                           <button
                                             type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              const pick = perProductPicks[product.id];
-                                              if (pick) updateSceneOutfit(scene.id, pick.config);
-                                            }}
+                                             onClick={(e) => {
+                                               e.stopPropagation();
+                                               if (scene.outfitHint) {
+                                                 // Accept the scene's built-in curated direction
+                                                 setManualAcceptedHints(prev => new Set(prev).add(scene.id));
+                                               } else {
+                                                 const pick = perProductPicks[product.id];
+                                                 if (pick) updateSceneOutfit(scene.id, pick.config);
+                                               }
+                                             }}
                                             className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/15 transition-colors"
                                           >
                                             <Sparkles className="w-3.5 h-3.5" />
