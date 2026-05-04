@@ -1345,6 +1345,7 @@ export function buildDynamicPrompt(
     if (bgHexForReinforcement) parts.push(`CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation.`);
     parts.push(scene.description);
     parts.push(`Product: ${product.title}.`);
+    if (ctx.productDimensions) parts.push(`Product specifications: ${ctx.productDimensions}.`);
     if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish, product.description)}.`);
     parts.push(`Background: ${bgResolved}.`);
     parts.push(resolveToken('lightingDirective', ctx));
