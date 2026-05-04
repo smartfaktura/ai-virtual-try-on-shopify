@@ -193,7 +193,6 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
       bottom: { garment: 'trousers', subtype: 'wide-leg', color: 'black', material: 'wool' },
       shoes: { garment: 'heel', subtype: 'pointed', color: 'black', material: 'leather' },
       jewelry: { earrings: 'Gold drop earrings', metal: 'Gold' },
-      bag: { garment: 'clutch', subtype: 'structured', color: 'black', material: 'leather' },
     },
   },
   {
