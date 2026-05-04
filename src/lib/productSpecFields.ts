@@ -69,19 +69,21 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Footwear ──
   'sneakers': [
-    { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '42' },
+    { key: 'height', label: 'Shoe Height', type: 'input', placeholder: '12', placeholderImperial: '5', unit: 'cm' },
+    { key: 'widthProfile', label: 'Width', type: 'select', options: ['Narrow', 'Regular', 'Wide'] },
   ],
   'shoes': [
-    { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '40' },
+    { key: 'height', label: 'Shoe Height', type: 'input', placeholder: '8', placeholderImperial: '3', unit: 'cm' },
     { key: 'heel', label: 'Heel Height', type: 'input', placeholder: '2', placeholderImperial: '0.8', unit: 'cm' },
+    { key: 'widthProfile', label: 'Width', type: 'select', options: ['Narrow', 'Regular', 'Wide'] },
   ],
   'boots': [
-    { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '41' },
+    { key: 'height', label: 'Boot Height', type: 'input', placeholder: '25', placeholderImperial: '10', unit: 'cm' },
     { key: 'shaft', label: 'Shaft', type: 'select', options: ['Ankle', 'Mid-calf', 'Knee-high', 'Over-the-knee'] },
     { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '5', placeholderImperial: '2', unit: 'cm' },
   ],
   'high-heels': [
-    { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '38' },
+    { key: 'height', label: 'Shoe Height', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
     { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '10', placeholderImperial: '4', unit: 'cm' },
   ],
 
@@ -126,15 +128,17 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Jewelry ──
   'jewellery-necklaces': [
-    { key: 'chain', label: 'Chain Length', type: 'select', options: ['35cm (choker)', '40cm', '45cm', '50cm', '60cm', '70cm (opera)'], optionsImperial: ['14" (choker)', '16"', '18"', '20"', '24"', '28" (opera)'] },
+    { key: 'chain', label: 'Chain Length', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
     { key: 'pendantSize', label: 'Pendant Size', type: 'input', placeholder: '2×1.5', placeholderImperial: '0.8×0.6', unit: 'cm' },
+    { key: 'pendantThickness', label: 'Pendant Thickness', type: 'input', placeholder: '5', unit: 'mm' },
   ],
   'jewellery-rings': [
     { key: 'ringSize', label: 'Ring Size', type: 'input', placeholder: '7' },
     { key: 'bandWidth', label: 'Band Width', type: 'input', placeholder: '3', unit: 'mm' },
+    { key: 'stoneSize', label: 'Stone Size', type: 'input', placeholder: '6', unit: 'mm' },
   ],
   'jewellery-bracelets': [
-    { key: 'length', label: 'Length', type: 'select', options: ['16cm', '17cm', '18cm', '19cm', '20cm', '21cm'], optionsImperial: ['6.3"', '6.7"', '7"', '7.5"', '7.9"', '8.3"'] },
+    { key: 'length', label: 'Length', type: 'input', placeholder: '18', placeholderImperial: '7', unit: 'cm' },
     { key: 'width', label: 'Width', type: 'input', placeholder: '8', unit: 'mm' },
   ],
   'jewellery-earrings': [
@@ -176,9 +180,11 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Furniture ──
   'furniture': [
+    { key: 'furnitureType', label: 'Type', type: 'select', options: ['Chair', 'Armchair', 'Sofa', 'Coffee Table', 'Dining Table', 'Desk', 'Shelf', 'Cabinet', 'Bed', 'Bench', 'Stool', 'Other'] },
     { key: 'width', label: 'Width', type: 'input', placeholder: '180', placeholderImperial: '71', unit: 'cm' },
     { key: 'depth', label: 'Depth', type: 'input', placeholder: '80', placeholderImperial: '31', unit: 'cm' },
     { key: 'height', label: 'Height', type: 'input', placeholder: '75', placeholderImperial: '30', unit: 'cm' },
+    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
   ],
 
   // ── Tech ──
