@@ -1,91 +1,53 @@
 
-## Product Specifications Input System
+## Debug & Enhance Product Specifications
 
-### Problem
-The `dimensions` field exists on `user_products` table and is passed to `buildDynamicPrompt`, but is **never injected into the actual prompt**. AI improvises product dimensions, causing inaccurate results especially for furniture, bags, jewelry, and other size-critical products.
+### Bugs Found
 
-### Solution
-Add a "Product Details" card at the top of Step 3 (before Model Selection) that shows category-aware specification fields per selected product. Only products **missing** dimension data are shown. Inject these values into the prompt builder.
+1. **Double "Product specifications:" prefix** — `buildSpecsPromptLine` returns `"Product specifications: Length: 180cm..."` but the prompt builder also wraps with `"Product specifications: ..."`. Result: `"Product specifications: Product specifications: Length..."`.
+2. **Select empty string value** — Radix Select with `value=""` can cause rendering issues. Should use `undefined` for unset state.
+3. **No input sanitization** — User can paste control characters, extremely long strings, or script tags into text fields. These flow directly into prompts and the DB.
+4. **No unit system toggle** — Units are hardcoded to metric (cm/mm). International users need inches/oz/fl oz.
 
----
+### Fixes
 
-### 1. Category-Aware Input Fields
+#### 1. `src/lib/productSpecFields.ts`
 
-Each product category gets specific dimension/spec fields. A free-text "Additional details" input is always shown.
+- Add `UnitSystem = 'metric' | 'imperial'` type
+- Add `imperialUnit` field to `SpecField` interface (e.g. `'in'` for `'cm'`, `'oz'` for `'g'`, `'fl oz'` for `'ml'`)
+- Add `getDisplayUnit(field, system)` helper
+- Add `sanitize(val, maxLen)` helper — strips control characters, trims, limits length
+- Update `buildDimensionsString` to accept `unitSystem` param, use `getDisplayUnit`
+- **Fix**: `buildSpecsPromptLine` returns raw content WITHOUT "Product specifications:" prefix (caller adds it)
+- Apply `sanitize()` to all spec values and notes before building strings
 
-| Category Group | Fields |
-|---|---|
-| **Furniture** (furniture) | Length, Width, Height (cm/in toggle), Seating capacity, Additional details |
-| **Garments** (garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear) | Size label (XS-3XL), Fit description, Length type (cropped/regular/long), Additional details |
-| **Shoes/Sneakers/Boots/Heels** (shoes, sneakers, boots, high-heels) | Size (EU/US), Heel height, Shaft height (boots), Additional details |
-| **Bags/Backpacks** (bags-accessories, backpacks, wallets-cardholders) | Width, Height, Depth, Strap length, Additional details |
-| **Hats** (hats-small) | Brim width, Crown height, Additional details |
-| **Watches** (watches) | Case diameter (mm), Band width (mm), Case thickness, Additional details |
-| **Jewelry** (jewellery-*) | Ring size / Chain length / Stone dimensions depending on sub-type, Additional details |
-| **Eyewear** (eyewear) | Lens width, Bridge width, Temple length, Additional details |
-| **Fragrance** (fragrance) | Bottle volume (ml), Bottle height, Additional details |
-| **Beauty/Skincare/Makeup** (beauty-skincare, makeup-lipsticks) | Container volume, Container type, Additional details |
-| **Food/Beverages** (food, beverages) | Package weight/volume, Container dimensions, Additional details |
-| **Home Decor** (home-decor) | Width, Height, Depth, Additional details |
-| **Tech Devices** (tech-devices) | Screen size, Width, Height, Depth, Weight, Additional details |
-| **Supplements** (supplements-wellness) | Container volume, Pill/capsule count, Additional details |
-| **Default/Unknown** | Width, Height, Depth, Additional details |
+#### 2. `src/components/app/product-images/ProductSpecsCard.tsx`
 
-### 2. UI: Product Specs Card in Step 3
+- Add `unitSystem` state (`'metric' | 'imperial'`), default to `'metric'`
+- Add a compact toggle row at the top of the card: `cm / in` pill toggle
+- Pass `unitSystem` to `SpecInput` to display the correct unit suffix
+- Fix Select: use `value={value || undefined}` instead of `value={value || ''}`
+- Limit textarea to 500 chars with `maxLength={500}`
+- Add `inputMode="decimal"` to numeric text inputs for better mobile keyboard
 
-- New card placed **before** the Model Selection card (top of "Complete setup")
-- Header: "Product Specifications" with an Info icon and subtitle: "Add dimensions to improve accuracy"
-- Shows only products where `product.dimensions` is empty/null
-- If ALL selected products have dimensions filled, the card is hidden
-- Each product shows its thumbnail + title + category-specific input fields
-- Compact inline layout: dimension fields as small labeled inputs in a row
-- "Additional details" as a textarea
-- Values are stored in a new `DetailSettings` field: `productSpecs?: Record<productId, { dimensions?: string; specs?: Record<string, string>; notes?: string }>`
-- Also persists to `user_products.dimensions` on change (so it's remembered next time)
+#### 3. `src/lib/productImagePromptBuilder.ts`
 
-### 3. Prompt Injection
+- No change needed — both injection points already use `"Product specifications: ${ctx.productDimensions}."` which is correct once `buildSpecsPromptLine` stops adding the prefix
 
-In `productImagePromptBuilder.ts`:
+#### 4. `src/pages/ProductImages.tsx`
 
-**a) Add `productDimensions` to `TokenContext`:**
-```
-productDimensions?: string | null;
-```
+- Pass unit system from details to `buildSpecsPromptLine` calls
+- Add `unitSystem` to `DetailSettings` type so it persists with the form state
+- DB persistence line: wrap dimensions string with sanitize before writing
 
-**b) In `buildDynamicPrompt`, pass dimensions into context:**
-```
-productDimensions: product.dimensions,
-```
+#### 5. `src/components/app/product-images/types.ts`
 
-**c) Add dimension injection in both fallback and template paths:**
-- After product title line, inject: `Product dimensions: {dimensions}.` when available
-- For category-specific formatting:
-  - Furniture: "Product dimensions: 180cm L x 80cm W x 75cm H, seats 4."
-  - Garments: "Product size: M, relaxed fit, regular length."
-  - Shoes: "Shoe size EU 42, heel height 3cm."
-  - Bags: "Bag dimensions: 30cm W x 25cm H x 12cm D."
-  - etc.
+- Add `specUnitSystem?: 'metric' | 'imperial'` to `DetailSettings`
 
-**d) Also inject `notes` (Additional details) as a product clarification line in the prompt.**
-
-### 4. Data Flow
-
-```
-Step 3 UI input
-  -> updates DetailSettings.productSpecs[productId]
-  -> also patches user_products.dimensions in DB
-  -> at generation time, ProductImages.tsx reads productSpecs
-     and passes combined string to buildDynamicPrompt
-  -> prompt includes "Product specifications: ..." line
-```
-
-### 5. Files to Create/Edit
+### Files Changed
 
 | File | Change |
 |---|---|
-| `src/lib/productSpecFields.ts` | **NEW** — Category-to-fields mapping, field definitions |
-| `src/components/app/product-images/ProductSpecsCard.tsx` | **NEW** — The UI card component |
-| `src/components/app/product-images/types.ts` | Add `productSpecs` to `DetailSettings` |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Insert `ProductSpecsCard` before Model Selection |
-| `src/lib/productImagePromptBuilder.ts` | Add `productDimensions` to TokenContext, inject into prompt |
-| `src/pages/ProductImages.tsx` | Pass specs to prompt builder, persist to DB |
+| `src/lib/productSpecFields.ts` | Fix prefix bug, add sanitization, add imperial units |
+| `src/components/app/product-images/ProductSpecsCard.tsx` | Add unit toggle, fix Select value, add input limits |
+| `src/components/app/product-images/types.ts` | Add `specUnitSystem` to DetailSettings |
+| `src/pages/ProductImages.tsx` | Pass unit system through generation flow |
