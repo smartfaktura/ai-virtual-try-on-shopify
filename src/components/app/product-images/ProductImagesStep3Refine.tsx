@@ -2942,6 +2942,36 @@ export function ProductImagesStep3Refine({
                     Set a signature color that carries across doors, chairs, surfaces & props in {aestheticColorScenes.length} shot{aestheticColorScenes.length !== 1 ? 's' : ''} — creating a cohesive visual story.
                   </p>
                 </div>
+
+                {/* Scene thumbnails strip */}
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {aestheticColorScenes.map(scene => (
+                    <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
+                      <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
+                        {scene.previewUrl ? (
+                          <ShimmerImage
+                            src={getOptimizedUrl(scene.previewUrl, { quality: 55 })}
+                            alt={scene.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Camera className="w-3.5 h-3.5 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        {details.aestheticColorHex && (
+                          <div
+                            className="absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-white shadow-sm"
+                            style={{ backgroundColor: details.aestheticColorHex }}
+                          />
+                        )}
+                      </div>
+                      <p className="text-[8px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
+                    </div>
+                  ))}
+                </div>
+
                 {!details.aestheticColorHex && (
                   <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
                     <Sparkles className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
