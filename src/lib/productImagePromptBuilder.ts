@@ -729,6 +729,8 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 
   // Compute which slots to skip based on the product's garment type
   const skipSlots = getConflictingSlots(garmentType);
+  // halfPortrait scenes: suppress shoes so AI doesn't force full-body framing
+  if (halfPortrait) skipSlots.add('shoes');
 
   // Prefer structured config if available — but gap-fill missing essential slots
   if (details?.outfitConfig) {
