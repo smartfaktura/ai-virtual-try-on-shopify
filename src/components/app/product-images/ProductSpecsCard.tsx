@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save, Pencil } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory, ALL_CATEGORY_OPTIONS } from '@/lib/productSpecFields';
-import type { SpecField } from '@/lib/productSpecFields';
+import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory, ALL_CATEGORY_OPTIONS, getDisplayUnit } from '@/lib/productSpecFields';
+import type { SpecField, UnitSystem } from '@/lib/productSpecFields';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import type { UserProduct, ProductAnalysis } from './types';
@@ -30,12 +31,13 @@ interface ProductSpecData {
 }
 
 /** Serialize structured fields + notes into a flat string */
-function serializeSpec(data: ProductSpecData, specFields: SpecField[]): string {
+function serializeSpec(data: ProductSpecData, specFields: SpecField[], unitSys: UnitSystem = 'metric'): string {
   const parts: string[] = [];
   for (const f of specFields) {
     const val = data.fields[f.key]?.trim();
     if (val) {
-      parts.push(`${f.label}: ${val}${f.unit && !val.includes(f.unit) ? f.unit : ''}`);
+      const displayUnit = getDisplayUnit(f.unit, unitSys) || '';
+      parts.push(`${f.label}: ${val}${displayUnit && !val.includes(displayUnit) ? displayUnit : ''}`);
     }
   }
   const notes = data.notes.trim();
@@ -79,6 +81,7 @@ export function ProductSpecsCard({
   const [openProductId, setOpenProductId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastSavedSpecs, setLastSavedSpecs] = useState<Record<string, string>>({});
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
 
   const productsNeedingSpecs = useMemo(() => {
     return allProducts.filter(p => {
@@ -114,9 +117,10 @@ export function ProductSpecsCard({
   }, [analyses]);
 
   const updateStructured = useCallback((productId: string, specFields: SpecField[], data: ProductSpecData) => {
-    const serialized = serializeSpec(data, specFields);
+    const serialized = serializeSpec(data, specFields, unitSystem);
     onProductSpecsChange({ ...productSpecs, [productId]: serialized });
-  }, [productSpecs, onProductSpecsChange]);
+  }, [productSpecs, onProductSpecsChange, unitSystem]);
+  
 
   const getStructured = useCallback((productId: string, specFields: SpecField[]): ProductSpecData => {
     const raw = productSpecs[productId] || '';
@@ -169,6 +173,32 @@ export function ProductSpecsCard({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Unit toggle */}
+            <div
+              className="flex items-center rounded-md border border-border/50 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setUnitSystem('metric')}
+                className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
+                  unitSystem === 'metric'
+                    ? 'bg-amber-500/15 text-amber-600'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                cm
+              </button>
+              <button
+                onClick={() => setUnitSystem('imperial')}
+                className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
+                  unitSystem === 'imperial'
+                    ? 'bg-amber-500/15 text-amber-600'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                in
+              </button>
+            </div>
             <span className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider">Optional</span>
             {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
           </div>
@@ -255,7 +285,7 @@ export function ProductSpecsCard({
                                     <SelectValue placeholder="Select" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {field.options.map(opt => (
+                                    {(unitSystem === 'imperial' && field.optionsImperial ? field.optionsImperial : field.options).map(opt => (
                                       <SelectItem key={opt} value={opt} className="text-xs">
                                         {opt}
                                       </SelectItem>
@@ -270,13 +300,13 @@ export function ProductSpecsCard({
                                       const newFields = { ...data.fields, [field.key]: e.target.value };
                                       updateStructured(product.id, specFields, { ...data, fields: newFields });
                                     }}
-                                    placeholder={field.placeholder}
+                                    placeholder={unitSystem === 'imperial' && field.placeholderImperial ? field.placeholderImperial : field.placeholder}
                                     className="h-8 text-xs"
                                     inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
                                     maxLength={50}
                                   />
                                   {field.unit && (
-                                    <span className="text-[10px] text-muted-foreground flex-shrink-0 min-w-[20px]">{field.unit}</span>
+                                    <span className="text-[10px] text-muted-foreground flex-shrink-0 min-w-[20px]">{getDisplayUnit(field.unit, unitSystem)}</span>
                                   )}
                                 </div>
                               )}

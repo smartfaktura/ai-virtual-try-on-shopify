@@ -1,37 +1,57 @@
+
 ## Problem
 
-The Product Details fields are bloated with material, finish, hardware, and style dropdowns that don't serve the core purpose: telling the AI the **physical scale** of the product so it renders at the correct size relative to a person and environment.
-
-Material, finish, and style are already visible from the product image — the AI detects those automatically.
+All dimension fields are hardcoded to `cm` (metric). US market users expect inches. The user wants a toggle to switch between cm and inches.
 
 ## Solution
 
-Strip every category down to **only dimension/size fields** — the inputs that communicate physical scale. Remove all material, finish, hardware, style, metal, stone, frame, body, container, packaging dropdowns.
+Add a small `cm | in` toggle at the top of the Product Details card. When toggled, all dimension fields update their displayed unit labels and placeholders to the selected system. The serialized value always includes the unit so the AI knows the scale.
 
-### What stays per category
+### Changes
 
-**Apparel**: Size + Fit (these affect how garments drape on a body — relevant to scale)
-**Dresses**: Size + Length (mini vs maxi = huge visual difference)
-**Jeans**: Waist + Length + Fit
-**Jackets**: Size + Length
-**Hoodies/Activewear/Swimwear/Lingerie/Kidswear**: Size only
-**Footwear (all)**: EU Size only (+ Heel Height for heels/boots)
-**Bags/Backpacks**: W × H × D dimensions
-**Wallets**: W × H
-**Belts/Scarves**: Length × Width
-**Hats**: just a note field (one-size)
-**Eyewear**: Lens Width + Bridge + Temple (standard frame sizing)
-**Watches**: Case diameter
-**Jewelry**: Chain length / Ring size / Bracelet length / Drop length — these define how it sits on a body
-**Fragrance/Beauty/Makeup**: Volume + Height (bottle scale)
-**Food**: Weight + Package Size
-**Beverages**: Volume
-**Home Decor/Furniture**: W × H × D
-**Tech**: Dimensions (freeform like "14.6×7.1×0.8cm")
-**Supplements**: Container Height
-**Pet Accessories**: Length × Width
-**Default (other)**: W × H × D
+**`src/lib/productSpecFields.ts`**
+- Add a `placeholderImperial?: string` property to `SpecField` for inch-equivalent placeholders.
+- Add imperial placeholders to every field that currently has a `cm` unit. Fields with `mm`, `g`, `ml`, or no unit stay unchanged (eyewear mm, watches mm, weight g, volume ml are universal).
+- Export a helper `getImperialUnit(metricUnit)` that maps `cm` -> `in`, leaving `mm`/`g`/`ml` unchanged.
+- Update jewelry chain length select options to include both units: `'35cm / 14" (choker)'` etc.
+- Update jewelry bracelet length options similarly.
+
+**`src/components/app/product-images/ProductSpecsCard.tsx`**
+- Add a `unitSystem` state: `'metric' | 'imperial'`, default `'metric'`.
+- Render a small segmented toggle (`cm | in`) next to the "Product Details" header, right of the "OPTIONAL" label.
+- When rendering each field: if `field.unit === 'cm'`, display `in` instead when imperial is selected, and use `field.placeholderImperial` for the placeholder.
+- The serialized spec string stores the active unit (e.g., `Width: 12 in` vs `Width: 30 cm`) so the AI prompt gets the correct scale info.
+
+### Categories reviewed
+
+| Category | Has cm fields | Imperial placeholder needed |
+|----------|--------------|---------------------------|
+| Bags, Backpacks, Wallets | Yes (W/H/D) | Yes |
+| Belts, Scarves | Yes (L/W) | Yes |
+| Hats | Yes (circumference) | Yes |
+| Shoes/Boots/Heels | Yes (heel height) | Yes |
+| Jewelry (earrings, pendants) | Yes (drop/width) | Yes |
+| Fragrance, Beauty, Makeup | Yes (bottle height) | Yes |
+| Food (package size) | Yes | Yes |
+| Beverages (container height) | Yes | Yes |
+| Home Decor, Furniture | Yes (W/H/D) | Yes |
+| Supplements | Yes (container height) | Yes |
+| Pet Accessories | Yes (L/W) | Yes |
+| Eyewear | mm -- unchanged | No |
+| Watches | mm -- unchanged | No |
+| Apparel (size/fit selects) | No cm fields | No |
+| Footwear (EU size input) | No cm unit | No |
+| Tech (freeform) | No unit | No |
+| Jeans (waist/length numbers) | No unit | No |
+
+### UI Detail
+
+The toggle is a tiny pair of buttons styled like a segmented control:
+```
+[cm] [in]
+```
+Placed inline after the "OPTIONAL" badge, before the collapse chevron. Approximately 60px wide, matching the existing muted text style.
 
 ### Files changed
-
-**`src/lib/productSpecFields.ts`** — Rewrite all CATEGORY_FIELDS entries to dimension-only fields. Remove material/finish/hardware/style/metal/stone/frame/body/container/packaging selects. Keep the file structure, exports, and helper functions identical.
+1. `src/lib/productSpecFields.ts` -- add `placeholderImperial` to SpecField, add imperial placeholders to all cm-unit fields
+2. `src/components/app/product-images/ProductSpecsCard.tsx` -- add unit toggle state and swap unit/placeholder based on selection

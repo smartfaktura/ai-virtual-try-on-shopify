@@ -8,13 +8,24 @@ export function sanitizeSpecInput(val: string, maxLen = 500): string {
 
 // ── SpecField: each field is either a dropdown select or a text input ──
 
+export type UnitSystem = 'metric' | 'imperial';
+
 export interface SpecField {
   key: string;
   label: string;
   type: 'select' | 'input';
   options?: string[];
+  optionsImperial?: string[];
   placeholder?: string;
+  placeholderImperial?: string;
   unit?: string;
+}
+
+/** Map metric unit to imperial equivalent */
+export function getDisplayUnit(metricUnit: string | undefined, system: UnitSystem): string | undefined {
+  if (!metricUnit || system === 'metric') return metricUnit;
+  if (metricUnit === 'cm') return 'in';
+  return metricUnit; // mm, g, ml stay the same
 }
 
 // ── Category field definitions ──
@@ -62,45 +73,45 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
   ],
   'shoes': [
     { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '40' },
-    { key: 'heel', label: 'Heel Height', type: 'input', placeholder: '2', unit: 'cm' },
+    { key: 'heel', label: 'Heel Height', type: 'input', placeholder: '2', placeholderImperial: '0.8', unit: 'cm' },
   ],
   'boots': [
     { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '41' },
     { key: 'shaft', label: 'Shaft', type: 'select', options: ['Ankle', 'Mid-calf', 'Knee-high', 'Over-the-knee'] },
-    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '5', unit: 'cm' },
+    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '5', placeholderImperial: '2', unit: 'cm' },
   ],
   'high-heels': [
     { key: 'euSize', label: 'EU Size', type: 'input', placeholder: '38' },
-    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '10', unit: 'cm' },
+    { key: 'heelHeight', label: 'Heel Height', type: 'input', placeholder: '10', placeholderImperial: '4', unit: 'cm' },
   ],
 
   // ── Bags ──
   'bags-accessories': [
-    { key: 'width', label: 'Width', type: 'input', placeholder: '30', unit: 'cm' },
-    { key: 'height', label: 'Height', type: 'input', placeholder: '25', unit: 'cm' },
-    { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '25', placeholderImperial: '10', unit: 'cm' },
+    { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', placeholderImperial: '5', unit: 'cm' },
   ],
   'backpacks': [
-    { key: 'height', label: 'Height', type: 'input', placeholder: '45', unit: 'cm' },
-    { key: 'width', label: 'Width', type: 'input', placeholder: '30', unit: 'cm' },
-    { key: 'depth', label: 'Depth', type: 'input', placeholder: '15', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+    { key: 'depth', label: 'Depth', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
   'wallets-cardholders': [
-    { key: 'width', label: 'Width', type: 'input', placeholder: '11', unit: 'cm' },
-    { key: 'height', label: 'Height', type: 'input', placeholder: '8', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '11', placeholderImperial: '4.3', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '8', placeholderImperial: '3', unit: 'cm' },
   ],
 
   // ── Accessories ──
   'belts': [
-    { key: 'length', label: 'Length', type: 'input', placeholder: '100', unit: 'cm' },
-    { key: 'width', label: 'Width', type: 'input', placeholder: '3.5', unit: 'cm' },
+    { key: 'length', label: 'Length', type: 'input', placeholder: '100', placeholderImperial: '40', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '3.5', placeholderImperial: '1.4', unit: 'cm' },
   ],
   'scarves': [
-    { key: 'length', label: 'Length', type: 'input', placeholder: '180', unit: 'cm' },
-    { key: 'width', label: 'Width', type: 'input', placeholder: '70', unit: 'cm' },
+    { key: 'length', label: 'Length', type: 'input', placeholder: '180', placeholderImperial: '71', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '70', placeholderImperial: '28', unit: 'cm' },
   ],
   'hats-small': [
-    { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', unit: 'cm' },
+    { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
   ],
   'eyewear': [
     { key: 'lens', label: 'Lens Width', type: 'input', placeholder: '52', unit: 'mm' },
@@ -115,84 +126,84 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Jewelry ──
   'jewellery-necklaces': [
-    { key: 'chain', label: 'Chain Length', type: 'select', options: ['35cm (choker)', '40cm', '45cm', '50cm', '60cm', '70cm (opera)'] },
-    { key: 'pendantSize', label: 'Pendant Size', type: 'input', placeholder: '2×1.5', unit: 'cm' },
+    { key: 'chain', label: 'Chain Length', type: 'select', options: ['35cm (choker)', '40cm', '45cm', '50cm', '60cm', '70cm (opera)'], optionsImperial: ['14" (choker)', '16"', '18"', '20"', '24"', '28" (opera)'] },
+    { key: 'pendantSize', label: 'Pendant Size', type: 'input', placeholder: '2×1.5', placeholderImperial: '0.8×0.6', unit: 'cm' },
   ],
   'jewellery-rings': [
     { key: 'ringSize', label: 'Ring Size', type: 'input', placeholder: '7' },
     { key: 'bandWidth', label: 'Band Width', type: 'input', placeholder: '3', unit: 'mm' },
   ],
   'jewellery-bracelets': [
-    { key: 'length', label: 'Length', type: 'select', options: ['16cm', '17cm', '18cm', '19cm', '20cm', '21cm'] },
+    { key: 'length', label: 'Length', type: 'select', options: ['16cm', '17cm', '18cm', '19cm', '20cm', '21cm'], optionsImperial: ['6.3"', '6.7"', '7"', '7.5"', '7.9"', '8.3"'] },
     { key: 'width', label: 'Width', type: 'input', placeholder: '8', unit: 'mm' },
   ],
   'jewellery-earrings': [
-    { key: 'drop', label: 'Drop Length', type: 'input', placeholder: '4', unit: 'cm' },
-    { key: 'width', label: 'Width', type: 'input', placeholder: '1.5', unit: 'cm' },
+    { key: 'drop', label: 'Drop Length', type: 'input', placeholder: '4', placeholderImperial: '1.6', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '1.5', placeholderImperial: '0.6', unit: 'cm' },
   ],
 
   // ── Fragrance ──
   'fragrance': [
     { key: 'volume', label: 'Volume', type: 'select', options: ['5ml', '10ml', '30ml', '50ml', '75ml', '100ml', '150ml', '200ml'] },
-    { key: 'bottleHeight', label: 'Bottle Height', type: 'input', placeholder: '15', unit: 'cm' },
+    { key: 'bottleHeight', label: 'Bottle Height', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
 
   // ── Beauty ──
   'beauty-skincare': [
     { key: 'volume', label: 'Volume', type: 'select', options: ['5ml', '10ml', '15ml', '30ml', '50ml', '75ml', '100ml', '200ml'] },
-    { key: 'height', label: 'Container Height', type: 'input', placeholder: '15', unit: 'cm' },
+    { key: 'height', label: 'Container Height', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
   'makeup-lipsticks': [
-    { key: 'height', label: 'Height', type: 'input', placeholder: '8', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '8', placeholderImperial: '3', unit: 'cm' },
   ],
 
   // ── Food & Beverages ──
   'food': [
     { key: 'weight', label: 'Weight', type: 'input', placeholder: '250', unit: 'g' },
-    { key: 'packageSize', label: 'Package Size', type: 'input', placeholder: '15×20', unit: 'cm' },
+    { key: 'packageSize', label: 'Package Size', type: 'input', placeholder: '15×20', placeholderImperial: '6×8', unit: 'cm' },
   ],
   'beverages': [
     { key: 'volume', label: 'Volume', type: 'select', options: ['200ml', '250ml', '330ml', '350ml', '500ml', '750ml', '1L'] },
-    { key: 'height', label: 'Container Height', type: 'input', placeholder: '20', unit: 'cm' },
+    { key: 'height', label: 'Container Height', type: 'input', placeholder: '20', placeholderImperial: '8', unit: 'cm' },
   ],
 
   // ── Home & Decor ──
   'home-decor': [
-    { key: 'width', label: 'Width', type: 'input', placeholder: '30', unit: 'cm' },
-    { key: 'height', label: 'Height', type: 'input', placeholder: '25', unit: 'cm' },
-    { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '25', placeholderImperial: '10', unit: 'cm' },
+    { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', placeholderImperial: '5', unit: 'cm' },
   ],
 
   // ── Furniture ──
   'furniture': [
-    { key: 'width', label: 'Width', type: 'input', placeholder: '180', unit: 'cm' },
-    { key: 'depth', label: 'Depth', type: 'input', placeholder: '80', unit: 'cm' },
-    { key: 'height', label: 'Height', type: 'input', placeholder: '75', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '180', placeholderImperial: '71', unit: 'cm' },
+    { key: 'depth', label: 'Depth', type: 'input', placeholder: '80', placeholderImperial: '31', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '75', placeholderImperial: '30', unit: 'cm' },
   ],
 
   // ── Tech ──
   'tech-devices': [
-    { key: 'dimensions', label: 'Dimensions', type: 'input', placeholder: '14.6×7.1×0.8cm' },
+    { key: 'dimensions', label: 'Dimensions', type: 'input', placeholder: '14.6×7.1×0.8cm', placeholderImperial: '5.7×2.8×0.3in' },
     { key: 'screen', label: 'Screen', type: 'input', placeholder: '6.1"' },
   ],
 
   // ── Supplements ──
   'supplements-wellness': [
-    { key: 'containerHeight', label: 'Container Height', type: 'input', placeholder: '12', unit: 'cm' },
+    { key: 'containerHeight', label: 'Container Height', type: 'input', placeholder: '12', placeholderImperial: '5', unit: 'cm' },
     { key: 'quantity', label: 'Quantity', type: 'input', placeholder: '60 capsules' },
   ],
 
   // ── Pet Accessories ──
   'pet-accessories': [
-    { key: 'length', label: 'Length', type: 'input', placeholder: '150', unit: 'cm' },
-    { key: 'width', label: 'Width', type: 'input', placeholder: '2', unit: 'cm' },
+    { key: 'length', label: 'Length', type: 'input', placeholder: '150', placeholderImperial: '60', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '2', placeholderImperial: '0.8', unit: 'cm' },
   ],
 };
 
 const DEFAULT_FIELDS: SpecField[] = [
-  { key: 'width', label: 'Width', type: 'input', placeholder: '30', unit: 'cm' },
-  { key: 'height', label: 'Height', type: 'input', placeholder: '20', unit: 'cm' },
-  { key: 'depth', label: 'Depth', type: 'input', placeholder: '10', unit: 'cm' },
+  { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+  { key: 'height', label: 'Height', type: 'input', placeholder: '20', placeholderImperial: '8', unit: 'cm' },
+  { key: 'depth', label: 'Depth', type: 'input', placeholder: '10', placeholderImperial: '4', unit: 'cm' },
 ];
 
 export function getCategoryFields(category: string | undefined | null): SpecField[] {
