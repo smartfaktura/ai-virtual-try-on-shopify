@@ -1921,11 +1921,10 @@ export function ProductImagesStep3Refine({
     try {
       const ts = Date.now();
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const { supabase: sb } = await import('@/integrations/supabase/client');
-      const userId = (await sb.auth.getUser()).data.user?.id;
+      const { supabase } = await import('@/integrations/supabase/client');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) throw new Error('Not signed in');
       const path = `${userId}/packaging-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase.storage
         .from('product-uploads')
         .upload(path, file, { cacheControl: '3600', upsert: false });
