@@ -179,6 +179,40 @@ export function OutfitPresetBar({
             </PopoverContent>
           </Popover>
         </div>
+
+        {/* Confirmation bar */}
+        {pendingPreset && mode === 'apply-all' && (
+          <div className="flex items-center gap-2 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+            <p className="text-[11px] text-foreground flex-1">
+              Apply <span className="font-semibold">{pendingPreset.name}</span> to all {shotCount} shots?
+            </p>
+            <Button
+              size="sm"
+              className="h-7 text-[11px] px-3 gap-1"
+              onClick={confirmApplyAll}
+            >
+              <Check className="h-3 w-3" /> Apply all
+            </Button>
+            {onSetupOneByOne && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[11px] px-2.5"
+                onClick={handleOneByOne}
+              >
+                Set up one by one
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[11px] px-2"
+              onClick={() => setPendingPreset(null)}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
