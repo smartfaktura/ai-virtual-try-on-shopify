@@ -22,7 +22,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Paintbrush, User, Users, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
-  Save, Trash2, History, Check, Info,
+  Save, Trash2, History, Check, Info, ArrowRight, CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -2195,6 +2195,36 @@ export function ProductImagesStep3Refine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [details.outfitConfigByScene]);
 
+  // Build flat ordered list for save-and-next navigation
+  const flatSceneList = useMemo(() => {
+    const list: Array<{ productId: string; sceneId: string }> = [];
+    for (const product of selectedProductsList) {
+      for (const scene of modelShots) {
+        list.push({ productId: product.id, sceneId: scene.id });
+      }
+    }
+    return list;
+  }, [selectedProductsList, modelShots]);
+
+  const handleSaveAndNext = useCallback((currentProductId: string, currentSceneId: string) => {
+    const currentKey = `${currentProductId}:${currentSceneId}`;
+    const idx = flatSceneList.findIndex(s => `${s.productId}:${s.sceneId}` === currentKey);
+    if (idx >= 0 && idx < flatSceneList.length - 1) {
+      const next = flatSceneList[idx + 1];
+      setExpandedOutfitSceneId(`${next.productId}:${next.sceneId}`);
+      toast.success('Saved');
+    } else {
+      setExpandedOutfitSceneId(null);
+      toast.success('All scenes styled');
+    }
+  }, [flatSceneList]);
+
+  const isLastScene = useCallback((productId: string, sceneId: string) => {
+    const key = `${productId}:${sceneId}`;
+    const idx = flatSceneList.findIndex(s => `${s.productId}:${s.sceneId}` === key);
+    return idx === flatSceneList.length - 1;
+  }, [flatSceneList]);
+
   // Per-product reference upload handler — stores as trigger:{type}:{productId}
   const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
     if (!onSceneExtraRefsChange) return;
@@ -2792,7 +2822,13 @@ export function ProductImagesStep3Refine({
                                    onClick={() => setExpandedOutfitSceneId(isExpanded ? null : `${product.id}:${scene.id}`)}
                                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/30 transition-colors text-left"
                                  >
-                                   <span className="text-[10px] font-bold text-muted-foreground/50 w-4 text-center flex-shrink-0">{idx + 1}</span>
+                                    <span className="relative text-[10px] font-bold text-muted-foreground/50 w-4 text-center flex-shrink-0">
+                                      {(perSceneCfg || (source === 'scene' && !perSceneCfg)) ? (
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                      ) : (
+                                        idx + 1
+                                      )}
+                                    </span>
 
                                    <div className="w-10 h-[50px] rounded-md overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
                                      {scene.previewUrl ? (
@@ -2905,8 +2941,30 @@ export function ProductImagesStep3Refine({
                                         allProducts={allProducts}
                                         productCategories={selectedProductCategories}
                                         globalPresetName={(details as any).appliedPresetName || undefined}
-                                      />
-                                   </div>
+                                       />
+                                      {/* Save & Next footer */}
+                                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/30">
+                                        {isLastScene(product.id, scene.id) ? (
+                                          <Button
+                                            size="sm"
+                                            className="h-7 text-[11px] px-3 gap-1.5"
+                                            onClick={() => handleSaveAndNext(product.id, scene.id)}
+                                          >
+                                            <Check className="w-3 h-3" />
+                                            Done
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            size="sm"
+                                            className="h-7 text-[11px] px-3 gap-1.5"
+                                            onClick={() => handleSaveAndNext(product.id, scene.id)}
+                                          >
+                                            Save & Next
+                                            <ArrowRight className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
                                  )}
                                </div>
                              );
