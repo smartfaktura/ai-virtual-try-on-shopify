@@ -1,31 +1,51 @@
-## Issues Found
-
-1. **No way to customize + apply to all**: The top "Apply a style to all shots" section only has preset pills — no way to open the full outfit editor and apply custom settings to all shots.
-2. **Per-scene quick styles don't highlight after applying**: `activePresetName` isn't passed to the per-scene `OutfitPresetBar` (single mode).
-3. **Reset button too small and poorly positioned**: Tiny 11px text link in the top-right corner.
-4. **3 products selected but only 2 scenes show**: `modelShots` filters scenes to those with `personDetails`/`actionDetails` trigger blocks. If a product's scenes lack these blocks, they won't appear. This is actually correct behavior (non-model scenes don't need outfit styling), but the UI doesn't communicate this.
-
 ## Changes
 
-### 1. Add "Customize & apply to all" button that opens outfit editor modal
+### 1. Remove bags from built-in presets
 
-In the top-level "Apply a style to all shots" area, add a pill-style "Customize" button next to the preset pills. Clicking it opens a `Dialog` containing a `ZaraOutfitPanel` with an "Apply to all shots" confirmation button. This lets users build a custom outfit and apply it globally.
+Remove `bag` entries from the 5 universal presets in `outfitVocabulary.ts`. Only the "Editorial Fashion" preset currently has one.
 
-Also rename the section label from "APPLY A STYLE TO ALL SHOTS" to just "Presets" and show the "Save as custom style" as a same-style pill instead of a separate ghost button below.
+### 2. Replace customize popup with inline editor
 
-### 2. Pass `activePresetName` to per-scene OutfitPresetBar
+Remove the Dialog-based customize modal. Instead, add an inline collapsible "Customize & apply to all" section that expands in-place (below the presets row) with the ZaraOutfitPanel + "Apply to all N shots" button. Uses the existing `applyToAllOpen` state.
 
-Track which preset was applied per scene (store in state or derive from config match), pass it to the single-mode `OutfitPresetBar` so the selected style highlights.
+### 3. Group outfit section by product
 
-### 3. Improve Reset button
+This is the main structural change. Instead of showing a flat list of model shots, group them by product:
 
-Move "Reset all" to a visible secondary button (outline variant, proper size) placed inline with the presets area, not hidden in the header corner.
+```text
+Model Styling
+6 on-model shots across 3 products
 
-### 4. Add scene count context per product
+[Presets row: Minimal Premium | Editorial Fashion | ... | Customize | Save custom]
 
-Below the "Model Styling" header, add a brief note like "Styling applies to 2 on-model shots across 3 products" so users understand why not all scenes appear.
+▼ White Tank Top (product thumbnail + title)
+  Locked slot: TOP — filled by this product
+  Configure: outerwear, bottom, shoes, accessories
+  Scenes using this product:
+    1. Side Profile Street Study — Built-in look
+    2. Old Money Outdoor Portrait — Built-in look
 
-## Files
+▼ Beige Wool Blazer (product thumbnail + title)
+  Locked slot: OUTERWEAR — filled by this product
+  Configure: top, bottom, shoes, accessories
+  Scenes using this product:
+    3. On-Model Front — Scene settings
+    4. Movement Shot — Scene settings
+```
 
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — Add customize modal, move reset button, add scene context note, pass activePresetName to per-scene bar
-- `src/components/app/product-images/OutfitPresetBar.tsx` — Restructure: "Presets" label, save-as-custom as inline pill
+Each product group has:
+- A header showing the product thumbnail, title, and which slot it fills
+- Its own ZaraOutfitPanel (resolving conflicts for just that product)
+- A list of scenes that use this product, each showing its status badge
+- Per-scene override capability (expand a scene to customize just that one)
+
+**Implementation approach**: Since `selectedScenes` is a flat array without product association, and all scenes currently apply to all products, group by deriving which product locks which slot. When there's only 1 product, the UI stays essentially the same (just with a product header). When multiple products are selected, each product gets its own outfit section. The outfit config is stored per-product in `outfitConfigByScene` keyed by scene ID (existing mechanism).
+
+**Key data flow**: For each product, resolve its conflict to find its locked slot, then show the ZaraOutfitPanel scoped to that product. Scenes are shown under each product group (all scenes appear under each product since they apply to all). The per-scene config overrides remain per-scene.
+
+Actually, since scenes apply to ALL products equally (each scene generates images for every selected product), the grouping should be by product for the outfit editor (since different products lock different slots), with all scenes listed once per product. The outfit configured for a product group applies to all its scenes.
+
+### Files to change
+
+- `src/lib/outfitVocabulary.ts` — Remove `bag` from Editorial Fashion preset
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — Replace Dialog with inline collapsible; restructure outfit section to group by product with product headers, per-product ZaraOutfitPanel, and scene list under each
