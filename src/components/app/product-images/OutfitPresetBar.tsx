@@ -146,7 +146,7 @@ export function OutfitPresetBar({
               className="h-7 px-2.5 rounded-full text-[11px] font-medium border border-dashed border-border hover:border-foreground/30 bg-background hover:bg-muted transition-all flex items-center gap-1"
             >
               <SlidersHorizontal className="h-3 w-3" />
-              Customize
+              Create your own Look
             </button>
           )}
 
