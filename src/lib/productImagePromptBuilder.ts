@@ -1008,13 +1008,17 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
       if (resolvedHint) {
         let hint = resolvedHint;
-        if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
+        if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
         return `OUTFIT DIRECTION — ${hint}`;
       }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      // In AI mode, skip outfit injection for scenes without a built-in hint
+      // In AI mode, inject a lightweight product-aware directive instead of nothing
       const isAiMode = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
-      if (isAiMode) return '';
+      if (isAiMode) {
+        if (!needsOutfit) return '';
+        const noteClause = details.customOutfitNote ? ` STYLING PRIORITY: ${details.customOutfitNote}` : '';
+        return `WARDROBE — Choose an outfit that naturally complements [PRODUCT]. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive with the scene palette.${noteClause}`;
+      }
       return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait')) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
