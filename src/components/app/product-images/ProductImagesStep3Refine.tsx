@@ -1648,6 +1648,7 @@ interface Step3RefineProps {
   onUpgradeClick?: () => void;
   perCategoryScenes?: Map<string, Set<string>>;
   categoryGroups?: Map<string, string[]>;
+  onCategoryOverride?: (productId: string, category: string) => void;
 }
 
 /* ══════════════════════════════════════════════
