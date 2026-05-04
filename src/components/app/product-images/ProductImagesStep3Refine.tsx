@@ -2133,6 +2133,8 @@ export function ProductImagesStep3Refine({
   };
 
 
+
+
   // All models + resolve selected model gender
   const allModels = [...userModels, ...globalModels];
   const selectedModelGender = useMemo(() => {
@@ -2183,6 +2185,14 @@ export function ProductImagesStep3Refine({
     }
     return !!(details.outfitTop || details.outfitBottom || details.outfitShoes || details.outfitAccessories);
   }, [details.outfitConfig, details.outfitTop, details.outfitBottom, details.outfitShoes, details.outfitAccessories]);
+
+  // Auto-enable outfit override when user has a configured outfit and all scenes have hints.
+  // Handles outfitConfig carried over from a previous generation via localStorage.
+  useEffect(() => {
+    if (allModelScenesHaveOutfitHint && userOutfitFilled && !details.outfitOverrideEnabled) {
+      update({ outfitOverrideEnabled: true });
+    }
+  }, [allModelScenesHaveOutfitHint, userOutfitFilled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stylingSourceByScene = useMemo(() => {
     const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
