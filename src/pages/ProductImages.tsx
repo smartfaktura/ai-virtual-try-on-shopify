@@ -824,6 +824,21 @@ export default function ProductImages() {
     }
 
     const WORKFLOW_ID = '4bb79966-42f1-4720-af45-183aa954e8e1';
+
+    // Persist product specs to DB (fire-and-forget)
+    if (details.productSpecs) {
+      for (const [pid, specEntry] of Object.entries(details.productSpecs)) {
+        const product = userProducts.find(p => p.id === pid);
+        if (!product) continue;
+        const analysis = analyses[pid] || (product as any).analysis_json;
+        const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
+        const dimStr = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config);
+        if (dimStr) {
+          supabase.from('user_products').update({ dimensions: dimStr }).eq('id', pid).then(() => {});
+        }
+      }
+    }
+
     const batchId = crypto.randomUUID();
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
