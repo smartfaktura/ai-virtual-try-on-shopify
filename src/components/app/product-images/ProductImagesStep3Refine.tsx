@@ -1683,6 +1683,11 @@ function ZaraOutfitPanel({
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
   const [singlePresetName, setSinglePresetName] = useState<string | undefined>(globalPresetName);
 
+  // Sync global preset name when it changes (e.g. apply-to-all)
+  useEffect(() => {
+    if (globalPresetName) setSinglePresetName(globalPresetName);
+  }, [globalPresetName]);
+
   // Resolve conflicts for ALL selected products — each may lock a different slot
   const productIds = useMemo(() => Array.from(selectedProductIds), [selectedProductIds]);
 
