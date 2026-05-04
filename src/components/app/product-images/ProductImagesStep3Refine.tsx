@@ -2651,7 +2651,7 @@ export function ProductImagesStep3Refine({
                                  <>
                                    <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
                                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                     Custom look
+                                      Scene settings
                                    </span>
                                    {perSceneCfg && (
                                      <span className="text-[10px] text-muted-foreground truncate">
@@ -2670,7 +2670,7 @@ export function ProductImagesStep3Refine({
                                  <>
                                    <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
                                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                     Custom look
+                                     Scene settings
                                    </span>
                                    <span className="text-[10px] text-muted-foreground truncate">
                                      {summarizeOutfitConfig(perSceneCfg)}
