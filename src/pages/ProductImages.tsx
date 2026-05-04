@@ -890,12 +890,16 @@ export default function ProductImages() {
 
           for (let vIdx = 0; vIdx < variations.length; vIdx++) {
             const variationOverride = variations[vIdx];
-            // Per-product outfit override: AI Stylist assigns a unique preset per product
+            // Per-scene outfit override > per-product outfit > global outfitConfig
+            const perSceneOutfit = details.outfitConfigByScene?.[scene.id];
             const perProductOutfit = details.outfitConfigByProduct?.[product.id];
+            const resolvedOutfit = perSceneOutfit || perProductOutfit;
             const variationDetails: DetailSettings = {
               ...details,
               ...variationOverride,
-              ...(perProductOutfit ? { outfitConfig: perProductOutfit } : {}),
+              ...(resolvedOutfit ? { outfitConfig: resolvedOutfit } : {}),
+              // Enable override flag when per-scene outfit exists so prompt builder bypasses outfit_hint
+              ...(perSceneOutfit ? { outfitOverrideEnabled: true } : {}),
             };
             const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
 

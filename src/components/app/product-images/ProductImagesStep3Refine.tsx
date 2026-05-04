@@ -41,7 +41,7 @@ import {
   JEWELRY_NECKLACES, JEWELRY_EARRINGS, JEWELRY_BRACELETS, JEWELRY_RINGS, JEWELRY_METALS,
   pickDefaultPreset, pickDefaultPresetPerProduct,
 } from '@/lib/outfitVocabulary';
-import { AiStylistCard } from './AiStylistCard';
+// AiStylistCard removed — replaced by per-scene outfit direction
 import { toast } from '@/lib/brandedToast';
 
 /* ══════════════════════════════════════════════
@@ -1982,73 +1982,137 @@ export function ProductImagesStep3Refine({
     return Array.from(cats);
   }, [selectedProductsList, analyses, primaryCategory]);
 
-  // ── AI Stylist: per-product auto-pick ──
-  // Each selected product gets its own preset suited to its category.
-  // Stored in details.outfitConfigByProduct so the prompt builder can resolve
-  // the right outfit for each product at generation time.
-  const [restyleSeed, setRestyleSeed] = useState(0);
-  const [customizeOpen, setCustomizeOpen] = useState(false);
+  // ── Model shots (computed early so outfit logic can use it) ──
+  const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
+
+  // ── Per-scene outfit direction ──
+  const [expandedOutfitSceneId, setExpandedOutfitSceneId] = useState<string | null>(null);
+  const [applyToAllOpen, setApplyToAllOpen] = useState(false);
   const autoPickedRef = useRef(false);
 
-  // Build the per-product picks (productId → preset) used by both the AI Stylist card
-  // and the auto-apply effect below. Recomputed when products, categories, or seed change.
+  // Build the per-product picks (productId → preset) for scenes without outfit_hint
   const perProductPicks = useMemo(() => {
     if (selectedProductsList.length === 0) return {} as Record<string, ReturnType<typeof pickDefaultPreset>>;
     const items = selectedProductsList.map(p => ({
       id: p.id,
       categories: [analyses[p.id]?.category, primaryCategory].filter(Boolean) as string[],
     }));
-    return pickDefaultPresetPerProduct(items, restyleSeed);
-  }, [selectedProductsList, analyses, primaryCategory, restyleSeed]);
+    return pickDefaultPresetPerProduct(items, 0);
+  }, [selectedProductsList, analyses, primaryCategory]);
 
-  // Apply the per-product picks on first mount (silent) — and again whenever Re-style is clicked.
+  // Auto-pick presets for scenes without outfit_hint on first mount
   useEffect(() => {
-    if (!hasPersonBlock) return;
-    const cfg = details.outfitConfig;
-    const hasGlobal = cfg && Object.keys(cfg).some(k => {
-      const v = (cfg as Record<string, unknown>)[k];
-      return v !== undefined && v !== null && v !== '';
-    });
-    const hasPerProduct = details.outfitConfigByProduct && Object.keys(details.outfitConfigByProduct).length > 0;
-    // First mount with any existing user customization → leave alone
-    if (!autoPickedRef.current && (hasGlobal || hasPerProduct)) {
+    if (!hasPersonBlock || autoPickedRef.current) return;
+    const existing = details.outfitConfigByScene;
+    if (existing && Object.keys(existing).length > 0) {
       autoPickedRef.current = true;
       return;
     }
-    // Apply (or re-apply on restyle)
-    if (Object.keys(perProductPicks).length === 0) return;
+    // For scenes without outfit_hint, auto-assign based on first product's preset
+    const firstPreset = Object.values(perProductPicks)[0];
+    if (!firstPreset) { autoPickedRef.current = true; return; }
     const map: Record<string, OutfitConfig> = {};
-    for (const [pid, preset] of Object.entries(perProductPicks)) {
-      if (preset) map[pid] = preset.config;
+    for (const scene of modelShots) {
+      if (!scene.outfitHint) {
+        map[scene.id] = firstPreset.config;
+      }
     }
-    autoPickedRef.current = true;
-    update({ outfitConfigByProduct: map, outfitConfig: undefined });
+    if (Object.keys(map).length > 0) {
+      autoPickedRef.current = true;
+      update({ outfitConfigByScene: map });
+    } else {
+      autoPickedRef.current = true;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPersonBlock, restyleSeed, perProductPicks]);
+  }, [hasPersonBlock, perProductPicks, modelShots]);
 
-  const handleRestyle = useCallback(() => {
-    setRestyleSeed(s => s + 1);
-    const count = selectedProductsList.length;
-    toast.success(`Re-styled ${count} ${count === 1 ? 'product' : 'products'}`);
-  }, [selectedProductsList.length]);
+  // Get the auto-picked preset name for display
+  const autoPickedPresetName = useMemo(() => {
+    const first = Object.values(perProductPicks)[0];
+    return first?.name || null;
+  }, [perProductPicks]);
 
-  // Picks shown in the card (productId → preset name), filtered to current selection
-  const stylistCardPicks = useMemo(() => {
-    return selectedProductsList
-      .map(p => ({
-        product: p,
-        presetName: perProductPicks[p.id]?.name || '',
-      }))
-      .filter(x => !!x.presetName);
-  }, [selectedProductsList, perProductPicks]);
-
-  // Legacy single-name fallback (used in Edit-Outfit override card)
-  const autoPickedPresetName = stylistCardPicks[0]?.presetName || null;
-
-  const clearAutoPick = useCallback(() => {
-    update({ outfitConfig: {}, outfitConfigByProduct: {} });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Summarize an outfit_hint into a short user-friendly string
+  const summarizeOutfitHint = useCallback((hint: string): string => {
+    let s = hint
+      .replace(/\{\{[^}]+\}\}/g, '')
+      .replace(/\[PRODUCT IMAGE\]/gi, '')
+      .replace(/\n+/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    // Take first sentence
+    const firstSentence = s.match(/^[^.!]+[.!]/);
+    if (firstSentence) s = firstSentence[0];
+    // Remove leading instructional verbs
+    s = s.replace(/^(Build|Style|Use|Create|The model wears|The look should)\s+/i, '');
+    // Capitalize first letter
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+    if (s.length > 65) s = s.slice(0, 62).trimEnd() + '…';
+    return s || 'Curated styling direction';
   }, []);
+
+  // Determine source for each model scene
+  const sceneOutfitSource = useMemo(() => {
+    return modelShots.map(scene => {
+      const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
+      if (hasPerScene) return { scene, source: 'custom' as const };
+      if (scene.outfitHint) return { scene, source: 'scene' as const };
+      return { scene, source: 'ai' as const };
+    });
+  }, [modelShots, details.outfitConfigByScene]);
+
+  // Summarize an OutfitConfig into a short string for display
+  const summarizeOutfitConfig = useCallback((cfg: OutfitConfig): string => {
+    const parts: string[] = [];
+    const describe = (label: string, p?: { garment?: string; color?: string }) => {
+      if (!p?.garment) return;
+      parts.push(p.color ? `${p.color} ${p.garment}` : p.garment);
+    };
+    describe('', cfg.top);
+    describe('', cfg.bottom);
+    describe('', cfg.dress);
+    describe('', cfg.shoes);
+    describe('', cfg.outerwear);
+    if (parts.length === 0) return 'Custom outfit';
+    return parts.slice(0, 3).join(', ');
+  }, []);
+
+  const handleApplyToAll = useCallback((cfg: OutfitConfig) => {
+    const map: Record<string, OutfitConfig> = {};
+    for (const scene of modelShots) {
+      map[scene.id] = cfg;
+    }
+    update({ outfitConfigByScene: map });
+    setApplyToAllOpen(false);
+    toast.success(`Applied outfit to ${modelShots.length} shots`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelShots]);
+
+  const handleResetAllOutfits = useCallback(() => {
+    // Clear per-scene overrides — scenes with hints revert to their hints, others get auto-pick
+    const map: Record<string, OutfitConfig> = {};
+    const firstPreset = Object.values(perProductPicks)[0];
+    for (const scene of modelShots) {
+      if (!scene.outfitHint && firstPreset) {
+        map[scene.id] = firstPreset.config;
+      }
+    }
+    update({ outfitConfigByScene: map, outfitOverrideEnabled: false });
+    toast.success('Reset all outfits to defaults');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelShots, perProductPicks]);
+
+  const handleResetSceneOutfit = useCallback((sceneId: string) => {
+    const next = { ...details.outfitConfigByScene };
+    delete next[sceneId];
+    update({ outfitConfigByScene: next });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details.outfitConfigByScene]);
+
+  const updateSceneOutfit = useCallback((sceneId: string, cfg: OutfitConfig) => {
+    update({ outfitConfigByScene: { ...details.outfitConfigByScene, [sceneId]: cfg } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details.outfitConfigByScene]);
 
   // Per-product reference upload handler — stores as trigger:{type}:{productId}
   const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
@@ -2160,100 +2224,7 @@ export function ProductImagesStep3Refine({
     }
   }, [aestheticColorScenes.length]);
   const productShots = useMemo(() => selectedScenes.filter(s => !(s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
-  const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
-
-  // Check if all person/action scenes have outfit_hint (scene-controlled outfit)
-  const allModelScenesHaveOutfitHint = useMemo(() => {
-    const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
-    return personScenes.length > 0 && personScenes.every(s => !!s.outfitHint);
-  }, [selectedScenes]);
-  const someModelScenesHaveOutfitHint = useMemo(() => {
-    const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
-    return personScenes.some(s => !!s.outfitHint) && !allModelScenesHaveOutfitHint;
-  }, [selectedScenes, allModelScenesHaveOutfitHint]);
-
-  // ── Per-scene styling source preview (matches resolveOutfitHintText logic in promptBuilder) ──
-  const userOutfitFilled = useMemo(() => {
-    const cfg = details.outfitConfig;
-    if (cfg) {
-      if (cfg.top?.garment || cfg.bottom?.garment || cfg.shoes?.garment ||
-          cfg.outerwear?.garment || cfg.dress?.garment || cfg.coverUp?.garment ||
-          cfg.bag?.garment || cfg.hat?.garment || cfg.eyewear?.garment ||
-          cfg.belt?.garment || cfg.watch?.garment ||
-          (cfg.jewelry && Object.keys(cfg.jewelry).length > 0) ||
-          (cfg.accessories && cfg.accessories.length > 0)) return true;
-    }
-    return !!(details.outfitTop || details.outfitBottom || details.outfitShoes || details.outfitAccessories);
-  }, [details.outfitConfig, details.outfitTop, details.outfitBottom, details.outfitShoes, details.outfitAccessories]);
-
-  // Auto-enable outfit override when user has a configured outfit and all scenes have hints.
-  // Handles outfitConfig carried over from a previous generation via localStorage.
-  useEffect(() => {
-    if (allModelScenesHaveOutfitHint && userOutfitFilled && !details.outfitOverrideEnabled) {
-      update({ outfitOverrideEnabled: true });
-    }
-  }, [allModelScenesHaveOutfitHint, userOutfitFilled]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const stylingSourceByScene = useMemo(() => {
-    const personScenes = selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails'));
-    return personScenes.map(s => {
-      const overrideActive = !!details.outfitOverrideEnabled && userOutfitFilled;
-      let source: 'scene' | 'user' | 'default';
-      if (overrideActive) source = 'user';
-      else if (s.outfitHint) source = 'scene';
-      else if (userOutfitFilled) source = 'user';
-      else source = 'default';
-      return { scene: s, source };
-    });
-  }, [selectedScenes, details.outfitOverrideEnabled, userOutfitFilled]);
-
-  // Human-readable summary of what's in outfitConfig (e.g. "Top: white cropped tee")
-  const userOutfitSummaryParts = useMemo<string[]>(() => {
-    const cfg = details.outfitConfig;
-    const parts: string[] = [];
-    if (!cfg) {
-      if (details.outfitTop) parts.push(`Top: ${details.outfitTop}`);
-      if (details.outfitBottom) parts.push(`Bottom: ${details.outfitBottom}`);
-      if (details.outfitShoes) parts.push(`Shoes: ${details.outfitShoes}`);
-      if (details.outfitAccessories) parts.push(`Accessories: ${details.outfitAccessories}`);
-      return parts;
-    }
-    const describe = (label: string, p?: { garment?: string; color?: string; fit?: string; material?: string; subtype?: string }) => {
-      if (!p?.garment) return;
-      const bits = [p.color, p.fit, p.material, p.subtype, p.garment].filter(Boolean);
-      parts.push(`${label}: ${bits.join(' ')}`);
-    };
-    describe('Outerwear', cfg.outerwear);
-    describe('Top', cfg.top);
-    describe('Bottom', cfg.bottom);
-    describe('Dress', cfg.dress);
-    describe('Cover-up', cfg.coverUp);
-    describe('Shoes', cfg.shoes);
-    describe('Bag', cfg.bag);
-    describe('Hat', cfg.hat);
-    describe('Eyewear', cfg.eyewear);
-    describe('Belt', cfg.belt);
-    describe('Watch', cfg.watch);
-    if (cfg.jewelry && Object.keys(cfg.jewelry).length > 0) {
-      const jBits = Object.entries(cfg.jewelry).filter(([, v]) => !!v).map(([k, v]) => `${k}: ${v}`);
-      if (jBits.length) parts.push(`Jewelry: ${jBits.join(', ')}`);
-    }
-    if (cfg.accessories) parts.push(`Accessories: ${cfg.accessories}`);
-    return parts;
-  }, [details.outfitConfig, details.outfitTop, details.outfitBottom, details.outfitShoes, details.outfitAccessories]);
-
-  // Decide how to render the styling preview: hidden / single-summary / mixed-list
-  const stylingPreview = useMemo(() => {
-    const rows = stylingSourceByScene;
-    const overrideActive = !!details.outfitOverrideEnabled && userOutfitFilled;
-    if (rows.length === 0) return { mode: 'hidden' as const, overrideActive };
-    const sources = new Set(rows.map(r => r.source));
-    if (sources.size === 1) {
-      return { mode: 'uniform' as const, source: rows[0].source, count: rows.length, overrideActive };
-    }
-    return { mode: 'mixed' as const, rows, overrideActive };
-  }, [stylingSourceByScene, details.outfitOverrideEnabled, userOutfitFilled]);
-
+  // modelShots already declared above (before outfit section)
 
   // Shot card collapse
   const SHOTS_LIMIT = 8;
@@ -2567,139 +2538,176 @@ export function ProductImagesStep3Refine({
             </Card>
           )}
 
-          {/* ── STYLE & OUTFIT (unified) — right after model ── */}
+          {/* ── STYLE & OUTFIT — per-scene outfit direction ── */}
           {hasPersonBlock && (
             <Card>
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">Pick a direction — applies to all on-model shots.</p>
-                  {hasMultipleCategories && !allModelScenesHaveOutfitHint && (
-                    <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 mt-2 flex items-center gap-1.5">
-                      <Info className="w-3 h-3 flex-shrink-0 text-primary" />
-                      Mixed categories — each product is styled separately to fit its own silhouette.
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">Each shot has an outfit direction. Edit individually or apply one look to all</p>
                 </div>
 
-                {allModelScenesHaveOutfitHint ? (
-                  /* Scene-controlled outfit — with Edit Outfit override */
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                      <Shirt className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        {details.outfitOverrideEnabled ? (
-                          <>
-                            <p className="text-xs font-medium">Custom outfit active</p>
-                            <p className="text-[11px] text-muted-foreground">Your outfit selection overrides the scene's styling for this generation.</p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-xs font-medium">Outfit is directed by your selected shots</p>
-                            <p className="text-[11px] text-muted-foreground">Each shot has a curated styling direction — colors will match your aesthetic choice.</p>
-                          </>
+                {/* Apply to all button */}
+                {modelShots.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5 w-full"
+                    onClick={() => setApplyToAllOpen(!applyToAllOpen)}
+                  >
+                    <Layers className="w-3.5 h-3.5" />
+                    {applyToAllOpen ? 'Close' : 'Apply one outfit to all shots'}
+                  </Button>
+                )}
+
+                {/* Apply-to-all editor */}
+                {applyToAllOpen && (
+                  <div className="space-y-3 border border-primary/20 rounded-lg p-4 bg-primary/[0.02]">
+                    <p className="text-[11px] text-muted-foreground">Configure an outfit below — it will apply to all {modelShots.length} on-model shots.</p>
+                    <ZaraOutfitPanel
+                      details={{ ...details, outfitConfig: details.outfitConfigByScene?.[modelShots[0]?.id] || details.outfitConfig || {} }}
+                      update={(p) => {
+                        if (p.outfitConfig) handleApplyToAll(p.outfitConfig);
+                      }}
+                      primaryCategory={primaryCategory}
+                      modelGender={selectedModelGender}
+                      analyses={analyses}
+                      selectedProductIds={selectedProductIds}
+                      allProducts={allProducts}
+                      productCategories={selectedProductCategories}
+                    />
+                  </div>
+                )}
+
+                {/* Per-scene outfit list */}
+                <div className="space-y-1.5">
+                  {sceneOutfitSource.map(({ scene, source }) => {
+                    const isExpanded = expandedOutfitSceneId === scene.id;
+                    const perSceneCfg = details.outfitConfigByScene?.[scene.id];
+
+                    return (
+                      <div key={scene.id} className="rounded-lg border border-border/60 overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedOutfitSceneId(isExpanded ? null : scene.id)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left"
+                        >
+                          {/* Scene preview */}
+                          <div className="w-14 h-[72px] rounded-md overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
+                            {scene.previewUrl ? (
+                              <ShimmerImage
+                                src={getOptimizedUrl(scene.previewUrl, { quality: 65 })}
+                                alt={scene.title}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Camera className="w-4 h-4 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Scene info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{scene.title}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {source === 'scene' && (
+                                <>
+                                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Shot styled</span>
+                                  <span className="text-[10px] text-muted-foreground truncate">
+                                    {summarizeOutfitHint(scene.outfitHint!)}
+                                  </span>
+                                </>
+                              )}
+                              {source === 'ai' && (
+                                <>
+                                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">Styled by AI</span>
+                                  {perSceneCfg && (
+                                    <span className="text-[10px] text-muted-foreground truncate">
+                                      {summarizeOutfitConfig(perSceneCfg)}
+                                    </span>
+                                  )}
+                                  {!perSceneCfg && autoPickedPresetName && (
+                                    <span className="text-[10px] text-muted-foreground truncate">{autoPickedPresetName}</span>
+                                  )}
+                                </>
+                              )}
+                              {source === 'custom' && (
+                                <>
+                                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">Custom</span>
+                                  {perSceneCfg && (
+                                    <span className="text-[10px] text-muted-foreground truncate">
+                                      {summarizeOutfitConfig(perSceneCfg)}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform flex-shrink-0', isExpanded && 'rotate-180')} />
+                        </button>
+
+                        {/* Expanded editor */}
+                        {isExpanded && (
+                          <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/40">
+                            {source === 'scene' && !perSceneCfg && (
+                              <p className="text-[11px] text-muted-foreground italic">
+                                This shot has its own curated styling direction. Edit below to override it.
+                              </p>
+                            )}
+                            {source === 'custom' && scene.outfitHint && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetSceneOutfit(scene.id)}
+                                className="text-[11px] text-primary hover:underline"
+                              >
+                                Reset to shot direction
+                              </button>
+                            )}
+                            <ZaraOutfitPanel
+                              details={{ ...details, outfitConfig: perSceneCfg || {} }}
+                              update={(p) => {
+                                if (p.outfitConfig) updateSceneOutfit(scene.id, p.outfitConfig);
+                              }}
+                              primaryCategory={primaryCategory}
+                              modelGender={selectedModelGender}
+                              analyses={analyses}
+                              selectedProductIds={selectedProductIds}
+                              allProducts={allProducts}
+                              productCategories={selectedProductCategories}
+                            />
+                          </div>
                         )}
                       </div>
-                      <Button
-                        variant={details.outfitOverrideEnabled ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="h-7 text-[11px] px-2.5 flex-shrink-0"
-                        onClick={() => update({ outfitOverrideEnabled: !details.outfitOverrideEnabled })}
-                      >
-                        {details.outfitOverrideEnabled ? 'Reset to scene styling' : 'Edit outfit'}
-                      </Button>
-                    </div>
+                    );
+                  })}
+                </div>
 
-                    {details.outfitOverrideEnabled && (
-                      <ZaraOutfitPanel
-                        details={details}
-                        update={update}
-                        primaryCategory={primaryCategory}
-                        modelGender={selectedModelGender}
-                        analyses={analyses}
-                        selectedProductIds={selectedProductIds}
-                        allProducts={allProducts}
-                        productCategories={selectedProductCategories}
-                      />
-                    )}
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Custom styling note (optional)</Label>
-                      <Textarea
-                        value={details.customOutfitNote || ''}
-                        onChange={e => update({ customOutfitNote: e.target.value || undefined })}
-                        className="text-xs min-h-[60px]"
-                        placeholder="e.g. prefer neutral tones, add layered look..."
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  /* Standard outfit panel — AI Stylist card by default, full editor on Customize */
-                  <>
-                    {someModelScenesHaveOutfitHint && (() => {
-                      const hasOutfit = stylistCardPicks.length > 0
-                        || (details.outfitConfig && Object.keys(details.outfitConfig).some(k => k !== 'name' && (details.outfitConfig as any)[k]))
-                        || (details.outfitConfigByProduct && Object.keys(details.outfitConfigByProduct).length > 0);
-                      const isOn = !!details.outfitOverrideEnabled;
-                      return (
-                        <div className="bg-muted/50 rounded-md px-2.5 py-2 flex items-start gap-2">
-                          <Info className="w-3 h-3 flex-shrink-0 text-primary mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[11px] text-muted-foreground leading-snug">
-                              {isOn
-                                ? 'Your outfit selection will override all curated styling'
-                                : 'Some shots have their own styling direction'}
-                            </p>
-                          </div>
-                          <TooltipProvider delayDuration={200}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[11px] text-foreground/80 whitespace-nowrap">Apply my outfit to all shots</span>
-                                  <Switch
-                                    checked={isOn}
-                                    disabled={!hasOutfit}
-                                    onCheckedChange={(checked) => update({ outfitOverrideEnabled: checked })}
-                                  />
-                                </div>
-                              </TooltipTrigger>
-                              {!hasOutfit && (
-                                <TooltipContent side="top">Pick an outfit first</TooltipContent>
-                              )}
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      );
-                    })()}
-
-                    {stylistCardPicks.length > 0 && (
-                      <AiStylistCard
-                        picks={stylistCardPicks}
-                        onRestyle={handleRestyle}
-                        onToggleCustomize={() => setCustomizeOpen(o => !o)}
-                        customizeOpen={customizeOpen}
-                      />
-                    )}
-
-                    {customizeOpen && (
-                      <div className="space-y-3 pt-1">
-                        <p className="text-[11px] text-muted-foreground italic">
-                          Editing here applies a single outfit to all your products (overrides per-product picks).
-                        </p>
-                        <ZaraOutfitPanel
-                          details={details}
-                          update={update}
-                          primaryCategory={primaryCategory}
-                          modelGender={selectedModelGender}
-                          analyses={analyses}
-                          selectedProductIds={selectedProductIds}
-                          allProducts={allProducts}
-                          productCategories={selectedProductCategories}
-                        />
-                      </div>
-                    )}
-                  </>
+                {/* Reset all link */}
+                {sceneOutfitSource.some(s => s.source === 'custom') && (
+                  <button
+                    type="button"
+                    onClick={handleResetAllOutfits}
+                    className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    Reset all to defaults
+                  </button>
                 )}
+
+                {/* Custom styling note */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Custom styling note (optional)</Label>
+                  <Textarea
+                    value={details.customOutfitNote || ''}
+                    onChange={e => update({ customOutfitNote: e.target.value || undefined })}
+                    className="text-xs min-h-[60px]"
+                    placeholder="e.g. prefer neutral tones, add layered look..."
+                  />
+                </div>
 
                 <Collapsible>
                   <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
