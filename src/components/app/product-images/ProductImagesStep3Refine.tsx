@@ -1754,7 +1754,8 @@ function ZaraOutfitPanel({
         currentConfig={config}
         resolution={resolution}
         onApplyToAll={(cfg) => handleLoadPreset(cfg)}
-        onLoadSingle={handleLoadPreset}
+        onLoadSingle={(cfg, pName) => handleLoadSingle(cfg, pName)}
+        activePresetName={singlePresetName}
         mode="single"
         category={primaryCategory}
         gender={modelGender}
