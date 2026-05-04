@@ -2555,7 +2555,7 @@ export function ProductImagesStep3Refine({
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">Needed for {scenesNeedingModel.length} selected shot{scenesNeedingModel.length !== 1 ? 's' : ''}.</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Pick one or more models for your {scenesNeedingModel.length} on-model shot{scenesNeedingModel.length !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
                 <ModelPickerSections
