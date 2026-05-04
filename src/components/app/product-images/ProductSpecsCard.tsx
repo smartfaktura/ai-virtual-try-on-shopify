@@ -120,7 +120,7 @@ export function ProductSpecsCard({
     const serialized = serializeSpec(data, specFields, unitSystem);
     onProductSpecsChange({ ...productSpecs, [productId]: serialized });
   }, [productSpecs, onProductSpecsChange, unitSystem]);
-  }, [productSpecs, onProductSpecsChange]);
+  
 
   const getStructured = useCallback((productId: string, specFields: SpecField[]): ProductSpecData => {
     const raw = productSpecs[productId] || '';
