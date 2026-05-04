@@ -751,7 +751,7 @@ function extractImageFromGeminiResponse(data: Record<string, unknown>): string |
 
 async function generateImage(
   prompt: string,
-  referenceImages: Array<{ url: string; label: string }>,
+  referenceImages: Array<{ url: string; label: string; promptLabel?: string }>,
   aiModel: string,
   apiKey: string,
   aspectRatio?: string
