@@ -1412,12 +1412,17 @@ export function buildDynamicPrompt(
         injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${hint} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction.`;
       } else if (!resolvedHint) {
         // No scene hint — fall back to user-selected outfit (structured or legacy)
+        // When outfitMode === 'ai', skip injecting structured outfit — let the
+        // generation model choose complementary styling autonomously.
+        const isAiMode = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
         const hasUserOutfit =
-          !!details.outfitConfig ||
-          !!details.outfitTop ||
-          !!details.outfitBottom ||
-          !!details.outfitShoes ||
-          !!details.outfitAccessories;
+          !isAiMode && (
+            !!details.outfitConfig ||
+            !!details.outfitTop ||
+            !!details.outfitBottom ||
+            !!details.outfitShoes ||
+            !!details.outfitAccessories
+          );
         if (hasUserOutfit) {
           const directive = defaultOutfitDirective(
             analysis?.category,
