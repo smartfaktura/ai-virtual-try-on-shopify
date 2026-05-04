@@ -1,30 +1,30 @@
 
-## Outfit Styling card redesign + AI prompt improvements
+## Restructure Manual Outfit Mode UX
 
-### UI changes (`ProductImagesStep3Refine.tsx`)
+### Problem
+When user selects "Style manually," the preset bar shows immediately as a large block, making it unclear where to start. The user wants per-scene editing to be the primary action, with bulk presets as a secondary option at the bottom.
 
-**1. Scene thumbnail strip** — Add model shot thumbnails (same style as bg/aesthetic cards) with green check badges on built-in-look scenes so users see exactly which shots need outfit styling.
+### Changes
 
-**2. Better mode pills** — Replace flat card layout with taller pills that have icon boxes (8x8 rounded-lg with icon), more padding (px-4 py-3.5), and a filled primary circle checkmark instead of bare check icon.
+**1. Remove inline OutfitPresetBar from top of manual mode**
+Replace the current preset bar + customize-all collapsible (lines ~2853-2914) with a guidance hint:
+- Show a small instructional note: "Tap a shot below to customize its outfit around your product" with a subtle pointer icon
+- This makes the per-scene list the clear primary action
 
-**3. Always default to AI** — Change `effectiveMode` from auto-detecting based on existing configs to simply: `details.outfitMode === 'manual' ? 'manual' : 'ai'`. AI is always default.
+**2. Improve per-scene row visual affordance**
+Add a small "Edit" text or pencil icon on the right side of each scene row (replacing the bare chevron) to make it obvious the row is clickable.
 
-**4. Move custom note into main card** — Remove custom styling note from the Appearance collapsible. Place it directly in the outfit card after the mode selector, visible in both AI and manual modes. Label: "Additional styling direction (optional)" with helper text "Applies to all N on-model shots — guides AI styling choices and color direction". Placeholder adapts to mode.
+**3. Add "Edit all shots in bulk" collapsible at bottom**
+After the per-product groups, before the Appearance section, add a single button/trigger:
+- Label: "Apply outfit to all shots at once"
+- On click, opens a section containing:
+  - **Outfit Presets** header with description: "Quick styles to apply across all on-model shots"
+  - The existing `OutfitPresetBar` component
+  - The existing `ZaraOutfitPanel` customize-all flow
+- This keeps bulk editing accessible but de-emphasized
 
-**5. Remove custom note from Appearance section** — Delete the `customOutfitNote` textarea from the Collapsible content since it now lives in the main card.
+**4. Ensure preset save refreshes scene state**
+After `handleApplyToAll` runs (which already updates `outfitConfigByScene` for each scene), verify the per-scene badges update immediately. The current implementation already does this via React state updates, but confirm `appliedPresetName` gets set so badges show "Scene settings" with the preset summary instantly.
 
-### Prompt builder improvements (`productImagePromptBuilder.ts`)
-
-**6. AI mode adds smart product-aware direction** — When `outfitMode === 'ai'` and a scene has no `outfitHint`, instead of injecting nothing, inject a lightweight product-aware directive:
-```
-WARDROBE — Choose an outfit that naturally complements [PRODUCT]. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive. [customOutfitNote if set]
-```
-This gives the model enough direction to make good choices without locking specific garments.
-
-**7. Custom note in AI mode gets stronger prompt weight** — When `customOutfitNote` is set in AI mode, wrap it as: `STYLING PRIORITY: {note}` so it has higher weight than generic direction.
-
-**8. Custom note for hint scenes too** — When a scene HAS an `outfitHint`, append `customOutfitNote` with proper framing so it adds user preference on top of the curated direction (already works, just verify).
-
-### Files changed
-1. `src/components/app/product-images/ProductImagesStep3Refine.tsx` — UI redesign (items 1-5)
-2. `src/lib/productImagePromptBuilder.ts` — AI prompt improvements (items 6-8)
+### Files
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — All UI restructuring (items 1-4)
