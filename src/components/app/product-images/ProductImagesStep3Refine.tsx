@@ -2876,17 +2876,18 @@ export function ProductImagesStep3Refine({
                                        </button>
                                      )}
                                      <ZaraOutfitPanel
-                                       details={{ ...details, outfitConfig: perSceneCfg || {} }}
-                                       update={(p) => {
-                                         if (p.outfitConfig) updateSceneOutfit(scene.id, p.outfitConfig);
-                                       }}
-                                       primaryCategory={primaryCategory}
-                                       modelGender={selectedModelGender}
-                                       analyses={analyses}
-                                       selectedProductIds={new Set([product.id])}
-                                       allProducts={allProducts}
-                                       productCategories={selectedProductCategories}
-                                     />
+                                        details={{ ...details, outfitConfig: perSceneCfg || {} }}
+                                        update={(p) => {
+                                          if (p.outfitConfig) updateSceneOutfit(scene.id, p.outfitConfig);
+                                        }}
+                                        primaryCategory={primaryCategory}
+                                        modelGender={selectedModelGender}
+                                        analyses={analyses}
+                                        selectedProductIds={new Set([product.id])}
+                                        allProducts={allProducts}
+                                        productCategories={selectedProductCategories}
+                                        globalPresetName={perSceneCfg ? undefined : (details as any).appliedPresetName}
+                                      />
                                    </div>
                                  )}
                                </div>
