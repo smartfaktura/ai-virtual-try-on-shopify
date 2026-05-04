@@ -2941,8 +2941,30 @@ export function ProductImagesStep3Refine({
                                         allProducts={allProducts}
                                         productCategories={selectedProductCategories}
                                         globalPresetName={(details as any).appliedPresetName || undefined}
-                                      />
-                                   </div>
+                                       />
+                                      {/* Save & Next footer */}
+                                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/30">
+                                        {isLastScene(product.id, scene.id) ? (
+                                          <Button
+                                            size="sm"
+                                            className="h-7 text-[11px] px-3 gap-1.5"
+                                            onClick={() => handleSaveAndNext(product.id, scene.id)}
+                                          >
+                                            <Check className="w-3 h-3" />
+                                            Done
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            size="sm"
+                                            className="h-7 text-[11px] px-3 gap-1.5"
+                                            onClick={() => handleSaveAndNext(product.id, scene.id)}
+                                          >
+                                            Save & Next
+                                            <ArrowRight className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
                                  )}
                                </div>
                              );
