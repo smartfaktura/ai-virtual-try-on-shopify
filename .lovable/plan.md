@@ -1,24 +1,27 @@
-I found the issue: the preset is being applied, but the scene rows are showing the sanitized outfit config after product-slot conflict removal. For your tank top, the selected product locks the `top` slot, so Sport / Active removes the crop-top piece and the summary can keep looking like the old/default outfit. Also the apply-all handler only stores one config by `scene.id`, which is risky when multiple products share the same scene IDs.
+## Scene-Level Half Portrait Framing Control
 
-Plan:
+Instead of hardcoding framing by garment type, add a new scene-level trigger block `halfPortrait` that admins can toggle per scene. When active, it:
+- Changes body framing to three-quarter (head to mid-thigh)
+- Suppresses shoes from the outfit directive so the AI doesn't try to show full-body
 
-1. Fix apply-all so the UI clearly reflects the selected preset
-   - When applying Sport / Active / Editorial Fashion / any preset to all shots, store the preset name alongside the outfit config in Step 3 state
-   - Update each scene row summary to show the applied style label first, e.g. `Sport / Active` or `Sport / Active · black leggings, white sneaker`, instead of only the remaining sanitized pieces
-   - Keep the top/product slot lock behavior correct, so the product itself is not replaced by preset clothing
+### Changes
 
-2. Make per-product scene styling more reliable
-   - Change the outfit map logic in Step 3 to support product-scoped scene keys where needed, so one product’s scene settings do not accidentally overwrite another product’s settings when categories share scene IDs
-   - Add a helper for reading/writing outfit config per product + scene with fallback to the existing scene-only key for current data
+**1. Add `halfPortrait` to trigger blocks** (`src/components/app/product-images/detailBlockConfig.ts`)
+- Add `'halfPortrait'` to the `ALL_TRIGGER_KEYS` array so it appears as a checkbox in the admin scene editor
 
-3. Fix expanded scene editor consistency
-   - When opening a scene after Apply all, pass the actual applied config and preset name into the `ZaraOutfitPanel`
-   - Ensure Quick Styles highlight the applied preset and the slot cards reflect the correct remaining configurable pieces after locked product slots are removed
+**2. Update `resolveBodyFramingDirective`** (`src/lib/productImagePromptBuilder.ts`)
+- Add a new parameter: the scene's `triggerBlocks` array
+- If `triggerBlocks` includes `halfPortrait`, return: "Three-quarter shot — model visible from head to mid-thigh, product is the focal point. Do NOT force a full-body head-to-toe shot."
+- This overrides the category-based default framing
+- Update the call site at the `bodyFramingDirective` token case (~line 1069) to pass `scene.triggerBlocks`
 
-4. Rename the button
-   - Rename `Customize` to `Create your own Look` in the Outfit Styling preset bar
-   - Keep the existing action the same: it opens the custom apply-to-all look editor
+**3. Suppress shoes in outfit when `halfPortrait` is active** (`src/lib/productImagePromptBuilder.ts`)
+- In `defaultOutfitDirective` (and the auto-inject outfit block ~line 1387): when the scene has `halfPortrait` trigger, add `'shoes'` to the `skipSlots` set so shoes are never mentioned in the outfit prompt
+- This prevents the AI from interpreting outfit shoes as a cue to show a full-body shot
 
-5. Clean up user feedback
-   - Toast still says how many shots were updated
-   - Row labels should make it obvious the preset is active even when product locking hides one of the preset’s slots
+**4. Product reference isolation** (`src/lib/productImagePromptBuilder.ts`)
+- Near the end of `buildPrompt` (around where SCENE REFERENCE is appended, ~line 1456): when a product reference image is provided, add a directive: "PRODUCT REFERENCE ISOLATION — Focus ONLY on the named product from the reference image. Ignore any other garments or items visible in the reference photo."
+- This prevents the AI from picking up shorts/other clothing from the product photo
+
+### Admin workflow
+After deployment, you can go to the scene library and toggle the `halfPortrait` trigger on any on-model scene where you want portrait-style framing instead of full-body. No code changes needed per scene — it's all data-driven.
