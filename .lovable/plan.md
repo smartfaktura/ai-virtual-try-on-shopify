@@ -1,119 +1,40 @@
 
-# Per-Scene Outfit Direction with Smart Defaults
+## What changes
 
-## Problem
+### 1. Outerwear "None" option
+Add a "None" chip as the first option in the `OUTERWEAR_TYPES` array in `src/lib/outfitVocabulary.ts` (id: `none`, label: `None`). When selected, it explicitly signals no outerwear. The `OutfitSlotCard` already supports clearing via the X button, but "None" makes it more discoverable. The prompt builder will treat `garment: 'none'` as "no outerwear layer".
 
-The Style & Outfit card has two different UIs depending on `outfit_hint` presence. Mixed selections are confusing. Users can't see or control outfit per scene.
+### 2. Fix "Apply one outfit to all shots" — keep open, add Save button
+Currently in `ProductImagesStep3Refine.tsx`, the apply-to-all `ZaraOutfitPanel` calls `handleApplyToAll` on every single slot change, which immediately applies to all scenes AND closes the section. 
 
-## User experience
+Changes:
+- Add a local `applyToAllDraft` state (`OutfitConfig`) that the ZaraOutfitPanel writes to instead of immediately applying
+- The ZaraOutfitPanel stays open while the user configures details
+- Add a "Save & apply to all N shots" button at the bottom of the apply-to-all section
+- Clicking that button calls `handleApplyToAll(applyToAllDraft)` which applies + closes
+- Also add a "Save as preset" button next to it (reuses existing save popover logic)
 
-### Default state (zero clicks)
+### 3. Show presets above the apply-to-all editor
+Move/duplicate the `OutfitPresetBar` to appear at the top of the apply-to-all section (before the slot cards). Currently presets are only inside the ZaraOutfitPanel. Add the 5 new default presets as quick-select chips that load into the draft. User and saved presets also appear here.
 
-The card shows a vertical list of all on-model scenes. Each scene shows its current outfit source:
+### 4. Add 5 default style presets
+Add these to `BUILT_IN_PRESETS` in `src/lib/outfitVocabulary.ts` as universal category presets (available for all product types):
 
-```text
-Style & Outfit
-Each shot has an outfit direction. Edit individually or apply one look to all.
+- **Minimal Premium** — Clean basics, neutral tones (white tee, tailored black trousers, white sneakers)
+- **Editorial Fashion** — Campaign-ready, polished (silk blouse, wide-leg trousers, pointed heels)
+- **Casual Everyday** — Relaxed lifestyle (grey knit sweater, light-wash jeans, white sneakers)
+- **Streetwear / Urban** — Oversized layers (oversized hoodie, cargo pants, chunky sneakers, cap)
+- **Sport / Active** — Athleisure (fitted sport top, leggings, running shoes)
 
-[Apply one outfit to all shots]
-
-  ┌──────────────────────────────────────────────┐
-  │ [scene img]  Urban Street Walk               │
-  │              Styled by AI · Coastal Minimal   │
-  │                                     [Edit ▾]  │
-  ├──────────────────────────────────────────────┤
-  │ [scene img]  Shadowed Wall Evening            │
-  │              Shot styled · Elegant draping,   │
-  │              monochrome neutral palette…       │
-  │                                     [Edit ▾]  │
-  ├──────────────────────────────────────────────┤
-  │ [scene img]  Sunlit Skin Hero                 │
-  │              Shot styled · No additional       │
-  │              clothing, sunlight and body only  │
-  │                                     [Edit ▾]  │
-  └──────────────────────────────────────────────┘
-```
-
-**Scenes without `outfit_hint`** show "Styled by AI" + the auto-picked preset name (e.g. "Coastal Minimal", "Summer Casual"). These are the existing `pickDefaultPreset` results.
-
-**Scenes with `outfit_hint`** show "Shot styled" + a smart summary of the hint text. Since hints are long prompt-level briefs (e.g. 500+ chars about draping, accessories, hair), the UI extracts the first meaningful sentence and truncates to ~60 chars with ellipsis. The full hint is never shown raw — it's a prompt directive, not user copy.
-
-The summary extraction logic:
-1. Strip template tokens (`{{productName}}`, `[PRODUCT IMAGE]`)
-2. Take the first sentence or line
-3. Lowercase, truncate at ~60 chars
-4. Example: "Build a cohesive premium activewear look..." becomes "Premium activewear look, minimal sport-forward styling..."
-5. For very short hints like "No additional clothing. Shadow and body only." — show as-is
-
-### Editing a single scene
-
-Tapping "Edit" expands accordion-style:
-- OutfitPresetBar (quick preset loading for that scene)
-- ZaraOutfitPanel (full slot-by-slot editor)
-- For "Shot styled" scenes: a "Reset to shot direction" link to restore the original hint
-- Changes stored in `outfitConfigByScene[scene.id]`
-- Source pill updates to "Custom" after editing
-
-### Apply to all shots
-
-"Apply one outfit to all shots" opens a single ZaraOutfitPanel. The configured outfit applies to every on-model scene. All rows update to show "Custom". A "Reset all to defaults" link restores AI picks and shot directions.
-
-### Custom note
-
-The "Custom styling note" textarea stays at the bottom, applied globally.
+Each preset maps to the existing `OutfitConfig` slots (top, bottom, shoes, outerwear, hat, etc.).
 
 ---
 
-## Technical details
+## Files to edit
 
-### 1. New type: `outfitConfigByScene`
-
-**File: `src/components/app/product-images/types.ts`**
-
-Add to `DetailSettings`:
-```typescript
-outfitConfigByScene?: Record<string, OutfitConfig>;
-```
-
-### 2. UI rewrite
-
-**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
-
-**Remove:**
-- The `allModelScenesHaveOutfitHint` ternary (lines ~2585-2701)
-- The auto-enable `useEffect` for `outfitOverrideEnabled` (lines ~2191-2195)
-- AI Stylist card (`AiStylistCard` usage) — Sienna card removed
-- `customizeOpen` state
-- `someModelScenesHaveOutfitHint` info banner and toggle
-
-**Add:**
-- `expandedOutfitSceneId` state for accordion
-- `applyToAllOpen` state for the bulk editor
-- Helper: `summarizeOutfitHint(hint: string): string` — strips tokens, extracts first sentence, truncates
-- Scene list rendering: map `modelShots`, each row has 64x80 preview (`getOptimizedUrl(url, { quality: 65 })`), title, source pill + summary, Edit toggle
-- Expanded row: ZaraOutfitPanel scoped to `outfitConfigByScene[scene.id]`
-
-**Auto-pick initialization:**
-- On mount, for scenes without `outfit_hint` and without existing config in `outfitConfigByScene`, run `pickDefaultPreset` and store result
-- Scenes with `outfit_hint` get no entry — hint is the default
-
-### 3. Generation job resolution
-
-**File: `src/pages/ProductImages.tsx`** (~line 894)
-
-New priority chain per job:
-```
-outfitConfigByScene[scene.id] > outfitConfigByProduct[product.id] > global outfitConfig
-```
-
-When `outfitConfigByScene[scene.id]` exists, set `outfitOverrideEnabled: true` in that job's `variationDetails` so the prompt builder bypasses the scene's `outfit_hint`. Without a per-scene override, `outfitOverrideEnabled` stays false and the hint is used naturally.
-
-### 4. Prompt builder — zero changes
-
-`resolveOutfitHintText` already has the correct logic: returns scene hint by default, returns `undefined` only when `outfitOverrideEnabled && hasUserDefinedOutfit`. The job loop sets these flags per-job.
-
-### 5. Backward compatibility
-
-- `outfitConfigByProduct` continues to work as fallback
-- `outfitConfig` (global) is lowest priority
-- Old localStorage state produces same results
+| File | Change |
+|---|---|
+| `src/lib/outfitVocabulary.ts` | Add `{ id: 'none', label: 'None' }` to `OUTERWEAR_TYPES`. Add 5 new universal presets to `BUILT_IN_PRESETS`. |
+| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Refactor apply-to-all section: add `applyToAllDraft` state, stop auto-closing, add Save button. Show presets at top of apply-to-all section. |
+| `src/components/app/product-images/OutfitPresetBar.tsx` | No changes needed (already supports built-in + user presets). |
+| Prompt builder (`productImagePromptBuilder.ts`) | Handle outerwear `garment: 'none'` — skip outerwear from prompt when garment is `none`. |

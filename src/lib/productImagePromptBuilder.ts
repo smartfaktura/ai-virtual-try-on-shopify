@@ -639,7 +639,7 @@ export function getConflictingSlots(garmentType?: string): Set<OutfitSlot> {
 // ── Build structured outfit string from OutfitConfig ──
 export function buildStructuredOutfitString(config: OutfitConfig, skipSlots?: Set<OutfitSlot>): string {
   const describePiece = (piece?: OutfitPiece, fallbackGarment?: string): string => {
-    if (!piece || !piece.garment) return '';
+    if (!piece || !piece.garment || piece.garment === 'none') return '';
     const parts: string[] = [];
     if (piece.color) parts.push(piece.color);
     if (piece.material) parts.push(piece.material);
