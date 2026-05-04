@@ -2555,7 +2555,13 @@ export function ProductImagesStep3Refine({
                     variant="outline"
                     size="sm"
                     className="h-8 text-xs gap-1.5 w-full"
-                    onClick={() => setApplyToAllOpen(!applyToAllOpen)}
+                    onClick={() => {
+                      if (!applyToAllOpen) {
+                        // Initialize draft from first scene or global config
+                        setApplyToAllDraft(details.outfitConfigByScene?.[modelShots[0]?.id] || details.outfitConfig || {});
+                      }
+                      setApplyToAllOpen(!applyToAllOpen);
+                    }}
                   >
                     <Layers className="w-3.5 h-3.5" />
                     {applyToAllOpen ? 'Close' : 'Apply one outfit to all shots'}
@@ -2565,11 +2571,11 @@ export function ProductImagesStep3Refine({
                 {/* Apply-to-all editor */}
                 {applyToAllOpen && (
                   <div className="space-y-3 border border-primary/20 rounded-lg p-4 bg-primary/[0.02]">
-                    <p className="text-[11px] text-muted-foreground">Configure an outfit below — it will apply to all {modelShots.length} on-model shots.</p>
+                    <p className="text-[11px] text-muted-foreground">Configure an outfit below — it will apply to all {modelShots.length} on-model shots</p>
                     <ZaraOutfitPanel
-                      details={{ ...details, outfitConfig: details.outfitConfigByScene?.[modelShots[0]?.id] || details.outfitConfig || {} }}
+                      details={{ ...details, outfitConfig: applyToAllDraft }}
                       update={(p) => {
-                        if (p.outfitConfig) handleApplyToAll(p.outfitConfig);
+                        if (p.outfitConfig) setApplyToAllDraft(p.outfitConfig);
                       }}
                       primaryCategory={primaryCategory}
                       modelGender={selectedModelGender}
@@ -2578,6 +2584,16 @@ export function ProductImagesStep3Refine({
                       allProducts={allProducts}
                       productCategories={selectedProductCategories}
                     />
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-8 text-xs flex-1"
+                        onClick={() => handleApplyToAll(applyToAllDraft)}
+                      >
+                        Apply to all {modelShots.length} shots
+                      </Button>
+                    </div>
                   </div>
                 )}
 
