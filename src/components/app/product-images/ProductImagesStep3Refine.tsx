@@ -1982,6 +1982,9 @@ export function ProductImagesStep3Refine({
     return Array.from(cats);
   }, [selectedProductsList, analyses, primaryCategory]);
 
+  // ── Model shots (computed early so outfit logic can use it) ──
+  const modelShots = useMemo(() => selectedScenes.filter(s => (s.triggerBlocks || []).some(b => b === 'personDetails' || b === 'actionDetails')), [selectedScenes]);
+
   // ── Per-scene outfit direction ──
   const [expandedOutfitSceneId, setExpandedOutfitSceneId] = useState<string | null>(null);
   const [applyToAllOpen, setApplyToAllOpen] = useState(false);
