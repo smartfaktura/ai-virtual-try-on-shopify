@@ -1,30 +1,39 @@
 
-## Restructure Manual Outfit Mode UX
+## Limit scene thumbnails + improve model/reference/styling UX
 
-### Problem
-When user selects "Style manually," the preset bar shows immediately as a large block, making it unclear where to start. The user wants per-scene editing to be the primary action, with bulk presets as a secondary option at the bottom.
+### 1. Cap scene thumbnail strips at 4 + overflow counter
 
-### Changes
+All three thumbnail strips (background, outfit, aesthetic) currently render every scene. Change each to show max 4 thumbnails + a "+N more" card when there are more than 4 scenes.
 
-**1. Remove inline OutfitPresetBar from top of manual mode**
-Replace the current preset bar + customize-all collapsible (lines ~2853-2914) with a guidance hint:
-- Show a small instructional note: "Tap a shot below to customize its outfit around your product" with a subtle pointer icon
-- This makes the per-scene list the clear primary action
+Extract a shared helper render pattern:
+```
+const MAX_THUMBS = 4;
+const visible = scenes.slice(0, MAX_THUMBS);
+const overflow = scenes.length - MAX_THUMBS;
+```
+The "+N" card is a 52x65 rounded-lg with muted bg, centered text showing `+{overflow}`.
 
-**2. Improve per-scene row visual affordance**
-Add a small "Edit" text or pencil icon on the right side of each scene row (replacing the bare chevron) to make it obvious the row is clickable.
+**Files:** `ProductImagesStep3Refine.tsx` — 3 thumbnail strips (bg ~line 2619, outfit ~line 2718, aesthetic ~line 3236)
 
-**3. Add "Edit all shots in bulk" collapsible at bottom**
-After the per-product groups, before the Appearance section, add a single button/trigger:
-- Label: "Apply outfit to all shots at once"
-- On click, opens a section containing:
-  - **Outfit Presets** header with description: "Quick styles to apply across all on-model shots"
-  - The existing `OutfitPresetBar` component
-  - The existing `ZaraOutfitPanel` customize-all flow
-- This keeps bulk editing accessible but de-emphasized
+### 2. Improve "Choose model" card copy
 
-**4. Ensure preset save refreshes scene state**
-After `handleApplyToAll` runs (which already updates `outfitConfigByScene` for each scene), verify the per-scene badges update immediately. The current implementation already does this via React state updates, but confirm `appliedPresetName` gets set so badges show "Scene settings" with the preset summary instantly.
+- Change title from "Choose model" to "Model Selection"
+- Change subtitle from "Needed for X selected shots." to "Pick one or more models for your {X} on-model shots"
 
-### Files
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — All UI restructuring (items 1-4)
+**Files:** `ProductImagesStep3Refine.tsx` ~lines 2542, 2558
+
+### 3. Simplify styling direction textarea
+
+Replace the current label + textarea + helper trio with a single-line collapsible:
+- Show a subtle clickable row: pencil icon + "Add styling direction" (collapsed by default)
+- On click, expand to show the textarea only
+- Remove the `<Label>`, the `<Info>` icon, and the bottom helper `<p>` tag
+- Keep the textarea placeholder as-is
+
+**Files:** `ProductImagesStep3Refine.tsx` ~lines 2830-2847
+
+### 4. Add scene thumbnails near reference sections
+
+For each reference card (packaging, back view, trigger-based), compute which selected scenes actually use that trigger and show a small thumbnail strip (also capped at 4) above the upload area so the user knows which shots benefit from the reference.
+
+**Files:** `ProductImagesStep3Refine.tsx` ~lines 3409-3460
