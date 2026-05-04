@@ -262,6 +262,12 @@ export function ProductSpecsCard({
                           ))}
                         </div>
 
+                        {isApparelCategory(category) && (
+                          <p className="text-[10px] text-muted-foreground italic">
+                            Fabric is auto-detected from your product image
+                          </p>
+                        )}
+
                         {/* Additional notes */}
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
