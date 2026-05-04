@@ -3251,9 +3251,11 @@ export function ProductImagesStep3Refine({
                           {/* Scrollable content */}
                           <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
                             {dialogSource === 'scene' && !dialogPerSceneCfg && (
-                              <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                                ✓ This shot uses its built-in curated look. Customize below to override
-                              </p>
+                              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 px-3 py-2.5 space-y-1.5">
+                                <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                                  This shot has a curated look. Fill in any slot below to override it with your own styling
+                                </p>
+                              </div>
                             )}
                             {dialogSource === 'ai' && !dialogPerSceneCfg && (
                               <p className="text-[11px] text-amber-600 dark:text-amber-400">
