@@ -2758,7 +2758,7 @@ export function ProductImagesStep3Refine({
                   <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <button
                       type="button"
-                      onClick={() => update({ outfitMode: 'ai' })}
+                      onClick={() => { update({ outfitMode: 'ai' }); autoPickedRef.current = false; }}
                       className={cn(
                         'relative rounded-xl border px-3 py-3 sm:px-4 sm:py-3.5 text-left transition-all cursor-pointer',
                         effectiveMode === 'ai'
