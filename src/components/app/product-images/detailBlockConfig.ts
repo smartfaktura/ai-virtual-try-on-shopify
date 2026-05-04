@@ -99,7 +99,7 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
 export const ALL_TRIGGER_KEYS = [
   ...['background', 'visualDirection', 'sceneEnvironment', 'personDetails',
     'actionDetails', 'detailFocus', 'angleSelection', 'packagingDetails',
-    'backView', 'productSize', 'branding', 'layout', 'aestheticColor'],
+    'backView', 'productSize', 'branding', 'layout', 'aestheticColor', 'halfPortrait'],
   ...Object.keys(REFERENCE_TRIGGERS),
 ];
 

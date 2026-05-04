@@ -235,7 +235,12 @@ const BG_COLOR_NEGATIVES = 'No warm tint on background, no yellow cast on backgr
 // PRODUCT_FIDELITY and REFERENCE_ISOLATION removed — covered by edge function CRITICAL REQUIREMENTS #2 and #7
 
 // ── Body framing map by category + scene type ──
-function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
+function resolveBodyFramingDirective(category?: string, sceneType?: string, triggerBlocks?: string[]): string {
+  // halfPortrait trigger: three-quarter framing regardless of category
+  if ((triggerBlocks || []).includes('halfPortrait')) {
+    return 'Three-quarter shot — model visible from head to mid-thigh, product clearly the focal point on the torso. Do NOT force a full-body head-to-toe shot. Shoes may be partially visible or cropped out.';
+  }
+
   const isOnModel = sceneType === 'portrait' || sceneType === 'editorial' || sceneType === 'lifestyle';
   if (!isOnModel) return '';
 
@@ -706,7 +711,7 @@ export function buildStructuredOutfitString(config: OutfitConfig, skipSlots?: Se
 }
 
 // ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
-function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string, garmentType?: string): string {
+function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string, garmentType?: string, halfPortrait?: boolean): string {
   // For categories where the product IS the outfit, enforce no additional clothing
   // EXCEPTION: swimwear allows beach cover-ups + accessories from user's outfitConfig
   if (category === 'lingerie' || category === 'swimwear' || category === 'activewear' || category === 'kidswear') {
@@ -724,6 +729,8 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 
   // Compute which slots to skip based on the product's garment type
   const skipSlots = getConflictingSlots(garmentType);
+  // halfPortrait scenes: suppress shoes so AI doesn't force full-body framing
+  if (halfPortrait) skipSlots.add('shoes');
 
   // Prefer structured config if available — but gap-fill missing essential slots
   if (details?.outfitConfig) {
@@ -769,7 +776,7 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 }
 
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string, halfPortrait?: boolean): string {
   const parts: string[] = [];
   // When a specific model is selected, skip user-set person details (age, skin, expression etc.)
   // — those fields are hidden in the UI and shouldn't leak into the prompt
@@ -787,7 +794,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let dir = defaultPersonDirective(category);
       if (!resolvedOutfitHint) {
-        dir += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
+        dir += ` ${defaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
       }
       dir += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return dir;
@@ -799,7 +806,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
 
   // Append outfit using structured config or smart default for on-model scenes
   if (sceneNeedsPerson && !resolvedOutfitHint) {
-    directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
+    directive += ` ${defaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
   }
 
   // Append model reference if present
@@ -991,7 +998,8 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'personDirective': {
       const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
       const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
-      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint);
+      const isHalfPortrait = (scene.triggerBlocks || []).includes('halfPortrait');
+      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint, isHalfPortrait);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
@@ -1004,7 +1012,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
         return `OUTFIT DIRECTION — ${hint}`;
       }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType) : '';
+      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait')) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
@@ -1066,7 +1074,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       }
     }
 
-    case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType);
+    case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType, scene.triggerBlocks);
 
     case 'customNote': return details.customNote || '';
     case 'modelDirective': return ctx.selectedModelId ? 'Use the specific model reference provided in the source image.' : '';
@@ -1415,7 +1423,8 @@ export function buildDynamicPrompt(
             analysis?.category,
             details,
             (details as any).modelGender,
-            analysis?.garmentType
+            analysis?.garmentType,
+            (scene.triggerBlocks || []).includes('halfPortrait')
           );
           if (directive && !prompt.includes(directive)) {
             injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
@@ -1456,6 +1465,9 @@ export function buildDynamicPrompt(
   if (scene.useSceneReference && scene.previewUrl) {
     prompt += ` SCENE REFERENCE — Replicate the exact composition, camera angle, lighting setup, and environment from the provided scene reference image. Replace only the product with ${product.title} (${analysis?.category || 'product'}). Maintain identical framing, perspective, and overall styling.`;
   }
+
+  // Product reference isolation — prevent AI from picking up extra garments from the product photo
+  prompt += ` PRODUCT REFERENCE ISOLATION — The product reference image shows "${product.title}". Focus ONLY on this specific product. Ignore any other garments, clothing items, or accessories visible in the reference photo. The model should wear the product exactly as described, with the outfit specified in the wardrobe note — do NOT reproduce other clothing from the reference image.`;
 
   // Append custom note at the end
   if (details.customNote && !prompt.includes(details.customNote)) {
