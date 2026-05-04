@@ -928,6 +928,7 @@ interface TokenContext {
   productWeight?: string | null;
   productMaterials?: string | null;
   productColor?: string | null;
+  productDimensions?: string | null;
   analysis: ProductAnalysis | null;
   details: DetailSettings;
   selectedModelId?: string;
