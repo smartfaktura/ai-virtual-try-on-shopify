@@ -1799,7 +1799,8 @@ function ZaraOutfitPanel({
             <div className="space-y-2 pt-2">
               {accessorySlots.map(slot => {
                 const meta = SLOT_TYPES[slot];
-                const isLocked = resolution.lockedSlot === slot;
+                const lockedEntry = lockedSlotProducts.get(slot);
+                const isLocked = !!lockedEntry;
                 // ── Special: jewelry uses JewelryConfig (necklace/earrings/bracelet/ring/metal) ──
                 if (slot === 'jewelry') {
                   const jv = config.jewelry || {};
@@ -1866,8 +1867,8 @@ function ZaraOutfitPanel({
                     value={value}
                     onChange={(p) => updateSlot(slot, p)}
                     locked={isLocked}
-                    productThumb={isLocked ? firstProduct?.image_url : undefined}
-                    productName={isLocked ? firstProduct?.title : undefined}
+                    productThumb={isLocked ? lockedEntry?.product?.image_url : undefined}
+                    productName={isLocked ? lockedEntry?.product?.title : undefined}
                     showFit={false}
                   />
                 );
