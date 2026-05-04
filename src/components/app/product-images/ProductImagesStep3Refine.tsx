@@ -3115,10 +3115,12 @@ export function ProductImagesStep3Refine({
                         </div>
                       </div>
                     </CollapsibleContent>
-                 </Collapsible>
-               </CardContent>
-             </Card>
-           )}
+                  </Collapsible>
+                  </>)}
+                </CardContent>
+              </Card>
+              );
+            })()}
 
 
           {/* Aesthetic Color card */}
