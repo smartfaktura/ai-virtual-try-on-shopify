@@ -424,6 +424,10 @@ export interface DetailSettings {
 
   // When true, user-defined outfitConfig overrides scene's outfit_hint (Edit Outfit override)
   outfitOverrideEnabled?: boolean;
+
+  // Per-scene outfit config — allows individual outfit overrides per scene.
+  // outfitConfigByScene[sceneId] wins over outfitConfigByProduct and global outfitConfig.
+  outfitConfigByScene?: Record<string, OutfitConfig>;
 }
 
 export interface GenerationPlan {
