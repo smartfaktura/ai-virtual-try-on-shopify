@@ -1,35 +1,29 @@
 
-## Replace inline scene outfit editors with a popup dialog
+## Fix styling consistency and add missing step titles/subtitles
 
-### Problem
-The current inline expand/collapse per-scene editing is confusing with many scenes. Users lose context when multiple panels open/close.
+### 1. Match collapsible trigger styles in outfit section (`ProductImagesStep3Refine.tsx`)
 
-### Changes in `ProductImagesStep3Refine.tsx`
+The "Edit all shots in bulk" and "Appearance" triggers use `text-xs font-semibold` with `w-3.5 h-3.5` icons and `py-2`. The "Add styling direction" triggers (lines ~2849 and ~3127) and hint blocks need to match:
 
-**1. Convert scene rows to open a Dialog instead of expanding inline**
+- **"Add styling direction"** (both AI and manual instances): Change icon from `w-3 h-3` to `w-3.5 h-3.5`, text from `text-[11px]` to `text-xs font-semibold`, trigger padding from `py-1.5` to `py-2`
+- **"Tap any shot below..."** hint (line 2878): Change text from `text-[11px]` to `text-xs`
+- **"AI will style N shots..."** box (line 2834): Change text from `text-[11px]` to `text-xs`
 
-- Clicking a scene row sets `expandedOutfitSceneId` as before, but instead of rendering an inline expanded panel, it opens a `Dialog`
-- The Dialog renders the scene thumbnail, title, status, and the `ZaraOutfitPanel` + reset/clear buttons
-- "Save & Next" and "Done" buttons inside the dialog navigate to the next scene (keeping the dialog open) or close it
-- Dialog uses `DialogContent` with responsive sizing: full-screen on mobile (`max-w-full h-full sm:max-w-lg sm:h-auto sm:max-h-[85vh]`), scrollable content area
+### 2. Step header consistency across wizard steps
 
-**2. Remove inline expanded content**
+The pattern is: `<h2>` title + `<p>` subtitle. Step 1 (Products) and Step 5 (Generate) follow this. Missing/inconsistent ones:
 
-- Remove the `{isExpanded && (...)}` block (lines 3048-3118) that renders the ZaraOutfitPanel inline
-- Keep the scene row button but change it to only open the dialog (no chevron toggle)
+**Step 3 (Setup) — `ProductImagesStep3Refine.tsx` line 2514:**
+- Current: `<span className="text-sm font-semibold">Complete setup</span>` — too small, no `<h2>`
+- Fix: Use `<h2 className="text-lg font-semibold tracking-tight">Complete setup</h2>` to match other steps
 
-**3. Yellow warning icon for unconfigured scenes**
+**Step 2 (Select shots) — `ProductImagesStep2Scenes.tsx` line 458:**
+- Has title but no subtitle
+- Add: `<p className="text-sm text-muted-foreground mt-1">Pick the shots you want to generate for your products</p>`
 
-- Replace the current `idx + 1` number for unconfigured scenes with an `AlertCircle` icon in amber (`text-amber-500`) so users clearly see which scenes need manual setup
-- Scenes with built-in look keep the green check, scenes with custom config keep the green check
-- Only scenes with `source === 'ai' && !perSceneCfg` show the amber warning icon
+**Step 1 (Products) — `ProductImagesStep1Products.tsx` line 54:**
+- Already correct with title + subtitle, but subtitle could be improved for multi-product: change to "Choose one or more products to generate visuals for" (already says this — good)
 
-**4. Mobile optimization**
-
-- Dialog: `max-w-full h-[100dvh] sm:max-w-lg sm:h-auto` with `overflow-y-auto` body
-- Scene header (thumbnail + title) pinned at top of dialog
-- Footer buttons (Save & Next / Done) sticky at bottom
-- Touch-friendly spacing throughout
-
-### File
+### Files
 - `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+- `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
