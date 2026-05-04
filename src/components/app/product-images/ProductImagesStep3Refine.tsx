@@ -1739,9 +1739,9 @@ function ZaraOutfitPanel({
 
   // Split available slots into garments (always shown) vs accessories (collapsible)
   const garmentOrder: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp'];
-  const garmentSlots = garmentOrder.filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
+  const garmentSlots = garmentOrder.filter(s => lockedSlotProducts.has(s) || resolution.availableSlots.includes(s));
   const accessorySlots = (['bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'] as OutfitSlotKey[])
-    .filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
+    .filter(s => lockedSlotProducts.has(s) || resolution.availableSlots.includes(s));
 
   return (
     <div className="space-y-3">
