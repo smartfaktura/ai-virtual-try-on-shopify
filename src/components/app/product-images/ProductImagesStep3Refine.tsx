@@ -1645,6 +1645,8 @@ interface Step3RefineProps {
   analyses?: Record<string, import('./types').ProductAnalysis>;
   isFree?: boolean;
   onUpgradeClick?: () => void;
+  perCategoryScenes?: Map<string, Set<string>>;
+  categoryGroups?: Map<string, string[]>;
 }
 
 /* ══════════════════════════════════════════════
@@ -1916,6 +1918,8 @@ export function ProductImagesStep3Refine({
   analyses = {},
   isFree = false,
   onUpgradeClick,
+  perCategoryScenes,
+  categoryGroups,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -2711,8 +2715,21 @@ export function ProductImagesStep3Refine({
                        ? SLOT_TYPES[productResolution.lockedSlot]?.label?.toUpperCase()
                        : null;
 
-                     // Get scenes for this product — model shots apply to all products
-                     const productModelShots = modelShots;
+                      // Filter model shots to this product's category scenes
+                      let productModelShots = modelShots;
+                      if (perCategoryScenes && perCategoryScenes.size > 0 && categoryGroups) {
+                        let productCategory: string | null = null;
+                        for (const [catId, pids] of categoryGroups) {
+                          if (pids.includes(product.id)) { productCategory = catId; break; }
+                        }
+                        if (productCategory) {
+                          const catSceneIds = perCategoryScenes.get(productCategory);
+                          if (catSceneIds && catSceneIds.size > 0) {
+                            const filtered = modelShots.filter(s => catSceneIds.has(s.id));
+                            if (filtered.length > 0) productModelShots = filtered;
+                          }
+                        }
+                      }
                      const productSceneOutfits = productModelShots.map(scene => {
                        const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
                        if (hasPerScene) return { scene, source: 'custom' as const };
