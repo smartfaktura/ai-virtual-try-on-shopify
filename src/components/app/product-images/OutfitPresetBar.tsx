@@ -16,7 +16,7 @@ interface OutfitPresetBarProps {
   currentConfig: OutfitConfig;
   resolution: ConflictResolution;
   onApplyToAll: (config: OutfitConfig, presetName: string) => void;
-  onLoadSingle?: (config: OutfitConfig) => void;
+  onLoadSingle?: (config: OutfitConfig, presetName: string) => void;
   onOpenCustomize?: () => void;
   category?: string;
   gender?: string;
@@ -42,7 +42,7 @@ export function OutfitPresetBar({
     const merged = { ...currentConfig, ...cleaned };
 
     if (mode === 'single' && onLoadSingle) {
-      onLoadSingle(merged);
+      onLoadSingle(merged, preset.name);
       toast.success(`Applied "${preset.name}"`);
       return;
     }
