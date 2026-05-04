@@ -83,18 +83,15 @@ export function OutfitPresetBar({
         <div className="flex flex-wrap gap-1.5">
           {builtIn.map(p => {
             const isActive = activePresetName === p.name;
-            const isPending = pendingPreset?.id === p.id;
             return (
               <button
                 key={p.id}
                 onClick={() => handleSelect(p)}
                 className={cn(
                   'h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all',
-                  isPending
-                    ? 'bg-primary text-primary-foreground border-primary ring-2 ring-primary/20'
-                    : isActive
-                      ? 'bg-primary/10 border-primary/30 text-primary'
-                      : 'bg-background hover:bg-muted border-border hover:border-foreground/20',
+                  isActive
+                    ? 'bg-primary/10 border-primary/30 text-primary'
+                    : 'bg-background hover:bg-muted border-border hover:border-foreground/20',
                 )}
               >
                 {isActive && <Check className="inline h-3 w-3 mr-1 -ml-0.5" />}
