@@ -155,15 +155,16 @@ export function ProductSpecsCard({
   return (
     <Card className="border-amber-500/20 bg-amber-500/[0.03]">
       <CardContent className="p-5 space-y-4">
-        <button
-          onClick={() => setCollapsed(v => !v)}
-          className="flex items-center justify-between w-full text-left"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-amber-500/10">
+        <div className="flex items-center justify-between w-full">
+          <button
+            type="button"
+            onClick={() => setCollapsed(v => !v)}
+            className="flex items-center gap-2.5 text-left flex-1 min-w-0"
+          >
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-amber-500/10 flex-shrink-0">
               <Ruler className="w-3.5 h-3.5 text-amber-500" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-sm font-semibold tracking-tight">Product Details</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {collapsed && productsNeedingSpecs.length > 1
@@ -171,14 +172,12 @@ export function ProductSpecsCard({
                   : 'Add dimensions and details to improve accuracy'}
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
+          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Unit toggle */}
-            <div
-              className="flex items-center rounded-md border border-border/50 overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="flex items-center rounded-md border border-border/50 overflow-hidden">
               <button
+                type="button"
                 onClick={() => setUnitSystem('metric')}
                 className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
                   unitSystem === 'metric'
@@ -189,6 +188,7 @@ export function ProductSpecsCard({
                 cm
               </button>
               <button
+                type="button"
                 onClick={() => setUnitSystem('imperial')}
                 className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
                   unitSystem === 'imperial'
@@ -200,9 +200,11 @@ export function ProductSpecsCard({
               </button>
             </div>
             <span className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider">Optional</span>
-            {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+            <button type="button" onClick={() => setCollapsed(v => !v)} className="p-0.5">
+              {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+            </button>
           </div>
-        </button>
+        </div>
 
         {!collapsed && (
           <div className="space-y-2 pt-1">
