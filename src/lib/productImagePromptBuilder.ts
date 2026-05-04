@@ -1012,7 +1012,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
         return `OUTFIT DIRECTION — ${hint}`;
       }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType) : '';
+      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait')) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
