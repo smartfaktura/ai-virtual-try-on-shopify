@@ -2843,24 +2843,31 @@ export function ProductImagesStep3Refine({
                     </div>
                   )}
 
-                  {/* Styling note — available in both modes */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Info className="w-3 h-3" />
-                      Styling direction for all {modelShots.length} shots (optional)
-                    </Label>
-                    <Textarea
-                      value={details.customOutfitNote || ''}
-                      onChange={e => update({ customOutfitNote: e.target.value || undefined })}
-                      className="text-xs min-h-[52px]"
-                      placeholder={effectiveMode === 'ai'
-                        ? 'e.g. keep tones neutral and earthy, no logos, athletic style...'
-                        : 'e.g. prefer neutral tones, add layered look, no bright colors...'}
-                    />
-                    <p className="text-[9px] text-muted-foreground/60">
-                      Guides outfit color and style choices across every on-model shot
-                    </p>
-                  </div>
+                  {/* Styling note — minimal collapsible */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note">
+                      <ChevronRight className="w-3 h-3 text-muted-foreground transition-transform group-data-[state=open]/note:rotate-90 flex-shrink-0" />
+                      <Pencil className="w-3 h-3 text-muted-foreground/60" />
+                      <span className="text-[11px] text-muted-foreground group-hover/note:text-foreground transition-colors">
+                        {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
+                      </span>
+                      {details.customOutfitNote && (
+                        <span className="text-[10px] text-muted-foreground/50 truncate ml-1 max-w-[200px]">{details.customOutfitNote}</span>
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2 pl-7">
+                        <Textarea
+                          value={details.customOutfitNote || ''}
+                          onChange={e => update({ customOutfitNote: e.target.value || undefined })}
+                          className="text-xs min-h-[48px]"
+                          placeholder={effectiveMode === 'ai'
+                            ? 'e.g. keep tones neutral and earthy, no logos, athletic style...'
+                            : 'e.g. prefer neutral tones, add layered look, no bright colors...'}
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   {/* Manual mode — per-scene first, bulk edit at bottom */}
                   {effectiveMode === 'manual' && (<>
