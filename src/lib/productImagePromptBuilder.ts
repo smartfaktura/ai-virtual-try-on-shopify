@@ -1372,6 +1372,11 @@ export function buildDynamicPrompt(
   }
   prompt += template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
+  // Inject product specifications/dimensions when available
+  if (ctx.productDimensions) {
+    prompt += ` Product specifications: ${ctx.productDimensions}.`;
+  }
+
   // Auto-inject key directives if template didn't include their tokens
   // For category-collection scenes, skip aesthetic overrides — let their templates drive the look
   const isGlobalScene = !scene.categoryCollection;
