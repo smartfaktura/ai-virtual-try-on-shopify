@@ -1741,10 +1741,12 @@ export default function ProductImages() {
                   primaryCategory={primaryCategory}
                   sceneExtraRefs={sceneExtraRefs}
                   onSceneExtraRefsChange={setSceneExtraRefs}
-                  analyses={analyses}
-                  isFree={isFree}
-                  onUpgradeClick={() => setUpgradeModalOpen(true)}
-                />
+                   analyses={analyses}
+                   isFree={isFree}
+                   onUpgradeClick={() => setUpgradeModalOpen(true)}
+                   perCategoryScenes={perCategoryScenes}
+                   categoryGroups={categoryGroups}
+                 />
               </div>
             )}
 
