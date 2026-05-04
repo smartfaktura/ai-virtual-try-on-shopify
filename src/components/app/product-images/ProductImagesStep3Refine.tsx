@@ -2582,7 +2582,7 @@ export function ProductImagesStep3Refine({
                        handleApplyToAll(cfg);
                        update({ appliedPresetName: presetName } as any);
                      }}
-                     activePresetName={(details as any).appliedPresetName || autoPickedPresetName || undefined}
+                     activePresetName={(details as any).appliedPresetName || undefined}
                      shotCount={modelShots.length}
                      mode="apply-all"
                      category={selectedProductCategories[0]}
