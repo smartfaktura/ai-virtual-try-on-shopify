@@ -139,9 +139,9 @@ export function ProductSpecsCard({
         });
       await Promise.all(updates);
       setLastSavedSpecs({ ...productSpecs });
-      toast({ title: 'Product details saved' });
+      toast.success('Product details saved');
     } catch {
-      toast({ title: 'Failed to save', variant: 'destructive' });
+      toast.error('Failed to save details');
     } finally {
       setSaving(false);
     }
