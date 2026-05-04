@@ -8,13 +8,24 @@ export function sanitizeSpecInput(val: string, maxLen = 500): string {
 
 // ── SpecField: each field is either a dropdown select or a text input ──
 
+export type UnitSystem = 'metric' | 'imperial';
+
 export interface SpecField {
   key: string;
   label: string;
   type: 'select' | 'input';
   options?: string[];
+  optionsImperial?: string[];
   placeholder?: string;
+  placeholderImperial?: string;
   unit?: string;
+}
+
+/** Map metric unit to imperial equivalent */
+export function getDisplayUnit(metricUnit: string | undefined, system: UnitSystem): string | undefined {
+  if (!metricUnit || system === 'metric') return metricUnit;
+  if (metricUnit === 'cm') return 'in';
+  return metricUnit; // mm, g, ml stay the same
 }
 
 // ── Category field definitions ──
