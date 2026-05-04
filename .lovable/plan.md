@@ -1,21 +1,52 @@
-## Problem
 
-Reference image uploads (back view, packaging, scene extras, per-product triggers) fail with "new row violates row-level security policy" because the storage upload paths don't include the user's ID as the first folder segment.
+# Jacket Extra Reference Triggers
 
-The storage RLS INSERT policy on `product-uploads` requires: `auth.uid()::text = storage.foldername(name)[1]` — meaning the path must start with `{user_id}/`.
+Add three new optional reference image upload slots for all jacket scenes, and extend the generation pipeline to pass multiple extra references to the AI.
 
-The working quick-upload in `ProductImages.tsx` correctly uses `${user.id}/...`, but three reference upload handlers in `ProductImagesStep3Refine.tsx` use paths like `packaging-refs/...` and `scene-extra-refs/...` without the user ID prefix.
+## What changes
 
-## Fix
+### 1. Add 3 new reference trigger definitions
 
-Update all three upload handlers in `src/components/app/product-images/ProductImagesStep3Refine.tsx` to prefix the storage path with the authenticated user's ID:
+In `src/components/app/product-images/detailBlockConfig.ts`, add to `REFERENCE_TRIGGERS`:
 
-1. **Packaging reference upload** (~line 1924): Change path from `packaging-refs/${ts}-...` to `${userId}/packaging-refs/${ts}-...`
-2. **Per-product reference upload** (~line 2059): Change path from `scene-extra-refs/${ts}-...` to `${userId}/scene-extra-refs/${ts}-...`
-3. **Extra reference upload** (~line 2257): Change path from `scene-extra-refs/${ts}-...` to `${userId}/scene-extra-refs/${ts}-...`
+- **`sleeveButtonDetail`** — "Upload sleeve button close-up" — for cuff button detail shots
+- **`innerLining`** — "Upload inner lining photo" — for jacket interior/lining rendering
+- **`cuffDetail`** — "Upload cuff detail photo" — for fashion/editorial cuff rendering
 
-Each handler already imports the supabase client; we'll also call `supabase.auth.getUser()` (or pass the user ID as a prop) to get the current user's ID for the path prefix.
+Each gets a `promptLabel` so the AI knows what it's looking at (e.g. "Sleeve button close-up reference — use this to accurately render cuff button details and stitching").
 
-### Technical detail
+### 2. Add triggers to all 48 jacket scenes in the database
 
-The component receives props but doesn't currently have the user ID. The simplest approach is to import `supabase` and call `auth.getUser()` inside each handler (already async), or thread the user ID through from the parent which already has it.
+SQL UPDATE to append `sleeveButtonDetail`, `innerLining`, `cuffDetail` to the `trigger_blocks` array for every scene where `category_collection = 'jackets'`. These are optional — the upload cards only appear when the user selects jacket scenes, and they can skip any/all of them.
+
+### 3. Support multiple extra references in generation payload
+
+Currently the client sends only one `extra_reference_image_url` (breaks on first match). Changes:
+
+**Client side** (`src/pages/ProductImages.tsx` ~line 951-975): Instead of breaking after the first matching trigger, collect ALL matching trigger reference URLs into an `extra_references` array of `{ url, label }` objects. Keep the single `extra_reference_image_url` for backward compatibility with the first match.
+
+**Edge function** (`supabase/functions/generate-workflow/index.ts` ~line 1314): Read the new `extra_references` array and push each entry into `referenceImages` with its custom label, so the AI receives all uploaded jacket detail photos alongside the product.
+
+### 4. No UI changes needed
+
+The existing reference trigger UI in `ProductImagesStep3Refine.tsx` already auto-renders upload cards for any trigger key found in `REFERENCE_TRIGGERS`. Adding the 3 new keys is enough — the upload cards, remove buttons, and per-product support all work automatically.
+
+---
+
+## Technical details
+
+**Database migration:**
+```sql
+UPDATE product_image_scenes
+SET trigger_blocks = array_cat(
+  trigger_blocks,
+  ARRAY['sleeveButtonDetail','innerLining','cuffDetail']
+)
+WHERE category_collection = 'jackets';
+```
+
+**Files modified:**
+- `src/components/app/product-images/detailBlockConfig.ts` — 3 new entries in `REFERENCE_TRIGGERS`
+- `src/pages/ProductImages.tsx` — collect all matching trigger refs into `extra_references` array
+- `supabase/functions/generate-workflow/index.ts` — iterate `extra_references` array into `referenceImages`
+- 1 database migration for the trigger_blocks update
