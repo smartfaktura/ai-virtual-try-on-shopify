@@ -48,6 +48,7 @@ import { mockModels } from '@/data/mockData';
 import { useProductAnalysis } from '@/hooks/useProductAnalysis';
 import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
 import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
+import { getSpecFieldsForCategory, buildSpecsPromptLine } from '@/lib/productSpecFields';
 
 const STEP_DEFS = [
   { number: 1, label: 'Product', icon: Package },
