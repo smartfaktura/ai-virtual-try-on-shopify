@@ -3269,7 +3269,7 @@ export function ProductImagesStep3Refine({
                                 className="text-[11px] text-primary hover:underline flex items-center gap-1"
                               >
                                 <RotateCcw className="w-3 h-3" />
-                                Reset to built-in look
+                                Reset to curated look
                               </button>
                             )}
                             {dialogPerSceneCfg && !dialogScene.outfitHint && (
