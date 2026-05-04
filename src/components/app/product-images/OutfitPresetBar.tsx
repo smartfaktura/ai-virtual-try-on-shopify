@@ -47,14 +47,8 @@ export function OutfitPresetBar({
       return;
     }
 
-    // In apply-all mode, show confirmation
-    setPendingPreset({ ...preset, config: merged });
-  };
-
-  const confirmApply = () => {
-    if (!pendingPreset) return;
-    onApplyToAll(pendingPreset.config, pendingPreset.name);
-    setPendingPreset(null);
+    // In apply-all mode, apply immediately
+    onApplyToAll(merged, preset.name);
   };
 
   const handleSave = async () => {
