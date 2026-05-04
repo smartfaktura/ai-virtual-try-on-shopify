@@ -1,21 +1,18 @@
-## Problem
+## Bug
 
-When multiple product categories exist (e.g. Clothing & Apparel, Activewear, Jeans), each category has different scenes selected in Step 2 via `perCategoryScenes`. However Step 3 shows ALL model shots under every product because `productModelShots = modelShots` (line 2715) — it never filters by category.
+When a preset is applied to all shots via the top-level bar, `handleApplyToAll` stores each scene's config in `outfitConfigByScene`. But the per-scene `ZaraOutfitPanel` receives `globalPresetName={perSceneCfg ? undefined : appliedPresetName}` — since `perSceneCfg` is now truthy (it was just set), the preset name is always `undefined`, so Quick Styles pills never highlight.
 
-## Solution
+## Fix
 
-Pass `perCategoryScenes` and `categoryGroups` into Step 3, then filter scenes per product based on their category.
+**`src/components/app/product-images/ProductImagesStep3Refine.tsx`** (line 2906)
 
-### Changes
+Change:
+```
+globalPresetName={perSceneCfg ? undefined : (details as any).appliedPresetName}
+```
+To:
+```
+globalPresetName={(details as any).appliedPresetName || undefined}
+```
 
-**`src/pages/ProductImages.tsx`**
-- Pass `perCategoryScenes` and `categoryGroups` as new props to `ProductImagesStep3Refine`
-
-**`src/components/app/product-images/ProductImagesStep3Refine.tsx`**
-- Add `perCategoryScenes` and `categoryGroups` to `Step3RefineProps`
-- In the per-product outfit group (around line 2715), replace `const productModelShots = modelShots` with logic that:
-  1. Finds which category the product belongs to via `categoryGroups`
-  2. Gets the scene IDs for that category from `perCategoryScenes`
-  3. Filters `modelShots` to only include scenes in that category's selection
-  4. Falls back to all `modelShots` when `perCategoryScenes` is empty (single-category case)
-- Update the shot count in the header summary to reflect the correct per-product totals
+Always pass the global preset name regardless of whether `perSceneCfg` exists — the config was set from that preset. When the user manually edits a slot, `ZaraOutfitPanel` already clears `singlePresetName` internally.
