@@ -3467,6 +3467,36 @@ export function ProductImagesStep3Refine({
                         <p className="text-xs text-muted-foreground mt-0.5">{trigger.description}</p>
                       </div>
                     </div>
+                    {/* Scene thumbnails for this reference */}
+                    {(() => {
+                      const triggerKey = trigger.key === 'packagingDetails' ? 'packagingDetails'
+                        : trigger.key === 'backView' ? 'backView' : trigger.key;
+                      const refScenes = selectedScenes.filter(s => (s.triggerBlocks || []).includes(triggerKey));
+                      if (refScenes.length === 0) return null;
+                      return (
+                        <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+                          {refScenes.slice(0, 4).map(scene => (
+                            <div key={scene.id} className="flex-shrink-0 w-[40px] space-y-0.5">
+                              <div className="w-[40px] h-[50px] rounded-md overflow-hidden border border-border/40 bg-muted">
+                                {scene.previewUrl ? (
+                                  <ShimmerImage src={getOptimizedUrl(scene.previewUrl, { quality: 50 })} alt={scene.title} className="w-full h-full object-cover" loading="lazy" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center"><Camera className="w-3 h-3 text-muted-foreground/30" /></div>
+                                )}
+                              </div>
+                              <p className="text-[7px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
+                            </div>
+                          ))}
+                          {refScenes.length > 4 && (
+                            <div className="flex-shrink-0 w-[40px] space-y-0.5">
+                              <div className="w-[40px] h-[50px] rounded-md border border-border/40 bg-muted/50 flex items-center justify-center">
+                                <span className="text-[10px] font-semibold text-muted-foreground">+{refScenes.length - 4}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {refUrl ? (
                       <div className="relative group w-24 aspect-[3/4] rounded-lg overflow-hidden border border-border bg-muted/30">
                         <img src={getOptimizedUrl(refUrl, { quality: 70 })} alt={trigger.label} className="w-full h-full object-contain" />
