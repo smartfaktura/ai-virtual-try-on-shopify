@@ -138,7 +138,7 @@ export function ProductSpecsCard({
         });
       await Promise.all(updates);
       setLastSavedSpecs({ ...productSpecs });
-      toast.success('Product details saved');
+      // silent save
     } catch {
       toast.error('Failed to save details');
     } finally {
@@ -358,7 +358,7 @@ export function ProductSpecsCard({
                 size="sm"
                 variant="outline"
                 onClick={handleSave}
-                disabled={saving || !hasUnsavedChanges}
+                disabled={saving}
                 className="h-8 text-xs gap-1.5 flex-shrink-0"
               >
                 {saving ? (
