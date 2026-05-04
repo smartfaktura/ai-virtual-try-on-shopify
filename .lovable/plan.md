@@ -1,57 +1,20 @@
 
 ## Problem
 
-All dimension fields are hardcoded to `cm` (metric). US market users expect inches. The user wants a toggle to switch between cm and inches.
+When a user selects "Style manually" mode, scenes with built-in (curated) looks show a green "Built-in look" badge and a subtle "Edit" button. The backend already supports overriding these built-in looks — the per-scene config is correctly passed to the prompt builder with `outfitOverrideEnabled: true`. However, the UI doesn't make it clear that built-in scenes are overridable. The "Edit" button blends in and users may think the curated look is locked.
 
 ## Solution
 
-Add a small `cm | in` toggle at the top of the Product Details card. When toggled, all dimension fields update their displayed unit labels and placeholders to the selected system. The serialized value always includes the unit so the AI knows the scale.
+Make the UI clearly communicate that built-in scenes can be overridden in manual mode:
 
-### Changes
+### Changes in `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-**`src/lib/productSpecFields.ts`**
-- Add a `placeholderImperial?: string` property to `SpecField` for inch-equivalent placeholders.
-- Add imperial placeholders to every field that currently has a `cm` unit. Fields with `mm`, `g`, `ml`, or no unit stay unchanged (eyewear mm, watches mm, weight g, volume ml are universal).
-- Export a helper `getImperialUnit(metricUnit)` that maps `cm` -> `in`, leaving `mm`/`g`/`ml` unchanged.
-- Update jewelry chain length select options to include both units: `'35cm / 14" (choker)'` etc.
-- Update jewelry bracelet length options similarly.
+1. **Replace the "Edit" button text with "Override"** for built-in scenes (where `source === 'scene'` and no `perSceneCfg`). Keep "Edit" for scenes that already have a custom config or have no built-in look.
 
-**`src/components/app/product-images/ProductSpecsCard.tsx`**
-- Add a `unitSystem` state: `'metric' | 'imperial'`, default `'metric'`.
-- Render a small segmented toggle (`cm | in`) next to the "Product Details" header, right of the "OPTIONAL" label.
-- When rendering each field: if `field.unit === 'cm'`, display `in` instead when imperial is selected, and use `field.placeholderImperial` for the placeholder.
-- The serialized spec string stores the active unit (e.g., `Width: 12 in` vs `Width: 30 cm`) so the AI prompt gets the correct scale info.
+2. **Add an "Override" quick-action button** for built-in scenes. Currently, lines 3044-3057 hide the AI quick-apply button when `source === 'scene'`. Add an equivalent styled button that says "Override" so the user has a clear primary action.
 
-### Categories reviewed
+3. **Update the badge text** in manual mode: change `Built-in look` to `Curated · tap to override` so users know it's not locked.
 
-| Category | Has cm fields | Imperial placeholder needed |
-|----------|--------------|---------------------------|
-| Bags, Backpacks, Wallets | Yes (W/H/D) | Yes |
-| Belts, Scarves | Yes (L/W) | Yes |
-| Hats | Yes (circumference) | Yes |
-| Shoes/Boots/Heels | Yes (heel height) | Yes |
-| Jewelry (earrings, pendants) | Yes (drop/width) | Yes |
-| Fragrance, Beauty, Makeup | Yes (bottle height) | Yes |
-| Food (package size) | Yes | Yes |
-| Beverages (container height) | Yes | Yes |
-| Home Decor, Furniture | Yes (W/H/D) | Yes |
-| Supplements | Yes (container height) | Yes |
-| Pet Accessories | Yes (L/W) | Yes |
-| Eyewear | mm -- unchanged | No |
-| Watches | mm -- unchanged | No |
-| Apparel (size/fit selects) | No cm fields | No |
-| Footwear (EU size input) | No cm unit | No |
-| Tech (freeform) | No unit | No |
-| Jeans (waist/length numbers) | No unit | No |
+4. **Update the dialog message** (line 3254-3256): the existing text says "Customize below to override" — this is good but make it slightly more prominent by adding an "Override curated look" button that pre-clears the hint and lets the user start fresh with the outfit panel.
 
-### UI Detail
-
-The toggle is a tiny pair of buttons styled like a segmented control:
-```
-[cm] [in]
-```
-Placed inline after the "OPTIONAL" badge, before the collapse chevron. Approximately 60px wide, matching the existing muted text style.
-
-### Files changed
-1. `src/lib/productSpecFields.ts` -- add `placeholderImperial` to SpecField, add imperial placeholders to all cm-unit fields
-2. `src/components/app/product-images/ProductSpecsCard.tsx` -- add unit toggle state and swap unit/placeholder based on selection
+These are all UI-only changes. The prompt builder logic already works correctly.
