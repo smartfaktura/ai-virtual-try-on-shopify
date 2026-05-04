@@ -1921,8 +1921,10 @@ export function ProductImagesStep3Refine({
     try {
       const ts = Date.now();
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `packaging-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
       const { supabase } = await import('@/integrations/supabase/client');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      const path = `${userId}/packaging-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
       const { data, error } = await supabase.storage
         .from('product-uploads')
         .upload(path, file, { cacheControl: '3600', upsert: false });
@@ -2056,7 +2058,9 @@ export function ProductImagesStep3Refine({
     try {
       const ts = Date.now();
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const userId = (await (await import('@/integrations/supabase/client')).supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      const path = `${userId}/scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
       const { data, error } = await (await import('@/integrations/supabase/client')).supabase.storage
         .from('product-uploads')
         .upload(path, file, { cacheControl: '3600', upsert: false });
@@ -2254,7 +2258,9 @@ export function ProductImagesStep3Refine({
     try {
       const ts = Date.now();
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const userId = (await (await import('@/integrations/supabase/client')).supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      const path = `${userId}/scene-extra-refs/${ts}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
       const { data, error } = await (await import('@/integrations/supabase/client')).supabase.storage
         .from('product-uploads')
         .upload(path, file, { cacheControl: '3600', upsert: false });
