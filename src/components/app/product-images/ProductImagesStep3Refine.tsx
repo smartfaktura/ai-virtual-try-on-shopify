@@ -2539,7 +2539,7 @@ export function ProductImagesStep3Refine({
                           ));
                         })()}
                       </div>
-                      <span className="text-sm font-semibold">Choose model</span>
+                      <span className="text-sm font-semibold">Model Selection</span>
                       {!isFree && (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) > 0 && (
                         <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
                           <Check className="w-2.5 h-2.5 mr-0.5" />{details.selectedModelIds?.length || 1} selected
@@ -2555,7 +2555,7 @@ export function ProductImagesStep3Refine({
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">Needed for {scenesNeedingModel.length} selected shot{scenesNeedingModel.length !== 1 ? 's' : ''}.</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Pick one or more models for your {scenesNeedingModel.length} on-model shot{scenesNeedingModel.length !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
                 <ModelPickerSections
@@ -2617,7 +2617,7 @@ export function ProductImagesStep3Refine({
 
                 {/* Scene thumbnails strip — shows which shots require background */}
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                  {bgScenes.map(scene => (
+                  {bgScenes.slice(0, 4).map(scene => (
                     <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
                       <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
                         {scene.previewUrl ? (
@@ -2642,6 +2642,14 @@ export function ProductImagesStep3Refine({
                       <p className="text-[8px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
                     </div>
                   ))}
+                  {bgScenes.length > 4 && (
+                    <div className="flex-shrink-0 w-[52px] space-y-1">
+                      <div className="w-[52px] h-[65px] rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+                        <span className="text-[11px] font-semibold text-muted-foreground">+{bgScenes.length - 4}</span>
+                      </div>
+                      <p className="text-[8px] text-muted-foreground leading-tight text-center">more</p>
+                    </div>
+                  )}
                 </div>
 
                 {!details.backgroundTone && (
@@ -2716,7 +2724,7 @@ export function ProductImagesStep3Refine({
 
                   {/* Scene thumbnails strip — shows which shots need outfit */}
                   <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                    {modelShots.map(scene => {
+                    {modelShots.slice(0, 4).map(scene => {
                       const src = sceneOutfitSource.find(s => s.scene.id === scene.id);
                       const hasBuiltIn = src?.source === 'scene';
                       return (
@@ -2744,6 +2752,14 @@ export function ProductImagesStep3Refine({
                         </div>
                       );
                     })}
+                    {modelShots.length > 4 && (
+                      <div className="flex-shrink-0 w-[52px] space-y-1">
+                        <div className="w-[52px] h-[65px] rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+                          <span className="text-[11px] font-semibold text-muted-foreground">+{modelShots.length - 4}</span>
+                        </div>
+                        <p className="text-[8px] text-muted-foreground leading-tight text-center">more</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Mode selector — pill-style options */}
@@ -2827,24 +2843,31 @@ export function ProductImagesStep3Refine({
                     </div>
                   )}
 
-                  {/* Styling note — available in both modes */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Info className="w-3 h-3" />
-                      Styling direction for all {modelShots.length} shots (optional)
-                    </Label>
-                    <Textarea
-                      value={details.customOutfitNote || ''}
-                      onChange={e => update({ customOutfitNote: e.target.value || undefined })}
-                      className="text-xs min-h-[52px]"
-                      placeholder={effectiveMode === 'ai'
-                        ? 'e.g. keep tones neutral and earthy, no logos, athletic style...'
-                        : 'e.g. prefer neutral tones, add layered look, no bright colors...'}
-                    />
-                    <p className="text-[9px] text-muted-foreground/60">
-                      Guides outfit color and style choices across every on-model shot
-                    </p>
-                  </div>
+                  {/* Styling note — minimal collapsible */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note">
+                      <ChevronRight className="w-3 h-3 text-muted-foreground transition-transform group-data-[state=open]/note:rotate-90 flex-shrink-0" />
+                      <Pencil className="w-3 h-3 text-muted-foreground/60" />
+                      <span className="text-[11px] text-muted-foreground group-hover/note:text-foreground transition-colors">
+                        {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
+                      </span>
+                      {details.customOutfitNote && (
+                        <span className="text-[10px] text-muted-foreground/50 truncate ml-1 max-w-[200px]">{details.customOutfitNote}</span>
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2 pl-7">
+                        <Textarea
+                          value={details.customOutfitNote || ''}
+                          onChange={e => update({ customOutfitNote: e.target.value || undefined })}
+                          className="text-xs min-h-[48px]"
+                          placeholder={effectiveMode === 'ai'
+                            ? 'e.g. keep tones neutral and earthy, no logos, athletic style...'
+                            : 'e.g. prefer neutral tones, add layered look, no bright colors...'}
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   {/* Manual mode — per-scene first, bulk edit at bottom */}
                   {effectiveMode === 'manual' && (<>
@@ -3234,7 +3257,7 @@ export function ProductImagesStep3Refine({
 
                 {/* Scene thumbnails strip */}
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                  {aestheticColorScenes.map(scene => (
+                  {aestheticColorScenes.slice(0, 4).map(scene => (
                     <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
                       <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
                         {scene.previewUrl ? (
@@ -3259,6 +3282,14 @@ export function ProductImagesStep3Refine({
                       <p className="text-[8px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
                     </div>
                   ))}
+                  {aestheticColorScenes.length > 4 && (
+                    <div className="flex-shrink-0 w-[52px] space-y-1">
+                      <div className="w-[52px] h-[65px] rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+                        <span className="text-[11px] font-semibold text-muted-foreground">+{aestheticColorScenes.length - 4}</span>
+                      </div>
+                      <p className="text-[8px] text-muted-foreground leading-tight text-center">more</p>
+                    </div>
+                  )}
                 </div>
 
                 {!details.aestheticColorHex && (
@@ -3436,6 +3467,36 @@ export function ProductImagesStep3Refine({
                         <p className="text-xs text-muted-foreground mt-0.5">{trigger.description}</p>
                       </div>
                     </div>
+                    {/* Scene thumbnails for this reference */}
+                    {(() => {
+                      const triggerKey = trigger.key === 'packagingDetails' ? 'packagingDetails'
+                        : trigger.key === 'backView' ? 'backView' : trigger.key;
+                      const refScenes = selectedScenes.filter(s => (s.triggerBlocks || []).includes(triggerKey));
+                      if (refScenes.length === 0) return null;
+                      return (
+                        <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+                          {refScenes.slice(0, 4).map(scene => (
+                            <div key={scene.id} className="flex-shrink-0 w-[40px] space-y-0.5">
+                              <div className="w-[40px] h-[50px] rounded-md overflow-hidden border border-border/40 bg-muted">
+                                {scene.previewUrl ? (
+                                  <ShimmerImage src={getOptimizedUrl(scene.previewUrl, { quality: 50 })} alt={scene.title} className="w-full h-full object-cover" loading="lazy" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center"><Camera className="w-3 h-3 text-muted-foreground/30" /></div>
+                                )}
+                              </div>
+                              <p className="text-[7px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
+                            </div>
+                          ))}
+                          {refScenes.length > 4 && (
+                            <div className="flex-shrink-0 w-[40px] space-y-0.5">
+                              <div className="w-[40px] h-[50px] rounded-md border border-border/40 bg-muted/50 flex items-center justify-center">
+                                <span className="text-[10px] font-semibold text-muted-foreground">+{refScenes.length - 4}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {refUrl ? (
                       <div className="relative group w-24 aspect-[3/4] rounded-lg overflow-hidden border border-border bg-muted/30">
                         <img src={getOptimizedUrl(refUrl, { quality: 70 })} alt={trigger.label} className="w-full h-full object-contain" />
