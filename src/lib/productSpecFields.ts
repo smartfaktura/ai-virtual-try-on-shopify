@@ -25,26 +25,22 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'size', label: 'Size', type: 'select', options: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] },
     { key: 'fit', label: 'Fit', type: 'select', options: ['Slim', 'Regular', 'Relaxed', 'Oversized', 'Cropped'] },
     { key: 'length', label: 'Length', type: 'select', options: ['Cropped', 'Waist', 'Hip', 'Mid-thigh', 'Knee', 'Full'] },
-    { key: 'fabric', label: 'Fabric', type: 'select', options: ['Cotton', 'Linen', 'Silk', 'Polyester', 'Wool', 'Cashmere', 'Blend'] },
   ],
   'dresses': [
     { key: 'size', label: 'Size', type: 'select', options: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'] },
     { key: 'silhouette', label: 'Silhouette', type: 'select', options: ['A-line', 'Bodycon', 'Wrap', 'Shift', 'Fit & flare', 'Slip'] },
     { key: 'length', label: 'Length', type: 'select', options: ['Mini', 'Above knee', 'Knee', 'Midi', 'Maxi'] },
-    { key: 'fabric', label: 'Fabric', type: 'select', options: ['Cotton', 'Silk', 'Satin', 'Chiffon', 'Linen', 'Jersey', 'Lace'] },
   ],
   'hoodies': [
     { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
     { key: 'fit', label: 'Fit', type: 'select', options: ['Regular', 'Oversized', 'Cropped', 'Boxy'] },
     { key: 'style', label: 'Style', type: 'select', options: ['Pullover', 'Zip-up', 'Half-zip'] },
-    { key: 'fabric', label: 'Fabric', type: 'select', options: ['Fleece', 'French terry', 'Cotton', 'Heavyweight cotton'] },
   ],
   'jeans': [
     { key: 'waist', label: 'Waist', type: 'input', placeholder: '32' },
     { key: 'length', label: 'Length', type: 'input', placeholder: '32' },
     { key: 'fit', label: 'Fit', type: 'select', options: ['Skinny', 'Slim', 'Straight', 'Regular', 'Wide-leg', 'Bootcut', 'Tapered'] },
     { key: 'rise', label: 'Rise', type: 'select', options: ['Low', 'Mid', 'High'] },
-    { key: 'fabric', label: 'Denim', type: 'select', options: ['Rigid denim', 'Stretch denim', 'Raw denim', 'Distressed'] },
   ],
   'jackets': [
     { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
@@ -56,7 +52,6 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
     { key: 'fit', label: 'Fit', type: 'select', options: ['Compression', 'Slim', 'Regular', 'Relaxed'] },
     { key: 'waist', label: 'Waist', type: 'select', options: ['Low', 'Mid', 'High'] },
-    { key: 'fabric', label: 'Fabric', type: 'select', options: ['Moisture-wicking', 'Recycled nylon', 'Spandex blend', 'Mesh panel'] },
   ],
   'swimwear': [
     { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL'] },
@@ -72,7 +67,6 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
   'kidswear': [
     { key: 'age', label: 'Age', type: 'select', options: ['0-3m', '3-6m', '6-12m', '1-2y', '2-3y', '3-4y', '4-5y', '5-6y', '7-8y', '9-10y', '11-12y'] },
     { key: 'fit', label: 'Fit', type: 'select', options: ['Regular', 'Relaxed', 'Slim'] },
-    { key: 'fabric', label: 'Fabric', type: 'select', options: ['Organic cotton', 'Cotton', 'Jersey', 'Fleece'] },
   ],
 
   // ── Footwear ──
