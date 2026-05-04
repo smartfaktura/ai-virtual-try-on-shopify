@@ -1,52 +1,26 @@
 
-# Jacket Extra Reference Triggers
+# Fix: IMAGE_LABEL_MAP scope error crashing jacket generations
 
-Add three new optional reference image upload slots for all jacket scenes, and extend the generation pipeline to pass multiple extra references to the AI.
+## Problem
+The latest generation failed with `IMAGE_LABEL_MAP is not defined`. This happened because the code I added (and the existing single-reference code) tries to write to `IMAGE_LABEL_MAP` from the variation loop, but `IMAGE_LABEL_MAP` is defined *inside* the `generateImage` function — it's not in scope at the call site.
 
-## What changes
+The old single-reference code had the same latent bug but only triggered when `customLabel` was truthy (which rarely happened). The new multi-reference code triggers it on every call.
 
-### 1. Add 3 new reference trigger definitions
+## Fix
 
-In `src/components/app/product-images/detailBlockConfig.ts`, add to `REFERENCE_TRIGGERS`:
+**In `supabase/functions/generate-workflow/index.ts`:**
 
-- **`sleeveButtonDetail`** — "Upload sleeve button close-up" — for cuff button detail shots
-- **`innerLining`** — "Upload inner lining photo" — for jacket interior/lining rendering
-- **`cuffDetail`** — "Upload cuff detail photo" — for fashion/editorial cuff rendering
+1. Stop writing to `IMAGE_LABEL_MAP` from outside `generateImage`. Instead, pass `promptLabel` as a property on each reference image object.
 
-Each gets a `promptLabel` so the AI knows what it's looking at (e.g. "Sleeve button close-up reference — use this to accurately render cuff button details and stitching").
+2. Inside `generateImage` (~line 778), check for `img.promptLabel` first before falling back to `IMAGE_LABEL_MAP`:
+   ```
+   const labelText = img.promptLabel 
+     ? `[PRODUCT EXTRA ANGLE] ${img.promptLabel}`
+     : IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
+   ```
 
-### 2. Add triggers to all 48 jacket scenes in the database
+3. Remove the `IMAGE_LABEL_MAP` writes from both the multi-reference block and the single-reference block (lines ~1321 and ~1331).
 
-SQL UPDATE to append `sleeveButtonDetail`, `innerLining`, `cuffDetail` to the `trigger_blocks` array for every scene where `category_collection = 'jackets'`. These are optional — the upload cards only appear when the user selects jacket scenes, and they can skip any/all of them.
+This also fixes the pre-existing bug for single extra references with custom labels (e.g. atomizer, interior detail triggers for bags/fragrances).
 
-### 3. Support multiple extra references in generation payload
-
-Currently the client sends only one `extra_reference_image_url` (breaks on first match). Changes:
-
-**Client side** (`src/pages/ProductImages.tsx` ~line 951-975): Instead of breaking after the first matching trigger, collect ALL matching trigger reference URLs into an `extra_references` array of `{ url, label }` objects. Keep the single `extra_reference_image_url` for backward compatibility with the first match.
-
-**Edge function** (`supabase/functions/generate-workflow/index.ts` ~line 1314): Read the new `extra_references` array and push each entry into `referenceImages` with its custom label, so the AI receives all uploaded jacket detail photos alongside the product.
-
-### 4. No UI changes needed
-
-The existing reference trigger UI in `ProductImagesStep3Refine.tsx` already auto-renders upload cards for any trigger key found in `REFERENCE_TRIGGERS`. Adding the 3 new keys is enough — the upload cards, remove buttons, and per-product support all work automatically.
-
----
-
-## Technical details
-
-**Database migration:**
-```sql
-UPDATE product_image_scenes
-SET trigger_blocks = array_cat(
-  trigger_blocks,
-  ARRAY['sleeveButtonDetail','innerLining','cuffDetail']
-)
-WHERE category_collection = 'jackets';
-```
-
-**Files modified:**
-- `src/components/app/product-images/detailBlockConfig.ts` — 3 new entries in `REFERENCE_TRIGGERS`
-- `src/pages/ProductImages.tsx` — collect all matching trigger refs into `extra_references` array
-- `supabase/functions/generate-workflow/index.ts` — iterate `extra_references` array into `referenceImages`
-- 1 database migration for the trigger_blocks update
+**Files changed:** `supabase/functions/generate-workflow/index.ts` only, then redeploy.
