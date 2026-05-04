@@ -998,7 +998,8 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'personDirective': {
       const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
       const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
-      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint);
+      const isHalfPortrait = (scene.triggerBlocks || []).includes('halfPortrait');
+      return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint, isHalfPortrait);
     }
     case 'handStyle': return buildHandDirective(details);
     case 'nailDirective': return resolveNailStyle(details.nails);
