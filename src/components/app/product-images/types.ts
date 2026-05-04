@@ -65,7 +65,8 @@ export type ProductCategory =
   | 'sneakers' | 'boots' | 'high-heels'
   | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'eyewear'
   | 'watches' | 'jewellery-necklaces' | 'jewellery-earrings'
-  | 'jewellery-bracelets' | 'jewellery-rings';
+  | 'jewellery-bracelets' | 'jewellery-rings'
+  | 'pet-accessories';
 
 export interface ProductAnalysis {
   /** Schema version — used to invalidate stale analyses */
