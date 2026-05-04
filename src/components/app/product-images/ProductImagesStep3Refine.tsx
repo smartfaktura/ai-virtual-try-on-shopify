@@ -2132,14 +2132,16 @@ export function ProductImagesStep3Refine({
   }, []);
 
   // Determine source for each model scene
+  const isManualOutfitMode = details.outfitMode === 'manual';
   const sceneOutfitSource = useMemo(() => {
     return modelShots.map(scene => {
       const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
       if (hasPerScene) return { scene, source: 'custom' as const };
-      if (scene.outfitHint) return { scene, source: 'scene' as const };
+      // In manual mode, ignore curated hints — treat as needing styling
+      if (!isManualOutfitMode && scene.outfitHint) return { scene, source: 'scene' as const };
       return { scene, source: 'ai' as const };
     });
-  }, [modelShots, details.outfitConfigByScene]);
+  }, [modelShots, details.outfitConfigByScene, isManualOutfitMode]);
 
   // Summarize an OutfitConfig into a short string for display
   const summarizeOutfitConfig = useCallback((cfg: OutfitConfig): string => {
@@ -2912,7 +2914,7 @@ export function ProductImagesStep3Refine({
                      const productSceneOutfits = productModelShots.map(scene => {
                        const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
                        if (hasPerScene) return { scene, source: 'custom' as const };
-                       if (scene.outfitHint) return { scene, source: 'scene' as const };
+                       if (!isManualOutfitMode && scene.outfitHint) return { scene, source: 'scene' as const };
                        return { scene, source: 'ai' as const };
                      });
 
