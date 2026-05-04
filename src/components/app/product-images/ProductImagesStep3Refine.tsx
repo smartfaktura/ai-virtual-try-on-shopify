@@ -1668,6 +1668,7 @@ const SLOT_TYPES: Record<OutfitSlotKey, { label: string; types: typeof TOP_TYPES
 
 function ZaraOutfitPanel({
   details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts, productCategories,
+  globalPresetName,
 }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
@@ -1677,9 +1678,10 @@ function ZaraOutfitPanel({
   selectedProductIds: Set<string>;
   allProducts: UserProduct[];
   productCategories?: string[];
+  globalPresetName?: string;
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
-  const [singlePresetName, setSinglePresetName] = useState<string | undefined>(undefined);
+  const [singlePresetName, setSinglePresetName] = useState<string | undefined>(globalPresetName);
 
   // Resolve conflicts for ALL selected products — each may lock a different slot
   const productIds = useMemo(() => Array.from(selectedProductIds), [selectedProductIds]);
