@@ -2517,6 +2517,7 @@ export function ProductImagesStep3Refine({
             analyses={analyses}
             productSpecs={details.productSpecs || {}}
             onProductSpecsChange={(specs) => update({ productSpecs: specs })}
+            onCategoryOverride={onCategoryOverride}
           />
 
           {/* Choose model card — shown first */}
