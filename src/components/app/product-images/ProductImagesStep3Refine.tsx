@@ -3250,7 +3250,7 @@ export function ProductImagesStep3Refine({
 
                 {/* Scene thumbnails strip */}
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                  {aestheticColorScenes.map(scene => (
+                  {aestheticColorScenes.slice(0, 4).map(scene => (
                     <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
                       <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
                         {scene.previewUrl ? (
@@ -3275,6 +3275,14 @@ export function ProductImagesStep3Refine({
                       <p className="text-[8px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
                     </div>
                   ))}
+                  {aestheticColorScenes.length > 4 && (
+                    <div className="flex-shrink-0 w-[52px] space-y-1">
+                      <div className="w-[52px] h-[65px] rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+                        <span className="text-[11px] font-semibold text-muted-foreground">+{aestheticColorScenes.length - 4}</span>
+                      </div>
+                      <p className="text-[8px] text-muted-foreground leading-tight text-center">more</p>
+                    </div>
+                  )}
                 </div>
 
                 {!details.aestheticColorHex && (
