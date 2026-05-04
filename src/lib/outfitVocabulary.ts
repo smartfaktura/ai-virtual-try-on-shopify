@@ -53,6 +53,7 @@ export const BOTTOM_TYPES: GarmentTypeOption[] = [
 
 // ── Outerwear ──
 export const OUTERWEAR_TYPES: GarmentTypeOption[] = [
+  { id: 'none', label: 'None' },
   { id: 'jacket', label: 'Jacket', subtypes: ['denim', 'leather biker', 'bomber', 'varsity', 'suede', 'harrington', 'puffer'], materials: ['denim', 'leather', 'nylon', 'wool'] },
   { id: 'blazer', label: 'Blazer', subtypes: ['oversized', 'tailored', 'double-breasted', 'cropped'], materials: ['wool', 'linen', 'cotton'] },
   { id: 'coat', label: 'Coat', subtypes: ['trench', 'wool overcoat', 'puffer', 'parka', 'pea coat', 'duster'], materials: ['wool', 'cashmere', 'cotton', 'nylon'] },
@@ -851,6 +852,62 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
     config: {
       top: { garment: 'shirt', subtype: 'oxford', color: 'white', material: 'cotton' },
       bottom: { garment: 'trousers', subtype: 'pleated', color: 'cream', material: 'wool' },
+    },
+  },
+
+  // ─────── STYLE COLLECTIONS (universal, always shown) ───────
+  {
+    id: 'builtin-style-minimal-premium',
+    name: 'Minimal Premium',
+    category: ['universal'],
+    recommended: true,
+    config: {
+      top: { garment: 't-shirt', subtype: 'crew', color: 'white', material: 'cotton', fit: 'fitted' },
+      bottom: { garment: 'trousers', subtype: 'tailored', color: 'black', material: 'wool' },
+      shoes: { garment: 'loafer', subtype: 'penny', color: 'black', material: 'leather' },
+    },
+  },
+  {
+    id: 'builtin-style-editorial-fashion',
+    name: 'Editorial Fashion',
+    category: ['universal'],
+    config: {
+      top: { garment: 'blouse', subtype: 'silk', color: 'cream', material: 'silk', fit: 'fitted' },
+      bottom: { garment: 'trousers', subtype: 'wide-leg', color: 'black', material: 'wool' },
+      shoes: { garment: 'heel', subtype: 'pointed', color: 'black', material: 'leather' },
+      jewelry: { earrings: 'Drops', metal: 'Gold' },
+    },
+  },
+  {
+    id: 'builtin-style-casual-everyday',
+    name: 'Casual Everyday',
+    category: ['universal'],
+    recommended: true,
+    config: {
+      top: { garment: 'knit', subtype: 'crewneck', color: 'grey', material: 'cotton', fit: 'relaxed' },
+      bottom: { garment: 'jeans', subtype: 'straight', color: 'light wash', material: 'denim' },
+      shoes: { garment: 'sneaker', subtype: 'low-top', color: 'white', material: 'leather' },
+    },
+  },
+  {
+    id: 'builtin-style-streetwear-urban',
+    name: 'Streetwear / Urban',
+    category: ['universal'],
+    config: {
+      top: { garment: 'hoodie', subtype: 'pullover', color: 'black', material: 'cotton', fit: 'oversized' },
+      bottom: { garment: 'trousers', subtype: 'cargo', color: 'khaki', material: 'cotton', fit: 'relaxed' },
+      shoes: { garment: 'sneaker', subtype: 'chunky', color: 'white', material: 'leather' },
+      hat: { garment: 'cap', subtype: 'dad', color: 'black', material: 'cotton' },
+    },
+  },
+  {
+    id: 'builtin-style-sport-active',
+    name: 'Sport / Active',
+    category: ['universal'],
+    config: {
+      top: { garment: 'crop-top', subtype: 'ribbed', color: 'black', material: 'lycra', fit: 'fitted' },
+      bottom: { garment: 'leggings', subtype: 'high-waist', color: 'black', material: 'lycra' },
+      shoes: { garment: 'sneaker', subtype: 'chunky', color: 'white', material: 'mesh' },
     },
   },
 
