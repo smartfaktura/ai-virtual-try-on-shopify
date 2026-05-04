@@ -3211,6 +3211,30 @@ export function ProductImagesStep3Refine({
                     </CollapsibleContent>
                   </Collapsible>
 
+                  {/* Styling direction — after bulk edit */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note2">
+                      <ChevronRight className="w-3 h-3 text-muted-foreground transition-transform group-data-[state=open]/note2:rotate-90 flex-shrink-0" />
+                      <Pencil className="w-3 h-3 text-muted-foreground/60" />
+                      <span className="text-[11px] text-muted-foreground group-hover/note2:text-foreground transition-colors">
+                        {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
+                      </span>
+                      {details.customOutfitNote && (
+                        <span className="text-[10px] text-muted-foreground/50 truncate ml-1 max-w-[120px] sm:max-w-[200px]">{details.customOutfitNote}</span>
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2 pl-7">
+                        <Textarea
+                          value={details.customOutfitNote || ''}
+                          onChange={e => update({ customOutfitNote: e.target.value || undefined })}
+                          className="text-xs min-h-[48px]"
+                          placeholder="e.g. prefer neutral tones, add layered look, no bright colors..."
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
                  <Collapsible>
                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
