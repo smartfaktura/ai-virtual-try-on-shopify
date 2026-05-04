@@ -631,7 +631,7 @@ export function getConflictingSlots(garmentType?: string): Set<OutfitSlot> {
     return new Set(['bottom']);
   }
   // Top garments
-  if (['crop top', 'blouse', 'shirt', 'hoodie', 'sweater', 'cardigan', 'tank top', 'vest', 'jacket', 'blazer', 'coat', 'parka', 'bomber', 'polo', 'tunic', 'cape', 'poncho', 'turtleneck', 'henley', 'pullover', 'windbreaker', 'anorak', 'gilet', 'knitwear', 'knit', 'outerwear', 'tops', 'sweatshirt', 't-shirt', 'tee', 'jersey', 'fleece', 'flannel'].some(k => gt.includes(k))) {
+  if (['crop top', 'blouse', 'shirt', 'hoodie', 'sweater', 'cardigan', 'tank top', 'vest', 'jacket', 'blazer', 'coat', 'parka', 'bomber', 'polo', 'tunic', 'cape', 'poncho', 'turtleneck', 'henley', 'pullover', 'windbreaker', 'anorak', 'gilet', 'knitwear', 'knit', 'outerwear', 'tops', 'sweatshirt', 't-shirt', 'tee', 'jersey', 'fleece', 'flannel', 'bra', 'sports bra', 'sports-bra', 'bustier', 'corset', 'bandeau', 'camisole', 'halter top', 'tube top', 'wrap top', 'track jacket'].some(k => gt.includes(k))) {
     return new Set(['top']);
   }
   // Footwear
