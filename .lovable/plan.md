@@ -1,17 +1,11 @@
 
-## Changes to `ProductImagesStep3Refine.tsx`
+## Fix: Sports bra not conflicting with the "top" outfit slot
 
-### 1. Swap card order: Model first, Background second
+The `getConflictingSlots()` function in `src/lib/productImagePromptBuilder.ts` (line 634) lists keywords that map to the `top` slot conflict. "Sports bra", "bra", and similar top-layer garments are missing from this list, so the system doesn't recognize them as tops and leaves the top slot editable.
 
-Move the "Choose model" card block (lines ~2572-2700+) **above** the "Background style" card block (lines ~2518-2568). This makes the user pick their model first, then select background color — matching the logical flow.
+### Change in `src/lib/productImagePromptBuilder.ts`
 
-### 2. Add scene thumbnail strip to Background style card
+Add these keywords to the top garment conflict list (line 634):
+`'bra'`, `'sports bra'`, `'sports-bra'`, `'bustier'`, `'corset'`, `'bandeau'`, `'camisole'`, `'halter top'`, `'tube top'`, `'wrap top'`, `'track jacket'`
 
-Add a scene thumbnails strip to the Background style card, matching the same pattern used by the Aesthetic color card (lines ~3031-3057). This will show small previews of the scenes that require a background color, so the user clearly understands which shots are affected.
-
-The strip will display each `bgScene` with its preview image and title, styled identically to the aesthetic color card's thumbnail row (52px wide cards with scene name below).
-
-### Result
-
-- Users first pick their model, then scroll to background color — a more natural sequence
-- Background style card will show scene thumbnails so users immediately see which shots need a background, removing ambiguity
+This ensures that when the product is a sports bra (or similar), the top outfit slot is automatically hidden/conflicted — the product itself fills that role.
