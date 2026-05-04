@@ -2558,6 +2558,18 @@ export function ProductImagesStep3Refine({
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Each shot has an outfit direction. Edit individually or apply one look to all</p>
                 </div>
 
+                {/* Quick-select presets — always visible above apply-to-all */}
+                {!topLevelResolution.hideOutfitPanel && (
+                  <OutfitPresetBar
+                    currentConfig={details.outfitConfig || {}}
+                    resolution={topLevelResolution}
+                    onLoad={(cfg) => handleApplyToAll(cfg)}
+                    category={selectedProductCategories[0]}
+                    gender={selectedModelGender}
+                    productCategories={selectedProductCategories}
+                  />
+                )}
+
                 {/* Apply to all button */}
                 {modelShots.length > 1 && (
                   <Button
