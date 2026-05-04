@@ -28,7 +28,7 @@ interface OutfitPresetBarProps {
 }
 
 export function OutfitPresetBar({
-  currentConfig, resolution, onApplyToAll, onLoadSingle, onOpenCustomize,
+  currentConfig, resolution, onApplyToAll, onLoadSingle, onOpenCustomize, onSetupOneByOne,
   category, gender,
   productCategories, activePresetName, shotCount = 0, mode = 'apply-all',
 }: OutfitPresetBarProps) {
@@ -36,6 +36,7 @@ export function OutfitPresetBar({
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [pendingPreset, setPendingPreset] = useState<{ config: OutfitConfig; name: string } | null>(null);
 
   const handleSelect = (preset: UserOutfitPreset) => {
     const cleaned = applyPresetWithLocks(preset.config, resolution);
@@ -47,8 +48,19 @@ export function OutfitPresetBar({
       return;
     }
 
-    // In apply-all mode, apply immediately
-    onApplyToAll(merged, preset.name);
+    // In apply-all mode, show confirmation
+    setPendingPreset({ config: merged, name: preset.name });
+  };
+
+  const confirmApplyAll = () => {
+    if (!pendingPreset) return;
+    onApplyToAll(pendingPreset.config, pendingPreset.name);
+    setPendingPreset(null);
+  };
+
+  const handleOneByOne = () => {
+    setPendingPreset(null);
+    onSetupOneByOne?.();
   };
 
   const handleSave = async () => {
