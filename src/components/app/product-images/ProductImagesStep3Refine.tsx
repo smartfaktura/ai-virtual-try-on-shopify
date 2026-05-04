@@ -42,6 +42,7 @@ import {
   pickDefaultPreset, pickDefaultPresetPerProduct,
 } from '@/lib/outfitVocabulary';
 // AiStylistCard removed — replaced by per-scene outfit direction
+import { ProductSpecsCard } from './ProductSpecsCard';
 import { toast } from '@/lib/brandedToast';
 
 /* ══════════════════════════════════════════════
