@@ -155,11 +155,15 @@ export function ProductSpecsCard({
   return (
     <Card className="border-amber-500/20 bg-amber-500/[0.03]">
       <CardContent className="p-5 space-y-4">
-        <div className="flex items-center justify-between w-full">
-          <button
-            type="button"
+        {/* Header row: title on left, collapse chevron on right */}
+        <div className="flex items-start gap-2.5">
+          {/* Clickable title area — collapses the card */}
+          <div
+            role="button"
+            tabIndex={0}
             onClick={() => setCollapsed(v => !v)}
-            className="flex items-center gap-2.5 text-left flex-1 min-w-0"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCollapsed(v => !v); } }}
+            className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
           >
             <div className="flex items-center justify-center w-7 h-7 rounded-md bg-amber-500/10 flex-shrink-0">
               <Ruler className="w-3.5 h-3.5 text-amber-500" />
@@ -172,14 +176,19 @@ export function ProductSpecsCard({
                   : 'Add dimensions and details to improve accuracy'}
               </p>
             </div>
-          </button>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Unit toggle */}
-            <div className="flex items-center rounded-md border border-border/50 overflow-hidden">
+          </div>
+
+          {/* Unit toggle + Optional label + chevron — all outside the collapse trigger */}
+          <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
+            <div
+              className="flex items-center rounded-md border border-border/50 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
-                onClick={() => setUnitSystem('metric')}
-                className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
+                onClick={(e) => { e.stopPropagation(); setUnitSystem('metric'); }}
+                className={`px-2.5 py-1 text-[11px] font-medium tracking-wider transition-colors min-h-[28px] ${
                   unitSystem === 'metric'
                     ? 'bg-amber-500/15 text-amber-600'
                     : 'text-muted-foreground hover:text-foreground'
@@ -189,8 +198,8 @@ export function ProductSpecsCard({
               </button>
               <button
                 type="button"
-                onClick={() => setUnitSystem('imperial')}
-                className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
+                onClick={(e) => { e.stopPropagation(); setUnitSystem('imperial'); }}
+                className={`px-2.5 py-1 text-[11px] font-medium tracking-wider transition-colors min-h-[28px] ${
                   unitSystem === 'imperial'
                     ? 'bg-amber-500/15 text-amber-600'
                     : 'text-muted-foreground hover:text-foreground'
@@ -199,8 +208,12 @@ export function ProductSpecsCard({
                 in
               </button>
             </div>
-            <span className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider">Optional</span>
-            <button type="button" onClick={() => setCollapsed(v => !v)} className="p-0.5">
+            <span className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider hidden sm:inline">Optional</span>
+            <button
+              type="button"
+              onClick={() => setCollapsed(v => !v)}
+              className="p-1 -mr-1"
+            >
               {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
             </button>
           </div>
@@ -219,56 +232,70 @@ export function ProductSpecsCard({
 
                 return (
                   <div key={product.id} className="rounded-lg border border-border/50 bg-card/50 overflow-hidden">
-                    {/* Accordion header */}
-                    <button
-                      onClick={() => toggleProduct(product.id)}
-                      className="flex items-center gap-2.5 w-full text-left p-3"
-                    >
-                      <div className="w-8 h-8 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                        <img
-                          src={getOptimizedUrl(product.image_url, { quality: 50 })}
-                          alt=""
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium truncate">{product.title}</p>
-                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    {/* Accordion header — use div with role=button, NOT a <button> */}
+                    <div className="flex items-center gap-2.5 w-full p-3">
+                      {/* Clickable area: image + title + chevron */}
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => toggleProduct(product.id)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleProduct(product.id); } }}
+                        className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                          <img
+                            src={getOptimizedUrl(product.image_url, { quality: 50 })}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium truncate">{product.title}</p>
+                          {/* Category: either an interactive selector or plain text */}
                           {onCategoryOverride ? (
-                            <Select
-                              value={category || 'other'}
-                              onValueChange={(val) => onCategoryOverride(product.id, val)}
-                            >
-                              <SelectTrigger className="h-5 w-auto min-w-0 border-none bg-transparent p-0 pr-5 text-[10px] text-muted-foreground shadow-none focus:ring-0 hover:text-foreground transition-colors [&>svg]:w-3 [&>svg]:h-3">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="max-h-[280px]">
-                                {ALL_CATEGORY_OPTIONS.map(opt => (
-                                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                                    {opt.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+                              <Select
+                                value={category || 'other'}
+                                onValueChange={(val) => onCategoryOverride(product.id, val)}
+                              >
+                                <SelectTrigger className="h-5 w-auto min-w-0 border-none bg-transparent p-0 pr-5 text-[10px] text-muted-foreground shadow-none focus:ring-0 hover:text-foreground transition-colors [&>svg]:w-3 [&>svg]:h-3">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[280px]">
+                                  {ALL_CATEGORY_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                      {opt.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           ) : (
                             <p className="text-[10px] text-muted-foreground">{categoryLabel}</p>
                           )}
                         </div>
                       </div>
+                      {/* Status + chevron */}
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {hasFilled && <Check className="w-3 h-3 text-emerald-500" />}
-                        {isOpen
-                          ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
-                          : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+                        <button
+                          type="button"
+                          onClick={() => toggleProduct(product.id)}
+                          className="p-0.5"
+                        >
+                          {isOpen
+                            ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                            : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+                        </button>
                       </div>
-                    </button>
+                    </div>
 
                     {/* Expanded content */}
                     {isOpen && (
                       <div className="px-3 pb-3 space-y-3">
-                        {/* Spec fields grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2.5">
+                        {/* Spec fields grid — 1 col on very small, 2 col default, 3 col on sm+ */}
+                        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2.5">
                           {specFields.map(field => (
                             <div key={field.key} className="space-y-1">
                               <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
@@ -283,7 +310,7 @@ export function ProductSpecsCard({
                                     updateStructured(product.id, specFields, { ...data, fields: newFields });
                                   }}
                                 >
-                                  <SelectTrigger className="h-8 text-xs">
+                                  <SelectTrigger className="h-9 text-xs">
                                     <SelectValue placeholder="Select" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -303,7 +330,7 @@ export function ProductSpecsCard({
                                       updateStructured(product.id, specFields, { ...data, fields: newFields });
                                     }}
                                     placeholder={unitSystem === 'imperial' && field.placeholderImperial ? field.placeholderImperial : field.placeholder}
-                                    className="h-8 text-xs"
+                                    className="h-9 text-xs"
                                     inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
                                     maxLength={50}
                                   />
