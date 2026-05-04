@@ -168,7 +168,7 @@ export function OutfitPresetBar({
       <Popover open={saveOpen} onOpenChange={setSaveOpen}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm" className="h-7 px-2.5 text-[11px] gap-1">
-            <Save className="h-3 w-3" /> Save current look
+            <Save className="h-3 w-3" /> Save as custom style
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-3 space-y-2">
