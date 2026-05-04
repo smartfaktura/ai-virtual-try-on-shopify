@@ -2067,14 +2067,28 @@ export function ProductImagesStep3Refine({
     return first?.name || null;
   }, [perProductPicks]);
 
-  // Top-level resolution for the preset bar shown outside ZaraOutfitPanel
+  // Top-level resolution for the preset bar shown outside ZaraOutfitPanel — merge all products
   const topLevelResolution = useMemo(() => {
-    const firstProductId = Array.from(selectedProductIds)[0];
-    const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
-    return resolveOutfitConflicts(
-      firstAnalysis?.category || primaryCategory,
-      firstAnalysis?.garmentType,
-    );
+    const allHidden = new Set<OutfitSlotKey>();
+    const lockedSlots = new Set<OutfitSlotKey>();
+    let allHide = true;
+
+    for (const pid of Array.from(selectedProductIds)) {
+      const a = analyses[pid];
+      const res = resolveOutfitConflicts(a?.category || primaryCategory, a?.garmentType);
+      if (res.hideOutfitPanel) continue;
+      allHide = false;
+      if (res.lockedSlot) lockedSlots.add(res.lockedSlot);
+      for (const h of res.hiddenSlots) allHidden.add(h);
+    }
+
+    if (allHide) return { lockedSlot: null, hiddenSlots: allHidden, availableSlots: [] as OutfitSlotKey[], hideOutfitPanel: true } as ConflictResolution;
+
+    for (const s of lockedSlots) allHidden.delete(s);
+    const ALL_S: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp', 'bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'];
+    const available = ALL_S.filter(s => !lockedSlots.has(s) && !allHidden.has(s));
+    const first = lockedSlots.size > 0 ? Array.from(lockedSlots)[0] : null;
+    return { lockedSlot: first, hiddenSlots: allHidden, availableSlots: available, hideOutfitPanel: false } as ConflictResolution;
   }, [selectedProductIds, analyses, primaryCategory]);
 
   // Summarize an outfit_hint into a short user-friendly string
