@@ -67,7 +67,7 @@ export function OutfitSlotCard({
             <span className="text-[10px] text-muted-foreground/50 italic truncate">· {ghostDefault}</span>
           )}
         </div>
-        {value?.garment && (
+        {value?.garment && value.garment !== 'none' && (
           <button
             onClick={() => onChange(undefined)}
             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -119,7 +119,7 @@ export function OutfitSlotCard({
       )}
 
       {/* Color swatches */}
-      {value?.garment && (
+      {value?.garment && value.garment !== 'none' && (
         <div className="flex items-center gap-2 flex-wrap pt-1">
           <span className="text-[10px] text-muted-foreground/70 w-12">Color</span>
           {OUTFIT_COLORS.map(c => {
@@ -141,7 +141,7 @@ export function OutfitSlotCard({
       )}
 
       {/* Material pills */}
-      {value?.garment && selectedType?.materials && selectedType.materials.length > 0 && (
+      {value?.garment && value.garment !== 'none' && selectedType?.materials && selectedType.materials.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] text-muted-foreground/70 w-12">Material</span>
           {selectedType.materials.map(m => {
@@ -163,7 +163,7 @@ export function OutfitSlotCard({
       )}
 
       {/* Fit pills */}
-      {value?.garment && showFit && (
+      {value?.garment && value.garment !== 'none' && showFit && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] text-muted-foreground/70 w-12">Fit</span>
           {FIT_OPTIONS.map(f => {

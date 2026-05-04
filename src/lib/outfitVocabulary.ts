@@ -62,12 +62,14 @@ export const OUTERWEAR_TYPES: GarmentTypeOption[] = [
 
 // ── Dress (full-body) ──
 export const DRESS_TYPES: GarmentTypeOption[] = [
+  { id: 'none', label: 'None' },
   { id: 'dress', label: 'Dress', subtypes: ['mini', 'midi', 'maxi', 'slip', 'wrap', 'shirt-dress', 'knit', 'evening', 'tea'], materials: ['silk', 'cotton', 'linen', 'satin', 'knit'] },
   { id: 'jumpsuit', label: 'Jumpsuit', subtypes: ['wide-leg', 'tapered', 'cropped'], materials: ['cotton', 'linen', 'satin'] },
 ];
 
 // ── Shoes ──
 export const SHOE_TYPES: GarmentTypeOption[] = [
+  { id: 'none', label: 'Barefoot' },
   { id: 'sneaker', label: 'Sneaker', subtypes: ['low-top', 'high-top', 'chunky', 'minimal', 'retro runner'], materials: ['leather', 'canvas', 'mesh'] },
   { id: 'loafer', label: 'Loafer', subtypes: ['penny', 'horsebit', 'tassel', 'chunky'], materials: ['leather', 'suede'] },
   { id: 'boot', label: 'Boot', subtypes: ['chelsea', 'combat', 'cowboy', 'knee-high', 'ankle'], materials: ['leather', 'suede'] },
