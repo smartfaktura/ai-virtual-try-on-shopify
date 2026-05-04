@@ -2132,6 +2132,15 @@ export function ProductImagesStep3Refine({
     }
   };
 
+  // Auto-enable outfit override when user has a configured outfit and all scenes have hints.
+  // This handles the case where outfitConfig was carried over from a previous generation
+  // (e.g. via localStorage) but outfitOverrideEnabled was not set.
+  useEffect(() => {
+    if (allModelScenesHaveOutfitHint && userOutfitFilled && !details.outfitOverrideEnabled) {
+      update({ outfitOverrideEnabled: true });
+    }
+  }, [allModelScenesHaveOutfitHint, userOutfitFilled]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // All models + resolve selected model gender
   const allModels = [...userModels, ...globalModels];
