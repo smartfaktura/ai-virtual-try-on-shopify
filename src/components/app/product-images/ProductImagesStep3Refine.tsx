@@ -2650,8 +2650,7 @@ export function ProductImagesStep3Refine({
                       currentConfig={details.outfitConfig || {}}
                       resolution={topLevelResolution}
                       onApplyToAll={(cfg, presetName) => {
-                        handleApplyToAll(cfg);
-                        update({ appliedPresetName: presetName } as any);
+                        handleApplyToAll(cfg, presetName);
                       }}
                       onOpenCustomize={() => {
                         setApplyToAllDraft(details.outfitConfig || {});
