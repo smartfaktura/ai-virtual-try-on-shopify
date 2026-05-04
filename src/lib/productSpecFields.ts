@@ -267,6 +267,15 @@ export function getCategoryFields(category: string | undefined | null): SpecFiel
   return CATEGORY_FIELDS[category] || DEFAULT_FIELDS;
 }
 
+const APPAREL_CATEGORIES = new Set([
+  'garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear',
+  'swimwear', 'lingerie', 'kidswear',
+]);
+
+export function isApparelCategory(category: string | undefined | null): boolean {
+  return !!category && APPAREL_CATEGORIES.has(category);
+}
+
 // ── Category labels ──
 
 const CATEGORY_LABELS: Record<string, string> = {
