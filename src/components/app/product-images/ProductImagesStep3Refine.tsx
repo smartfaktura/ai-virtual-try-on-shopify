@@ -1668,6 +1668,7 @@ const SLOT_TYPES: Record<OutfitSlotKey, { label: string; types: typeof TOP_TYPES
 
 function ZaraOutfitPanel({
   details, update, primaryCategory, modelGender, analyses, selectedProductIds, allProducts, productCategories,
+  globalPresetName,
 }: {
   details: DetailSettings;
   update: (p: Partial<DetailSettings>) => void;
@@ -1677,9 +1678,15 @@ function ZaraOutfitPanel({
   selectedProductIds: Set<string>;
   allProducts: UserProduct[];
   productCategories?: string[];
+  globalPresetName?: string;
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
-  const [singlePresetName, setSinglePresetName] = useState<string | undefined>(undefined);
+  const [singlePresetName, setSinglePresetName] = useState<string | undefined>(globalPresetName);
+
+  // Sync global preset name when it changes (e.g. apply-to-all)
+  useEffect(() => {
+    if (globalPresetName) setSinglePresetName(globalPresetName);
+  }, [globalPresetName]);
 
   // Resolve conflicts for ALL selected products — each may lock a different slot
   const productIds = useMemo(() => Array.from(selectedProductIds), [selectedProductIds]);
@@ -2611,7 +2618,7 @@ export function ProductImagesStep3Refine({
                  {/* Header */}
                  <div>
                    <div className="flex items-center justify-between">
-                     <h3 className="text-sm font-semibold">Model Styling</h3>
+                     <h3 className="text-sm font-semibold">Outfit Styling</h3>
                      {sceneOutfitSource.some(s => s.source === 'custom') && (
                        <Button
                          variant="outline"
@@ -2631,24 +2638,32 @@ export function ProductImagesStep3Refine({
 
                  {/* Presets bar — apply to all */}
                  {!topLevelResolution.hideOutfitPanel && (
-                   <OutfitPresetBar
-                     currentConfig={details.outfitConfig || {}}
-                     resolution={topLevelResolution}
-                     onApplyToAll={(cfg, presetName) => {
-                       handleApplyToAll(cfg);
-                       update({ appliedPresetName: presetName } as any);
-                     }}
-                     onOpenCustomize={() => {
-                       setApplyToAllDraft(details.outfitConfig || {});
-                       setApplyToAllOpen(!applyToAllOpen);
-                     }}
-                     activePresetName={(details as any).appliedPresetName || undefined}
-                     shotCount={modelShots.length}
-                     mode="apply-all"
-                     category={selectedProductCategories[0]}
-                     gender={selectedModelGender}
-                     productCategories={selectedProductCategories}
-                   />
+                    <OutfitPresetBar
+                      currentConfig={details.outfitConfig || {}}
+                      resolution={topLevelResolution}
+                      onApplyToAll={(cfg, presetName) => {
+                        handleApplyToAll(cfg);
+                        update({ appliedPresetName: presetName } as any);
+                      }}
+                      onOpenCustomize={() => {
+                        setApplyToAllDraft(details.outfitConfig || {});
+                        setApplyToAllOpen(!applyToAllOpen);
+                      }}
+                      onSetupOneByOne={() => {
+                        // Expand first product's first scene
+                        const firstProduct = selectedProductsList[0];
+                        const firstScene = modelShots[0];
+                        if (firstProduct && firstScene) {
+                          setExpandedOutfitSceneId(`${firstProduct.id}:${firstScene.id}`);
+                        }
+                      }}
+                      activePresetName={(details as any).appliedPresetName || undefined}
+                      shotCount={modelShots.length}
+                      mode="apply-all"
+                      category={selectedProductCategories[0]}
+                      gender={selectedModelGender}
+                      productCategories={selectedProductCategories}
+                    />
                  )}
 
                  {/* Customize & apply to all — Inline collapsible */}
@@ -2861,17 +2876,18 @@ export function ProductImagesStep3Refine({
                                        </button>
                                      )}
                                      <ZaraOutfitPanel
-                                       details={{ ...details, outfitConfig: perSceneCfg || {} }}
-                                       update={(p) => {
-                                         if (p.outfitConfig) updateSceneOutfit(scene.id, p.outfitConfig);
-                                       }}
-                                       primaryCategory={primaryCategory}
-                                       modelGender={selectedModelGender}
-                                       analyses={analyses}
-                                       selectedProductIds={new Set([product.id])}
-                                       allProducts={allProducts}
-                                       productCategories={selectedProductCategories}
-                                     />
+                                        details={{ ...details, outfitConfig: perSceneCfg || {} }}
+                                        update={(p) => {
+                                          if (p.outfitConfig) updateSceneOutfit(scene.id, p.outfitConfig);
+                                        }}
+                                        primaryCategory={primaryCategory}
+                                        modelGender={selectedModelGender}
+                                        analyses={analyses}
+                                        selectedProductIds={new Set([product.id])}
+                                        allProducts={allProducts}
+                                        productCategories={selectedProductCategories}
+                                        globalPresetName={perSceneCfg ? undefined : (details as any).appliedPresetName}
+                                      />
                                    </div>
                                  )}
                                </div>
@@ -2934,6 +2950,36 @@ export function ProductImagesStep3Refine({
                     Set a signature color that carries across doors, chairs, surfaces & props in {aestheticColorScenes.length} shot{aestheticColorScenes.length !== 1 ? 's' : ''} — creating a cohesive visual story.
                   </p>
                 </div>
+
+                {/* Scene thumbnails strip */}
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {aestheticColorScenes.map(scene => (
+                    <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
+                      <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
+                        {scene.previewUrl ? (
+                          <ShimmerImage
+                            src={getOptimizedUrl(scene.previewUrl, { quality: 55 })}
+                            alt={scene.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Camera className="w-3.5 h-3.5 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        {details.aestheticColorHex && (
+                          <div
+                            className="absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-white shadow-sm"
+                            style={{ backgroundColor: details.aestheticColorHex }}
+                          />
+                        )}
+                      </div>
+                      <p className="text-[8px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
+                    </div>
+                  ))}
+                </div>
+
                 {!details.aestheticColorHex && (
                   <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
                     <Sparkles className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
