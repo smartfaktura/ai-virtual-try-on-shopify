@@ -35,7 +35,6 @@ export function OutfitPresetBar({
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [pendingPreset, setPendingPreset] = useState<UserOutfitPreset | null>(null);
 
   const handleSelect = (preset: UserOutfitPreset) => {
     const cleaned = applyPresetWithLocks(preset.config, resolution);
@@ -47,14 +46,8 @@ export function OutfitPresetBar({
       return;
     }
 
-    // In apply-all mode, show confirmation
-    setPendingPreset({ ...preset, config: merged });
-  };
-
-  const confirmApply = () => {
-    if (!pendingPreset) return;
-    onApplyToAll(pendingPreset.config, pendingPreset.name);
-    setPendingPreset(null);
+    // In apply-all mode, apply immediately
+    onApplyToAll(merged, preset.name);
   };
 
   const handleSave = async () => {
@@ -90,18 +83,15 @@ export function OutfitPresetBar({
         <div className="flex flex-wrap gap-1.5">
           {builtIn.map(p => {
             const isActive = activePresetName === p.name;
-            const isPending = pendingPreset?.id === p.id;
             return (
               <button
                 key={p.id}
                 onClick={() => handleSelect(p)}
                 className={cn(
                   'h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all',
-                  isPending
-                    ? 'bg-primary text-primary-foreground border-primary ring-2 ring-primary/20'
-                    : isActive
-                      ? 'bg-primary/10 border-primary/30 text-primary'
-                      : 'bg-background hover:bg-muted border-border hover:border-foreground/20',
+                  isActive
+                    ? 'bg-primary/10 border-primary/30 text-primary'
+                    : 'bg-background hover:bg-muted border-border hover:border-foreground/20',
                 )}
               >
                 {isActive && <Check className="inline h-3 w-3 mr-1 -ml-0.5" />}
@@ -173,30 +163,6 @@ export function OutfitPresetBar({
             </PopoverContent>
           </Popover>
         </div>
-
-        {/* Confirmation bar */}
-        {pendingPreset && mode === 'apply-all' && (
-          <div className="flex items-center gap-2 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-            <p className="text-[11px] text-foreground flex-1">
-              Apply <span className="font-semibold">{pendingPreset.name}</span> to all {shotCount} shots?
-            </p>
-            <Button
-              size="sm"
-              className="h-7 text-[11px] px-3 gap-1"
-              onClick={confirmApply}
-            >
-              <Check className="h-3 w-3" /> Apply
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[11px] px-2"
-              onClick={() => setPendingPreset(null)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );
