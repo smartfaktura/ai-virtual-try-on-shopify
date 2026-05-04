@@ -1982,73 +1982,134 @@ export function ProductImagesStep3Refine({
     return Array.from(cats);
   }, [selectedProductsList, analyses, primaryCategory]);
 
-  // ── AI Stylist: per-product auto-pick ──
-  // Each selected product gets its own preset suited to its category.
-  // Stored in details.outfitConfigByProduct so the prompt builder can resolve
-  // the right outfit for each product at generation time.
-  const [restyleSeed, setRestyleSeed] = useState(0);
-  const [customizeOpen, setCustomizeOpen] = useState(false);
+  // ── Per-scene outfit direction ──
+  const [expandedOutfitSceneId, setExpandedOutfitSceneId] = useState<string | null>(null);
+  const [applyToAllOpen, setApplyToAllOpen] = useState(false);
   const autoPickedRef = useRef(false);
 
-  // Build the per-product picks (productId → preset) used by both the AI Stylist card
-  // and the auto-apply effect below. Recomputed when products, categories, or seed change.
+  // Build the per-product picks (productId → preset) for scenes without outfit_hint
   const perProductPicks = useMemo(() => {
     if (selectedProductsList.length === 0) return {} as Record<string, ReturnType<typeof pickDefaultPreset>>;
     const items = selectedProductsList.map(p => ({
       id: p.id,
       categories: [analyses[p.id]?.category, primaryCategory].filter(Boolean) as string[],
     }));
-    return pickDefaultPresetPerProduct(items, restyleSeed);
-  }, [selectedProductsList, analyses, primaryCategory, restyleSeed]);
+    return pickDefaultPresetPerProduct(items, 0);
+  }, [selectedProductsList, analyses, primaryCategory]);
 
-  // Apply the per-product picks on first mount (silent) — and again whenever Re-style is clicked.
+  // Auto-pick presets for scenes without outfit_hint on first mount
   useEffect(() => {
-    if (!hasPersonBlock) return;
-    const cfg = details.outfitConfig;
-    const hasGlobal = cfg && Object.keys(cfg).some(k => {
-      const v = (cfg as Record<string, unknown>)[k];
-      return v !== undefined && v !== null && v !== '';
-    });
-    const hasPerProduct = details.outfitConfigByProduct && Object.keys(details.outfitConfigByProduct).length > 0;
-    // First mount with any existing user customization → leave alone
-    if (!autoPickedRef.current && (hasGlobal || hasPerProduct)) {
+    if (!hasPersonBlock || autoPickedRef.current) return;
+    const existing = details.outfitConfigByScene;
+    if (existing && Object.keys(existing).length > 0) {
       autoPickedRef.current = true;
       return;
     }
-    // Apply (or re-apply on restyle)
-    if (Object.keys(perProductPicks).length === 0) return;
+    // For scenes without outfit_hint, auto-assign based on first product's preset
+    const firstPreset = Object.values(perProductPicks)[0];
+    if (!firstPreset) { autoPickedRef.current = true; return; }
     const map: Record<string, OutfitConfig> = {};
-    for (const [pid, preset] of Object.entries(perProductPicks)) {
-      if (preset) map[pid] = preset.config;
+    for (const scene of modelShots) {
+      if (!scene.outfitHint) {
+        map[scene.id] = firstPreset.config;
+      }
     }
-    autoPickedRef.current = true;
-    update({ outfitConfigByProduct: map, outfitConfig: undefined });
+    if (Object.keys(map).length > 0) {
+      autoPickedRef.current = true;
+      update({ outfitConfigByScene: map });
+    } else {
+      autoPickedRef.current = true;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPersonBlock, restyleSeed, perProductPicks]);
+  }, [hasPersonBlock, perProductPicks, modelShots]);
 
-  const handleRestyle = useCallback(() => {
-    setRestyleSeed(s => s + 1);
-    const count = selectedProductsList.length;
-    toast.success(`Re-styled ${count} ${count === 1 ? 'product' : 'products'}`);
-  }, [selectedProductsList.length]);
+  // Get the auto-picked preset name for display
+  const autoPickedPresetName = useMemo(() => {
+    const first = Object.values(perProductPicks)[0];
+    return first?.name || null;
+  }, [perProductPicks]);
 
-  // Picks shown in the card (productId → preset name), filtered to current selection
-  const stylistCardPicks = useMemo(() => {
-    return selectedProductsList
-      .map(p => ({
-        product: p,
-        presetName: perProductPicks[p.id]?.name || '',
-      }))
-      .filter(x => !!x.presetName);
-  }, [selectedProductsList, perProductPicks]);
-
-  // Legacy single-name fallback (used in Edit-Outfit override card)
-  const autoPickedPresetName = stylistCardPicks[0]?.presetName || null;
-
-  const clearAutoPick = useCallback(() => {
-    update({ outfitConfig: {}, outfitConfigByProduct: {} });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Summarize an outfit_hint into a short user-friendly string
+  const summarizeOutfitHint = useCallback((hint: string): string => {
+    let s = hint
+      .replace(/\{\{[^}]+\}\}/g, '')
+      .replace(/\[PRODUCT IMAGE\]/gi, '')
+      .replace(/\n+/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    // Take first sentence
+    const firstSentence = s.match(/^[^.!]+[.!]/);
+    if (firstSentence) s = firstSentence[0];
+    // Remove leading instructional verbs
+    s = s.replace(/^(Build|Style|Use|Create|The model wears|The look should)\s+/i, '');
+    // Capitalize first letter
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+    if (s.length > 65) s = s.slice(0, 62).trimEnd() + '…';
+    return s || 'Curated styling direction';
   }, []);
+
+  // Determine source for each model scene
+  const sceneOutfitSource = useMemo(() => {
+    return modelShots.map(scene => {
+      const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
+      if (hasPerScene) return { scene, source: 'custom' as const };
+      if (scene.outfitHint) return { scene, source: 'scene' as const };
+      return { scene, source: 'ai' as const };
+    });
+  }, [modelShots, details.outfitConfigByScene]);
+
+  // Summarize an OutfitConfig into a short string for display
+  const summarizeOutfitConfig = useCallback((cfg: OutfitConfig): string => {
+    const parts: string[] = [];
+    const describe = (label: string, p?: { garment?: string; color?: string }) => {
+      if (!p?.garment) return;
+      parts.push(p.color ? `${p.color} ${p.garment}` : p.garment);
+    };
+    describe('', cfg.top);
+    describe('', cfg.bottom);
+    describe('', cfg.dress);
+    describe('', cfg.shoes);
+    describe('', cfg.outerwear);
+    if (parts.length === 0) return 'Custom outfit';
+    return parts.slice(0, 3).join(', ');
+  }, []);
+
+  const handleApplyToAll = useCallback((cfg: OutfitConfig) => {
+    const map: Record<string, OutfitConfig> = {};
+    for (const scene of modelShots) {
+      map[scene.id] = cfg;
+    }
+    update({ outfitConfigByScene: map });
+    setApplyToAllOpen(false);
+    toast.success(`Applied outfit to ${modelShots.length} shots`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelShots]);
+
+  const handleResetAllOutfits = useCallback(() => {
+    // Clear per-scene overrides — scenes with hints revert to their hints, others get auto-pick
+    const map: Record<string, OutfitConfig> = {};
+    const firstPreset = Object.values(perProductPicks)[0];
+    for (const scene of modelShots) {
+      if (!scene.outfitHint && firstPreset) {
+        map[scene.id] = firstPreset.config;
+      }
+    }
+    update({ outfitConfigByScene: map, outfitOverrideEnabled: false });
+    toast.success('Reset all outfits to defaults');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelShots, perProductPicks]);
+
+  const handleResetSceneOutfit = useCallback((sceneId: string) => {
+    const next = { ...details.outfitConfigByScene };
+    delete next[sceneId];
+    update({ outfitConfigByScene: next });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details.outfitConfigByScene]);
+
+  const updateSceneOutfit = useCallback((sceneId: string, cfg: OutfitConfig) => {
+    update({ outfitConfigByScene: { ...details.outfitConfigByScene, [sceneId]: cfg } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details.outfitConfigByScene]);
 
   // Per-product reference upload handler — stores as trigger:{type}:{productId}
   const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
