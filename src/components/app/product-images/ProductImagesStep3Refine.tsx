@@ -3164,6 +3164,137 @@ export function ProductImagesStep3Refine({
                     </CollapsibleContent>
                   </Collapsible>
                   </>)}
+
+                  {/* Scene outfit editor dialog */}
+                  {(() => {
+                    if (!expandedOutfitSceneId) return null;
+                    const [dialogProductId, dialogSceneId] = expandedOutfitSceneId.split(':');
+                    const dialogProduct = selectedProductsList.find(p => p.id === dialogProductId);
+                    const dialogScene = modelShots.find(s => s.id === dialogSceneId);
+                    if (!dialogProduct || !dialogScene) return null;
+                    const dialogPerSceneCfg = details.outfitConfigByScene?.[dialogSceneId];
+                    const dialogSource = dialogPerSceneCfg ? 'custom' : (dialogScene.outfitHint ? 'scene' : 'ai');
+                    const dialogAnalysis = analyses[dialogProductId];
+                    const dialogResolution = resolveOutfitConflicts(dialogAnalysis?.category || primaryCategory, dialogAnalysis?.garmentType);
+
+                    return (
+                      <Dialog open={!!expandedOutfitSceneId} onOpenChange={(open) => { if (!open) setExpandedOutfitSceneId(null); }}>
+                        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 max-h-[90dvh] sm:max-h-[85vh] flex flex-col overflow-hidden">
+                          {/* Header */}
+                          <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 border-b border-border/40 flex-shrink-0">
+                            <div className="w-12 h-[60px] rounded-lg overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
+                              {dialogScene.previewUrl ? (
+                                <ShimmerImage
+                                  src={getOptimizedUrl(dialogScene.previewUrl, { quality: 65 })}
+                                  alt={dialogScene.title}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Camera className="w-5 h-5 text-muted-foreground/30" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <DialogTitle className="text-sm font-semibold truncate">{dialogScene.title}</DialogTitle>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{dialogProduct.title}</p>
+                              {dialogSource === 'scene' && !dialogPerSceneCfg && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 mt-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  Built-in look
+                                </span>
+                              )}
+                              {dialogSource === 'ai' && !dialogPerSceneCfg && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 mt-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Needs styling
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Scrollable content */}
+                          <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
+                            {dialogSource === 'scene' && !dialogPerSceneCfg && (
+                              <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                                ✓ This shot uses its built-in curated look. Customize below to override
+                              </p>
+                            )}
+                            {dialogSource === 'ai' && !dialogPerSceneCfg && (
+                              <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                                Configure the outfit styling for this shot
+                              </p>
+                            )}
+                            {dialogPerSceneCfg && dialogScene.outfitHint && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetSceneOutfit(dialogSceneId)}
+                                className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                Reset to built-in look
+                              </button>
+                            )}
+                            {dialogPerSceneCfg && !dialogScene.outfitHint && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetSceneOutfit(dialogSceneId)}
+                                className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+                              >
+                                <X className="w-3 h-3" />
+                                Clear outfit
+                              </button>
+                            )}
+                            <ZaraOutfitPanel
+                              details={{ ...details, outfitConfig: dialogPerSceneCfg || {} }}
+                              update={(p) => {
+                                if (p.outfitConfig) updateSceneOutfit(dialogSceneId, p.outfitConfig);
+                              }}
+                              primaryCategory={primaryCategory}
+                              modelGender={selectedModelGender}
+                              analyses={analyses}
+                              selectedProductIds={new Set([dialogProductId])}
+                              allProducts={allProducts}
+                              productCategories={selectedProductCategories}
+                              globalPresetName={(details as any).appliedPresetName || undefined}
+                            />
+                          </div>
+
+                          {/* Footer */}
+                          <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-border/40 flex-shrink-0 bg-background">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() => setExpandedOutfitSceneId(null)}
+                            >
+                              Close
+                            </Button>
+                            {isLastScene(dialogProductId, dialogSceneId) ? (
+                              <Button
+                                size="sm"
+                                className="h-8 text-xs px-4 gap-1.5"
+                                onClick={() => handleSaveAndNext(dialogProductId, dialogSceneId)}
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                Done
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="h-8 text-xs px-4 gap-1.5"
+                                onClick={() => handleSaveAndNext(dialogProductId, dialogSceneId)}
+                              >
+                                Save & Next
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    );
+                  })()}
                 </CardContent>
               </Card>
               );
