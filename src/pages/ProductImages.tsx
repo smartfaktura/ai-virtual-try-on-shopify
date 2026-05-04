@@ -1745,6 +1745,7 @@ export default function ProductImages() {
                    onUpgradeClick={() => setUpgradeModalOpen(true)}
                    perCategoryScenes={perCategoryScenes}
                    categoryGroups={categoryGroups}
+                   onCategoryOverride={overrideCategory}
                  />
               </div>
             )}
