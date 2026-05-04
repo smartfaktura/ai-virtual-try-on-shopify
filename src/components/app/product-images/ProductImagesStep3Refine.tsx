@@ -1922,6 +1922,7 @@ export function ProductImagesStep3Refine({
   onUpgradeClick,
   perCategoryScenes,
   categoryGroups,
+  onCategoryOverride,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
