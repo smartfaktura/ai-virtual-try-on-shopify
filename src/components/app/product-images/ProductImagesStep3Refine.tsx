@@ -1988,6 +1988,7 @@ export function ProductImagesStep3Refine({
   // ── Per-scene outfit direction ──
   const [expandedOutfitSceneId, setExpandedOutfitSceneId] = useState<string | null>(null);
   const [applyToAllOpen, setApplyToAllOpen] = useState(false);
+  const [applyToAllDraft, setApplyToAllDraft] = useState<OutfitConfig>({});
   const autoPickedRef = useRef(false);
 
   // Build the per-product picks (productId → preset) for scenes without outfit_hint
