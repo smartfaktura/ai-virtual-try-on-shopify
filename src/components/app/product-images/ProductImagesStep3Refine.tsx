@@ -2716,19 +2716,20 @@ export function ProductImagesStep3Refine({
                        : null;
 
                       // Filter model shots to this product's category scenes
-                      const productModelShots = useMemo(() => {
-                        if (!perCategoryScenes || perCategoryScenes.size === 0 || !categoryGroups) return modelShots;
-                        // Find which category this product belongs to
+                      let productModelShots = modelShots;
+                      if (perCategoryScenes && perCategoryScenes.size > 0 && categoryGroups) {
                         let productCategory: string | null = null;
                         for (const [catId, pids] of categoryGroups) {
                           if (pids.includes(product.id)) { productCategory = catId; break; }
                         }
-                        if (!productCategory) return modelShots;
-                        const catSceneIds = perCategoryScenes.get(productCategory);
-                        if (!catSceneIds || catSceneIds.size === 0) return modelShots;
-                        const filtered = modelShots.filter(s => catSceneIds.has(s.id));
-                        return filtered.length > 0 ? filtered : modelShots;
-                      }, [modelShots, perCategoryScenes, categoryGroups, product.id]);
+                        if (productCategory) {
+                          const catSceneIds = perCategoryScenes.get(productCategory);
+                          if (catSceneIds && catSceneIds.size > 0) {
+                            const filtered = modelShots.filter(s => catSceneIds.has(s.id));
+                            if (filtered.length > 0) productModelShots = filtered;
+                          }
+                        }
+                      }
                      const productSceneOutfits = productModelShots.map(scene => {
                        const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
                        if (hasPerScene) return { scene, source: 'custom' as const };
