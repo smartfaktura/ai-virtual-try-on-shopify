@@ -34,7 +34,7 @@ import type { ModelProfile } from '@/types';
 import { getConflictingSlots, resolveGarmentType, type OutfitSlot } from '@/lib/productImagePromptBuilder';
 import { OutfitSlotCard } from './OutfitSlotCard';
 import { OutfitPresetBar } from './OutfitPresetBar';
-import { resolveOutfitConflicts, type OutfitSlotKey } from '@/lib/outfitConflictResolver';
+import { resolveOutfitConflicts, type OutfitSlotKey, type ConflictResolution } from '@/lib/outfitConflictResolver';
 import {
   TOP_TYPES, BOTTOM_TYPES, OUTERWEAR_TYPES, DRESS_TYPES, SHOE_TYPES,
   BAG_TYPES, HAT_TYPES, EYEWEAR_TYPES, BELT_TYPES, WATCH_TYPES, COVER_UP_TYPES,
@@ -1680,17 +1680,47 @@ function ZaraOutfitPanel({
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
 
-  // Resolve conflicts based on the first selected product (or primary category fallback)
-  const firstProductId = Array.from(selectedProductIds)[0];
-  const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
-  const firstProduct = allProducts.find(p => p.id === firstProductId);
-  const resolution = useMemo(
-    () => resolveOutfitConflicts(
-      firstAnalysis?.category || primaryCategory,
-      firstAnalysis?.garmentType,
-    ),
-    [firstAnalysis, primaryCategory],
-  );
+  // Resolve conflicts for ALL selected products — each may lock a different slot
+  const productIds = useMemo(() => Array.from(selectedProductIds), [selectedProductIds]);
+
+  const { resolution, lockedSlotProducts } = useMemo(() => {
+    type LockedEntry = { product: typeof allProducts[0] | undefined; analysis: typeof analyses[string] };
+    const lockedMap = new Map<OutfitSlotKey, LockedEntry>();
+    const allHidden = new Set<OutfitSlotKey>();
+    let allHidePanel = true;
+
+    for (const pid of productIds) {
+      const analysis = analyses[pid];
+      const product = allProducts.find(p => p.id === pid);
+      const res = resolveOutfitConflicts(analysis?.category || primaryCategory, analysis?.garmentType);
+      if (res.hideOutfitPanel) continue;
+      allHidePanel = false;
+      if (res.lockedSlot && !lockedMap.has(res.lockedSlot)) {
+        lockedMap.set(res.lockedSlot, { product, analysis });
+      }
+      for (const h of res.hiddenSlots) allHidden.add(h);
+    }
+
+    if (allHidePanel || (productIds.length > 0 && lockedMap.size === 0 && allHidePanel)) {
+      const empty: ConflictResolution = { lockedSlot: null, hiddenSlots: allHidden, availableSlots: [], hideOutfitPanel: true };
+      return { resolution: empty, lockedSlotProducts: lockedMap };
+    }
+
+    // Don't hide slots that are locked by a product
+    for (const s of lockedMap.keys()) allHidden.delete(s);
+
+    const ALL_SLOTS_LIST: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp', 'bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'];
+    const available = ALL_SLOTS_LIST.filter(s => !lockedMap.has(s) && !allHidden.has(s));
+    const firstLocked = lockedMap.size > 0 ? Array.from(lockedMap.keys())[0] : null;
+
+    const merged: ConflictResolution = {
+      lockedSlot: firstLocked,
+      hiddenSlots: allHidden,
+      availableSlots: available,
+      hideOutfitPanel: false,
+    };
+    return { resolution: merged, lockedSlotProducts: lockedMap };
+  }, [productIds, analyses, allProducts, primaryCategory]);
 
   const config: OutfitConfig = details.outfitConfig || {};
   const updateSlot = (slot: OutfitSlotKey, piece: OutfitPiece | undefined) => {
@@ -1709,9 +1739,9 @@ function ZaraOutfitPanel({
 
   // Split available slots into garments (always shown) vs accessories (collapsible)
   const garmentOrder: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp'];
-  const garmentSlots = garmentOrder.filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
+  const garmentSlots = garmentOrder.filter(s => lockedSlotProducts.has(s) || resolution.availableSlots.includes(s));
   const accessorySlots = (['bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'] as OutfitSlotKey[])
-    .filter(s => s === resolution.lockedSlot || resolution.availableSlots.includes(s));
+    .filter(s => lockedSlotProducts.has(s) || resolution.availableSlots.includes(s));
 
   return (
     <div className="space-y-3">
@@ -1721,38 +1751,39 @@ function ZaraOutfitPanel({
         onApplyToAll={(cfg) => handleLoadPreset(cfg)}
         onLoadSingle={handleLoadPreset}
         mode="single"
-        category={firstAnalysis?.category || primaryCategory}
+        category={primaryCategory}
         gender={modelGender}
         productCategories={productCategories}
       />
 
       <div className="space-y-2">
-        {garmentSlots.map(slot => {
-          const meta = SLOT_TYPES[slot];
-          const isLocked = resolution.lockedSlot === slot;
-          const value = (config as Record<string, OutfitPiece | undefined>)[slot];
-          // Show "add layer" CTA on TOP slot when outerwear is available + not yet picked
-          const showAddLayer = slot === 'top'
-            && resolution.availableSlots.includes('outerwear')
-            && !config.outerwear
-            && !isLocked;
-          return (
-            <OutfitSlotCard
-              key={slot}
-              label={meta.label.toUpperCase()}
-              hint={slot === 'top' && resolution.lockedSlot === 'outerwear' ? "What's underneath?" : undefined}
-              ghostDefault={meta.ghost}
-              types={meta.types}
-              value={value}
-              onChange={(p) => updateSlot(slot, p)}
-              locked={isLocked}
-              productThumb={isLocked ? firstProduct?.image_url : undefined}
-              productName={isLocked ? firstProduct?.title : undefined}
-              onAddLayer={showAddLayer ? () => updateSlot('outerwear', { garment: 'jacket', color: '' }) : undefined}
-              layerLabel="+ Add layer over (jacket, blazer, cardigan)"
-            />
-          );
-        })}
+         {garmentSlots.map(slot => {
+           const meta = SLOT_TYPES[slot];
+           const lockedEntry = lockedSlotProducts.get(slot);
+           const isLocked = !!lockedEntry;
+           const value = (config as Record<string, OutfitPiece | undefined>)[slot];
+           // Show "add layer" CTA on TOP slot when outerwear is available + not yet picked
+           const showAddLayer = slot === 'top'
+             && resolution.availableSlots.includes('outerwear')
+             && !config.outerwear
+             && !isLocked;
+           return (
+             <OutfitSlotCard
+               key={slot}
+               label={meta.label.toUpperCase()}
+               hint={slot === 'top' && lockedSlotProducts.has('outerwear') ? "What's underneath?" : undefined}
+               ghostDefault={meta.ghost}
+               types={meta.types}
+               value={value}
+               onChange={(p) => updateSlot(slot, p)}
+               locked={isLocked}
+               productThumb={isLocked ? lockedEntry?.product?.image_url : undefined}
+               productName={isLocked ? lockedEntry?.product?.title : undefined}
+               onAddLayer={showAddLayer ? () => updateSlot('outerwear', { garment: 'jacket', color: '' }) : undefined}
+               layerLabel="+ Add layer over (jacket, blazer, cardigan)"
+             />
+           );
+         })}
       </div>
 
       {accessorySlots.length > 0 && (
@@ -1768,7 +1799,8 @@ function ZaraOutfitPanel({
             <div className="space-y-2 pt-2">
               {accessorySlots.map(slot => {
                 const meta = SLOT_TYPES[slot];
-                const isLocked = resolution.lockedSlot === slot;
+                const lockedEntry = lockedSlotProducts.get(slot);
+                const isLocked = !!lockedEntry;
                 // ── Special: jewelry uses JewelryConfig (necklace/earrings/bracelet/ring/metal) ──
                 if (slot === 'jewelry') {
                   const jv = config.jewelry || {};
@@ -1835,8 +1867,8 @@ function ZaraOutfitPanel({
                     value={value}
                     onChange={(p) => updateSlot(slot, p)}
                     locked={isLocked}
-                    productThumb={isLocked ? firstProduct?.image_url : undefined}
-                    productName={isLocked ? firstProduct?.title : undefined}
+                    productThumb={isLocked ? lockedEntry?.product?.image_url : undefined}
+                    productName={isLocked ? lockedEntry?.product?.title : undefined}
                     showFit={false}
                   />
                 );
@@ -2035,14 +2067,28 @@ export function ProductImagesStep3Refine({
     return first?.name || null;
   }, [perProductPicks]);
 
-  // Top-level resolution for the preset bar shown outside ZaraOutfitPanel
+  // Top-level resolution for the preset bar shown outside ZaraOutfitPanel — merge all products
   const topLevelResolution = useMemo(() => {
-    const firstProductId = Array.from(selectedProductIds)[0];
-    const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
-    return resolveOutfitConflicts(
-      firstAnalysis?.category || primaryCategory,
-      firstAnalysis?.garmentType,
-    );
+    const allHidden = new Set<OutfitSlotKey>();
+    const lockedSlots = new Set<OutfitSlotKey>();
+    let allHide = true;
+
+    for (const pid of Array.from(selectedProductIds)) {
+      const a = analyses[pid];
+      const res = resolveOutfitConflicts(a?.category || primaryCategory, a?.garmentType);
+      if (res.hideOutfitPanel) continue;
+      allHide = false;
+      if (res.lockedSlot) lockedSlots.add(res.lockedSlot);
+      for (const h of res.hiddenSlots) allHidden.add(h);
+    }
+
+    if (allHide) return { lockedSlot: null, hiddenSlots: allHidden, availableSlots: [] as OutfitSlotKey[], hideOutfitPanel: true } as ConflictResolution;
+
+    for (const s of lockedSlots) allHidden.delete(s);
+    const ALL_S: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp', 'bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'];
+    const available = ALL_S.filter(s => !lockedSlots.has(s) && !allHidden.has(s));
+    const first = lockedSlots.size > 0 ? Array.from(lockedSlots)[0] : null;
+    return { lockedSlot: first, hiddenSlots: allHidden, availableSlots: available, hideOutfitPanel: false } as ConflictResolution;
   }, [selectedProductIds, analyses, primaryCategory]);
 
   // Summarize an outfit_hint into a short user-friendly string
