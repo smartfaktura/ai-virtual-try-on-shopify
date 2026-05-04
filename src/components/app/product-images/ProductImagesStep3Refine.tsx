@@ -1918,6 +1918,8 @@ export function ProductImagesStep3Refine({
   analyses = {},
   isFree = false,
   onUpgradeClick,
+  perCategoryScenes,
+  categoryGroups,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
