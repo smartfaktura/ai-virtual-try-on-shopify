@@ -725,9 +725,21 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
   // Compute which slots to skip based on the product's garment type
   const skipSlots = getConflictingSlots(garmentType);
 
-  // Prefer structured config if available
+  // Prefer structured config if available — but gap-fill missing essential slots
   if (details?.outfitConfig) {
-    const structured = buildStructuredOutfitString(details.outfitConfig, skipSlots);
+    const cfg = { ...details.outfitConfig };
+    const defaults = categoryOutfitDefaults(category, gender);
+    // Fill missing essential slots that aren't skipped by the product
+    if (!cfg.top && !skipSlots.has('top') && !cfg.dress && defaults.top) {
+      cfg.top = { garment: defaults.top, color: 'neutral', material: 'cotton' };
+    }
+    if (!cfg.bottom && !skipSlots.has('bottom') && !cfg.dress && defaults.bottom) {
+      cfg.bottom = { garment: defaults.bottom, color: 'neutral', material: 'cotton' };
+    }
+    if (!cfg.shoes && !skipSlots.has('shoes') && defaults.shoes) {
+      cfg.shoes = { garment: defaults.shoes, color: 'white', material: 'leather' };
+    }
+    const structured = buildStructuredOutfitString(cfg, skipSlots);
     if (structured) return structured;
   }
 

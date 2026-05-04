@@ -1,30 +1,83 @@
-## Issues and Fixes
 
-### 1. Outerwear "None" showing color/fit options
-**Problem:** In `OutfitSlotCard.tsx`, the color, material, and fit sections render when `value?.garment` is truthy. Since `garment: 'none'` is truthy, those sections display for the "None" selection.
-**Fix:** Change all three visibility checks from `value?.garment` to `value?.garment && value.garment !== 'none'`.
+## Overview
 
-### 2. Add "None" to Dress types
-**Problem:** No way to deselect a dress/jumpsuit once chosen (only an X button exists).
-**Fix:** Add `{ id: 'none', label: 'None' }` as the first entry in `DRESS_TYPES` in `outfitVocabulary.ts`. Same prompt-builder skip logic already handles `garment === 'none'`.
-
-### 3. Add "Barefoot" to Shoes
-**Problem:** No option to go shoeless.
-**Fix:** Add `{ id: 'none', label: 'Barefoot' }` as the first entry in `SHOE_TYPES` in `outfitVocabulary.ts`. The prompt builder already skips `garment === 'none'`.
-
-### 4. Presets not visible in apply-to-all section
-**Problem:** The `ZaraOutfitPanel` already renders `OutfitPresetBar` inside it (line 1718), and the presets do load from `useOutfitPresets`. However, the presets may not be showing because the `OutfitPresetBar` filters by `presetIsRelevant()` which checks if preset slots overlap with `resolution.availableSlots`. If the resolution is computed from a product that locks most slots, presets get filtered out.
-
-The more likely issue: the `OutfitPresetBar` component's `useOutfitPresets` hook fetches from the DB, and the built-in presets come from a `filterBuiltIns` function inside that hook. Need to verify the hook passes categories correctly so universal presets appear.
-
-**Fix:** Ensure the `OutfitPresetBar` inside the apply-to-all `ZaraOutfitPanel` receives proper `productCategories` so universal presets surface. If the filtering is correct but presets are hidden due to `presetIsRelevant` being too strict, relax it for universal presets.
+Redesign the Style & Outfit section to show only 5 curated universal presets, make per-scene outfit status immediately clear (configured vs needs attention), preserve scene-built-in outfits by default, and fix the prompt builder gap that causes models to appear with incomplete outfits.
 
 ---
 
-## Files to edit
+## 1. Reduce presets to 5 universal styles
+
+**File: `src/lib/outfitVocabulary.ts`**
+
+Remove all category-specific built-in presets (~50+ entries) and all extra universal ones. Keep exactly 5 universal presets with enriched, production-quality configs:
+
+| Preset | Description | Key pieces |
+|--------|-------------|------------|
+| **Minimal Premium** | Clean basics, neutral tones, timeless | White fitted tee, black tailored trousers, black leather loafer, gold studs, black leather belt |
+| **Editorial Fashion** | Campaign-ready, polished, high-fashion | Cream silk blouse, black wide-leg wool trousers, black pointed heels, gold drop earrings, structured black clutch |
+| **Casual Everyday** | Relaxed lifestyle, still aesthetic | Grey cotton crewneck knit, light wash straight jeans, white leather low-top sneaker (no logos), small gold hoops |
+| **Streetwear / Urban** | Oversized layers, denim, cargos | Black oversized hoodie, khaki cotton cargo trousers, white chunky sneaker, black cotton dad cap |
+| **Sport / Active** | Gym, tennis, athleisure | Black fitted lycra crop top, black high-waist lycra leggings, white mesh chunky sneaker |
+
+Each preset will have complete slot coverage (top + bottom + shoes + jewelry/accessories where appropriate) so no model ever appears with missing clothing.
+
+Update `filterPresetsByCategories` to always return these 5 (category filtering no longer needed since all are universal).
+
+---
+
+## 2. Redesign outfit section UX
+
+**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
+
+### Scene outfit status cards (always visible)
+Each on-model scene shows a compact card with clear status:
+- **Green check + "Scene styled"** — scene has a built-in `outfitHint` (used by default, no action needed)
+- **Blue check + outfit summary** — user has selected a preset or custom outfit for this scene
+- **Amber warning + "No outfit selected"** — scene has no built-in hint AND no user config; user needs to pick one
+
+Scenes without outfits get a subtle amber border to draw attention without being alarming.
+
+### Preset bar stays at top but simplified
+The 5 preset pills appear at the top. Clicking one applies it to scenes that don't already have a built-in outfit hint (not all scenes). Scenes with built-in hints keep their direction unless user explicitly overrides.
+
+### "Apply to all shots" becomes secondary
+Move from a prominent full-width button to a small text link ("Apply one look to all shots") below the preset bar. This makes individual scene control the primary experience.
+
+### Per-scene expand/edit
+Clicking a scene card expands it to show the full outfit editor. For scenes with built-in hints, show "This shot has curated styling. Override below if needed." For scenes without config, guide: "Select a preset above or configure manually."
+
+---
+
+## 3. Fix incomplete outfit in prompt builder
+
+**File: `src/lib/productImagePromptBuilder.ts`**
+
+In `defaultOutfitDirective` (around line 728-732), after building the structured outfit string from `outfitConfig`, check for missing essential non-skipped slots. If `top`, `bottom`, or `shoes` are absent from the config but not in `skipSlots`, merge in values from `categoryOutfitDefaults`. This prevents the AI from generating models wearing only partial outfits.
+
+```
+Before: outfitConfig has top only → returns "Top: white cotton crew t-shirt" (no pants/shoes)
+After:  merges defaults → returns "Top: white cotton crew t-shirt; Bottom: slim navy cotton chinos; Shoes: white leather sneakers"
+```
+
+---
+
+## 4. Simplify OutfitPresetBar
+
+**File: `src/components/app/product-images/OutfitPresetBar.tsx`**
+
+- Remove `presetIsRelevant` filtering (all 5 presets always show)
+- Remove "No presets fit this product" empty state
+- Remove "Your saved looks" section header when only built-ins exist
+- Keep "Save current" functionality for user custom presets
+- Simplify header from "Suggested looks for your products" to just "Quick styles"
+
+---
+
+## Files changed
 
 | File | Change |
-|---|---|
-| `src/components/app/product-images/OutfitSlotCard.tsx` | Change `value?.garment` guards (lines 70, 122, 144, 166) to `value?.garment && value.garment !== 'none'` so None/Barefoot hides color/material/fit |
-| `src/lib/outfitVocabulary.ts` | Add `{ id: 'none', label: 'None' }` to `DRESS_TYPES` and `{ id: 'none', label: 'Barefoot' }` to `SHOE_TYPES` |
-| `src/hooks/useOutfitPresets.ts` | Inspect and fix filtering so universal presets always appear regardless of slot overlap |
+|------|--------|
+| `src/lib/outfitVocabulary.ts` | Replace ~50 presets with 5 enriched universal ones |
+| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Redesign outfit section: status indicators, amber/green states, secondary apply-all |
+| `src/components/app/product-images/OutfitPresetBar.tsx` | Simplify to always show all 5 presets, remove filtering |
+| `src/lib/productImagePromptBuilder.ts` | Gap-fill missing slots with category defaults |

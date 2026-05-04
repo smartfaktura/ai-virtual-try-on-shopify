@@ -2555,10 +2555,140 @@ export function ProductImagesStep3Refine({
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">Each shot has an outfit direction. Edit individually or apply one look to all</p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">Each shot has an outfit direction — configure per scene or pick a quick style</p>
                 </div>
 
-                {/* Quick-select presets — always visible above apply-to-all */}
+                {/* Per-scene outfit status list */}
+                <div className="space-y-1.5">
+                  {sceneOutfitSource.map(({ scene, source }) => {
+                    const isExpanded = expandedOutfitSceneId === scene.id;
+                    const perSceneCfg = details.outfitConfigByScene?.[scene.id];
+                    const hasNoOutfit = source === 'ai' && !perSceneCfg;
+
+                    return (
+                      <div
+                        key={scene.id}
+                        className={cn(
+                          'rounded-lg border overflow-hidden transition-colors',
+                          hasNoOutfit
+                            ? 'border-amber-400/60 bg-amber-50/30 dark:bg-amber-950/10'
+                            : 'border-border/60',
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setExpandedOutfitSceneId(isExpanded ? null : scene.id)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left"
+                        >
+                          {/* Scene preview */}
+                          <div className="w-14 h-[72px] rounded-md overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
+                            {scene.previewUrl ? (
+                              <ShimmerImage
+                                src={getOptimizedUrl(scene.previewUrl, { quality: 65 })}
+                                alt={scene.title}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Camera className="w-4 h-4 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Scene info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{scene.title}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {source === 'scene' && (
+                                <>
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    Scene styled
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground truncate">
+                                    {summarizeOutfitHint(scene.outfitHint!)}
+                                  </span>
+                                </>
+                              )}
+                              {source === 'custom' && (
+                                <>
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                    Outfit set
+                                  </span>
+                                  {perSceneCfg && (
+                                    <span className="text-[10px] text-muted-foreground truncate">
+                                      {summarizeOutfitConfig(perSceneCfg)}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                              {source === 'ai' && !perSceneCfg && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                  No outfit selected
+                                </span>
+                              )}
+                              {source === 'ai' && perSceneCfg && (
+                                <>
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                    Outfit set
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground truncate">
+                                    {summarizeOutfitConfig(perSceneCfg)}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform flex-shrink-0', isExpanded && 'rotate-180')} />
+                        </button>
+
+                        {/* Expanded editor */}
+                        {isExpanded && (
+                          <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/40">
+                            {source === 'scene' && !perSceneCfg && (
+                              <p className="text-[11px] text-muted-foreground italic">
+                                This shot has curated styling. Override below if needed
+                              </p>
+                            )}
+                            {hasNoOutfit && (
+                              <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                                Select a quick style above or configure manually below
+                              </p>
+                            )}
+                            {(source === 'custom' || (source === 'ai' && perSceneCfg)) && scene.outfitHint && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetSceneOutfit(scene.id)}
+                                className="text-[11px] text-primary hover:underline"
+                              >
+                                Reset to shot direction
+                              </button>
+                            )}
+                            <ZaraOutfitPanel
+                              details={{ ...details, outfitConfig: perSceneCfg || {} }}
+                              update={(p) => {
+                                if (p.outfitConfig) updateSceneOutfit(scene.id, p.outfitConfig);
+                              }}
+                              primaryCategory={primaryCategory}
+                              modelGender={selectedModelGender}
+                              analyses={analyses}
+                              selectedProductIds={selectedProductIds}
+                              allProducts={allProducts}
+                              productCategories={selectedProductCategories}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Quick-select presets */}
                 {!topLevelResolution.hideOutfitPanel && (
                   <OutfitPresetBar
                     currentConfig={details.outfitConfig || {}}
@@ -2570,24 +2700,34 @@ export function ProductImagesStep3Refine({
                   />
                 )}
 
-                {/* Apply to all button */}
+                {/* Apply to all — secondary text link */}
                 {modelShots.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs gap-1.5 w-full"
-                    onClick={() => {
-                      if (!applyToAllOpen) {
-                        // Initialize draft from first scene or global config
-                        setApplyToAllDraft(details.outfitConfigByScene?.[modelShots[0]?.id] || details.outfitConfig || {});
-                      }
-                      setApplyToAllOpen(!applyToAllOpen);
-                    }}
-                  >
-                    <Layers className="w-3.5 h-3.5" />
-                    {applyToAllOpen ? 'Close' : 'Apply one outfit to all shots'}
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                      onClick={() => {
+                        if (!applyToAllOpen) {
+                          setApplyToAllDraft(details.outfitConfigByScene?.[modelShots[0]?.id] || details.outfitConfig || {});
+                        }
+                        setApplyToAllOpen(!applyToAllOpen);
+                      }}
+                    >
+                      <Layers className="w-3 h-3" />
+                      {applyToAllOpen ? 'Close custom editor' : 'Customize & apply to all shots'}
+                    </button>
+
+                    {sceneOutfitSource.some(s => s.source === 'custom') && (
+                      <button
+                        type="button"
+                        onClick={handleResetAllOutfits}
+                        className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 ml-auto"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Reset all
+                      </button>
+                    )}
+                  </div>
                 )}
 
                 {/* Apply-to-all editor */}
@@ -2617,124 +2757,6 @@ export function ProductImagesStep3Refine({
                       </Button>
                     </div>
                   </div>
-                )}
-
-                {/* Per-scene outfit list */}
-                <div className="space-y-1.5">
-                  {sceneOutfitSource.map(({ scene, source }) => {
-                    const isExpanded = expandedOutfitSceneId === scene.id;
-                    const perSceneCfg = details.outfitConfigByScene?.[scene.id];
-
-                    return (
-                      <div key={scene.id} className="rounded-lg border border-border/60 overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedOutfitSceneId(isExpanded ? null : scene.id)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left"
-                        >
-                          {/* Scene preview */}
-                          <div className="w-14 h-[72px] rounded-md overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
-                            {scene.previewUrl ? (
-                              <ShimmerImage
-                                src={getOptimizedUrl(scene.previewUrl, { quality: 65 })}
-                                alt={scene.title}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Camera className="w-4 h-4 text-muted-foreground/30" />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Scene info */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium truncate">{scene.title}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              {source === 'scene' && (
-                                <>
-                                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Shot styled</span>
-                                  <span className="text-[10px] text-muted-foreground truncate">
-                                    {summarizeOutfitHint(scene.outfitHint!)}
-                                  </span>
-                                </>
-                              )}
-                              {source === 'ai' && (
-                                <>
-                                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">Styled by AI</span>
-                                  {perSceneCfg && (
-                                    <span className="text-[10px] text-muted-foreground truncate">
-                                      {summarizeOutfitConfig(perSceneCfg)}
-                                    </span>
-                                  )}
-                                  {!perSceneCfg && autoPickedPresetName && (
-                                    <span className="text-[10px] text-muted-foreground truncate">{autoPickedPresetName}</span>
-                                  )}
-                                </>
-                              )}
-                              {source === 'custom' && (
-                                <>
-                                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">Custom</span>
-                                  {perSceneCfg && (
-                                    <span className="text-[10px] text-muted-foreground truncate">
-                                      {summarizeOutfitConfig(perSceneCfg)}
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform flex-shrink-0', isExpanded && 'rotate-180')} />
-                        </button>
-
-                        {/* Expanded editor */}
-                        {isExpanded && (
-                          <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/40">
-                            {source === 'scene' && !perSceneCfg && (
-                              <p className="text-[11px] text-muted-foreground italic">
-                                This shot has its own curated styling direction. Edit below to override it.
-                              </p>
-                            )}
-                            {source === 'custom' && scene.outfitHint && (
-                              <button
-                                type="button"
-                                onClick={() => handleResetSceneOutfit(scene.id)}
-                                className="text-[11px] text-primary hover:underline"
-                              >
-                                Reset to shot direction
-                              </button>
-                            )}
-                            <ZaraOutfitPanel
-                              details={{ ...details, outfitConfig: perSceneCfg || {} }}
-                              update={(p) => {
-                                if (p.outfitConfig) updateSceneOutfit(scene.id, p.outfitConfig);
-                              }}
-                              primaryCategory={primaryCategory}
-                              modelGender={selectedModelGender}
-                              analyses={analyses}
-                              selectedProductIds={selectedProductIds}
-                              allProducts={allProducts}
-                              productCategories={selectedProductCategories}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Reset all link */}
-                {sceneOutfitSource.some(s => s.source === 'custom') && (
-                  <button
-                    type="button"
-                    onClick={handleResetAllOutfits}
-                    className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    Reset all to defaults
-                  </button>
                 )}
 
                 {/* Custom styling note */}
