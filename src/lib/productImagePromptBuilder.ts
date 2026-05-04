@@ -891,8 +891,8 @@ function hasUserDefinedOutfit(details: DetailSettings): boolean {
 // ── Shared outfit hint resolver ──
 function resolveOutfitHintText(scene: ProductImageScene, details: DetailSettings, productName?: string): string | undefined {
   if (!scene.outfitHint) return undefined;
-  // If user has defined any outfit slot → bypass scene hint (user intent takes priority)
-  if (hasUserDefinedOutfit(details)) return undefined;
+  // If user explicitly enabled outfit override AND has at least one slot defined → bypass scene hint
+  if (details.outfitOverrideEnabled && hasUserDefinedOutfit(details)) return undefined;
   const hex = details.aestheticColorHex;
   const label = details.aestheticColorLabel;
   const colorDesc = hex && /^#[0-9A-Fa-f]{6}$/.test(hex) ? (label ? `${label} (${hex})` : hex) : 'coordinated';
