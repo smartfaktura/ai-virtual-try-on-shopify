@@ -751,7 +751,7 @@ function extractImageFromGeminiResponse(data: Record<string, unknown>): string |
 
 async function generateImage(
   prompt: string,
-  referenceImages: Array<{ url: string; label: string }>,
+  referenceImages: Array<{ url: string; label: string; promptLabel?: string }>,
   aiModel: string,
   apiKey: string,
   aspectRatio?: string
@@ -775,7 +775,9 @@ async function generateImage(
     { type: "text", text: prompt },
   ];
   for (const img of referenceImages) {
-    const labelText = IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
+    const labelText = img.promptLabel
+      ? `[PRODUCT EXTRA ANGLE] ${img.promptLabel}`
+      : IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
     contentParts.push({ type: "text", text: labelText });
     contentParts.push({
       type: "image_url",
@@ -1287,7 +1289,7 @@ serve(async (req) => {
             `[generate-workflow] Variation ${i + 1}/${variationsToGenerate.length} [${angle.label}]: "${variation.label}" (${aspectRatio})${body.model ? ` [with model: ${body.model.name}]` : ""}`
           );
 
-          const referenceImages: Array<{ url: string; label: string }> = [
+          const referenceImages: Array<{ url: string; label: string; promptLabel?: string }> = [
             { url: body.product.imageUrl, label: "product" },
           ];
           // Add additional product images as AI references for flat lay multi-product
@@ -1314,11 +1316,9 @@ serve(async (req) => {
           // Add extra angle reference images (e.g. back/side view, atomizer, cuff detail) when provided
           const extraRefsArray = (body as Record<string, unknown>).extra_references as Array<{ url: string; label: string }> | undefined;
           if (extraRefsArray && Array.isArray(extraRefsArray) && extraRefsArray.length > 0) {
-            // Multi-reference mode: add each with a unique label key
+            // Multi-reference mode: each ref carries its own promptLabel
             extraRefsArray.forEach((ref, idx) => {
-              const labelKey = `product_extra_angle_${idx}`;
-              referenceImages.push({ url: ref.url, label: labelKey });
-              IMAGE_LABEL_MAP[labelKey] = `[PRODUCT EXTRA ANGLE ${idx + 1}] ${ref.label}`;
+              referenceImages.push({ url: ref.url, label: `product_extra_angle_${idx}`, promptLabel: ref.label });
             });
             console.log(`[generate-workflow] Adding ${extraRefsArray.length} extra reference images for "${variation.label}"`);
           } else if ((body as Record<string, unknown>).extra_reference_image_url) {
@@ -1326,10 +1326,8 @@ serve(async (req) => {
             referenceImages.push({
               url: (body as Record<string, unknown>).extra_reference_image_url as string,
               label: customLabel ? `product_extra_angle_custom` : "product_extra_angle",
+              ...(customLabel ? { promptLabel: customLabel } : {}),
             });
-            if (customLabel) {
-              IMAGE_LABEL_MAP['product_extra_angle_custom'] = `[PRODUCT EXTRA ANGLE] ${customLabel}`;
-            }
             console.log(`[generate-workflow] Adding extra angle reference image for "${variation.label}"${customLabel ? ` (custom: ${customLabel})` : ''}`);
           }
 
