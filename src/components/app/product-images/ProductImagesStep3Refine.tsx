@@ -2947,10 +2947,9 @@ export function ProductImagesStep3Refine({
 
                          {/* Scenes list for this product */}
                          <div className="divide-y divide-border/30">
-                           {productSceneOutfits.map(({ scene, source }, idx) => {
-                             const isExpanded = expandedOutfitSceneId === `${product.id}:${scene.id}`;
-                             const perSceneCfg = details.outfitConfigByScene?.[scene.id];
-                             const hasNoOutfit = source === 'ai' && !perSceneCfg;
+                           {productSceneOutfits.map(({ scene, source }) => {
+                              const perSceneCfg = details.outfitConfigByScene?.[scene.id];
+                              const hasNoOutfit = source === 'ai' && !perSceneCfg;
 
                              return (
                                <div
