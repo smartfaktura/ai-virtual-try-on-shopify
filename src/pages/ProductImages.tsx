@@ -880,7 +880,16 @@ export default function ProductImages() {
               // Enable override flag when per-scene outfit exists so prompt builder bypasses outfit_hint
               ...(perSceneOutfit ? { outfitOverrideEnabled: true } : {}),
             };
-            const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
+            // Merge Step 3 specs into dimensions
+            const specEntry = details.productSpecs?.[product.id];
+            let mergedDims = product.dimensions || '';
+            if (specEntry) {
+              const specConfig = getSpecFieldsForCategory(productAnalysis?.category || product.product_type);
+              const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, specConfig);
+              if (specLine) mergedDims = specLine;
+            }
+            const enrichedProduct = { ...product, dimensions: mergedDims || undefined };
+            const variationInstruction = buildDynamicPrompt(scene, enrichedProduct, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
 
             const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
             for (const ratioForJob of sceneRatios) {
