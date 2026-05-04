@@ -3013,10 +3013,26 @@ export function ProductImagesStep3Refine({
                                       </div>
                                     </div>
 
-                                     <span className="flex items-center gap-1 text-[10px] text-primary font-medium flex-shrink-0">
-                                       <Pencil className="w-3 h-3" />
-                                       Edit
-                                     </span>
+                                     <div className="flex items-center gap-1.5 flex-shrink-0">
+                                       {!perSceneCfg && source !== 'scene' && (
+                                         <button
+                                           type="button"
+                                           onClick={(e) => {
+                                             e.stopPropagation();
+                                             const pick = perProductPicks[product.id];
+                                             if (pick) updateSceneOutfit(scene.id, pick.config);
+                                           }}
+                                           className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                         >
+                                           <Sparkles className="w-3 h-3" />
+                                           AI
+                                         </button>
+                                       )}
+                                       <span className="flex items-center gap-1 text-[10px] text-primary font-medium">
+                                         <Pencil className="w-3 h-3" />
+                                         Edit
+                                       </span>
+                                     </div>
                                   </button>
                                </div>
                              );
