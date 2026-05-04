@@ -2903,7 +2903,7 @@ export function ProductImagesStep3Refine({
                                         selectedProductIds={new Set([product.id])}
                                         allProducts={allProducts}
                                         productCategories={selectedProductCategories}
-                                        globalPresetName={perSceneCfg ? undefined : (details as any).appliedPresetName}
+                                        globalPresetName={(details as any).appliedPresetName || undefined}
                                       />
                                    </div>
                                  )}
