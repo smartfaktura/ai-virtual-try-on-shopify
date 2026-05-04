@@ -2914,7 +2914,7 @@ export function ProductImagesStep3Refine({
                      const productSceneOutfits = productModelShots.map(scene => {
                        const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
                        if (hasPerScene) return { scene, source: 'custom' as const };
-                       if (scene.outfitHint) return { scene, source: 'scene' as const };
+                       if (!isManualOutfitMode && scene.outfitHint) return { scene, source: 'scene' as const };
                        return { scene, source: 'ai' as const };
                      });
 
