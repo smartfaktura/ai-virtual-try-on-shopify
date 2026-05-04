@@ -2195,6 +2195,36 @@ export function ProductImagesStep3Refine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [details.outfitConfigByScene]);
 
+  // Build flat ordered list for save-and-next navigation
+  const flatSceneList = useMemo(() => {
+    const list: Array<{ productId: string; sceneId: string }> = [];
+    for (const product of selectedProductsList) {
+      for (const scene of modelShots) {
+        list.push({ productId: product.id, sceneId: scene.id });
+      }
+    }
+    return list;
+  }, [selectedProductsList, modelShots]);
+
+  const handleSaveAndNext = useCallback((currentProductId: string, currentSceneId: string) => {
+    const currentKey = `${currentProductId}:${currentSceneId}`;
+    const idx = flatSceneList.findIndex(s => `${s.productId}:${s.sceneId}` === currentKey);
+    if (idx >= 0 && idx < flatSceneList.length - 1) {
+      const next = flatSceneList[idx + 1];
+      setExpandedOutfitSceneId(`${next.productId}:${next.sceneId}`);
+      toast.success('Saved');
+    } else {
+      setExpandedOutfitSceneId(null);
+      toast.success('All scenes styled');
+    }
+  }, [flatSceneList]);
+
+  const isLastScene = useCallback((productId: string, sceneId: string) => {
+    const key = `${productId}:${sceneId}`;
+    const idx = flatSceneList.findIndex(s => `${s.productId}:${s.sceneId}` === key);
+    return idx === flatSceneList.length - 1;
+  }, [flatSceneList]);
+
   // Per-product reference upload handler — stores as trigger:{type}:{productId}
   const handlePerProductRefUpload = useCallback(async (triggerKey: string, productId: string, file: File) => {
     if (!onSceneExtraRefsChange) return;
