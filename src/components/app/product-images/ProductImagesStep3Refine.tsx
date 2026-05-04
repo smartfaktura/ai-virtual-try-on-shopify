@@ -2044,7 +2044,8 @@ export function ProductImagesStep3Refine({
   const [expandedOutfitSceneId, setExpandedOutfitSceneId] = useState<string | null>(null);
   const [applyToAllOpen, setApplyToAllOpen] = useState(false);
   const [applyToAllDraft, setApplyToAllDraft] = useState<OutfitConfig>({});
-  const autoPickedRef = useRef(false);
+   const autoPickedRef = useRef(false);
+   const [manualAcceptedHints, setManualAcceptedHints] = useState<Set<string>>(new Set());
 
   // Build the per-product picks (productId → preset) for scenes without outfit_hint
   const perProductPicks = useMemo(() => {
@@ -2137,11 +2138,12 @@ export function ProductImagesStep3Refine({
     return modelShots.map(scene => {
       const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
       if (hasPerScene) return { scene, source: 'custom' as const };
-      // In manual mode, ignore curated hints — treat as needing styling
+      // In manual mode, ignore curated hints unless user accepted via AI button
       if (!isManualOutfitMode && scene.outfitHint) return { scene, source: 'scene' as const };
+      if (isManualOutfitMode && scene.outfitHint && manualAcceptedHints.has(scene.id)) return { scene, source: 'scene' as const };
       return { scene, source: 'ai' as const };
     });
-  }, [modelShots, details.outfitConfigByScene, isManualOutfitMode]);
+  }, [modelShots, details.outfitConfigByScene, isManualOutfitMode, manualAcceptedHints]);
 
   // Summarize an OutfitConfig into a short string for display
   const summarizeOutfitConfig = useCallback((cfg: OutfitConfig): string => {
@@ -2914,8 +2916,9 @@ export function ProductImagesStep3Refine({
                      const productSceneOutfits = productModelShots.map(scene => {
                        const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
                        if (hasPerScene) return { scene, source: 'custom' as const };
-                       if (!isManualOutfitMode && scene.outfitHint) return { scene, source: 'scene' as const };
-                       return { scene, source: 'ai' as const };
+                        if (!isManualOutfitMode && scene.outfitHint) return { scene, source: 'scene' as const };
+                        if (isManualOutfitMode && scene.outfitHint && manualAcceptedHints.has(scene.id)) return { scene, source: 'scene' as const };
+                        return { scene, source: 'ai' as const };
                      });
 
                      return (
@@ -3029,28 +3032,41 @@ export function ProductImagesStep3Refine({
                                     </div>
 
                                      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                                       {perSceneCfg && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleResetSceneOutfit(scene.id);
-                                              toast.success('Outfit cleared');
-                                            }}
-                                            className="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                                            title="Clear outfit"
-                                          >
-                                            <X className="w-3.5 h-3.5" />
-                                          </button>
-                                        )}
+                                       {(perSceneCfg || (isManualOutfitMode && manualAcceptedHints.has(scene.id))) && (
+                                           <button
+                                             type="button"
+                                             onClick={(e) => {
+                                               e.stopPropagation();
+                                               if (perSceneCfg) {
+                                                 handleResetSceneOutfit(scene.id);
+                                               }
+                                               if (manualAcceptedHints.has(scene.id)) {
+                                                 setManualAcceptedHints(prev => {
+                                                   const next = new Set(prev);
+                                                   next.delete(scene.id);
+                                                   return next;
+                                                 });
+                                               }
+                                             }}
+                                             className="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                                             title="Clear outfit"
+                                           >
+                                             <X className="w-3.5 h-3.5" />
+                                           </button>
+                                         )}
                                        {!perSceneCfg && source !== 'scene' && (
                                           <button
                                             type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              const pick = perProductPicks[product.id];
-                                              if (pick) updateSceneOutfit(scene.id, pick.config);
-                                            }}
+                                             onClick={(e) => {
+                                               e.stopPropagation();
+                                               if (scene.outfitHint) {
+                                                 // Accept the scene's built-in curated direction
+                                                 setManualAcceptedHints(prev => new Set(prev).add(scene.id));
+                                               } else {
+                                                 const pick = perProductPicks[product.id];
+                                                 if (pick) updateSceneOutfit(scene.id, pick.config);
+                                               }
+                                             }}
                                             className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/15 transition-colors"
                                           >
                                             <Sparkles className="w-3.5 h-3.5" />

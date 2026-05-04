@@ -1,26 +1,20 @@
-
 ## Problem
 
-When user selects "Style manually", scenes with built-in curated outfits (`outfitHint`) still show green "Curated · tap to override" badges and appear as pre-styled. Manual mode should mean manual — all scenes start unstyled, user fills in from scratch.
+In manual outfit mode, scenes that have a built-in `outfitHint` (curated styling direction) show "Needs styling" with an AI button. Clicking the AI button applies a generic category-based preset instead of the scene's own curated outfit direction. The user expects the AI button to accept/show the scene's built-in outfit hint.
 
-## Changes in `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+## Changes
 
-### 1. Scene source determination (line ~2912)
+**File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`**
 
-In the `productSceneOutfits` mapping, check if mode is manual. If manual, skip the `outfitHint` check so scenes with curated hints get `source: 'ai'` (needs styling) instead of `source: 'scene'` (curated). Only scenes where user has explicitly set `perSceneCfg` show as styled.
+1. **Add local state** to track which scenes the user has "accepted" the curated hint for in manual mode:
+   ```
+   const [manualAcceptedHints, setManualAcceptedHints] = useState<Set<string>>(new Set());
+   ```
 
-```
-const isManual = details.outfitMode === 'manual';
-// existing map...
-if (!isManual && scene.outfitHint) return { scene, source: 'scene' };
-```
+2. **Update `sceneOutfitSource` and `productSceneOutfits`** logic: when a scene has `outfitHint` and is in manual mode, if its ID is in `manualAcceptedHints`, treat it as `source: 'scene'` (showing the curated green badge + hint text) instead of `source: 'ai'`.
 
-### 2. Same fix for the top-level `sceneOutfitSource` (line ~2139)
+3. **Update the AI button click handler** (~line 3049): when the scene has `outfitHint`, instead of applying `perProductPicks`, add the scene ID to `manualAcceptedHints`. This switches the scene from "Needs styling" to showing the curated look with the hint text visible.
 
-There's an earlier computed array used for counts — apply the same logic there so `builtInCount` is 0 in manual mode and "Needs styling" badges appear correctly.
+4. **Update the X (clear) button** logic: when clearing a scene that was accepted via hint, also remove it from `manualAcceptedHints` so it goes back to "Needs styling".
 
-### 3. AI button visibility (line ~3044)
-
-Currently the AI quick-apply button is hidden for `source === 'scene'`. In manual mode all scenes will be `source: 'ai'`, so the AI button will naturally appear — giving users the option to tap AI for a curated suggestion or fill in manually. No extra change needed here.
-
-This ensures manual mode = all scenes start empty with "Needs styling" + both AI and Edit buttons visible on every scene.
+The result: in manual mode, scenes with curated hints show "Needs styling" initially. Clicking AI accepts the scene's built-in direction and shows the green "Curated" badge with the outfit hint text. The user can still click Edit to override manually.
