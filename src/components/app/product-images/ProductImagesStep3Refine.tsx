@@ -3012,7 +3012,14 @@ export function ProductImagesStep3Refine({
                                      </div>
                                    </div>
 
-                                   <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform flex-shrink-0', isExpanded && 'rotate-180')} />
+                                    {isExpanded ? (
+                                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-180 transition-transform flex-shrink-0" />
+                                    ) : (
+                                      <span className="flex items-center gap-1 text-[10px] text-primary font-medium flex-shrink-0">
+                                        <Pencil className="w-3 h-3" />
+                                        Edit
+                                      </span>
+                                    )}
                                  </button>
 
                                  {isExpanded && (
