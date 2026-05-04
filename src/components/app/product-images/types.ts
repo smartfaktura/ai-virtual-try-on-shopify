@@ -432,11 +432,8 @@ export interface DetailSettings {
   // Outfit styling mode: 'ai' = let AI match outfits, 'manual' = user picks per scene
   outfitMode?: 'ai' | 'manual';
 
-  // Per-product specifications (dimensions, notes) — entered in Step 3
-  productSpecs?: Record<string, { specs: Record<string, string>; notes: string }>;
-
-  // Unit system for product specs (metric = cm/mm/ml, imperial = in/oz/fl oz)
-  specUnitSystem?: 'metric' | 'imperial';
+  // Per-product specifications (free-text) — entered in Step 3
+  productSpecs?: Record<string, string>;
 }
 
 export interface GenerationPlan {
