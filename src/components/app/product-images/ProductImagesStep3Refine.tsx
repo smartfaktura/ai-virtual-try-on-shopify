@@ -1751,38 +1751,39 @@ function ZaraOutfitPanel({
         onApplyToAll={(cfg) => handleLoadPreset(cfg)}
         onLoadSingle={handleLoadPreset}
         mode="single"
-        category={firstAnalysis?.category || primaryCategory}
+        category={primaryCategory}
         gender={modelGender}
         productCategories={productCategories}
       />
 
       <div className="space-y-2">
-        {garmentSlots.map(slot => {
-          const meta = SLOT_TYPES[slot];
-          const isLocked = resolution.lockedSlot === slot;
-          const value = (config as Record<string, OutfitPiece | undefined>)[slot];
-          // Show "add layer" CTA on TOP slot when outerwear is available + not yet picked
-          const showAddLayer = slot === 'top'
-            && resolution.availableSlots.includes('outerwear')
-            && !config.outerwear
-            && !isLocked;
-          return (
-            <OutfitSlotCard
-              key={slot}
-              label={meta.label.toUpperCase()}
-              hint={slot === 'top' && resolution.lockedSlot === 'outerwear' ? "What's underneath?" : undefined}
-              ghostDefault={meta.ghost}
-              types={meta.types}
-              value={value}
-              onChange={(p) => updateSlot(slot, p)}
-              locked={isLocked}
-              productThumb={isLocked ? firstProduct?.image_url : undefined}
-              productName={isLocked ? firstProduct?.title : undefined}
-              onAddLayer={showAddLayer ? () => updateSlot('outerwear', { garment: 'jacket', color: '' }) : undefined}
-              layerLabel="+ Add layer over (jacket, blazer, cardigan)"
-            />
-          );
-        })}
+         {garmentSlots.map(slot => {
+           const meta = SLOT_TYPES[slot];
+           const lockedEntry = lockedSlotProducts.get(slot);
+           const isLocked = !!lockedEntry;
+           const value = (config as Record<string, OutfitPiece | undefined>)[slot];
+           // Show "add layer" CTA on TOP slot when outerwear is available + not yet picked
+           const showAddLayer = slot === 'top'
+             && resolution.availableSlots.includes('outerwear')
+             && !config.outerwear
+             && !isLocked;
+           return (
+             <OutfitSlotCard
+               key={slot}
+               label={meta.label.toUpperCase()}
+               hint={slot === 'top' && lockedSlotProducts.has('outerwear') ? "What's underneath?" : undefined}
+               ghostDefault={meta.ghost}
+               types={meta.types}
+               value={value}
+               onChange={(p) => updateSlot(slot, p)}
+               locked={isLocked}
+               productThumb={isLocked ? lockedEntry?.product?.image_url : undefined}
+               productName={isLocked ? lockedEntry?.product?.title : undefined}
+               onAddLayer={showAddLayer ? () => updateSlot('outerwear', { garment: 'jacket', color: '' }) : undefined}
+               layerLabel="+ Add layer over (jacket, blazer, cardigan)"
+             />
+           );
+         })}
       </div>
 
       {accessorySlots.length > 0 && (
