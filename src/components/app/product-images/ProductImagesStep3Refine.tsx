@@ -22,7 +22,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Paintbrush, User, Users, Layers, Camera, ChevronDown, ChevronRight, RotateCcw, Upload,
   ImageIcon, Coins, Plus, X, Search, PackagePlus, Settings2, Sparkles, Lock, Shirt,
-  Save, Trash2, History, Check, Info, ArrowRight, CheckCircle2,
+  Save, Trash2, History, Check, Info, ArrowRight, CheckCircle2, Pencil,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
