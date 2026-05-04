@@ -2138,8 +2138,9 @@ export function ProductImagesStep3Refine({
     return modelShots.map(scene => {
       const hasPerScene = !!(details.outfitConfigByScene?.[scene.id]);
       if (hasPerScene) return { scene, source: 'custom' as const };
-      // In manual mode, ignore curated hints — treat as needing styling
+      // In manual mode, ignore curated hints unless user accepted via AI button
       if (!isManualOutfitMode && scene.outfitHint) return { scene, source: 'scene' as const };
+      if (isManualOutfitMode && scene.outfitHint && manualAcceptedHints.has(scene.id)) return { scene, source: 'scene' as const };
       return { scene, source: 'ai' as const };
     });
   }, [modelShots, details.outfitConfigByScene, isManualOutfitMode]);
