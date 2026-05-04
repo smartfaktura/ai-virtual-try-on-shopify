@@ -1679,6 +1679,7 @@ function ZaraOutfitPanel({
   productCategories?: string[];
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
+  const [singlePresetName, setSinglePresetName] = useState<string | undefined>(undefined);
 
   // Resolve conflicts for ALL selected products — each may lock a different slot
   const productIds = useMemo(() => Array.from(selectedProductIds), [selectedProductIds]);
