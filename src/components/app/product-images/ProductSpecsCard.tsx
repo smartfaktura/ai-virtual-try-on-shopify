@@ -202,7 +202,27 @@ export function ProductSpecsCard({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium truncate">{product.title}</p>
-                        <p className="text-[10px] text-muted-foreground">{categoryLabel}</p>
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          {onCategoryOverride ? (
+                            <Select
+                              value={category || 'other'}
+                              onValueChange={(val) => onCategoryOverride(product.id, val)}
+                            >
+                              <SelectTrigger className="h-5 w-auto min-w-0 border-none bg-transparent p-0 pr-5 text-[10px] text-muted-foreground shadow-none focus:ring-0 hover:text-foreground transition-colors [&>svg]:w-3 [&>svg]:h-3">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[280px]">
+                                {ALL_CATEGORY_OPTIONS.map(opt => (
+                                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground">{categoryLabel}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {hasFilled && <Check className="w-3 h-3 text-emerald-500" />}
