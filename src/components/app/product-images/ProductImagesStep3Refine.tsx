@@ -3013,26 +3013,40 @@ export function ProductImagesStep3Refine({
                                       </div>
                                     </div>
 
-                                     <div className="flex items-center gap-1.5 flex-shrink-0">
+                                     <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                                       {perSceneCfg && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleResetSceneOutfit(scene.id);
+                                              toast.success('Outfit cleared');
+                                            }}
+                                            className="inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                                            title="Clear outfit"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
                                        {!perSceneCfg && source !== 'scene' && (
-                                         <button
-                                           type="button"
-                                           onClick={(e) => {
-                                             e.stopPropagation();
-                                             const pick = perProductPicks[product.id];
-                                             if (pick) updateSceneOutfit(scene.id, pick.config);
-                                           }}
-                                           className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                         >
-                                           <Sparkles className="w-3 h-3" />
-                                           AI
-                                         </button>
-                                       )}
-                                       <span className="flex items-center gap-1 text-[10px] text-primary font-medium">
-                                         <Pencil className="w-3 h-3" />
-                                         Edit
-                                       </span>
-                                     </div>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const pick = perProductPicks[product.id];
+                                              if (pick) updateSceneOutfit(scene.id, pick.config);
+                                            }}
+                                            className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/15 transition-colors"
+                                          >
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                            AI
+                                          </button>
+                                        )}
+                                        <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors">
+                                          <Pencil className="w-3.5 h-3.5" />
+                                          Edit
+                                        </span>
+                                      </div>
                                   </button>
                                </div>
                              );

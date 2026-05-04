@@ -1322,6 +1322,16 @@ export default function ProductImages() {
           setDetails(prev => ({ ...prev, selectedModelId: globalModelProfiles[0].modelId, selectedModelIds: [globalModelProfiles[0].modelId] }));
           toast.info('Smart defaults applied — we auto-selected a model and best settings for your scenes. You can go back to Refine to customize.');
         }
+        // Warn about unstyled scenes in manual mode
+        if (details.outfitMode === 'manual' && hasOnModelScenes) {
+          const modelScenes = selectedScenes.filter(s =>
+            s.triggerBlocks?.some((b: string) => b === 'personDetails' || b === 'actionDetails')
+          );
+          const unstyledCount = modelScenes.filter(s => !s.outfitHint && !details.outfitConfigByScene?.[s.id]).length;
+          if (unstyledCount > 0) {
+            toast.info(`${unstyledCount} shot${unstyledCount > 1 ? 's' : ''} still need styling — AI will pick complementary outfits for those`);
+          }
+        }
         setStep(4);
         break;
       }
