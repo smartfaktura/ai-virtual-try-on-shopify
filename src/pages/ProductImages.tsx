@@ -926,7 +926,7 @@ export default function ProductImages() {
                     title: product.title,
                     productType: productAnalysis?.category || product.product_type,
                     description: product.description,
-                    dimensions: product.dimensions || undefined,
+                    dimensions: mergedDims || product.dimensions || undefined,
                     weight: (product as any).weight || undefined,
                     materials: (product as any).materials || undefined,
                     color: (product as any).color || undefined,
