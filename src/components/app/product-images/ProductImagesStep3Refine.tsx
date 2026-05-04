@@ -2631,24 +2631,32 @@ export function ProductImagesStep3Refine({
 
                  {/* Presets bar — apply to all */}
                  {!topLevelResolution.hideOutfitPanel && (
-                   <OutfitPresetBar
-                     currentConfig={details.outfitConfig || {}}
-                     resolution={topLevelResolution}
-                     onApplyToAll={(cfg, presetName) => {
-                       handleApplyToAll(cfg);
-                       update({ appliedPresetName: presetName } as any);
-                     }}
-                     onOpenCustomize={() => {
-                       setApplyToAllDraft(details.outfitConfig || {});
-                       setApplyToAllOpen(!applyToAllOpen);
-                     }}
-                     activePresetName={(details as any).appliedPresetName || undefined}
-                     shotCount={modelShots.length}
-                     mode="apply-all"
-                     category={selectedProductCategories[0]}
-                     gender={selectedModelGender}
-                     productCategories={selectedProductCategories}
-                   />
+                    <OutfitPresetBar
+                      currentConfig={details.outfitConfig || {}}
+                      resolution={topLevelResolution}
+                      onApplyToAll={(cfg, presetName) => {
+                        handleApplyToAll(cfg);
+                        update({ appliedPresetName: presetName } as any);
+                      }}
+                      onOpenCustomize={() => {
+                        setApplyToAllDraft(details.outfitConfig || {});
+                        setApplyToAllOpen(!applyToAllOpen);
+                      }}
+                      onSetupOneByOne={() => {
+                        // Expand first product's first scene
+                        const firstProduct = selectedProductsList[0];
+                        const firstScene = modelShots[0];
+                        if (firstProduct && firstScene) {
+                          setExpandedOutfitSceneId(`${firstProduct.id}:${firstScene.id}`);
+                        }
+                      }}
+                      activePresetName={(details as any).appliedPresetName || undefined}
+                      shotCount={modelShots.length}
+                      mode="apply-all"
+                      category={selectedProductCategories[0]}
+                      gender={selectedModelGender}
+                      productCategories={selectedProductCategories}
+                    />
                  )}
 
                  {/* Customize & apply to all — Inline collapsible */}
