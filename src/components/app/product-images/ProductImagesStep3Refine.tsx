@@ -1680,17 +1680,47 @@ function ZaraOutfitPanel({
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
 
-  // Resolve conflicts based on the first selected product (or primary category fallback)
-  const firstProductId = Array.from(selectedProductIds)[0];
-  const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
-  const firstProduct = allProducts.find(p => p.id === firstProductId);
-  const resolution = useMemo(
-    () => resolveOutfitConflicts(
-      firstAnalysis?.category || primaryCategory,
-      firstAnalysis?.garmentType,
-    ),
-    [firstAnalysis, primaryCategory],
-  );
+  // Resolve conflicts for ALL selected products — each may lock a different slot
+  const productIds = useMemo(() => Array.from(selectedProductIds), [selectedProductIds]);
+
+  const { resolution, lockedSlotProducts } = useMemo(() => {
+    type LockedEntry = { product: typeof allProducts[0] | undefined; analysis: typeof analyses[string] };
+    const lockedMap = new Map<OutfitSlotKey, LockedEntry>();
+    const allHidden = new Set<OutfitSlotKey>();
+    let allHidePanel = true;
+
+    for (const pid of productIds) {
+      const analysis = analyses[pid];
+      const product = allProducts.find(p => p.id === pid);
+      const res = resolveOutfitConflicts(analysis?.category || primaryCategory, analysis?.garmentType);
+      if (res.hideOutfitPanel) continue;
+      allHidePanel = false;
+      if (res.lockedSlot && !lockedMap.has(res.lockedSlot)) {
+        lockedMap.set(res.lockedSlot, { product, analysis });
+      }
+      for (const h of res.hiddenSlots) allHidden.add(h);
+    }
+
+    if (allHidePanel || (productIds.length > 0 && lockedMap.size === 0 && allHidePanel)) {
+      const empty: ConflictResolution = { lockedSlot: null, hiddenSlots: allHidden, availableSlots: [], hideOutfitPanel: true };
+      return { resolution: empty, lockedSlotProducts: lockedMap };
+    }
+
+    // Don't hide slots that are locked by a product
+    for (const s of lockedMap.keys()) allHidden.delete(s);
+
+    const ALL_SLOTS_LIST: OutfitSlotKey[] = ['outerwear', 'top', 'bottom', 'dress', 'shoes', 'coverUp', 'bag', 'hat', 'eyewear', 'belt', 'watch', 'jewelry'];
+    const available = ALL_SLOTS_LIST.filter(s => !lockedMap.has(s) && !allHidden.has(s));
+    const firstLocked = lockedMap.size > 0 ? Array.from(lockedMap.keys())[0] : null;
+
+    const merged: ConflictResolution = {
+      lockedSlot: firstLocked,
+      hiddenSlots: allHidden,
+      availableSlots: available,
+      hideOutfitPanel: false,
+    };
+    return { resolution: merged, lockedSlotProducts: lockedMap };
+  }, [productIds, analyses, allProducts, primaryCategory]);
 
   const config: OutfitConfig = details.outfitConfig || {};
   const updateSlot = (slot: OutfitSlotKey, piece: OutfitPiece | undefined) => {
