@@ -1645,6 +1645,8 @@ interface Step3RefineProps {
   analyses?: Record<string, import('./types').ProductAnalysis>;
   isFree?: boolean;
   onUpgradeClick?: () => void;
+  perCategoryScenes?: Map<string, Set<string>>;
+  categoryGroups?: Map<string, string[]>;
 }
 
 /* ══════════════════════════════════════════════
