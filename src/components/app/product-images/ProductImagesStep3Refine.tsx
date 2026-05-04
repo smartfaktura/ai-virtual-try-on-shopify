@@ -2682,29 +2682,111 @@ export function ProductImagesStep3Refine({
           )}
 
            {/* ── MODEL STYLING — per-product grouped outfit direction ── */}
-           {hasPersonBlock && (
-             <Card>
-               <CardContent className="p-5 space-y-4">
-                 {/* Header */}
-                 <div>
-                   <div className="flex items-center justify-between">
-                     <h3 className="text-sm font-semibold">Outfit Styling</h3>
-                     {sceneOutfitSource.some(s => s.source === 'custom') && (
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         className="h-7 text-[11px] px-2.5 gap-1"
-                         onClick={handleResetAllOutfits}
-                       >
-                         <RotateCcw className="w-3 h-3" />
-                         Reset all
-                       </Button>
-                     )}
-                   </div>
-                   <p className="text-xs text-muted-foreground/70 mt-0.5">
-                     {modelShots.length} on-model shot{modelShots.length !== 1 ? 's' : ''}{selectedProductsList.length > 1 ? ` across ${selectedProductsList.length} products` : ''}
-                   </p>
-                 </div>
+           {hasPersonBlock && (() => {
+              const builtInCount = sceneOutfitSource.filter(s => s.source === 'scene').length;
+              const needsStylingCount = modelShots.length - builtInCount;
+              const effectiveMode = details.outfitMode || (
+                // Auto-detect: if user already configured per-scene outfits, show manual
+                sceneOutfitSource.some(s => s.source === 'custom') ? 'manual' : 'ai'
+              );
+              return (
+              <Card>
+                <CardContent className="p-5 space-y-4">
+                  {/* Header */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Shirt className="w-4 h-4 text-primary" />
+                        <h3 className="text-sm font-semibold">Outfit Styling</h3>
+                      </div>
+                      {effectiveMode === 'manual' && sceneOutfitSource.some(s => s.source === 'custom') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[11px] px-2.5 gap-1"
+                          onClick={handleResetAllOutfits}
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          Reset all
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Choose how to dress the model for {modelShots.length} shot{modelShots.length !== 1 ? 's' : ''}
+                      {builtInCount > 0 && ` · ${builtInCount} with built-in looks`}
+                    </p>
+                  </div>
+
+                  {/* Mode selector — two cards */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => update({ outfitMode: 'ai' })}
+                      className={cn(
+                        'relative rounded-xl border p-3 text-left transition-all cursor-pointer',
+                        effectiveMode === 'ai'
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                          : 'border-border hover:border-primary/40 bg-card',
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className={cn('w-4 h-4', effectiveMode === 'ai' ? 'text-primary' : 'text-muted-foreground')} />
+                        <span className="text-xs font-semibold">AI styling</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-snug">
+                        AI picks complementary outfits that match your product
+                      </p>
+                      {effectiveMode === 'ai' && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => update({ outfitMode: 'manual' })}
+                      className={cn(
+                        'relative rounded-xl border p-3 text-left transition-all cursor-pointer',
+                        effectiveMode === 'manual'
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                          : 'border-border hover:border-primary/40 bg-card',
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Settings2 className={cn('w-4 h-4', effectiveMode === 'manual' ? 'text-primary' : 'text-muted-foreground')} />
+                        <span className="text-xs font-semibold">Style manually</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-snug">
+                        Choose presets or customize outfits per shot
+                      </p>
+                      {effectiveMode === 'manual' && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* AI mode confirmation */}
+                  {effectiveMode === 'ai' && (
+                    <div className="rounded-lg bg-primary/5 border border-primary/10 px-3 py-2.5 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <span className="text-[11px] font-medium text-foreground">
+                          AI will style {needsStylingCount > 0 ? `${needsStylingCount} shot${needsStylingCount !== 1 ? 's' : ''}` : 'all shots'} with outfits that complement your product
+                        </span>
+                      </div>
+                      {builtInCount > 0 && (
+                        <p className="text-[10px] text-muted-foreground pl-[22px]">
+                          {builtInCount} shot{builtInCount !== 1 ? 's' : ''} will keep their curated built-in look
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Manual mode — existing preset bar + per-scene */}
+                  {effectiveMode === 'manual' && (<>
+
 
                  {/* Presets bar — apply to all */}
                  {!topLevelResolution.hideOutfitPanel && (
@@ -3033,10 +3115,12 @@ export function ProductImagesStep3Refine({
                         </div>
                       </div>
                     </CollapsibleContent>
-                 </Collapsible>
-               </CardContent>
-             </Card>
-           )}
+                  </Collapsible>
+                  </>)}
+                </CardContent>
+              </Card>
+              );
+            })()}
 
 
           {/* Aesthetic Color card */}
