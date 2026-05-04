@@ -18,6 +18,7 @@ interface OutfitPresetBarProps {
   onApplyToAll: (config: OutfitConfig, presetName: string) => void;
   onLoadSingle?: (config: OutfitConfig, presetName: string) => void;
   onOpenCustomize?: () => void;
+  onSetupOneByOne?: () => void;
   category?: string;
   gender?: string;
   productCategories?: string[];
