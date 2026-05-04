@@ -2846,72 +2846,16 @@ export function ProductImagesStep3Refine({
                     </p>
                   </div>
 
-                  {/* Manual mode — existing preset bar + per-scene */}
+                  {/* Manual mode — per-scene first, bulk edit at bottom */}
                   {effectiveMode === 'manual' && (<>
 
-
-                 {/* Presets bar — apply to all */}
-                 {!topLevelResolution.hideOutfitPanel && (
-                    <OutfitPresetBar
-                      currentConfig={details.outfitConfig || {}}
-                      resolution={topLevelResolution}
-                      onApplyToAll={(cfg, presetName) => {
-                        handleApplyToAll(cfg, presetName);
-                      }}
-                      onOpenCustomize={() => {
-                        setApplyToAllDraft(details.outfitConfig || {});
-                        setApplyToAllOpen(!applyToAllOpen);
-                      }}
-                      onSetupOneByOne={() => {
-                        // Expand first product's first scene
-                        const firstProduct = selectedProductsList[0];
-                        const firstScene = modelShots[0];
-                        if (firstProduct && firstScene) {
-                          setExpandedOutfitSceneId(`${firstProduct.id}:${firstScene.id}`);
-                        }
-                      }}
-                      activePresetName={(details as any).appliedPresetName || undefined}
-                      shotCount={modelShots.length}
-                      mode="apply-all"
-                      category={selectedProductCategories[0]}
-                      gender={selectedModelGender}
-                      productCategories={selectedProductCategories}
-                    />
-                 )}
-
-                 {/* Customize & apply to all — Inline collapsible */}
-                 {applyToAllOpen && (
-                   <div className="rounded-xl border border-primary/20 bg-muted/20 p-4 space-y-3">
-                     <div className="flex items-center justify-between">
-                       <p className="text-xs font-medium">Customize outfit for all shots</p>
-                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setApplyToAllOpen(false)}>
-                         <X className="w-3.5 h-3.5" />
-                       </Button>
-                     </div>
-                     <ZaraOutfitPanel
-                       details={{ ...details, outfitConfig: applyToAllDraft }}
-                       update={(p) => {
-                         if (p.outfitConfig) setApplyToAllDraft(p.outfitConfig);
-                       }}
-                       primaryCategory={primaryCategory}
-                       modelGender={selectedModelGender}
-                       analyses={analyses}
-                       selectedProductIds={selectedProductIds}
-                       allProducts={allProducts}
-                       productCategories={selectedProductCategories}
-                     />
-                     <div className="flex justify-end pt-1">
-                       <Button
-                         size="sm"
-                          onClick={() => {
-                            handleApplyToAll(applyToAllDraft, 'Custom');
-                          }}
-                       >
-                         Apply to all {modelShots.length} shots
-                       </Button>
-                     </div>
-                   </div>
-                 )}
+                  {/* Guidance hint */}
+                  <div className="rounded-lg bg-muted/30 border border-border/40 px-3 py-2.5 flex items-center gap-2.5">
+                    <Pencil className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    <p className="text-[11px] text-muted-foreground">
+                      Tap any shot below to customize its outfit around your product
+                    </p>
+                  </div>
 
                  {/* Per-product outfit groups */}
                  <div className="space-y-3">
