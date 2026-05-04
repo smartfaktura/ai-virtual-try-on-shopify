@@ -3166,15 +3166,6 @@ export function ProductImagesStep3Refine({
                           outfitAccessories={details.outfitConfig?.accessories}
                           onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
                         />
-                        <div className="space-y-1.5">
-                          <Label className="text-xs text-muted-foreground">Custom styling note (optional)</Label>
-                          <Textarea
-                            value={details.customOutfitNote || ''}
-                            onChange={e => update({ customOutfitNote: e.target.value || undefined })}
-                            className="text-xs min-h-[60px]"
-                            placeholder="e.g. prefer neutral tones, add layered look..."
-                          />
-                        </div>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
