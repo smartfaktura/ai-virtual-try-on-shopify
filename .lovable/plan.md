@@ -1,26 +1,10 @@
+## Remove "Load your last settings" banner
 
-## Make manual mode truly empty + add per-scene AI pick
+**File: `src/pages/ProductImages.tsx`**
 
-### Problem
-When switching to "Style manually", all scenes auto-fill with preset values, defeating the purpose. Reset also re-applies presets. User needs to see which scenes are unconfigured.
-
-### Changes in `ProductImagesStep3Refine.tsx`
-
-**1. Stop auto-picking presets when in manual mode**
-- In the auto-pick `useEffect` (~line 2058): add guard `if (details.outfitMode === 'manual') return;` so it only auto-fills for AI mode
-- When user switches TO manual mode (the `onClick` at ~line 2799): clear `outfitConfigByScene` to `{}` so all scenes show as empty/needing styling
-
-**2. Reset all → truly empty**
-- Change `handleResetAllOutfits` to set `outfitConfigByScene: {}` (empty object) instead of re-applying presets
-- Change toast to "Cleared all outfit settings"
-
-**3. Show Reset all button always in manual mode** (not just when custom exists)
-- Change condition from `sceneOutfitSource.some(s => s.source === 'custom')` to just `true` when manual — always show it so user can clear anytime. Disable it when already empty.
-
-**4. Add "AI pick" pill on each scene row**
-- Next to the "Edit" button, add a small `Sparkles` pill button "AI" that auto-assigns the preset for that single scene without opening the dialog
-- Clicking it applies `perProductPicks[productId].config` to that scene's `outfitConfigByScene` entry
-- Only show when scene has no config (`!perSceneCfg`) and `source !== 'scene'` (not built-in)
-
-### Files
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+1. **Remove state variables** (lines 106-107): Delete `showLastSettingsBanner` and `lastSettingsCategory` state declarations
+2. **Remove the check useEffect** (lines 601-615): Delete the effect that checks localStorage on step 3 entry
+3. **Keep the save effect** (lines 617-624): The save-on-step-4 effect is harmless and costs nothing — leave it so the feature can be re-enabled later if needed. Alternatively remove it too for cleanliness.
+4. **Remove `loadLastSettings` callback** (lines 626-637)
+5. **Remove the banner JSX** (lines 1722-1729): The `{showLastSettingsBanner && (...)}` block
+6. **Clean up `History` import** (line 8): Remove `History` from the lucide-react import if no longer used elsewhere
