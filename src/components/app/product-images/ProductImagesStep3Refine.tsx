@@ -2501,7 +2501,7 @@ export function ProductImagesStep3Refine({
       />
 
 
-      {(scenesNeedingModel.length > 0 || bgScenes.length > 0 || aestheticColorScenes.length > 0) && (
+      {(scenesNeedingModel.length > 0 || bgScenes.length > 0 || aestheticColorScenes.length > 0 || selectedProductIds.size > 0) && (
         <div className="space-y-3">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">Complete setup</h2>
