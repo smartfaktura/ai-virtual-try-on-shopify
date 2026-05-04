@@ -2746,15 +2746,24 @@ export function ProductImagesStep3Refine({
                     <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="pt-2 pb-1 pl-6">
-                      <InlinePersonDetails
-                        details={details}
-                        update={update}
-                        outfitAccessories={details.outfitConfig?.accessories}
-                        onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
-                      />
-                    </div>
-                  </CollapsibleContent>
+                     <div className="pt-2 pb-1 pl-6 space-y-4">
+                       <InlinePersonDetails
+                         details={details}
+                         update={update}
+                         outfitAccessories={details.outfitConfig?.accessories}
+                         onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
+                       />
+                       <div className="space-y-1.5">
+                         <Label className="text-xs text-muted-foreground">Custom styling note (optional)</Label>
+                         <Textarea
+                           value={details.customOutfitNote || ''}
+                           onChange={e => update({ customOutfitNote: e.target.value || undefined })}
+                           className="text-xs min-h-[60px]"
+                           placeholder="e.g. prefer neutral tones, add layered look..."
+                         />
+                       </div>
+                     </div>
+                   </CollapsibleContent>
                 </Collapsible>
               </CardContent>
             </Card>
