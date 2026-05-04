@@ -2697,11 +2697,9 @@ export function ProductImagesStep3Refine({
                      <div className="flex justify-end pt-1">
                        <Button
                          size="sm"
-                         onClick={() => {
-                           handleApplyToAll(applyToAllDraft);
-                           update({ appliedPresetName: 'Custom' } as any);
-                           setApplyToAllOpen(false);
-                         }}
+                          onClick={() => {
+                            handleApplyToAll(applyToAllDraft, 'Custom');
+                          }}
                        >
                          Apply to all {modelShots.length} shots
                        </Button>
