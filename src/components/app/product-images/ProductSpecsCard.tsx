@@ -18,6 +18,7 @@ interface ProductSpecsCardProps {
   analyses: Record<string, ProductAnalysis>;
   productSpecs: Record<string, string>;
   onProductSpecsChange: (specs: Record<string, string>) => void;
+  onCategoryOverride?: (productId: string, category: string) => void;
 }
 
 // Internal structured state: field key -> value
