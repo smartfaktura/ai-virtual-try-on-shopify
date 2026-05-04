@@ -950,16 +950,24 @@ export default function ProductImages() {
                   ...(details.packagingReferenceUrl ? { packaging_reference_url: details.packagingReferenceUrl } : {}),
                   ...(() => {
                     const triggerBlocks = scene.triggerBlocks || [];
-                    const refs: Record<string, string> = {};
+                    const refs: Record<string, any> = {};
+                    const extraRefs: Array<{ url: string; label: string }> = [];
                     for (const tb of triggerBlocks) {
                       const perProductKey = `trigger:${tb}:${product.id}`;
                       const globalKey = `trigger:${tb}`;
                       const refUrl = sceneExtraRefs[perProductKey] || sceneExtraRefs[globalKey];
                       if (refUrl && REFERENCE_TRIGGERS[tb]) {
-                        refs.extra_reference_image_url = refUrl;
-                        refs.extra_reference_label = REFERENCE_TRIGGERS[tb].promptLabel;
-                        break;
+                        extraRefs.push({ url: refUrl, label: REFERENCE_TRIGGERS[tb].promptLabel });
                       }
+                    }
+                    // First match goes to legacy single field for backward compat
+                    if (extraRefs.length > 0) {
+                      refs.extra_reference_image_url = extraRefs[0].url;
+                      refs.extra_reference_label = extraRefs[0].label;
+                    }
+                    // All matches go to extra_references array
+                    if (extraRefs.length > 1) {
+                      refs.extra_references = extraRefs;
                     }
                     if (!refs.extra_reference_image_url) {
                       if (sceneExtraRefs[scene.id]) {

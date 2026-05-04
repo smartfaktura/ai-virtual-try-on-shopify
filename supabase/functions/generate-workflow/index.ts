@@ -1311,14 +1311,22 @@ serve(async (req) => {
             referenceImages.push({ url: (body as Record<string, unknown>).packaging_reference_url as string, label: "packaging_reference" });
             console.log(`[generate-workflow] Adding packaging reference image`);
           }
-          // Add extra angle reference image (e.g. back/side view, atomizer, open bottle) when provided
-          if ((body as Record<string, unknown>).extra_reference_image_url) {
+          // Add extra angle reference images (e.g. back/side view, atomizer, cuff detail) when provided
+          const extraRefsArray = (body as Record<string, unknown>).extra_references as Array<{ url: string; label: string }> | undefined;
+          if (extraRefsArray && Array.isArray(extraRefsArray) && extraRefsArray.length > 0) {
+            // Multi-reference mode: add each with a unique label key
+            extraRefsArray.forEach((ref, idx) => {
+              const labelKey = `product_extra_angle_${idx}`;
+              referenceImages.push({ url: ref.url, label: labelKey });
+              IMAGE_LABEL_MAP[labelKey] = `[PRODUCT EXTRA ANGLE ${idx + 1}] ${ref.label}`;
+            });
+            console.log(`[generate-workflow] Adding ${extraRefsArray.length} extra reference images for "${variation.label}"`);
+          } else if ((body as Record<string, unknown>).extra_reference_image_url) {
             const customLabel = (body as Record<string, unknown>).extra_reference_label as string | undefined;
             referenceImages.push({
               url: (body as Record<string, unknown>).extra_reference_image_url as string,
               label: customLabel ? `product_extra_angle_custom` : "product_extra_angle",
             });
-            // If a custom label was provided, register it in the label map dynamically
             if (customLabel) {
               IMAGE_LABEL_MAP['product_extra_angle_custom'] = `[PRODUCT EXTRA ANGLE] ${customLabel}`;
             }
