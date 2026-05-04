@@ -48,7 +48,7 @@ import { mockModels } from '@/data/mockData';
 import { useProductAnalysis } from '@/hooks/useProductAnalysis';
 import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
 import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
-import { getSpecFieldsForCategory, buildSpecsPromptLine } from '@/lib/productSpecFields';
+import { buildSpecsPromptLine } from '@/lib/productSpecFields';
 
 const STEP_DEFS = [
   { number: 1, label: 'Product', icon: Package },
@@ -769,11 +769,10 @@ export default function ProductImages() {
   const buildInstruction = useCallback((scene: typeof allScenes[0], product: UserProduct) => {
     const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
     // Merge Step 3 specs into dimensions for prompt injection
-    const specEntry = details.productSpecs?.[product.id];
+    const specText = details.productSpecs?.[product.id];
     let mergedDimensions = product.dimensions || '';
-    if (specEntry) {
-      const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
-      const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config, details.specUnitSystem || 'metric');
+    if (specText) {
+      const specLine = buildSpecsPromptLine(specText);
       if (specLine) mergedDimensions = specLine;
     }
     const enrichedProduct = { ...product, dimensions: mergedDimensions || undefined };
@@ -827,12 +826,8 @@ export default function ProductImages() {
 
     // Persist product specs to DB (fire-and-forget)
     if (details.productSpecs) {
-      for (const [pid, specEntry] of Object.entries(details.productSpecs)) {
-        const product = userProducts.find(p => p.id === pid);
-        if (!product) continue;
-        const analysis = analyses[pid] || (product as any).analysis_json;
-        const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
-        const dimStr = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config, details.specUnitSystem || 'metric');
+      for (const [pid, specText] of Object.entries(details.productSpecs)) {
+        const dimStr = buildSpecsPromptLine(specText);
         if (dimStr) {
           supabase.from('user_products').update({ dimensions: dimStr }).eq('id', pid).then(() => {});
         }
@@ -896,11 +891,10 @@ export default function ProductImages() {
               ...(perSceneOutfit ? { outfitOverrideEnabled: true } : {}),
             };
             // Merge Step 3 specs into dimensions
-            const specEntry = details.productSpecs?.[product.id];
+            const specText2 = details.productSpecs?.[product.id];
             let mergedDims = product.dimensions || '';
-            if (specEntry) {
-              const specConfig = getSpecFieldsForCategory(productAnalysis?.category || product.product_type);
-              const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, specConfig);
+            if (specText2) {
+              const specLine = buildSpecsPromptLine(specText2);
               if (specLine) mergedDims = specLine;
             }
             const enrichedProduct = { ...product, dimensions: mergedDims || undefined };
