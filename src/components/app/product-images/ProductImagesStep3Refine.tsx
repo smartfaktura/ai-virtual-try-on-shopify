@@ -1731,6 +1731,10 @@ function ZaraOutfitPanel({
     update({ outfitConfig: next });
   };
   const handleLoadPreset = (cfg: OutfitConfig) => update({ outfitConfig: cfg });
+  const handleLoadSingle = (cfg: OutfitConfig, presetName?: string) => {
+    update({ outfitConfig: cfg });
+    if (presetName) setSinglePresetName(presetName);
+  };
 
   if (resolution.hideOutfitPanel) {
     return (
