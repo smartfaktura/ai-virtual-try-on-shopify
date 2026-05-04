@@ -87,18 +87,18 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Bags ──
   'bags-accessories': [
-    { key: 'width', label: 'Width', type: 'input', placeholder: '30', unit: 'cm' },
-    { key: 'height', label: 'Height', type: 'input', placeholder: '25', unit: 'cm' },
-    { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '25', placeholderImperial: '10', unit: 'cm' },
+    { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', placeholderImperial: '5', unit: 'cm' },
   ],
   'backpacks': [
-    { key: 'height', label: 'Height', type: 'input', placeholder: '45', unit: 'cm' },
-    { key: 'width', label: 'Width', type: 'input', placeholder: '30', unit: 'cm' },
-    { key: 'depth', label: 'Depth', type: 'input', placeholder: '15', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+    { key: 'depth', label: 'Depth', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
   'wallets-cardholders': [
-    { key: 'width', label: 'Width', type: 'input', placeholder: '11', unit: 'cm' },
-    { key: 'height', label: 'Height', type: 'input', placeholder: '8', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '11', placeholderImperial: '4.3', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '8', placeholderImperial: '3', unit: 'cm' },
   ],
 
   // ── Accessories ──
