@@ -2143,7 +2143,7 @@ export function ProductImagesStep3Refine({
       if (isManualOutfitMode && scene.outfitHint && manualAcceptedHints.has(scene.id)) return { scene, source: 'scene' as const };
       return { scene, source: 'ai' as const };
     });
-  }, [modelShots, details.outfitConfigByScene, isManualOutfitMode]);
+  }, [modelShots, details.outfitConfigByScene, isManualOutfitMode, manualAcceptedHints]);
 
   // Summarize an OutfitConfig into a short string for display
   const summarizeOutfitConfig = useCallback((cfg: OutfitConfig): string => {
