@@ -35,7 +35,6 @@ export function OutfitPresetBar({
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [pendingPreset, setPendingPreset] = useState<UserOutfitPreset | null>(null);
 
   const handleSelect = (preset: UserOutfitPreset) => {
     const cleaned = applyPresetWithLocks(preset.config, resolution);
