@@ -1,26 +1,22 @@
 
-# Fix: IMAGE_LABEL_MAP scope error crashing jacket generations
+# Move Reference Uploads After Style & Outfit
 
-## Problem
-The latest generation failed with `IMAGE_LABEL_MAP is not defined`. This happened because the code I added (and the existing single-reference code) tries to write to `IMAGE_LABEL_MAP` from the variation loop, but `IMAGE_LABEL_MAP` is defined *inside* the `generateImage` function — it's not in scope at the call site.
+Move the "Product-Specific Reference Uploads" section in `ProductImagesStep3Refine.tsx` from its current position (before "Complete setup") to after the "Style & Outfit" section and before the "Additional note" section.
 
-The old single-reference code had the same latent bug but only triggered when `customLabel` was truthy (which rarely happened). The new multi-reference code triggers it on every call.
+## What changes
 
-## Fix
+**File:** `src/components/app/product-images/ProductImagesStep3Refine.tsx`
 
-**In `supabase/functions/generate-workflow/index.ts`:**
+1. **Cut** the reference uploads block (lines 2418–2524) from its current position
+2. **Paste** it between the end of Style & Outfit (line 2985) and the start of Additional Note (line 2987)
 
-1. Stop writing to `IMAGE_LABEL_MAP` from outside `generateImage`. Instead, pass `promptLabel` as a property on each reference image object.
+The hidden file inputs (packaging ref, per-product ref, trigger ref) stay in their current positions — they're invisible and work regardless of DOM order.
 
-2. Inside `generateImage` (~line 778), check for `img.promptLabel` first before falling back to `IMAGE_LABEL_MAP`:
-   ```
-   const labelText = img.promptLabel 
-     ? `[PRODUCT EXTRA ANGLE] ${img.promptLabel}`
-     : IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
-   ```
-
-3. Remove the `IMAGE_LABEL_MAP` writes from both the multi-reference block and the single-reference block (lines ~1321 and ~1331).
-
-This also fixes the pre-existing bug for single extra references with custom labels (e.g. atomizer, interior detail triggers for bags/fragrances).
-
-**Files changed:** `supabase/functions/generate-workflow/index.ts` only, then redeploy.
+New flow in the Setup section:
+```
+Complete setup (model, background, aesthetic color)
+  → Model Selection
+  → Style & Outfit
+  → Reference Uploads (sleeve buttons, inner lining, cuff detail, etc.)
+  → Additional note
+```
