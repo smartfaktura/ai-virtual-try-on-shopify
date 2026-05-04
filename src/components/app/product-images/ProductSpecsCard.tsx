@@ -73,6 +73,7 @@ export function ProductSpecsCard({
   analyses,
   productSpecs,
   onProductSpecsChange,
+  onCategoryOverride,
 }: ProductSpecsCardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [openProductId, setOpenProductId] = useState<string | null>(null);
