@@ -1289,7 +1289,7 @@ serve(async (req) => {
             `[generate-workflow] Variation ${i + 1}/${variationsToGenerate.length} [${angle.label}]: "${variation.label}" (${aspectRatio})${body.model ? ` [with model: ${body.model.name}]` : ""}`
           );
 
-          const referenceImages: Array<{ url: string; label: string }> = [
+          const referenceImages: Array<{ url: string; label: string; promptLabel?: string }> = [
             { url: body.product.imageUrl, label: "product" },
           ];
           // Add additional product images as AI references for flat lay multi-product
