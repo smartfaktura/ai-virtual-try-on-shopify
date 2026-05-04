@@ -2033,6 +2033,16 @@ export function ProductImagesStep3Refine({
     return first?.name || null;
   }, [perProductPicks]);
 
+  // Top-level resolution for the preset bar shown outside ZaraOutfitPanel
+  const topLevelResolution = useMemo(() => {
+    const firstProductId = Array.from(selectedProductIds)[0];
+    const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
+    return resolveOutfitConflicts(
+      firstAnalysis?.category || primaryCategory,
+      firstAnalysis?.garmentType,
+    );
+  }, [selectedProductIds, analyses, primaryCategory]);
+
   // Summarize an outfit_hint into a short user-friendly string
   const summarizeOutfitHint = useCallback((hint: string): string => {
     let s = hint
