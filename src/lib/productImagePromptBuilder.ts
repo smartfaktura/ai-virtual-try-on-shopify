@@ -1324,6 +1324,7 @@ export function buildDynamicPrompt(
     productWeight: product.weight,
     productMaterials: product.materials,
     productColor: product.color,
+    productDimensions: product.dimensions,
     analysis,
     details,
     selectedModelId: details.selectedModelId,
