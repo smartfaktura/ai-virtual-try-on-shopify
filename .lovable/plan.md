@@ -1,53 +1,53 @@
 
-## Debug & Enhance Product Specifications
+## Problem
 
-### Bugs Found
+The current ProductSpecsCard shows 3-5 structured dimension inputs (Length, Width, Height, etc.) per product plus a unit system toggle. This is over-engineered:
+- Users naturally type "30x20x10cm" in a text field
+- Most dimension fields will be left empty, adding visual clutter
+- The unit toggle adds complexity for something rarely used
+- For apparel, Size/Fit selects feel forced — users know their product better
 
-1. **Double "Product specifications:" prefix** — `buildSpecsPromptLine` returns `"Product specifications: Length: 180cm..."` but the prompt builder also wraps with `"Product specifications: ..."`. Result: `"Product specifications: Product specifications: Length..."`.
-2. **Select empty string value** — Radix Select with `value=""` can cause rendering issues. Should use `undefined` for unset state.
-3. **No input sanitization** — User can paste control characters, extremely long strings, or script tags into text fields. These flow directly into prompts and the DB.
-4. **No unit system toggle** — Units are hardcoded to metric (cm/mm). International users need inches/oz/fl oz.
+## Simplified Approach
 
-### Fixes
+Replace all structured fields with **one smart textarea per product** that uses category-aware placeholder text to guide users on what details help accuracy.
 
-#### 1. `src/lib/productSpecFields.ts`
+### What changes
 
-- Add `UnitSystem = 'metric' | 'imperial'` type
-- Add `imperialUnit` field to `SpecField` interface (e.g. `'in'` for `'cm'`, `'oz'` for `'g'`, `'fl oz'` for `'ml'`)
-- Add `getDisplayUnit(field, system)` helper
-- Add `sanitize(val, maxLen)` helper — strips control characters, trims, limits length
-- Update `buildDimensionsString` to accept `unitSystem` param, use `getDisplayUnit`
-- **Fix**: `buildSpecsPromptLine` returns raw content WITHOUT "Product specifications:" prefix (caller adds it)
-- Apply `sanitize()` to all spec values and notes before building strings
+**1. `src/components/app/product-images/ProductSpecsCard.tsx`** — Complete rewrite:
+- Remove all SpecInput rendering, Select fields, and unit toggle
+- Each product gets: thumbnail + name + single textarea (3 rows, 500 char limit)
+- Placeholder is category-specific, e.g.:
+  - Furniture: "e.g. 180×80×75cm, oak wood, matte finish"
+  - Garments/Jackets: "e.g. size M, oversized fit, mid-thigh length, 100% wool"
+  - Sneakers: "e.g. EU 42, white/grey colorway, chunky sole"
+  - Fragrance: "e.g. 50ml, tall rectangular bottle, gold cap"
+  - Jewelry: "e.g. 45cm chain, 2cm pendant, rose gold"
+  - Default: "e.g. 30×20×10cm, matte black, round shape"
+- Remove `unitSystem` / `onUnitSystemChange` props entirely
 
-#### 2. `src/components/app/product-images/ProductSpecsCard.tsx`
+**2. `src/lib/productSpecFields.ts`** — Simplify heavily:
+- Remove `SpecField`, `CategorySpecConfig`, `UnitSystem`, `getDisplayUnit`, `buildDimensionsString`
+- Keep `sanitizeSpecInput` (still needed)
+- Add `getCategoryPlaceholder(category: string): string` — returns the hint text
+- Simplify `buildSpecsPromptLine` to just take a string (the textarea value)
 
-- Add `unitSystem` state (`'metric' | 'imperial'`), default to `'metric'`
-- Add a compact toggle row at the top of the card: `cm / in` pill toggle
-- Pass `unitSystem` to `SpecInput` to display the correct unit suffix
-- Fix Select: use `value={value || undefined}` instead of `value={value || ''}`
-- Limit textarea to 500 chars with `maxLength={500}`
-- Add `inputMode="decimal"` to numeric text inputs for better mobile keyboard
+**3. `src/components/app/product-images/types.ts`** — Remove `specUnitSystem` from `DetailSettings`. Change `productSpecs` value type from `{ specs: Record<string, string>; notes: string }` to just `string` (the textarea content).
 
-#### 3. `src/lib/productImagePromptBuilder.ts`
+**4. `src/components/app/product-images/ProductImagesStep3Refine.tsx`** — Remove `unitSystem` / `onUnitSystemChange` props from the ProductSpecsCard usage.
 
-- No change needed — both injection points already use `"Product specifications: ${ctx.productDimensions}."` which is correct once `buildSpecsPromptLine` stops adding the prefix
+**5. `src/pages/ProductImages.tsx`** — Update `buildInstruction` and generation handler to work with the simplified string-based specs. Update the persistence logic to save the single text value to `user_products.dimensions`.
 
-#### 4. `src/pages/ProductImages.tsx`
+**6. `src/lib/productImagePromptBuilder.ts`** — Simplify the spec injection to just append the raw user text as `Product specifications: {text}`.
 
-- Pass unit system from details to `buildSpecsPromptLine` calls
-- Add `unitSystem` to `DetailSettings` type so it persists with the form state
-- DB persistence line: wrap dimensions string with sanitize before writing
+### UI Result
 
-#### 5. `src/components/app/product-images/types.ts`
+The card becomes much lighter:
+- Amber-bordered card with "Product Details" header + "Optional" badge
+- Collapsible (same as now)
+- Per product: small thumbnail, product name, category hint, single textarea
+- Info note at bottom: "Details are saved and reused in future generations"
+- No unit toggle, no structured fields, no selects
 
-- Add `specUnitSystem?: 'metric' | 'imperial'` to `DetailSettings`
+### Prompt injection stays the same
 
-### Files Changed
-
-| File | Change |
-|---|---|
-| `src/lib/productSpecFields.ts` | Fix prefix bug, add sanitization, add imperial units |
-| `src/components/app/product-images/ProductSpecsCard.tsx` | Add unit toggle, fix Select value, add input limits |
-| `src/components/app/product-images/types.ts` | Add `specUnitSystem` to DetailSettings |
-| `src/pages/ProductImages.tsx` | Pass unit system through generation flow |
+Whatever the user types goes into the prompt as `Product specifications: {user text}`. AI models handle natural language dimensions well.
