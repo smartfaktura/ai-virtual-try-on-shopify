@@ -101,8 +101,8 @@ type GridSize = '6col' | '5col' | '4col' | '3col';
 const GRID_CLASSES: Record<GridSize, string> = {
   '6col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6',
   '5col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
-  '4col': 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-  '3col': 'grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3',
+  '4col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4',
+  '3col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3',
 };
 
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
