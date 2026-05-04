@@ -31,12 +31,13 @@ interface ProductSpecData {
 }
 
 /** Serialize structured fields + notes into a flat string */
-function serializeSpec(data: ProductSpecData, specFields: SpecField[]): string {
+function serializeSpec(data: ProductSpecData, specFields: SpecField[], unitSys: UnitSystem = 'metric'): string {
   const parts: string[] = [];
   for (const f of specFields) {
     const val = data.fields[f.key]?.trim();
     if (val) {
-      parts.push(`${f.label}: ${val}${f.unit && !val.includes(f.unit) ? f.unit : ''}`);
+      const displayUnit = getDisplayUnit(f.unit, unitSys) || '';
+      parts.push(`${f.label}: ${val}${displayUnit && !val.includes(displayUnit) ? displayUnit : ''}`);
     }
   }
   const notes = data.notes.trim();
