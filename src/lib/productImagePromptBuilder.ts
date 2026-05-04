@@ -1423,7 +1423,8 @@ export function buildDynamicPrompt(
             analysis?.category,
             details,
             (details as any).modelGender,
-            analysis?.garmentType
+            analysis?.garmentType,
+            (scene.triggerBlocks || []).includes('halfPortrait')
           );
           if (directive && !prompt.includes(directive)) {
             injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
