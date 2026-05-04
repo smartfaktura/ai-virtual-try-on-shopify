@@ -8,7 +8,7 @@ import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save, Pencil } fro
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory, ALL_CATEGORY_OPTIONS, getDisplayUnit } from '@/lib/productSpecFields';
 import type { SpecField, UnitSystem } from '@/lib/productSpecFields';
-import type { SpecField } from '@/lib/productSpecFields';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import type { UserProduct, ProductAnalysis } from './types';
