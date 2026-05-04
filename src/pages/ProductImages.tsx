@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, History, RefreshCw, Loader2, Upload, FlaskConical } from 'lucide-react';
+import { Package, Layers, Paintbrush, ClipboardCheck, Sparkles, CheckCircle, Search, Check, RefreshCw, Loader2, Upload, FlaskConical } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,8 +103,6 @@ export default function ProductImages() {
   const [forcedActiveCategoryId, setForcedActiveCategoryId] = useState<string | null>(null);
   const [sceneExtraRefs, setSceneExtraRefs] = useState<Record<string, string>>({});
   const [details, setDetails] = useState<DetailSettings>(INITIAL_DETAILS);
-  const [showLastSettingsBanner, setShowLastSettingsBanner] = useState(false);
-  const [lastSettingsCategory, setLastSettingsCategory] = useState<string | null>(null);
   const prevProductIdsRef = useRef<string | null>(null);
 
   // Free-plan caps: wrap setters so every code path (toggle, bulk, deep-link) is gated.
@@ -598,22 +596,6 @@ export default function ProductImages() {
     return counts;
   }, [categoryGroups]);
 
-  // Check for last-used settings when entering Refine step
-  useEffect(() => {
-    if (step === 3 && primaryCategory) {
-      const key = `pi_last_details_${primaryCategory}`;
-      try {
-        const saved = localStorage.getItem(key);
-        if (saved) {
-          setLastSettingsCategory(primaryCategory);
-          setShowLastSettingsBanner(true);
-        }
-      } catch {}
-    } else {
-      setShowLastSettingsBanner(false);
-    }
-  }, [step, primaryCategory]);
-
   // Save details when moving from Refine to Review
   useEffect(() => {
     if (step === 4 && primaryCategory) {
@@ -622,19 +604,6 @@ export default function ProductImages() {
       } catch {}
     }
   }, [step, primaryCategory, details]);
-
-  const loadLastSettings = useCallback(() => {
-    if (!lastSettingsCategory) return;
-    try {
-      const saved = localStorage.getItem(`pi_last_details_${lastSettingsCategory}`);
-      if (saved) {
-        const parsed = JSON.parse(saved) as DetailSettings;
-        // Keep format settings from current session but load everything else
-        setDetails({ ...parsed, aspectRatio: details.aspectRatio, quality: details.quality, imageCount: details.imageCount });
-      }
-    } catch {}
-    setShowLastSettingsBanner(false);
-  }, [lastSettingsCategory, details.aspectRatio, details.quality, details.imageCount]);
 
   const imageCount = parseInt(details.imageCount || '1', 10);
   const creditsPerImage = 6;
@@ -1719,14 +1688,6 @@ export default function ProductImages() {
 
             {step === 3 && (
               <div>
-                {showLastSettingsBanner && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/[0.03] mb-4">
-                    <History className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span className="text-sm text-muted-foreground flex-1">Load your last settings for <span className="font-medium text-foreground">{lastSettingsCategory}</span>?</span>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowLastSettingsBanner(false)}>Dismiss</Button>
-                    <Button size="sm" className="h-7 text-xs" onClick={loadLastSettings}>Apply</Button>
-                  </div>
-                )}
                 <ProductImagesStep3Refine
                   selectedSceneIds={selectedSceneIds}
                   productCount={selectedProducts.length}
