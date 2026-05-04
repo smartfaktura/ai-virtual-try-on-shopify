@@ -773,7 +773,7 @@ export default function ProductImages() {
     let mergedDimensions = product.dimensions || '';
     if (specEntry) {
       const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
-      const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config);
+      const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config, details.specUnitSystem || 'metric');
       if (specLine) mergedDimensions = specLine;
     }
     const enrichedProduct = { ...product, dimensions: mergedDimensions || undefined };
