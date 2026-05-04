@@ -1,27 +1,53 @@
-## Scene-Level Half Portrait Framing Control
 
-Instead of hardcoding framing by garment type, add a new scene-level trigger block `halfPortrait` that admins can toggle per scene. When active, it:
-- Changes body framing to three-quarter (head to mid-thigh)
-- Suppresses shoes from the outfit directive so the AI doesn't try to show full-body
+## Problem 1: Per-Scene Outfit Navigation is Tedious
 
-### Changes
+Currently, styling each scene requires: expand scene accordion → configure outfit → manually collapse → find next scene → expand it. No way to "save and move on."
 
-**1. Add `halfPortrait` to trigger blocks** (`src/components/app/product-images/detailBlockConfig.ts`)
-- Add `'halfPortrait'` to the `ALL_TRIGGER_KEYS` array so it appears as a checkbox in the admin scene editor
+### Solution: Add Save & Next button + auto-collapse
 
-**2. Update `resolveBodyFramingDirective`** (`src/lib/productImagePromptBuilder.ts`)
-- Add a new parameter: the scene's `triggerBlocks` array
-- If `triggerBlocks` includes `halfPortrait`, return: "Three-quarter shot — model visible from head to mid-thigh, product is the focal point. Do NOT force a full-body head-to-toe shot."
-- This overrides the category-based default framing
-- Update the call site at the `bodyFramingDirective` token case (~line 1069) to pass `scene.triggerBlocks`
+In `ProductImagesStep3Refine.tsx`, when a scene's outfit accordion is expanded:
 
-**3. Suppress shoes in outfit when `halfPortrait` is active** (`src/lib/productImagePromptBuilder.ts`)
-- In `defaultOutfitDirective` (and the auto-inject outfit block ~line 1387): when the scene has `halfPortrait` trigger, add `'shoes'` to the `skipSlots` set so shoes are never mentioned in the outfit prompt
-- This prevents the AI from interpreting outfit shoes as a cue to show a full-body shot
+1. **Add a "Save & Next" button** at the bottom of each expanded scene panel (next to existing reset/clear buttons area). Clicking it:
+   - Keeps the current outfit config (already auto-saved via `updateSceneOutfit`)
+   - Collapses the current scene
+   - Auto-expands the next scene in the list (same product, or first scene of next product if at the end)
+   - Shows a subtle toast "Saved" confirmation
 
-**4. Product reference isolation** (`src/lib/productImagePromptBuilder.ts`)
-- Near the end of `buildPrompt` (around where SCENE REFERENCE is appended, ~line 1456): when a product reference image is provided, add a directive: "PRODUCT REFERENCE ISOLATION — Focus ONLY on the named product from the reference image. Ignore any other garments or items visible in the reference photo."
-- This prevents the AI from picking up shorts/other clothing from the product photo
+2. **Add a "Save" button** (for the last scene, or when user just wants to confirm without advancing). This collapses the accordion and shows "Saved" toast.
 
-### Admin workflow
-After deployment, you can go to the scene library and toggle the `halfPortrait` trigger on any on-model scene where you want portrait-style framing instead of full-body. No code changes needed per scene — it's all data-driven.
+3. **Visual: checkmark on styled scenes** — scenes that have a configured outfit show a small green check icon next to the scene number, giving at-a-glance progress.
+
+---
+
+## Problem 2: Results Grid Shows Wrong Aspect Ratio
+
+The results grid already uses `img.aspectRatio` for the container but falls back to `1/1`. The real issue is:
+
+### Fix in `ProductImagesStep6Results.tsx`:
+- The grid thumbnails already respect `aspectRatio` — this is working. But the **lightbox** (`ImageLightbox.tsx`) shows images with `object-contain` and fixed max-heights without considering the original ratio — it works correctly since it uses `object-contain`.
+
+### Fix: Ensure grid thumbnails use original ratio, not forced square
+- Line 131: the fallback `'1/1'` should be removed or changed to `'4/5'` as default since most product images are portrait. But more importantly, check that `aspectRatio` is actually being passed through from generation results.
+
+- **Grid cards**: currently use `object-cover` which crops non-square images. Change to `object-contain` with a neutral background so the full image is visible in its original ratio.
+
+- **Lightbox**: Already uses `object-contain` — no changes needed. The lightbox correctly shows the full image.
+
+---
+
+## Technical Changes
+
+### File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+
+1. Build a flat ordered list of `{productId, sceneId}` pairs from the per-product scene groups
+2. Add `handleSaveAndNext(currentProductId, currentSceneId)` callback:
+   - Find current index in the flat list
+   - If next exists: `setExpandedOutfitSceneId(next)`
+   - If last: `setExpandedOutfitSceneId(null)` + toast "All scenes styled"
+3. In the expanded scene panel (line ~2863), add a footer with "Save & Next" / "Done" buttons
+4. Add a check icon overlay on styled scene rows
+
+### File: `src/components/app/product-images/ProductImagesStep6Results.tsx`
+
+1. Change `object-cover` to `object-contain` on grid thumbnails (line 138) and add `bg-muted/50` for letterboxing
+2. Keep the `aspectRatio` style on the container so cards maintain proper proportions
