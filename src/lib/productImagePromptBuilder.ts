@@ -235,7 +235,12 @@ const BG_COLOR_NEGATIVES = 'No warm tint on background, no yellow cast on backgr
 // PRODUCT_FIDELITY and REFERENCE_ISOLATION removed — covered by edge function CRITICAL REQUIREMENTS #2 and #7
 
 // ── Body framing map by category + scene type ──
-function resolveBodyFramingDirective(category?: string, sceneType?: string): string {
+function resolveBodyFramingDirective(category?: string, sceneType?: string, triggerBlocks?: string[]): string {
+  // halfPortrait trigger: three-quarter framing regardless of category
+  if ((triggerBlocks || []).includes('halfPortrait')) {
+    return 'Three-quarter shot — model visible from head to mid-thigh, product clearly the focal point on the torso. Do NOT force a full-body head-to-toe shot. Shoes may be partially visible or cropped out.';
+  }
+
   const isOnModel = sceneType === 'portrait' || sceneType === 'editorial' || sceneType === 'lifestyle';
   if (!isOnModel) return '';
 
