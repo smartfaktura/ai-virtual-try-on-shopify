@@ -75,6 +75,24 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
     description: 'Upload your brand logo or type the exact text/brand name to display in this shot. If skipped, the AI uses whatever branding is visible on the product.',
     promptLabel: 'Brand logo reference — use this to accurately render the brand logo in the scene:',
   },
+  sleeveButtonDetail: {
+    key: 'sleeveButtonDetail',
+    label: 'Upload sleeve button close-up',
+    description: 'Upload a close-up of the cuff buttons so the AI can accurately render button shape, thread, and placement.',
+    promptLabel: 'Sleeve button close-up reference — use this to accurately render cuff button details, thread color, and stitching:',
+  },
+  innerLining: {
+    key: 'innerLining',
+    label: 'Upload inner lining photo',
+    description: 'Upload a photo of the jacket interior — lining pattern, label placement, inner pockets — for accurate rendering.',
+    promptLabel: 'Jacket inner lining reference — use this to accurately render the interior lining pattern, label, and inner pocket layout:',
+  },
+  cuffDetail: {
+    key: 'cuffDetail',
+    label: 'Upload cuff detail photo',
+    description: 'Upload a detail shot of the cuff — stitching, fold, button loop — for editorial-quality cuff rendering.',
+    promptLabel: 'Cuff detail reference — use this to accurately render cuff construction, fold, stitching, and button-loop detail:',
+  },
 };
 
 /** All trigger block keys including reference triggers */
