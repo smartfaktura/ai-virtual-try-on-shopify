@@ -806,7 +806,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
 
   // Append outfit using structured config or smart default for on-model scenes
   if (sceneNeedsPerson && !resolvedOutfitHint) {
-    directive += ` ${defaultOutfitDirective(category, d, gender, garmentType)}`;
+    directive += ` ${defaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
   }
 
   // Append model reference if present
