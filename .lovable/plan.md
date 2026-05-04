@@ -1,29 +1,26 @@
 
-## Fix styling consistency and add missing step titles/subtitles
+## Make manual mode truly empty + add per-scene AI pick
 
-### 1. Match collapsible trigger styles in outfit section (`ProductImagesStep3Refine.tsx`)
+### Problem
+When switching to "Style manually", all scenes auto-fill with preset values, defeating the purpose. Reset also re-applies presets. User needs to see which scenes are unconfigured.
 
-The "Edit all shots in bulk" and "Appearance" triggers use `text-xs font-semibold` with `w-3.5 h-3.5` icons and `py-2`. The "Add styling direction" triggers (lines ~2849 and ~3127) and hint blocks need to match:
+### Changes in `ProductImagesStep3Refine.tsx`
 
-- **"Add styling direction"** (both AI and manual instances): Change icon from `w-3 h-3` to `w-3.5 h-3.5`, text from `text-[11px]` to `text-xs font-semibold`, trigger padding from `py-1.5` to `py-2`
-- **"Tap any shot below..."** hint (line 2878): Change text from `text-[11px]` to `text-xs`
-- **"AI will style N shots..."** box (line 2834): Change text from `text-[11px]` to `text-xs`
+**1. Stop auto-picking presets when in manual mode**
+- In the auto-pick `useEffect` (~line 2058): add guard `if (details.outfitMode === 'manual') return;` so it only auto-fills for AI mode
+- When user switches TO manual mode (the `onClick` at ~line 2799): clear `outfitConfigByScene` to `{}` so all scenes show as empty/needing styling
 
-### 2. Step header consistency across wizard steps
+**2. Reset all → truly empty**
+- Change `handleResetAllOutfits` to set `outfitConfigByScene: {}` (empty object) instead of re-applying presets
+- Change toast to "Cleared all outfit settings"
 
-The pattern is: `<h2>` title + `<p>` subtitle. Step 1 (Products) and Step 5 (Generate) follow this. Missing/inconsistent ones:
+**3. Show Reset all button always in manual mode** (not just when custom exists)
+- Change condition from `sceneOutfitSource.some(s => s.source === 'custom')` to just `true` when manual — always show it so user can clear anytime. Disable it when already empty.
 
-**Step 3 (Setup) — `ProductImagesStep3Refine.tsx` line 2514:**
-- Current: `<span className="text-sm font-semibold">Complete setup</span>` — too small, no `<h2>`
-- Fix: Use `<h2 className="text-lg font-semibold tracking-tight">Complete setup</h2>` to match other steps
-
-**Step 2 (Select shots) — `ProductImagesStep2Scenes.tsx` line 458:**
-- Has title but no subtitle
-- Add: `<p className="text-sm text-muted-foreground mt-1">Pick the shots you want to generate for your products</p>`
-
-**Step 1 (Products) — `ProductImagesStep1Products.tsx` line 54:**
-- Already correct with title + subtitle, but subtitle could be improved for multi-product: change to "Choose one or more products to generate visuals for" (already says this — good)
+**4. Add "AI pick" pill on each scene row**
+- Next to the "Edit" button, add a small `Sparkles` pill button "AI" that auto-assigns the preset for that single scene without opening the dialog
+- Clicking it applies `perProductPicks[productId].config` to that scene's `outfitConfigByScene` entry
+- Only show when scene has no config (`!perSceneCfg`) and `source !== 'scene'` (not built-in)
 
 ### Files
 - `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-- `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
