@@ -775,7 +775,9 @@ async function generateImage(
     { type: "text", text: prompt },
   ];
   for (const img of referenceImages) {
-    const labelText = IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
+    const labelText = (img as any).promptLabel
+      ? `[PRODUCT EXTRA ANGLE] ${(img as any).promptLabel}`
+      : IMAGE_LABEL_MAP[img.label] || `[${img.label.toUpperCase()}] Reference image:`;
     contentParts.push({ type: "text", text: labelText });
     contentParts.push({
       type: "image_url",
