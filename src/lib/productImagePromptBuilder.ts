@@ -1071,7 +1071,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
       }
     }
 
-    case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType);
+    case 'bodyFramingDirective': return resolveBodyFramingDirective(cat, scene.sceneType, scene.triggerBlocks);
 
     case 'customNote': return details.customNote || '';
     case 'modelDirective': return ctx.selectedModelId ? 'Use the specific model reference provided in the source image.' : '';
