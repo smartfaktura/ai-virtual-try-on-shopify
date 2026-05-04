@@ -2515,8 +2515,6 @@ export function ProductImagesStep3Refine({
             analyses={analyses}
             productSpecs={details.productSpecs || {}}
             onProductSpecsChange={(specs) => update({ productSpecs: specs })}
-            unitSystem={details.specUnitSystem || 'metric'}
-            onUnitSystemChange={(system) => update({ specUnitSystem: system })}
           />
 
           {/* Choose model card — shown first */}
