@@ -768,7 +768,16 @@ export default function ProductImages() {
   // Build instruction from scene + details — use live analyses map instead of stale DB row
   const buildInstruction = useCallback((scene: typeof allScenes[0], product: UserProduct) => {
     const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
-    return buildDynamicPrompt(scene, product, analysis, details, selectedModelGender);
+    // Merge Step 3 specs into dimensions for prompt injection
+    const specEntry = details.productSpecs?.[product.id];
+    let mergedDimensions = product.dimensions || '';
+    if (specEntry) {
+      const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
+      const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config);
+      if (specLine) mergedDimensions = specLine;
+    }
+    const enrichedProduct = { ...product, dimensions: mergedDimensions || undefined };
+    return buildDynamicPrompt(scene, enrichedProduct, analysis, details, selectedModelGender);
   }, [details, analyses, selectedModelGender]);
 
   // Generation handler
