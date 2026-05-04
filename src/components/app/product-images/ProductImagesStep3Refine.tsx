@@ -2033,6 +2033,16 @@ export function ProductImagesStep3Refine({
     return first?.name || null;
   }, [perProductPicks]);
 
+  // Top-level resolution for the preset bar shown outside ZaraOutfitPanel
+  const topLevelResolution = useMemo(() => {
+    const firstProductId = Array.from(selectedProductIds)[0];
+    const firstAnalysis = firstProductId ? analyses[firstProductId] : undefined;
+    return resolveOutfitConflicts(
+      firstAnalysis?.category || primaryCategory,
+      firstAnalysis?.garmentType,
+    );
+  }, [selectedProductIds, analyses, primaryCategory]);
+
   // Summarize an outfit_hint into a short user-friendly string
   const summarizeOutfitHint = useCallback((hint: string): string => {
     let s = hint
@@ -2547,6 +2557,18 @@ export function ProductImagesStep3Refine({
                   <h3 className="text-sm font-semibold">Style & Outfit</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Each shot has an outfit direction. Edit individually or apply one look to all</p>
                 </div>
+
+                {/* Quick-select presets — always visible above apply-to-all */}
+                {!topLevelResolution.hideOutfitPanel && (
+                  <OutfitPresetBar
+                    currentConfig={details.outfitConfig || {}}
+                    resolution={topLevelResolution}
+                    onLoad={(cfg) => handleApplyToAll(cfg)}
+                    category={selectedProductCategories[0]}
+                    gender={selectedModelGender}
+                    productCategories={selectedProductCategories}
+                  />
+                )}
 
                 {/* Apply to all button */}
                 {modelShots.length > 1 && (

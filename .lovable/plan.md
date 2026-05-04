@@ -1,32 +1,23 @@
+## Issues and Fixes
 
-## What changes
+### 1. Outerwear "None" showing color/fit options
+**Problem:** In `OutfitSlotCard.tsx`, the color, material, and fit sections render when `value?.garment` is truthy. Since `garment: 'none'` is truthy, those sections display for the "None" selection.
+**Fix:** Change all three visibility checks from `value?.garment` to `value?.garment && value.garment !== 'none'`.
 
-### 1. Outerwear "None" option
-Add a "None" chip as the first option in the `OUTERWEAR_TYPES` array in `src/lib/outfitVocabulary.ts` (id: `none`, label: `None`). When selected, it explicitly signals no outerwear. The `OutfitSlotCard` already supports clearing via the X button, but "None" makes it more discoverable. The prompt builder will treat `garment: 'none'` as "no outerwear layer".
+### 2. Add "None" to Dress types
+**Problem:** No way to deselect a dress/jumpsuit once chosen (only an X button exists).
+**Fix:** Add `{ id: 'none', label: 'None' }` as the first entry in `DRESS_TYPES` in `outfitVocabulary.ts`. Same prompt-builder skip logic already handles `garment === 'none'`.
 
-### 2. Fix "Apply one outfit to all shots" — keep open, add Save button
-Currently in `ProductImagesStep3Refine.tsx`, the apply-to-all `ZaraOutfitPanel` calls `handleApplyToAll` on every single slot change, which immediately applies to all scenes AND closes the section. 
+### 3. Add "Barefoot" to Shoes
+**Problem:** No option to go shoeless.
+**Fix:** Add `{ id: 'none', label: 'Barefoot' }` as the first entry in `SHOE_TYPES` in `outfitVocabulary.ts`. The prompt builder already skips `garment === 'none'`.
 
-Changes:
-- Add a local `applyToAllDraft` state (`OutfitConfig`) that the ZaraOutfitPanel writes to instead of immediately applying
-- The ZaraOutfitPanel stays open while the user configures details
-- Add a "Save & apply to all N shots" button at the bottom of the apply-to-all section
-- Clicking that button calls `handleApplyToAll(applyToAllDraft)` which applies + closes
-- Also add a "Save as preset" button next to it (reuses existing save popover logic)
+### 4. Presets not visible in apply-to-all section
+**Problem:** The `ZaraOutfitPanel` already renders `OutfitPresetBar` inside it (line 1718), and the presets do load from `useOutfitPresets`. However, the presets may not be showing because the `OutfitPresetBar` filters by `presetIsRelevant()` which checks if preset slots overlap with `resolution.availableSlots`. If the resolution is computed from a product that locks most slots, presets get filtered out.
 
-### 3. Show presets above the apply-to-all editor
-Move/duplicate the `OutfitPresetBar` to appear at the top of the apply-to-all section (before the slot cards). Currently presets are only inside the ZaraOutfitPanel. Add the 5 new default presets as quick-select chips that load into the draft. User and saved presets also appear here.
+The more likely issue: the `OutfitPresetBar` component's `useOutfitPresets` hook fetches from the DB, and the built-in presets come from a `filterBuiltIns` function inside that hook. Need to verify the hook passes categories correctly so universal presets appear.
 
-### 4. Add 5 default style presets
-Add these to `BUILT_IN_PRESETS` in `src/lib/outfitVocabulary.ts` as universal category presets (available for all product types):
-
-- **Minimal Premium** — Clean basics, neutral tones (white tee, tailored black trousers, white sneakers)
-- **Editorial Fashion** — Campaign-ready, polished (silk blouse, wide-leg trousers, pointed heels)
-- **Casual Everyday** — Relaxed lifestyle (grey knit sweater, light-wash jeans, white sneakers)
-- **Streetwear / Urban** — Oversized layers (oversized hoodie, cargo pants, chunky sneakers, cap)
-- **Sport / Active** — Athleisure (fitted sport top, leggings, running shoes)
-
-Each preset maps to the existing `OutfitConfig` slots (top, bottom, shoes, outerwear, hat, etc.).
+**Fix:** Ensure the `OutfitPresetBar` inside the apply-to-all `ZaraOutfitPanel` receives proper `productCategories` so universal presets surface. If the filtering is correct but presets are hidden due to `presetIsRelevant` being too strict, relax it for universal presets.
 
 ---
 
@@ -34,7 +25,6 @@ Each preset maps to the existing `OutfitConfig` slots (top, bottom, shoes, outer
 
 | File | Change |
 |---|---|
-| `src/lib/outfitVocabulary.ts` | Add `{ id: 'none', label: 'None' }` to `OUTERWEAR_TYPES`. Add 5 new universal presets to `BUILT_IN_PRESETS`. |
-| `src/components/app/product-images/ProductImagesStep3Refine.tsx` | Refactor apply-to-all section: add `applyToAllDraft` state, stop auto-closing, add Save button. Show presets at top of apply-to-all section. |
-| `src/components/app/product-images/OutfitPresetBar.tsx` | No changes needed (already supports built-in + user presets). |
-| Prompt builder (`productImagePromptBuilder.ts`) | Handle outerwear `garment: 'none'` — skip outerwear from prompt when garment is `none`. |
+| `src/components/app/product-images/OutfitSlotCard.tsx` | Change `value?.garment` guards (lines 70, 122, 144, 166) to `value?.garment && value.garment !== 'none'` so None/Barefoot hides color/material/fit |
+| `src/lib/outfitVocabulary.ts` | Add `{ id: 'none', label: 'None' }` to `DRESS_TYPES` and `{ id: 'none', label: 'Barefoot' }` to `SHOE_TYPES` |
+| `src/hooks/useOutfitPresets.ts` | Inspect and fix filtering so universal presets always appear regardless of slot overlap |
