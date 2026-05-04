@@ -3057,7 +3057,7 @@ export function ProductImagesStep3Refine({
                                         )}
                                         <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors">
                                           <Pencil className="w-3.5 h-3.5" />
-                                          Edit
+                                          {source === 'scene' && !perSceneCfg ? 'Override' : 'Edit'}
                                         </span>
                                       </div>
                                   </button>
