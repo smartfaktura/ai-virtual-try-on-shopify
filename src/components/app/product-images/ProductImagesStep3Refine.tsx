@@ -3102,7 +3102,92 @@ export function ProductImagesStep3Refine({
                    })}
                  </div>
 
-                 {/* Appearance section */}
+                  {/* Bulk edit — apply presets to all shots at once */}
+                  <Collapsible open={applyToAllOpen} onOpenChange={setApplyToAllOpen}>
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/bulk">
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/bulk:rotate-90 flex-shrink-0" />
+                      <Layers className="w-3.5 h-3.5 text-muted-foreground group-hover/bulk:text-foreground transition-colors flex-shrink-0" />
+                      <span className="text-xs font-semibold text-muted-foreground group-hover/bulk:text-foreground transition-colors">Edit all shots in bulk</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-3 pb-1 pl-2 space-y-3">
+                        {/* Preset description */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5 text-primary/60" />
+                            <span className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">Outfit Presets</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground/70">
+                            Apply a style to all {modelShots.length} on-model shots at once — you can still override individual shots above
+                          </p>
+                        </div>
+
+                        {/* Preset bar */}
+                        {!topLevelResolution.hideOutfitPanel && (
+                          <OutfitPresetBar
+                            currentConfig={details.outfitConfig || {}}
+                            resolution={topLevelResolution}
+                            onApplyToAll={(cfg, presetName) => {
+                              handleApplyToAll(cfg, presetName);
+                            }}
+                            onOpenCustomize={() => {
+                              setApplyToAllDraft(details.outfitConfig || {});
+                            }}
+                            onSetupOneByOne={() => {
+                              setApplyToAllOpen(false);
+                              const firstProduct = selectedProductsList[0];
+                              const firstScene = modelShots[0];
+                              if (firstProduct && firstScene) {
+                                setExpandedOutfitSceneId(`${firstProduct.id}:${firstScene.id}`);
+                              }
+                            }}
+                            activePresetName={(details as any).appliedPresetName || undefined}
+                            shotCount={modelShots.length}
+                            mode="apply-all"
+                            category={selectedProductCategories[0]}
+                            gender={selectedModelGender}
+                            productCategories={selectedProductCategories}
+                          />
+                        )}
+
+                        {/* Custom outfit editor for bulk */}
+                        {applyToAllDraft && Object.keys(applyToAllDraft).length > 0 && (
+                          <div className="rounded-xl border border-primary/20 bg-muted/20 p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-medium">Customize outfit for all shots</p>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setApplyToAllDraft({})}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                            <ZaraOutfitPanel
+                              details={{ ...details, outfitConfig: applyToAllDraft }}
+                              update={(p) => {
+                                if (p.outfitConfig) setApplyToAllDraft(p.outfitConfig);
+                              }}
+                              primaryCategory={primaryCategory}
+                              modelGender={selectedModelGender}
+                              analyses={analyses}
+                              selectedProductIds={selectedProductIds}
+                              allProducts={allProducts}
+                              productCategories={selectedProductCategories}
+                            />
+                            <div className="flex justify-end pt-1">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  handleApplyToAll(applyToAllDraft, 'Custom');
+                                  setApplyToAllDraft({});
+                                }}
+                              >
+                                Apply to all {modelShots.length} shots
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
                  <Collapsible>
                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
