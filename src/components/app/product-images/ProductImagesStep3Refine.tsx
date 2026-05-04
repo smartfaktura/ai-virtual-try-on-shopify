@@ -2842,7 +2842,7 @@ export function ProductImagesStep3Refine({
                       </div>
                       {builtInCount > 0 && (
                         <p className="text-[10px] text-muted-foreground pl-[22px]">
-                          {builtInCount} shot{builtInCount !== 1 ? 's' : ''} will keep their curated built-in look
+                          {builtInCount} shot{builtInCount !== 1 ? 's' : ''} will keep their curated look
                         </p>
                       )}
                     </div>
