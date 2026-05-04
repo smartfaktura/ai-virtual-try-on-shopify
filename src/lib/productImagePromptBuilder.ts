@@ -711,7 +711,7 @@ export function buildStructuredOutfitString(config: OutfitConfig, skipSlots?: Se
 }
 
 // ── Default outfit directive when user leaves everything on auto but scene needs outfit ──
-function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string, garmentType?: string): string {
+function defaultOutfitDirective(category?: string, details?: DetailSettings, gender?: string, garmentType?: string, halfPortrait?: boolean): string {
   // For categories where the product IS the outfit, enforce no additional clothing
   // EXCEPTION: swimwear allows beach cover-ups + accessories from user's outfitConfig
   if (category === 'lingerie' || category === 'swimwear' || category === 'activewear' || category === 'kidswear') {
