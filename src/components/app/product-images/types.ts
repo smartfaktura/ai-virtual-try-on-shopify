@@ -428,6 +428,9 @@ export interface DetailSettings {
   // Per-scene outfit config — allows individual outfit overrides per scene.
   // outfitConfigByScene[sceneId] wins over outfitConfigByProduct and global outfitConfig.
   outfitConfigByScene?: Record<string, OutfitConfig>;
+
+  // Outfit styling mode: 'ai' = let AI match outfits, 'manual' = user picks per scene
+  outfitMode?: 'ai' | 'manual';
 }
 
 export interface GenerationPlan {
