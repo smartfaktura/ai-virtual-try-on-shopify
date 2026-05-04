@@ -3,9 +3,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getCategoryGuide, getCategoryLabel, getNotesPlaceholder, sanitizeSpecInput, buildSpecsPromptLine } from '@/lib/productSpecFields';
+import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine } from '@/lib/productSpecFields';
+import type { SpecField } from '@/lib/productSpecFields';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
 import type { UserProduct, ProductAnalysis } from './types';
@@ -18,59 +20,50 @@ interface ProductSpecsCardProps {
   onProductSpecsChange: (specs: Record<string, string>) => void;
 }
 
-// Internal structured state per product
+// Internal structured state: field key -> value
+type FieldValues = Record<string, string>;
+
 interface ProductSpecData {
-  dimValues: Record<string, string>; // label -> value
+  fields: FieldValues;
   notes: string;
 }
 
-/** Serialize structured data into a flat string for prompt/storage */
-function serializeSpec(data: ProductSpecData, category: string | undefined | null): string {
-  const guide = getCategoryGuide(category);
+/** Serialize structured fields + notes into a flat string */
+function serializeSpec(data: ProductSpecData, specFields: SpecField[]): string {
   const parts: string[] = [];
-
-  for (const dim of guide.dimensions) {
-    const val = data.dimValues[dim.label]?.trim();
+  for (const f of specFields) {
+    const val = data.fields[f.key]?.trim();
     if (val) {
-      parts.push(`${dim.label}: ${val}${dim.unit ? dim.unit : ''}`);
+      parts.push(`${f.label}: ${val}${f.unit && !val.includes(f.unit) ? f.unit : ''}`);
     }
   }
-
   const notes = data.notes.trim();
-  if (notes) {
-    if (parts.length > 0) {
-      parts.push(notes);
-    } else {
-      return notes;
-    }
-  }
-
+  if (notes) parts.push(notes);
   return parts.join(', ');
 }
 
-/** Parse a flat spec string back into structured data (best-effort) */
-function parseSpec(raw: string, category: string | undefined | null): ProductSpecData {
-  const guide = getCategoryGuide(category);
-  const dimValues: Record<string, string> = {};
+/** Parse a flat string back into structured data (best-effort) */
+function parseSpec(raw: string, specFields: SpecField[]): ProductSpecData {
+  const fields: FieldValues = {};
   let remaining = raw;
 
-  for (const dim of guide.dimensions) {
-    const pattern = new RegExp(`${dim.label}:\\s*([^,]+)`, 'i');
+  for (const f of specFields) {
+    // Escape special regex chars in label
+    const escaped = f.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`${escaped}:\\s*([^,]+)`, 'i');
     const match = remaining.match(pattern);
     if (match) {
       let val = match[1].trim();
-      if (dim.unit && val.endsWith(dim.unit)) {
-        val = val.slice(0, -dim.unit.length).trim();
+      if (f.unit && val.endsWith(f.unit)) {
+        val = val.slice(0, -f.unit.length).trim();
       }
-      dimValues[dim.label] = val;
+      fields[f.key] = val;
       remaining = remaining.replace(match[0], '');
     }
   }
 
-  // Clean up leftover commas/whitespace
   const notes = remaining.replace(/^[,\s]+|[,\s]+$/g, '').replace(/,\s*,/g, ', ').trim();
-
-  return { dimValues, notes };
+  return { fields, notes };
 }
 
 export function ProductSpecsCard({
@@ -118,14 +111,14 @@ export function ProductSpecsCard({
     return analysis?.category || product.product_type;
   }, [analyses]);
 
-  const updateStructured = useCallback((productId: string, category: string | undefined | null, data: ProductSpecData) => {
-    const serialized = serializeSpec(data, category);
+  const updateStructured = useCallback((productId: string, specFields: SpecField[], data: ProductSpecData) => {
+    const serialized = serializeSpec(data, specFields);
     onProductSpecsChange({ ...productSpecs, [productId]: serialized });
   }, [productSpecs, onProductSpecsChange]);
 
-  const getStructured = useCallback((productId: string, category: string | undefined | null): ProductSpecData => {
+  const getStructured = useCallback((productId: string, specFields: SpecField[]): ProductSpecData => {
     const raw = productSpecs[productId] || '';
-    return parseSpec(raw, category);
+    return parseSpec(raw, specFields);
   }, [productSpecs]);
 
   const handleSave = useCallback(async () => {
@@ -150,12 +143,6 @@ export function ProductSpecsCard({
   const toggleProduct = useCallback((id: string) => {
     setOpenProductId(prev => prev === id ? null : id);
   }, []);
-
-  const appendExtra = useCallback((productId: string, category: string | undefined | null, chip: string) => {
-    const data = getStructured(productId, category);
-    const notes = data.notes ? `${data.notes}, ${chip}` : chip;
-    updateStructured(productId, category, { ...data, notes: sanitizeSpecInput(notes, 500) });
-  }, [getStructured, updateStructured]);
 
   if (productsNeedingSpecs.length === 0) return null;
 
@@ -187,13 +174,13 @@ export function ProductSpecsCard({
 
         {!collapsed && (
           <div className="space-y-2 pt-1">
-            <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+            <div className="space-y-1.5 max-h-[420px] overflow-y-auto">
               {productsNeedingSpecs.map(product => {
                 const category = getCategory(product);
                 const categoryLabel = getCategoryLabel(category);
                 const isOpen = openProductId === product.id;
-                const guide = getCategoryGuide(category);
-                const data = getStructured(product.id, category);
+                const specFields = getCategoryFields(category);
+                const data = getStructured(product.id, specFields);
                 const hasFilled = (productSpecs[product.id] || '').trim().length > 0;
 
                 return (
@@ -226,57 +213,56 @@ export function ProductSpecsCard({
                     {/* Expanded content */}
                     {isOpen && (
                       <div className="px-3 pb-3 space-y-3">
-                        {/* Structured dimension inputs */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {guide.dimensions.map(dim => (
-                            <div key={dim.label} className="space-y-1">
+                        {/* Spec fields grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2.5">
+                          {specFields.map(field => (
+                            <div key={field.key} className="space-y-1">
                               <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                {dim.label}
+                                {field.label}
                               </label>
-                              <div className="flex items-center gap-1">
-                                <Input
-                                  value={data.dimValues[dim.label] || ''}
-                                  onChange={(e) => {
-                                    const newDims = { ...data.dimValues, [dim.label]: e.target.value };
-                                    updateStructured(product.id, category, { ...data, dimValues: newDims });
+
+                              {field.type === 'select' && field.options ? (
+                                <Select
+                                  value={data.fields[field.key] || undefined}
+                                  onValueChange={(val) => {
+                                    const newFields = { ...data.fields, [field.key]: val };
+                                    updateStructured(product.id, specFields, { ...data, fields: newFields });
                                   }}
-                                  placeholder={dim.placeholder}
-                                  className="h-8 text-xs"
-                                  inputMode={/^\d/.test(dim.placeholder) ? 'decimal' : 'text'}
-                                  maxLength={50}
-                                />
-                                {dim.unit && (
-                                  <span className="text-[10px] text-muted-foreground flex-shrink-0 w-6">{dim.unit}</span>
-                                )}
-                              </div>
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Select" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {field.options.map(opt => (
+                                      <SelectItem key={opt} value={opt} className="text-xs">
+                                        {opt}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={data.fields[field.key] || ''}
+                                    onChange={(e) => {
+                                      const newFields = { ...data.fields, [field.key]: e.target.value };
+                                      updateStructured(product.id, specFields, { ...data, fields: newFields });
+                                    }}
+                                    placeholder={field.placeholder}
+                                    className="h-8 text-xs"
+                                    inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
+                                    maxLength={50}
+                                  />
+                                  {field.unit && (
+                                    <span className="text-[10px] text-muted-foreground flex-shrink-0 min-w-[20px]">{field.unit}</span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
 
-                        {/* Hint chips */}
-                        {guide.extras.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {guide.extras.map(chip => {
-                              const isUsed = data.notes.toLowerCase().includes(chip.toLowerCase());
-                              return (
-                                <button
-                                  key={chip}
-                                  onClick={() => !isUsed && appendExtra(product.id, category, chip)}
-                                  disabled={isUsed}
-                                  className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
-                                    isUsed
-                                      ? 'border-primary/30 bg-primary/10 text-primary cursor-default'
-                                      : 'border-border hover:border-primary/40 hover:bg-primary/5 text-muted-foreground'
-                                  }`}
-                                >
-                                  {isUsed ? '✓ ' : '+ '}{chip}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* Additional notes textarea */}
+                        {/* Additional notes */}
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                             Additional Notes
@@ -284,12 +270,9 @@ export function ProductSpecsCard({
                           <Textarea
                             value={data.notes}
                             onChange={(e) => {
-                              updateStructured(product.id, category, {
-                                ...data,
-                                notes: e.target.value,
-                              });
+                              updateStructured(product.id, specFields, { ...data, notes: e.target.value });
                             }}
-                            placeholder={getNotesPlaceholder()}
+                            placeholder="Any additional details about your product…"
                             className="text-xs min-h-[44px] resize-none"
                             rows={2}
                             maxLength={500}
