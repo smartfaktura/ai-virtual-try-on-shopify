@@ -252,6 +252,15 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'form', label: 'Form', type: 'select', options: ['Capsule', 'Tablet', 'Powder', 'Liquid', 'Gummy', 'Softgel'] },
     { key: 'container', label: 'Container', type: 'select', options: ['White bottle', 'Amber bottle', 'Clear bottle', 'Pouch', 'Jar'] },
   ],
+
+  // ── Pet Accessories ──
+  'pet-accessories': [
+    { key: 'length', label: 'Length', type: 'input', placeholder: '150', unit: 'cm' },
+    { key: 'width', label: 'Width', type: 'input', placeholder: '2', unit: 'cm' },
+    { key: 'material', label: 'Material', type: 'select', options: ['Nylon', 'Leather', 'Rope', 'Neoprene', 'Polyester', 'Canvas', 'Silicone'] },
+    { key: 'hardware', label: 'Hardware', type: 'select', options: ['Chrome', 'Gold', 'Matte black', 'Stainless steel', 'Brass', 'None'] },
+    { key: 'style', label: 'Style', type: 'select', options: ['Leash', 'Collar', 'Harness', 'Bandana', 'Toy', 'Bed', 'Bowl', 'Carrier'] },
+  ],
 };
 
 const DEFAULT_FIELDS: SpecField[] = [
@@ -294,7 +303,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   'food': 'Food', 'beverages': 'Beverage',
   'home-decor': 'Home Décor', 'tech-devices': 'Tech Device',
   'supplements-wellness': 'Supplement',
+  'pet-accessories': 'Pet Accessory',
+  'other': 'Other',
 };
+
+/** All categories as sorted { value, label } pairs for dropdowns */
+export const ALL_CATEGORY_OPTIONS = Object.entries(CATEGORY_LABELS)
+  .map(([value, label]) => ({ value, label }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export function getCategoryLabel(category: string | undefined | null): string {
   if (!category) return 'Product';

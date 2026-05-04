@@ -1648,6 +1648,7 @@ interface Step3RefineProps {
   onUpgradeClick?: () => void;
   perCategoryScenes?: Map<string, Set<string>>;
   categoryGroups?: Map<string, string[]>;
+  onCategoryOverride?: (productId: string, category: string) => void;
 }
 
 /* ══════════════════════════════════════════════
@@ -1921,6 +1922,7 @@ export function ProductImagesStep3Refine({
   onUpgradeClick,
   perCategoryScenes,
   categoryGroups,
+  onCategoryOverride,
 }: Step3RefineProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -2515,6 +2517,7 @@ export function ProductImagesStep3Refine({
             analyses={analyses}
             productSpecs={details.productSpecs || {}}
             onProductSpecsChange={(specs) => update({ productSpecs: specs })}
+            onCategoryOverride={onCategoryOverride}
           />
 
           {/* Choose model card — shown first */}

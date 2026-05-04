@@ -4,9 +4,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save, Pencil } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory } from '@/lib/productSpecFields';
+import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory, ALL_CATEGORY_OPTIONS } from '@/lib/productSpecFields';
 import type { SpecField } from '@/lib/productSpecFields';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
@@ -18,6 +18,7 @@ interface ProductSpecsCardProps {
   analyses: Record<string, ProductAnalysis>;
   productSpecs: Record<string, string>;
   onProductSpecsChange: (specs: Record<string, string>) => void;
+  onCategoryOverride?: (productId: string, category: string) => void;
 }
 
 // Internal structured state: field key -> value
@@ -72,6 +73,7 @@ export function ProductSpecsCard({
   analyses,
   productSpecs,
   onProductSpecsChange,
+  onCategoryOverride,
 }: ProductSpecsCardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [openProductId, setOpenProductId] = useState<string | null>(null);
@@ -200,7 +202,27 @@ export function ProductSpecsCard({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium truncate">{product.title}</p>
-                        <p className="text-[10px] text-muted-foreground">{categoryLabel}</p>
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          {onCategoryOverride ? (
+                            <Select
+                              value={category || 'other'}
+                              onValueChange={(val) => onCategoryOverride(product.id, val)}
+                            >
+                              <SelectTrigger className="h-5 w-auto min-w-0 border-none bg-transparent p-0 pr-5 text-[10px] text-muted-foreground shadow-none focus:ring-0 hover:text-foreground transition-colors [&>svg]:w-3 [&>svg]:h-3">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[280px]">
+                                {ALL_CATEGORY_OPTIONS.map(opt => (
+                                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground">{categoryLabel}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {hasFilled && <Check className="w-3 h-3 text-emerald-500" />}

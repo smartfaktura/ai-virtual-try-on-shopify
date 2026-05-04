@@ -73,7 +73,7 @@ export default function ProductImages() {
   const [sceneLimitHint, setSceneLimitHint] = useState(false);
   const sceneLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryClient = useQueryClient();
-  const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds } = useProductAnalysis();
+  const { analyses, isAnalyzing, analyzeProducts, reAnalyzeProduct, pendingIds, overrideCategory } = useProductAnalysis();
   const { allScenes: baseScenes, fetchSceneById } = useProductImageScenes();
   // Out-of-category scene injected when Recreate from Explore points to a
   // scene_ref scoped to a different product family than the current product.
@@ -1745,6 +1745,7 @@ export default function ProductImages() {
                    onUpgradeClick={() => setUpgradeModalOpen(true)}
                    perCategoryScenes={perCategoryScenes}
                    categoryGroups={categoryGroups}
+                   onCategoryOverride={overrideCategory}
                  />
               </div>
             )}
