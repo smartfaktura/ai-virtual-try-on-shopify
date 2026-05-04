@@ -171,6 +171,32 @@ export function ProductSpecsCard({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Unit toggle */}
+            <div
+              className="flex items-center rounded-md border border-border/50 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setUnitSystem('metric')}
+                className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
+                  unitSystem === 'metric'
+                    ? 'bg-amber-500/15 text-amber-600'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                cm
+              </button>
+              <button
+                onClick={() => setUnitSystem('imperial')}
+                className={`px-2 py-0.5 text-[10px] font-medium tracking-wider transition-colors ${
+                  unitSystem === 'imperial'
+                    ? 'bg-amber-500/15 text-amber-600'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                in
+              </button>
+            </div>
             <span className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider">Optional</span>
             {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
           </div>
