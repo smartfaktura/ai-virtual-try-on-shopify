@@ -1,25 +1,33 @@
-## Problems
+## Problem
 
-1. **"Minimal Premium" auto-preselected**: The preset bar always shows a checkmark on a style because `autoPickedPresetName` feeds into `activePresetName`. Users see it highlighted before they chose anything.
-2. **"Save current look" unclear**: The pill doesn't communicate what it saves or why you'd use it.
-3. **"Custom look" label on per-scene cards**: Unclear — user wants it renamed to something like "Scene settings".
+When multiple products are selected (e.g., blazer + shoes + bag), the `ZaraOutfitPanel` only resolves conflicts based on the **first** product. This means:
+- Only the first product's slot shows as locked with its thumbnail
+- Other products' slots appear editable when they should be locked
+- Users can't see which product fills which slot
 
-## Changes
+## Fix
 
-### 1. Remove auto-preselection highlight (OutfitPresetBar + ProductImagesStep3Refine)
+### Refactor `ZaraOutfitPanel` to resolve ALL products (ProductImagesStep3Refine.tsx)
 
-- Stop passing `autoPickedPresetName` as fallback in `activePresetName`. Only highlight a preset when the user explicitly clicked "Apply" via the confirmation flow (i.e., only use `appliedPresetName`).
-- The auto-pick logic that fills empty scenes on mount can stay — it just won't visually highlight the preset bar pill anymore. No checkmark until the user acts.
+Replace the single-product resolution logic (lines 1683-1693) with a multi-product approach:
 
-### 2. Clarify "Save current look" button
+1. Loop through ALL `selectedProductIds` and call `resolveOutfitConflicts` for each
+2. Build a `lockedSlotProducts` map: `slot → { product, analysis }` — one entry per unique locked slot
+3. Merge all hidden slots across products
+4. Compute available slots as anything not locked or hidden
+5. When rendering `OutfitSlotCard`, check `lockedSlotProducts.has(slot)` instead of `resolution.lockedSlot === slot`, and pass the **correct** product's thumbnail/name from the map
 
-- Rename to **"Save as custom style"** with a short helper tooltip or subtitle so users understand they're saving their current outfit configuration for reuse.
+Lines affected in `ZaraOutfitPanel`:
+- **Lines 1683-1693**: Replace single-product resolution with multi-product loop
+- **Lines 1712-1714**: Update slot filtering to use multi-lock map
+- **Lines 1730-1753**: Use `lockedSlotProducts.get(slot)` for `locked`, `productThumb`, `productName` per garment slot
+- **Lines 1771, 1837-1839**: Same for accessory slots
+- **Lines 1743**: Adjust "What's underneath?" hint to check `lockedSlotProducts.has('outerwear')`
 
-### 3. Rename "Custom look" to "Scene settings"
+### Also update `topLevelResolution` (lines 2038-2046)
 
-- In the per-scene status badges, replace **"Custom look"** with **"Scene settings"** (both instances: `source === 'custom'` and `source === 'ai' && perSceneCfg`).
+The top-level resolution used for the `OutfitPresetBar` above the scene list also only checks the first product. Update it to merge all products' resolutions so the preset bar correctly hides/locks slots.
 
 ## Files
 
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — remove `autoPickedPresetName` from `activePresetName` prop, rename "Custom look" badges to "Scene settings"
-- `src/components/app/product-images/OutfitPresetBar.tsx` — rename "Save current look" to "Save as custom style"
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — Multi-product conflict resolution in ZaraOutfitPanel + topLevelResolution
