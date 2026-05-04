@@ -283,7 +283,7 @@ export function ProductSpecsCard({
                                     <SelectValue placeholder="Select" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {field.options.map(opt => (
+                                    {(unitSystem === 'imperial' && field.optionsImperial ? field.optionsImperial : field.options).map(opt => (
                                       <SelectItem key={opt} value={opt} className="text-xs">
                                         {opt}
                                       </SelectItem>
@@ -298,13 +298,13 @@ export function ProductSpecsCard({
                                       const newFields = { ...data.fields, [field.key]: e.target.value };
                                       updateStructured(product.id, specFields, { ...data, fields: newFields });
                                     }}
-                                    placeholder={field.placeholder}
+                                    placeholder={unitSystem === 'imperial' && field.placeholderImperial ? field.placeholderImperial : field.placeholder}
                                     className="h-8 text-xs"
                                     inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
                                     maxLength={50}
                                   />
                                   {field.unit && (
-                                    <span className="text-[10px] text-muted-foreground flex-shrink-0 min-w-[20px]">{field.unit}</span>
+                                    <span className="text-[10px] text-muted-foreground flex-shrink-0 min-w-[20px]">{getDisplayUnit(field.unit, unitSystem)}</span>
                                   )}
                                 </div>
                               )}
