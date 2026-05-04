@@ -1729,6 +1729,7 @@ function ZaraOutfitPanel({
     if (piece) (next as Record<string, unknown>)[slot] = piece;
     else delete (next as Record<string, unknown>)[slot];
     update({ outfitConfig: next });
+    setSinglePresetName(undefined); // manual edit clears preset highlight
   };
   const handleLoadPreset = (cfg: OutfitConfig) => update({ outfitConfig: cfg });
   const handleLoadSingle = (cfg: OutfitConfig, presetName?: string) => {
