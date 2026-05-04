@@ -776,7 +776,7 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
 }
 
 // ── Person directive builder (skips auto values) ──
-function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string): string {
+function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string, halfPortrait?: boolean): string {
   const parts: string[] = [];
   // When a specific model is selected, skip user-set person details (age, skin, expression etc.)
   // — those fields are hidden in the UI and shouldn't leak into the prompt
