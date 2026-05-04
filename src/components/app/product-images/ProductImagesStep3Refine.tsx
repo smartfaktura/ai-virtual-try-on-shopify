@@ -2044,7 +2044,8 @@ export function ProductImagesStep3Refine({
   const [expandedOutfitSceneId, setExpandedOutfitSceneId] = useState<string | null>(null);
   const [applyToAllOpen, setApplyToAllOpen] = useState(false);
   const [applyToAllDraft, setApplyToAllDraft] = useState<OutfitConfig>({});
-  const autoPickedRef = useRef(false);
+   const autoPickedRef = useRef(false);
+   const [manualAcceptedHints, setManualAcceptedHints] = useState<Set<string>>(new Set());
 
   // Build the per-product picks (productId → preset) for scenes without outfit_hint
   const perProductPicks = useMemo(() => {
