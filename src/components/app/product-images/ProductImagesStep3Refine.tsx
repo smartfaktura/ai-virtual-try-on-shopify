@@ -2539,7 +2539,7 @@ export function ProductImagesStep3Refine({
                           ));
                         })()}
                       </div>
-                      <span className="text-sm font-semibold">Choose model</span>
+                      <span className="text-sm font-semibold">Model Selection</span>
                       {!isFree && (details.selectedModelIds?.length || (details.selectedModelId ? 1 : 0)) > 0 && (
                         <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
                           <Check className="w-2.5 h-2.5 mr-0.5" />{details.selectedModelIds?.length || 1} selected
