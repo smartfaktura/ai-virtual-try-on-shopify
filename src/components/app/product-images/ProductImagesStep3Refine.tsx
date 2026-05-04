@@ -2611,7 +2611,7 @@ export function ProductImagesStep3Refine({
                  {/* Header */}
                  <div>
                    <div className="flex items-center justify-between">
-                     <h3 className="text-sm font-semibold">Model Styling</h3>
+                     <h3 className="text-sm font-semibold">Outfit Styling</h3>
                      {sceneOutfitSource.some(s => s.source === 'custom') && (
                        <Button
                          variant="outline"
