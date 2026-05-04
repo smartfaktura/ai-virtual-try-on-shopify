@@ -1008,13 +1008,17 @@ function resolveToken(token: string, ctx: TokenContext): string {
       const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
       if (resolvedHint) {
         let hint = resolvedHint;
-        if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
+        if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
         return `OUTFIT DIRECTION — ${hint}`;
       }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      // In AI mode, skip outfit injection for scenes without a built-in hint
+      // In AI mode, inject a lightweight product-aware directive instead of nothing
       const isAiMode = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
-      if (isAiMode) return '';
+      if (isAiMode) {
+        if (!needsOutfit) return '';
+        const noteClause = details.customOutfitNote ? ` STYLING PRIORITY: ${details.customOutfitNote}` : '';
+        return `WARDROBE — Choose an outfit that naturally complements [PRODUCT]. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive with the scene palette.${noteClause}`;
+      }
       return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait')) : '';
     }
     case 'focusArea': return resolveFocusArea(details, scene);
@@ -1411,12 +1415,10 @@ export function buildDynamicPrompt(
       const resolvedHint = resolveOutfitHintText(scene, details, product.title);
       if (resolvedHint && !prompt.includes(resolvedHint)) {
         let hint = resolvedHint;
-        if (details.customOutfitNote) hint += ` ${details.customOutfitNote}`;
+        if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
         injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${hint} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction.`;
       } else if (!resolvedHint) {
-        // No scene hint — fall back to user-selected outfit (structured or legacy)
-        // When outfitMode === 'ai', skip injecting structured outfit — let the
-        // generation model choose complementary styling autonomously.
+        // No scene hint — fall back to user-selected outfit or AI directive
         const isAiMode = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
         const hasUserOutfit =
           !isAiMode && (
@@ -1437,6 +1439,10 @@ export function buildDynamicPrompt(
           if (directive && !prompt.includes(directive)) {
             injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
           }
+        } else if (isAiMode) {
+          // AI mode: inject lightweight product-aware wardrobe note
+          const noteClause = details.customOutfitNote ? ` STYLING PRIORITY: ${details.customOutfitNote}` : '';
+          injectedNote = `WARDROBE NOTE (subordinate to scene direction): Choose an outfit that naturally complements the product. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive with the scene palette.${noteClause}`;
         }
       }
 

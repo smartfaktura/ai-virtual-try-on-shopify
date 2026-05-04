@@ -2685,13 +2685,11 @@ export function ProductImagesStep3Refine({
            {hasPersonBlock && (() => {
               const builtInCount = sceneOutfitSource.filter(s => s.source === 'scene').length;
               const needsStylingCount = modelShots.length - builtInCount;
-              const effectiveMode = details.outfitMode || (
-                // Auto-detect: if user already configured per-scene outfits, show manual
-                sceneOutfitSource.some(s => s.source === 'custom') ? 'manual' : 'ai'
-              );
+              // Always default to AI — only switch to manual if user explicitly set it
+              const effectiveMode = details.outfitMode === 'manual' ? 'manual' : 'ai';
               return (
               <Card>
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="p-5 space-y-5">
                   {/* Header */}
                   <div>
                     <div className="flex items-center justify-between">
@@ -2712,33 +2710,71 @@ export function ProductImagesStep3Refine({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Choose how to dress the model for {modelShots.length} shot{modelShots.length !== 1 ? 's' : ''}
-                      {builtInCount > 0 && ` · ${builtInCount} with built-in looks`}
+                      Choose how to dress the model for {modelShots.length} shot{modelShots.length !== 1 ? 's' : ''} that feature a model
                     </p>
                   </div>
 
-                  {/* Mode selector — two cards */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* Scene thumbnails strip — shows which shots need outfit */}
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                    {modelShots.map(scene => {
+                      const src = sceneOutfitSource.find(s => s.scene.id === scene.id);
+                      const hasBuiltIn = src?.source === 'scene';
+                      return (
+                        <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
+                          <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
+                            {scene.previewUrl ? (
+                              <ShimmerImage
+                                src={getOptimizedUrl(scene.previewUrl, { quality: 55 })}
+                                alt={scene.title}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Camera className="w-3.5 h-3.5 text-muted-foreground/30" />
+                              </div>
+                            )}
+                            {hasBuiltIn && (
+                              <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
+                                <Check className="w-2 h-2 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-[8px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Mode selector — pill-style options */}
+                  <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => update({ outfitMode: 'ai' })}
                       className={cn(
-                        'relative rounded-xl border p-3 text-left transition-all cursor-pointer',
+                        'flex-1 relative rounded-xl border px-4 py-3.5 text-left transition-all cursor-pointer',
                         effectiveMode === 'ai'
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                          : 'border-border hover:border-primary/40 bg-card',
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border hover:border-primary/30 bg-card',
                       )}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Sparkles className={cn('w-4 h-4', effectiveMode === 'ai' ? 'text-primary' : 'text-muted-foreground')} />
-                        <span className="text-xs font-semibold">AI styling</span>
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          effectiveMode === 'ai' ? 'bg-primary/10' : 'bg-muted',
+                        )}>
+                          <Sparkles className={cn('w-4 h-4', effectiveMode === 'ai' ? 'text-primary' : 'text-muted-foreground')} />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold block">AI styling</span>
+                          <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                            Picks outfits that complement your product
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[10px] text-muted-foreground leading-snug">
-                        AI picks complementary outfits that match your product
-                      </p>
                       {effectiveMode === 'ai' && (
-                        <div className="absolute top-2 right-2">
-                          <Check className="w-3.5 h-3.5 text-primary" />
+                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-3 h-3 text-primary-foreground" />
                         </div>
                       )}
                     </button>
@@ -2746,22 +2782,29 @@ export function ProductImagesStep3Refine({
                       type="button"
                       onClick={() => update({ outfitMode: 'manual' })}
                       className={cn(
-                        'relative rounded-xl border p-3 text-left transition-all cursor-pointer',
+                        'flex-1 relative rounded-xl border px-4 py-3.5 text-left transition-all cursor-pointer',
                         effectiveMode === 'manual'
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                          : 'border-border hover:border-primary/40 bg-card',
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border hover:border-primary/30 bg-card',
                       )}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Settings2 className={cn('w-4 h-4', effectiveMode === 'manual' ? 'text-primary' : 'text-muted-foreground')} />
-                        <span className="text-xs font-semibold">Style manually</span>
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          effectiveMode === 'manual' ? 'bg-primary/10' : 'bg-muted',
+                        )}>
+                          <Settings2 className={cn('w-4 h-4', effectiveMode === 'manual' ? 'text-primary' : 'text-muted-foreground')} />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold block">Style manually</span>
+                          <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                            Choose presets or customize per shot
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[10px] text-muted-foreground leading-snug">
-                        Choose presets or customize outfits per shot
-                      </p>
                       {effectiveMode === 'manual' && (
-                        <div className="absolute top-2 right-2">
-                          <Check className="w-3.5 h-3.5 text-primary" />
+                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-3 h-3 text-primary-foreground" />
                         </div>
                       )}
                     </button>
@@ -2783,6 +2826,25 @@ export function ProductImagesStep3Refine({
                       )}
                     </div>
                   )}
+
+                  {/* Styling note — available in both modes */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Info className="w-3 h-3" />
+                      Styling direction for all {modelShots.length} shots (optional)
+                    </Label>
+                    <Textarea
+                      value={details.customOutfitNote || ''}
+                      onChange={e => update({ customOutfitNote: e.target.value || undefined })}
+                      className="text-xs min-h-[52px]"
+                      placeholder={effectiveMode === 'ai'
+                        ? 'e.g. keep tones neutral and earthy, no logos, athletic style...'
+                        : 'e.g. prefer neutral tones, add layered look, no bright colors...'}
+                    />
+                    <p className="text-[9px] text-muted-foreground/60">
+                      Guides outfit color and style choices across every on-model shot
+                    </p>
+                  </div>
 
                   {/* Manual mode — existing preset bar + per-scene */}
                   {effectiveMode === 'manual' && (<>
@@ -3104,15 +3166,6 @@ export function ProductImagesStep3Refine({
                           outfitAccessories={details.outfitConfig?.accessories}
                           onAccessoriesChange={(v) => update({ outfitConfig: { ...details.outfitConfig, accessories: v } })}
                         />
-                        <div className="space-y-1.5">
-                          <Label className="text-xs text-muted-foreground">Custom styling note (optional)</Label>
-                          <Textarea
-                            value={details.customOutfitNote || ''}
-                            onChange={e => update({ customOutfitNote: e.target.value || undefined })}
-                            className="text-xs min-h-[60px]"
-                            placeholder="e.g. prefer neutral tones, add layered look..."
-                          />
-                        </div>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
