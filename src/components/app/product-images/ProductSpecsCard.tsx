@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine } from '@/lib/productSpecFields';
+import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory } from '@/lib/productSpecFields';
 import type { SpecField } from '@/lib/productSpecFields';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/brandedToast';
@@ -261,6 +261,12 @@ export function ProductSpecsCard({
                             </div>
                           ))}
                         </div>
+
+                        {isApparelCategory(category) && (
+                          <p className="text-[10px] text-muted-foreground italic">
+                            Fabric is auto-detected from your product image
+                          </p>
+                        )}
 
                         {/* Additional notes */}
                         <div className="space-y-1">
