@@ -2055,7 +2055,7 @@ export function ProductImagesStep3Refine({
 
   // Auto-pick presets for scenes without outfit_hint on first mount
   useEffect(() => {
-    if (!hasPersonBlock || autoPickedRef.current) return;
+    if (!hasPersonBlock || autoPickedRef.current || details.outfitMode === 'manual') return;
     const existing = details.outfitConfigByScene;
     if (existing && Object.keys(existing).length > 0) {
       autoPickedRef.current = true;
@@ -2170,18 +2170,10 @@ export function ProductImagesStep3Refine({
   }, [modelShots]);
 
   const handleResetAllOutfits = useCallback(() => {
-    // Clear per-scene overrides — scenes with hints revert to their hints, others get auto-pick
-    const map: Record<string, OutfitConfig> = {};
-    const firstPreset = Object.values(perProductPicks)[0];
-    for (const scene of modelShots) {
-      if (!scene.outfitHint && firstPreset) {
-        map[scene.id] = firstPreset.config;
-      }
-    }
-    update({ outfitConfigByScene: map, outfitOverrideEnabled: false });
-    toast.success('Reset all outfits to defaults');
+    update({ outfitConfigByScene: {}, outfitOverrideEnabled: false });
+    toast.success('Cleared all outfit settings');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelShots, perProductPicks]);
+  }, []);
 
   const handleResetSceneOutfit = useCallback((sceneId: string) => {
     const next = { ...details.outfitConfigByScene };
@@ -2705,7 +2697,7 @@ export function ProductImagesStep3Refine({
                         <Shirt className="w-4 h-4 text-primary" />
                         <h3 className="text-sm font-semibold">Outfit Styling</h3>
                       </div>
-                      {effectiveMode === 'manual' && sceneOutfitSource.some(s => s.source === 'custom') && (
+                      {effectiveMode === 'manual' && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -2796,7 +2788,7 @@ export function ProductImagesStep3Refine({
                     </button>
                     <button
                       type="button"
-                      onClick={() => update({ outfitMode: 'manual' })}
+                      onClick={() => { update({ outfitMode: 'manual', outfitConfigByScene: {} }); autoPickedRef.current = false; }}
                       className={cn(
                         'relative rounded-xl border px-3 py-3 sm:px-4 sm:py-3.5 text-left transition-all cursor-pointer',
                         effectiveMode === 'manual'
