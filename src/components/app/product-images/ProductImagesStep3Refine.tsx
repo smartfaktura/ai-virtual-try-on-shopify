@@ -2515,60 +2515,7 @@ export function ProductImagesStep3Refine({
             <p className="text-xs text-muted-foreground mt-0.5">Only a few choices are needed for selected shots.</p>
           </div>
 
-          {/* Background style card — shown first so users can pick the backdrop before model/outfit */}
-          {bgScenes.length > 0 && (
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Paintbrush className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold">Background style</span>
-                    {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 0 && (
-                      <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
-                        ×{details.backgroundTone.split(',').filter(Boolean).length} selected
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Applies to {bgScenes.length} selected shot{bgScenes.length !== 1 ? 's' : ''}.</p>
-                </div>
-                {!details.backgroundTone && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
-                    <Paintbrush className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
-                    <span className="text-[11px] text-primary/60 font-medium">Select a background color for your selected scenes</span>
-                  </div>
-                )}
-                <BackgroundSwatchSelector
-                  value={details.backgroundTone || ''}
-                  onChange={v => {
-                    const next = isFree ? (v.split(',').filter(Boolean).pop() || '') : v;
-                    update({ backgroundTone: next });
-                  }}
-                  details={details}
-                  update={update}
-                  savedColors={savedColors}
-                  canSave={canSave}
-                  onSaveColor={(hex) => saveColor({ hex })}
-                  onSaveGradient={(from, to) => saveGradient({ from, to })}
-                  onDeleteSavedColor={deleteColor}
-                  isFree={isFree}
-                  maxSelections={isFree ? 1 : undefined}
-                  onLimitReached={flashBgLimit}
-                  onUpgradeClick={onUpgradeClick}
-                />
-                {isFree && bgLimitHintAt != null && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
-                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Free plan limit — 1 background per generation.</span>
-                    {onUpgradeClick && (
-                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Choose model card */}
+          {/* Choose model card — shown first */}
           {scenesNeedingModel.length > 0 && (
            <Card>
               <CardContent className="p-5 space-y-5">
@@ -2640,6 +2587,91 @@ export function ProductImagesStep3Refine({
                   <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
                     <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
                     <span className="text-foreground">Free plan limit — 1 model per generation.</span>
+                    {onUpgradeClick && (
+                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Background style card — with scene thumbnails showing which shots need a background */}
+          {bgScenes.length > 0 && (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Paintbrush className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold">Background style</span>
+                    {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 0 && (
+                      <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
+                        \u00d7{details.backgroundTone.split(',').filter(Boolean).length} selected
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Pick a backdrop color for {bgScenes.length} shot{bgScenes.length !== 1 ? 's' : ''} that use a solid background
+                  </p>
+                </div>
+
+                {/* Scene thumbnails strip — shows which shots require background */}
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {bgScenes.map(scene => (
+                    <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
+                      <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
+                        {scene.previewUrl ? (
+                          <ShimmerImage
+                            src={getOptimizedUrl(scene.previewUrl, { quality: 55 })}
+                            alt={scene.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Camera className="w-3.5 h-3.5 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        {details.backgroundTone && (
+                          <div
+                            className="absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-white shadow-sm"
+                            style={{ backgroundColor: details.backgroundTone.split(',')[0] || undefined }}
+                          />
+                        )}
+                      </div>
+                      <p className="text-[8px] text-muted-foreground leading-tight text-center truncate">{scene.title}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {!details.backgroundTone && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                    <Paintbrush className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                    <span className="text-[11px] text-primary/60 font-medium">Pick a color to set the backdrop for the shots above</span>
+                  </div>
+                )}
+                <BackgroundSwatchSelector
+                  value={details.backgroundTone || ''}
+                  onChange={v => {
+                    const next = isFree ? (v.split(',').filter(Boolean).pop() || '') : v;
+                    update({ backgroundTone: next });
+                  }}
+                  details={details}
+                  update={update}
+                  savedColors={savedColors}
+                  canSave={canSave}
+                  onSaveColor={(hex) => saveColor({ hex })}
+                  onSaveGradient={(from, to) => saveGradient({ from, to })}
+                  onDeleteSavedColor={deleteColor}
+                  isFree={isFree}
+                  maxSelections={isFree ? 1 : undefined}
+                  onLimitReached={flashBgLimit}
+                  onUpgradeClick={onUpgradeClick}
+                />
+                {isFree && bgLimitHintAt != null && (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Free plan limit \u2014 1 background per generation.</span>
                     {onUpgradeClick && (
                       <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
                     )}
