@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, Trash2, Sparkles, Check, X } from 'lucide-react';
+import { Save, Trash2, Sparkles, Check, X, SlidersHorizontal } from 'lucide-react';
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
@@ -16,7 +16,8 @@ interface OutfitPresetBarProps {
   currentConfig: OutfitConfig;
   resolution: ConflictResolution;
   onApplyToAll: (config: OutfitConfig, presetName: string) => void;
-  onLoadSingle?: (config: OutfitConfig) => void;
+  onLoadSingle?: (config: OutfitConfig, presetName: string) => void;
+  onOpenCustomize?: () => void;
   category?: string;
   gender?: string;
   productCategories?: string[];
@@ -26,7 +27,8 @@ interface OutfitPresetBarProps {
 }
 
 export function OutfitPresetBar({
-  currentConfig, resolution, onApplyToAll, onLoadSingle, category, gender,
+  currentConfig, resolution, onApplyToAll, onLoadSingle, onOpenCustomize,
+  category, gender,
   productCategories, activePresetName, shotCount = 0, mode = 'apply-all',
 }: OutfitPresetBarProps) {
   const { builtIn, userPresets, savePreset, deletePreset } = useOutfitPresets(undefined);
@@ -40,7 +42,7 @@ export function OutfitPresetBar({
     const merged = { ...currentConfig, ...cleaned };
 
     if (mode === 'single' && onLoadSingle) {
-      onLoadSingle(merged);
+      onLoadSingle(merged, preset.name);
       toast.success(`Applied "${preset.name}"`);
       return;
     }
@@ -69,19 +71,19 @@ export function OutfitPresetBar({
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (id: string, pName: string) => {
     await deletePreset(id);
-    toast.success(`Removed "${name}"`);
+    toast.success(`Removed "${pName}"`);
   };
 
   return (
-    <div className="space-y-3">
-      {/* Built-in presets */}
+    <div className="space-y-2.5">
+      {/* Presets section */}
       <div className="rounded-xl border bg-muted/20 p-3 space-y-2.5">
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3 w-3 text-primary/60" />
           <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">
-            {mode === 'single' ? 'Quick styles' : 'Apply a style to all shots'}
+            {mode === 'single' ? 'Quick styles' : 'Presets'}
           </span>
         </div>
 
@@ -107,6 +109,69 @@ export function OutfitPresetBar({
               </button>
             );
           })}
+
+          {/* User saved looks — inline as pills */}
+          {userPresets.map(p => (
+            <div key={p.id} className="inline-flex items-center gap-0.5 rounded-full border bg-background hover:bg-muted transition-colors">
+              <button
+                onClick={() => handleSelect(p)}
+                className={cn(
+                  'h-7 pl-2.5 pr-1 text-[11px] font-medium',
+                  activePresetName === p.name && 'text-primary',
+                )}
+              >
+                {activePresetName === p.name && <Check className="inline h-3 w-3 mr-1 -ml-0.5" />}
+                {p.name}
+              </button>
+              <button
+                onClick={() => handleDelete(p.id, p.name)}
+                className="h-7 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive"
+                aria-label={`Delete ${p.name}`}
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+
+          {/* Customize button — opens full editor modal (apply-all mode only) */}
+          {mode === 'apply-all' && onOpenCustomize && (
+            <button
+              onClick={onOpenCustomize}
+              className="h-7 px-2.5 rounded-full text-[11px] font-medium border border-dashed border-border hover:border-foreground/30 bg-background hover:bg-muted transition-all flex items-center gap-1"
+            >
+              <SlidersHorizontal className="h-3 w-3" />
+              Customize
+            </button>
+          )}
+
+          {/* Save as custom style — inline pill */}
+          <Popover open={saveOpen} onOpenChange={setSaveOpen}>
+            <PopoverTrigger asChild>
+              <button className="h-7 px-2.5 rounded-full text-[11px] font-medium border border-dashed border-border hover:border-foreground/30 bg-background hover:bg-muted transition-all flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                <Save className="h-3 w-3" />
+                Save custom
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 p-3 space-y-2">
+              <p className="text-xs font-medium">Save outfit as preset</p>
+              <Input
+                autoFocus
+                placeholder="e.g. My everyday look"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
+                className="h-8 text-xs"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSaveOpen(false)}>
+                  Cancel
+                </Button>
+                <Button size="sm" className="h-7 text-xs" disabled={!name.trim() || saving} onClick={handleSave}>
+                  {saving ? 'Saving…' : 'Save'}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Confirmation bar */}
@@ -133,64 +198,6 @@ export function OutfitPresetBar({
           </div>
         )}
       </div>
-
-      {/* User saved looks */}
-      {userPresets.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">
-              Your saved looks
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {userPresets.map(p => (
-              <div key={p.id} className="inline-flex items-center gap-0.5 rounded-full border bg-background hover:bg-muted transition-colors">
-                <button
-                  onClick={() => handleSelect(p)}
-                  className="h-7 pl-2.5 pr-1 text-[11px] font-medium"
-                >
-                  {p.name}
-                </button>
-                <button
-                  onClick={() => handleDelete(p.id, p.name)}
-                  className="h-7 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive"
-                  aria-label={`Delete ${p.name}`}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Save current */}
-      <Popover open={saveOpen} onOpenChange={setSaveOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-7 px-2.5 text-[11px] gap-1">
-            <Save className="h-3 w-3" /> Save as custom style
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-64 p-3 space-y-2">
-          <p className="text-xs font-medium">Save outfit as preset</p>
-          <Input
-            autoFocus
-            placeholder="e.g. My everyday look"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
-            className="h-8 text-xs"
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSaveOpen(false)}>
-              Cancel
-            </Button>
-            <Button size="sm" className="h-7 text-xs" disabled={!name.trim() || saving} onClick={handleSave}>
-              {saving ? 'Saving…' : 'Save'}
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }

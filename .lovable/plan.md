@@ -1,33 +1,31 @@
-## Problem
+## Issues Found
 
-When multiple products are selected (e.g., blazer + shoes + bag), the `ZaraOutfitPanel` only resolves conflicts based on the **first** product. This means:
-- Only the first product's slot shows as locked with its thumbnail
-- Other products' slots appear editable when they should be locked
-- Users can't see which product fills which slot
+1. **No way to customize + apply to all**: The top "Apply a style to all shots" section only has preset pills — no way to open the full outfit editor and apply custom settings to all shots.
+2. **Per-scene quick styles don't highlight after applying**: `activePresetName` isn't passed to the per-scene `OutfitPresetBar` (single mode).
+3. **Reset button too small and poorly positioned**: Tiny 11px text link in the top-right corner.
+4. **3 products selected but only 2 scenes show**: `modelShots` filters scenes to those with `personDetails`/`actionDetails` trigger blocks. If a product's scenes lack these blocks, they won't appear. This is actually correct behavior (non-model scenes don't need outfit styling), but the UI doesn't communicate this.
 
-## Fix
+## Changes
 
-### Refactor `ZaraOutfitPanel` to resolve ALL products (ProductImagesStep3Refine.tsx)
+### 1. Add "Customize & apply to all" button that opens outfit editor modal
 
-Replace the single-product resolution logic (lines 1683-1693) with a multi-product approach:
+In the top-level "Apply a style to all shots" area, add a pill-style "Customize" button next to the preset pills. Clicking it opens a `Dialog` containing a `ZaraOutfitPanel` with an "Apply to all shots" confirmation button. This lets users build a custom outfit and apply it globally.
 
-1. Loop through ALL `selectedProductIds` and call `resolveOutfitConflicts` for each
-2. Build a `lockedSlotProducts` map: `slot → { product, analysis }` — one entry per unique locked slot
-3. Merge all hidden slots across products
-4. Compute available slots as anything not locked or hidden
-5. When rendering `OutfitSlotCard`, check `lockedSlotProducts.has(slot)` instead of `resolution.lockedSlot === slot`, and pass the **correct** product's thumbnail/name from the map
+Also rename the section label from "APPLY A STYLE TO ALL SHOTS" to just "Presets" and show the "Save as custom style" as a same-style pill instead of a separate ghost button below.
 
-Lines affected in `ZaraOutfitPanel`:
-- **Lines 1683-1693**: Replace single-product resolution with multi-product loop
-- **Lines 1712-1714**: Update slot filtering to use multi-lock map
-- **Lines 1730-1753**: Use `lockedSlotProducts.get(slot)` for `locked`, `productThumb`, `productName` per garment slot
-- **Lines 1771, 1837-1839**: Same for accessory slots
-- **Lines 1743**: Adjust "What's underneath?" hint to check `lockedSlotProducts.has('outerwear')`
+### 2. Pass `activePresetName` to per-scene OutfitPresetBar
 
-### Also update `topLevelResolution` (lines 2038-2046)
+Track which preset was applied per scene (store in state or derive from config match), pass it to the single-mode `OutfitPresetBar` so the selected style highlights.
 
-The top-level resolution used for the `OutfitPresetBar` above the scene list also only checks the first product. Update it to merge all products' resolutions so the preset bar correctly hides/locks slots.
+### 3. Improve Reset button
+
+Move "Reset all" to a visible secondary button (outline variant, proper size) placed inline with the presets area, not hidden in the header corner.
+
+### 4. Add scene count context per product
+
+Below the "Model Styling" header, add a brief note like "Styling applies to 2 on-model shots across 3 products" so users understand why not all scenes appear.
 
 ## Files
 
-- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — Multi-product conflict resolution in ZaraOutfitPanel + topLevelResolution
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx` — Add customize modal, move reset button, add scene context note, pass activePresetName to per-scene bar
+- `src/components/app/product-images/OutfitPresetBar.tsx` — Restructure: "Presets" label, save-as-custom as inline pill

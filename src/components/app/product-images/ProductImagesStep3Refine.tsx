@@ -1679,6 +1679,7 @@ function ZaraOutfitPanel({
   productCategories?: string[];
 }) {
   const [accessoriesOpen, setAccessoriesOpen] = useState(false);
+  const [singlePresetName, setSinglePresetName] = useState<string | undefined>(undefined);
 
   // Resolve conflicts for ALL selected products — each may lock a different slot
   const productIds = useMemo(() => Array.from(selectedProductIds), [selectedProductIds]);
@@ -1728,8 +1729,13 @@ function ZaraOutfitPanel({
     if (piece) (next as Record<string, unknown>)[slot] = piece;
     else delete (next as Record<string, unknown>)[slot];
     update({ outfitConfig: next });
+    setSinglePresetName(undefined); // manual edit clears preset highlight
   };
   const handleLoadPreset = (cfg: OutfitConfig) => update({ outfitConfig: cfg });
+  const handleLoadSingle = (cfg: OutfitConfig, presetName?: string) => {
+    update({ outfitConfig: cfg });
+    if (presetName) setSinglePresetName(presetName);
+  };
 
   if (resolution.hideOutfitPanel) {
     return (
@@ -1749,7 +1755,8 @@ function ZaraOutfitPanel({
         currentConfig={config}
         resolution={resolution}
         onApplyToAll={(cfg) => handleLoadPreset(cfg)}
-        onLoadSingle={handleLoadPreset}
+        onLoadSingle={(cfg, pName) => handleLoadSingle(cfg, pName)}
+        activePresetName={singlePresetName}
         mode="single"
         category={primaryCategory}
         gender={modelGender}
@@ -2601,25 +2608,28 @@ export function ProductImagesStep3Refine({
            {hasPersonBlock && (
              <Card>
                <CardContent className="p-5 space-y-4">
-                 {/* Header with reset action */}
-                 <div className="flex items-center justify-between">
-                   <div>
+                 {/* Header */}
+                 <div>
+                   <div className="flex items-center justify-between">
                      <h3 className="text-sm font-semibold">Model Styling</h3>
-                     <p className="text-xs text-muted-foreground/70 mt-0.5">Choose what the model wears in each shot</p>
+                     {sceneOutfitSource.some(s => s.source === 'custom') && (
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="h-7 text-[11px] px-2.5 gap-1"
+                         onClick={handleResetAllOutfits}
+                       >
+                         <RotateCcw className="w-3 h-3" />
+                         Reset all
+                       </Button>
+                     )}
                    </div>
-                   {sceneOutfitSource.some(s => s.source === 'custom') && (
-                     <button
-                       type="button"
-                       onClick={handleResetAllOutfits}
-                       className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                     >
-                       <RotateCcw className="w-3 h-3" />
-                       Reset all
-                     </button>
-                   )}
+                   <p className="text-xs text-muted-foreground/70 mt-0.5">
+                     {modelShots.length} on-model shot{modelShots.length !== 1 ? 's' : ''}{selectedProductsList.length > 1 ? ` across ${selectedProductsList.length} products` : ''}
+                   </p>
                  </div>
 
-                 {/* Quick Styles — moved ABOVE scene list for discoverability */}
+                 {/* Presets bar with customize button */}
                  {!topLevelResolution.hideOutfitPanel && (
                    <OutfitPresetBar
                      currentConfig={details.outfitConfig || {}}
@@ -2627,6 +2637,10 @@ export function ProductImagesStep3Refine({
                      onApplyToAll={(cfg, presetName) => {
                        handleApplyToAll(cfg);
                        update({ appliedPresetName: presetName } as any);
+                     }}
+                     onOpenCustomize={() => {
+                       setApplyToAllDraft(details.outfitConfig || {});
+                       setApplyToAllOpen(true);
                      }}
                      activePresetName={(details as any).appliedPresetName || undefined}
                      shotCount={modelShots.length}
@@ -2636,6 +2650,42 @@ export function ProductImagesStep3Refine({
                      productCategories={selectedProductCategories}
                    />
                  )}
+
+                 {/* Customize & apply to all — Dialog */}
+                 <Dialog open={applyToAllOpen} onOpenChange={setApplyToAllOpen}>
+                   <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                     <DialogHeader>
+                       <DialogTitle>Customize outfit for all shots</DialogTitle>
+                     </DialogHeader>
+                     <ZaraOutfitPanel
+                       details={{ ...details, outfitConfig: applyToAllDraft }}
+                       update={(p) => {
+                         if (p.outfitConfig) setApplyToAllDraft(p.outfitConfig);
+                       }}
+                       primaryCategory={primaryCategory}
+                       modelGender={selectedModelGender}
+                       analyses={analyses}
+                       selectedProductIds={selectedProductIds}
+                       allProducts={allProducts}
+                       productCategories={selectedProductCategories}
+                     />
+                     <div className="flex justify-end gap-2 pt-2 border-t">
+                       <Button variant="outline" size="sm" onClick={() => setApplyToAllOpen(false)}>
+                         Cancel
+                       </Button>
+                       <Button
+                         size="sm"
+                         onClick={() => {
+                           handleApplyToAll(applyToAllDraft);
+                           update({ appliedPresetName: 'Custom' } as any);
+                           setApplyToAllOpen(false);
+                         }}
+                       >
+                         Apply to all {modelShots.length} shots
+                       </Button>
+                     </div>
+                   </DialogContent>
+                 </Dialog>
 
                  {/* Per-scene outfit cards */}
                  <div className="space-y-1.5">
