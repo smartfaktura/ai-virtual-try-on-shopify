@@ -2697,7 +2697,7 @@ export function ProductImagesStep3Refine({
               const effectiveMode = details.outfitMode === 'manual' ? 'manual' : 'ai';
               return (
               <Card>
-                <CardContent className="p-5 space-y-5">
+                <CardContent className="p-4 sm:p-5 space-y-4 sm:space-y-5">
                   {/* Header */}
                   <div>
                     <div className="flex items-center justify-between">
@@ -2763,33 +2763,33 @@ export function ProductImagesStep3Refine({
                   </div>
 
                   {/* Mode selector — pill-style options */}
-                  <div className="flex gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => update({ outfitMode: 'ai' })}
                       className={cn(
-                        'flex-1 relative rounded-xl border px-4 py-3.5 text-left transition-all cursor-pointer',
+                        'relative rounded-xl border px-3 py-3 sm:px-4 sm:py-3.5 text-left transition-all cursor-pointer',
                         effectiveMode === 'ai'
                           ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                           : 'border-border hover:border-primary/30 bg-card',
                       )}
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5">
                         <div className={cn(
-                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          'w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0',
                           effectiveMode === 'ai' ? 'bg-primary/10' : 'bg-muted',
                         )}>
-                          <Sparkles className={cn('w-4 h-4', effectiveMode === 'ai' ? 'text-primary' : 'text-muted-foreground')} />
+                          <Sparkles className={cn('w-3.5 h-3.5 sm:w-4 sm:h-4', effectiveMode === 'ai' ? 'text-primary' : 'text-muted-foreground')} />
                         </div>
-                        <div>
-                          <span className="text-xs font-semibold block">AI styling</span>
-                          <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
-                            Picks outfits that complement your product
+                        <div className="min-w-0">
+                          <span className="text-[11px] sm:text-xs font-semibold block">AI styling</span>
+                          <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-snug mt-0.5">
+                            Complements your product
                           </p>
                         </div>
                       </div>
                       {effectiveMode === 'ai' && (
-                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                           <Check className="w-3 h-3 text-primary-foreground" />
                         </div>
                       )}
@@ -2798,28 +2798,28 @@ export function ProductImagesStep3Refine({
                       type="button"
                       onClick={() => update({ outfitMode: 'manual' })}
                       className={cn(
-                        'flex-1 relative rounded-xl border px-4 py-3.5 text-left transition-all cursor-pointer',
+                        'relative rounded-xl border px-3 py-3 sm:px-4 sm:py-3.5 text-left transition-all cursor-pointer',
                         effectiveMode === 'manual'
                           ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                           : 'border-border hover:border-primary/30 bg-card',
                       )}
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5">
                         <div className={cn(
-                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          'w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0',
                           effectiveMode === 'manual' ? 'bg-primary/10' : 'bg-muted',
                         )}>
-                          <Settings2 className={cn('w-4 h-4', effectiveMode === 'manual' ? 'text-primary' : 'text-muted-foreground')} />
+                          <Settings2 className={cn('w-3.5 h-3.5 sm:w-4 sm:h-4', effectiveMode === 'manual' ? 'text-primary' : 'text-muted-foreground')} />
                         </div>
-                        <div>
-                          <span className="text-xs font-semibold block">Style manually</span>
-                          <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
-                            Choose presets or customize per shot
+                        <div className="min-w-0">
+                          <span className="text-[11px] sm:text-xs font-semibold block">Style manually</span>
+                          <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-snug mt-0.5">
+                            Customize per shot
                           </p>
                         </div>
                       </div>
                       {effectiveMode === 'manual' && (
-                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                           <Check className="w-3 h-3 text-primary-foreground" />
                         </div>
                       )}
@@ -2852,7 +2852,7 @@ export function ProductImagesStep3Refine({
                         {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
                       </span>
                       {details.customOutfitNote && (
-                        <span className="text-[10px] text-muted-foreground/50 truncate ml-1 max-w-[200px]">{details.customOutfitNote}</span>
+                        <span className="text-[10px] text-muted-foreground/50 truncate ml-1 max-w-[120px] sm:max-w-[200px]">{details.customOutfitNote}</span>
                       )}
                     </CollapsibleTrigger>
                     <CollapsibleContent>
@@ -2963,7 +2963,7 @@ export function ProductImagesStep3Refine({
                                  <button
                                    type="button"
                                    onClick={() => setExpandedOutfitSceneId(isExpanded ? null : `${product.id}:${scene.id}`)}
-                                   className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/30 transition-colors text-left"
+                                   className="w-full flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2.5 sm:py-2 min-h-[48px] hover:bg-muted/30 transition-colors text-left"
                                  >
                                     <span className="relative text-[10px] font-bold text-muted-foreground/50 w-4 text-center flex-shrink-0">
                                       {(perSceneCfg || (source === 'scene' && !perSceneCfg)) ? (
@@ -2973,7 +2973,7 @@ export function ProductImagesStep3Refine({
                                       )}
                                     </span>
 
-                                   <div className="w-10 h-[50px] rounded-md overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
+                                   <div className="w-9 h-[45px] sm:w-10 sm:h-[50px] rounded-md overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
                                      {scene.previewUrl ? (
                                        <ShimmerImage
                                          src={getOptimizedUrl(scene.previewUrl, { quality: 65 })}
