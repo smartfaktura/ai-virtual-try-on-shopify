@@ -358,7 +358,7 @@ export function ProductSpecsCard({
                 size="sm"
                 variant="outline"
                 onClick={handleSave}
-                disabled={saving || !hasUnsavedChanges}
+                disabled={saving}
                 className="h-8 text-xs gap-1.5 flex-shrink-0"
               >
                 {saving ? (
