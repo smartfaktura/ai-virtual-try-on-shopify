@@ -2842,7 +2842,7 @@ export function ProductImagesStep3Refine({
                       </div>
                       {builtInCount > 0 && (
                         <p className="text-[10px] text-muted-foreground pl-[22px]">
-                          {builtInCount} shot{builtInCount !== 1 ? 's' : ''} will keep their curated built-in look
+                          {builtInCount} shot{builtInCount !== 1 ? 's' : ''} will keep their curated look
                         </p>
                       )}
                     </div>
@@ -2998,7 +2998,7 @@ export function ProductImagesStep3Refine({
                                         {source === 'scene' && !perSceneCfg && (
                                           <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                            Built-in look
+                                            Curated · tap to override
                                           </span>
                                         )}
                                         {(source === 'custom' || (source === 'scene' && perSceneCfg) || (source === 'ai' && perSceneCfg)) && (
@@ -3057,7 +3057,7 @@ export function ProductImagesStep3Refine({
                                         )}
                                         <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors">
                                           <Pencil className="w-3.5 h-3.5" />
-                                          Edit
+                                          {source === 'scene' && !perSceneCfg ? 'Override' : 'Edit'}
                                         </span>
                                       </div>
                                   </button>
@@ -3236,7 +3236,7 @@ export function ProductImagesStep3Refine({
                               {dialogSource === 'scene' && !dialogPerSceneCfg && (
                                 <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 mt-1">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                  Built-in look
+                                  Curated look · override below
                                 </span>
                               )}
                               {dialogSource === 'ai' && !dialogPerSceneCfg && (
@@ -3251,9 +3251,11 @@ export function ProductImagesStep3Refine({
                           {/* Scrollable content */}
                           <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
                             {dialogSource === 'scene' && !dialogPerSceneCfg && (
-                              <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                                ✓ This shot uses its built-in curated look. Customize below to override
-                              </p>
+                              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 px-3 py-2.5 space-y-1.5">
+                                <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                                  This shot has a curated look. Fill in any slot below to override it with your own styling
+                                </p>
+                              </div>
                             )}
                             {dialogSource === 'ai' && !dialogPerSceneCfg && (
                               <p className="text-[11px] text-amber-600 dark:text-amber-400">
@@ -3267,7 +3269,7 @@ export function ProductImagesStep3Refine({
                                 className="text-[11px] text-primary hover:underline flex items-center gap-1"
                               >
                                 <RotateCcw className="w-3 h-3" />
-                                Reset to built-in look
+                                Reset to curated look
                               </button>
                             )}
                             {dialogPerSceneCfg && !dialogScene.outfitHint && (
