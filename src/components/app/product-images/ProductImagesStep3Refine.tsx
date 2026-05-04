@@ -2843,7 +2843,8 @@ export function ProductImagesStep3Refine({
                     </div>
                   )}
 
-                  {/* Styling note — minimal collapsible */}
+                  {/* AI mode — styling direction after confirmation */}
+                  {effectiveMode === 'ai' && (
                   <Collapsible>
                     <CollapsibleTrigger className="w-full flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note">
                       <ChevronRight className="w-3 h-3 text-muted-foreground transition-transform group-data-[state=open]/note:rotate-90 flex-shrink-0" />
@@ -2861,13 +2862,12 @@ export function ProductImagesStep3Refine({
                           value={details.customOutfitNote || ''}
                           onChange={e => update({ customOutfitNote: e.target.value || undefined })}
                           className="text-xs min-h-[48px]"
-                          placeholder={effectiveMode === 'ai'
-                            ? 'e.g. keep tones neutral and earthy, no logos, athletic style...'
-                            : 'e.g. prefer neutral tones, add layered look, no bright colors...'}
+                          placeholder="e.g. keep tones neutral and earthy, no logos, athletic style..."
                         />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
+                  )}
 
                   {/* Manual mode — per-scene first, bulk edit at bottom */}
                   {effectiveMode === 'manual' && (<>
