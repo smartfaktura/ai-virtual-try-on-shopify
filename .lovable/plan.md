@@ -1,39 +1,26 @@
 
-## Limit scene thumbnails + improve model/reference/styling UX
+## Fix outfit styling mobile layout
 
-### 1. Cap scene thumbnail strips at 4 + overflow counter
+### Changes in `ProductImagesStep3Refine.tsx`
 
-All three thumbnail strips (background, outfit, aesthetic) currently render every scene. Change each to show max 4 thumbnails + a "+N more" card when there are more than 4 scenes.
+**1. Mode selector pills** (~lines 2765-2827)
+- Change `flex gap-3` to `grid grid-cols-2 gap-2 sm:gap-3`
+- Reduce pill padding: `px-3 py-3 sm:px-4 sm:py-3.5`
+- Stack icon above text on mobile: `flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5`
+- Shrink icon box: `w-7 h-7 sm:w-8 sm:h-8`, icon: `w-3.5 h-3.5 sm:w-4 sm:h-4`
+- Shorter description text: "Complements your product" / "Customize per shot"
+- Font size: `text-[11px] sm:text-xs` for title, `text-[9px] sm:text-[10px]` for description
+- Check circle position: `top-2 right-2 sm:top-2.5 sm:right-2.5`
 
-Extract a shared helper render pattern:
-```
-const MAX_THUMBS = 4;
-const visible = scenes.slice(0, MAX_THUMBS);
-const overflow = scenes.length - MAX_THUMBS;
-```
-The "+N" card is a 52x65 rounded-lg with muted bg, centered text showing `+{overflow}`.
+**2. Scene row touch targets** (~lines 2960-2965)
+- Scene row button: add `min-h-[48px]` for proper mobile touch target
+- Scene thumbnail: reduce from `w-10 h-[50px]` to `w-9 h-[45px] sm:w-10 sm:h-[50px]`
 
-**Files:** `ProductImagesStep3Refine.tsx` — 3 thumbnail strips (bg ~line 2619, outfit ~line 2718, aesthetic ~line 3236)
+**3. Card padding** (~line 2710)
+- Card content: `p-4 sm:p-5 space-y-4 sm:space-y-5`
 
-### 2. Improve "Choose model" card copy
+**4. Styling note collapsible** (~line 2855)
+- Truncate preview: reduce `max-w-[200px]` to `max-w-[120px] sm:max-w-[200px]`
 
-- Change title from "Choose model" to "Model Selection"
-- Change subtitle from "Needed for X selected shots." to "Pick one or more models for your {X} on-model shots"
-
-**Files:** `ProductImagesStep3Refine.tsx` ~lines 2542, 2558
-
-### 3. Simplify styling direction textarea
-
-Replace the current label + textarea + helper trio with a single-line collapsible:
-- Show a subtle clickable row: pencil icon + "Add styling direction" (collapsed by default)
-- On click, expand to show the textarea only
-- Remove the `<Label>`, the `<Info>` icon, and the bottom helper `<p>` tag
-- Keep the textarea placeholder as-is
-
-**Files:** `ProductImagesStep3Refine.tsx` ~lines 2830-2847
-
-### 4. Add scene thumbnails near reference sections
-
-For each reference card (packaging, back view, trigger-based), compute which selected scenes actually use that trigger and show a small thumbnail strip (also capped at 4) above the upload area so the user knows which shots benefit from the reference.
-
-**Files:** `ProductImagesStep3Refine.tsx` ~lines 3409-3460
+### Files
+- `src/components/app/product-images/ProductImagesStep3Refine.tsx`
