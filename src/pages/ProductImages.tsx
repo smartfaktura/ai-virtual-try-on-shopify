@@ -48,6 +48,7 @@ import { mockModels } from '@/data/mockData';
 import { useProductAnalysis } from '@/hooks/useProductAnalysis';
 import type { PIStep, UserProduct, DetailSettings, ProductAnalysis } from '@/components/app/product-images/types';
 import { buildDynamicPrompt } from '@/lib/productImagePromptBuilder';
+import { getSpecFieldsForCategory, buildSpecsPromptLine } from '@/lib/productSpecFields';
 
 const STEP_DEFS = [
   { number: 1, label: 'Product', icon: Package },
@@ -767,7 +768,16 @@ export default function ProductImages() {
   // Build instruction from scene + details — use live analyses map instead of stale DB row
   const buildInstruction = useCallback((scene: typeof allScenes[0], product: UserProduct) => {
     const analysis = analyses[product.id] || (product as any).analysis_json as ProductAnalysis | null;
-    return buildDynamicPrompt(scene, product, analysis, details, selectedModelGender);
+    // Merge Step 3 specs into dimensions for prompt injection
+    const specEntry = details.productSpecs?.[product.id];
+    let mergedDimensions = product.dimensions || '';
+    if (specEntry) {
+      const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
+      const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config);
+      if (specLine) mergedDimensions = specLine;
+    }
+    const enrichedProduct = { ...product, dimensions: mergedDimensions || undefined };
+    return buildDynamicPrompt(scene, enrichedProduct, analysis, details, selectedModelGender);
   }, [details, analyses, selectedModelGender]);
 
   // Generation handler
@@ -814,6 +824,21 @@ export default function ProductImages() {
     }
 
     const WORKFLOW_ID = '4bb79966-42f1-4720-af45-183aa954e8e1';
+
+    // Persist product specs to DB (fire-and-forget)
+    if (details.productSpecs) {
+      for (const [pid, specEntry] of Object.entries(details.productSpecs)) {
+        const product = userProducts.find(p => p.id === pid);
+        if (!product) continue;
+        const analysis = analyses[pid] || (product as any).analysis_json;
+        const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
+        const dimStr = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config);
+        if (dimStr) {
+          supabase.from('user_products').update({ dimensions: dimStr }).eq('id', pid).then(() => {});
+        }
+      }
+    }
+
     const batchId = crypto.randomUUID();
     const newJobMap = new Map<string, string>();
     let lastBalance: number | null = null;
@@ -870,7 +895,16 @@ export default function ProductImages() {
               // Enable override flag when per-scene outfit exists so prompt builder bypasses outfit_hint
               ...(perSceneOutfit ? { outfitOverrideEnabled: true } : {}),
             };
-            const variationInstruction = buildDynamicPrompt(scene, product, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
+            // Merge Step 3 specs into dimensions
+            const specEntry = details.productSpecs?.[product.id];
+            let mergedDims = product.dimensions || '';
+            if (specEntry) {
+              const specConfig = getSpecFieldsForCategory(productAnalysis?.category || product.product_type);
+              const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, specConfig);
+              if (specLine) mergedDims = specLine;
+            }
+            const enrichedProduct = { ...product, dimensions: mergedDims || undefined };
+            const variationInstruction = buildDynamicPrompt(scene, enrichedProduct, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
 
             const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
             for (const ratioForJob of sceneRatios) {
@@ -907,7 +941,7 @@ export default function ProductImages() {
                     title: product.title,
                     productType: productAnalysis?.category || product.product_type,
                     description: product.description,
-                    dimensions: product.dimensions || undefined,
+                    dimensions: mergedDims || product.dimensions || undefined,
                     weight: (product as any).weight || undefined,
                     materials: (product as any).materials || undefined,
                     color: (product as any).color || undefined,

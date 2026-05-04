@@ -928,6 +928,7 @@ interface TokenContext {
   productWeight?: string | null;
   productMaterials?: string | null;
   productColor?: string | null;
+  productDimensions?: string | null;
   analysis: ProductAnalysis | null;
   details: DetailSettings;
   selectedModelId?: string;
@@ -1323,6 +1324,7 @@ export function buildDynamicPrompt(
     productWeight: product.weight,
     productMaterials: product.materials,
     productColor: product.color,
+    productDimensions: product.dimensions,
     analysis,
     details,
     selectedModelId: details.selectedModelId,
@@ -1343,6 +1345,7 @@ export function buildDynamicPrompt(
     if (bgHexForReinforcement) parts.push(`CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation.`);
     parts.push(scene.description);
     parts.push(`Product: ${product.title}.`);
+    if (ctx.productDimensions) parts.push(`Product specifications: ${ctx.productDimensions}.`);
     if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish, product.description)}.`);
     parts.push(`Background: ${bgResolved}.`);
     parts.push(resolveToken('lightingDirective', ctx));
@@ -1368,6 +1371,11 @@ export function buildDynamicPrompt(
     prompt = `CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation. `;
   }
   prompt += template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
+
+  // Inject product specifications/dimensions when available
+  if (ctx.productDimensions) {
+    prompt += ` Product specifications: ${ctx.productDimensions}.`;
+  }
 
   // Auto-inject key directives if template didn't include their tokens
   // For category-collection scenes, skip aesthetic overrides — let their templates drive the look
