@@ -127,7 +127,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
                 className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group relative"
               >
                 <div
-                  className="bg-muted/30 overflow-hidden"
+                  className="bg-muted/40 overflow-hidden"
                   style={{ aspectRatio: img.aspectRatio ? img.aspectRatio.replace(':', '/') : '1/1' }}
                 >
                   <ShimmerImage
