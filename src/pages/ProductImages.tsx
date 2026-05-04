@@ -773,7 +773,7 @@ export default function ProductImages() {
     let mergedDimensions = product.dimensions || '';
     if (specEntry) {
       const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
-      const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config);
+      const specLine = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config, details.specUnitSystem || 'metric');
       if (specLine) mergedDimensions = specLine;
     }
     const enrichedProduct = { ...product, dimensions: mergedDimensions || undefined };
@@ -832,7 +832,7 @@ export default function ProductImages() {
         if (!product) continue;
         const analysis = analyses[pid] || (product as any).analysis_json;
         const config = getSpecFieldsForCategory(analysis?.category || product.product_type);
-        const dimStr = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config);
+        const dimStr = buildSpecsPromptLine(specEntry.specs, specEntry.notes, config, details.specUnitSystem || 'metric');
         if (dimStr) {
           supabase.from('user_products').update({ dimensions: dimStr }).eq('id', pid).then(() => {});
         }
