@@ -1,13 +1,26 @@
-## Replace Riviera visuals + remix gallery order
+## Fixes for /showcase/brite
 
-### 1. Copy uploaded images to project
-- `user-uploads://vovv.ai-1-2.jpg` → `public/images/showcase/brite-riviera-zara.jpg` (Zara version)
-- `user-uploads://vovv.ai-2.jpg` → `public/images/showcase/brite-riviera-freya.jpg` (Freya version)
+### 1. Rounded corners disappearing on mobile hover/tap
+The `group-hover:scale-[1.03]` transform on the `<img>` causes mobile Safari to lose the parent's `overflow-hidden` + `rounded-xl` clipping during the animation.
 
-### 2. Update `src/pages/showcase/BriteShowcase.tsx`
+**Fix** in `BriteShowcase.tsx` line 114: Add `will-change-transform` to the button element so the GPU compositing layer respects the border-radius clip during child transforms.
 
-Replace the two Riviera Pop Escape entries with local paths:
-- Zara: `/images/showcase/brite-riviera-zara.jpg`
-- Freya: `/images/showcase/brite-riviera-freya.jpg`
+Change:
+```
+className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden ..."
+```
+To:
+```
+className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden will-change-transform ..."
+```
 
-Remix the entire IMAGES array order so no two same-scene entries are adjacent. Spread duplicates (Fisheye Portrait, Tennis Court, Golden Splash Cheers, Sunburn Editorial Sip, Sport Flash Soda Energy, Close Face Drink Hold, Sport Sun Shadow, Riviera Pop Escape) far apart. Alternate product-only and on-model shots for visual variety.
+### 2. "OrangeVisual" text merging on mobile
+Line 74-76: The `<br className="hidden sm:block" />` is hidden on mobile, causing "Orange" and "Visual" to run together without a space.
+
+**Fix**: Add `{' '}` after "Orange" on line 74 so there's always a space regardless of the `<br>` visibility.
+
+```tsx
+Your Brite Blood Orange{' '}
+<br className="hidden sm:block" />
+Visual Collection
+```
