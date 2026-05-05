@@ -177,7 +177,7 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
     'wallets-cardholders': 'Wallets & Cardholders',
     belts: 'Belts',
     scarves: 'Scarves',
-    'hats-small': 'Hats & Headwear',
+    'caps': 'Hats & Headwear',
     shoes: 'Shoes',
     sneakers: 'Sneakers',
     boots: 'Boots',
