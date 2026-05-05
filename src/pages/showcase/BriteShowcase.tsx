@@ -106,19 +106,19 @@ export default function BriteShowcase() {
       {/* Gallery */}
       <section className="pb-16 lg:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {IMAGES.map((img, i) => (
               <button
                 key={i}
                 onClick={() => setLightbox(i)}
-                className="group relative mb-3 sm:mb-4 break-inside-avoid block w-full rounded-xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
+                className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
               >
                 <img
                   src={getOptimizedUrl(img.url, { quality: 50 })}
                   alt={`${img.scene}${img.model ? ` with ${img.model}` : ''}`}
                   loading={i < 8 ? 'eager' : 'lazy'}
                   decoding="async"
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
