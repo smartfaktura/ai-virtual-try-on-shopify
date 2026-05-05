@@ -597,7 +597,7 @@ export default function Jobs() {
         ) : (
           <>
             <div className="relative">
-              {isFetching && !isLoading && (
+              {isFetching && !isLoading && smartView === 'all' && (
                 <div className="absolute inset-0 z-10 flex items-start justify-center pointer-events-none">
                   <div className="sticky top-[40vh]">
                     <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
