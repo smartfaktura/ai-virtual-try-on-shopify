@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -96,19 +96,9 @@ export function useSeoVisualOverridesMap(): Map<string, SeoVisualOverride> {
     return m;
   }, [data]);
 
-  // Preload override images so any swap (cold-cache first-ever visit) is
-  // instant rather than waiting on a fresh image fetch after the data lands.
-  useEffect(() => {
-    if (typeof window === 'undefined' || !data) return;
-    const seen = new Set<string>();
-    for (const row of data) {
-      if (!row.preview_image_url || seen.has(row.preview_image_url)) continue;
-      seen.add(row.preview_image_url);
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = row.preview_image_url;
-    }
-  }, [data]);
+  // Bulk preloading removed — it fetched ALL override images at full
+  // resolution on every SEO page mount, saturating bandwidth and delaying
+  // the hero tiles that users actually see first.
 
   return map;
 }
