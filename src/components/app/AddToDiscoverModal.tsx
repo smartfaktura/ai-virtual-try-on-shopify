@@ -64,7 +64,9 @@ const PRODUCT_TYPE_TO_COLLECTION: Record<string, string> = {
   // Accessories
   belt: 'belts',
   scarf: 'scarves',
-  hat: 'hats-small',
+  hat: 'hats',
+  cap: 'caps',
+  beanie: 'beanies',
   // Jewellery
   necklace: 'jewellery-necklaces',
   earring: 'jewellery-earrings',
