@@ -196,8 +196,11 @@ export function ProductSpecsCard({
                 const category = getCategory(product);
                 const categoryLabel = getCategoryLabel(category);
                 const isOpen = openProductId === product.id;
-                const specFields = getCategoryFields(category);
-                const data = getStructured(product.id, specFields);
+                const baseFields = getCategoryFields(category);
+                const baseData = getStructured(product.id, baseFields);
+                // Resolve conditional fields using current values
+                const specFields = getCategoryFields(category, baseData.fields);
+                const data = specFields !== baseFields ? getStructured(product.id, specFields) : baseData;
                 const hasFilled = (productSpecs[product.id] || '').trim().length > 0;
 
                 return (
