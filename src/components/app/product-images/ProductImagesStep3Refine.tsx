@@ -3585,6 +3585,8 @@ export function ProductImagesStep3Refine({
         if (hasPackagingScenes) productSpecificTriggers.push({ key: 'packagingDetails', label: 'Packaging reference', description: 'Upload a photo of your packaging for more accurate results.', icon: <PackagePlus className="w-4 h-4 text-primary" /> });
         if (hasBackViewScenes) productSpecificTriggers.push({ key: 'backView', label: 'Back view reference', description: 'Upload a photo of the back for accurate results.', icon: <RotateCcw className="w-4 h-4 text-primary" /> });
         for (const tk of activeReferenceTriggers) {
+          // Skip packagingDetails and backView — already hardcoded above
+          if (tk === 'packagingDetails' || tk === 'backView') continue;
           const def = REFERENCE_TRIGGERS[tk];
           if (def) productSpecificTriggers.push({ key: tk, label: def.label, description: def.description, icon: <Camera className="w-4 h-4 text-primary" /> });
         }
