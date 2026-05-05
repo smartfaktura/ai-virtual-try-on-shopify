@@ -15,11 +15,11 @@ export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = f
     <button
       type="button"
       onClick={onSelect}
-      className={`relative cursor-pointer rounded-lg sm:rounded-xl overflow-hidden transition-all duration-200 group text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none ${
-        isSelected ? 'ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-lg scale-[1.02]' : 'ring-1 ring-border hover:ring-primary hover:shadow-md hover:scale-[1.01]'
+      className={`relative cursor-pointer rounded-lg sm:rounded-xl transition-all duration-200 group text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none ${
+        isSelected ? 'ring-2 ring-primary ring-offset-1 shadow-lg' : 'ring-1 ring-border hover:ring-primary hover:shadow-md'
       }`}
     >
-      <div className="aspect-[3/4] overflow-hidden bg-muted">
+      <div className="aspect-[3/4] overflow-hidden rounded-lg sm:rounded-xl bg-muted">
         <ShimmerImage src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" aspectRatio="3/4" />
       </div>
       {showAiMatch && (
