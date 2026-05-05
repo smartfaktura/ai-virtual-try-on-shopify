@@ -51,6 +51,7 @@ export const CATEGORY_HEADLINES_RETURNING: Record<string, string> = {
   fashion: 'Create campaign-ready fashion visuals - no photoshoot needed.',
   footwear: 'Create campaign-ready footwear visuals - no photoshoot needed.',
   'bags-accessories': 'Create campaign-ready bags & accessories visuals - no photoshoot needed.',
+  'hats-caps-beanies': 'Create campaign-ready hats & beanies visuals - no photoshoot needed.',
   watches: 'Create campaign-ready watch visuals - no photoshoot needed.',
   eyewear: 'Create campaign-ready eyewear visuals - no photoshoot needed.',
   jewelry: 'Create campaign-ready jewelry visuals - no photoshoot needed.',
