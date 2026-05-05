@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProductImageScenes, type DbScene } from '@/hooks/useProductImageScenes';
 import ImportFromScenesModal from '@/components/app/ImportFromScenesModal';
@@ -791,6 +792,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
             url={scene.preview_image_url}
             className="w-full h-full"
             iconClassName="w-6 h-6 sm:w-4 sm:h-4"
+            thumbSize={80}
           />
         </div>
         {/* Right column on mobile: info + actions stacked. Desktop: passes through to flex row */}
@@ -1274,7 +1276,7 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
             title="Click here and paste (⌘V) to upload a screenshot"
           >
             {draft.preview_image_url ? (
-              <img src={draft.preview_image_url} alt="Preview" className="w-full h-full object-cover" />
+              <img src={getOptimizedUrl(draft.preview_image_url, { quality: 50, width: 160, height: 160, resize: 'cover' })} alt="Preview" className="w-full h-full object-cover" />
             ) : (
               <Camera className="w-6 h-6 text-muted-foreground/30" />
             )}
