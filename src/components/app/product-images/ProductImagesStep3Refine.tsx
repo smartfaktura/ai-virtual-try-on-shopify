@@ -167,7 +167,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
           <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
         </div>
         {filteredUser.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
             {filteredUser.map(m => (
               <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
             ))}
@@ -211,7 +211,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
               </span>
             )}
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
             {inlineModels.map(m => (
               <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
             ))}
@@ -252,14 +252,14 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
             </div>
           </div>
 
-          <div className="overflow-y-auto flex-1 space-y-4 pr-1">
+          <div className="overflow-y-auto flex-1 space-y-4 pr-1 p-1">
             {modalFilteredUser.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Crown className="w-3.5 h-3.5 text-primary" />
                   <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
                 </div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   {modalFilteredUser.map(m => (
                     <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
@@ -270,7 +270,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
             {modalFilteredGlobal.length > 0 && (
               <div className="space-y-2">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   {modalFilteredGlobal.map(m => (
                     <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
