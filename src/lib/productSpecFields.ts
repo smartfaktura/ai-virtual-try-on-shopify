@@ -212,11 +212,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'screen', label: 'Screen', type: 'input', placeholder: '6.1"' },
   ],
 
-  // ── Tech ──
-  'tech-devices': [
-    { key: 'dimensions', label: 'Dimensions', type: 'input', placeholder: '14.6×7.1×0.8cm', placeholderImperial: '5.7×2.8×0.3in' },
-    { key: 'screen', label: 'Screen', type: 'input', placeholder: '6.1"' },
-  ],
+
 
   // ── Supplements ──
   'supplements-wellness': [
