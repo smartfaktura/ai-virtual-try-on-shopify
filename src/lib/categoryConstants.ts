@@ -129,6 +129,7 @@ const FAMILY_ID_TO_ADJ: Record<string, string> = {
   fashion: 'fashion',
   footwear: 'footwear',
   'bags-accessories': 'accessories',
+  'hats-caps-beanies': 'headwear',
   watches: 'watch',
   eyewear: 'eyewear',
   jewelry: 'jewelry',
