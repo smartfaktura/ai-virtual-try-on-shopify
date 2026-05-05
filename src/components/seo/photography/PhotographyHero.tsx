@@ -34,8 +34,8 @@ function Tile({ tile, priority = 'low' }: { tile: Tile; priority?: 'high' | 'aut
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
       <img
-        src={getOptimizedUrl(tile.src, { width: 640, height: 854, quality: 85, resize: 'cover' })}
-        srcSet={getResizedSrcSet(tile.src, { widths: [360, 540, 720, 900], aspect: [3, 4], quality: 85 })}
+        src={getOptimizedUrl(tile.src, { width: 420, height: 560, quality: 80, resize: 'cover' })}
+        srcSet={getResizedSrcSet(tile.src, { widths: [360, 420], aspect: [3, 4], quality: 80 })}
         sizes="(max-width: 640px) 180px, 210px"
         alt={tile.alt}
         width={210}
@@ -92,7 +92,7 @@ export function PhotographyHero() {
   // Preload the very first hero tile so the browser starts fetching it
   // before React hydration completes. Locks in a deterministic LCP order.
   const firstTilePreload = row1[0]
-    ? getOptimizedUrl(row1[0].src, { width: 540, height: 720, quality: 85, resize: 'cover' })
+    ? getOptimizedUrl(row1[0].src, { width: 420, height: 560, quality: 80, resize: 'cover' })
     : null;
 
   return (
