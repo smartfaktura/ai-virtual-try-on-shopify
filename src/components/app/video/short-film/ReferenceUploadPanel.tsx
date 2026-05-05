@@ -65,6 +65,7 @@ interface FullProduct {
 }
 
 export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPanelProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [dragRole, setDragRole] = useState<string | null>(null);
   const [uploadingRole, setUploadingRole] = useState<string | null>(null);
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null); // productId:subRole
