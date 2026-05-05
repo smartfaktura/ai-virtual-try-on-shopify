@@ -163,6 +163,8 @@ VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories
 
 HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
 
+FURNITURE vs HOME-DECOR: Use "furniture" for any seating (chairs, armchairs, sofas, stools, benches, recliners, ottomans), tables (dining tables, coffee tables, desks, side tables), storage (bookshelves, dressers, wardrobes, cabinets, sideboards), and bed frames. Use "home-decor" ONLY for decorative items: candles, vases, pillows, cushions, throws, planters, picture frames, lamps, wall art.
+
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above
 - sizeClass: very-small | small | medium | large | extra-large
