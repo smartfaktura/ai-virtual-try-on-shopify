@@ -513,14 +513,7 @@ export default function Settings() {
                 {portalLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <ExternalLink className="w-4 h-4 mr-1.5" />}
                 {portalLoading ? 'Redirecting…' : 'Manage Billing & Invoices'}
               </Button>
-            ) : (
-              <button
-                className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-2"
-                onClick={openCustomerPortal}
-              >
-                View past invoices
-              </button>
-            )}
+            ) : null}
         </div>
         )}
 
