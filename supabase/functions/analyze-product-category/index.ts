@@ -151,7 +151,9 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+
+HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above
