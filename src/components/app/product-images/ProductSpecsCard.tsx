@@ -2,15 +2,12 @@ import { useMemo, useCallback, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save, Pencil } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp, Ruler, Check, Pencil } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory, ALL_CATEGORY_OPTIONS, getDisplayUnit } from '@/lib/productSpecFields';
+import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, isApparelCategory, ALL_CATEGORY_OPTIONS, getDisplayUnit } from '@/lib/productSpecFields';
 import type { SpecField, UnitSystem } from '@/lib/productSpecFields';
 
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/lib/brandedToast';
 import type { UserProduct, ProductAnalysis } from './types';
 
 interface ProductSpecsCardProps {
@@ -79,8 +76,6 @@ export function ProductSpecsCard({
 }: ProductSpecsCardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [openProductId, setOpenProductId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [lastSavedSpecs, setLastSavedSpecs] = useState<Record<string, string>>({});
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
 
   const productsNeedingSpecs = useMemo(() => {
@@ -103,14 +98,6 @@ export function ProductSpecsCard({
     return productsNeedingSpecs.filter(p => productSpecs[p.id]?.trim()).length;
   }, [productsNeedingSpecs, productSpecs]);
 
-  const hasUnsavedChanges = useMemo(() => {
-    return productsNeedingSpecs.some(p => {
-      const current = productSpecs[p.id] || '';
-      const saved = lastSavedSpecs[p.id] || '';
-      return current !== saved;
-    });
-  }, [productsNeedingSpecs, productSpecs, lastSavedSpecs]);
-
   const getCategory = useCallback((product: UserProduct) => {
     const analysis = analyses[product.id];
     return analysis?.category || product.product_type;
@@ -120,30 +107,12 @@ export function ProductSpecsCard({
     const serialized = serializeSpec(data, specFields, unitSystem);
     onProductSpecsChange({ ...productSpecs, [productId]: serialized });
   }, [productSpecs, onProductSpecsChange, unitSystem]);
-  
 
   const getStructured = useCallback((productId: string, specFields: SpecField[]): ProductSpecData => {
     const raw = productSpecs[productId] || '';
     return parseSpec(raw, specFields);
   }, [productSpecs]);
 
-  const handleSave = useCallback(async () => {
-    setSaving(true);
-    try {
-      const updates = productsNeedingSpecs
-        .filter(p => (productSpecs[p.id] || '').trim())
-        .map(p => {
-          const dimStr = buildSpecsPromptLine(productSpecs[p.id]);
-          return supabase.from('user_products').update({ dimensions: dimStr || null }).eq('id', p.id);
-        });
-      await Promise.all(updates);
-      setLastSavedSpecs({ ...productSpecs });
-    } catch {
-      toast.error('Failed to save details');
-    } finally {
-      setSaving(false);
-    }
-  }, [productsNeedingSpecs, productSpecs]);
 
   const toggleProduct = useCallback((id: string) => {
     setOpenProductId(prev => prev === id ? null : id);
@@ -411,28 +380,12 @@ export function ProductSpecsCard({
               })}
             </div>
 
-            {/* Save button */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-start gap-1.5">
-                <Info className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-[11px] text-muted-foreground leading-snug">
-                  Details are saved to your product and reused in future generations
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleSave}
-                disabled={saving}
-                className="h-8 text-xs gap-1.5 flex-shrink-0"
-              >
-                {saving ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Save className="w-3 h-3" />
-                )}
-                {saving ? 'Saving…' : 'Save Details'}
-              </Button>
+            {/* Auto-save info */}
+            <div className="flex items-start gap-1.5 pt-2">
+              <Info className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Details are saved automatically when you generate
+              </p>
             </div>
           </div>
         )}
