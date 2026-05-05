@@ -1,28 +1,20 @@
-## Brite Showcase Refinements
+## Fix mobile gallery alignment
 
-Rewrite `src/pages/showcase/BriteShowcase.tsx` with the following changes:
+Replace CSS `columns-2` masonry layout with CSS Grid in the gallery section of `src/pages/showcase/BriteShowcase.tsx`.
 
-### 1. White background, no orange accents
-- Root div: `bg-white` instead of `bg-[#0a0a14]`
-- All text colors switch to dark slate (`#0f172a` headings, `#64748b` body, `#94a3b8` labels)
-- Stat cards: `bg-[#f8fafc]` with `border-[#e2e8f0]`, icons in `text-[#94a3b8]`
-- Remove the orange/red gradient blobs
-- Focus ring: `ring-[#0f172a]/20` instead of orange
+### Change (line 109)
 
-### 2. Content rephrased for Brite team (not public case study)
-- Remove "Case Study" label → replace with "Prepared for Brite"
-- Headline: "Your Brite Blood Orange Visual Collection"
-- Subtitle: "From a single product photo, VOVV.AI generated 35 ready-to-use visuals across 18 distinct scenes — editorial, lifestyle, and product-only — in just 73 seconds."
-- Stats updated to show "35" instead of "36"
+**Before:**
+```
+columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4
+```
++ each button has `mb-3 sm:mb-4 break-inside-avoid`
 
-### 3. Remove one Sky Grip Pop
-- Delete the Freya Sky Grip Pop entry (line 46), keeping only the Zara one
-- Total drops from 36 → 35 images
+**After:**
+```
+grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4
+```
++ each button gets `aspect-[4/5]` (all images are 4:5 ratio), remove `mb-3 sm:mb-4 break-inside-avoid`
++ img gets `object-cover w-full h-full` instead of `w-full h-auto`
 
-### 4. CTA section
-- Replace `HomeFinalCTA` with a custom inline CTA block
-- Dark slate bg `#0f172a`, headline "Ready to create yours?", subtitle "Upload one product photo and get a full visual library in minutes"
-- "Try free now" button (white, links to /auth) + "Explore more examples" (outline, links to /discover)
-
-### Files changed
-- `src/pages/showcase/BriteShowcase.tsx` — full rewrite with white theme
+This ensures perfect row alignment on all screen sizes since all images share the same 4:5 aspect ratio.
