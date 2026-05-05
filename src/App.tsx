@@ -162,6 +162,7 @@ const App = () => {
             <Route path="/tryshot" element={<TryShot />} />
             <Route path="/tryshot/:domain" element={<TryShot />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/showcase/brite" element={<BriteShowcase />} />
 
 
             {/* Feature pages */}
