@@ -266,111 +266,119 @@ export function ProductSpecsCard({
                     {/* Expanded content */}
                     {isOpen && (
                       <div className="px-3 pb-3 space-y-3">
-                        {/* cm/in toggle — shown per product, near the fields */}
-                        {showUnitToggle && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-muted-foreground">Unit</span>
-                            <div
-                              className="flex items-center rounded-md border border-border/50 overflow-hidden"
-                              onClick={(e) => e.stopPropagation()}
-                              onTouchEnd={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setUnitSystem('metric'); }}
-                                className={`px-3 py-1 text-xs font-medium tracking-wider transition-colors min-h-[30px] ${
-                                  unitSystem === 'metric'
-                                    ? 'bg-amber-500/15 text-amber-600'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                              >
-                                cm
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setUnitSystem('imperial'); }}
-                                className={`px-3 py-1 text-xs font-medium tracking-wider transition-colors min-h-[30px] ${
-                                  unitSystem === 'imperial'
-                                    ? 'bg-amber-500/15 text-amber-600'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                              >
-                                inches
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Spec fields grid */}
+                        {/* Spec fields grid — inline unit toggles per field */}
                         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2.5">
-                          {specFields.map(field => {
-                            const datalistId = `dl-${product.id}-${field.key}`;
-                            return (
-                              <div key={field.key} className="space-y-1">
-                                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                  {field.label}
-                                </label>
+                          {(() => {
+                            let cmToggleRendered = false;
+                            return specFields.map(field => {
+                              const datalistId = `dl-${product.id}-${field.key}`;
+                              const isCmField = field.unit === 'cm';
+                              const showCmToggle = isCmField && !cmToggleRendered;
+                              if (showCmToggle) cmToggleRendered = true;
+                              const isVolumeCombo = field.key === 'volume' && field.type === 'comboInput';
 
-                                {field.type === 'select' && field.options ? (
-                                  <Select
-                                    value={data.fields[field.key] || undefined}
-                                    onValueChange={(val) => {
-                                      const newFields = { ...data.fields, [field.key]: val };
-                                      updateStructured(product.id, specFields, { ...data, fields: newFields });
-                                    }}
-                                  >
-                                    <SelectTrigger className="h-9 text-xs">
-                                      <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {(unitSystem === 'imperial' && field.optionsImperial ? field.optionsImperial : field.options).map(opt => (
-                                        <SelectItem key={opt} value={opt} className="text-xs">
-                                          {opt}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                ) : field.type === 'comboInput' && field.options ? (
-                                  /* ComboInput: free-text input with datalist suggestions */
-                                  <div className="relative">
-                                    <Input
-                                      list={datalistId}
-                                      value={data.fields[field.key] || ''}
-                                      onChange={(e) => {
-                                        const newFields = { ...data.fields, [field.key]: e.target.value };
+                              return (
+                                <div key={field.key} className="space-y-1">
+                                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                    {field.label}
+                                  </label>
+
+                                  {field.type === 'select' && field.options ? (
+                                    <Select
+                                      value={data.fields[field.key] || undefined}
+                                      onValueChange={(val) => {
+                                        const newFields = { ...data.fields, [field.key]: val };
                                         updateStructured(product.id, specFields, { ...data, fields: newFields });
                                       }}
-                                      placeholder={field.placeholder || 'Type or select'}
-                                      className="h-9 text-xs"
-                                      maxLength={50}
-                                    />
-                                    <datalist id={datalistId}>
-                                      {field.options.map(opt => (
-                                        <option key={opt} value={opt} />
-                                      ))}
-                                    </datalist>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1.5">
-                                    <Input
-                                      value={data.fields[field.key] || ''}
-                                      onChange={(e) => {
-                                        const newFields = { ...data.fields, [field.key]: e.target.value };
-                                        updateStructured(product.id, specFields, { ...data, fields: newFields });
-                                      }}
-                                      placeholder={unitSystem === 'imperial' && field.placeholderImperial ? field.placeholderImperial : field.placeholder}
-                                      className="h-9 text-xs"
-                                      inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
-                                      maxLength={50}
-                                    />
-                                    {field.unit && (
-                                      <span className="text-xs text-muted-foreground flex-shrink-0 min-w-[24px]">{getDisplayUnit(field.unit, unitSystem)}</span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                                    >
+                                      <SelectTrigger className="h-9 text-xs">
+                                        <SelectValue placeholder="Select" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {(unitSystem === 'imperial' && field.optionsImperial ? field.optionsImperial : field.options).map(opt => (
+                                          <SelectItem key={opt} value={opt} className="text-xs">
+                                            {opt}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  ) : field.type === 'comboInput' && field.options ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <Input
+                                        list={datalistId}
+                                        value={data.fields[field.key] || ''}
+                                        onChange={(e) => {
+                                          const newFields = { ...data.fields, [field.key]: e.target.value };
+                                          updateStructured(product.id, specFields, { ...data, fields: newFields });
+                                        }}
+                                        placeholder={field.placeholder || 'Type or select'}
+                                        className="h-9 text-xs"
+                                        maxLength={50}
+                                      />
+                                      <datalist id={datalistId}>
+                                        {field.options.map(opt => (
+                                          <option key={opt} value={opt} />
+                                        ))}
+                                      </datalist>
+                                      {isVolumeCombo && (
+                                        <span className="text-[11px] text-muted-foreground flex-shrink-0">ml</span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1.5">
+                                      <Input
+                                        value={data.fields[field.key] || ''}
+                                        onChange={(e) => {
+                                          const newFields = { ...data.fields, [field.key]: e.target.value };
+                                          updateStructured(product.id, specFields, { ...data, fields: newFields });
+                                        }}
+                                        placeholder={unitSystem === 'imperial' && field.placeholderImperial ? field.placeholderImperial : field.placeholder}
+                                        className="h-9 text-xs"
+                                        inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
+                                        maxLength={50}
+                                      />
+                                      {isCmField ? (
+                                        showCmToggle ? (
+                                          <div
+                                            className="flex items-center rounded-md border border-border/50 overflow-hidden flex-shrink-0"
+                                            onClick={(e) => e.stopPropagation()}
+                                            onTouchEnd={(e) => e.stopPropagation()}
+                                          >
+                                            <button
+                                              type="button"
+                                              onClick={(e) => { e.stopPropagation(); setUnitSystem('metric'); }}
+                                              className={`px-2 py-0.5 text-[11px] font-medium transition-colors min-h-[26px] ${
+                                                unitSystem === 'metric'
+                                                  ? 'bg-amber-500/15 text-amber-600'
+                                                  : 'text-muted-foreground hover:text-foreground'
+                                              }`}
+                                            >
+                                              cm
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => { e.stopPropagation(); setUnitSystem('imperial'); }}
+                                              className={`px-2 py-0.5 text-[11px] font-medium transition-colors min-h-[26px] ${
+                                                unitSystem === 'imperial'
+                                                  ? 'bg-amber-500/15 text-amber-600'
+                                                  : 'text-muted-foreground hover:text-foreground'
+                                              }`}
+                                            >
+                                              in
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <span className="text-[11px] text-muted-foreground flex-shrink-0">{unitSystem === 'metric' ? 'cm' : 'in'}</span>
+                                        )
+                                      ) : field.unit ? (
+                                        <span className="text-[11px] text-muted-foreground flex-shrink-0">{field.unit}</span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
 
                         {isApparelCategory(category) && (
