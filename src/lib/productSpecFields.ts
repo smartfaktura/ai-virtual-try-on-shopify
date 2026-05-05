@@ -148,7 +148,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Fragrance ──
   'fragrance': [
-    { key: 'volume', label: 'Volume', type: 'select', options: ['5ml', '10ml', '30ml', '50ml', '75ml', '100ml', '150ml', '200ml'] },
+    { key: 'volume', label: 'Volume', type: 'comboInput', options: ['5ml', '10ml', '30ml', '50ml', '75ml', '100ml', '150ml', '200ml'], placeholder: '50ml' },
     { key: 'bottleHeight', label: 'Bottle Height', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
 
