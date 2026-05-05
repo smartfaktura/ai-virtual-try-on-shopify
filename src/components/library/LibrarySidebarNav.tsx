@@ -81,12 +81,12 @@ export function LibrarySidebarNav({
                       isActive && !activeCollectionSlug
                         ? 'bg-foreground text-background font-semibold'
                         : isActive
-                          ? 'bg-foreground/[0.08] text-foreground font-semibold'
-                          : 'text-foreground/70 hover:bg-foreground/[0.05] hover:text-foreground',
+                          ? 'bg-primary/10 text-primary font-semibold'
+                          : 'text-foreground/70 hover:bg-primary/[0.06] hover:text-primary',
                     )}
                   >
                     {ChevronIcon ? (
-                      <ChevronIcon className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                      <ChevronIcon className={cn("h-3.5 w-3.5 shrink-0", isActive ? "opacity-80" : "opacity-60")} />
                     ) : (
                       <span className="w-3.5 shrink-0" />
                     )}
@@ -96,7 +96,9 @@ export function LibrarySidebarNav({
                         'shrink-0 text-[11px] tabular-nums',
                         isActive && !activeCollectionSlug
                           ? 'text-background/70'
-                          : 'text-foreground/40',
+                          : isActive
+                            ? 'text-primary/60'
+                            : 'text-foreground/40',
                       )}
                     >
                       {f.totalCount}
@@ -112,8 +114,8 @@ export function LibrarySidebarNav({
                         className={cn(
                           'w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-colors text-left',
                           isActive && activeCollectionSlug === null
-                            ? 'bg-foreground text-background font-semibold'
-                            : 'text-foreground/60 hover:bg-foreground/[0.05] hover:text-foreground',
+                            ? 'bg-primary text-white font-semibold'
+                            : 'text-foreground/60 hover:bg-primary/[0.06] hover:text-primary',
                         )}
                       >
                         <span className="flex-1">All</span>
@@ -121,7 +123,7 @@ export function LibrarySidebarNav({
                           className={cn(
                             'tabular-nums text-[11px]',
                             isActive && activeCollectionSlug === null
-                              ? 'text-background/60'
+                              ? 'text-white/70'
                               : 'opacity-50',
                           )}
                         >
@@ -138,15 +140,15 @@ export function LibrarySidebarNav({
                             className={cn(
                               'w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-colors text-left',
                               collActive
-                                ? 'bg-foreground text-background font-semibold'
-                                : 'text-foreground/60 hover:bg-foreground/[0.05] hover:text-foreground',
+                                ? 'bg-primary text-white font-semibold'
+                                : 'text-foreground/60 hover:bg-primary/[0.06] hover:text-primary',
                             )}
                           >
                             <span className="truncate flex-1">{c.label}</span>
                             <span
                               className={cn(
                                 'tabular-nums text-[11px]',
-                                collActive ? 'text-background/60' : 'opacity-50',
+                                collActive ? 'text-white/70' : 'opacity-50',
                               )}
                             >
                               {c.totalCount}

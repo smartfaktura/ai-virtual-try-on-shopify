@@ -210,8 +210,8 @@ export default function ProductVisualLibrary() {
 
               {isLoading && (
                 <div className="space-y-6">
-                  {/* Pill row skeleton (desktop only — mobile shows trigger skeleton above) */}
-                  <div className="hidden lg:flex gap-2 overflow-hidden">
+                  {/* Pill row skeleton (mobile/tablet only — desktop has sidebar) */}
+                  <div className="flex lg:hidden gap-2 overflow-hidden">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <Skeleton
                         key={i}
@@ -427,7 +427,7 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
     <section className="scroll-mt-24">
       {/* Sub-category pills — desktop only (mobile uses drawer) */}
       {showPills && (
-        <div className="relative mb-8 hidden lg:block">
+        <div className="relative mb-8 lg:hidden">
           <div
             ref={pillsScrollRef}
             className={`flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-[padding] duration-200 ${
