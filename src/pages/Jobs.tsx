@@ -143,6 +143,13 @@ export default function Jobs() {
     return allItems;
   }, [allItems, smartView, favoriteIds, getStatus]);
 
+  // Auto-fetch all pages when a filtered smart view is active so all favorites/statuses show
+  useEffect(() => {
+    if (smartView !== 'all' && hasNextPage && !isFetchingNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [smartView, hasNextPage, isFetchingNextPage, isFetching, fetchNextPage, allItems.length]);
+
   const { lastCompletedAt } = useGenerationQueue();
   const { count: columnCount, options: columnOptions, setColumns } = useColumnCount();
 
