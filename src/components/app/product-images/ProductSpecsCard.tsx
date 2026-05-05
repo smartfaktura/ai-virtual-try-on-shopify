@@ -53,8 +53,13 @@ function parseSpec(raw: string, specFields: SpecField[]): ProductSpecData {
     const match = remaining.match(pattern);
     if (match) {
       let val = match[1].trim();
-      if (f.unit && val.endsWith(f.unit)) {
-        val = val.slice(0, -f.unit.length).trim();
+      // Strip both metric and imperial unit suffixes
+      const unitsToStrip = [f.unit, f.unit === 'cm' ? 'in' : undefined].filter(Boolean) as string[];
+      for (const u of unitsToStrip) {
+        if (val.endsWith(u)) {
+          val = val.slice(0, -u.length).trim();
+          break;
+        }
       }
       fields[f.key] = val;
       remaining = remaining.replace(match[0], '');
