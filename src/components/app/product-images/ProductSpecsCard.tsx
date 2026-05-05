@@ -2,15 +2,12 @@ import { useMemo, useCallback, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Info, ChevronDown, ChevronUp, Ruler, Check, Loader2, Save, Pencil } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp, Ruler, Check, Pencil } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, buildSpecsPromptLine, isApparelCategory, ALL_CATEGORY_OPTIONS, getDisplayUnit } from '@/lib/productSpecFields';
+import { getCategoryFields, getCategoryLabel, sanitizeSpecInput, isApparelCategory, ALL_CATEGORY_OPTIONS, getDisplayUnit } from '@/lib/productSpecFields';
 import type { SpecField, UnitSystem } from '@/lib/productSpecFields';
 
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/lib/brandedToast';
 import type { UserProduct, ProductAnalysis } from './types';
 
 interface ProductSpecsCardProps {
