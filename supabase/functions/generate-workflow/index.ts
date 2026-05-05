@@ -767,7 +767,7 @@ async function generateImage(
     product_4: '[PRODUCT IMAGE 4] Additional product reference:',
     model: '[MODEL IMAGE] Identity reference — the person MUST look like this:',
     scene_reference: '[SCENE REFERENCE] Composition and style reference:',
-    packaging_reference: '[PACKAGING REFERENCE] Packaging fidelity reference:',
+    packaging_reference: '[PACKAGING REFERENCE] This is the REAL product packaging — reproduce its EXACT color, material, texture, shape, branding, and construction. Do NOT invent or change any packaging detail:',
     product_extra_angle: '[PRODUCT EXTRA ANGLE] Additional product angle reference — use this to accurately render the product from the requested view:',
   };
 
