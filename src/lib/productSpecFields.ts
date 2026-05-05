@@ -154,7 +154,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Beauty ──
   'beauty-skincare': [
-    { key: 'volume', label: 'Volume', type: 'select', options: ['5ml', '10ml', '15ml', '30ml', '50ml', '75ml', '100ml', '200ml'] },
+    { key: 'volume', label: 'Volume', type: 'comboInput', options: ['5ml', '10ml', '15ml', '30ml', '50ml', '75ml', '100ml', '200ml'], placeholder: '50ml' },
     { key: 'height', label: 'Container Height', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
   'makeup-lipsticks': [
