@@ -1,23 +1,21 @@
-## Problem
 
-The `ScenePreviewThumb` component on `/app/admin/product-image-scenes` loads full-resolution images (often 2K PNGs) for tiny 40x40px thumbnails. This wastes bandwidth and slows down the page significantly when hundreds of scenes are listed.
+## Changes
 
-## Solution
+### 1. Hide horizontal sub-category pills on desktop (ProductVisualLibrary.tsx)
 
-Update `ScenePreviewThumb` to accept an optional `thumbSize` prop and use `getOptimizedUrl` from `src/lib/imageOptimization.ts` to request appropriately sized images from Supabase Storage's render endpoint.
+The `FamilySection` component renders horizontal pill filters (lines 429-501) with `hidden lg:block`. Since the sidebar already shows all categories and sub-categories on desktop (lg+), these pills are redundant. Change the visibility to show only on mobile/tablet where the sidebar is hidden:
 
-### Changes
+- Change the pill container from `hidden lg:block` to `lg:hidden` (visible below lg, hidden at lg+ where sidebar is visible)
+- Also hide the pill skeleton row (line 214) which currently shows `hidden lg:flex` — remove or hide it entirely
 
-**`src/components/admin/ScenePreviewThumb.tsx`**
-- Import `getOptimizedUrl` from `@/lib/imageOptimization`
-- Add optional `thumbSize` prop (number, default ~120)
-- For Supabase URLs: pass through `getOptimizedUrl` with `width`, `height`, `quality: 50`, `resize: 'cover'` — this is a fixed-size thumbnail so the width param is safe per project conventions
-- For external URLs: continue using the image-proxy as before (no optimization available)
+### 2. Improve sidebar hover/active styling (LibrarySidebarNav.tsx)
 
-**`src/pages/AdminProductImageScenes.tsx`**
-- Pass `thumbSize={80}` to `ScenePreviewThumb` in the scene list (the thumbnail container is 40px on desktop / 112px on mobile, so 80px at 2x is sufficient)
+Update the main category and sub-category button styles for a more polished look:
 
-**`src/pages/AdminSceneLibrary.tsx`**
-- Pass appropriate `thumbSize` values to each `ScenePreviewThumb` usage (48px thumbnails get `thumbSize={96}`, larger previews get `thumbSize={256}`)
+- **Active family (no sub selected):** Keep solid dark bg (`bg-foreground text-background`)
+- **Active family (sub selected):** Use a subtle primary tint instead of `bg-foreground/[0.08]` — e.g. `bg-primary/10 text-primary font-semibold`
+- **Hover on inactive family:** Use `hover:bg-primary/[0.06] hover:text-primary` for a warmer, branded feel
+- **Active sub-category:** Use `bg-primary text-white` instead of `bg-foreground text-background` for visual distinction from parent
+- **Hover on inactive sub:** Use `hover:bg-primary/[0.06] hover:text-primary`
 
-This keeps full-size loading as the default for any other consumers while dramatically reducing payload on admin listing pages.
+These changes give the sidebar a cohesive primary-color accent system that differentiates parent from child selections.
