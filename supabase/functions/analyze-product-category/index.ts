@@ -9,7 +9,7 @@ const corsHeaders = {
 /** All valid category_collection IDs */
 const VALID_CATEGORIES = new Set([
   "fragrance", "beauty-skincare", "makeup-lipsticks", "bags-accessories", "backpacks",
-  "wallets-cardholders", "belts", "scarves", "hats-small", "shoes", "sneakers", "boots",
+  "wallets-cardholders", "belts", "scarves", "caps", "hats", "beanies", "shoes", "sneakers", "boots",
   "high-heels", "garments", "dresses", "hoodies", "jeans", "jackets",
   "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
@@ -43,7 +43,9 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/lipstick|mascara|foundation|concealer|blush|eyeshadow|eyeliner|lip gloss|bronzer|primer|highlighter|contour|rouge/i, "makeup-lipsticks"],
   [/serum|moisturizer|cream|cleanser|toner|sunscreen|lotion|face wash|body wash|shampoo|conditioner|exfoliant|retinol/i, "beauty-skincare"],
   [/\bbag\b|handbag|clutch|purse|tote|satchel/i, "bags-accessories"],
-  [/\bhat\b|\bcap\b|beanie|headband|beret|fedora/i, "hats-small"],
+  [/beanie|knit cap|toque|skull cap|watch cap/i, "beanies"],
+  [/\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
+  [/\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret|headband/i, "hats"],
   [/\bshoe\b|\bshoes\b|sandal|loafer|slipper|mule/i, "shoes"],
   [/\bshirt\b|pants|skirt|coat|sweater|blouse|cardigan|vest/i, "garments"],
   [/armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
@@ -56,6 +58,9 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
 
 /** Parent->Child specificity overrides */
 const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
+  ["bags-accessories", /beanie|knit cap|toque|skull cap|watch cap/i, "beanies"],
+  ["bags-accessories", /\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
+  ["bags-accessories", /\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret/i, "hats"],
   ["bags-accessories", /scarf|shawl|wrap|stole/i, "scarves"],
   ["bags-accessories", /wallet|cardholder|card holder|card case/i, "wallets-cardholders"],
   ["bags-accessories", /\bbelt\b|waist belt/i, "belts"],
