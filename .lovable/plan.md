@@ -1,47 +1,28 @@
 
-# Improve All Scarves Scene Prompts for Design Fidelity
+# Add Real-World Scale Block to Front View Scarves Scene
 
-## Problem
-Scarves scene prompts allow the AI to hallucinate text, logos, and altered design patterns. The packshot scenes (front-view, angle-view, side-view, top-view, in-hand, low-angle) have weak or missing design-preservation directives. Editorial scenes have good structure but lack explicit anti-hallucination rules for text/logos.
+## What
+Inject a `[REAL-WORLD SCALE — CRITICAL]` directive into the Front View (`front-view-bags-scarves`) scene prompt. This block uses the `{{specification}}` token (which carries the product's physical dimensions) to render scarves at proportionally correct sizes in the frame, so a 50cm scarf looks visibly smaller than a 120cm scarf.
 
-## Solution
-Add a standardized **DESIGN FIDELITY** block to every scarves scene prompt via a single DB migration. This block will be injected near the top of each prompt (after the opening product image reference line) to ensure:
+## Database Update (single scene)
 
-1. **Exact pattern replication** — print scale, repeat spacing, motif placement, border widths, color palette all cloned pixel-for-pixel from the reference
-2. **Zero text/logo hallucination** — if the original has text or logos, reproduce them exactly; if it has none, generate none
-3. **Material accuracy** — render the correct textile behavior (silk sheen, cashmere matte, wool texture) based on the `{{material}}` token injected by the prompt builder
-4. **Proportional integrity** — no element may be enlarged, shrunk, repositioned, or stylized vs. the reference
-
-### The universal block (appended to every prompt):
+Update `product_image_scenes` where `scene_id = 'front-view-bags-scarves'` to insert the following block after the existing `[DESIGN PATTERN FIDELITY — CRITICAL]` section and before `STRICT PRODUCT ACCURACY`:
 
 ```
-[DESIGN PATTERN FIDELITY — CRITICAL]
-The scarf's surface design is the product. Treat [PRODUCT IMAGE] as the ONLY ground truth for every visual element:
-- Reproduce the exact print pattern, motif shapes, repeat scale, and spacing. No element may be larger, smaller, repositioned, or reinterpreted.
-- Match the exact color palette — every hue, saturation, and tonal relationship must be cloned from the reference. Do not shift, brighten, mute, or harmonize colors.
-- Replicate border widths, edge treatments, and fringe length precisely as shown.
-- If the reference contains text, logos, monograms, or brand marks: reproduce them EXACTLY — same font, size, spacing, position, and color. Do NOT invent, translate, stylize, or omit any character.
-- If the reference contains NO text or logos: generate NONE. Do not add any text, letters, symbols, watermarks, or brand marks.
-- Render the fabric as {{material}} with physically accurate behavior: correct sheen, drape weight, fold memory, and surface texture for that textile.
-- Never add patterns, textures, embellishments, or design elements that do not exist in the reference image.
+[REAL-WORLD SCALE — CRITICAL]
+Use {{specification}} as the exact physical size reference for the scarf.
+The scarf must be rendered according to its real dimensions from {{specification}}.
+Do NOT visually normalize all scarves to the same size.
+- If {{specification}} says 120 cm x 120 cm, the scarf should appear large and fill approximately 85–90% of the frame width.
+- If {{specification}} says 100 cm x 100 cm, it should fill approximately 75–80% of the frame width.
+- If {{specification}} says 70 cm x 70 cm, it should fill approximately 60–65% of the frame width.
+- If {{specification}} says 50 cm x 50 cm, it should fill approximately 45–50% of the frame width.
+The same print on different scarf sizes must appear at different visual scales in the frame.
+A smaller scarf must not be enlarged to look like a large scarf.
+A larger scarf must not be reduced to look like a small scarf.
 ```
 
-### Specific improvements per scene group
-
-**Packshot scenes** (front-view, angle-view, side-view, top-view, low-angle): Currently have minimal fidelity language. Will get the full block plus strengthened existing lines.
-
-**Close-up / detail scene**: Will emphasize that the macro crop must show the actual weave/print from the reference, not a generic texture.
-
-**In-hand / lifestyle scenes**: Block added to reinforce that styling context must not alter or obscure the design.
-
-**Editorial on-model scenes** (headscarf, knot, blazer, etc.): Already have good structure. Block will replace the existing generic fidelity paragraph with the stronger version.
-
-**Still-life scenes** (folded stack, perfume tray, bag handle): Block ensures folded/draped presentations still show accurate pattern alignment at fold edges.
-
-**Packaging scenes**: Block ensures the scarf portion maintains fidelity even when shown alongside packaging.
+The rest of the prompt (composition, framing, lighting, background, output style) stays identical.
 
 ## Implementation
-
-Single DB migration updating `prompt_template` for all 30 active scarves scenes. Each scene keeps its unique composition/lighting/mood instructions but gains the standardized fidelity block.
-
-The migration will use individual `UPDATE` statements per scene to append or replace the fidelity section, keeping each prompt's creative direction intact while adding the anti-hallucination and pattern-accuracy rules.
+Single data UPDATE via the insert tool (not a schema migration — no table structure changes).
