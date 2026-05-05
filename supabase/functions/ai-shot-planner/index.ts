@@ -191,13 +191,7 @@ VALID SCENE TYPES: ${VALID_SCENE_TYPES.join(", ")}
 VALID CAMERA MOTIONS: ${VALID_CAMERA_MOTIONS.join(", ")}
 ${intentBlock}${platformBlock}${paceBlock}${priorityBlock}${categoryBlock}${audienceBlock}${offerBlock}${clarityBlock}${endingBlock}
 
-Return ONLY valid JSON with this structure:
-{
-  "music_direction": "one sentence describing the ideal music: specific instruments, BPM range, and energy arc",
-  "shots": [array of shot objects]
-}
-
-Each shot object MUST have exactly these fields:
+Each shot object fields:
 - shot_index (number, 1-based)
 - role (string: MUST match the role from the provided sequence)
 - purpose (string: 1-sentence description of what this shot achieves)
@@ -234,6 +228,50 @@ Each shot's "role" field MUST match the corresponding role in the sequence.
 ${wantVoiceover ? 'CRITICAL: script_line word budget is ~2 words per second of shot duration. Match phrasing to content intent. For character_visible shots with script_line, write natural dialogue.' : "IMPORTANT: Leave script_line as empty string for ALL shots — voiceover is disabled."}
 Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for sound effects, sfx_trigger_at for timing" : ""}, and music_direction for the overall music track.`;
 
+    // ── Tool calling schema for structured output ──────────────────
+    const shotProperties: Record<string, any> = {
+      shot_index: { type: "number" },
+      role: { type: "string", enum: VALID_ROLES },
+      purpose: { type: "string" },
+      scene_type: { type: "string", enum: VALID_SCENE_TYPES },
+      camera_motion: { type: "string", enum: VALID_CAMERA_MOTIONS },
+      subject_motion: { type: "string", enum: ["minimal", "ambient", "natural_movement"] },
+      duration_sec: { type: "number" },
+      product_visible: { type: "boolean" },
+      character_visible: { type: "boolean" },
+      preservation_strength: { type: "string", enum: ["low", "medium", "high"] },
+      script_line: { type: "string" },
+      sfx_prompt: { type: "string" },
+      sfx_trigger_at: { type: "number" },
+    };
+
+    const tools = [
+      {
+        type: "function" as const,
+        function: {
+          name: "generate_shot_plan",
+          description: "Generate a cinematic shot plan with music direction and individual shots.",
+          parameters: {
+            type: "object",
+            properties: {
+              music_direction: { type: "string", description: "One sentence describing the ideal music: specific instruments, BPM range, and energy arc." },
+              shots: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: shotProperties,
+                  required: ["shot_index", "role", "purpose", "scene_type", "camera_motion", "subject_motion", "duration_sec", "product_visible", "character_visible", "preservation_strength", "script_line", "sfx_prompt", "sfx_trigger_at"],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ["music_direction", "shots"],
+            additionalProperties: false,
+          },
+        },
+      },
+    ];
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -246,6 +284,8 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        tools,
+        tool_choice: { type: "function", function: { name: "generate_shot_plan" } },
       }),
     });
 
@@ -267,39 +307,61 @@ Remember: cinematic, intent-appropriate pacing${wantSfx ? ", sfx_prompt for soun
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
 
-    // Try to parse as {music_direction, shots} object first, fall back to plain array
+    // ── Parse response: prefer tool_calls, fall back to content regex ──
     let shots: any[];
     let musicDirection: string | undefined;
 
-    const objMatch = content.match(/\{[\s\S]*\}/);
-    const arrMatch = content.match(/\[[\s\S]*\]/);
-
-    if (objMatch) {
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
       try {
-        const parsed = JSON.parse(objMatch[0]);
+        const parsed = typeof toolCall.function.arguments === "string"
+          ? JSON.parse(toolCall.function.arguments)
+          : toolCall.function.arguments;
         if (Array.isArray(parsed.shots)) {
           shots = parsed.shots;
           musicDirection = typeof parsed.music_direction === "string" ? parsed.music_direction : undefined;
-        } else if (Array.isArray(parsed)) {
-          shots = parsed;
         } else {
-          throw new Error("No shots array found");
+          throw new Error("tool_calls: no shots array");
         }
-      } catch {
-        if (arrMatch) {
-          shots = JSON.parse(arrMatch[0]);
-        } else {
-          console.error("Could not parse shot plan from AI response:", content);
-          throw new Error("Failed to parse AI response into shot plan");
-        }
+      } catch (toolErr) {
+        console.error("Failed to parse tool_calls arguments, falling back to content:", toolErr);
+        // Fall through to content-based parsing
+        shots = null as any;
       }
-    } else if (arrMatch) {
-      shots = JSON.parse(arrMatch[0]);
-    } else {
-      console.error("Could not parse shot plan from AI response:", content);
-      throw new Error("Failed to parse AI response into shot plan");
+    }
+
+    // Fallback: parse from message content (legacy path)
+    if (!shots) {
+      const content = data.choices?.[0]?.message?.content || "";
+      const objMatch = content.match(/\{[\s\S]*\}/);
+      const arrMatch = content.match(/\[[\s\S]*\]/);
+
+      if (objMatch) {
+        try {
+          const parsed = JSON.parse(objMatch[0]);
+          if (Array.isArray(parsed.shots)) {
+            shots = parsed.shots;
+            musicDirection = typeof parsed.music_direction === "string" ? parsed.music_direction : undefined;
+          } else if (Array.isArray(parsed)) {
+            shots = parsed;
+          } else {
+            throw new Error("No shots array found");
+          }
+        } catch {
+          if (arrMatch) {
+            shots = JSON.parse(arrMatch[0]);
+          } else {
+            console.error("Could not parse shot plan from AI response:", content);
+            throw new Error("Failed to parse AI response into shot plan");
+          }
+        }
+      } else if (arrMatch) {
+        shots = JSON.parse(arrMatch[0]);
+      } else {
+        console.error("Could not parse shot plan from AI response (no tool_calls, no content JSON):", JSON.stringify(data.choices?.[0]?.message || {}));
+        throw new Error("Failed to parse AI response into shot plan");
+      }
     }
 
     // Validate and sanitize — snap roles to valid system roles
