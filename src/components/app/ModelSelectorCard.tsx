@@ -15,29 +15,29 @@ export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = f
     <button
       type="button"
       onClick={onSelect}
-      className={`relative cursor-pointer rounded-lg sm:rounded-xl overflow-hidden transition-all duration-200 group text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none ${
-        isSelected ? 'ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-lg scale-[1.02]' : 'ring-1 ring-border hover:ring-primary hover:shadow-md hover:scale-[1.01]'
+      className={`relative cursor-pointer rounded-lg sm:rounded-xl transition-all duration-200 group text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none ${
+        isSelected ? 'ring-2 ring-primary ring-offset-2 shadow-lg' : 'ring-1 ring-border hover:ring-primary hover:shadow-md'
       }`}
     >
-      <div className="aspect-[3/4] overflow-hidden bg-muted">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg sm:rounded-xl bg-muted">
         <ShimmerImage src={getOptimizedUrl(model.previewUrl, { quality: 60 })} alt={model.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" aspectRatio="3/4" />
-      </div>
-      {showAiMatch && (
-        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
-          <Badge className="text-[8px] sm:text-[10px] px-1.5 py-0.5 bg-foreground/80 text-background border-0 shadow-sm">AI Match</Badge>
-        </div>
-      )}
-      {isSelected && (
-        <div className="absolute inset-0 bg-primary/10 pointer-events-none">
-          <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-5 h-5 sm:w-7 sm:h-7 bg-primary rounded-full flex items-center justify-center shadow-md">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+        {showAiMatch && (
+          <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+            <Badge className="text-[8px] sm:text-[10px] px-1.5 py-0.5 bg-foreground/80 text-background border-0 shadow-sm">AI Match</Badge>
           </div>
+        )}
+        {isSelected && (
+          <div className="absolute inset-0 bg-primary/10 pointer-events-none">
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-5 h-5 sm:w-7 sm:h-7 bg-primary rounded-full flex items-center justify-center shadow-md">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+        )}
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
+          <p className="text-white text-xs sm:text-sm font-bold">{model.name}</p>
         </div>
-      )}
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
-        <p className="text-white text-xs sm:text-sm font-bold">{model.name}</p>
       </div>
     </button>
   );
