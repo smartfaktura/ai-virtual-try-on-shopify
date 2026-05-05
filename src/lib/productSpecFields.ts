@@ -249,6 +249,7 @@ const CONDITIONAL_FIELDS: Record<ConditionalKey, SpecField[]> = {
   // ── Furniture conditionals on furnitureType ──
   'furniture::furnitureType::Sofa': [
     { key: 'sofaShape', label: 'Shape', type: 'select', options: ['Straight', 'L-shaped', 'U-shaped', 'Curved', 'Sectional'] },
+    { key: 'seatingCapacity', label: 'Seating', type: 'select', options: ['2-seater', '3-seater', '4-seater', '5+ seater / Sectional'] },
     { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
     { key: 'seatDepth', label: 'Seat Depth', type: 'input', placeholder: '55', placeholderImperial: '22', unit: 'cm' },
   ],
