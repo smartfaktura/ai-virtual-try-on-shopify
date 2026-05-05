@@ -1392,9 +1392,17 @@ export function buildDynamicPrompt(
   }
   prompt += template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
-  // Inject product specifications/dimensions when available
-  if (ctx.productDimensions) {
-    prompt += ` Product specifications: ${ctx.productDimensions}.`;
+  // Inject product specifications — skip if template already used {{specification}}
+  const hasSpecToken = (template || '').includes('{{specification}}');
+  if (!hasSpecToken && ctx.productDimensions) {
+    const specBlock = resolveToken('specification', ctx);
+    // Insert right after first sentence (product intro) for clarity
+    const firstPeriod = prompt.indexOf('. ');
+    if (firstPeriod > 0) {
+      prompt = prompt.slice(0, firstPeriod + 2) + specBlock + ' ' + prompt.slice(firstPeriod + 2);
+    } else {
+      prompt += ' ' + specBlock;
+    }
   }
 
   // Auto-inject key directives if template didn't include their tokens
