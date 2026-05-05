@@ -1409,7 +1409,7 @@ export function buildDynamicPrompt(
   // so the AI renders accurate material textures (e.g. silk sheen, wool knit, leather grain)
   const hasMaterialToken = (template || '').includes('{{materialTexture}}');
   if (!hasMaterialToken) {
-    const sid = (scene.sceneId || '').toLowerCase();
+    const sid = (scene.id || '').toLowerCase();
     const isDetailScene = /closeup|close-up|detail|texture|macro|hardware/.test(sid);
     if (isDetailScene) {
       // Priority: user-specified materials > analysis materialFamily
