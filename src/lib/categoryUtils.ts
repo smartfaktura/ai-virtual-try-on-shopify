@@ -15,7 +15,7 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   // Headwear (must precede bags-accessories)
   [['beanie', 'knit cap', 'toque', 'skull cap', 'watch cap'], 'beanies' as TemplateCategory],
   [['baseball cap', 'snapback', 'trucker cap', 'visor', 'dad hat'], 'caps' as TemplateCategory],
-  [['fedora', 'panama', 'bucket hat', 'wide brim', 'sun hat', 'cowboy hat', 'boater', 'beret'], 'hats' as TemplateCategory],
+  [['hat', 'fedora', 'panama', 'bucket hat', 'wide brim', 'sun hat', 'cowboy hat', 'boater', 'beret', 'headband'], 'hats' as TemplateCategory],
   // Accessories
   [['scarf', 'shawl', 'wrap', 'bandana', 'neckerchief'], 'scarves' as TemplateCategory],
   // Footwear
