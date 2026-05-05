@@ -638,7 +638,7 @@ export default function Jobs() {
                 ))}
               </div>
             </div>
-            {hasNextPage && (
+            {hasNextPage && smartView === 'all' && (
               <div className="flex justify-center pt-6 pb-2">
                 <Button
                   variant="outline"
