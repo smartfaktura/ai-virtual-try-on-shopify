@@ -110,7 +110,7 @@ export function resolveOutfitConflicts(
   if (cat === 'bags-accessories' || cat === 'backpacks' || cat === 'wallets-cardholders' || match(gt, ['bag', 'tote', 'clutch', 'crossbody', 'backpack', 'handbag', 'purse'])) {
     return build('bag', []);
   }
-  if (cat === 'hats-small' || match(gt, ['hat', 'cap', 'beanie', 'beret', 'fedora'])) {
+  if (cat === 'caps' || cat === 'hats' || cat === 'beanies' || match(gt, ['hat', 'cap', 'beanie', 'beret', 'fedora'])) {
     return build('hat', []);
   }
   if (cat === 'eyewear' || match(gt, ['sunglasses', 'glasses', 'eyewear', 'optical'])) {
