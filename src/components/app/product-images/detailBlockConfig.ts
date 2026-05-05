@@ -93,6 +93,12 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
     description: 'Upload a detail shot of the cuff — stitching, fold, button loop — for editorial-quality cuff rendering.',
     promptLabel: 'Cuff detail reference — use this to accurately render cuff construction, fold, stitching, and button-loop detail:',
   },
+  materialDetail: {
+    key: 'materialDetail',
+    label: 'Upload material/fabric photo',
+    description: 'Upload a close-up of the material — wood grain, fabric weave, leather texture, marble veining — so the AI can accurately match the surface finish.',
+    promptLabel: 'Material/fabric close-up reference — use this to accurately render the surface texture, grain, and finish of the furniture:',
+  },
 };
 
 /** All trigger block keys including reference triggers */
