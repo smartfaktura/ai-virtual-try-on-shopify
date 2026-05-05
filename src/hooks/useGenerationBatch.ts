@@ -243,7 +243,12 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
     const jobIds: string[] = [];
     let lastNewBalance: number | null = null;
 
-    // Enqueue chunks sequentially with pacing + retry
+    // Enqueue chunks sequentially with pacing + retry.
+    // Wave pacing: after every WAVE_SIZE jobs, pause for WAVE_COOLDOWN_MS
+    // to stay well under the server-side burst limit.
+    const WAVE_SIZE = 30;
+    const WAVE_COOLDOWN_MS = 2000;
+
     for (let c = 0; c < chunks.length; c++) {
       const chunk = chunks[c];
       const chunkImageCount = chunk.length * angleMultiplier;
@@ -254,7 +259,13 @@ export function useGenerationBatch(options?: UseGenerationBatchOptions): UseGene
         batch_id: batchId,
       };
 
+      // Standard per-call pacing
       await paceDelay(c);
+
+      // Wave cooldown: pause longer every WAVE_SIZE jobs
+      if (c > 0 && c % WAVE_SIZE === 0) {
+        await new Promise(r => setTimeout(r, WAVE_COOLDOWN_MS));
+      }
 
       const result = await enqueueWithRetry(
         {
