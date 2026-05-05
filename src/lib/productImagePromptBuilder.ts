@@ -1522,7 +1522,7 @@ export function buildDynamicPrompt(
 
   // ── Jewelry anti-sparkle saugiklis ──
   const cat = analysis?.category;
-  const isJewelry = cat === 'jewelry' || cat === 'jewellery-necklaces' || cat === 'jewellery-earrings' || cat === 'jewellery-bracelets' || cat === 'jewellery-rings';
+  const isJewelry = (cat as string) === 'jewelry' || cat === 'jewellery-necklaces' || cat === 'jewellery-earrings' || cat === 'jewellery-bracelets' || cat === 'jewellery-rings';
   if (isJewelry) {
     prompt += ' JEWELRY REALISM (CRITICAL): No sparkle effects, no starburst reflections, no glitter particles, no fantasy light rays, no diamond twinkle overlays, no lens flare on gemstones. Jewelry must look like a real editorial photograph — tactile, dimensional, and physically believable. Reflections on metal and stones must be smooth, controlled, and natural. Never add any post-processing glow or shimmer that would not exist in a real studio photograph.';
   }
