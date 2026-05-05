@@ -76,6 +76,7 @@ export function mapAuthError(error: unknown, mode: AuthMode): MappedAuthError {
     // Weak / breached / short password
     if (
       msg.includes('password should be at least') ||
+      msg.includes('password should contain') ||
       msg.includes('password is too short') ||
       msg.includes('weak password') ||
       msg.includes('pwned') ||
@@ -83,7 +84,7 @@ export function mapAuthError(error: unknown, mode: AuthMode): MappedAuthError {
       msg.includes('password is known to be weak')
     ) {
       return {
-        message: 'Please choose a stronger password (at least 6 characters, avoid common or breached passwords).',
+        message: 'Please choose a stronger password (at least 6 characters, include uppercase, lowercase, and a number).',
       };
     }
 
