@@ -897,11 +897,14 @@ export default function ProductImages() {
             // Merge Step 3 specs into dimensions
             const specText2 = details.productSpecs?.[product.id];
             let mergedDims = product.dimensions || '';
+            let mergedMats = product.materials || '';
             if (specText2) {
               const specLine = buildSpecsPromptLine(specText2);
               if (specLine) mergedDims = specLine;
+              const matMatch = specText2.match(/Material:\s*([^,\n]+)/i);
+              if (matMatch) mergedMats = matMatch[1].trim();
             }
-            const enrichedProduct = { ...product, dimensions: mergedDims || undefined };
+            const enrichedProduct = { ...product, dimensions: mergedDims || undefined, materials: mergedMats || undefined };
             const variationInstruction = buildDynamicPrompt(scene, enrichedProduct, productAnalysis, variationDetails, currentModelRef?.gender || selectedModelGender);
 
             const sceneRatios = details.sceneAspectOverrides?.[scene.id] || selectedRatios;
