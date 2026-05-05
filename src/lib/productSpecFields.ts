@@ -167,7 +167,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'packageSize', label: 'Package Size', type: 'input', placeholder: '15×20', placeholderImperial: '6×8', unit: 'cm' },
   ],
   'beverages': [
-    { key: 'volume', label: 'Volume', type: 'select', options: ['200ml', '250ml', '330ml', '350ml', '500ml', '750ml', '1L'] },
+    { key: 'volume', label: 'Volume', type: 'comboInput', options: ['200ml', '250ml', '330ml', '350ml', '500ml', '750ml', '1L', '1.5L', '2L'], placeholder: '330ml' },
     { key: 'height', label: 'Container Height', type: 'input', placeholder: '20', placeholderImperial: '8', unit: 'cm' },
   ],
 
