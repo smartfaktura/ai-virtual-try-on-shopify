@@ -1,15 +1,11 @@
 ## Problem
 
-After uploading a file in the Short Film references step, the browser auto-scrolls down past the content, revealing blank space (the `pb-28` sticky bar padding). The user sees empty white space instead of their uploaded file preview.
+The auto-fetch effect we added causes a visible "Loading..." spinner and overlay when the Favorites tab is active, because the fetching indicators (`isFetching`, `isFetchingNextPage`) are displayed unconditionally.
 
-## Solution
+## Fix
 
-Add a `useRef` on the `ReferenceUploadPanel` root element and scroll it back into view after each file upload completes, so the user always sees their newly added reference instead of blank padding.
+Two changes in `src/pages/Jobs.tsx`:
 
-## Technical Details
+1. **Hide the overlay spinner during auto-fetch** (line 600): Change the condition from `isFetching && !isLoading` to `isFetching && !isLoading && smartView === 'all'` — so the full-screen spinner only shows on the "All" tab where the user manually triggered it.
 
-**File: `src/components/app/video/short-film/ReferenceUploadPanel.tsx`**
-
-1. Add a `useRef` to the component's root `<div>` 
-2. After `handleFileUpload` completes (line ~276, after `onChange` and clearing upload state), call `rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })` to gently bring the panel back into view without jarring jumps
-3. Apply the same scroll-back after product picker selection and model picker selection callbacks that add references
+2. **Hide the "Load More" button during auto-fetch** (line 641): Change `hasNextPage` to `hasNextPage && smartView === 'all'` — since filtered views auto-fetch all pages, the manual button is unnecessary and just shows a perpetual loading state.
