@@ -93,6 +93,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Bags ──
   'bags-accessories': [
+    { key: 'bagType', label: 'Type', type: 'select', options: ['Tote', 'Shoulder', 'Crossbody', 'Clutch', 'Duffel', 'Briefcase', 'Messenger', 'Hobo', 'Other'] },
     { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
     { key: 'height', label: 'Height', type: 'input', placeholder: '25', placeholderImperial: '10', unit: 'cm' },
     { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', placeholderImperial: '5', unit: 'cm' },
@@ -117,12 +118,17 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'width', label: 'Width', type: 'input', placeholder: '70', placeholderImperial: '28', unit: 'cm' },
   ],
   'caps': [
+    { key: 'style', label: 'Style', type: 'select', options: ['Baseball', 'Snapback', 'Trucker', 'Dad hat', '5-panel', 'Visor'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+    { key: 'brimLength', label: 'Brim Length', type: 'input', placeholder: '7', placeholderImperial: '2.8', unit: 'cm' },
   ],
   'hats': [
+    { key: 'style', label: 'Style', type: 'select', options: ['Fedora', 'Panama', 'Bucket', 'Wide brim', 'Cowboy', 'Boater', 'Sun hat'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+    { key: 'brimWidth', label: 'Brim Width', type: 'input', placeholder: '8', placeholderImperial: '3', unit: 'cm' },
   ],
   'beanies': [
+    { key: 'style', label: 'Style', type: 'select', options: ['Cuffed', 'Slouchy', 'Fisherman', 'Pom-pom', 'Ribbed'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
   ],
   'eyewear': [
@@ -134,6 +140,9 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
   // ── Watches ──
   'watches': [
     { key: 'case', label: 'Case Diameter', type: 'input', placeholder: '40', unit: 'mm' },
+    { key: 'caseThickness', label: 'Case Thickness', type: 'input', placeholder: '11', unit: 'mm' },
+    { key: 'bandWidth', label: 'Band Width', type: 'input', placeholder: '20', unit: 'mm' },
+    { key: 'bandMaterial', label: 'Band Material', type: 'select', options: ['Leather', 'Metal', 'Silicone', 'Fabric', 'Rubber', 'Ceramic'] },
   ],
 
   // ── Jewelry ──
@@ -190,18 +199,20 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Furniture ──
   'furniture': [
-    { key: 'furnitureType', label: 'Type', type: 'select', options: ['Chair', 'Armchair', 'Sofa', 'Coffee Table', 'Dining Table', 'Desk', 'Shelf', 'Cabinet', 'Bed', 'Bench', 'Stool', 'Other'] },
+    { key: 'furnitureType', label: 'Type', type: 'select', options: ['Chair', 'Armchair', 'Sofa', 'Coffee Table', 'Dining Table', 'Side Table', 'Desk', 'Shelf', 'Cabinet', 'Bed', 'Bench', 'Stool', 'Other'] },
     { key: 'width', label: 'Width', type: 'input', placeholder: '180', placeholderImperial: '71', unit: 'cm' },
     { key: 'depth', label: 'Depth', type: 'input', placeholder: '80', placeholderImperial: '31', unit: 'cm' },
     { key: 'height', label: 'Height', type: 'input', placeholder: '75', placeholderImperial: '30', unit: 'cm' },
-    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
   ],
 
   // ── Tech ──
   'tech-devices': [
+    { key: 'deviceType', label: 'Type', type: 'select', options: ['Phone', 'Laptop', 'Tablet', 'Headphones', 'Earbuds', 'Speaker', 'Smartwatch', 'Camera', 'Other'] },
     { key: 'dimensions', label: 'Dimensions', type: 'input', placeholder: '14.6×7.1×0.8cm', placeholderImperial: '5.7×2.8×0.3in' },
     { key: 'screen', label: 'Screen', type: 'input', placeholder: '6.1"' },
   ],
+
+
 
   // ── Supplements ──
   'supplements-wellness': [
@@ -222,9 +233,115 @@ const DEFAULT_FIELDS: SpecField[] = [
   { key: 'depth', label: 'Depth', type: 'input', placeholder: '10', placeholderImperial: '4', unit: 'cm' },
 ];
 
-export function getCategoryFields(category: string | undefined | null): SpecField[] {
+// ── Conditional fields: extra fields injected based on a parent select value ──
+// Key format: "category::parentFieldKey::parentValue"
+// These fields are appended after the base fields when the parent value matches.
+
+type ConditionalKey = `${string}::${string}::${string}`;
+
+const CONDITIONAL_FIELDS: Record<ConditionalKey, SpecField[]> = {
+  // ── Furniture conditionals on furnitureType ──
+  'furniture::furnitureType::Sofa': [
+    { key: 'sofaShape', label: 'Shape', type: 'select', options: ['Straight', 'L-shaped', 'U-shaped', 'Curved', 'Sectional'] },
+    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
+    { key: 'seatDepth', label: 'Seat Depth', type: 'input', placeholder: '55', placeholderImperial: '22', unit: 'cm' },
+  ],
+  'furniture::furnitureType::Armchair': [
+    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
+    { key: 'armHeight', label: 'Arm Height', type: 'input', placeholder: '60', placeholderImperial: '24', unit: 'cm' },
+  ],
+  'furniture::furnitureType::Chair': [
+    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
+  ],
+  'furniture::furnitureType::Stool': [
+    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '65', placeholderImperial: '26', unit: 'cm' },
+  ],
+  'furniture::furnitureType::Bench': [
+    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
+  ],
+  'furniture::furnitureType::Bed': [
+    { key: 'bedSize', label: 'Bed Size', type: 'select', options: ['Single', 'Double', 'Queen', 'King', 'Super King'] },
+    { key: 'headboardHeight', label: 'Headboard Height', type: 'input', placeholder: '120', placeholderImperial: '47', unit: 'cm' },
+  ],
+  'furniture::furnitureType::Shelf': [
+    { key: 'shelves', label: 'Shelves', type: 'input', placeholder: '4' },
+  ],
+  'furniture::furnitureType::Cabinet': [
+    { key: 'shelves', label: 'Shelves / Drawers', type: 'input', placeholder: '3' },
+    { key: 'doorStyle', label: 'Doors', type: 'select', options: ['Open', 'Single door', 'Double door', 'Sliding', 'Glass'] },
+  ],
+  'furniture::furnitureType::Desk': [
+    { key: 'legRoom', label: 'Leg Room Height', type: 'input', placeholder: '65', placeholderImperial: '26', unit: 'cm' },
+  ],
+
+  // ── Bag conditionals on bagType ──
+  'bags-accessories::bagType::Clutch': [
+    // Clutch is flat — remove depth, keep width+height only (base already has them)
+  ],
+  'bags-accessories::bagType::Duffel': [
+    { key: 'strapDrop', label: 'Strap Drop', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+  ],
+  'bags-accessories::bagType::Tote': [
+    { key: 'strapDrop', label: 'Strap Drop', type: 'input', placeholder: '25', placeholderImperial: '10', unit: 'cm' },
+  ],
+  'bags-accessories::bagType::Shoulder': [
+    { key: 'strapDrop', label: 'Strap Drop', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
+  ],
+  'bags-accessories::bagType::Crossbody': [
+    { key: 'strapDrop', label: 'Strap Drop', type: 'input', placeholder: '55', placeholderImperial: '22', unit: 'cm' },
+  ],
+
+  // ── Tech conditionals on deviceType ──
+  'tech-devices::deviceType::Headphones': [
+    { key: 'headphoneType', label: 'Style', type: 'select', options: ['Over-ear', 'On-ear', 'In-ear'] },
+  ],
+  'tech-devices::deviceType::Earbuds': [
+    { key: 'caseSize', label: 'Case Size', type: 'input', placeholder: '5×5×2.5cm', placeholderImperial: '2×2×1in' },
+  ],
+};
+
+// Fields to HIDE when a specific conditional key is active
+const CONDITIONAL_HIDE: Record<ConditionalKey, string[]> = {
+  'bags-accessories::bagType::Clutch': ['depth'],
+  'tech-devices::deviceType::Headphones': ['screen'],
+  'tech-devices::deviceType::Earbuds': ['screen'],
+  'tech-devices::deviceType::Speaker': ['screen'],
+};
+
+/**
+ * Get category fields, optionally with conditional fields resolved.
+ * Pass current field values to get dynamic sub-fields based on parent selects.
+ */
+export function getCategoryFields(category: string | undefined | null, fieldValues?: Record<string, string>): SpecField[] {
   if (!category) return DEFAULT_FIELDS;
-  return CATEGORY_FIELDS[category] || DEFAULT_FIELDS;
+  const base = CATEGORY_FIELDS[category] || DEFAULT_FIELDS;
+  if (!fieldValues) return base;
+
+  // Find which conditional keys match
+  const extra: SpecField[] = [];
+  const hideKeys = new Set<string>();
+
+  for (const field of base) {
+    if (field.type === 'select' && fieldValues[field.key]) {
+      const condKey = `${category}::${field.key}::${fieldValues[field.key]}` as ConditionalKey;
+      const condFields = CONDITIONAL_FIELDS[condKey];
+      if (condFields) extra.push(...condFields);
+      const condHide = CONDITIONAL_HIDE[condKey];
+      if (condHide) condHide.forEach(k => hideKeys.add(k));
+    }
+  }
+
+  const filtered = hideKeys.size > 0 ? base.filter(f => !hideKeys.has(f.key)) : base;
+  if (extra.length === 0) return filtered;
+
+  // Insert conditional fields right after the parent select
+  const result = [...filtered];
+  for (const ef of extra) {
+    if (!result.some(f => f.key === ef.key)) {
+      result.push(ef);
+    }
+  }
+  return result;
 }
 
 const APPAREL_CATEGORIES = new Set([
