@@ -89,6 +89,12 @@ export default function ProductVisualLibrary() {
     scrollToGrid();
   };
 
+  const handleSelectCollection = (familySlug: string, collectionSlug: string | null) => {
+    setActiveFamilySlug(familySlug);
+    setActiveCollectionSlug(collectionSlug);
+    scrollToGrid();
+  };
+
   const handleMobileSelect = (familySlug: string | null, collectionSlug: string | null) => {
     if (familySlug) setActiveFamilySlug(familySlug);
     setActiveCollectionSlug(collectionSlug);
