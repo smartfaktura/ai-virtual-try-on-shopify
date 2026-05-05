@@ -274,7 +274,10 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
           });
         }
       }
-      if (newRefs.length > 0) onChange([...references, ...newRefs]);
+      if (newRefs.length > 0) {
+        onChange([...references, ...newRefs]);
+        requestAnimationFrame(() => rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+      }
       setUploadingRole(null);
       setUploadingSlot(null);
     },
