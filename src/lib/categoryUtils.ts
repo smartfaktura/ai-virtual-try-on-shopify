@@ -12,10 +12,11 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['ring', 'signet', 'band ring', 'cocktail ring', 'engagement ring'], 'jewellery-rings' as TemplateCategory],
   [['watch', 'timepiece', 'chronograph', 'wristwatch'], 'watches' as TemplateCategory],
   [['sunglasses', 'glasses', 'eyewear', 'optical', 'aviator', 'spectacles'], 'eyewear' as TemplateCategory],
+  // Headwear (must precede bags-accessories)
+  [['beanie', 'knit cap', 'toque', 'skull cap', 'watch cap'], 'beanies' as TemplateCategory],
+  [['baseball cap', 'snapback', 'trucker cap', 'visor', 'dad hat'], 'caps' as TemplateCategory],
+  [['fedora', 'panama', 'bucket hat', 'wide brim', 'sun hat', 'cowboy hat', 'boater', 'beret'], 'hats' as TemplateCategory],
   // Accessories
-  [['backpack', 'rucksack', 'daypack'], 'backpacks' as TemplateCategory],
-  [['wallet', 'cardholder', 'card holder', 'card case', 'money clip'], 'wallets-cardholders' as TemplateCategory],
-  [['belt', 'waist belt', 'leather belt', 'buckle belt'], 'belts' as TemplateCategory],
   [['scarf', 'shawl', 'wrap', 'bandana', 'neckerchief'], 'scarves' as TemplateCategory],
   // Footwear
   [['sneaker', 'trainer', 'air max', 'nike dunk', 'jordan', 'running shoe'], 'sneakers' as TemplateCategory],
