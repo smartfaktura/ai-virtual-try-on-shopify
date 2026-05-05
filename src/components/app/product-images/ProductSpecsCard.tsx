@@ -98,14 +98,6 @@ export function ProductSpecsCard({
     return productsNeedingSpecs.filter(p => productSpecs[p.id]?.trim()).length;
   }, [productsNeedingSpecs, productSpecs]);
 
-  const hasUnsavedChanges = useMemo(() => {
-    return productsNeedingSpecs.some(p => {
-      const current = productSpecs[p.id] || '';
-      const saved = lastSavedSpecs[p.id] || '';
-      return current !== saved;
-    });
-  }, [productsNeedingSpecs, productSpecs, lastSavedSpecs]);
-
   const getCategory = useCallback((product: UserProduct) => {
     const analysis = analyses[product.id];
     return analysis?.category || product.product_type;
@@ -115,7 +107,11 @@ export function ProductSpecsCard({
     const serialized = serializeSpec(data, specFields, unitSystem);
     onProductSpecsChange({ ...productSpecs, [productId]: serialized });
   }, [productSpecs, onProductSpecsChange, unitSystem]);
-  
+
+  const getStructured = useCallback((productId: string, specFields: SpecField[]): ProductSpecData => {
+    const raw = productSpecs[productId] || '';
+    return parseSpec(raw, specFields);
+  }, [productSpecs]);
 
   const getStructured = useCallback((productId: string, specFields: SpecField[]): ProductSpecData => {
     const raw = productSpecs[productId] || '';
