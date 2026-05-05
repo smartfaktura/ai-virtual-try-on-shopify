@@ -1,21 +1,21 @@
+## Add anti-sparkle saugiklis for all jewelry scenes
 
-## Changes
+Add a jewelry-specific negative directive in the prompt builder that appends to every jewelry category scene. This prevents the AI model from adding fantasy sparkle/glitter effects.
 
-### 1. Hide horizontal sub-category pills on desktop (ProductVisualLibrary.tsx)
+### Implementation
 
-The `FamilySection` component renders horizontal pill filters (lines 429-501) with `hidden lg:block`. Since the sidebar already shows all categories and sub-categories on desktop (lg+), these pills are redundant. Change the visibility to show only on mobile/tablet where the sidebar is hidden:
+**File: `src/lib/productImagePromptBuilder.ts`**
 
-- Change the pill container from `hidden lg:block` to `lg:hidden` (visible below lg, hidden at lg+ where sidebar is visible)
-- Also hide the pill skeleton row (line 214) which currently shows `hidden lg:flex` — remove or hide it entirely
+In the final prompt assembly (around the saugikliai / negative prompt area, near the end of `buildDynamicPrompt`), add a category check: if the product's category is a jewelry type (`necklaces`, `earrings`, `rings`, `bracelets`, or parent `jewelry`/`jewellery`), append a hard negative directive:
 
-### 2. Improve sidebar hover/active styling (LibrarySidebarNav.tsx)
+```
+JEWELRY REALISM (CRITICAL): No sparkle effects, no starburst reflections, no glitter particles, no fantasy light rays, no diamond twinkle overlays, no lens flare on gemstones. Jewelry must look like a real editorial photograph — tactile, dimensional, and physically believable. Reflections on metal and stones must be smooth, controlled, and natural. Never add any post-processing glow or shimmer that would not exist in a real studio photograph.
+```
 
-Update the main category and sub-category button styles for a more polished look:
+This will be injected as a saugiklis for all jewelry scenes regardless of which specific scene template is used, ensuring consistent anti-sparkle enforcement even for scenes that currently use phrases like "refined sparkle" or "believable sparkle".
 
-- **Active family (no sub selected):** Keep solid dark bg (`bg-foreground text-background`)
-- **Active family (sub selected):** Use a subtle primary tint instead of `bg-foreground/[0.08]` — e.g. `bg-primary/10 text-primary font-semibold`
-- **Hover on inactive family:** Use `hover:bg-primary/[0.06] hover:text-primary` for a warmer, branded feel
-- **Active sub-category:** Use `bg-primary text-white` instead of `bg-foreground text-background` for visual distinction from parent
-- **Hover on inactive sub:** Use `hover:bg-primary/[0.06] hover:text-primary`
+### Technical detail
 
-These changes give the sidebar a cohesive primary-color accent system that differentiates parent from child selections.
+- Check `analysis?.category` against jewelry category IDs (same set used in `categoryConstants.ts`)
+- Inject after the prompt is assembled but before final cleanup, alongside existing saugikliai
+- No database changes needed — this is a client-side prompt builder change only
