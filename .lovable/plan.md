@@ -1,19 +1,22 @@
-## Problem
+## Update home-decor Front View scene with real-world scale logic
 
-The AI analysis sometimes returns `home-decor` for chairs and armchairs. Since `home-decor` is a valid category, the title-based fallback never runs, and there's no specificity override to correct it to `furniture`.
+Update the `front-view-home` scene's `prompt_template` in the `product_image_scenes` table to include dimension-aware scale directives using `{{specification}}`.
 
-## Changes
+### Database update
 
-**File: `supabase/functions/analyze-product-category/index.ts`**
+Update `product_image_scenes` where `scene_id = 'front-view-home'` with a new prompt that:
 
-1. **Add specificity overrides** from `home-decor` to `furniture` for chair/armchair patterns (around line 60-67):
-   ```
-   ["home-decor", /armchair|chair|sofa|couch|recliner|ottoman|bench|stool|desk|table|bookshelf|dresser|wardrobe|bed frame|nightstand|cabinet|sideboard|credenza|futon|mattress/i, "furniture"],
-   ```
+1. References `{{specification}}` for real-world dimensions
+2. Adds REAL-WORLD SCALE (CRITICAL) block with proportional frame-fill guidelines:
+   - Large items (e.g. 45 cm vase) fill ~80-85% frame height
+   - Medium items (e.g. 15 cm candle) fill ~50-55% frame height  
+   - Small items (e.g. 8 cm object) fill ~30-35% frame height
+3. Enforces strict front view, centered, no perspective shift
+4. Requires physically accurate material rendering (ceramic, wood, fabric, metal, glass, wax)
+5. Uses the same structure as the existing `furniture-front-view` prompt
 
-2. **Add FURNITURE GUIDANCE** to the AI system prompt (after HEADWEAR GUIDANCE, line 163):
-   ```
-   FURNITURE vs HOME-DECOR: Use "furniture" for any seating (chairs, armchairs, sofas, stools, benches, recliners), tables (dining, coffee, desk, side), storage (bookshelves, dressers, wardrobes, cabinets), and bed frames. Use "home-decor" for decorative items only: candles, vases, pillows, cushions, throws, planters, picture frames, lamps, wall art.
-   ```
+### Technical details
 
-These two changes ensure: (a) the AI is guided to pick the right category, and (b) if it still returns `home-decor` for a chair, the specificity override corrects it.
+- Single UPDATE on `product_image_scenes` table via service_role
+- No schema changes needed
+- The update replaces the existing simple packshot prompt with the dimension-aware version
