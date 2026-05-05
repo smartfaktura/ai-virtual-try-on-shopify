@@ -161,7 +161,9 @@ export default function ProductVisualLibrary() {
             <LibrarySidebarNav
               families={families}
               activeFamilySlug={activeFamilySlug}
+              activeCollectionSlug={activeCollectionSlug}
               onSelectFamily={handleSelectFamily}
+              onSelectCollection={handleSelectCollection}
               isLoading={isLoading}
             />
 
