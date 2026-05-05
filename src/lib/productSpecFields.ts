@@ -13,7 +13,7 @@ export type UnitSystem = 'metric' | 'imperial';
 export interface SpecField {
   key: string;
   label: string;
-  type: 'select' | 'input';
+  type: 'select' | 'input' | 'comboInput';
   options?: string[];
   optionsImperial?: string[];
   placeholder?: string;
@@ -148,13 +148,13 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Fragrance ──
   'fragrance': [
-    { key: 'volume', label: 'Volume', type: 'select', options: ['5ml', '10ml', '30ml', '50ml', '75ml', '100ml', '150ml', '200ml'] },
+    { key: 'volume', label: 'Volume', type: 'comboInput', options: ['5ml', '10ml', '30ml', '50ml', '75ml', '100ml', '150ml', '200ml'], placeholder: '50ml' },
     { key: 'bottleHeight', label: 'Bottle Height', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
 
   // ── Beauty ──
   'beauty-skincare': [
-    { key: 'volume', label: 'Volume', type: 'select', options: ['5ml', '10ml', '15ml', '30ml', '50ml', '75ml', '100ml', '200ml'] },
+    { key: 'volume', label: 'Volume', type: 'comboInput', options: ['5ml', '10ml', '15ml', '30ml', '50ml', '75ml', '100ml', '200ml'], placeholder: '50ml' },
     { key: 'height', label: 'Container Height', type: 'input', placeholder: '15', placeholderImperial: '6', unit: 'cm' },
   ],
   'makeup-lipsticks': [
@@ -167,7 +167,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'packageSize', label: 'Package Size', type: 'input', placeholder: '15×20', placeholderImperial: '6×8', unit: 'cm' },
   ],
   'beverages': [
-    { key: 'volume', label: 'Volume', type: 'select', options: ['200ml', '250ml', '330ml', '350ml', '500ml', '750ml', '1L'] },
+    { key: 'volume', label: 'Volume', type: 'comboInput', options: ['200ml', '250ml', '330ml', '350ml', '500ml', '750ml', '1L', '1.5L', '2L'], placeholder: '330ml' },
     { key: 'height', label: 'Container Height', type: 'input', placeholder: '20', placeholderImperial: '8', unit: 'cm' },
   ],
 

@@ -51,7 +51,6 @@ function parseSpec(raw: string, specFields: SpecField[]): ProductSpecData {
   let remaining = raw;
 
   for (const f of specFields) {
-    // Escape special regex chars in label
     const escaped = f.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const pattern = new RegExp(`${escaped}:\\s*([^,]+)`, 'i');
     const match = remaining.match(pattern);
@@ -67,6 +66,11 @@ function parseSpec(raw: string, specFields: SpecField[]): ProductSpecData {
 
   const notes = remaining.replace(/^[,\s]+|[,\s]+$/g, '').replace(/,\s*,/g, ', ').trim();
   return { fields, notes };
+}
+
+/** Check if a category's fields include any cm-switchable units */
+function hasCmFields(fields: SpecField[]): boolean {
+  return fields.some(f => f.unit === 'cm');
 }
 
 export function ProductSpecsCard({
@@ -138,7 +142,6 @@ export function ProductSpecsCard({
         });
       await Promise.all(updates);
       setLastSavedSpecs({ ...productSpecs });
-      // silent save
     } catch {
       toast.error('Failed to save details');
     } finally {
@@ -155,9 +158,8 @@ export function ProductSpecsCard({
   return (
     <Card className="border-amber-500/20 bg-amber-500/[0.03]">
       <CardContent className="p-5 space-y-4">
-        {/* Header row: title on left, collapse chevron on right */}
+        {/* Header row: title on left, Optional + collapse chevron on right */}
         <div className="flex items-start gap-2.5">
-          {/* Clickable title area — collapses the card */}
           <div
             role="button"
             tabIndex={0}
@@ -178,36 +180,8 @@ export function ProductSpecsCard({
             </div>
           </div>
 
-          {/* Unit toggle + Optional label + chevron — all outside the collapse trigger */}
+          {/* Optional label + chevron — unit toggle moved to per-product area */}
           <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
-            <div
-              className="flex items-center rounded-md border border-border/50 overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setUnitSystem('metric'); }}
-                className={`px-2.5 py-1 text-[11px] font-medium tracking-wider transition-colors min-h-[28px] ${
-                  unitSystem === 'metric'
-                    ? 'bg-amber-500/15 text-amber-600'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                cm
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setUnitSystem('imperial'); }}
-                className={`px-2.5 py-1 text-[11px] font-medium tracking-wider transition-colors min-h-[28px] ${
-                  unitSystem === 'imperial'
-                    ? 'bg-amber-500/15 text-amber-600'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                in
-              </button>
-            </div>
             <span className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider hidden sm:inline">Optional</span>
             <button
               type="button"
@@ -229,12 +203,12 @@ export function ProductSpecsCard({
                 const specFields = getCategoryFields(category);
                 const data = getStructured(product.id, specFields);
                 const hasFilled = (productSpecs[product.id] || '').trim().length > 0;
+                const showUnitToggle = hasCmFields(specFields);
 
                 return (
                   <div key={product.id} className="rounded-lg border border-border/50 bg-card/50 overflow-hidden">
-                    {/* Accordion header — use div with role=button, NOT a <button> */}
+                    {/* Accordion header */}
                     <div className="flex items-center gap-2.5 w-full p-3">
-                      {/* Clickable area: image + title + chevron */}
                       <div
                         role="button"
                         tabIndex={0}
@@ -252,7 +226,6 @@ export function ProductSpecsCard({
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium truncate">{product.title}</p>
-                          {/* Category: either an interactive selector or plain text */}
                           {onCategoryOverride ? (
                             <div onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
                               <Select
@@ -276,7 +249,6 @@ export function ProductSpecsCard({
                           )}
                         </div>
                       </div>
-                      {/* Status + chevron */}
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {hasFilled && <Check className="w-3 h-3 text-emerald-500" />}
                         <button
@@ -294,53 +266,111 @@ export function ProductSpecsCard({
                     {/* Expanded content */}
                     {isOpen && (
                       <div className="px-3 pb-3 space-y-3">
-                        {/* Spec fields grid — 1 col on very small, 2 col default, 3 col on sm+ */}
-                        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2.5">
-                          {specFields.map(field => (
-                            <div key={field.key} className="space-y-1">
-                              <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                {field.label}
-                              </label>
+                        {/* cm/in toggle — shown per product, near the fields */}
+                        {showUnitToggle && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-muted-foreground">Unit</span>
+                            <div
+                              className="flex items-center rounded-md border border-border/50 overflow-hidden"
+                              onClick={(e) => e.stopPropagation()}
+                              onTouchEnd={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setUnitSystem('metric'); }}
+                                className={`px-3 py-1 text-xs font-medium tracking-wider transition-colors min-h-[30px] ${
+                                  unitSystem === 'metric'
+                                    ? 'bg-amber-500/15 text-amber-600'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                              >
+                                cm
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setUnitSystem('imperial'); }}
+                                className={`px-3 py-1 text-xs font-medium tracking-wider transition-colors min-h-[30px] ${
+                                  unitSystem === 'imperial'
+                                    ? 'bg-amber-500/15 text-amber-600'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                              >
+                                inches
+                              </button>
+                            </div>
+                          </div>
+                        )}
 
-                              {field.type === 'select' && field.options ? (
-                                <Select
-                                  value={data.fields[field.key] || undefined}
-                                  onValueChange={(val) => {
-                                    const newFields = { ...data.fields, [field.key]: val };
-                                    updateStructured(product.id, specFields, { ...data, fields: newFields });
-                                  }}
-                                >
-                                  <SelectTrigger className="h-9 text-xs">
-                                    <SelectValue placeholder="Select" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {(unitSystem === 'imperial' && field.optionsImperial ? field.optionsImperial : field.options).map(opt => (
-                                      <SelectItem key={opt} value={opt} className="text-xs">
-                                        {opt}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <div className="flex items-center gap-1">
-                                  <Input
-                                    value={data.fields[field.key] || ''}
-                                    onChange={(e) => {
-                                      const newFields = { ...data.fields, [field.key]: e.target.value };
+                        {/* Spec fields grid */}
+                        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2.5">
+                          {specFields.map(field => {
+                            const datalistId = `dl-${product.id}-${field.key}`;
+                            return (
+                              <div key={field.key} className="space-y-1">
+                                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                  {field.label}
+                                </label>
+
+                                {field.type === 'select' && field.options ? (
+                                  <Select
+                                    value={data.fields[field.key] || undefined}
+                                    onValueChange={(val) => {
+                                      const newFields = { ...data.fields, [field.key]: val };
                                       updateStructured(product.id, specFields, { ...data, fields: newFields });
                                     }}
-                                    placeholder={unitSystem === 'imperial' && field.placeholderImperial ? field.placeholderImperial : field.placeholder}
-                                    className="h-9 text-xs"
-                                    inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
-                                    maxLength={50}
-                                  />
-                                  {field.unit && (
-                                    <span className="text-[10px] text-muted-foreground flex-shrink-0 min-w-[20px]">{getDisplayUnit(field.unit, unitSystem)}</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                                  >
+                                    <SelectTrigger className="h-9 text-xs">
+                                      <SelectValue placeholder="Select" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {(unitSystem === 'imperial' && field.optionsImperial ? field.optionsImperial : field.options).map(opt => (
+                                        <SelectItem key={opt} value={opt} className="text-xs">
+                                          {opt}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : field.type === 'comboInput' && field.options ? (
+                                  /* ComboInput: free-text input with datalist suggestions */
+                                  <div className="relative">
+                                    <Input
+                                      list={datalistId}
+                                      value={data.fields[field.key] || ''}
+                                      onChange={(e) => {
+                                        const newFields = { ...data.fields, [field.key]: e.target.value };
+                                        updateStructured(product.id, specFields, { ...data, fields: newFields });
+                                      }}
+                                      placeholder={field.placeholder || 'Type or select'}
+                                      className="h-9 text-xs"
+                                      maxLength={50}
+                                    />
+                                    <datalist id={datalistId}>
+                                      {field.options.map(opt => (
+                                        <option key={opt} value={opt} />
+                                      ))}
+                                    </datalist>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
+                                    <Input
+                                      value={data.fields[field.key] || ''}
+                                      onChange={(e) => {
+                                        const newFields = { ...data.fields, [field.key]: e.target.value };
+                                        updateStructured(product.id, specFields, { ...data, fields: newFields });
+                                      }}
+                                      placeholder={unitSystem === 'imperial' && field.placeholderImperial ? field.placeholderImperial : field.placeholder}
+                                      className="h-9 text-xs"
+                                      inputMode={field.placeholder && /^\d/.test(field.placeholder) ? 'decimal' : 'text'}
+                                      maxLength={50}
+                                    />
+                                    {field.unit && (
+                                      <span className="text-xs text-muted-foreground flex-shrink-0 min-w-[24px]">{getDisplayUnit(field.unit, unitSystem)}</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
 
                         {isApparelCategory(category) && (
