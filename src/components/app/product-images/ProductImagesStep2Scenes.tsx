@@ -162,6 +162,7 @@ const CATEGORY_ALIASES: Record<string, string> = {
   "drink": "beverages",
   "drinks": "beverages",
   "wallets": "wallets-cardholders",
+  "hats-small": "hats",
 };
 
 function refineCategory(cat: string, title: string): string {
