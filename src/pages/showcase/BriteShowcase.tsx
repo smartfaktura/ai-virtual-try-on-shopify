@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { LandingNav } from '@/components/landing/LandingNav';
-import { HomeFinalCTA } from '@/components/home/HomeFinalCTA';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { Clock, Images, Layers, X } from 'lucide-react';
+import { Clock, Images, Layers, X, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc';
 
@@ -43,13 +43,12 @@ const IMAGES: { url: string; scene: string; model?: string }[] = [
   { url: `${BASE}/51ba6ba9-16a9-4dc4-977e-680a8fba8a1f/0-0.jpg`, scene: 'Sport Sun Shadow', model: 'Zara' },
   { url: `${BASE}/a614397b-8444-44d7-a2f2-d48e88153afa/0-0.jpg`, scene: 'Sky Grip Pop', model: 'Zara' },
   { url: `${BASE}/fe8320d4-ba46-4fa2-b1e7-528291da7086/0-0.jpg`, scene: 'Riviera Pop Escape', model: 'Zara' },
-  { url: `${BASE}/34e173b4-7ea3-4b20-8a57-28945dff313f/0-0.jpg`, scene: 'Sky Grip Pop', model: 'Freya' },
   { url: `${BASE}/a9a07de5-5177-4b37-a9ea-9fa1ffda92c7/0-0.jpg`, scene: 'Riviera Pop Escape', model: 'Freya' },
 ];
 
 const STATS = [
-  { icon: Images, value: '36', label: 'Campaign Visuals' },
-  { icon: Clock, value: '73s', label: 'Total Generation Time' },
+  { icon: Images, value: '35', label: 'Visuals Generated' },
+  { icon: Clock, value: '73s', label: 'Total Time' },
   { icon: Layers, value: '18', label: 'Unique Scenes' },
 ];
 
@@ -57,32 +56,27 @@ export default function BriteShowcase() {
   const [lightbox, setLightbox] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#0a0a14]">
+    <div className="min-h-screen bg-white">
       <SEOHead
-        title="Brite Blood Orange – AI Product Photography Showcase | VOVV.AI"
-        description="36 campaign-ready product visuals generated from a single photo in 73 seconds."
+        title="Brite Blood Orange — Your AI Visuals | VOVV.AI"
+        description="35 product visuals generated for Brite Blood Orange Energy Drink."
         noindex
       />
       <LandingNav />
 
       {/* Hero */}
-      <section className="relative pt-28 pb-16 lg:pt-40 lg:pb-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none">
-          <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-orange-500 blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/3 w-[400px] h-[400px] rounded-full bg-red-500 blur-[120px]" />
-        </div>
-
-        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/40 mb-5">
-            Case Study
+      <section className="pt-28 pb-14 lg:pt-40 lg:pb-20">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-5">
+            Prepared for Brite
           </p>
-          <h1 className="text-white text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
-            36 Campaign-Ready Visuals
+          <h1 className="text-[#0f172a] text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
+            Your Brite Blood Orange
             <br className="hidden sm:block" />
-            <span className="text-orange-400"> One Product Photo. 73 Seconds</span>
+            Visual Collection
           </h1>
-          <p className="text-[#9ca3af] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            We took a single product photo of the Brite Blood Orange Energy Drink and ran it through VOVV.AI's Visual Studio. The result: a full campaign library spanning 18 unique scenes — lifestyle, editorial, product-only — all generated in just over a minute.
+          <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+            From a single product photo, VOVV.AI generated 35 ready-to-use visuals across 18 distinct scenes — editorial, lifestyle, and product-only — in just 73 seconds.
           </p>
         </div>
       </section>
@@ -94,13 +88,13 @@ export default function BriteShowcase() {
             {STATS.map((s) => (
               <div
                 key={s.label}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] py-6 px-3"
+                className="flex flex-col items-center gap-2 rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] py-6 px-3"
               >
-                <s.icon size={18} className="text-orange-400/70" />
-                <span className="text-white text-2xl sm:text-3xl font-semibold tracking-tight">
+                <s.icon size={18} className="text-[#94a3b8]" />
+                <span className="text-[#0f172a] text-2xl sm:text-3xl font-semibold tracking-tight">
                   {s.value}
                 </span>
-                <span className="text-[#6b7280] text-xs sm:text-sm text-center">
+                <span className="text-[#94a3b8] text-xs sm:text-sm text-center">
                   {s.label}
                 </span>
               </div>
@@ -117,7 +111,7 @@ export default function BriteShowcase() {
               <button
                 key={i}
                 onClick={() => setLightbox(i)}
-                className="group relative mb-3 sm:mb-4 break-inside-avoid block w-full rounded-xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50"
+                className="group relative mb-3 sm:mb-4 break-inside-avoid block w-full rounded-xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
               >
                 <img
                   src={getOptimizedUrl(img.url, { quality: 50 })}
@@ -126,7 +120,7 @@ export default function BriteShowcase() {
                   decoding="async"
                   className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <p className="text-white text-xs sm:text-sm font-medium leading-tight">
                     {img.scene}
@@ -170,7 +164,33 @@ export default function BriteShowcase() {
         </div>
       )}
 
-      <HomeFinalCTA />
+      {/* CTA */}
+      <section className="py-16 lg:py-28 bg-[#0f172a]">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
+            Ready to create yours?
+          </h2>
+          <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">
+            Upload one product photo and get a full visual library in minutes
+          </p>
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+            <Link
+              to="/auth"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#0f172a] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto"
+            >
+              Try free now
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/discover"
+              className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"
+            >
+              Explore more examples
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <LandingFooter />
     </div>
   );

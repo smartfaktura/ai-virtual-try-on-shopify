@@ -1,35 +1,28 @@
-## Brite Blood Orange Showcase Page
+## Brite Showcase Refinements
 
-Create a private (noindex) showcase page at `/showcase/brite` displaying 36 AI-generated product visuals for the Brite Blood Orange Energy Drink, styled to match the homepage aesthetic.
+Rewrite `src/pages/showcase/BriteShowcase.tsx` with the following changes:
 
-### Data
+### 1. White background, no orange accents
+- Root div: `bg-white` instead of `bg-[#0a0a14]`
+- All text colors switch to dark slate (`#0f172a` headings, `#64748b` body, `#94a3b8` labels)
+- Stat cards: `bg-[#f8fafc]` with `border-[#e2e8f0]`, icons in `text-[#94a3b8]`
+- Remove the orange/red gradient blobs
+- Focus ring: `ring-[#0f172a]/20` instead of orange
 
-- **36 images** from `generation_jobs` (product_name = "Brite Blood Orange Energy Drink")
-- **Total generation time**: ~73 seconds for all 36 images
-- **Quality**: All high quality, 4:5 ratio
-- **Scenes used**: 18 unique scenes (Sport Flash Soda Energy, Ice-Crushed Cold Product Shot, Dynamic Splash Product, etc.)
-- **Models used**: Freya, Zara, and product-only shots
-- All image URLs are public from `workflow-previews` bucket
+### 2. Content rephrased for Brite team (not public case study)
+- Remove "Case Study" label → replace with "Prepared for Brite"
+- Headline: "Your Brite Blood Orange Visual Collection"
+- Subtitle: "From a single product photo, VOVV.AI generated 35 ready-to-use visuals across 18 distinct scenes — editorial, lifestyle, and product-only — in just 73 seconds."
+- Stats updated to show "35" instead of "36"
 
-### Page Structure
+### 3. Remove one Sky Grip Pop
+- Delete the Freya Sky Grip Pop entry (line 46), keeping only the Zara one
+- Total drops from 36 → 35 images
 
-1. **Nav**: Reuse `LandingNav`
-2. **Hero section**: Dark bg matching homepage (`#1a1a2e`), headline "36 Campaign-Ready Visuals. One Product Photo. 73 Seconds.", subtitle explaining VOVV.AI generated these from a single product upload
-3. **Stats strip**: 3 stats — "36 Visuals", "73 Seconds", "18 Unique Scenes" in a clean row
-4. **Gallery section**: Masonry grid of all 36 images with lazy loading (`loading="lazy"`), optimized via `getOptimizedUrl` (quality-only, no width). Each image shows scene name on hover
-5. **CTA section**: Reuse `HomeFinalCTA` component
-6. **Footer**: Reuse `LandingFooter`
+### 4. CTA section
+- Replace `HomeFinalCTA` with a custom inline CTA block
+- Dark slate bg `#0f172a`, headline "Ready to create yours?", subtitle "Upload one product photo and get a full visual library in minutes"
+- "Try free now" button (white, links to /auth) + "Explore more examples" (outline, links to /discover)
 
-### Technical Details
-
-**New files:**
-- `src/pages/showcase/BriteShowcase.tsx` — Page component with hardcoded image data (no DB query needed since URLs are public and static)
-
-**Modified files:**
-- `src/App.tsx` — Add route: `<Route path="/showcase/brite" element={<BriteShowcase />} />`
-
-**SEO:** `<SEOHead noindex={true}>` to prevent indexing. No sitemap entry.
-
-**Image optimization:** All images use `getOptimizedUrl(url, { quality: 50 })` for fast loading. Native `loading="lazy"` on all images below the fold.
-
-**No robots.txt changes needed** — `noindex` meta tag is sufficient.
+### Files changed
+- `src/pages/showcase/BriteShowcase.tsx` — full rewrite with white theme
