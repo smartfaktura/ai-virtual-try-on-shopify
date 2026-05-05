@@ -9,7 +9,7 @@ const corsHeaders = {
 /** All valid category_collection IDs */
 const VALID_CATEGORIES = new Set([
   "fragrance", "beauty-skincare", "makeup-lipsticks", "bags-accessories", "backpacks",
-  "wallets-cardholders", "belts", "scarves", "hats-small", "shoes", "sneakers", "boots",
+  "wallets-cardholders", "belts", "scarves", "caps", "hats", "beanies", "shoes", "sneakers", "boots",
   "high-heels", "garments", "dresses", "hoodies", "jeans", "jackets",
   "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
@@ -43,7 +43,9 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/lipstick|mascara|foundation|concealer|blush|eyeshadow|eyeliner|lip gloss|bronzer|primer|highlighter|contour|rouge/i, "makeup-lipsticks"],
   [/serum|moisturizer|cream|cleanser|toner|sunscreen|lotion|face wash|body wash|shampoo|conditioner|exfoliant|retinol/i, "beauty-skincare"],
   [/\bbag\b|handbag|clutch|purse|tote|satchel/i, "bags-accessories"],
-  [/\bhat\b|\bcap\b|beanie|headband|beret|fedora/i, "hats-small"],
+  [/beanie|knit cap|toque|skull cap|watch cap/i, "beanies"],
+  [/\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
+  [/\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret|headband/i, "hats"],
   [/\bshoe\b|\bshoes\b|sandal|loafer|slipper|mule/i, "shoes"],
   [/\bshirt\b|pants|skirt|coat|sweater|blouse|cardigan|vest/i, "garments"],
   [/armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
@@ -56,6 +58,9 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
 
 /** Parent->Child specificity overrides */
 const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
+  ["bags-accessories", /beanie|knit cap|toque|skull cap|watch cap/i, "beanies"],
+  ["bags-accessories", /\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
+  ["bags-accessories", /\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret/i, "hats"],
   ["bags-accessories", /scarf|shawl|wrap|stole/i, "scarves"],
   ["bags-accessories", /wallet|cardholder|card holder|card case/i, "wallets-cardholders"],
   ["bags-accessories", /\bbelt\b|waist belt/i, "belts"],
@@ -94,7 +99,14 @@ function refineGenericGarments(analysis: Record<string, unknown>, title: string,
 }
 
 function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
-  const cat = analysis.category as string | undefined;
+  let cat = analysis.category as string | undefined;
+
+  // Backward compat: remap deprecated hats-small to hats
+  if (cat === "hats-small") {
+    console.log(`Category alias: "hats-small" -> "hats"`);
+    analysis.category = "hats";
+    cat = "hats";
+  }
 
   // If valid category, still check specificity overrides
   if (cat && cat !== "other" && VALID_CATEGORIES.has(cat)) {
@@ -146,7 +158,9 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, hats-small, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+
+HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above
