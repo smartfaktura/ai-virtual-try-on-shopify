@@ -1,21 +1,19 @@
-
 ## Problem
 
-The `/ai-product-photography` page loads slowly because:
+The Library search input unmounts when `isInitialLoading` becomes `true` during a search query change. This happens because:
 
-1. **Bulk image preloader saturates bandwidth** — `useSeoVisualOverrides.ts` lines 99-111 preload ALL override images (25+ full-resolution URLs) the moment data lands, competing with the hero tiles the user actually sees first.
+1. The search bar is wrapped in `!isTrulyEmpty && !isInitialLoading` (line 439), so it disappears when loading
+2. When a search returns 0 results and the user types the next character, `keepPreviousData` preserves the empty array, `isFetching` is true, so `isInitialLoading = (isLoading || isFetching) && allItems.length === 0` becomes true
+3. The search input is unmounted and replaced by `LibrarySkeletonGrid`, causing focus loss
 
-2. **Hero tile images are oversized** — Tiles render at 180-210px CSS width but request `width: 640` for `src` and up to `900w` in `srcSet`. At 2x DPR that's still only 420px needed, not 900px.
+## Fix (src/pages/Jobs.tsx)
 
-## Changes
+1. **Always show the search bar and smart view tabs** -- Remove `!isInitialLoading` from the conditional guards on lines 400 and 439. The search bar and filter controls should render regardless of loading state.
 
-### 1. `src/hooks/useSeoVisualOverrides.ts`
-- Remove the `useEffect` block (lines 99-111) that bulk-preloads every override image at full resolution. This single change eliminates 25+ concurrent image fetches that block the hero.
-- Remove the unused `useEffect` import if no longer needed.
+2. **Refine `isInitialLoading`** -- Only treat it as initial loading when there's no active search query and no filters. Change to:
+   ```
+   const isInitialLoading = (isLoading || isFetching) && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
+   ```
+   This prevents the skeleton from appearing when the user is actively searching/filtering and results happen to be empty during a fetch.
 
-### 2. `src/components/seo/photography/PhotographyHero.tsx`
-- Reduce `src` fallback from `width: 640, height: 854` to `width: 420, height: 560` (matches 210px tile at 2x).
-- Reduce `srcSet` widths from `[360, 540, 720, 900]` to `[360, 420]` — only two sizes needed for the 180/210px tile.
-- Reduce preload URL from `width: 540, height: 720` to `width: 420, height: 560`.
-
-These changes cut per-image payload roughly in half and eliminate bandwidth contention from bulk preloading.
+These two changes ensure the search input stays mounted and focused at all times, and shimmer/skeleton only appears on the true initial page load (no query, no filters, no data yet).
