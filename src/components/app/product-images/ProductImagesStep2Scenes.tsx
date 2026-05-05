@@ -119,6 +119,9 @@ const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
 
 /** Refine generic parent categories to specific child when title strongly matches */
 const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
+  ["bags-accessories", /beanie|knit cap|toque|skull cap|watch cap/i, "beanies"],
+  ["bags-accessories", /\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
+  ["bags-accessories", /\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret/i, "hats"],
   ["bags-accessories", /scarf|shawl|wrap|stole/i, "scarves"],
   ["bags-accessories", /wallet|cardholder|card holder|card case/i, "wallets-cardholders"],
   ["bags-accessories", /\bbelt\b|waist belt/i, "belts"],
