@@ -1,19 +1,31 @@
 ## Problem
 
-The model selector cards in the "Select Models" modal and inline grid have their selected/hover ring (blue border) visually clipped because:
+In the Product Details spec fields (Step 3 Setup), Width/Depth inputs behave strangely when the user switches to imperial ("in") units. The root cause:
 
-1. The parent grid containers use `gap-2` (8px), which is too tight for the `ring-2 ring-offset-2` + `scale-[1.02]` to render without overlapping adjacent cards.
-2. The grid containers have no outer padding, so edge cards get their rings cropped.
+1. `serializeSpec()` appends the display unit (e.g. `"in"`) to the stored value: `"Width: 97in"`
+2. `parseSpec()` only strips the metric unit (`"cm"`) defined in the field spec — it never strips `"in"`
+3. So the parsed value becomes `"97in"` and that literal string appears in the input field
+4. When the user types, the `"in"` suffix is already in the value, causing garbled input like `"9in7"`
 
-## Changes
+## Fix
 
-### 1. `src/components/app/ModelSelectorCard.tsx`
-- Remove `overflow-hidden` from the outer button (it clips the ring). Move it to the inner image `div` only (already has it).
-- Reduce `ring-offset` to `ring-offset-1` for tighter but visible spacing.
-- Remove `scale-[1.02]` / `scale-[1.01]` hover effects that cause overlap issues in tight grids.
+**`src/components/app/product-images/ProductSpecsCard.tsx`** — Update `parseSpec()` to strip both metric and imperial unit suffixes:
 
-### 2. `src/components/app/product-images/ProductImagesStep3Refine.tsx`
-- Increase grid `gap-2` to `gap-3` on all model grids (inline and modal) to give rings breathing room.
-- Add `p-1` padding to the modal scrollable area so edge rings aren't clipped by `overflow-y-auto`.
+```typescript
+// In parseSpec, replace the unit-stripping block (lines 56-58):
+// Before:
+if (f.unit && val.endsWith(f.unit)) {
+  val = val.slice(0, -f.unit.length).trim();
+}
 
-These are minimal, surgical fixes to ensure the blue selection ring is fully visible without cropping.
+// After:
+const unitsToStrip = [f.unit, f.unit === 'cm' ? 'in' : undefined].filter(Boolean) as string[];
+for (const u of unitsToStrip) {
+  if (val.endsWith(u)) {
+    val = val.slice(0, -u.length).trim();
+    break;
+  }
+}
+```
+
+This ensures that when parsing back from the serialized string `"Width: 97in"`, the `"in"` suffix is properly stripped, leaving just `"97"` in the input field. The fix is surgical — only the parse function changes, everything else stays the same.
