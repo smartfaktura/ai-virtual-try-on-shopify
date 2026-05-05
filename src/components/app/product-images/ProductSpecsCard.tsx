@@ -380,28 +380,12 @@ export function ProductSpecsCard({
               })}
             </div>
 
-            {/* Save button */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-start gap-1.5">
-                <Info className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-[11px] text-muted-foreground leading-snug">
-                  Details are saved to your product and reused in future generations
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleSave}
-                disabled={saving}
-                className="h-8 text-xs gap-1.5 flex-shrink-0"
-              >
-                {saving ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Save className="w-3 h-3" />
-                )}
-                {saving ? 'Saving…' : 'Save Details'}
-              </Button>
+            {/* Auto-save info */}
+            <div className="flex items-start gap-1.5 pt-2">
+              <Info className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Details are saved automatically when you generate
+              </p>
             </div>
           </div>
         )}
