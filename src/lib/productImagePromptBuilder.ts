@@ -1271,6 +1271,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productMaterials': return ctx.productMaterials || '';
     case 'productColor': return ctx.productColor || '';
 
+    // ── Product specifications (from Product Details card) ──
+    case 'specification': {
+      if (!ctx.productDimensions) return '';
+      return `[PRODUCT DIMENSIONS — ${productName.toUpperCase()}] ${ctx.productDimensions}. Render this product at exactly these proportions.`;
+    }
+
     // ── Brand Logo Text ──
     case 'brandLogoText': return details.brandLogoText || '';
 
