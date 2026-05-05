@@ -99,7 +99,14 @@ function refineGenericGarments(analysis: Record<string, unknown>, title: string,
 }
 
 function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
-  const cat = analysis.category as string | undefined;
+  let cat = analysis.category as string | undefined;
+
+  // Backward compat: remap deprecated hats-small to hats
+  if (cat === "hats-small") {
+    console.log(`Category alias: "hats-small" -> "hats"`);
+    analysis.category = "hats";
+    cat = "hats";
+  }
 
   // If valid category, still check specificity overrides
   if (cat && cat !== "other" && VALID_CATEGORIES.has(cat)) {
