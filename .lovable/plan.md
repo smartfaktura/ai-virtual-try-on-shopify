@@ -1,44 +1,20 @@
-## Overview
+## Add "Hats, Caps & Beanies" to Admin Recommended Scenes and Discover
 
-Two changes: (1) redesign the desktop sidebar to show expandable sub-category menus when a family is clicked, and (2) create a dedicated "Hats, Caps & Beanies" family category.
+The new family was added to `sceneTaxonomy.ts` and `usePublicSceneLibrary.ts` in the previous change, but the admin recommended-scenes page and discover flow still reference the old taxonomy. These files need updates:
 
----
+### 1. `src/lib/categoryConstants.ts` — Add category chip
+- Add `{ id: 'hats-caps-beanies', label: 'Hats, Caps & Beanies' }` after `bags-accessories` in `PRODUCT_CATEGORIES`
+- Add matching headline entries in `CATEGORY_HEADLINES` and `CATEGORY_HEADLINES_RETURNING`
 
-### 1. Sidebar with expandable sub-menus (desktop)
+### 2. `src/lib/onboardingTaxonomy.ts` — Register family
+- **FAMILY_SUB_ORDER**: Remove `caps`, `hats`, `beanies` from `'Bags & Accessories'` array, add new key `'Hats, Caps & Beanies': ['caps', 'hats', 'beanies']`
+- **FAMILY_ID_TO_NAME**: Add `'hats-caps-beanies': 'Hats, Caps & Beanies'`
+- (FAMILY_NAME_TO_ID is auto-derived, no manual change needed)
 
-**Current**: The left sidebar lists families as flat buttons. Sub-categories only appear as horizontal pills above the grid.
+### 3. `src/lib/discoverTaxonomy.ts` — No code changes
+This file re-exports from onboardingTaxonomy and sceneTaxonomy. Once those are updated, `getDiscoverFamilies()`, `getDiscoverSubtypes()`, and `itemMatchesDiscoverFilter()` will automatically include the new family.
 
-**New**: Each family with multiple collections gets an expand/collapse chevron. Clicking a family expands it inline to show its sub-categories (collections) indented below — similar to how the mobile drawer already works. The horizontal pill bar above the grid is kept as a secondary shortcut.
-
-**File: `src/components/library/LibrarySidebarNav.tsx`**
-- Add expand/collapse state tracking (which family is expanded)
-- When a family is clicked: select it AND expand its sub-categories
-- Show indented collection buttons under the expanded family (with counts)
-- Clicking a collection calls a new `onSelectCollection` callback
-- Active collection gets highlighted styling
-- ChevronRight/ChevronDown icon for families with multiple collections
-
-**File: `src/pages/ProductVisualLibrary.tsx`**
-- Pass `activeCollectionSlug` and `onSelectCollection` to `LibrarySidebarNav`
-- Wire up collection selection from sidebar to the existing filter state
-
-### 2. Add "Hats, Caps & Beanies" family category
-
-**File: `src/lib/sceneTaxonomy.ts`**
-- Change `caps`, `hats`, `beanies` from `'Accessories'` to `'Hats, Caps & Beanies'`
-- Add `'Hats, Caps & Beanies'` to `FAMILY_ORDER` (after `Bags & Accessories`)
-
-**File: `src/hooks/usePublicSceneLibrary.ts`**
-- Add `'Hats, Caps & Beanies': 'Hats, Caps & Beanies'` to `FAMILY_LABEL_OVERRIDES`
-
-**File: `src/lib/visualLibraryDeepLink.ts`**
-- Update `caps-hats` deep link to point to the new family slug `hats-caps-and-beanies`
-
----
-
-### Technical details
-
-- The sidebar expand state defaults to showing the active family expanded
-- Only one family expanded at a time (accordion pattern) for clean UX
-- No database changes needed — this is purely a UI taxonomy reorganization
-- The "Accessories" family key will no longer exist once caps/hats/beanies move out (they were the only members)
+### Result
+- Admin `/app/admin/recommended-scenes` will show a new "Hats, Caps & Beanies" tab alongside the existing family tabs
+- Sub-family strip under that tab will show Caps, Hats, Beanies pills for per-sub-type curation
+- Discover filtering will recognize the new family for category-based display
