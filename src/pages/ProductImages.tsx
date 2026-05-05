@@ -771,11 +771,15 @@ export default function ProductImages() {
     // Merge Step 3 specs into dimensions for prompt injection
     const specText = details.productSpecs?.[product.id];
     let mergedDimensions = product.dimensions || '';
+    let mergedMaterials = product.materials || '';
     if (specText) {
       const specLine = buildSpecsPromptLine(specText);
       if (specLine) mergedDimensions = specLine;
+      // Extract material from specs if present (e.g. "Material: Silk")
+      const materialMatch = specText.match(/Material:\s*([^,\n]+)/i);
+      if (materialMatch) mergedMaterials = materialMatch[1].trim();
     }
-    const enrichedProduct = { ...product, dimensions: mergedDimensions || undefined };
+    const enrichedProduct = { ...product, dimensions: mergedDimensions || undefined, materials: mergedMaterials || undefined };
     return buildDynamicPrompt(scene, enrichedProduct, analysis, details, selectedModelGender);
   }, [details, analyses, selectedModelGender]);
 
