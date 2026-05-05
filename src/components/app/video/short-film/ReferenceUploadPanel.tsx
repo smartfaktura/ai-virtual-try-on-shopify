@@ -400,7 +400,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   const productCount = productGroups.size + (customProductRefs.length > 0 ? 1 : 0);
 
   return (
-    <div className="space-y-4">
+    <div ref={rootRef} className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold text-foreground">Add References</h2>
         <p className="text-sm text-muted-foreground mt-1">
