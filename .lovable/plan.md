@@ -1,14 +1,25 @@
-## Newsletter HTML Fixes
 
-**File:** `/mnt/documents/vovv-newsletter-week-update.html`
+## Problem
 
-### Color corrections
-- Replace all `#0a0a0a` (black) with `#0f172a` (brand navy) — hero gradients, headings, CTA button, improvement titles
-- Replace `#1a1a1a` with `#1e293b` (brand navyCta) — gradient secondary stops
-- Replace `#f5f5f0` background with `#f5f5f4` (brand stone)
-- Replace `#fafaf8` CTA section bg with `#f5f5f4`
-- Replace `#f0eeeb` borders with `#e7e5e4` (brand border)
+The newsletter HTML has several issues causing broken rendering on mobile email clients:
 
-### Remove VOVV.AI links
-- Footer: change `<a href="https://vovv.ai">vovv.ai</a>` to plain text
-- Ensure "VOVV.AI" text in hero, reply section, and footer are plain text, not clickable links
+1. **Negative margins** on `.cta-section` and `.reply-section` (`margin: 0 -48px`) — this causes horizontal overflow and broken layout, especially in email clients that strip `<style>` tags
+2. **CSS class-based styling** — many email clients (Gmail, Outlook) strip `<style>` blocks entirely, so all class-based styles break
+3. **`display: flex`** in `.stat-row` — not widely supported in email clients
+4. **`@import` for Google Fonts** — stripped by most email clients
+
+## Fix — `/mnt/documents/vovv-newsletter-week-update.html`
+
+1. **Inline all styles** — Move every CSS property into `style=""` attributes directly on elements. Remove the `<style>` block (keep only a minimal reset).
+
+2. **Remove negative margins** — Move the CTA section and Reply section outside the `.content` wrapper so they naturally span full width without negative margin hacks.
+
+3. **Use table-based layout throughout** — Replace all `<div>` containers with `<table>` / `<tr>` / `<td>` for maximum email client compatibility.
+
+4. **Inline the font-family fallback** — Replace `@import` with inline `font-family` stacks on every text element.
+
+5. **Add `width` attributes on tables** — Use HTML `width` attributes alongside `max-width` CSS for Outlook compatibility.
+
+6. **Mobile-safe padding** — Use `padding: 40px 24px` everywhere (no 48px that needs a media query override). This gives consistent rendering whether or not the `<style>` block is preserved.
+
+The result will be a fully inlined, table-based HTML email that renders correctly across Gmail (mobile + desktop), Apple Mail, Outlook, and Yahoo.
