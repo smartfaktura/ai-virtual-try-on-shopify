@@ -120,16 +120,22 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
   'caps': [
     { key: 'style', label: 'Style', type: 'select', options: ['Baseball', 'Snapback', 'Trucker', 'Dad hat', '5-panel', 'Visor'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+    { key: 'crownHeight', label: 'Crown Height', type: 'input', placeholder: '10', placeholderImperial: '4', unit: 'cm' },
     { key: 'brimLength', label: 'Brim Length', type: 'input', placeholder: '7', placeholderImperial: '2.8', unit: 'cm' },
+    { key: 'brimType', label: 'Brim Type', type: 'select', options: ['Flat', 'Pre-curved', 'Slightly curved'] },
   ],
   'hats': [
     { key: 'style', label: 'Style', type: 'select', options: ['Fedora', 'Panama', 'Bucket', 'Wide brim', 'Cowboy', 'Boater', 'Sun hat'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+    { key: 'crownHeight', label: 'Crown Height', type: 'input', placeholder: '12', placeholderImperial: '4.7', unit: 'cm' },
     { key: 'brimWidth', label: 'Brim Width', type: 'input', placeholder: '8', placeholderImperial: '3', unit: 'cm' },
+    { key: 'brimType', label: 'Brim Type', type: 'select', options: ['Flat / Stiff', 'Slightly curved', 'Floppy / Soft', 'Upturned', 'Snap brim'] },
   ],
   'beanies': [
     { key: 'style', label: 'Style', type: 'select', options: ['Cuffed', 'Slouchy', 'Fisherman', 'Pom-pom', 'Ribbed'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+    { key: 'height', label: 'Height', type: 'input', placeholder: '22', placeholderImperial: '8.5', unit: 'cm' },
+    { key: 'foldCuff', label: 'Cuff', type: 'select', options: ['No cuff', 'Single fold', 'Double fold'] },
   ],
   'eyewear': [
     { key: 'lens', label: 'Lens Width', type: 'input', placeholder: '52', unit: 'mm' },
@@ -291,6 +297,11 @@ const CONDITIONAL_FIELDS: Record<ConditionalKey, SpecField[]> = {
     { key: 'strapDrop', label: 'Strap Drop', type: 'input', placeholder: '55', placeholderImperial: '22', unit: 'cm' },
   ],
 
+  // ── Hat conditionals on style ──
+  'hats::style::Cowboy': [
+    { key: 'crownCrease', label: 'Crown Crease', type: 'select', options: ['Cattleman', 'Pinch front', 'Gus', 'Open crown'] },
+  ],
+
   // ── Tech conditionals on deviceType ──
   'tech-devices::deviceType::Headphones': [
     { key: 'headphoneType', label: 'Style', type: 'select', options: ['Over-ear', 'On-ear', 'In-ear'] },
@@ -303,6 +314,7 @@ const CONDITIONAL_FIELDS: Record<ConditionalKey, SpecField[]> = {
 // Fields to HIDE when a specific conditional key is active
 const CONDITIONAL_HIDE: Record<ConditionalKey, string[]> = {
   'bags-accessories::bagType::Clutch': ['depth'],
+  'hats::style::Bucket': ['brimType'],
   'tech-devices::deviceType::Headphones': ['screen'],
   'tech-devices::deviceType::Earbuds': ['screen'],
   'tech-devices::deviceType::Speaker': ['screen'],
