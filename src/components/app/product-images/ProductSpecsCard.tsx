@@ -203,7 +203,6 @@ export function ProductSpecsCard({
                 const specFields = getCategoryFields(category);
                 const data = getStructured(product.id, specFields);
                 const hasFilled = (productSpecs[product.id] || '').trim().length > 0;
-                const showUnitToggle = hasCmFields(specFields);
 
                 return (
                   <div key={product.id} className="rounded-lg border border-border/50 bg-card/50 overflow-hidden">
