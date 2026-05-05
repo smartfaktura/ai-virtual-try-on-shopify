@@ -314,6 +314,7 @@ const CONDITIONAL_FIELDS: Record<ConditionalKey, SpecField[]> = {
 // Fields to HIDE when a specific conditional key is active
 const CONDITIONAL_HIDE: Record<ConditionalKey, string[]> = {
   'bags-accessories::bagType::Clutch': ['depth'],
+  'hats::style::Bucket': ['brimType'],
   'tech-devices::deviceType::Headphones': ['screen'],
   'tech-devices::deviceType::Earbuds': ['screen'],
   'tech-devices::deviceType::Speaker': ['screen'],
