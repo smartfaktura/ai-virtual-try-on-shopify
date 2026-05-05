@@ -1,22 +1,19 @@
 ## Changes
 
-### 1. `src/lib/productSpecFields.ts` — Replace jeans fields
+### 1. `src/components/app/product-images/ProductSpecsCard.tsx` — Inline unit toggles per field
 
-Current jeans fields (waist number + length number) don't matter for image generation. Replace with fields that actually affect how the jeans look in generated photos:
+Remove the separate "Unit cm/inches" row entirely. Instead, for each field:
 
-```
-'jeans': [
-  { key: 'waistHeight', label: 'Waist Rise', type: 'select', options: ['Low-rise', 'Mid-rise', 'High-rise'] },
-  { key: 'hemLength', label: 'Hem Length', type: 'select', options: ['Cropped (ankle)', 'Regular', 'Full length', 'Extra long'] },
-  { key: 'fit', label: 'Fit', type: 'select', options: ['Skinny', 'Slim', 'Straight', 'Regular', 'Wide-leg', 'Bootcut', 'Tapered'] },
-],
-```
+- **Fields with `unit: 'cm'`** — replace the static "cm" / "in" text label with a small inline **cm | in** toggle (two mini buttons in a bordered pill) right next to the input. Clicking either button switches `unitSystem` for all cm fields. This puts the unit control exactly where the user sees the value.
 
-### 2. `src/components/app/product-images/ProductSpecsCard.tsx` — Fix category selector styling
+- **Volume comboInput fields** — add a static "ml" label next to the input (volume presets already include "ml"/"L" in their text like "330ml", "1L"). The unit is embedded in the value itself.
 
-The current category selector is a bare text with a tiny chevron — looks broken per the screenshot. Update the `SelectTrigger` styling to look like a proper small pill/badge:
+- **Other units (mm, g)** — show as a static label next to the input (no toggle needed, these don't change).
 
-- Add a subtle border/background so it's recognizable as a dropdown
-- Increase from `text-[10px]` to `text-[11px]`
-- Add `rounded-full bg-muted/50 border border-border/40 px-2 py-0.5` to give it a pill shape
-- Keep the compact sizing but make it clearly interactive
+- **Remove** the `showUnitToggle` variable and the entire `{showUnitToggle && (...)}` block.
+
+- Only show the cm/in toggle on the **first** cm-unit field in the grid to avoid visual clutter (all others show the current unit as plain text since they're synced).
+
+### 2. Remove unused `hasCmFields` helper
+
+No longer needed since the toggle is inline per-field.
