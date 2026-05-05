@@ -386,7 +386,7 @@ export default function Jobs() {
 
   const activeFilterCount = (sourceFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0);
   // True only on initial fetch with no data yet — drives skeleton vs. content/empty-state decision
-  const isInitialLoading = (isLoading || isFetching) && allItems.length === 0;
+  const isInitialLoading = (isLoading || isFetching) && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
   const isTrulyEmpty = !isInitialLoading && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
 
   return (
@@ -397,7 +397,7 @@ export default function Jobs() {
       <section className="space-y-4 sm:space-y-6">
 
         {/* Smart Views */}
-        {!isTrulyEmpty && !isInitialLoading && (
+        {!isTrulyEmpty && (
         <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide">
           {SMART_VIEWS.map(v => (
             <button
@@ -436,7 +436,7 @@ export default function Jobs() {
         )}
 
         {/* Search + Filters + Columns + Select */}
-        {!isTrulyEmpty && !isInitialLoading && (
+        {!isTrulyEmpty && (
         <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div className="relative w-full sm:max-w-lg sm:flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
