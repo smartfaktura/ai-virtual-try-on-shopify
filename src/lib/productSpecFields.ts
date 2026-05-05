@@ -93,6 +93,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Bags ──
   'bags-accessories': [
+    { key: 'bagType', label: 'Type', type: 'select', options: ['Tote', 'Shoulder', 'Crossbody', 'Clutch', 'Duffel', 'Briefcase', 'Messenger', 'Hobo', 'Other'] },
     { key: 'width', label: 'Width', type: 'input', placeholder: '30', placeholderImperial: '12', unit: 'cm' },
     { key: 'height', label: 'Height', type: 'input', placeholder: '25', placeholderImperial: '10', unit: 'cm' },
     { key: 'depth', label: 'Depth', type: 'input', placeholder: '12', placeholderImperial: '5', unit: 'cm' },
@@ -117,12 +118,17 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'width', label: 'Width', type: 'input', placeholder: '70', placeholderImperial: '28', unit: 'cm' },
   ],
   'caps': [
+    { key: 'style', label: 'Style', type: 'select', options: ['Baseball', 'Snapback', 'Trucker', 'Dad hat', '5-panel', 'Visor'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+    { key: 'brimLength', label: 'Brim Length', type: 'input', placeholder: '7', placeholderImperial: '2.8', unit: 'cm' },
   ],
   'hats': [
+    { key: 'style', label: 'Style', type: 'select', options: ['Fedora', 'Panama', 'Bucket', 'Wide brim', 'Cowboy', 'Boater', 'Sun hat'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+    { key: 'brimWidth', label: 'Brim Width', type: 'input', placeholder: '8', placeholderImperial: '3', unit: 'cm' },
   ],
   'beanies': [
+    { key: 'style', label: 'Style', type: 'select', options: ['Cuffed', 'Slouchy', 'Fisherman', 'Pom-pom', 'Ribbed'] },
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
   ],
   'eyewear': [
@@ -134,6 +140,9 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
   // ── Watches ──
   'watches': [
     { key: 'case', label: 'Case Diameter', type: 'input', placeholder: '40', unit: 'mm' },
+    { key: 'caseThickness', label: 'Case Thickness', type: 'input', placeholder: '11', unit: 'mm' },
+    { key: 'bandWidth', label: 'Band Width', type: 'input', placeholder: '20', unit: 'mm' },
+    { key: 'bandMaterial', label: 'Band Material', type: 'select', options: ['Leather', 'Metal', 'Silicone', 'Fabric', 'Rubber', 'Ceramic'] },
   ],
 
   // ── Jewelry ──
@@ -190,11 +199,17 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Furniture ──
   'furniture': [
-    { key: 'furnitureType', label: 'Type', type: 'select', options: ['Chair', 'Armchair', 'Sofa', 'Coffee Table', 'Dining Table', 'Desk', 'Shelf', 'Cabinet', 'Bed', 'Bench', 'Stool', 'Other'] },
+    { key: 'furnitureType', label: 'Type', type: 'select', options: ['Chair', 'Armchair', 'Sofa', 'Coffee Table', 'Dining Table', 'Side Table', 'Desk', 'Shelf', 'Cabinet', 'Bed', 'Bench', 'Stool', 'Other'] },
     { key: 'width', label: 'Width', type: 'input', placeholder: '180', placeholderImperial: '71', unit: 'cm' },
     { key: 'depth', label: 'Depth', type: 'input', placeholder: '80', placeholderImperial: '31', unit: 'cm' },
     { key: 'height', label: 'Height', type: 'input', placeholder: '75', placeholderImperial: '30', unit: 'cm' },
-    { key: 'seatHeight', label: 'Seat Height', type: 'input', placeholder: '45', placeholderImperial: '18', unit: 'cm' },
+  ],
+
+  // ── Tech ──
+  'tech-devices': [
+    { key: 'deviceType', label: 'Type', type: 'select', options: ['Phone', 'Laptop', 'Tablet', 'Headphones', 'Earbuds', 'Speaker', 'Smartwatch', 'Camera', 'Other'] },
+    { key: 'dimensions', label: 'Dimensions', type: 'input', placeholder: '14.6×7.1×0.8cm', placeholderImperial: '5.7×2.8×0.3in' },
+    { key: 'screen', label: 'Screen', type: 'input', placeholder: '6.1"' },
   ],
 
   // ── Tech ──
