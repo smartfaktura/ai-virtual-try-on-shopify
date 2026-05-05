@@ -114,6 +114,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'width', label: 'Width', type: 'input', placeholder: '3.5', placeholderImperial: '1.4', unit: 'cm' },
   ],
   'scarves': [
+    { key: 'material', label: 'Material', type: 'select', options: ['Silk', 'Cashmere', 'Wool', 'Cotton', 'Linen', 'Modal', 'Viscose', 'Chiffon', 'Satin', 'Polyester blend'] },
     { key: 'length', label: 'Length', type: 'input', placeholder: '180', placeholderImperial: '71', unit: 'cm' },
     { key: 'width', label: 'Width', type: 'input', placeholder: '70', placeholderImperial: '28', unit: 'cm' },
   ],

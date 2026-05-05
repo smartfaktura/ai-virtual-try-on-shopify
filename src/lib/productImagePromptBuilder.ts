@@ -1405,6 +1405,24 @@ export function buildDynamicPrompt(
     }
   }
 
+  // Auto-inject material directive into closeup/detail/texture/macro scenes
+  // so the AI renders accurate material textures (e.g. silk sheen, wool knit, leather grain)
+  const hasMaterialToken = (template || '').includes('{{materialTexture}}');
+  if (!hasMaterialToken) {
+    const sid = (scene.id || '').toLowerCase();
+    const isDetailScene = /closeup|close-up|detail|texture|macro|hardware/.test(sid);
+    if (isDetailScene) {
+      // Priority: user-specified materials > analysis materialFamily
+      const userMaterial = ctx.productMaterials?.trim();
+      const analysisMaterial = analysis?.materialFamily;
+      const materialLabel = userMaterial || analysisMaterial;
+      if (materialLabel) {
+        const materialBlock = `[MATERIAL — CRITICAL] The product is made of ${materialLabel}. Render accurate ${materialLabel} texture, surface quality, sheen, drape, and tactile character. The material must be clearly identifiable as ${materialLabel} in the final image.`;
+        prompt += ' ' + materialBlock;
+      }
+    }
+  }
+
   // Auto-inject key directives if template didn't include their tokens
   // For category-collection scenes, skip aesthetic overrides — let their templates drive the look
   const isGlobalScene = !scene.categoryCollection;

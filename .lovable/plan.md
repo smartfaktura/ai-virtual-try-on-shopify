@@ -1,40 +1,26 @@
 ## Problem
 
-When users upload a packaging reference image (e.g. a black box), the AI completely ignores it and generates a random beige box. Two bugs cause this:
+1. Closeup/detail/texture scenes across all categories don't include the product's material in the prompt. For scarves specifically, the AI doesn't know it's silk so it renders a generic fabric texture.
+2. Scarves product spec fields only have Length and Width — no Material selector.
+3. ~130 closeup/detail/texture scenes across 38 categories all lack `{{materialTexture}}` token.
 
-### Bug 1: Packaging reference never reaches the AI
-The upload stores the image in `sceneExtraRefs['trigger:packagingDetails']`. During generation, the trigger_block loop checks `REFERENCE_TRIGGERS['packagingDetails']` — but `packagingDetails` is NOT in `REFERENCE_TRIGGERS` (it's a detail block, not a reference trigger). So the uploaded image is silently dropped.
+## Solution
 
-Meanwhile, `details.packagingReferenceUrl` (the old persistent slot) is only set by auto-fill from `p.packaging_image_url` or the old dedicated upload handler — NOT by the trigger card upload. So that path is also empty.
+Rather than updating 130+ scene templates individually, the fix adds automatic material injection at the prompt builder level (same pattern used for product dimensions).
 
-### Bug 2: Weak prompt labeling
-Even when the reference does get through, the label `[PACKAGING REFERENCE] Packaging fidelity reference:` is too vague. The AI treats it as a loose suggestion rather than a strict constraint.
+### 1. Add Material field to scarves spec fields (`src/lib/productSpecFields.ts`)
 
-## Fix
+Add a `material` comboInput field with options like Silk, Cashmere, Wool, Cotton, Linen, Modal, Viscose, Polyester blend.
 
-### 1. Add `packagingDetails` to `REFERENCE_TRIGGERS` in `detailBlockConfig.ts`
+### 2. Auto-inject material into all closeup/detail/texture scenes (`src/lib/productImagePromptBuilder.ts`)
 
-This makes the trigger_block loop correctly pick up the uploaded packaging image and inject it as a reference:
+After the specification injection block (~line 1406), add a material injection block that:
+- Checks if the template already contains `{{materialTexture}}`
+- If not, and material info is available (from analysis or product specs), injects a `[MATERIAL] The product material is X — render accurate X texture, sheen, drape, and surface quality.` block
+- Triggers on scene_id patterns: `closeup`, `detail`, `texture`, `macro`, `hardware`
 
-```typescript
-packagingDetails: {
-  key: 'packagingDetails',
-  label: 'Upload packaging photo',
-  description: 'Upload a photo of your actual packaging — box, bag, tissue, ribbon — so the AI reproduces it exactly.',
-  promptLabel: 'Packaging reference — the packaging in this image is the REAL packaging. Reproduce its EXACT color, material, texture, shape, branding, and construction. Do NOT invent or substitute any packaging element:',
-},
-```
+This ensures ALL closeup scenes automatically get material context without touching any scene templates.
 
-### 2. Update the IMAGE_LABEL_MAP in `generate-workflow/index.ts`
+### 3. Also inject material from product specs into the analysis context
 
-Strengthen the packaging reference directive so the AI treats it as mandatory:
-
-```typescript
-packaging_reference: '[PACKAGING REFERENCE] This is the REAL product packaging — reproduce its EXACT color, material, texture, shape, branding, and construction. Do NOT invent or change any packaging detail:',
-```
-
-### 3. Remove the redundant `packaging_reference_url` passthrough in `ProductImages.tsx`
-
-Since packaging references now flow through the standard trigger_block pipeline via `extra_references`, the old `details.packagingReferenceUrl` path (line 951) is no longer needed. However, we keep it for backward compatibility — if both paths fire, the reference just gets injected twice (harmless, reinforces fidelity). No change needed here.
-
-These changes ensure the uploaded packaging photo actually reaches the AI with a strong directive to match it exactly.
+In `productImagePromptBuilder.ts`, parse the serialized specs for a "Material" field and use it to override or supplement `analysis.materialFamily` so user-specified material takes priority.
