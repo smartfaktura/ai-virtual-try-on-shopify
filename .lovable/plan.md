@@ -1,20 +1,13 @@
-## Fix mobile gallery alignment
+## Replace Riviera visuals + remix gallery order
 
-Replace CSS `columns-2` masonry layout with CSS Grid in the gallery section of `src/pages/showcase/BriteShowcase.tsx`.
+### 1. Copy uploaded images to project
+- `user-uploads://vovv.ai-1-2.jpg` → `public/images/showcase/brite-riviera-zara.jpg` (Zara version)
+- `user-uploads://vovv.ai-2.jpg` → `public/images/showcase/brite-riviera-freya.jpg` (Freya version)
 
-### Change (line 109)
+### 2. Update `src/pages/showcase/BriteShowcase.tsx`
 
-**Before:**
-```
-columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4
-```
-+ each button has `mb-3 sm:mb-4 break-inside-avoid`
+Replace the two Riviera Pop Escape entries with local paths:
+- Zara: `/images/showcase/brite-riviera-zara.jpg`
+- Freya: `/images/showcase/brite-riviera-freya.jpg`
 
-**After:**
-```
-grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4
-```
-+ each button gets `aspect-[4/5]` (all images are 4:5 ratio), remove `mb-3 sm:mb-4 break-inside-avoid`
-+ img gets `object-cover w-full h-full` instead of `w-full h-auto`
-
-This ensures perfect row alignment on all screen sizes since all images share the same 4:5 aspect ratio.
+Remix the entire IMAGES array order so no two same-scene entries are adjacent. Spread duplicates (Fisheye Portrait, Tennis Court, Golden Splash Cheers, Sunburn Editorial Sip, Sport Flash Soda Energy, Close Face Drink Hold, Sport Sun Shadow, Riviera Pop Escape) far apart. Alternate product-only and on-model shots for visual variety.
