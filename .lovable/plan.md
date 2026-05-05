@@ -1,29 +1,15 @@
-## Fix: AI Shot Planner reliability — use tool calling for structured output
+## Bug: Password validation error breaks signup form layout
 
-### Problem
+### Root cause
 
-The `ai-shot-planner` edge function asks the AI model to return JSON in free text, then uses regex (`/\{[\s\S]*\}/`) to extract it. When the model wraps output in markdown code fences (` ```json ... ``` `) or adds commentary, the regex either fails or captures malformed JSON, causing the "AI planning failed, using auto plan instead" error.
+When Supabase returns a password complexity error like "Password should contain at least one character of each: abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789", the `mapAuthError` function in `src/lib/authErrors.ts` doesn't match it — it only checks for "password should be at least", not "password should contain". The raw message falls through to the last-resort handler and is displayed verbatim, causing layout distortion.
 
-### Solution
+### Fix
 
-Switch from free-text JSON extraction to **tool calling** — the AI gateway's structured output mechanism. This guarantees valid JSON matching our schema every time, eliminating parse failures entirely.
+**`src/lib/authErrors.ts`** (line 78): Add `msg.includes('password should contain')` to the weak password check block, and update the friendly message to mention the actual requirements:
 
-### Changes
+```
+message: 'Please choose a stronger password (at least 6 characters, include uppercase, lowercase, and a number).'
+```
 
-**`supabase/functions/ai-shot-planner/index.ts`**
-
-1. Add a `tools` array and `tool_choice` to the AI gateway request body, defining a `generate_shot_plan` function with the exact schema (music_direction string + shots array with all required fields and enums).
-
-2. Parse the response from `data.choices[0].message.tool_calls[0].function.arguments` instead of regex-extracting from `content`.
-
-3. Keep the existing regex-based parsing as a **fallback** in case the model returns content instead of a tool call (defensive coding).
-
-4. Strip the "Return ONLY valid JSON" instruction block from the system prompt since the tool schema now enforces structure.
-
-### Technical detail
-
-The tool schema will enforce:
-- `music_direction`: string
-- `shots`: array of objects with typed fields (`role` as enum of VALID_ROLES, `scene_type` as enum, `camera_motion` as enum, `duration_sec` as integer, etc.)
-
-This means the sanitization/snap logic (lines 305-333) still runs as a safety net but should rarely need to correct anything.
+One-line addition, no layout or structural changes needed.
