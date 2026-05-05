@@ -76,8 +76,7 @@ export function ProductSpecsCard({
 }: ProductSpecsCardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [openProductId, setOpenProductId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [lastSavedSpecs, setLastSavedSpecs] = useState<Record<string, string>>({});
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
 
   const productsNeedingSpecs = useMemo(() => {
