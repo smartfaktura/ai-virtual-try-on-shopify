@@ -58,6 +58,7 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
 
 /** Parent->Child specificity overrides */
 const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
+  ["home-decor", /armchair|chair|sofa|couch|recliner|ottoman|bench|stool|desk|table|bookshelf|dresser|wardrobe|bed frame|nightstand|cabinet|sideboard|credenza|futon|mattress/i, "furniture"],
   ["bags-accessories", /beanie|knit cap|toque|skull cap|watch cap/i, "beanies"],
   ["bags-accessories", /\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
   ["bags-accessories", /\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret/i, "hats"],
@@ -161,6 +162,8 @@ IMPORTANT: Pay close attention to the product title — if the title says "perfu
 VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 
 HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
+
+FURNITURE vs HOME-DECOR: Use "furniture" for any seating (chairs, armchairs, sofas, stools, benches, recliners, ottomans), tables (dining tables, coffee tables, desks, side tables), storage (bookshelves, dressers, wardrobes, cabinets, sideboards), and bed frames. Use "home-decor" ONLY for decorative items: candles, vases, pillows, cushions, throws, planters, picture frames, lamps, wall art.
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above
