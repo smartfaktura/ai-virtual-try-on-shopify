@@ -71,7 +71,7 @@ export default function BriteShowcase() {
             Prepared for Brite
           </p>
           <h1 className="text-[#0f172a] text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
-            Your Brite Blood Orange
+            Your Brite Blood Orange{' '}
             <br className="hidden sm:block" />
             Visual Collection
           </h1>
@@ -111,7 +111,7 @@ export default function BriteShowcase() {
               <button
                 key={i}
                 onClick={() => setLightbox(i)}
-                className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
+                className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
               >
                 <img
                   src={getOptimizedUrl(img.url, { quality: 50 })}
