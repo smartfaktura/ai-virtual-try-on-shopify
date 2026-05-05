@@ -55,13 +55,17 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'length', label: 'Length', type: 'select', options: ['Cropped', 'Hip', 'Mid-thigh', 'Knee'] },
   ],
   'activewear': [
-    { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
+    { key: 'style', label: 'Style', type: 'select', options: ['Leggings', 'Shorts', 'Sports bra', 'Tank top', 'Jacket', 'Set', 'Other'] },
+    { key: 'fit', label: 'Fit', type: 'select', options: ['Compression', 'Slim', 'Regular', 'Loose'] },
   ],
   'swimwear': [
-    { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL'] },
+    { key: 'style', label: 'Style', type: 'select', options: ['Bikini', 'One-piece', 'Tankini', 'Swim trunks', 'Board shorts', 'Coverup', 'Rash guard'] },
+    { key: 'coverage', label: 'Coverage', type: 'select', options: ['Minimal', 'Moderate', 'Full'] },
+    { key: 'cut', label: 'Cut', type: 'select', options: ['High-cut', 'Classic', 'Brazilian', 'Boy-short', 'String'] },
   ],
   'lingerie': [
-    { key: 'size', label: 'Size', type: 'input', placeholder: '34B' },
+    { key: 'style', label: 'Style', type: 'select', options: ['Bra', 'Bralette', 'Bodysuit', 'Slip', 'Corset', 'Set', 'Robe'] },
+    { key: 'coverage', label: 'Coverage', type: 'select', options: ['Sheer', 'Light', 'Full'] },
   ],
   'kidswear': [
     { key: 'age', label: 'Age', type: 'select', options: ['0-3m', '3-6m', '6-12m', '1-2y', '2-3y', '3-4y', '4-5y', '5-6y', '7-8y', '9-10y', '11-12y'] },
