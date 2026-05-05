@@ -1,53 +1,58 @@
 ## Overview
 
-Two changes:
-1. Split the existing `hats-small` category (45 scenes) into three new standalone categories: **Caps**, **Hats**, **Beanies**
-2. Dissolve the "Bags & Accessories" admin group — each category becomes standalone
+Add **type-aware conditional fields** to product spec categories where different sub-types need different dimension inputs. The current system shows identical fields regardless of what sub-type is selected (e.g. a Sofa and a Shelf show the same Width/Depth/Height/Seat Height).
 
-## Database changes
+## Changes
 
-- **Rename** all 45 `hats-small` rows to `caps`
-- **Duplicate** those 45 rows twice — once as `hats`, once as `beanies` (new UUIDs, same scene content)
+### 1. Furniture — type-specific fields
 
-## Code changes (~18 files)
+Current: Same 5 fields for all furniture types.
+New: The `furnitureType` select drives which fields appear:
 
-### Admin page (`AdminProductImageScenes.tsx`)
-- Remove the "Bags & Accessories" group from `CATEGORY_GROUPS`
-- Add standalone entries: Bags, Backpacks, Wallets & Cardholders, Belts, Scarves, Caps, Hats, Beanies
-- Remove `hats-small` entry
+| Type | Fields |
+|------|--------|
+| Sofa | Shape (Straight/L-shaped/U-shaped/Curved/Sectional), Width, Depth, Height, Seat Height |
+| Armchair | Width, Depth, Height, Seat Height |
+| Chair / Stool / Bench | Width, Depth, Height, Seat Height |
+| Coffee Table / Side Table | Width (or Diameter), Depth, Height |
+| Dining Table / Desk | Width, Depth, Height |
+| Bed | Size (Single/Double/Queen/King/Super King), Length, Width, Headboard Height |
+| Shelf / Cabinet | Width, Height, Depth, Shelves (count) |
+| Other | Width, Depth, Height |
 
-### Scene taxonomy (`sceneTaxonomy.ts`)
-- Add `caps`, `hats`, `beanies` to `CATEGORY_FAMILY_MAP` (mapped to "Accessories" or kept standalone)
-- Update `SUB_FAMILY_LABEL_OVERRIDES` — remove `hats-small`, add caps/hats/beanies
-- Update `ONBOARDING_TO_COLLECTIONS_MAP` — replace `hats-small` with `caps`, `hats`, `beanies` in the accessories array
-- Update `bags-accessories` collection map to remove `hats-small`
+### 2. Bags — type-specific fields
 
-### Types (`types/index.ts`, `product-images/types.ts`)
-- Replace `hats-small` with `caps | hats | beanies` in ProductCategory unions
+Add a `bagType` dropdown to `bags-accessories`:
+- Tote / Shoulder / Crossbody / Clutch / Duffel / Briefcase / Other
+- Clutch: Width, Height (no Depth — it's flat)
+- Duffel: Length, Diameter
+- Default: Width, Height, Depth + Strap Drop
 
-### Prompt builder (`productImagePromptBuilder.ts`)
-- Add `case 'caps':`, `case 'hats':`, `case 'beanies':` alongside existing `case 'hats-small':` entries (7 switch cases)
+### 3. Caps / Hats / Beanies — style-specific fields
 
-### Outfit conflict resolver (`outfitConflictResolver.ts`)
-- Expand `hats-small` check to include `caps`, `hats`, `beanies`
+Add a `style` dropdown:
+- **Caps**: Baseball, Snapback, Trucker, Dad hat, 5-panel, Visor
+- **Hats**: Fedora, Panama, Bucket, Wide brim, Cowboy, Boater
+- **Beanies**: Cuffed, Slouchy, Fisherman, Pom-pom
 
-### Product spec fields (`productSpecFields.ts`)
-- Add `caps`, `hats`, `beanies` field definitions (copy from `hats-small`)
-- Add to `CATEGORY_LABELS`
+All keep Circumference; Hats add Brim Width; Caps add Brim Length.
 
-### Category utils (`categoryUtils.ts`)
-- Replace `hats-small` mapping with entries for caps/hats/beanies
+### 4. Watches — more detail
 
-### Onboarding taxonomy (`onboardingTaxonomy.ts`)
-- Replace `hats-small` with `caps`, `hats`, `beanies`
+Add: Case Thickness, Band Width, Band Material (Leather/Metal/Silicone/Fabric/Rubber).
 
-### Scene selection UI (`ProductImagesStep2Scenes.tsx`)
-- Update `CATEGORY_LABELS`, `CATEGORY_ORDER`, keyword map, and tab groups
-- Dissolve the single "Bags & Accessories" tab into individual category tabs
+### 5. Tech — type-specific
 
-### Step 3 Refine (`ProductImagesStep3Refine.tsx`)
-- Replace `hats-small` entries with caps/hats/beanies in CATEGORY_DETAIL_HINTS and CATEGORY_PROMPT_HINTS
-- Update the fallback map
+Add `deviceType`: Phone, Laptop, Headphones, Speaker, Tablet, Earbuds, Smartwatch, Other
+- Phone/Tablet: Height, Width, Thickness, Screen Size
+- Laptop: Screen Size, Width, Depth, Thickness
+- Headphones: Over-ear/On-ear/In-ear style
+- Speaker: Width, Height, Depth
 
-### Other files (minor find-and-replace)
-- `sceneData.ts`, `visualLibraryDeepLink.ts`, `usePublicSceneLibrary.ts`, `useProductImageScenes.ts`, `demoProducts.ts`, `AdminBulkPreviewUpload.tsx`, `AddToDiscoverModal.tsx`, `DashboardDiscoverSection.tsx`
+### Technical approach
+
+**`productSpecFields.ts`**: Introduce a new concept — `conditionalFields` keyed by the value of a parent `select` field. The `getCategoryFields()` function gains an optional second parameter for current field values, and returns the right subset.
+
+**`ProductSpecsCard.tsx`**: When a `select` field with conditional children changes, the rendered field list updates dynamically. Already-filled values for hidden fields are preserved (not cleared) so switching back restores them.
+
+No database changes needed — this is purely a UI/prompt improvement.
