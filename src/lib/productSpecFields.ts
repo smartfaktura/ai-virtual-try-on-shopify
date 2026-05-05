@@ -13,7 +13,7 @@ export type UnitSystem = 'metric' | 'imperial';
 export interface SpecField {
   key: string;
   label: string;
-  type: 'select' | 'input';
+  type: 'select' | 'input' | 'comboInput';
   options?: string[];
   optionsImperial?: string[];
   placeholder?: string;
