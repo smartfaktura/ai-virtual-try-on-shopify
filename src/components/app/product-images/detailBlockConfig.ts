@@ -99,6 +99,12 @@ export const REFERENCE_TRIGGERS: Record<string, ReferenceTriggerDef> = {
     description: 'Upload a close-up of the material — wood grain, fabric weave, leather texture, marble veining — so the AI can accurately match the surface finish.',
     promptLabel: 'Material/fabric close-up reference — use this to accurately render the surface texture, grain, and finish of the furniture:',
   },
+  packagingDetails: {
+    key: 'packagingDetails',
+    label: 'Upload packaging photo',
+    description: 'Upload a photo of your actual packaging — box, bag, tissue, ribbon — so the AI reproduces it exactly.',
+    promptLabel: 'Packaging reference — the packaging in this image is the REAL packaging. Reproduce its EXACT color, material, texture, shape, branding, and construction. Do NOT invent or substitute any packaging element:',
+  },
 };
 
 /** All trigger block keys including reference triggers */
