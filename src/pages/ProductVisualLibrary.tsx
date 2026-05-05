@@ -89,6 +89,12 @@ export default function ProductVisualLibrary() {
     scrollToGrid();
   };
 
+  const handleSelectCollection = (familySlug: string, collectionSlug: string | null) => {
+    setActiveFamilySlug(familySlug);
+    setActiveCollectionSlug(collectionSlug);
+    scrollToGrid();
+  };
+
   const handleMobileSelect = (familySlug: string | null, collectionSlug: string | null) => {
     if (familySlug) setActiveFamilySlug(familySlug);
     setActiveCollectionSlug(collectionSlug);
@@ -155,7 +161,9 @@ export default function ProductVisualLibrary() {
             <LibrarySidebarNav
               families={families}
               activeFamilySlug={activeFamilySlug}
+              activeCollectionSlug={activeCollectionSlug}
               onSelectFamily={handleSelectFamily}
+              onSelectCollection={handleSelectCollection}
               isLoading={isLoading}
             />
 

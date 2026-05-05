@@ -1,29 +1,44 @@
+## Overview
 
-## Changes
+Two changes: (1) redesign the desktop sidebar to show expandable sub-category menus when a family is clicked, and (2) create a dedicated "Hats, Caps & Beanies" family category.
 
-### 1. Increase pro burst limit (database migration)
+---
 
-Update the `enqueue_generation` RPC function to raise the `pro` plan burst limit from 120 to 200:
+### 1. Sidebar with expandable sub-menus (desktop)
 
-```
-WHEN 'pro' THEN 200
-```
+**Current**: The left sidebar lists families as flat buttons. Sub-categories only appear as horizontal pills above the grid.
 
-This ensures batches of up to 200 scenes go through without hitting the burst wall.
+**New**: Each family with multiple collections gets an expand/collapse chevron. Clicking a family expands it inline to show its sub-categories (collections) indented below — similar to how the mobile drawer already works. The horizontal pill bar above the grid is kept as a secondary shortcut.
 
-### 2. Add client-side wave pacing
+**File: `src/components/library/LibrarySidebarNav.tsx`**
+- Add expand/collapse state tracking (which family is expanded)
+- When a family is clicked: select it AND expand its sub-categories
+- Show indented collection buttons under the expanded family (with counts)
+- Clicking a collection calls a new `onSelectCollection` callback
+- Active collection gets highlighted styling
+- ChevronRight/ChevronDown icon for families with multiple collections
 
-In `src/hooks/useGenerationBatch.ts`, change the sequential enqueue loop to send jobs in waves of 30 with a 2-second pause between waves. This stays well under the burst window and avoids 429 errors even for very large batches.
+**File: `src/pages/ProductVisualLibrary.tsx`**
+- Pass `activeCollectionSlug` and `onSelectCollection` to `LibrarySidebarNav`
+- Wire up collection selection from sidebar to the existing filter state
 
-The existing `paceDelay` (300ms between individual calls) remains, but after every 30th job a longer 2-second cooldown is inserted.
+### 2. Add "Hats, Caps & Beanies" family category
 
-### 3. Increase hourly limit for pro (edge function)
+**File: `src/lib/sceneTaxonomy.ts`**
+- Change `caps`, `hats`, `beanies` from `'Accessories'` to `'Hats, Caps & Beanies'`
+- Add `'Hats, Caps & Beanies'` to `FAMILY_ORDER` (after `Bags & Accessories`)
 
-In `supabase/functions/enqueue-generation/index.ts`, the `HOURLY_LIMITS` for `pro` is already 999, which is sufficient. No change needed there.
+**File: `src/hooks/usePublicSceneLibrary.ts`**
+- Add `'Hats, Caps & Beanies': 'Hats, Caps & Beanies'` to `FAMILY_LABEL_OVERRIDES`
+
+**File: `src/lib/visualLibraryDeepLink.ts`**
+- Update `caps-hats` deep link to point to the new family slug `hats-caps-and-beanies`
 
 ---
 
 ### Technical details
 
-- **Migration**: `ALTER FUNCTION` / `CREATE OR REPLACE FUNCTION` to update `enqueue_generation` with the new burst limit value.
-- **Client pacing**: Add a `WAVE_SIZE = 30` constant and insert `await new Promise(r => setTimeout(r, 2000))` after every 30th enqueue call in the `startBatch` loop.
+- The sidebar expand state defaults to showing the active family expanded
+- Only one family expanded at a time (accordion pattern) for clean UX
+- No database changes needed — this is purely a UI taxonomy reorganization
+- The "Accessories" family key will no longer exist once caps/hats/beanies move out (they were the only members)

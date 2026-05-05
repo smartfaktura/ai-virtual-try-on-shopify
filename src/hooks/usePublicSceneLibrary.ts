@@ -49,6 +49,7 @@ export const FAMILY_LABEL_OVERRIDES: Record<string, string> = {
   Fashion: 'Fashion & Apparel',
   Footwear: 'Footwear',
   'Bags & Accessories': 'Bags & Accessories',
+  'Hats, Caps & Beanies': 'Hats, Caps & Beanies',
   Watches: 'Watches',
   Eyewear: 'Eyewear',
   Jewelry: 'Jewelry',

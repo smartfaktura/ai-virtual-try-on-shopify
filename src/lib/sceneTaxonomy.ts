@@ -31,9 +31,9 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
   wallets: 'Bags & Accessories',
   belts: 'Bags & Accessories',
   scarves: 'Bags & Accessories',
-  caps: 'Accessories',
-  hats: 'Accessories',
-  beanies: 'Accessories',
+  caps: 'Hats, Caps & Beanies',
+  hats: 'Hats, Caps & Beanies',
+  beanies: 'Hats, Caps & Beanies',
 
   watches: 'Watches',
 
@@ -90,7 +90,7 @@ export function getSubFamilyLabel(slug: string): string {
 }
 
 export const FAMILY_ORDER = [
-  'Fashion', 'Footwear', 'Bags & Accessories', 'Watches', 'Eyewear', 'Jewelry',
+  'Fashion', 'Footwear', 'Bags & Accessories', 'Hats, Caps & Beanies', 'Watches', 'Eyewear', 'Jewelry',
   'Beauty & Fragrance', 'Home', 'Tech', 'Food & Drink', 'Wellness',
 ] as const;
 
