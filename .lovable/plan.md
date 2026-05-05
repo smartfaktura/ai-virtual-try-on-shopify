@@ -1,25 +1,26 @@
-
 ## Problem
 
-The newsletter HTML has several issues causing broken rendering on mobile email clients:
+The Library's Favorites tab filters client-side from paginated data (`allItems.filter(i => favoriteIds.has(i.id))`). Since `useLibraryItems` uses infinite scroll with 20 items per page, only favorites present in the first loaded page appear initially. The rest require manually clicking "Load More" repeatedly.
 
-1. **Negative margins** on `.cta-section` and `.reply-section` (`margin: 0 -48px`) — this causes horizontal overflow and broken layout, especially in email clients that strip `<style>` tags
-2. **CSS class-based styling** — many email clients (Gmail, Outlook) strip `<style>` blocks entirely, so all class-based styles break
-3. **`display: flex`** in `.stat-row` — not widely supported in email clients
-4. **`@import` for Google Fonts** — stripped by most email clients
+## Solution
 
-## Fix — `/mnt/documents/vovv-newsletter-week-update.html`
+When the user switches to the Favorites (or Brand Ready / Ready to Publish) smart view, automatically fetch all remaining pages so every matching item is visible without manual "Load More" clicks.
 
-1. **Inline all styles** — Move every CSS property into `style=""` attributes directly on elements. Remove the `<style>` block (keep only a minimal reset).
+## Technical Details
 
-2. **Remove negative margins** — Move the CTA section and Reply section outside the `.content` wrapper so they naturally span full width without negative margin hacks.
+**File: `src/pages/Jobs.tsx`**
 
-3. **Use table-based layout throughout** — Replace all `<div>` containers with `<table>` / `<tr>` / `<td>` for maximum email client compatibility.
+Add a `useEffect` that auto-fetches remaining pages when a filtered smart view is active:
 
-4. **Inline the font-family fallback** — Replace `@import` with inline `font-family` stacks on every text element.
+```typescript
+// Auto-fetch all pages when a filtered smart view is active
+useEffect(() => {
+  if (smartView !== 'all' && hasNextPage && !isFetchingNextPage && !isFetching) {
+    fetchNextPage();
+  }
+}, [smartView, hasNextPage, isFetchingNextPage, isFetching, fetchNextPage, allItems.length]);
+```
 
-5. **Add `width` attributes on tables** — Use HTML `width` attributes alongside `max-width` CSS for Outlook compatibility.
+This loops through all pages automatically when `smartView` is `favorites`, `brand_ready`, or `ready_to_publish`. Once all pages are loaded (`hasNextPage` becomes false), it stops. The `allItems.length` dependency ensures it re-triggers after each page loads.
 
-6. **Mobile-safe padding** — Use `padding: 40px 24px` everywhere (no 48px that needs a media query override). This gives consistent rendering whether or not the `<style>` block is preserved.
-
-The result will be a fully inlined, table-based HTML email that renders correctly across Gmail (mobile + desktop), Apple Mail, Outlook, and Yahoo.
+The "Load More" button remains visible for the `all` view (unchanged behavior).
