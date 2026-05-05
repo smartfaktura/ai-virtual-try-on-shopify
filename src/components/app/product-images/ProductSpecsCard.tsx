@@ -68,10 +68,6 @@ function parseSpec(raw: string, specFields: SpecField[]): ProductSpecData {
   return { fields, notes };
 }
 
-/** Check if a category's fields include any cm-switchable units */
-function hasCmFields(fields: SpecField[]): boolean {
-  return fields.some(f => f.unit === 'cm');
-}
 
 export function ProductSpecsCard({
   allProducts,
