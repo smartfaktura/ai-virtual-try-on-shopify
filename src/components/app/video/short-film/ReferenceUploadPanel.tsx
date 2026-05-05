@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, Users, MapPin, Palette, Library, Loader2, Package, Search, Trash2, Plus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +65,7 @@ interface FullProduct {
 }
 
 export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPanelProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [dragRole, setDragRole] = useState<string | null>(null);
   const [uploadingRole, setUploadingRole] = useState<string | null>(null);
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null); // productId:subRole
@@ -273,7 +274,10 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
           });
         }
       }
-      if (newRefs.length > 0) onChange([...references, ...newRefs]);
+      if (newRefs.length > 0) {
+        onChange([...references, ...newRefs]);
+        requestAnimationFrame(() => rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+      }
       setUploadingRole(null);
       setUploadingSlot(null);
     },
@@ -396,7 +400,7 @@ export function ReferenceUploadPanel({ references, onChange }: ReferenceUploadPa
   const productCount = productGroups.size + (customProductRefs.length > 0 ? 1 : 0);
 
   return (
-    <div className="space-y-4">
+    <div ref={rootRef} className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold text-foreground">Add References</h2>
         <p className="text-sm text-muted-foreground mt-1">
