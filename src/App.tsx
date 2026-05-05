@@ -16,6 +16,7 @@ import { checkAppVersion } from '@/lib/versionCheck';
 import { BrandLoaderProgressGlyph } from '@/components/ui/brand-loader-progress-glyph';
 const TryShot = lazy(() => import('@/pages/TryShot'));
 const Home = lazy(() => import('@/pages/Home'));
+const BriteShowcase = lazy(() => import('@/pages/showcase/BriteShowcase'));
 
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -161,6 +162,7 @@ const App = () => {
             <Route path="/tryshot" element={<TryShot />} />
             <Route path="/tryshot/:domain" element={<TryShot />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/showcase/brite" element={<BriteShowcase />} />
 
 
             {/* Feature pages */}
