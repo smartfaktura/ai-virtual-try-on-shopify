@@ -916,7 +916,19 @@ const CATEGORY_OUTFIT_CONFIG_DEFAULTS: Record<string, OutfitConfig> = {
     top: { garment: 'camisole', color: 'cream', fit: 'fitted', material: 'silk' },
     accessories: 'none',
   },
-  'hats-small': {
+  caps: {
+    top: { garment: 'blazer', color: 'black', fit: 'fitted', material: 'wool' },
+    bottom: { garment: 'trousers', color: 'charcoal', fit: 'slim', material: 'wool' },
+    shoes: { garment: 'loafers', color: 'black', material: 'leather' },
+    accessories: 'none',
+  },
+  hats: {
+    top: { garment: 'blazer', color: 'black', fit: 'fitted', material: 'wool' },
+    bottom: { garment: 'trousers', color: 'charcoal', fit: 'slim', material: 'wool' },
+    shoes: { garment: 'loafers', color: 'black', material: 'leather' },
+    accessories: 'none',
+  },
+  beanies: {
     top: { garment: 'blazer', color: 'black', fit: 'fitted', material: 'wool' },
     bottom: { garment: 'trousers', color: 'charcoal', fit: 'slim', material: 'wool' },
     shoes: { garment: 'loafers', color: 'black', material: 'leather' },
@@ -978,7 +990,17 @@ const MALE_OUTFIT_OVERRIDES: Record<string, Partial<OutfitConfig>> = {
   fragrance: {
     top: { garment: 'shirt', color: 'white', fit: 'fitted', material: 'cotton' },
   },
-  'hats-small': {
+  caps: {
+    top: { garment: 'bomber jacket', color: 'navy', fit: 'regular', material: 'nylon' },
+    bottom: { garment: 'chinos', color: 'charcoal', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+  },
+  hats: {
+    top: { garment: 'bomber jacket', color: 'navy', fit: 'regular', material: 'nylon' },
+    bottom: { garment: 'chinos', color: 'charcoal', fit: 'slim', material: 'cotton' },
+    shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
+  },
+  beanies: {
     top: { garment: 'bomber jacket', color: 'navy', fit: 'regular', material: 'nylon' },
     bottom: { garment: 'chinos', color: 'charcoal', fit: 'slim', material: 'cotton' },
     shoes: { garment: 'sneakers', color: 'white', material: 'leather' },
@@ -1026,8 +1048,8 @@ function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
     'jewellery-earrings': 'fragrance',
     'jewellery-bracelets': 'fragrance',
     'jewellery-rings': 'fragrance',
-    watches: 'hats-small',
-    eyewear: 'hats-small',
+    watches: 'caps',
+    eyewear: 'caps',
     sneakers: 'shoes',
     boots: 'shoes',
     'high-heels': 'shoes',

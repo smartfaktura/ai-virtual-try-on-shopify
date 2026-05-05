@@ -59,7 +59,7 @@ export function DashboardDiscoverSection() {
     'home-decor': 'home', 'furniture': 'home',
     'supplements-wellness': 'supplements', 'activewear': 'sports',
     'eyewear': 'accessories', 'bags-accessories': 'accessories', 'backpacks': 'accessories',
-    'belts': 'accessories', 'scarves': 'accessories', 'hats-small': 'accessories',
+    'belts': 'accessories', 'scarves': 'accessories', 'caps': 'accessories',
     'wallets-cardholders': 'accessories',
   };
 

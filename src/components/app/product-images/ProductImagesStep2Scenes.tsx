@@ -22,7 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
   other: 'Other / Custom', backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders', belts: 'Belts', scarves: 'Scarves',
-  'hats-small': 'Hats & Headwear', 'jewellery-necklaces': 'Necklaces',
+  caps: 'Caps', hats: 'Hats', beanies: 'Beanies', 'jewellery-necklaces': 'Necklaces',
   'jewellery-earrings': 'Earrings', 'jewellery-bracelets': 'Bracelets',
   'jewellery-rings': 'Rings', watches: 'Watches', dresses: 'Dresses', skirts: 'Skirts',
   hoodies: 'Hoodies', streetwear: 'Streetwear', sneakers: 'Sneakers',
@@ -54,7 +54,7 @@ interface Step2Props {
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   // ── Specific categories FIRST (matched before generic parents) ──
-  // Jewellery (before hats-small)
+  // Jewellery (before caps/hats/beanies)
   'jewellery-necklaces': ['necklace', 'pendant', 'chain necklace', 'choker', 'lariat'],
   'jewellery-earrings': ['earring', 'stud', 'hoop', 'drop earring', 'huggie', 'ear cuff'],
   'jewellery-bracelets': ['bracelet', 'bangle', 'cuff bracelet', 'charm bracelet', 'tennis bracelet', 'wristband'],
@@ -85,7 +85,9 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   // ── Generic parent categories (fallback) ──
   'fragrance': ['perfume', 'cologne', 'fragrance', 'eau de', 'scent', 'parfum'],
   'bags-accessories': ['bag', 'handbag', 'purse', 'clutch', 'tote', 'briefcase', 'satchel', 'crossbody', 'messenger', 'duffel', 'case', 'pouch'],
-  'hats-small': ['hat', 'cap', 'beanie', 'fedora', 'beret', 'headband', 'visor', 'bucket hat'],
+  caps: ['cap', 'baseball cap', 'snapback', 'trucker cap', 'visor', 'dad hat'],
+  hats: ['hat', 'fedora', 'beret', 'panama hat', 'sun hat', 'wide brim hat', 'bucket hat'],
+  beanies: ['beanie', 'knit cap', 'skull cap', 'winter hat', 'toque', 'watch cap'],
   'shoes': ['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford', 'derby', 'flat'],
   'garments': ['shirt', 'pants', 'sweater', 'coat', 'skirt', 'blouse', 'top', 'shorts', 'clothing', 'apparel', 'garment', 'jersey', 'tank', 'polo', 'uniform', 'tracksuit', 'jogger', 'vest', 'cardigan', 'suit', 'romper', 'jumpsuit'],
   'furniture': ['sofa', 'couch', 'sectional', 'loveseat', 'armchair', 'recliner', 'dining chair', 'office chair', 'accent chair', 'lounge chair', 'rocking chair', 'folding chair', 'bar stool', 'counter stool', 'stool', 'bench', 'ottoman', 'pouf', 'bean bag', 'dining table', 'coffee table', 'side table', 'end table', 'console table', 'accent table', 'nightstand', 'bedside table', 'desk', 'standing desk', 'writing desk', 'vanity', 'bed frame', 'headboard', 'bunk bed', 'daybed', 'futon', 'mattress', 'crib', 'bookshelf', 'bookcase', 'floating shelf', 'wall shelf', 'shelving unit', 'cabinet', 'filing cabinet', 'display cabinet', 'hutch', 'sideboard', 'buffet', 'credenza', 'dresser', 'chest of drawers', 'wardrobe', 'armoire', 'closet organizer', 'tv stand', 'media console', 'entertainment center', 'shoe rack', 'coat rack', 'wine rack', 'pantry', 'kitchen island', 'bar cart', 'furniture'],
@@ -108,7 +110,7 @@ const GRID_CLASSES: Record<GridSize, string> = {
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
   { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'] },
   { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
-  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small', 'watches', 'eyewear'] },
+  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'caps', 'hats', 'beanies', 'watches', 'eyewear'] },
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
   { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
   { label: 'Food & Drink', ids: ['food', 'beverages'] },

@@ -116,7 +116,13 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'length', label: 'Length', type: 'input', placeholder: '180', placeholderImperial: '71', unit: 'cm' },
     { key: 'width', label: 'Width', type: 'input', placeholder: '70', placeholderImperial: '28', unit: 'cm' },
   ],
-  'hats-small': [
+  'caps': [
+    { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+  ],
+  'hats': [
+    { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
+  ],
+  'beanies': [
     { key: 'circumference', label: 'Circumference', type: 'input', placeholder: '58', placeholderImperial: '23', unit: 'cm' },
   ],
   'eyewear': [
@@ -240,7 +246,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'sneakers': 'Sneakers', 'shoes': 'Shoes', 'boots': 'Boots', 'high-heels': 'Heels',
   'bags-accessories': 'Bag', 'backpacks': 'Backpack',
   'wallets-cardholders': 'Wallet', 'belts': 'Belt', 'scarves': 'Scarf',
-  'hats-small': 'Hat', 'watches': 'Watch',
+  'caps': 'Cap', 'hats': 'Hat', 'beanies': 'Beanie', 'watches': 'Watch',
   'jewellery-necklaces': 'Necklace', 'jewellery-rings': 'Ring',
   'jewellery-bracelets': 'Bracelet', 'jewellery-earrings': 'Earring',
   'eyewear': 'Eyewear', 'fragrance': 'Fragrance',

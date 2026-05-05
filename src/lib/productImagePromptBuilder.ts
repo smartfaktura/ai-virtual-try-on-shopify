@@ -267,7 +267,9 @@ function resolveBodyFramingDirective(category?: string, sceneType?: string, trig
     case 'wallets-cardholders':
     case 'belts':
     case 'scarves':
-    case 'hats-small':
+    case 'caps':
+    case 'hats':
+    case 'beanies':
       return 'Three-quarter shot — model visible from head to mid-thigh, bag and hands fully in-frame.';
     case 'jewellery-necklaces':
     case 'jewellery-earrings':
@@ -305,7 +307,9 @@ function defaultBackground(category?: string): string {
     case 'wallets-cardholders':
     case 'belts':
     case 'scarves':
-    case 'hats-small':
+    case 'caps':
+    case 'hats':
+    case 'beanies':
       return 'soft warm white seamless studio background — do NOT reproduce the background from the product reference photo';
     case 'lingerie':
     case 'swimwear':
@@ -367,7 +371,9 @@ function defaultShadow(category?: string): string {
     case 'wallets-cardholders':
     case 'belts':
     case 'scarves':
-    case 'hats-small':
+    case 'caps':
+    case 'hats':
+    case 'beanies':
       return 'Soft diffused shadow beneath the product for a refined, airy feel.';
     case 'lingerie':
     case 'swimwear':
@@ -424,7 +430,9 @@ function defaultStyling(category?: string): string {
     case 'wallets-cardholders':
     case 'belts':
     case 'scarves':
-    case 'hats-small':
+    case 'caps':
+    case 'hats':
+    case 'beanies':
       return 'Minimal luxury styling — clean, restrained, premium composition.';
     case 'tech-devices':
       return 'Modern sleek styling — contemporary, geometric, sharp composition.';
@@ -465,7 +473,9 @@ function defaultLighting(category?: string): string {
     case 'wallets-cardholders':
     case 'belts':
     case 'scarves':
-    case 'hats-small':
+    case 'caps':
+    case 'hats':
+    case 'beanies':
     case 'shoes':
     case 'sneakers':
     case 'boots':
@@ -518,7 +528,9 @@ function defaultPersonDirective(category?: string): string {
     case 'wallets-cardholders':
     case 'belts':
     case 'scarves':
-    case 'hats-small':
+    case 'caps':
+    case 'hats':
+    case 'beanies':
       return 'Stylish model with clean, modern look — natural skin, understated elegance, product is the focus.';
     case 'jewellery-necklaces':
     case 'jewellery-earrings':
@@ -563,7 +575,9 @@ function categoryOutfitDefaults(category?: string, gender?: string): OutfitPiece
     case 'wallets-cardholders':
     case 'belts':
     case 'scarves':
-    case 'hats-small':
+    case 'caps':
+    case 'hats':
+    case 'beanies':
       return isMale
         ? { top: 'fitted black crew-neck sweater', bottom: 'slim dark navy trousers', shoes: 'black leather boots', accessories: 'none' }
         : { top: 'fitted black turtleneck', bottom: 'slim dark navy trousers', shoes: 'black ankle boots', accessories: 'none' };

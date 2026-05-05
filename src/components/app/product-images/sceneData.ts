@@ -202,8 +202,8 @@ export const CATEGORY_COLLECTIONS: CategoryCollection[] = [
     ],
   },
   {
-    id: 'hats-small',
-    title: 'Hats & Small Accessories',
+    id: 'caps',
+    title: 'Caps',
     scenes: [
       {
         id: 'accessory_clean_hero', title: 'Clean Accessory Hero',

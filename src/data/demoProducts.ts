@@ -249,9 +249,9 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     "description": "Vibrant red baseball cap with white 'beauty & brains' embroidered script, featuring a classic adjustable design.",
     "image_url": "https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/demo-products/demo-cap.png",
     "previewSrc": `${PREVIEW_BASE}/demo-cap.webp`,
-    "category": "hats-small",
+    "category": "caps",
     "analysis_json": {
-      "category": "hats-small",
+      "category": "caps",
       "sizeClass": "medium",
       "productSubcategory": "headwear",
       "productForm": "structured",

@@ -31,7 +31,9 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
   wallets: 'Bags & Accessories',
   belts: 'Bags & Accessories',
   scarves: 'Bags & Accessories',
-  'hats-small': 'Bags & Accessories',
+  caps: 'Accessories',
+  hats: 'Accessories',
+  beanies: 'Accessories',
 
   watches: 'Watches',
 
@@ -62,7 +64,9 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
 export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
   'garments': 'Clothing',
   'activewear': 'Activewear',
-  'hats-small': 'Hats',
+  caps: 'Caps',
+  hats: 'Hats',
+  beanies: 'Beanies',
   'wallets-cardholders': 'Cardholders',
   'bags-accessories': 'Bags',
   'beauty-skincare': 'Skincare',
@@ -96,8 +100,8 @@ export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
   footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
   shoes: ['shoes', 'sneakers', 'boots', 'high-heels'],
   bags: ['bags-accessories', 'backpacks', 'wallets-cardholders'],
-  accessories: ['bags-accessories', 'belts', 'scarves', 'hats-small'],
-  'bags-accessories': ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'],
+  accessories: ['bags-accessories', 'belts', 'scarves', 'caps', 'hats', 'beanies'],
+  'bags-accessories': ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'caps', 'hats', 'beanies'],
   jewelry: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
   jewellery: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
   watches: ['watches'],
