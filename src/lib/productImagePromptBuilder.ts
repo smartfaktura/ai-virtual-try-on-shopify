@@ -1271,6 +1271,12 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'productMaterials': return ctx.productMaterials || '';
     case 'productColor': return ctx.productColor || '';
 
+    // ── Product specifications (from Product Details card) ──
+    case 'specification': {
+      if (!ctx.productDimensions) return '';
+      return `[PRODUCT DIMENSIONS — ${productName.toUpperCase()}] ${ctx.productDimensions}. Render this product at exactly these proportions.`;
+    }
+
     // ── Brand Logo Text ──
     case 'brandLogoText': return details.brandLogoText || '';
 
@@ -1359,7 +1365,7 @@ export function buildDynamicPrompt(
     if (bgHexForReinforcement) parts.push(`CRITICAL: The background must be exactly ${bgHexForReinforcement} — no warmer, no cooler, no tint variation.`);
     parts.push(scene.description);
     parts.push(`Product: ${product.title}.`);
-    if (ctx.productDimensions) parts.push(`Product specifications: ${ctx.productDimensions}.`);
+    if (ctx.productDimensions) parts.push(resolveToken('specification', ctx));
     if (analysis?.materialFamily) parts.push(`Material: ${defaultMaterial(analysis.materialFamily, analysis.finish, product.description)}.`);
     parts.push(`Background: ${bgResolved}.`);
     parts.push(resolveToken('lightingDirective', ctx));
@@ -1386,9 +1392,17 @@ export function buildDynamicPrompt(
   }
   prompt += template.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
 
-  // Inject product specifications/dimensions when available
-  if (ctx.productDimensions) {
-    prompt += ` Product specifications: ${ctx.productDimensions}.`;
+  // Inject product specifications — skip if template already used {{specification}}
+  const hasSpecToken = (template || '').includes('{{specification}}');
+  if (!hasSpecToken && ctx.productDimensions) {
+    const specBlock = resolveToken('specification', ctx);
+    // Insert right after first sentence (product intro) for clarity
+    const firstPeriod = prompt.indexOf('. ');
+    if (firstPeriod > 0) {
+      prompt = prompt.slice(0, firstPeriod + 2) + specBlock + ' ' + prompt.slice(firstPeriod + 2);
+    } else {
+      prompt += ' ' + specBlock;
+    }
   }
 
   // Auto-inject key directives if template didn't include their tokens

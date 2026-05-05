@@ -1,24 +1,21 @@
-## Improve hat dimension fields for more accurate AI generation
+## Add `{{specification}}` token and improve auto-injection
 
-Add crown height, brim type, and conditional style-specific fields for headwear categories.
+No trigger needed — just a simple token that resolves to the product's dimensions string, and smarter auto-injection positioning.
 
-### Changes in `src/lib/productSpecFields.ts`
+### Changes in `src/lib/productImagePromptBuilder.ts`
 
-**Hats** (line 125-129) — expand fields:
-- Add `crownHeight` (Crown Height) input field after circumference
-- Add `brimType` (Brim Type) select: Flat / Stiff, Slightly curved, Floppy / Soft, Upturned, Snap brim
-- Keep existing: style, circumference, brimWidth
+**1. Add `{{specification}}` token** (in `resolveToken` switch, after `productColor` ~line 1272):
+```
+case 'specification': {
+  if (!ctx.productDimensions) return '';
+  return `[PRODUCT DIMENSIONS — ${productName.toUpperCase()}] ${ctx.productDimensions}. Render this product at exactly these proportions.`;
+}
+```
+If dimensions are empty, returns empty string — template just gets nothing inserted. No trigger block needed.
 
-**Caps** (line 120-124) — add:
-- `crownHeight` (Crown Height) input, placeholder 10cm
-- `brimType` (Brim Type) select: Flat, Pre-curved, Slightly curved
+**2. Improve auto-injection for templates without `{{specification}}`** (~lines 1389-1392):
+- Check if template already contains `{{specification}}`; if yes, skip auto-injection (token already handled it)
+- If no token in template, inject the same structured block right after the first sentence (product intro) instead of appending at the very end
+- Fallback path (no template, ~line 1362): same structured block right after `Product: {title}`
 
-**Beanies** (line 130-133) — add:
-- `height` (Height) input, placeholder 22cm — how tall when laid flat
-- `foldCuff` (Cuff) select: No cuff, Single fold, Double fold
-
-**Conditional fields** via `CONDITIONAL_FIELDS`:
-- `hats::style::Cowboy` — add `crownCrease` select: Cattleman, Pinch front, Gus, Open crown
-- `hats::style::Bucket` — hide `brimType` (bucket hats don't have rigid brim distinction) via `CONDITIONAL_HIDE`
-
-These fields feed directly into the AI prompt via the existing spec system, giving the generation model precise shape information (crown proportions, brim stiffness) for more realistic results.
+**Result**: Scene templates can optionally use `{{specification}}` to place specs exactly where they want. Templates that don't use it still get specs auto-injected near the product identity. Empty specs = nothing added anywhere.
