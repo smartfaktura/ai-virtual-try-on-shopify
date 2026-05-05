@@ -791,6 +791,7 @@ function SceneRow({ scene, idx, total, editingId, editDraft, onStartEdit, onCanc
             url={scene.preview_image_url}
             className="w-full h-full"
             iconClassName="w-6 h-6 sm:w-4 sm:h-4"
+            thumbSize={80}
           />
         </div>
         {/* Right column on mobile: info + actions stacked. Desktop: passes through to flex row */}
