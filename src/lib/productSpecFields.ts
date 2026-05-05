@@ -297,6 +297,11 @@ const CONDITIONAL_FIELDS: Record<ConditionalKey, SpecField[]> = {
     { key: 'strapDrop', label: 'Strap Drop', type: 'input', placeholder: '55', placeholderImperial: '22', unit: 'cm' },
   ],
 
+  // ── Hat conditionals on style ──
+  'hats::style::Cowboy': [
+    { key: 'crownCrease', label: 'Crown Crease', type: 'select', options: ['Cattleman', 'Pinch front', 'Gus', 'Open crown'] },
+  ],
+
   // ── Tech conditionals on deviceType ──
   'tech-devices::deviceType::Headphones': [
     { key: 'headphoneType', label: 'Style', type: 'select', options: ['Over-ear', 'On-ear', 'In-ear'] },
