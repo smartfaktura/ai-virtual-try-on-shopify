@@ -1275,7 +1275,7 @@ function SceneForm({ draft, onChange, allSubCategories = [] }: { draft: Partial<
             title="Click here and paste (⌘V) to upload a screenshot"
           >
             {draft.preview_image_url ? (
-              <img src={draft.preview_image_url} alt="Preview" className="w-full h-full object-cover" />
+              <img src={getOptimizedUrl(draft.preview_image_url, { quality: 50, width: 160, height: 160, resize: 'cover' })} alt="Preview" className="w-full h-full object-cover" />
             ) : (
               <Camera className="w-6 h-6 text-muted-foreground/30" />
             )}
