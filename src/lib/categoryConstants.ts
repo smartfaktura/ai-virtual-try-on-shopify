@@ -11,6 +11,7 @@ export const PRODUCT_CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel' },
   { id: 'footwear', label: 'Footwear' },
   { id: 'bags-accessories', label: 'Bags & Accessories' },
+  { id: 'hats-caps-beanies', label: 'Hats, Caps & Beanies' },
   { id: 'watches', label: 'Watches' },
   { id: 'eyewear', label: 'Eyewear' },
   { id: 'jewelry', label: 'Jewelry' },
