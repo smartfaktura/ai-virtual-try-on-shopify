@@ -46,8 +46,8 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'fit', label: 'Fit', type: 'select', options: ['Regular', 'Oversized', 'Cropped', 'Boxy'] },
   ],
   'jeans': [
-    { key: 'waist', label: 'Waist', type: 'input', placeholder: '32' },
-    { key: 'length', label: 'Length', type: 'input', placeholder: '32' },
+    { key: 'waistHeight', label: 'Waist Rise', type: 'select', options: ['Low-rise', 'Mid-rise', 'High-rise'] },
+    { key: 'hemLength', label: 'Hem Length', type: 'select', options: ['Cropped (ankle)', 'Regular', 'Full length', 'Extra long'] },
     { key: 'fit', label: 'Fit', type: 'select', options: ['Skinny', 'Slim', 'Straight', 'Regular', 'Wide-leg', 'Bootcut', 'Tapered'] },
   ],
   'jackets': [
