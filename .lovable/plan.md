@@ -1,19 +1,29 @@
-## Problem
+## Fix: AI Shot Planner reliability — use tool calling for structured output
 
-The Library search input unmounts when `isInitialLoading` becomes `true` during a search query change. This happens because:
+### Problem
 
-1. The search bar is wrapped in `!isTrulyEmpty && !isInitialLoading` (line 439), so it disappears when loading
-2. When a search returns 0 results and the user types the next character, `keepPreviousData` preserves the empty array, `isFetching` is true, so `isInitialLoading = (isLoading || isFetching) && allItems.length === 0` becomes true
-3. The search input is unmounted and replaced by `LibrarySkeletonGrid`, causing focus loss
+The `ai-shot-planner` edge function asks the AI model to return JSON in free text, then uses regex (`/\{[\s\S]*\}/`) to extract it. When the model wraps output in markdown code fences (` ```json ... ``` `) or adds commentary, the regex either fails or captures malformed JSON, causing the "AI planning failed, using auto plan instead" error.
 
-## Fix (src/pages/Jobs.tsx)
+### Solution
 
-1. **Always show the search bar and smart view tabs** -- Remove `!isInitialLoading` from the conditional guards on lines 400 and 439. The search bar and filter controls should render regardless of loading state.
+Switch from free-text JSON extraction to **tool calling** — the AI gateway's structured output mechanism. This guarantees valid JSON matching our schema every time, eliminating parse failures entirely.
 
-2. **Refine `isInitialLoading`** -- Only treat it as initial loading when there's no active search query and no filters. Change to:
-   ```
-   const isInitialLoading = (isLoading || isFetching) && allItems.length === 0 && !searchQuery && activeFilterCount === 0 && smartView === 'all';
-   ```
-   This prevents the skeleton from appearing when the user is actively searching/filtering and results happen to be empty during a fetch.
+### Changes
 
-These two changes ensure the search input stays mounted and focused at all times, and shimmer/skeleton only appears on the true initial page load (no query, no filters, no data yet).
+**`supabase/functions/ai-shot-planner/index.ts`**
+
+1. Add a `tools` array and `tool_choice` to the AI gateway request body, defining a `generate_shot_plan` function with the exact schema (music_direction string + shots array with all required fields and enums).
+
+2. Parse the response from `data.choices[0].message.tool_calls[0].function.arguments` instead of regex-extracting from `content`.
+
+3. Keep the existing regex-based parsing as a **fallback** in case the model returns content instead of a tool call (defensive coding).
+
+4. Strip the "Return ONLY valid JSON" instruction block from the system prompt since the tool schema now enforces structure.
+
+### Technical detail
+
+The tool schema will enforce:
+- `music_direction`: string
+- `shots`: array of objects with typed fields (`role` as enum of VALID_ROLES, `scene_type` as enum, `camera_motion` as enum, `duration_sec` as integer, etc.)
+
+This means the sanitization/snap logic (lines 305-333) still runs as a safety net but should rarely need to correct anything.
