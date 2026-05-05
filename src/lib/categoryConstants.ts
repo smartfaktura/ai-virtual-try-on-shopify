@@ -28,6 +28,7 @@ export const CATEGORY_HEADLINES: Record<string, string> = {
   fashion: 'Create your first fashion campaign in seconds - no photoshoot needed.',
   footwear: 'Create your first footwear campaign in seconds - no photoshoot needed.',
   'bags-accessories': 'Create your first bags & accessories campaign in seconds - no photoshoot needed.',
+  'hats-caps-beanies': 'Create your first hats & beanies campaign in seconds - no photoshoot needed.',
   watches: 'Create your first watch campaign in seconds - no photoshoot needed.',
   eyewear: 'Create your first eyewear campaign in seconds - no photoshoot needed.',
   jewelry: 'Launch your first jewelry campaign in seconds - no photoshoot needed.',
