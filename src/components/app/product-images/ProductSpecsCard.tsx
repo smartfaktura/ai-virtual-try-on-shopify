@@ -113,28 +113,6 @@ export function ProductSpecsCard({
     return parseSpec(raw, specFields);
   }, [productSpecs]);
 
-  const getStructured = useCallback((productId: string, specFields: SpecField[]): ProductSpecData => {
-    const raw = productSpecs[productId] || '';
-    return parseSpec(raw, specFields);
-  }, [productSpecs]);
-
-  const handleSave = useCallback(async () => {
-    setSaving(true);
-    try {
-      const updates = productsNeedingSpecs
-        .filter(p => (productSpecs[p.id] || '').trim())
-        .map(p => {
-          const dimStr = buildSpecsPromptLine(productSpecs[p.id]);
-          return supabase.from('user_products').update({ dimensions: dimStr || null }).eq('id', p.id);
-        });
-      await Promise.all(updates);
-      setLastSavedSpecs({ ...productSpecs });
-    } catch {
-      toast.error('Failed to save details');
-    } finally {
-      setSaving(false);
-    }
-  }, [productsNeedingSpecs, productSpecs]);
 
   const toggleProduct = useCallback((id: string) => {
     setOpenProductId(prev => prev === id ? null : id);
