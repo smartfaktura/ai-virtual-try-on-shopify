@@ -99,14 +99,14 @@ serve(async (req) => {
 
     console.log(`Inserting ${newRows.length} new scenes`);
 
-    // Insert in batches of 50
+    // Upsert in batches of 50 (skip existing)
     const batchSize = 50;
     let inserted = 0;
     for (let i = 0; i < newRows.length; i += batchSize) {
       const batch = newRows.slice(i, i + batchSize);
       const { error: insertErr } = await sb
         .from("product_image_scenes")
-        .insert(batch);
+        .upsert(batch, { onConflict: "scene_id", ignoreDuplicates: true });
       if (insertErr) throw new Error(`Insert error at batch ${i}: ${insertErr.message}`);
       inserted += batch.length;
     }
