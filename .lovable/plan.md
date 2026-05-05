@@ -1,23 +1,19 @@
+## Problem
 
-# Fix In-Hand Studio Outfit + Close-Up Detail Texture for Scarves
+The AI analysis sometimes returns `home-decor` for chairs and armchairs. Since `home-decor` is a valid category, the title-based fallback never runs, and there's no specificity override to correct it to `furniture`.
 
-## 1. In-Hand Studio — Add outfit_hint
+## Changes
 
-Set `outfit_hint` on `in-hand-studio-bags-scarves` to:
+**File: `supabase/functions/analyze-product-category/index.ts`**
 
-> Elegant premium white soft bright aesthetic. Fashion-forward minimal styling — clean white or ivory top, delicate jewellery optional. Skin luminous, nails neutral. The outfit must never compete with the scarf.
+1. **Add specificity overrides** from `home-decor` to `furniture` for chair/armchair patterns (around line 60-67):
+   ```
+   ["home-decor", /armchair|chair|sofa|couch|recliner|ottoman|bench|stool|desk|table|bookshelf|dresser|wardrobe|bed frame|nightstand|cabinet|sideboard|credenza|futon|mattress/i, "furniture"],
+   ```
 
-This will override the standard outfit picker and lock the model styling to a clean white editorial look.
+2. **Add FURNITURE GUIDANCE** to the AI system prompt (after HEADWEAR GUIDANCE, line 163):
+   ```
+   FURNITURE vs HOME-DECOR: Use "furniture" for any seating (chairs, armchairs, sofas, stools, benches, recliners), tables (dining, coffee, desk, side), storage (bookshelves, dressers, wardrobes, cabinets), and bed frames. Use "home-decor" for decorative items only: candles, vases, pillows, cushions, throws, planters, picture frames, lamps, wall art.
+   ```
 
-## 2. Close-Up Detail — Fix texture bias
-
-The current prompt for `closeup-detail-bags-scarves` says "show the actual weave structure, thread count, and surface finish" which biases the AI toward rendering silk-like weave regardless of the actual material.
-
-Replace that line with material-conditional language:
-
-> Render the fabric as {{material}} — show the surface finish and texture that is physically accurate for {{material}}. Do NOT default to silk weave or any other assumed textile. If the product is cotton, show cotton fibre. If cashmere, show cashmere nap. If silk, show silk sheen. Match the ACTUAL material only.
-
-Also update the closing lighting instruction from "revealing fabric weave, thread detail" to "revealing realistic textile depth and surface detail true to {{material}}".
-
-## Implementation
-Two UPDATE statements via the insert tool on `product_image_scenes`.
+These two changes ensure: (a) the AI is guided to pick the right category, and (b) if it still returns `home-decor` for a chair, the specificity override corrects it.

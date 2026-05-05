@@ -58,6 +58,7 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
 
 /** Parent->Child specificity overrides */
 const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
+  ["home-decor", /armchair|chair|sofa|couch|recliner|ottoman|bench|stool|desk|table|bookshelf|dresser|wardrobe|bed frame|nightstand|cabinet|sideboard|credenza|futon|mattress/i, "furniture"],
   ["bags-accessories", /beanie|knit cap|toque|skull cap|watch cap/i, "beanies"],
   ["bags-accessories", /\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
   ["bags-accessories", /\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret/i, "hats"],
