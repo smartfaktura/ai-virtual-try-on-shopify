@@ -54,14 +54,21 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
     ],
   },
   {
-    label: 'Bags & Accessories',
+    label: 'Bags',
     items: [
-      { value: 'bags-accessories', label: 'Bags & Accessories' },
+      { value: 'bags-accessories', label: 'Bags' },
       { value: 'backpacks', label: 'Backpacks' },
+    ],
+  },
+  {
+    label: 'Accessories',
+    items: [
       { value: 'wallets-cardholders', label: 'Wallets & Cardholders' },
       { value: 'belts', label: 'Belts' },
       { value: 'scarves', label: 'Scarves' },
-      { value: 'hats-small', label: 'Hats & Small Accessories' },
+      { value: 'caps', label: 'Caps' },
+      { value: 'hats', label: 'Hats' },
+      { value: 'beanies', label: 'Beanies' },
       { value: 'watches', label: 'Watches' },
       { value: 'eyewear', label: 'Eyewear' },
     ],
