@@ -230,6 +230,7 @@ export default function BundleVisuals() {
           label: scene.title + (selectedRatios.length > 1 ? ` [${ratio}]` : ''),
           instruction: promptInstruction,
           aspect_ratio: ratio,
+          is_bundle: true,
           ...(scene.useSceneReference && scene.previewUrl ? {
             use_scene_reference: true,
             preview_url: scene.previewUrl,
