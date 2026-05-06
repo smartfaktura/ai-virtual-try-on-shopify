@@ -1,25 +1,25 @@
-## Add 6 New Living Room Scenes
+## Add 6 New Home Office Scenes
 
-Insert 6 new interior-design-forward, fully furnished Living Room scenes into `product_image_scenes`, following the exact pattern of existing scenes (sort_order 142-147, same `COMPLETE INTERIOR COMPOSITION` directive, dimensional accuracy block, and conditional product-type logic).
+Insert 6 new design-forward, fully furnished Home Office scenes into `product_image_scenes`, following the exact pattern of existing Home Office scenes (same `COMPLETE INTERIOR COMPOSITION` directive, `PROPORTIONAL SCALE RULE`, NO LOGOS/SCREENS block, and conditional product-type logic).
 
-### New Scenes
+### New Scenes (sort_order 160–165)
 
-1. **Terracotta Courtyard Living** (142) — Warm terracotta lime-wash walls, arched niches, reclaimed oak beams, handmade Zellige tile accents. Mediterranean warmth meets modern comfort.
+1. **Smoked Glass Loft Office** (160) — Floor-to-ceiling smoked glass partition, blackened steel desk frame, polished concrete floor, cognac leather task chair. Industrial-loft creative director energy.
 
-2. **Midnight Velvet Drawing Room** (143) — Deep navy paneled walls, rich midnight blue velvet, antiqued brass chandelier, herringbone parquet. Moody maximalist evening atmosphere.
+2. **Warm Terracotta Writer's Room** (161) — Terracotta lime-wash walls, reclaimed elm writing desk, woven rattan chair, clay pendant lamp, sisal rug. Mediterranean warmth for focused work.
 
-3. **Brutalist Concrete Salon** (144) — Board-formed concrete walls, large pivoting steel-frame windows, warm camel leather, olive linen. Raw architectural drama softened by organic textiles.
+3. **Japandi Zen Study** (162) — Light hinoki wood desk, tatami-inspired woven flooring, rice-paper shoji screen partition, matte black task lamp, low-profile storage credenza. Serene and clutter-free.
 
-4. **Blush & Sage Garden Room** (145) — Dusty rose plaster walls, sage green linen, indoor olive tree, fluted travertine console. Soft biophilic palette with European garden-room charm.
+4. **Midnight Library Office** (163) — Deep navy paneled walls floor-to-ceiling, built-in dark oak bookshelves, brass reading lamp, emerald velvet desk chair, herringbone parquet. Moody members-club study.
 
-5. **Smoked Oak Library Lounge** (146) — Floor-to-ceiling smoked oak bookshelves, cognac leather club chairs, brass reading lamps, Persian rug. Intellectual warmth, members-club ambiance.
+5. **Sage & Plaster Creative Studio** (164) — Sage green plaster walls, bleached ash trestle desk, linen-upholstered swivel chair, fluted travertine bookends, indoor fiddle-leaf fig. Soft biophilic palette.
 
-6. **Alpine Chalet Great Room** (147) — Exposed timber A-frame ceiling, stone fireplace wall, sheepskin throws, wide-plank pine floors. Cozy mountain-lodge grandeur with natural textures.
+6. **Alpine Timber Cabin Office** (165) — Exposed timber A-frame ceiling, wide-plank pine floors, stone-clad accent wall, sheepskin-draped desk chair, brass banker's lamp. Mountain-lodge work retreat.
 
 ### Technical Details
 
 - Database: 6 `INSERT` statements via the insert tool (data operation, not schema change)
-- Each prompt includes the full `COMPLETE INTERIOR COMPOSITION` conditional block, `DIMENSIONAL ACCURACY` ruler, and `PROPORTIONAL SCALE RULE`
-- `category_collection = 'furniture'`, `sub_category = 'Living Room'`, `scene_type = 'lifestyle'`
+- Each prompt includes the full `COMPLETE INTERIOR COMPOSITION` conditional block, `PROPORTIONAL SCALE RULE`, and `NO LOGOS OR SCREENS` directive
+- `category_collection = 'furniture'`, `sub_category = 'Home Office'`, `scene_type = 'lifestyle'`
 - `category_sort_order = 0`, `sub_category_sort_order = 0`
 - No code file changes needed
