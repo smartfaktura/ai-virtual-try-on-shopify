@@ -1,28 +1,32 @@
 
-# Create 6 Modern Luxury Living Room Scenes
+# Update Living Room Scenes with Dimensions
 
-Add 6 new prompt-only scenes to the `custom_scenes` table, each designed specifically for big furniture (sofas, tables, TV units, consoles). All scenes will have detailed, editorial-quality prompt hints optimized for product photography generation.
+## What changes
 
-## The 6 Scenes
+Update the 6 recently added furniture scenes in `product_image_scenes` to:
 
-1. **Penthouse Panorama Lounge** — Floor-to-ceiling windows with city skyline view, warm evening light, open-plan luxury living room with polished concrete floors and brass accents.
+1. **Set `sub_category = 'Living Room'`** — groups them under a "Living Room" section in the scene picker
+2. **Add dimensional accuracy block** to every prompt — tells the AI to respect real-world furniture dimensions (e.g. 220cm sofa) relative to room architecture references (ceiling 2.7m, door 2.1m, tiles 60cm)
+3. **Add room-specific dimensions** to each scene's prompt (room size, ceiling height, window dimensions, prop sizes)
 
-2. **Ivory Boucle Salon** — Bright, airy living room with off-white plaster walls, arched doorways, herringbone oak floors, soft diffused morning light, quiet luxury Mediterranean aesthetic.
+## Technical approach
 
-3. **Walnut & Travertine Den** — Rich mid-century modern interior with walnut paneling, travertine stone accents, warm amber lighting, sculptural elements, curated art collection.
+Create a temporary admin edge function `admin-update-scenes` that:
+- Validates the caller is an admin (checks `user_roles`)
+- Uses `service_role` client to UPDATE `product_image_scenes`
+- Accepts an array of `{ scene_id, sub_category, prompt_template }` objects
 
-4. **Smoke & Stone Loft** — Industrial-luxe open loft with exposed steel beams, dark slate floors, moody directional lighting, charcoal concrete walls, floor-level low perspective.
+Then call it via `curl_edge_functions` with the 6 updated prompts, and delete the edge function afterward.
 
-5. **Nordic Fjord Living** — Scandinavian minimalist living room with light ash wood floors, pale sage walls, oversized windows framing a forest view, clean natural light.
+## Scenes being updated
 
-6. **Grand Atelier Salon** — Parisian-inspired high-ceiling room with ornate moldings, dark herringbone parquet, dramatic chandelier, editorial fashion-house aesthetic.
+| Scene ID | Room Dimensions |
+|---|---|
+| furniture-lifestyle-penthouse-panorama | 8m × 6m, 3.5m ceiling, windows 3.5m+ |
+| furniture-lifestyle-ivory-boucle-salon | 6m × 5m, 3m ceiling, arches 2.4m |
+| furniture-lifestyle-walnut-travertine-den | 5.5m × 4.5m, 2.8m ceiling |
+| furniture-lifestyle-smoke-stone-loft | 10m × 7m, 4.5m ceiling, windows 3m+ |
+| furniture-lifestyle-nordic-fjord | 6m × 5m, 2.7m ceiling, windows 2.2m × 1.8m |
+| furniture-lifestyle-grand-atelier-salon | 7m × 6m, 4m+ ceiling, doors 2.8m |
 
-## Technical Details
-
-- Insert 6 rows into `custom_scenes` via database migration
-- `category: 'home'`, `discover_categories: ['home']`
-- `prompt_only: true` (no reference image — pure prompt generation)
-- Each scene gets a detailed 80-150 word prompt hint specifying environment, lighting, materials, lens, composition, and style
-- Prompt hints will include instructions to keep center clear for product placement
-- `image_url` set to the existing placeholder scene image
-- `created_by` set to the admin user ID from existing home scenes
+All prompts will include a shared dimensional accuracy instruction block referencing standard architectural measurements for AI to calibrate product scale.
