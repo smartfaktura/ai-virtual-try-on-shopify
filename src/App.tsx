@@ -22,6 +22,7 @@ const BriteShowcase = lazy(() => import('@/pages/showcase/BriteShowcase'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
 const ProductImages = lazy(() => import('@/pages/ProductImages'));
+const BundleVisuals = lazy(() => import('@/pages/BundleVisuals'));
 const TextToProduct = lazy(() => import('@/pages/TextToProduct'));
 
 const Templates = lazy(() => import('@/pages/Templates'));
