@@ -289,9 +289,12 @@ The person in this image MUST be the EXACT same person shown in [MODEL IMAGE].
 - Do NOT alter, idealize, or change any facial features from the reference\n`
     : "";
 
-  // Additional products block for flat lay multi-product
+  // Bundle mode: variation.is_bundle flag means the instruction already contains full prompt with product listing, scale, arrangement
+  const isBundle = !!(variation as Record<string, unknown>).is_bundle;
+
+  // Additional products block for flat lay multi-product (skip for bundles — bundle prompt handles this)
   const totalProductCount = 1 + (additionalProducts?.length || 0);
-  const additionalProductsBlock = (additionalProducts && additionalProducts.length > 0)
+  const additionalProductsBlock = (!isBundle && additionalProducts && additionalProducts.length > 0)
     ? `\nADDITIONAL PRODUCTS IN COMPOSITION (${totalProductCount} TOTAL PRODUCTS — ALL MUST APPEAR):
 - Product 1 (PRIMARY): ${product.title} (${product.productType}) — see [PRODUCT IMAGE 1]
 ${additionalProducts.map((p, idx) => `- Product ${idx + 2}: ${p.title} (${p.productType})${p.description ? ` — ${p.description}` : ''} — see [PRODUCT IMAGE ${idx + 2}]`).join('\n')}
@@ -304,16 +307,18 @@ This flat lay MUST contain EXACTLY ${totalProductCount} distinct products. Each 
     ? `\nSTYLING & PROPS: ${stylingNotes}\nIncorporate these styling elements naturally into the flat lay composition.\n`
     : "";
 
-  // Prop style control for flat lay — prevents AI from adding extra commercial products
+  // Prop style control for flat lay — prevents AI from adding extra commercial products (skip for bundles — their scenes define context)
   let propStyleBlock = "";
-  if (propStyle === 'clean' || (!propStyle && additionalProducts !== undefined)) {
-    propStyleBlock = `\nCRITICAL COMPOSITION RULE (OVERRIDE ALL OTHER INSTRUCTIONS):
+  if (!isBundle) {
+    if (propStyle === 'clean' || (!propStyle && additionalProducts !== undefined)) {
+      propStyleBlock = `\nCRITICAL COMPOSITION RULE (OVERRIDE ALL OTHER INSTRUCTIONS):
 Show ONLY the selected products on the surface — NOTHING ELSE.
 IGNORE any mention of props, accents, flowers, botanicals, accessories, decorative items, or styling elements in the variation description above.
 The surface must contain ONLY the provided products. Zero additional items. No gold accents, no flowers, no ceramics, no leaves, no ribbons, no hardware, no decorative objects of any kind.
 This overrides everything — the variation description is for the SURFACE STYLE only, not for props.\n`;
-  } else if (propStyle === 'decorated') {
-    propStyleBlock = `\nCOMPOSITION RULE: You may add ONLY abstract/decorative styling elements around the products: natural textures, dried flowers, fabric swatches, paper, abstract shapes, ribbons. NEVER add extra commercial products like watches, cameras, electronics, earbuds, bags, or any item that could be mistaken for the user's own product.\n`;
+    } else if (propStyle === 'decorated') {
+      propStyleBlock = `\nCOMPOSITION RULE: You may add ONLY abstract/decorative styling elements around the products: natural textures, dried flowers, fabric swatches, paper, abstract shapes, ribbons. NEVER add extra commercial products like watches, cameras, electronics, earbuds, bags, or any item that could be mistaken for the user's own product.\n`;
+    }
   }
 
   // UGC mood and product interaction injection
