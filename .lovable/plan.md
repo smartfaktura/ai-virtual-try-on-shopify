@@ -1,66 +1,74 @@
 
-# Bundle Visuals — Fix Progress Banner Integration
+# Bundle Visuals — Prompt Engineering Fixes
 
-## Bugs Found
+## Critical Issues Found
 
-### 1. Product chips never update (Critical UX)
-`MultiProductProgressBanner` expects `multiProductJobIds` and `multiProductResults` to be **keyed by product ID**. But in the bundle flow, `jobMap` is keyed by scene-based keys (`bundle_${scene.id}_r${ratio}`). This means:
-- Product chips never show "processing" spinner
-- Product chips never show "done" checkmark
+### 1. Double product listing (confuses AI model)
+`buildBundlePrompt()` outputs a detailed `BUNDLE COMPOSITION — N PRODUCTS` block with scale calibration. But `buildVariationPrompt()` in the edge function ALSO generates its own `ADDITIONAL PRODUCTS IN COMPOSITION` block (lines 294-300). The AI receives TWO conflicting product lists with different formatting and numbering.
 
-### 2. `multiProductResults` constructed incorrectly
-Current code: `new Map(Array.from(jobMap.entries()).slice(0, completedJobs)...)` — this slices scene-keyed entries and maps them to fake results. None of them match product IDs.
+**Fix:** Add `is_bundle: true` flag to payload. When true, skip the `additionalProductsBlock` in `buildVariationPrompt` — the bundle prompt already handles product listing comprehensively.
 
-### 3. Progress percentage jumps
-The progress starts at 0% and jumps to e.g. 33% when the first job completes. No smooth ramp during generation phase.
+### 2. Prop style override kills lifestyle scenes
+When `additionalProducts` exists and `propStyle` is not set, the code defaults to `propStyle === 'clean'` (line 309). This injects a `CRITICAL COMPOSITION RULE` that says "Show ONLY products — ZERO additional items, no decorative objects." This completely contradicts lifestyle bundle scenes like "Gifting Moment" (tissue paper, gift box), "Kitchen Counter Collection" (counter context), "Picnic Basket Spread" (basket, blanket).
 
-## Fix
+**Fix:** Set `prop_style: 'decorated'` in the bundle payload for lifestyle scenes, or better: add `skip_prop_override: true` flag when `is_bundle: true` so the edge function skips the propStyleBlock entirely — the bundle prompt already contains its own scene-appropriate directives.
 
-Since Bundle Visuals is **not** a per-product workflow (it generates per-scene, not per-product), the product chips feature of `MultiProductProgressBanner` doesn't semantically apply. Instead:
+### 3. Prop-stripping regex damages bundle prompt
+Line 604 applies aggressive regex replacement on `variation.instruction` when `propStyle === 'clean'`:
+```
+variation.instruction.split('||PROPS||')[0]
+  .replace(/\.\s*Product (arranged|displayed)?with[\s\S]*$/i, '.')
+  .replace(/with\s+([...]accents|props|...)[\w\s,]*$/gi, '')
+```
+This can corrupt the bundle prompt by stripping text that contains keywords like "elements", "objects", etc. within the scale calibration or arrangement directives.
 
-- Pass `productQueue` with the selected products (for display context)
-- Create a **scene-keyed** results map where done job keys map to entries, so the overall progress bar and count work correctly
-- For the product chips to show correctly, **don't use them** — pass `productQueue` as a single-item array (the bundle as one "product") so the chips section is skipped (`totalProducts > 1` check), and rely on the progress bar + team messages + time estimates instead
+**Fix:** When `is_bundle: true`, use `variation.instruction` verbatim without any regex stripping.
 
-OR better: adapt the props so the progress banner shows per-**scene** progress instead of per-product:
-- `productQueue` = selected scenes (as pseudo-products with scene thumbnails)
-- `multiProductJobIds` = Map keyed by scene ID → job ID
-- `multiProductResults` = Map of completed scene IDs
+### 4. Background isolation directive conflicts with bundle logic
+Line 617 in CRITICAL REQUIREMENTS says: "Extract ONLY the product object from [PRODUCT IMAGE]." For bundles, ALL product reference images need this treatment, but the instruction implies singular product extraction. The bundle prompt already has `ANTI-HALLUCINATION` and `NO TEXT OR LOGOS` directives.
 
-This gives the user visual feedback on which scenes are done.
+**Fix:** When `is_bundle: true`, replace requirement #7 with: "Extract ONLY the product objects from ALL [PRODUCT IMAGE] references. IGNORE any backgrounds in reference images."
 
 ## Implementation
 
-In `BundleVisuals.tsx` Step 5 generating section, change how we wire `MultiProductProgressBanner`:
+### File: `supabase/functions/generate-workflow/index.ts`
 
-```tsx
-// Build scene-based maps for the progress banner
-const sceneProgressQueue = selectedScenes.map(s => ({
-  id: s.id,
-  title: s.title,
-  images: s.previewUrl ? [{ url: s.previewUrl }] : [],
-}));
+Add an `is_bundle` check (from payload) in `buildVariationPrompt`:
 
-// jobMap: key → jobId. We need scene.id → jobId for chips
-const sceneJobIds = new Map<string, string>();
-const sceneResults = new Map<string, { images: string[]; labels: string[] }>();
-for (const [key, jobId] of jobMap.entries()) {
-  const sceneId = key.replace(/^bundle_/, '').replace(/_r.*$/, '');
-  sceneJobIds.set(sceneId, jobId);
+```typescript
+// Near line 293, after additionalProducts block:
+const isBundle = (variation as any).is_bundle === true;
+
+// Line 294-300: wrap additionalProductsBlock
+const additionalProductsBlock = (!isBundle && additionalProducts?.length > 0) ? `...` : "";
+
+// Line 308-316: wrap propStyleBlock
+let propStyleBlock = "";
+if (!isBundle) {
+  // existing prop style logic
 }
-// Mark completed scenes
-let doneCount = 0;
-for (const [sceneId] of sceneJobIds) {
-  if (doneCount < completedJobs) {
-    sceneResults.set(sceneId, { images: [], labels: [] });
-    doneCount++;
-  }
-}
+
+// Line 604: variation.instruction handling
+isBundle 
+  ? variation.instruction 
+  : (propStyle === 'clean' ? /* regex strip */ : variation.instruction)
 ```
 
-Then pass these to the banner. This shows scene thumbnails with spinners/checkmarks as they complete.
+### File: `src/pages/BundleVisuals.tsx`
 
-Also remove stale `navigate` from the `handleGenerate` dependency array.
+Add `is_bundle: true` to each variation entry so the edge function knows to skip conflicting blocks:
 
-## Files to modify
-- `src/pages/BundleVisuals.tsx` — Fix Step 5 progress banner wiring
+```typescript
+const variationEntry = {
+  label: scene.title + ...,
+  instruction: promptInstruction,
+  aspect_ratio: ratio,
+  is_bundle: true,  // <-- NEW
+  ...
+};
+```
+
+## Safety
+- The `is_bundle` flag is purely additive — no existing workflows are affected
+- All changes are guarded by `if (isBundle)` checks
+- Existing product images / flat lay / UGC workflows continue using their current logic unchanged
