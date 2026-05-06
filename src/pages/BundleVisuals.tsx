@@ -86,7 +86,7 @@ export default function BundleVisuals() {
   const { allScenes, isLoading: isLoadingScenes } = useProductImageScenes();
 
   const bundleScenes = useMemo(
-    () => allScenes.filter(s => s.isActive && s.categoryCollection === 'bundle'),
+    () => allScenes.filter(s => s.categoryCollection === 'bundle'),
     [allScenes]
   );
 
