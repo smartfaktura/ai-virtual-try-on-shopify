@@ -1,38 +1,36 @@
-## Child Room Scenes — 6 New Entries
+## Update 12 Living Room Scenes to Full Interior Compositions
 
-Based on 2026 kids room trends (warm minimalism, architectural beds, textured neutrals, sophisticated color, natural materials), I'll create 6 scenes for a new **Child Room** sub-category under `furniture`.
+### Problem
+These 12 scenes currently generate images focused on a single product in an otherwise sparse room. The AI treats the product as the "visual hero" but doesn't populate the space with complementary furniture, resulting in empty-looking interiors rather than realistic, fully furnished rooms.
 
-### The 6 Scenes
+### Solution
+Add a `COMPLETE INTERIOR COMPOSITION` directive to each scene's `prompt_template` — the same pattern successfully used for the Home Office and Kids Room scenes. This block instructs the AI to:
 
-1. **Warm Oak Nursery Suite** — Natural honey oak floors, plaster walls in warm cream, large arched window. Scandinavian warmth with chunky knit textiles. Calm, gender-neutral.
+1. **Build a complete room** around the product — if the user selects a sofa, the room also gets a coffee table, side tables, a rug, lamps, and wall art. If they select a coffee table, the room gets a sofa behind it, armchairs, etc.
+2. **Integrate the product naturally** as part of the interior, not as a floating showpiece.
+3. **Maintain correct proportional scale** for all furniture pieces relative to the room architecture.
 
-2. **Sage & Plaster Playroom** — Matte sage green accent wall, smooth white plaster remaining walls, light oak herringbone floor. Earthy, grounding palette with soft linen textiles.
+### Scenes to Update (12 total)
+1. **Penthouse Panorama Lounge** — `furniture-lifestyle-penthouse-panorama`
+2. **Ivory Bouclé Salon** — `furniture-lifestyle-ivory-boucle-salon`
+3. **Walnut & Travertine Den** — `furniture-lifestyle-walnut-travertine-den`
+4. **Smoke & Stone Loft** — `furniture-lifestyle-smoke-stone-loft`
+5. **Nordic Fjord Living** — `furniture-lifestyle-nordic-fjord`
+6. **Grand Atelier Salon** — `furniture-lifestyle-grand-atelier-salon`
+7. **Sunlit Marble Atrium** — `furniture-lifestyle-sunlit-marble-atrium`
+8. **Coastal Breeze Salon** — `furniture-lifestyle-coastal-breeze-salon`
+9. **Cloud White Gallery** — `furniture-lifestyle-cloud-white-gallery`
+10. **Golden Hour Terrace Lounge** — `furniture-lifestyle-golden-terrace-lounge`
+11. **Silk & Stone Residence** — `furniture-lifestyle-silk-stone-residence`
+12. **Luminous Japandi Suite** — `furniture-lifestyle-luminous-japandi-suite`
 
-3. **Concrete Loft Kids Room** — Board-formed concrete feature wall, warm gray micro-cement floor, black steel window frame. Architectural, urban-industrial but softened with wool rugs.
+### What Changes in Each Prompt
+A new directive block inserted after the product fidelity line and before the scene description:
 
-4. **Travertine & Linen Haven** — Honed travertine accent wall panel, wide-plank bleached oak floor, linen curtains. Mediterranean warmth, tactile luxury.
-
-5. **Cloud White Modern Nursery** — All-white matte plaster walls, pale ash timber floor, sheer curtains diffusing light. Furniture is the absolute hero — clean, serene, gallery-like.
-
-6. **Walnut & Terracotta Retreat** — Rich walnut wood paneling on one wall, warm terracotta-tinted plaster on remaining walls, dark stained oak floor. Moody, cozy, sophisticated.
-
-### Scaling Rules (Child Room Specific)
-
-Every prompt will include:
-- **Room dimensions**: ~4m x 3.5m, 2.7m ceiling (standard child room)
-- **Proportional Scale Rule**: Product width as fraction of room width
-- **Human Scale Anchor**: Reference a child (~120cm tall, age 6-8) or standard door (210cm) as invisible ruler
-- **Child furniture standards**: Crib height ~90cm, toddler bed ~50cm from floor, child desk height ~55-60cm, child chair seat ~30-35cm
-- **No clutter directive**: No random toys, no excessive decoration
+- **COMPLETE INTERIOR COMPOSITION** — Forces a fully furnished room. Provides conditional logic: if the product is a sofa, add coffee table + side tables + rug + lamps; if it's a table, add seating around it; if it's a shelf/console, show it in a room with a seating area visible, etc.
+- **Replaces** the "furniture must remain the visual hero" line with "the product must be the primary focal point within a fully furnished, balanced interior."
+- Keeps all existing architectural descriptions, palettes, lighting, and camera settings unchanged.
 
 ### Technical Details
-
-- **Table**: `product_image_scenes`
-- **sub_category**: `Child Room`
-- **sub_category_sort_order**: `7`
-- **category_collection**: `furniture`
-- **scene_type**: `lifestyle`
-- **sort_order**: `160-165`
-- **is_active**: `true`
-
-Migration will INSERT 6 rows with full `prompt_template` values following the same structure as existing Home Office and Living Room scenes.
+- Single SQL `UPDATE` per scene via the data insert tool (not a migration — this is a data update, not a schema change).
+- Each prompt_template gets the composition block injected. No code files change.
