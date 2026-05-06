@@ -347,7 +347,7 @@ export default function BundleVisuals() {
       }
     };
     pollingRef.current = setTimeout(poll, 2000);
-  }, [selectedProducts, selectedScenes, canAfford, heroProductId, arrangement, customNote, selectedRatios, totalImages, analyses, setBalanceFromServer, queryClient, navigate]);
+  }, [selectedProducts, selectedScenes, canAfford, heroProductId, arrangement, customNote, selectedRatios, totalImages, analyses, setBalanceFromServer, queryClient]);
 
   useEffect(() => {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
@@ -605,17 +605,39 @@ export default function BundleVisuals() {
                 <p className="text-sm text-muted-foreground">Queuing generations…</p>
               </div>
             )}
-            {generationPhase === 'generating' && (
-              <MultiProductProgressBanner
-                productQueue={selectedProducts.map(p => ({ id: p.id, title: p.title, images: [{ url: p.image_url }] }))}
-                multiProductResults={new Map(Array.from(jobMap.entries()).slice(0, completedJobs).map(([k, v]) => [k, { images: [], labels: [] }]))}
-                multiProductJobIds={jobMap}
-                generatingProgress={expectedJobCount > 0 ? Math.round((completedJobs / expectedJobCount) * 100) : 0}
-                totalExpectedImages={expectedJobCount}
-                totalJobs={expectedJobCount}
-                workflowName="Bundle Visuals"
-              />
-            )}
+            {generationPhase === 'generating' && (() => {
+              // Build scene-based maps for progress banner (scenes as "products" for chip display)
+              const sceneQueue = selectedScenes.map(s => ({
+                id: s.id,
+                title: s.title,
+                images: s.previewUrl ? [{ url: s.previewUrl }] : [],
+              }));
+              const sceneJobIds = new Map<string, string>();
+              for (const [key, jobId] of jobMap.entries()) {
+                // key format: bundle_{sceneId}_r{ratio}
+                const sceneId = key.replace(/^bundle_/, '').replace(/_r.*$/, '');
+                if (!sceneJobIds.has(sceneId)) sceneJobIds.set(sceneId, jobId);
+              }
+              const sceneResults = new Map<string, { images: string[]; labels: string[] }>();
+              let counted = 0;
+              for (const [sceneId] of sceneJobIds) {
+                if (counted < completedJobs) {
+                  sceneResults.set(sceneId, { images: [], labels: [] });
+                  counted++;
+                }
+              }
+              return (
+                <MultiProductProgressBanner
+                  productQueue={sceneQueue}
+                  multiProductResults={sceneResults}
+                  multiProductJobIds={sceneJobIds}
+                  generatingProgress={expectedJobCount > 0 ? Math.round((completedJobs / expectedJobCount) * 100) : 0}
+                  totalExpectedImages={expectedJobCount}
+                  totalJobs={expectedJobCount}
+                  workflowName="Bundle Visuals"
+                />
+              );
+            })()}
           </div>
         )}
 

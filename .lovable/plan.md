@@ -1,51 +1,66 @@
 
-# Bundle Visuals — Generation UX Improvements
+# Bundle Visuals — Fix Progress Banner Integration
 
-## Issues Found
+## Bugs Found
 
-1. **Step 5 (Generating) is bare** — Only a spinner + "X/Y complete" text. No progress bar, no time estimate, no branded experience. The project already has `MultiProductProgressBanner` with all these features.
+### 1. Product chips never update (Critical UX)
+`MultiProductProgressBanner` expects `multiProductJobIds` and `multiProductResults` to be **keyed by product ID**. But in the bundle flow, `jobMap` is keyed by scene-based keys (`bundle_${scene.id}_r${ratio}`). This means:
+- Product chips never show "processing" spinner
+- Product chips never show "done" checkmark
 
-2. **Auto-redirect on completion** — Navigates to `/app/library` immediately, giving no sense of accomplishment or context about what was generated.
+### 2. `multiProductResults` constructed incorrectly
+Current code: `new Map(Array.from(jobMap.entries()).slice(0, completedJobs)...)` — this slices scene-keyed entries and maps them to fake results. None of them match product IDs.
 
-3. **No visual feedback during enqueue phase** — Between pressing "Generate" and jobs starting, there's no indication of progress.
+### 3. Progress percentage jumps
+The progress starts at 0% and jumps to e.g. 33% when the first job completes. No smooth ramp during generation phase.
 
-## Fixes
+## Fix
 
-### 1. Use `MultiProductProgressBanner` in Step 5
+Since Bundle Visuals is **not** a per-product workflow (it generates per-scene, not per-product), the product chips feature of `MultiProductProgressBanner` doesn't semantically apply. Instead:
 
-Replace the bare spinner with the existing branded progress component that provides:
-- Animated progress bar with time-based floor
-- Elapsed timer + smart time estimate
-- Rotating team member messages ("Tomas is composing your bundle...")
-- Overtime warnings when jobs take longer than expected
-- Product chips showing which items are in the bundle
+- Pass `productQueue` with the selected products (for display context)
+- Create a **scene-keyed** results map where done job keys map to entries, so the overall progress bar and count work correctly
+- For the product chips to show correctly, **don't use them** — pass `productQueue` as a single-item array (the bundle as one "product") so the chips section is skipped (`totalProducts > 1` check), and rely on the progress bar + team messages + time estimates instead
 
-Wire: `totalExpectedImages`, `generatingProgress = (completedJobs/expectedJobCount)*100`, `workflowName = "Bundle Visuals"`, product queue from selected products.
+OR better: adapt the props so the progress banner shows per-**scene** progress instead of per-product:
+- `productQueue` = selected scenes (as pseudo-products with scene thumbnails)
+- `multiProductJobIds` = Map keyed by scene ID → job ID
+- `multiProductResults` = Map of completed scene IDs
 
-### 2. Completion state with results summary
+This gives the user visual feedback on which scenes are done.
 
-Instead of auto-navigating to library:
-- Show a success state with checkmark animation
-- Display count: "3 bundle images ready"
-- Two buttons: **"View in Library"** (primary) and **"Create Another Bundle"** (ghost, resets to Step 1)
-- Keep the success state until user clicks
+## Implementation
 
-### 3. Better enqueue phase feedback
+In `BundleVisuals.tsx` Step 5 generating section, change how we wire `MultiProductProgressBanner`:
 
-Add a "Preparing..." state before polling starts (while base64 conversion + enqueue happens). Show "Uploading product images..." then "Queuing generations..." so user sees activity from the moment they click Generate.
+```tsx
+// Build scene-based maps for the progress banner
+const sceneProgressQueue = selectedScenes.map(s => ({
+  id: s.id,
+  title: s.title,
+  images: s.previewUrl ? [{ url: s.previewUrl }] : [],
+}));
 
-### 4. Progress percentage calculation fix
+// jobMap: key → jobId. We need scene.id → jobId for chips
+const sceneJobIds = new Map<string, string>();
+const sceneResults = new Map<string, { images: string[]; labels: string[] }>();
+for (const [key, jobId] of jobMap.entries()) {
+  const sceneId = key.replace(/^bundle_/, '').replace(/_r.*$/, '');
+  sceneJobIds.set(sceneId, jobId);
+}
+// Mark completed scenes
+let doneCount = 0;
+for (const [sceneId] of sceneJobIds) {
+  if (doneCount < completedJobs) {
+    sceneResults.set(sceneId, { images: [], labels: [] });
+    doneCount++;
+  }
+}
+```
 
-Current: raw `completedJobs / expectedJobCount`. 
-Improved: Account for enqueue phase (0-15%) + generation phase (15-100%), so progress never jumps from 0 to 30%.
+Then pass these to the banner. This shows scene thumbnails with spinners/checkmarks as they complete.
+
+Also remove stale `navigate` from the `handleGenerate` dependency array.
 
 ## Files to modify
-
-- `src/pages/BundleVisuals.tsx` — All changes contained here (import + use MultiProductProgressBanner, add completion state, improve progress tracking)
-
-## Safety
-
-- Zero edge function changes
-- Zero database changes
-- Zero changes to shared components
-- Only the Bundle Visuals page is touched
+- `src/pages/BundleVisuals.tsx` — Fix Step 5 progress banner wiring
