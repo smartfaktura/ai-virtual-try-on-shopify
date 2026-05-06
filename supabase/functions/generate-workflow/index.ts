@@ -599,12 +599,12 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
 
   return `${processedTemplate}
 ${themeBlock}
-PRODUCT DETAILS:
+${isBundle ? '' : `PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
 ${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
-${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
+`}${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${isBundle ? variation.instruction : (propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' '))}
 
@@ -614,7 +614,7 @@ ${brandLines.length > 0 ? `BRAND GUIDELINES:\n${brandLines.join("\n")}` : ""}
 
 CRITICAL REQUIREMENTS:
 1. The output image MUST be ${aspectRatio} aspect ratio. Do NOT inherit or match the reference image dimensions — this is a hard constraint.
-2. The product MUST look EXACTLY like [PRODUCT IMAGE${additionalProducts?.length ? ' 1' : ''}] — preserve 100% accurate packaging, labels, colors, branding, shape, and materials.${!isBundle && additionalProducts?.length ? `\n${additionalProducts.map((_, idx) => `${idx + 4}. Product ${idx + 2} MUST look EXACTLY like [PRODUCT IMAGE ${idx + 2}] — same packaging, shape, colors, and branding.`).join('\n')}\n${additionalProducts.length + 4}. The final image MUST show exactly ${1 + additionalProducts.length} distinct products. Count them before finalizing. Missing any product is a failure.` : ''}
+2. The product MUST look EXACTLY like [PRODUCT IMAGE${additionalProducts?.length ? ' 1' : ''}] — preserve 100% accurate packaging, labels, colors, branding, shape, and materials.${additionalProducts?.length ? `\n${additionalProducts.map((_, idx) => `${idx + 4}. Product ${idx + 2} MUST look EXACTLY like [PRODUCT IMAGE ${idx + 2}] — same packaging, shape, colors, and branding.`).join('\n')}\n${additionalProducts.length + 4}. The final image MUST show exactly ${1 + additionalProducts.length} distinct products. Count them before finalizing. Missing any product is a failure.` : ''}
 3. All text on packaging must be perfectly legible.
 4. Ultra high resolution, professional quality, no AI artifacts.
 5. This specific variation must clearly match the "${variation.label}" direction described above.
@@ -767,9 +767,10 @@ async function generateImage(
   // Build content array: text prompt + labeled reference images
   const IMAGE_LABEL_MAP: Record<string, string> = {
     product: '[PRODUCT IMAGE] Product reference — reproduce ONLY the product object (shape, colors, labels, materials). IGNORE all background, surfaces, and environment in this image:',
-    product_2: '[PRODUCT IMAGE 2] Additional product reference:',
-    product_3: '[PRODUCT IMAGE 3] Additional product reference:',
-    product_4: '[PRODUCT IMAGE 4] Additional product reference:',
+    product_2: '[PRODUCT IMAGE 2] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
+    product_3: '[PRODUCT IMAGE 3] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
+    product_4: '[PRODUCT IMAGE 4] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
+    product_5: '[PRODUCT IMAGE 5] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
     model: '[MODEL IMAGE] Identity reference — the person MUST look like this:',
     scene_reference: '[SCENE REFERENCE] Composition and style reference:',
     packaging_reference: '[PACKAGING REFERENCE] This is the REAL product packaging — reproduce its EXACT color, material, texture, shape, branding, and construction. Do NOT invent or change any packaging detail:',
