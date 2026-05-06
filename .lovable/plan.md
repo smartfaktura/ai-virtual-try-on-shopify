@@ -1,27 +1,25 @@
-## Improve Bedroom Scenes & Add 6 New Trending Scenes
+## Add 6 New Living Room Scenes
 
-### Part 1: Update 12 Existing Bedroom Scenes
+Insert 6 new interior-design-forward, fully furnished Living Room scenes into `product_image_scenes`, following the exact pattern of existing scenes (sort_order 142-147, same `COMPLETE INTERIOR COMPOSITION` directive, dimensional accuracy block, and conditional product-type logic).
 
-Add `COMPLETE INTERIOR COMPOSITION` directive to all 12 scenes, forcing the AI to generate fully furnished bedrooms (nightstands, lamps, rugs, art, seating) around any selected product. Also replace "visual hero" phrasing with "primary focal point within a fully furnished, balanced interior."
+### New Scenes
 
-**Scenes:** Linen Cloud Suite, Parisian Pied-à-Terre, Coastal Dawn Retreat, Warm Walnut Sanctuary, Scandi Hygge Nest, Terracotta & Linen Villa, Japandi Sleep Temple, Hamptons Morning Suite, Milanese Atelier Bedroom, Desert Stone Retreat, Skyline Penthouse Bedroom, Garden Conservatory Bedroom.
+1. **Terracotta Courtyard Living** (142) — Warm terracotta lime-wash walls, arched niches, reclaimed oak beams, handmade Zellige tile accents. Mediterranean warmth meets modern comfort.
 
-The directive includes conditional logic for beds, nightstands, dressers, wardrobes, chairs, rugs, and lamps — each product type gets appropriate complementary furniture.
+2. **Midnight Velvet Drawing Room** (143) — Deep navy paneled walls, rich midnight blue velvet, antiqued brass chandelier, herringbone parquet. Moody maximalist evening atmosphere.
 
-### Part 2: Add 6 New Trending Bedroom Scenes
+3. **Brutalist Concrete Salon** (144) — Board-formed concrete walls, large pivoting steel-frame windows, warm camel leather, olive linen. Raw architectural drama softened by organic textiles.
 
-Based on current 2025-2026 interior design trends:
+4. **Blush & Sage Garden Room** (145) — Dusty rose plaster walls, sage green linen, indoor olive tree, fluted travertine console. Soft biophilic palette with European garden-room charm.
 
-1. **Quiet Luxury Moody Suite** — Dark chocolate fluted oak paneling, warm amber velvet, brass accents. The "quiet luxury" movement.
-2. **Curved Plaster Grotto** — Organic arched white lime plaster, tadelakt flooring, Mediterranean cave-like serenity. Curves-over-angles trend.
-3. **Moss Green Velvet Cocoon** — Deep forest green walls, biophilic accents (pothos, botanical prints), cognac leather. Nature-immersion trend.
-4. **Raw Earth Wabi-Sabi Room** — Imperfect clay plaster, reclaimed timber, mismatched vintage stools, undyed linen. Wabi-sabi movement.
-5. **Warm Minimalist Loft** — Polished concrete + whitewashed brick, industrial windows, warm putty tones. Warm minimalism trend.
-6. **Art Deco Revival Boudoir** — Deep emerald fluted velvet, brass sunburst mirror, chevron parquet, geometric mouldings. Neo-deco revival.
+5. **Smoked Oak Library Lounge** (146) — Floor-to-ceiling smoked oak bookshelves, cognac leather club chairs, brass reading lamps, Persian rug. Intellectual warmth, members-club ambiance.
 
-All 6 new scenes include the full `COMPLETE INTERIOR COMPOSITION` directive, `PROPORTIONAL SCALE RULE`, and rich `STYLED INTERIOR DETAILS` blocks matching the existing bedroom scene pattern.
+6. **Alpine Chalet Great Room** (147) — Exposed timber A-frame ceiling, stone fireplace wall, sheepskin throws, wide-plank pine floors. Cozy mountain-lodge grandeur with natural textures.
 
 ### Technical Details
-- Two `UPDATE` statements via migration: one to inject the composition block, one to fix "visual hero" phrasing across 12 scenes.
-- Six `INSERT` statements for new scenes into `product_image_scenes` with `category_collection = 'furniture'`, `sub_category = 'Bedroom'`, `scene_type = 'lifestyle'`, sort_order 154-159.
-- No code file changes needed.
+
+- Database: 6 `INSERT` statements via the insert tool (data operation, not schema change)
+- Each prompt includes the full `COMPLETE INTERIOR COMPOSITION` conditional block, `DIMENSIONAL ACCURACY` ruler, and `PROPORTIONAL SCALE RULE`
+- `category_collection = 'furniture'`, `sub_category = 'Living Room'`, `scene_type = 'lifestyle'`
+- `category_sort_order = 0`, `sub_category_sort_order = 0`
+- No code file changes needed
