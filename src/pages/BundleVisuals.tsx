@@ -608,7 +608,7 @@ export default function BundleVisuals() {
         </div>
       )}
 
-      <NoCreditsModal open={noCreditsModalOpen} onOpenChange={setNoCreditsModalOpen} />
+      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} />
     </div>
   );
 }
