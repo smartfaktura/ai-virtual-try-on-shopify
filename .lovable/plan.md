@@ -1,30 +1,38 @@
+## Child Room Scenes — 6 New Entries
 
-## Improve 6 Living Room Scene Prompts
+Based on 2026 kids room trends (warm minimalism, architectural beds, textured neutrals, sophisticated color, natural materials), I'll create 6 scenes for a new **Child Room** sub-category under `furniture`.
 
-Two problems to fix:
+### The 6 Scenes
 
-### 1. Dimensional accuracy — product appears oversized
+1. **Warm Oak Nursery Suite** — Natural honey oak floors, plaster walls in warm cream, large arched window. Scandinavian warmth with chunky knit textiles. Calm, gender-neutral.
 
-The current DIMENSIONAL ACCURACY block is too vague. A 200cm sofa in a 7m-wide room should occupy ~29% of the wall, but the AI has no explicit instruction to calculate proportions. The fix:
+2. **Sage & Plaster Playroom** — Matte sage green accent wall, smooth white plaster remaining walls, light oak herringbone floor. Earthy, grounding palette with soft linen textiles.
 
-- Replace the generic dimensional block with a **PROPORTIONAL SCALE RULE** that explicitly tells the AI: "A 200cm product must occupy roughly 200/room-width of the visible wall. If the room is 7m wide, the product spans ~2/7 of that wall. Never let a product exceed 40% of the room width unless its real dimensions require it."
-- Add a **HUMAN SCALE ANCHOR**: "Imagine a 175cm adult standing next to the product for scale reference — the product must look correct relative to that person even if no person is shown."
-- Add door/window pixel-ratio anchoring: "The standard door (210cm × 90cm) visible or implied in the scene is your calibration ruler."
+3. **Concrete Loft Kids Room** — Board-formed concrete feature wall, warm gray micro-cement floor, black steel window frame. Architectural, urban-industrial but softened with wool rugs.
 
-### 2. Scenes feel sterile — need cozy, styled-interior warmth
+4. **Travertine & Linen Haven** — Honed travertine accent wall panel, wide-plank bleached oak floor, linen curtains. Mediterranean warmth, tactile luxury.
 
-Each of the 6 scenes will get styling layers that make them feel like a real lived-in, interior-designed space rather than a cold showroom:
+5. **Cloud White Modern Nursery** — All-white matte plaster walls, pale ash timber floor, sheer curtains diffusing light. Furniture is the absolute hero — clean, serene, gallery-like.
 
-- **Sunlit Marble Atrium** — Add: a stack of oversized coffee-table books, a cashmere throw draped on an accent chair, a subtle scented candle on the console, warm-toned dried pampas in a ceramic vase. Soften marble coldness with layered textiles.
-- **Coastal Breeze Salon** — Add: a linen-bound book and reading glasses on a side table, a woven rattan tray with a ceramic mug, a soft knit blanket over the sofa arm, weathered wooden picture frames on a shelf. More Mediterranean cottage, less hotel lobby.
-- **Cloud White Gallery** — Add: a curated stack of art monographs on the floor near the wall, a soft sheepskin draped over one seat, a hand-thrown ceramic cup on a side surface, a single stem flower in a slim vase. Gallery warmth, not clinical.
-- **Golden Hour Terrace Lounge** — Add: an open book face-down on the coffee table, wine glasses catching the golden light, a lightweight linen throw, terracotta pottery with a trailing plant on the terrace. Warm resort evening, not empty model home.
-- **Silk & Stone Residence** — Add: a velvet cushion in muted sage, a leather-bound journal on the side table, a small brass tray with a candle and matches, fresh cut stems in a fluted vase near the fireplace. Quiet luxury that feels inhabited.
-- **Luminous Japandi Suite** — Add: a handmade ceramic tea set on the bench, a folded indigo-dyed linen cloth, a single ikebana arrangement in the tokonoma niche, a wabi-sabi stoneware bowl with a few dried pods. Lived-in serenity.
+6. **Walnut & Terracotta Retreat** — Rich walnut wood paneling on one wall, warm terracotta-tinted plaster on remaining walls, dark stained oak floor. Moody, cozy, sophisticated.
 
-### Technical details
+### Scaling Rules (Child Room Specific)
 
-- Single data UPDATE via the insert tool (6 rows, updating `prompt_template` column only)
-- Each prompt keeps the `[PRODUCT IMAGE]` source-of-truth header and `{{productName}}` placeholder
-- The improved DIMENSIONAL ACCURACY block replaces the old one in all 6 prompts
-- No schema changes, no code changes needed
+Every prompt will include:
+- **Room dimensions**: ~4m x 3.5m, 2.7m ceiling (standard child room)
+- **Proportional Scale Rule**: Product width as fraction of room width
+- **Human Scale Anchor**: Reference a child (~120cm tall, age 6-8) or standard door (210cm) as invisible ruler
+- **Child furniture standards**: Crib height ~90cm, toddler bed ~50cm from floor, child desk height ~55-60cm, child chair seat ~30-35cm
+- **No clutter directive**: No random toys, no excessive decoration
+
+### Technical Details
+
+- **Table**: `product_image_scenes`
+- **sub_category**: `Child Room`
+- **sub_category_sort_order**: `7`
+- **category_collection**: `furniture`
+- **scene_type**: `lifestyle`
+- **sort_order**: `160-165`
+- **is_active**: `true`
+
+Migration will INSERT 6 rows with full `prompt_template` values following the same structure as existing Home Office and Living Room scenes.
