@@ -1,50 +1,25 @@
-## Add New "Outdoor Furniture" Subcategory with 12 Scenes
+## Add New "Dining Room" Subcategory with 6 Scenes
 
-Create a new subcategory under `furniture` called **"Outdoor Furniture"** with 12 luxury, design-forward terrace/patio scenes — all fully furnished with realistic outdoor proportions.
+Create a new subcategory under `furniture` called **"Dining Room"** with 6 luxury, design-forward fully furnished dining scenes. Each adapts to any product type (dining table, chairs, sideboard, lighting, rug, tableware display).
 
-### Naming & Structure
+### Scenes (sort_order 192–197)
 
-- `category_collection = 'furniture'`
-- `sub_category = 'Outdoor Furniture'`
-- `scene_type = 'lifestyle'`
-- `sort_order` range: 180–191 (clear of existing scenes)
-- `category_sort_order = 0`, `sub_category_sort_order = 0`
+1. **Warm Travertine Dining Hall** (192) — Honed travertine floor, arched alcove, long oak farmhouse table (seats 8), linen-upholstered chairs, brass chandelier, terracotta accents.
 
-### Prompt Architecture
+2. **Midnight Lacquer Dining Room** (193) — Deep charcoal lacquered walls, smoked oak parquet, round walnut pedestal table, emerald velvet chairs, antiqued brass candelabra, moody maximalist.
 
-Each scene will include:
+3. **Scandi Birch Dining Nook** (194) — Light birch flooring, warm white walls, round birch dining table (seats 6), woven paper-cord chairs, linen pendant lamp, minimalist ceramics.
 
-- **COMPLETE OUTDOOR COMPOSITION** — conditional logic for different product types (sofa/sectional, dining table, lounge chair, side table, planter, lighting, rug, parasol/umbrella). No matter what product the user adds, the terrace will be fully furnished around it.
-- **PROPORTIONAL SCALE RULE** — calibrated for outdoor spaces (typical terrace 6m × 4m to 8m × 5m). References: standard exterior door (210cm × 90cm), railing height (~100cm), planter boxes, and a 175cm standing adult as anchor.
-- **NO LOGOS** directive (outdoor furniture brands, cushion tags, etc.)
+4. **Mediterranean Courtyard Dining** (195) — Open-air courtyard with limestone floor, long reclaimed teak table under a vine-draped pergola, rush-seat chairs, terracotta tableware, olive tree.
 
-### The 12 Scenes
+5. **Brutalist Concrete Dining Loft** (196) — Board-formed concrete walls, steel-frame windows, live-edge walnut slab table on blackened steel legs, cognac leather chairs, industrial pendant lights.
 
-1. **Mediterranean Stone Terrace** (180) — Warm limestone paving, bougainvillea-draped pergola, linen-draped outdoor sofa, olive tree in terracotta pot. Sea view backdrop.
-
-2. **Brutalist Concrete Rooftop** (181) — Board-formed concrete planters, blackened steel outdoor dining set, city skyline backdrop, warm teak accents, architectural cacti.
-
-3. **Hamptons White Porch** (182) — Wide wrap-around porch, white-painted railing, slatted teak loungers, blue-and-white striped cushions, hydrangea planters, ocean breeze light.
-
-4. **Japandi Courtyard Deck** (183) — Smooth cedar decking, low-profile modular seating in warm gray, black river pebble border, bamboo screen, Akari-style outdoor lanterns.
-
-5. **Tuscan Loggia Dining** (184) — Stone arched loggia, long reclaimed oak dining table (seats 8), wrought iron lanterns, vineyard view, linen table runner, terracotta accents.
-
-6. **Tropical Resort Poolside** (185) — Travertine pool deck, daybed with canopy in natural linen, palm fronds overhead, infinity pool edge, warm sunset light.
-
-7. **Scandi Cabin Veranda** (186) — Dark-stained timber deck, sheepskin-draped Adirondack chairs, wool blankets, log side tables, pine forest backdrop, morning mist.
-
-8. **Desert Hacienda Patio** (187) — Stucco walls, Saltillo tile floor, wrought iron dining chairs, succulent garden, fire pit, warm desert sunset, adobe arches.
-
-9. **Parisian Balcony Bistro** (188) — Narrow wrought iron balcony, marble-topped bistro table, two folding café chairs, window boxes with geraniums, Haussmann rooftop view.
-
-10. **Modern Glass Pavilion** (189) — Freestanding glass-and-steel outdoor room, modular outdoor sofa in bouclé, polished concrete floor, landscape garden view, pendant lighting.
-
-11. **Coastal Dune Deck** (190) — Bleached hardwood deck on sand dunes, rope-wrapped loungers, driftwood coffee table, sea grass planters, ocean horizon, wind-swept light.
-
-12. **Alpine Chalet Terrace** (191) — Wide timber balcony with mountain views, chunky wooden outdoor dining table, sheepskin throws on benches, lantern lighting, snow-dusted peaks backdrop.
+6. **Blush & Fluted Stone Dining** (197) — Dusty rose plaster walls, fluted travertine dining table, cream bouclé chairs, brass arc floor lamp, dried pampas centerpiece, soft biophilic palette.
 
 ### Technical Details
 
-- Database: 12 `INSERT` statements via the insert tool (data operation, not schema change)
-- No code file changes needed — the existing scene loading logic already groups by `sub_category` dynamically
+- Database: 6 `INSERT` statements via the insert tool
+- Each prompt includes `COMPLETE INTERIOR COMPOSITION` (conditional for dining table / chair / sideboard / lighting / rug / tableware), `PROPORTIONAL SCALE RULE` with dining-room calibration (standard table heights, chair dimensions, room ~5m×4m), and `NO LOGOS` directive
+- `category_collection = 'furniture'`, `sub_category = 'Dining Room'`, `scene_type = 'lifestyle'`
+- `category_sort_order = 0`, `sub_category_sort_order = 0`
+- No code file changes needed
