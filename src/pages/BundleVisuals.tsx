@@ -182,6 +182,7 @@ export default function BundleVisuals() {
     for (const p of selectedProducts) {
       productBase64Map.set(p.id, await convertImageToBase64(p.image_url));
     }
+    setGenerationPhase('enqueuing');
 
     const heroProduct = selectedProducts.find(p => p.id === heroProductId) || selectedProducts[0];
     const otherProducts = selectedProducts.filter(p => p.id !== heroProduct.id);
