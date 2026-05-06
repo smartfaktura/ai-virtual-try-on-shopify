@@ -1,15 +1,28 @@
-## Bug: Password validation error breaks signup form layout
 
-### Root cause
+# Create 6 Modern Luxury Living Room Scenes
 
-When Supabase returns a password complexity error like "Password should contain at least one character of each: abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789", the `mapAuthError` function in `src/lib/authErrors.ts` doesn't match it — it only checks for "password should be at least", not "password should contain". The raw message falls through to the last-resort handler and is displayed verbatim, causing layout distortion.
+Add 6 new prompt-only scenes to the `custom_scenes` table, each designed specifically for big furniture (sofas, tables, TV units, consoles). All scenes will have detailed, editorial-quality prompt hints optimized for product photography generation.
 
-### Fix
+## The 6 Scenes
 
-**`src/lib/authErrors.ts`** (line 78): Add `msg.includes('password should contain')` to the weak password check block, and update the friendly message to mention the actual requirements:
+1. **Penthouse Panorama Lounge** — Floor-to-ceiling windows with city skyline view, warm evening light, open-plan luxury living room with polished concrete floors and brass accents.
 
-```
-message: 'Please choose a stronger password (at least 6 characters, include uppercase, lowercase, and a number).'
-```
+2. **Ivory Boucle Salon** — Bright, airy living room with off-white plaster walls, arched doorways, herringbone oak floors, soft diffused morning light, quiet luxury Mediterranean aesthetic.
 
-One-line addition, no layout or structural changes needed.
+3. **Walnut & Travertine Den** — Rich mid-century modern interior with walnut paneling, travertine stone accents, warm amber lighting, sculptural elements, curated art collection.
+
+4. **Smoke & Stone Loft** — Industrial-luxe open loft with exposed steel beams, dark slate floors, moody directional lighting, charcoal concrete walls, floor-level low perspective.
+
+5. **Nordic Fjord Living** — Scandinavian minimalist living room with light ash wood floors, pale sage walls, oversized windows framing a forest view, clean natural light.
+
+6. **Grand Atelier Salon** — Parisian-inspired high-ceiling room with ornate moldings, dark herringbone parquet, dramatic chandelier, editorial fashion-house aesthetic.
+
+## Technical Details
+
+- Insert 6 rows into `custom_scenes` via database migration
+- `category: 'home'`, `discover_categories: ['home']`
+- `prompt_only: true` (no reference image — pure prompt generation)
+- Each scene gets a detailed 80-150 word prompt hint specifying environment, lighting, materials, lens, composition, and style
+- Prompt hints will include instructions to keep center clear for product placement
+- `image_url` set to the existing placeholder scene image
+- `created_by` set to the admin user ID from existing home scenes
