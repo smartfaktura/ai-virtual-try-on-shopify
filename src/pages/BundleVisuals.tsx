@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SEOHead } from '@/components/SEOHead';
 import { PageHeader } from '@/components/app/PageHeader';
 import { CatalogStepper } from '@/components/app/catalog/CatalogStepper';
-import { Package, Layers, Paintbrush, Sparkles, Star, Grid3x3, ArrowDownRight, CircleDot, Shuffle, Loader2, CheckCircle, Upload, FlaskConical, Image as ImageIcon } from 'lucide-react';
+import { MultiProductProgressBanner } from '@/components/app/MultiProductProgressBanner';
+import { Package, Layers, Paintbrush, Sparkles, Star, Grid3x3, ArrowDownRight, CircleDot, Shuffle, Loader2, CheckCircle, Upload, FlaskConical, Image as ImageIcon, PartyPopper } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,6 +67,8 @@ export default function BundleVisuals() {
   const [expectedJobCount, setExpectedJobCount] = useState(0);
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const [completedJobs, setCompletedJobs] = useState(0);
+  const [generationPhase, setGenerationPhase] = useState<'preparing' | 'enqueuing' | 'generating' | 'complete'>('preparing');
+  const [successCount, setSuccessCount] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load user products
@@ -166,6 +169,8 @@ export default function BundleVisuals() {
     setExpectedJobCount(totalImages);
     setEnqueuedCount(0);
     setCompletedJobs(0);
+    setGenerationPhase('preparing');
+    setSuccessCount(0);
     setStep(5);
 
     const { data: session } = await supabase.auth.getSession();
@@ -177,6 +182,7 @@ export default function BundleVisuals() {
     for (const p of selectedProducts) {
       productBase64Map.set(p.id, await convertImageToBase64(p.image_url));
     }
+    setGenerationPhase('enqueuing');
 
     const heroProduct = selectedProducts.find(p => p.id === heroProductId) || selectedProducts[0];
     const otherProducts = selectedProducts.filter(p => p.id !== heroProduct.id);
@@ -312,6 +318,7 @@ export default function BundleVisuals() {
     setEnqueuedCount(newJobMap.size);
     setExpectedJobCount(newJobMap.size);
     sendWake(token);
+    setGenerationPhase('generating');
 
     // Start polling
     const jobIds = Array.from(newJobMap.values());
@@ -328,9 +335,10 @@ export default function BundleVisuals() {
 
         if (done.length >= jobIds.length) {
           const failedCount = done.filter(j => j.status === 'failed').length;
+          const successfulCount = done.length - failedCount;
           if (failedCount > 0) toast.warning(`${failedCount} image${failedCount !== 1 ? 's' : ''} failed — credits refunded`);
-          toast.success(`Bundle visuals complete — ${done.length - failedCount} images ready`);
-          navigate('/app/library');
+          setSuccessCount(successfulCount);
+          setGenerationPhase('complete');
           return;
         }
         pollingRef.current = setTimeout(poll, 3000);
@@ -582,15 +590,51 @@ export default function BundleVisuals() {
           </div>
         )}
 
-        {/* Step 5: Generating */}
-        {step === 5 && (
+        {/* Step 5: Generating / Complete */}
+        {step === 5 && generationPhase !== 'complete' && (
+          <div className="flex flex-col items-center justify-center py-16 space-y-6">
+            {generationPhase === 'preparing' && (
+              <div className="text-center space-y-3">
+                <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+                <p className="text-sm text-muted-foreground">Uploading product images…</p>
+              </div>
+            )}
+            {generationPhase === 'enqueuing' && (
+              <div className="text-center space-y-3">
+                <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+                <p className="text-sm text-muted-foreground">Queuing generations…</p>
+              </div>
+            )}
+            {generationPhase === 'generating' && (
+              <MultiProductProgressBanner
+                productQueue={selectedProducts.map(p => ({ id: p.id, title: p.title, images: [{ url: p.image_url }] }))}
+                multiProductResults={new Map(Array.from(jobMap.entries()).slice(0, completedJobs).map(([k, v]) => [k, { images: [], labels: [] }]))}
+                multiProductJobIds={jobMap}
+                generatingProgress={expectedJobCount > 0 ? Math.round((completedJobs / expectedJobCount) * 100) : 0}
+                totalExpectedImages={expectedJobCount}
+                totalJobs={expectedJobCount}
+                workflowName="Bundle Visuals"
+              />
+            )}
+          </div>
+        )}
+
+        {step === 5 && generationPhase === 'complete' && (
           <div className="flex flex-col items-center justify-center py-20 space-y-6">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <PartyPopper className="w-8 h-8 text-primary" />
+            </div>
             <div className="text-center space-y-2">
-              <p className="text-lg font-semibold">Creating your bundle visuals</p>
-              <p className="text-sm text-muted-foreground">
-                {completedJobs}/{expectedJobCount} images complete
-              </p>
+              <p className="text-lg font-semibold">{successCount} bundle image{successCount !== 1 ? 's' : ''} ready</p>
+              <p className="text-sm text-muted-foreground">Your visuals are waiting in the library</p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="ghost" onClick={() => { setStep(1); setSelectedProductIds(new Set()); setSelectedSceneIds(new Set()); setGenerationPhase('preparing'); }}>
+                Create Another
+              </Button>
+              <Button onClick={() => navigate('/app/library')}>
+                View in Library
+              </Button>
             </div>
           </div>
         )}
