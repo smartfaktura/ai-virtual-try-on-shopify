@@ -240,6 +240,7 @@ const App = () => {
                         <Route path="/creative-drops" element={<CreativeDrops />} />
                         <Route path="/generate" element={<Generate />} />
                         <Route path="/generate/product-images" element={<ProductImages />} />
+                        <Route path="/generate/bundle-visuals" element={<BundleVisuals />} />
                         <Route path="/generate/text-to-product" element={<TextToProduct />} />
                         <Route path="/generate/:workflowSlug" element={<Generate />} />
                         <Route path="/library" element={<Jobs />} />
