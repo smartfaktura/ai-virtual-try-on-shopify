@@ -606,7 +606,7 @@ ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realist
 ${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
 ${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
-${propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' ')}
+${isBundle ? variation.instruction : (propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' '))}
 
 ${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
 
