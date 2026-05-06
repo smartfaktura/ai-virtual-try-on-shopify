@@ -67,6 +67,8 @@ export default function BundleVisuals() {
   const [expectedJobCount, setExpectedJobCount] = useState(0);
   const [enqueuedCount, setEnqueuedCount] = useState(0);
   const [completedJobs, setCompletedJobs] = useState(0);
+  const [generationPhase, setGenerationPhase] = useState<'preparing' | 'enqueuing' | 'generating' | 'complete'>('preparing');
+  const [successCount, setSuccessCount] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load user products
