@@ -169,6 +169,8 @@ export default function BundleVisuals() {
     setExpectedJobCount(totalImages);
     setEnqueuedCount(0);
     setCompletedJobs(0);
+    setGenerationPhase('preparing');
+    setSuccessCount(0);
     setStep(5);
 
     const { data: session } = await supabase.auth.getSession();
