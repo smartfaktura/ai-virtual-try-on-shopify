@@ -318,6 +318,7 @@ export default function BundleVisuals() {
     setEnqueuedCount(newJobMap.size);
     setExpectedJobCount(newJobMap.size);
     sendWake(token);
+    setGenerationPhase('generating');
 
     // Start polling
     const jobIds = Array.from(newJobMap.values());
@@ -334,9 +335,10 @@ export default function BundleVisuals() {
 
         if (done.length >= jobIds.length) {
           const failedCount = done.filter(j => j.status === 'failed').length;
+          const successfulCount = done.length - failedCount;
           if (failedCount > 0) toast.warning(`${failedCount} image${failedCount !== 1 ? 's' : ''} failed — credits refunded`);
-          toast.success(`Bundle visuals complete — ${done.length - failedCount} images ready`);
-          navigate('/app/library');
+          setSuccessCount(successfulCount);
+          setGenerationPhase('complete');
           return;
         }
         pollingRef.current = setTimeout(poll, 3000);
