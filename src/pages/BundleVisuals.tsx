@@ -590,15 +590,51 @@ export default function BundleVisuals() {
           </div>
         )}
 
-        {/* Step 5: Generating */}
-        {step === 5 && (
+        {/* Step 5: Generating / Complete */}
+        {step === 5 && generationPhase !== 'complete' && (
+          <div className="flex flex-col items-center justify-center py-16 space-y-6">
+            {generationPhase === 'preparing' && (
+              <div className="text-center space-y-3">
+                <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+                <p className="text-sm text-muted-foreground">Uploading product images…</p>
+              </div>
+            )}
+            {generationPhase === 'enqueuing' && (
+              <div className="text-center space-y-3">
+                <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+                <p className="text-sm text-muted-foreground">Queuing generations…</p>
+              </div>
+            )}
+            {generationPhase === 'generating' && (
+              <MultiProductProgressBanner
+                productQueue={selectedProducts.map(p => ({ id: p.id, title: p.title, images: [{ url: p.image_url }] }))}
+                multiProductResults={new Map(Array.from(jobMap.entries()).slice(0, completedJobs).map(([k, v]) => [k, { images: [], labels: [] }]))}
+                multiProductJobIds={jobMap}
+                generatingProgress={expectedJobCount > 0 ? Math.round((completedJobs / expectedJobCount) * 100) : 0}
+                totalExpectedImages={expectedJobCount}
+                totalJobs={expectedJobCount}
+                workflowName="Bundle Visuals"
+              />
+            )}
+          </div>
+        )}
+
+        {step === 5 && generationPhase === 'complete' && (
           <div className="flex flex-col items-center justify-center py-20 space-y-6">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <PartyPopper className="w-8 h-8 text-primary" />
+            </div>
             <div className="text-center space-y-2">
-              <p className="text-lg font-semibold">Creating your bundle visuals</p>
-              <p className="text-sm text-muted-foreground">
-                {completedJobs}/{expectedJobCount} images complete
-              </p>
+              <p className="text-lg font-semibold">{successCount} bundle image{successCount !== 1 ? 's' : ''} ready</p>
+              <p className="text-sm text-muted-foreground">Your visuals are waiting in the library</p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="ghost" onClick={() => { setStep(1); setSelectedProductIds(new Set()); setSelectedSceneIds(new Set()); setGenerationPhase('preparing'); }}>
+                Create Another
+              </Button>
+              <Button onClick={() => navigate('/app/library')}>
+                View in Library
+              </Button>
             </div>
           </div>
         )}
