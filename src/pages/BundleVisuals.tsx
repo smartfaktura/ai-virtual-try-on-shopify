@@ -347,7 +347,7 @@ export default function BundleVisuals() {
       }
     };
     pollingRef.current = setTimeout(poll, 2000);
-  }, [selectedProducts, selectedScenes, canAfford, heroProductId, arrangement, customNote, selectedRatios, totalImages, analyses, setBalanceFromServer, queryClient, navigate]);
+  }, [selectedProducts, selectedScenes, canAfford, heroProductId, arrangement, customNote, selectedRatios, totalImages, analyses, setBalanceFromServer, queryClient]);
 
   useEffect(() => {
     return () => { if (pollingRef.current) clearTimeout(pollingRef.current); };
