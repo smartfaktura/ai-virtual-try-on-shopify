@@ -1,25 +1,28 @@
-## Add New "Dining Room" Subcategory with 6 Scenes
+## Add 6 Product-Focused Dining Room Scenes
 
-Create a new subcategory under `furniture` called **"Dining Room"** with 6 luxury, design-forward fully furnished dining scenes. Each adapts to any product type (dining table, chairs, sideboard, lighting, rug, tableware display).
+Create 6 new scenes under `furniture` → `Dining Room` that keep a fully furnished room but **strip back table clutter** so the user's selected product is the undeniable hero. Each prompt includes a new `PRODUCT HERO FOCUS` directive that reduces tableware/centerpieces to a minimum and uses lighting, framing, and negative space to draw the eye to the product.
 
-### Scenes (sort_order 192–197)
+### Scenes (sort_order 2957–2962)
 
-1. **Warm Travertine Dining Hall** (192) — Honed travertine floor, arched alcove, long oak farmhouse table (seats 8), linen-upholstered chairs, brass chandelier, terracotta accents.
+1. **Limestone Arch Dining** (2957) — Pale limestone floor, double-height arched doorway, long raw-oak table with 6 slipcovered chairs. Table styled with only a linen runner and two ceramic vessels — nothing more. Warm side light pools onto the product.
 
-2. **Midnight Lacquer Dining Room** (193) — Deep charcoal lacquered walls, smoked oak parquet, round walnut pedestal table, emerald velvet chairs, antiqued brass candelabra, moody maximalist.
+2. **Charcoal Plaster Dining** (2958) — Dark charcoal microcement walls, pale oak herringbone floor, round smoked-oak table (seats 4), black cane-back chairs. Table nearly bare: a single sculptural candle holder. Moody directional spotlight isolates the product.
 
-3. **Scandi Birch Dining Nook** (194) — Light birch flooring, warm white walls, round birch dining table (seats 6), woven paper-cord chairs, linen pendant lamp, minimalist ceramics.
+3. **Whitewashed Farmhouse Dining** (2959) — Whitewashed brick walls, reclaimed pine floor, long trestle table (seats 8), simple rush-seat chairs. Only a stoneware pitcher and two glasses on the table. Bright, airy north light makes the product glow.
 
-4. **Mediterranean Courtyard Dining** (195) — Open-air courtyard with limestone floor, long reclaimed teak table under a vine-draped pergola, rush-seat chairs, terracotta tableware, olive tree.
+4. **Walnut Gallery Dining** (2960) — Warm walnut-panelled wall (wainscot height), cream plaster above, polished concrete floor. Oval walnut table (seats 6), tan leather chairs. Table set with a single low ceramic bowl. Museum-like precision — the product is the exhibit.
 
-5. **Brutalist Concrete Dining Loft** (196) — Board-formed concrete walls, steel-frame windows, live-edge walnut slab table on blackened steel legs, cognac leather chairs, industrial pendant lights.
+5. **Sage & Linen Dining** (2961) — Sage green limewash walls, wide-plank white-oak floor, rectangular ash dining table, cream bouclé chairs. One folded linen napkin and a single stem vase on the table. Soft diffused daylight, calm and editorial.
 
-6. **Blush & Fluted Stone Dining** (197) — Dusty rose plaster walls, fluted travertine dining table, cream bouclé chairs, brass arc floor lamp, dried pampas centerpiece, soft biophilic palette.
+6. **Raw Concrete Dining Loft** (2962) — Board-formed concrete ceiling, steel-frame Crittall windows, poured resin floor. Industrial trestle table (blackened steel + oak top), cognac leather sling chairs. Empty table surface — product commands full attention. Late afternoon sun rakes across the concrete.
 
-### Technical Details
+### Technical details
 
-- Database: 6 `INSERT` statements via the insert tool
-- Each prompt includes `COMPLETE INTERIOR COMPOSITION` (conditional for dining table / chair / sideboard / lighting / rug / tableware), `PROPORTIONAL SCALE RULE` with dining-room calibration (standard table heights, chair dimensions, room ~5m×4m), and `NO LOGOS` directive
+- **Database**: 6 `INSERT` statements via the insert tool into `product_image_scenes`
+- **`PRODUCT HERO FOCUS` directive** (new, added to each prompt): Instructs the model to keep the dining table surface deliberately sparse — maximum 2 small styling props — so the user's product receives 70%+ of visual attention. Lighting and depth of field bias toward the product.
+- **`COMPLETE INTERIOR COMPOSITION`** retained: Room still looks fully furnished (chairs, sideboard/shelf, rug or lighting fixture, architectural details) — only the *table surface* is decluttered.
+- **`PROPORTIONAL SCALE RULE`** with dining-room calibration (75cm table height, 210cm door, 175cm adult anchor, ~5m room width).
+- **`NO LOGOS OR TEXT`** directive on all scenes.
 - `category_collection = 'furniture'`, `sub_category = 'Dining Room'`, `scene_type = 'lifestyle'`
 - `category_sort_order = 0`, `sub_category_sort_order = 0`
 - No code file changes needed
