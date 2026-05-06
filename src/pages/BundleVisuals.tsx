@@ -83,18 +83,26 @@ export default function BundleVisuals() {
   });
 
   // Load bundle scenes (category_collection = 'bundle')
-  const { scenes: allScenes, isLoading: isLoadingScenes } = useProductImageScenes({
-    categoryCollection: 'bundle',
-  });
+  const { allScenes, isLoading: isLoadingScenes } = useProductImageScenes();
 
-  const bundleScenes = useMemo(() => allScenes.filter(s => s.isActive), [allScenes]);
+  const bundleScenes = useMemo(
+    () => allScenes.filter(s => s.isActive && s.categoryCollection === 'bundle'),
+    [allScenes]
+  );
 
   // Analyses for selected products
   const selectedProducts = useMemo(
     () => userProducts.filter(p => selectedProductIds.has(p.id)),
     [userProducts, selectedProductIds]
   );
-  const { analyses } = useProductAnalysis(selectedProducts);
+  const { analyses, analyzeProducts } = useProductAnalysis();
+
+  // Trigger analysis when products change
+  useEffect(() => {
+    if (selectedProducts.length > 0) {
+      analyzeProducts(selectedProducts);
+    }
+  }, [selectedProducts, analyzeProducts]);
 
   // Auto-set first selected product as hero
   useEffect(() => {
