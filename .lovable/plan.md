@@ -1,32 +1,24 @@
+## Add 6 Bright & Clean Luxury Living Room Scenes
 
-# Update Living Room Scenes with Dimensions
+Insert 6 new scenes into `product_image_scenes` with `category_collection = 'furniture'`, `sub_category = 'Living Room'`, `scene_type = 'lifestyle'`, `is_active = true`, sort orders 136-141. All scenes follow the existing pattern with dimensional accuracy blocks and bright, airy, clean aesthetics matching 2025-2026 luxury interior trends.
 
-## What changes
+### The 6 New Scenes
 
-Update the 6 recently added furniture scenes in `product_image_scenes` to:
+1. **Sunlit Marble Atrium** (sort 136) — Bright open living room with white marble floors, double-height windows, warm natural light flooding in. Cream/ivory palette with brushed brass accents. Minimalist luxury, AD aesthetic.
 
-1. **Set `sub_category = 'Living Room'`** — groups them under a "Living Room" section in the scene picker
-2. **Add dimensional accuracy block** to every prompt — tells the AI to respect real-world furniture dimensions (e.g. 220cm sofa) relative to room architecture references (ceiling 2.7m, door 2.1m, tiles 60cm)
-3. **Add room-specific dimensions** to each scene's prompt (room size, ceiling height, window dimensions, prop sizes)
+2. **Coastal Breeze Salon** (sort 137) — Light-filled seaside-inspired living room with whitewashed oak floors, soft blue-white palette, sheer linen curtains, ocean-view windows. Clean Hamptons-meets-Mediterranean luxury.
 
-## Technical approach
+3. **Cloud White Gallery** (sort 138) — Ultra-clean gallery-style living space with pure white walls, polished light terrazzo floors, recessed lighting, single statement art piece. Museum-like precision, bright and minimal.
 
-Create a temporary admin edge function `admin-update-scenes` that:
-- Validates the caller is an admin (checks `user_roles`)
-- Uses `service_role` client to UPDATE `product_image_scenes`
-- Accepts an array of `{ scene_id, sub_category, prompt_template }` objects
+4. **Golden Hour Terrace Lounge** (sort 139) — Indoor-outdoor living room with retractable glass walls opening to a terrace, travertine flooring flowing inside-out, warm golden afternoon light, olive trees visible. Bright resort luxury.
 
-Then call it via `curl_edge_functions` with the 6 updated prompts, and delete the edge function afterward.
+5. **Silk & Stone Residence** (sort 140) — Bright luxury living room with pale limestone walls, silk-finish plaster ceiling, champagne-toned accents, large windows with Roman shades. Soft warmth, clean lines, quiet opulence.
 
-## Scenes being updated
+6. **Luminous Japandi Suite** (sort 141) — Bright Japanese-Scandinavian fusion room with light hinoki-toned wood, white limewash walls, shoji-inspired sliding panels, clean geometry, abundant natural light. Serene and minimal.
 
-| Scene ID | Room Dimensions |
-|---|---|
-| furniture-lifestyle-penthouse-panorama | 8m × 6m, 3.5m ceiling, windows 3.5m+ |
-| furniture-lifestyle-ivory-boucle-salon | 6m × 5m, 3m ceiling, arches 2.4m |
-| furniture-lifestyle-walnut-travertine-den | 5.5m × 4.5m, 2.8m ceiling |
-| furniture-lifestyle-smoke-stone-loft | 10m × 7m, 4.5m ceiling, windows 3m+ |
-| furniture-lifestyle-nordic-fjord | 6m × 5m, 2.7m ceiling, windows 2.2m × 1.8m |
-| furniture-lifestyle-grand-atelier-salon | 7m × 6m, 4m+ ceiling, doors 2.8m |
+### Technical Details
 
-All prompts will include a shared dimensional accuracy instruction block referencing standard architectural measurements for AI to calibrate product scale.
+- Single database insert into `product_image_scenes` using the insert tool (data operation, not schema change)
+- Each prompt includes the standard dimensional accuracy block and `{{productName}}` placeholder
+- All prompts emphasize bright natural light, clean surfaces, and luxury editorial quality
+- Lens/composition directives match existing scene standards (28-35mm, editorial style)
