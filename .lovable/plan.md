@@ -1,29 +1,43 @@
-## Tennis Editorial — Fix Player Direction, Court Position & Camera Angles
+## Tennis Editorial — Enhanced Film Grain, Cinematic Color & Anti-Unnatural Pose Safeguards
 
-### Problems identified in the 5 on-model scenes
+### What's changing
 
-1. **Tennis Court Baseline** — Model faces "toward the net" but the prompt doesn't specify which direction the body/camera face relative to the court. A forehand preparation at the baseline means the player faces the net (toward camera or away). The camera should be courtside or slightly behind the baseline shooting across, not from the net end. The model should stand near the center mark or ad/deuce side baseline — not dead center which isn't where baseline play happens.
+Each of the 6 Tennis Editorial scenes gets two upgrades to the film grading section and a new anti-pose safeguard block:
 
-2. **Clay Court Warm-Up** — Warm-up stretching happens behind the baseline or in the back court area before a match. The prompt doesn't specify where on the court the model stands. Camera should be at court level, shooting from the sideline or slightly diagonal — not elevated above.
+### 1. Enhanced Film Grain (specific per scene)
 
-3. **Net Approach Portrait** — Model "approaches the net" but doesn't specify direction of movement. A volley approach means the player moves FROM the baseline TOWARD the net — the body should face the net with forward momentum. Camera should be positioned at the net post or slightly past the net shooting back toward the approaching player, or from the side. The model should be inside the service box area, not at the baseline.
+Current grain directives are generic ("render organic grain"). Replacing with scene-specific grain recipes that describe the physical film stock behavior:
 
-4. **Tennis Club Lounge** — No directional issues (seated), but the bench position should specify it's behind the baseline (changeover bench location in real tennis).
+| Scene | Film Grain Recipe |
+|---|---|
+| **Tennis Court Baseline** | Kodak Vision3 500T tungsten film pushed +1 stop — heavy clumped grain in shadow areas with visible silver-halide clusters, finer grain in highlights. Grain density shifts with luminance: deep shadows show coarse irregular clumps ~3-4px equivalent, mid-tones show medium organic texture ~1-2px, highlights stay nearly clean. Color grain channels should separate slightly — green channel sharper, red/blue softer — creating subtle chromatic grain variation. |
+| **Clay Court Warm-Up** | Fuji Superia 400 warm consumer film — pronounced warm-toned grain with golden-amber bias in the grain texture itself. Grain clumps irregularly in the warm mid-tones, creating a tactile hand-printed feel. Shadow grain compresses into muddy warm brown clusters. The grain should feel like a slightly underexposed scan with scanner dust artifacts barely visible. |
+| **Net Approach Portrait** | Kodak Portra 400 pulled -1/3 — ultra-fine grain in the highlights and skin tones (this is a portrait, grain must not destroy facial detail), with characterful medium grain emerging in the shadow channels and dark fabric areas. The grain should have a slightly cool bias matching the teal shadow push. Barely visible on the brightest skin, pronounced in the dark net mesh and court shadows behind. |
+| **Tennis Club Lounge** | Kodak Gold 200 overexposed +1 — warm halation bloom on highlights with golden grain structure. Grain is visible and tactile across the entire image, heavier in mid-tones than shadows (Gold characteristic). The grain clumps should feel like a well-scanned drugstore print — nostalgic, imperfect, with slight color-noise shifting between frames. |
+| **Racket & Gear Flat Lay** | Kodak Ektar 100 medium-format — extremely fine, tight grain structure appropriate for a well-lit product shot. Grain is uniform and barely visible but present enough to feel analogue. No clumping. The grain adds subtle surface texture without competing with fabric weave detail. |
+| **Stadium Court Hero** | Kodak Vision3 250D daylight motion picture film — cinematic grain with strong presence in the crushed shadow areas and dark mid-tones. The grain has a slightly cool desaturated quality matching broadcast film. Heavy, gritty clusters in the darkest 20% of the image, transitioning to clean tight grain in the highlights on the model. This is sports broadcast grain — raw, editorial, not polished. |
 
-5. **Stadium Court Hero** — Model at center T-junction is fine for a campaign hero, but "squared to camera" doesn't specify camera position relative to the court. For a dramatic hero shot, camera should be at one end of the court shooting down the center line, or elevated at the umpire chair angle.
+### 2. Cinematic Color Grading Enhancement
 
-### Fixes per scene (5 updates, skip Flat Lay)
+Adding specific color science directives per scene:
 
-| Scene | Court Position | Body Direction | Camera Angle |
-|---|---|---|---|
-| **Tennis Court Baseline** | Deuce side (right side) of baseline, 2–3 feet behind baseline | Body facing net, torso coiled for forehand, weight toward net | Camera at sideline level or slightly behind on same baseline end, shooting across the court at ~30° angle. Low angle ~waist height for athletic power. |
-| **Clay Court Warm-Up** | Behind the baseline, centered or slightly to ad side | Body facing parallel to net (lateral lunge along baseline direction) | Camera from sideline at court level, shooting diagonally across. Slightly elevated ~15° for warm-up context. |
-| **Net Approach Portrait** | Inside the service box, ~8–10 feet from the net | Body moving toward the net, weight on front foot stepping forward | Camera at net post height or just past the net, shooting back toward the player. Or from sideline at net height. |
-| **Tennis Club Lounge** | Changeover bench — located at the back of the court behind the baseline, at the midpoint between the two baselines on the sideline | Seated facing courtside | Camera at seated eye level, ~50mm. |
-| **Stadium Court Hero** | Center of baseline or just behind center mark | Body facing camera (net behind camera, baseline at feet) | Camera at the opposite end of the court or slightly elevated (broadcast camera angle ~15° above court level), shooting down the length of the court. |
+- **Baseline**: Add split-toning — warm amber in highlights, cool slate-blue in shadows. Specify a slight S-curve contrast with lifted blacks and soft-rolled highlights.
+- **Clay Court**: Add complementary color harmony — warm terracotta dominant with desaturated teal-green in shadows. Specify analog color-crossover in the mid-tones.
+- **Net Approach**: Add skin-tone protection — lock skin luminance channel while pushing teal into shadow chrominance only. Specify highlight rolloff mimicking Arri Alexa sensor behavior.
+- **Club Lounge**: Add vintage color fade — desaturate overall by 10-15%, push golden warmth into whites, let blacks drift to warm brown. Specify halation radius around backlit edges.
+- **Flat Lay**: Add studio color precision — neutral white balance with micro-warm shift (+3 Kelvin), clean shadows with no color contamination. Maintain fabric color accuracy above all.
+- **Stadium Hero**: Add broadcast LUT feel — punchy mid-tone contrast, teal-orange complementary split, skin warmth isolated from environment desaturation. Specify blue-hour ambient color.
+
+### 3. Anti-Unnatural Pose Safeguard Block
+
+Adding a new `POSE AUTHENTICITY (CRITICAL)` section to each on-model scene (5 scenes, skip Flat Lay) with:
+
+- Explicit list of forbidden poses: no squatting, no yoga poses, no fashion model hand-on-hip, no standing with racket raised overhead like a trophy (unless Stadium Hero), no sitting cross-legged on court, no lying down, no jumping unless mid-serve
+- Positive guidance: every pose must be a position a real tennis player assumes during play, warm-up, or changeover
+- Scene-specific pose lock: each scene names the EXACT tennis moment being captured (e.g., "forehand preparation", "volley approach", "changeover rest") and states the model must be in THAT moment, not any other
 
 ### Scope
-- 5 `UPDATE` statements to `prompt_template` via insert tool
-- Only rewriting body direction, court position, and camera/composition paragraphs
-- Film grading, product dynamics, anti-AI directives, court geometry sections all preserved
-- Racket & Gear Flat Lay skipped (no person, no direction)
+- 6 `UPDATE` statements via insert tool (data only)
+- Film grading sections rewritten with scene-specific film stock recipes
+- New pose safeguard block added to 5 on-model scenes
+- All other prompt sections (court geometry, camera position, product dynamics) preserved unchanged
