@@ -1,26 +1,29 @@
-## Tennis Editorial — 6 Scene Prompt Accuracy Fix
+## Tennis Editorial — Fix Player Direction, Court Position & Camera Angles
 
-Update `prompt_template` (and `outfit_hint` where needed) for these 6 scenes in `product_image_scenes`:
+### Problems identified in the 5 on-model scenes
 
-### Problems to fix across all 6
+1. **Tennis Court Baseline** — Model faces "toward the net" but the prompt doesn't specify which direction the body/camera face relative to the court. A forehand preparation at the baseline means the player faces the net (toward camera or away). The camera should be courtside or slightly behind the baseline shooting across, not from the net end. The model should stand near the center mark or ad/deuce side baseline — not dead center which isn't where baseline play happens.
 
-1. **Court lines are vague** — "crisp white lines" without specifying real tennis geometry (baseline 36ft, service boxes 21ft deep, center mark, singles sidelines, doubles alleys 4.5ft, net at 36" center/42" posts)
-2. **Racket handling is generic** — "holding a racket naturally" produces random grips. Must specify real tennis grips (continental for volleys, semi-western for forehands) and correct racket-face angles
-3. **Body mechanics lack tennis specificity** — need real footwork (split-step, open/closed stance, unit turn, recovery shuffle)
-4. **Props feel decorative** — towel, ball, wristband placement must match real tennis behavior (racket strings-up on bench, towel tucked in waistband during changeover)
+2. **Clay Court Warm-Up** — Warm-up stretching happens behind the baseline or in the back court area before a match. The prompt doesn't specify where on the court the model stands. Camera should be at court level, shooting from the sideline or slightly diagonal — not elevated above.
 
-### Per-scene fixes
+3. **Net Approach Portrait** — Model "approaches the net" but doesn't specify direction of movement. A volley approach means the player moves FROM the baseline TOWARD the net — the body should face the net with forward momentum. Camera should be positioned at the net post or slightly past the net shooting back toward the approaching player, or from the side. The model should be inside the service box area, not at the baseline.
 
-| Scene | ID | Fixes |
-|---|---|---|
-| **Tennis Court Baseline** | `fa0a39df` | Explicit service box T-junction and center mark at feet. Semi-western forehand grip with racket face closed ~15°. Split-step loading pattern. |
-| **Clay Court Warm-Up** | `18ae7b74` | Clay lines = recessed white tape (not painted). Add slide marks and loose granule scatter. Racket across shoulders = grip in dominant hand, head on opposite shoulder. |
-| **Net Approach Portrait** | `2c0751b6` | Continental volley grip, racket head above wrist at ~45°. Net white band and cable visible at correct height. Service box T-junction in mid-ground. |
-| **Tennis Club Lounge** | `0e7fcb55` | Racket resting strings-up leaning on bench or held by throat. Court visible through terrace must show correct baseline/sideline geometry. |
-| **Racket & Gear Flat Lay** | `f547ef0d` | String pattern 16×19 visible. Grip overwrap spiral direction correct. Tennis ball seam = continuous S-curve (not random lines). |
-| **Stadium Court Hero** | `471d0334` | Center court T-junction visible at model's feet. Doubles alley lines flanking. Ready position with continental grip, racket at waist, strings facing forward. |
+4. **Tennis Club Lounge** — No directional issues (seated), but the bench position should specify it's behind the baseline (changeover bench location in real tennis).
+
+5. **Stadium Court Hero** — Model at center T-junction is fine for a campaign hero, but "squared to camera" doesn't specify camera position relative to the court. For a dramatic hero shot, camera should be at one end of the court shooting down the center line, or elevated at the umpire chair angle.
+
+### Fixes per scene (5 updates, skip Flat Lay)
+
+| Scene | Court Position | Body Direction | Camera Angle |
+|---|---|---|---|
+| **Tennis Court Baseline** | Deuce side (right side) of baseline, 2–3 feet behind baseline | Body facing net, torso coiled for forehand, weight toward net | Camera at sideline level or slightly behind on same baseline end, shooting across the court at ~30° angle. Low angle ~waist height for athletic power. |
+| **Clay Court Warm-Up** | Behind the baseline, centered or slightly to ad side | Body facing parallel to net (lateral lunge along baseline direction) | Camera from sideline at court level, shooting diagonally across. Slightly elevated ~15° for warm-up context. |
+| **Net Approach Portrait** | Inside the service box, ~8–10 feet from the net | Body moving toward the net, weight on front foot stepping forward | Camera at net post height or just past the net, shooting back toward the player. Or from sideline at net height. |
+| **Tennis Club Lounge** | Changeover bench — located at the back of the court behind the baseline, at the midpoint between the two baselines on the sideline | Seated facing courtside | Camera at seated eye level, ~50mm. |
+| **Stadium Court Hero** | Center of baseline or just behind center mark | Body facing camera (net behind camera, baseline at feet) | Camera at the opposite end of the court or slightly elevated (broadcast camera angle ~15° above court level), shooting down the length of the court. |
 
 ### Scope
-- 6 `UPDATE` statements via insert tool (data changes only)
-- Film grading, product dynamics, anti-AI directives all preserved
-- Only court geometry, racket mechanics, body positions, and prop placement rewritten
+- 5 `UPDATE` statements to `prompt_template` via insert tool
+- Only rewriting body direction, court position, and camera/composition paragraphs
+- Film grading, product dynamics, anti-AI directives, court geometry sections all preserved
+- Racket & Gear Flat Lay skipped (no person, no direction)
