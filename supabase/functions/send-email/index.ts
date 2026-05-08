@@ -361,7 +361,7 @@ serve(async (req) => {
         html = leadWelcomeEmail();
         break;
       case "service_notice":
-        subject = "Your visuals are ready — VOVV.‌AI";
+        subject = "We're back on track — VOVV.‌AI";
         html = serviceNoticeEmail(data || {});
         break;
       default:
