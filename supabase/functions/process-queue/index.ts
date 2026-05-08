@@ -19,16 +19,22 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   "text-product": "generate-text-product",
 };
 
+const BATCH_SIZE = 6; // max concurrent dispatches per round
+const STAGGER_MS = 200; // small stagger between fetches within a batch
+
 /**
- * Fire-and-forget: dispatch job to generation function without waiting.
- * The generation function will update generation_queue directly when done.
+ * Fire-and-forget: dispatch job to generation function.
+ * Uses a short timeout — we only care about immediate rejection (403/500),
+ * not the full generation response. The generation function updates the queue itself.
  */
 function dispatchGenerationFunction(
   functionUrl: string,
   serviceRoleKey: string,
   payload: Record<string, unknown>,
 ): Promise<{ ok: boolean; status?: number }> {
-  // Wait briefly for immediate rejection (403/500) but don't wait for full generation
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
   return fetch(functionUrl, {
     method: "POST",
     headers: {
@@ -37,16 +43,22 @@ function dispatchGenerationFunction(
       "x-queue-internal": "true",
     },
     body: JSON.stringify(payload),
+    signal: controller.signal,
   }).then(async (res) => {
+    clearTimeout(timeout);
     if (!res.ok) {
-      // Read body for logging, then signal failure
       const body = await res.text().catch(() => "");
       console.error(`[process-queue] Dispatch rejected: ${res.status} ${body.slice(0, 300)}`);
       return { ok: false, status: res.status };
     }
-    // Don't await the body — the function is still running and will self-complete
+    // Don't read body — function is still running
     return { ok: true };
   }).catch((err) => {
+    clearTimeout(timeout);
+    // AbortError means the function accepted the connection and is still processing — that's success
+    if (err.name === "AbortError") {
+      return { ok: true };
+    }
     console.error(`[process-queue] Dispatch fetch error:`, err);
     return { ok: false, status: 0 };
   });
@@ -62,16 +74,12 @@ serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const isQueueInternal = req.headers.get("x-queue-internal") === "true";
 
-  // Accept: exact service role key match OR a valid service_role JWT from internal callers
   let authOk = false;
   if (authHeader === `Bearer ${serviceRoleKey}`) {
     authOk = true;
   } else if (isQueueInternal && authHeader?.startsWith("Bearer ")) {
-    // Internal callers (retry-queue, enqueue-generation) may have a different-format
-    // service role key after key rotation. Validate via Supabase auth.
     try {
       const token = authHeader.replace("Bearer ", "");
-      // Decode JWT payload to check role claim (service_role)
       const payloadB64 = token.split(".")[1];
       if (payloadB64) {
         const payload = JSON.parse(atob(payloadB64));
@@ -80,7 +88,7 @@ serve(async (req) => {
         }
       }
     } catch {
-      // Invalid token format — fall through to reject
+      // Invalid token format
     }
   }
 
@@ -94,7 +102,7 @@ serve(async (req) => {
   console.log("[process-queue] Auth OK — dispatching jobs");
 
   const startTime = Date.now();
-  const MAX_RUNTIME_MS = 55_000; // 55 seconds — fire-and-forget dispatch, 1s stagger
+  const MAX_RUNTIME_MS = 55_000;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -103,7 +111,7 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Step 0: Acquire singleton dispatch lock — only one instance dispatches at a time
+    // Step 0: Acquire singleton dispatch lock
     const { data: lockAcquired } = await supabase.rpc("try_acquire_dispatch_lock", { p_locked_by: "process-queue" });
     if (!lockAcquired) {
       console.log("[process-queue] Another dispatcher is active, skipping.");
@@ -121,78 +129,86 @@ serve(async (req) => {
 
     let dispatchedCount = 0;
 
-    // Step 2: Loop — claim and dispatch jobs until time runs out
+    // Step 2: Loop — claim batches of jobs and dispatch concurrently
     while (Date.now() - startTime < MAX_RUNTIME_MS) {
-      // Claim next job
-      const { data: claimResult, error: claimError } = await supabase.rpc("claim_next_job");
+      // Claim up to BATCH_SIZE jobs
+      interface ClaimedJob {
+        id: string;
+        job_type: string;
+        payload: Record<string, unknown>;
+        user_id: string;
+        credits_reserved: number;
+      }
+      const batch: ClaimedJob[] = [];
 
-      if (claimError) {
-        console.error("[process-queue] Claim error:", claimError);
-        break;
+      for (let i = 0; i < BATCH_SIZE; i++) {
+        if (Date.now() - startTime >= MAX_RUNTIME_MS) break;
+
+        const { data: claimResult, error: claimError } = await supabase.rpc("claim_next_job");
+        if (claimError) {
+          console.error("[process-queue] Claim error:", claimError);
+          break;
+        }
+        const claimed = claimResult as Record<string, unknown>;
+        if (!claimed.job || claimed.job === null) break;
+
+        batch.push(claimed.job as ClaimedJob);
       }
 
-      const claimed = claimResult as Record<string, unknown>;
-      if (!claimed.job || claimed.job === null) {
+      if (batch.length === 0) {
         console.log(`[process-queue] No more jobs. Dispatched ${dispatchedCount} jobs total.`);
         break;
       }
 
-      const job = claimed.job as Record<string, unknown>;
-      const jobId = job.id as string;
-      const jobType = job.job_type as string;
-      const payload = job.payload as Record<string, unknown>;
-      const userId = job.user_id as string;
-      const creditsReserved = job.credits_reserved as number;
+      // Dispatch all jobs in this batch concurrently with small stagger
+      const dispatches = batch.map((job, idx) => {
+        const functionName = JOB_TYPE_TO_FUNCTION[job.job_type];
+        if (!functionName) {
+          // Unknown job type — fail immediately
+          return (async () => {
+            console.error(`[process-queue] Unknown job type: ${job.job_type}, failing job ${job.id}`);
+            await supabase
+              .from("generation_queue")
+              .update({ status: "failed", error_message: `Unknown job type: ${job.job_type}`, completed_at: new Date().toISOString() })
+              .eq("id", job.id);
+            await supabase.rpc("refund_credits", { p_user_id: job.user_id, p_amount: job.credits_reserved });
+            return { job, ok: false, skipped: true };
+          })();
+        }
 
-      const functionName = JOB_TYPE_TO_FUNCTION[jobType];
-      if (!functionName) {
-        console.error(`[process-queue] Unknown job type: ${jobType}, failing job ${jobId}`);
-        await supabase
-          .from("generation_queue")
-          .update({
-            status: "failed",
-            error_message: `Unknown job type: ${jobType}`,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", jobId);
-        await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
-        continue;
+        const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+        const enrichedPayload = {
+          ...job.payload,
+          user_id: job.user_id,
+          job_id: job.id,
+          job_type: job.job_type,
+          credits_reserved: job.credits_reserved,
+        };
+
+        // Small stagger to avoid thundering herd
+        return new Promise<{ job: ClaimedJob; ok: boolean; skipped?: boolean }>((resolve) => {
+          setTimeout(async () => {
+            const result = await dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
+            if (!result.ok) {
+              console.error(`[process-queue] Dispatch of job ${job.id} rejected with status ${result.status} — failing job and refunding`);
+              await supabase
+                .from("generation_queue")
+                .update({ status: "failed", error_message: `Dispatch rejected (${result.status}). Please try again.`, completed_at: new Date().toISOString() })
+                .eq("id", job.id);
+              await supabase.rpc("refund_credits", { p_user_id: job.user_id, p_amount: job.credits_reserved });
+            }
+            resolve({ job, ok: result.ok });
+          }, idx * STAGGER_MS);
+        });
+      });
+
+      const results = await Promise.allSettled(dispatches);
+      for (const r of results) {
+        if (r.status === "fulfilled" && r.value.ok) {
+          dispatchedCount++;
+          console.log(`[process-queue] ⚡ Dispatched job ${r.value.job.id}, type=${r.value.job.job_type}, user=${r.value.job.user_id}`);
+        }
       }
-
-      const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-
-      // Enrich payload with queue metadata so generation function can update the queue
-      const enrichedPayload = {
-        ...payload,
-        user_id: userId,
-        job_id: jobId,
-        job_type: jobType,
-        credits_reserved: creditsReserved,
-      };
-
-      // Dispatch and check for immediate rejection
-      const dispatchResult = await dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
-
-      if (!dispatchResult.ok) {
-        // Target function rejected immediately (e.g. 403 auth mismatch) — fail the job
-        console.error(`[process-queue] Dispatch of job ${jobId} rejected with status ${dispatchResult.status} — failing job and refunding`);
-        await supabase
-          .from("generation_queue")
-          .update({
-            status: "failed",
-            error_message: `Dispatch rejected (${dispatchResult.status}). Please try again.`,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", jobId);
-        await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
-        continue;
-      }
-
-      dispatchedCount++;
-
-      // Stagger dispatches (1s) to avoid thundering herd on AI gateway
-      await new Promise((r) => setTimeout(r, 1000));
-      console.log(`[process-queue] ⚡ Dispatched job ${jobId}, type=${jobType}, user=${userId}`);
     }
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
@@ -209,7 +225,6 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } finally {
-    // Always release the singleton lock so next invocation can dispatch
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabase = createClient(supabaseUrl, serviceRoleKey, {
