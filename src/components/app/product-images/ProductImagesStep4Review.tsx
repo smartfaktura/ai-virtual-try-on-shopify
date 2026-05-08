@@ -76,6 +76,7 @@ function friendlyLabel(val: string | undefined): string {
 }
 
 export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep, onDetailsChange, allProducts = [], selectedProductIds = new Set(), perCategoryScenes, categoryGroups }: Step4Props) {
+  const { openBuyModal } = useCredits();
   const { allScenes: dbScenes } = useProductImageScenes();
   const selectedScenes = dbScenes.filter(s => selectedSceneIds.has(s.id));
   const update = useCallback((partial: Partial<DetailSettings>) => {
