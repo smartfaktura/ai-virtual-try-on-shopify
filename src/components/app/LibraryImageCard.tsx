@@ -131,13 +131,29 @@ export function LibraryImageCard({
         </div>
       )}
 
-      <ShimmerImage
-        src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
-        alt={item.label}
-        className="w-full h-full object-cover block group-hover:scale-[1.02] transition-all duration-500"
-        loading="lazy"
-        aspectRatio={item.aspectRatio === '1:1' ? '1/1' : item.aspectRatio === '9:16' ? '9/16' : item.aspectRatio === '16:9' ? '16/9' : item.aspectRatio === '4:5' ? '4/5' : item.aspectRatio === '5:4' ? '5/4' : '3/4'}
-      />
+      {(() => {
+        // Upscaled assets are already large PNGs and the Supabase render endpoint
+        // returns "Invalid source image" for them — use the original URL directly.
+        const isUpscaled = item.quality?.startsWith('upscaled_') || item.quality === 'upscaled';
+        const src = isUpscaled ? item.imageUrl : getOptimizedUrl(item.imageUrl, { quality: 60 });
+        const aspectRatio = item.aspectRatio === '1:1' ? '1/1' : item.aspectRatio === '9:16' ? '9/16' : item.aspectRatio === '16:9' ? '16/9' : item.aspectRatio === '4:5' ? '4/5' : item.aspectRatio === '5:4' ? '5/4' : '3/4';
+        return (
+          <ShimmerImage
+            src={src}
+            alt=""
+            className="w-full h-full object-cover block group-hover:scale-[1.02] transition-all duration-500"
+            loading="lazy"
+            aspectRatio={aspectRatio}
+            onError={(e) => {
+              // If the optimized thumbnail fails (rare 422 on render endpoint), fall back to the original URL once.
+              const img = e.currentTarget as HTMLImageElement;
+              if (img.src !== item.imageUrl) {
+                img.src = item.imageUrl;
+              }
+            }}
+          />
+        );
+      })()}
 
       {/* Upscaling overlay */}
       {isUpscaling && (() => {
