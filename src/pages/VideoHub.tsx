@@ -49,10 +49,23 @@ interface RecentVideoCardProps {
   selectMode: boolean;
   selected: boolean;
   onToggleSelect: () => void;
+  /** Drives the live timer + progress bar on processing cards */
+  nowTick?: number;
+  /** Briefly highlight this card after it transitions processing → complete */
+  highlight?: boolean;
 }
 
-function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect }: RecentVideoCardProps) {
+function RecentVideoCard({
+  video,
+  onClick,
+  selectMode,
+  selected,
+  onToggleSelect,
+  nowTick,
+  highlight,
+}: RecentVideoCardProps) {
   const isComplete = video.status === 'complete' && video.video_url;
+  const isProcessing = video.status === 'processing' || video.status === 'queued';
 
   // Prefer preview_url (actual video frame) > source_image_url
   const rawThumb = video.preview_url || video.source_image_url;
@@ -75,14 +88,25 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
     }
   }, [selectMode, onToggleSelect, onClick]);
 
-  const showStatusBadge = video.status === 'processing' || video.status === 'queued';
+  // Per-card live elapsed + progress (only relevant while processing)
+  const elapsedSec = isProcessing && nowTick
+    ? Math.max(0, Math.floor((nowTick - new Date(video.created_at).getTime()) / 1000))
+    : 0;
+  const expected = expectedSecondsForModel(video.model_name);
+  const progressPct = isProcessing
+    ? Math.min(95, Math.round((elapsedSec / expected) * 100))
+    : 0;
 
   return (
     <div
       className="group cursor-pointer"
       onClick={handleClick}
     >
-      <div className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-muted/30">
+      <div
+        className={`relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-muted/30 ${
+          highlight ? 'ring-2 ring-primary/60 ring-offset-2 ring-offset-background' : ''
+        }`}
+      >
         {selectMode && (
           <div className="absolute top-2 left-2 z-20">
             <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -100,7 +124,7 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
             src={thumbnailUrl!}
             alt=""
             aspectRatio={displayRatio}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${isProcessing ? 'opacity-70' : ''}`}
             onLoad={(e) => {
               const img = e.currentTarget;
               if (img.naturalWidth && img.naturalHeight) {
@@ -117,13 +141,41 @@ function RecentVideoCard({ video, onClick, selectMode, selected, onToggleSelect 
           </div>
         )}
 
-        {showStatusBadge && (
-          <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900 animate-pulse">
-            {video.status === 'processing' ? 'Processing' : 'Queued'}
-          </Badge>
+        {isProcessing && (
+          <>
+            <Badge
+              variant="secondary"
+              className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900"
+            >
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              {video.status === 'processing' ? 'Processing' : 'Queued'}
+            </Badge>
+            <Badge
+              variant="secondary"
+              className="absolute top-2 left-2 text-[10px] bg-background/80 backdrop-blur-sm text-muted-foreground"
+            >
+              Source frame
+            </Badge>
+            {/* Live elapsed pill */}
+            <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-medium text-background bg-foreground/70 backdrop-blur-sm rounded-full px-2 py-0.5">
+                {formatElapsed(elapsedSec)} elapsed
+              </span>
+              <span className="text-[10px] text-background/90 bg-foreground/50 backdrop-blur-sm rounded-full px-2 py-0.5">
+                ~{Math.max(1, Math.ceil((expected - elapsedSec) / 60))}m left
+              </span>
+            </div>
+            {/* Progress bar at the very bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-foreground/10 overflow-hidden">
+              <div
+                className="h-full bg-amber-500/80 transition-[width] duration-700 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </>
         )}
 
-        {video.camera_type && !showStatusBadge && (
+        {video.camera_type && !isProcessing && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-background/80 backdrop-blur-sm text-foreground capitalize">
             {video.camera_type.replace(/_/g, ' ')}
           </Badge>
