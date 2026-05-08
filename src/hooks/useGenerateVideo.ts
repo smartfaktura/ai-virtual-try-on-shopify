@@ -355,6 +355,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
 
   // Auto-refresh history silently while any video is still processing.
   // Also fires a watchdog `recoverStuckVideos` for rows stuck > 6 minutes.
+  // Realtime is the primary update path; this interval is a safety net.
   useEffect(() => {
     const processing = history.filter(v => v.status === 'processing' || v.status === 'queued');
     if (processing.length === 0) return;
@@ -365,15 +366,62 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       const sixMinAgo = Date.now() - 6 * 60 * 1000;
       const hasStuck = processing.some(v => new Date(v.created_at).getTime() < sixMinAgo);
       if (hasStuck) recoverStuckVideos();
-    }, 4000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [history, silentRefreshHistory, recoverStuckVideos]);
 
-  // Silent refresh history on window focus (no flash)
+  // Realtime subscription on generated_videos (filtered by current user).
+  // Pushes updates instantly when Kling completes a job — no waiting on the
+  // 8s polling fallback or for the tab to regain focus.
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled || !user) return;
+
+      channel = supabase
+        .channel(`generated-videos:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'generated_videos',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const newRow = payload.new as Record<string, unknown> | undefined;
+            const newStatus = newRow?.status as string | undefined;
+            silentRefreshHistory();
+            if (newStatus === 'complete' || newStatus === 'failed') {
+              refreshBalance();
+            }
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [silentRefreshHistory, refreshBalance]);
+
+  // Silent refresh on focus AND visibility change (covers iframe edge cases
+  // where focus events don't fire reliably in the Lovable preview).
+  useEffect(() => {
+    const onWake = () => {
+      if (document.visibilityState === 'visible') silentRefreshHistory();
+    };
     const onFocus = () => silentRefreshHistory();
     window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onWake);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onWake);
+    };
   }, [silentRefreshHistory]);
 
   const reset = useCallback(() => {
