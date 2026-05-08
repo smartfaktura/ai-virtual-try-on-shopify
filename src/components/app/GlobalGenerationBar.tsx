@@ -368,40 +368,60 @@ export function GlobalGenerationBar() {
               {visibleCompleted.map((group) => {
                 const member = getTeamMemberForJob(group);
                 const isVideo = group.job_type === 'video';
+                const hasFailure = group.failedCount > 0;
                 return (
-                  <div key={group.key} className="px-3 py-3 border-b border-border/20 last:border-0 bg-emerald-500/[0.04]">
+                  <div
+                    key={group.key}
+                    className={cn(
+                      'px-3 py-3 border-b border-border/20 last:border-0',
+                      hasFailure ? 'bg-destructive/[0.05]' : 'bg-emerald-500/[0.04]',
+                    )}
+                  >
                     <div className="flex items-center gap-2.5">
-                      <Avatar className="w-7 h-7 ring-1 ring-emerald-500/30 shrink-0">
-                        <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
-                        <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-600">{member.name[0]}</AvatarFallback>
-                      </Avatar>
+                      {hasFailure ? (
+                        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-destructive/10 ring-1 ring-destructive/30 shrink-0">
+                          <AlertCircle className="w-4 h-4 text-destructive" />
+                        </div>
+                      ) : (
+                        <Avatar className="w-7 h-7 ring-1 ring-emerald-500/30 shrink-0">
+                          <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
+                          <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-600">{member.name[0]}</AvatarFallback>
+                        </Avatar>
+                      )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold truncate text-foreground">
-                          {isVideo ? (group.totalCount > 1 ? `${group.totalCount} videos are ready!` : 'Your video is ready!') 
+                        <p className={cn(
+                          'text-xs font-semibold truncate',
+                          hasFailure ? 'text-destructive' : 'text-foreground',
+                        )}>
+                          {hasFailure
+                            ? (group.job_type === 'upscale' ? 'Upscale failed' : 'Generation failed')
+                            : isVideo ? (group.totalCount > 1 ? `${group.totalCount} videos are ready!` : 'Your video is ready!')
                             : group.job_type === 'upscale' ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
                             : 'Your images are ready!'}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {member.name} finished the job ✨
+                          {hasFailure ? 'Credits refunded — please try again' : `${member.name} finished the job ✨`}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="shrink-0 gap-1 h-6 text-[11px] px-2"
-                        onClick={() => {
-                          if (group.job_type === 'video') {
-                            navigate('/app/video');
-                          } else if (location.pathname.startsWith('/app/library')) {
-                            window.dispatchEvent(new CustomEvent('library:focus-grid'));
-                          } else {
-                            navigate('/app/library');
-                          }
-                        }}
-                      >
-                        {group.job_type === 'video' ? 'View in Videos' : 'View'}
-                        <ArrowRight className="w-3 h-3" />
-                      </Button>
+                      {!hasFailure && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="shrink-0 gap-1 h-6 text-[11px] px-2"
+                          onClick={() => {
+                            if (group.job_type === 'video') {
+                              navigate('/app/video');
+                            } else if (location.pathname.startsWith('/app/library')) {
+                              window.dispatchEvent(new CustomEvent('library:focus-grid'));
+                            } else {
+                              navigate('/app/library');
+                            }
+                          }}
+                        >
+                          {group.job_type === 'video' ? 'View in Videos' : 'View'}
+                          <ArrowRight className="w-3 h-3" />
+                        </Button>
+                      )}
                       <button
                         className="shrink-0 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded"
                         onClick={() => setDismissedKeys((s) => new Set([...s, group.key]))}
