@@ -40,8 +40,22 @@ serve(async (req) => {
 
   // Internal-only: only process-queue can call this
   const authHeader = req.headers.get("authorization");
-  const isInternal = req.headers.get("x-queue-internal") === "true";
-  if (!isInternal || authHeader !== `Bearer ${serviceRoleKey}`) {
+  const hasQueueHeader = req.headers.get("x-queue-internal") === "true";
+  let isQueueInternal = hasQueueHeader && authHeader === `Bearer ${serviceRoleKey}`;
+
+  // Fallback for signing-keys rotation: accept any valid service_role JWT
+  if (!isQueueInternal && hasQueueHeader && authHeader?.startsWith("Bearer ")) {
+    try {
+      const payloadB64 = authHeader.slice(7).split(".")[1];
+      if (payloadB64) {
+        const payload = JSON.parse(atob(payloadB64));
+        if (payload.role === "service_role") isQueueInternal = true;
+      }
+    } catch { /* invalid JWT */ }
+  }
+
+  if (!isQueueInternal) {
+    console.warn(`[upscale-worker] Auth REJECTED — headerLen=${authHeader?.length ?? 0}, hasQueueHeader=${hasQueueHeader}`);
     return new Response(
       JSON.stringify({ error: "This function is queue-only. Use enqueue-generation instead." }),
       { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }

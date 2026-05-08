@@ -111,7 +111,7 @@ export function useUpscaleImages() {
       if (jobIds.length > 0) {
         sendWake(token);
         const resLabel = resolution === '4k' ? '4K' : '2K';
-        toast.success(`Upscaling ${jobIds.length} image${jobIds.length > 1 ? 's' : ''} to ${resLabel}…`);
+        toast.info(`Upscale to ${resLabel} started — you'll see it in your Library when ready`);
         refreshBalance();
       }
 

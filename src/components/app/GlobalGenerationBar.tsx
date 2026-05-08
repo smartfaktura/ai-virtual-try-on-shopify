@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useVisibilityTick } from '@/hooks/useVisibilityTick';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, X, Clock } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, X, Clock, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { groupJobsIntoBatches, type ActiveJob, type BatchGroup } from '@/lib/batchGrouping';
@@ -59,6 +60,7 @@ export function GlobalGenerationBar() {
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
   const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
+  const toastedFailedKeysRef = useRef<Set<string>>(new Set());
 
   // Poll active jobs globally
   const { data: activeGroups = [] } = useQuery({
@@ -143,9 +145,34 @@ export function GlobalGenerationBar() {
     });
 
     if (justFinished.length > 0) {
-      setCompletedGroups((prev) => {
+      // Look up the final statuses of jobs in just-finished groups so we can
+      // distinguish actual completion from failure (signing-keys 403 etc.)
+      const finishedJobIds = justFinished
+        .flatMap((key) => prevGroupsRef.current.find((g) => g.key === key)?.jobs ?? [])
+        .map((j) => j.id);
+
+      (async () => {
+        let failureMap = new Map<string, { status: string; error_message: string | null }>();
+        if (finishedJobIds.length > 0) {
+          const { data: finalRows } = await supabase
+            .from('generation_queue')
+            .select('id, status, error_message')
+            .in('id', finishedJobIds);
+          for (const r of finalRows ?? []) {
+            failureMap.set(r.id, { status: r.status, error_message: r.error_message });
+          }
+        }
+
         const newCompleted: BatchGroup[] = justFinished.map((key) => {
           const original = prevGroupsRef.current.find((g) => g.key === key);
+          const jobIds = (original?.jobs ?? []).map((j) => j.id);
+          let failedCount = 0;
+          for (const id of jobIds) {
+            const fr = failureMap.get(id);
+            if (fr && (fr.status === 'failed' || fr.status === 'cancelled')) failedCount++;
+          }
+          const total = original?.totalCount ?? 0;
+          const allFailed = failedCount > 0 && failedCount === total;
           return {
             key,
             workflow_id: original?.workflow_id ?? null,
@@ -153,12 +180,12 @@ export function GlobalGenerationBar() {
             workflow_slug: original?.workflow_slug ?? null,
             product_name: original?.product_name ?? null,
             jobs: [],
-            totalCount: original?.totalCount ?? 0,
-            completedCount: original?.totalCount ?? 0,
+            totalCount: total,
+            completedCount: Math.max(0, total - failedCount),
             processingCount: 0,
             queuedCount: 0,
-            failedCount: 0,
-            allCompleted: true,
+            failedCount,
+            allCompleted: !allFailed,
             created_at: new Date().toISOString(),
             job_type: original?.job_type ?? null,
             quality: original?.quality ?? null,
@@ -168,19 +195,27 @@ export function GlobalGenerationBar() {
             generatedImageCount: original?.generatedImageCount ?? 0,
           };
         });
-        return [...prev, ...newCompleted];
-      });
 
-      const hadUpscale = justFinished.some((key) =>
-        prevGroupsRef.current.find((g) => g.key === key && g.job_type === 'upscale')
-      );
-      if (hadUpscale) {
-        queryClient.invalidateQueries({ queryKey: ['library'] });
-      }
+        // Fire one error toast per newly-failed group key
+        for (const g of newCompleted) {
+          if (g.failedCount > 0 && !toastedFailedKeysRef.current.has(g.key)) {
+            toastedFailedKeysRef.current.add(g.key);
+            const label = g.job_type === 'upscale' ? 'Upscale' : 'Generation';
+            toast.error(`${label} failed — credits refunded. Please try again.`);
+          }
+        }
 
-      setTimeout(() => {
-        setCompletedGroups((prev) => prev.filter((g) => !justFinished.includes(g.key)));
-      }, 8000);
+        setCompletedGroups((prev) => [...prev, ...newCompleted]);
+
+        const hadUpscale = newCompleted.some((g) => g.job_type === 'upscale' && g.failedCount === 0);
+        if (hadUpscale) {
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+        }
+
+        setTimeout(() => {
+          setCompletedGroups((prev) => prev.filter((g) => !justFinished.includes(g.key)));
+        }, 8000);
+      })();
     }
 
     prevActiveKeysRef.current = currentKeys;
@@ -333,40 +368,60 @@ export function GlobalGenerationBar() {
               {visibleCompleted.map((group) => {
                 const member = getTeamMemberForJob(group);
                 const isVideo = group.job_type === 'video';
+                const hasFailure = group.failedCount > 0;
                 return (
-                  <div key={group.key} className="px-3 py-3 border-b border-border/20 last:border-0 bg-emerald-500/[0.04]">
+                  <div
+                    key={group.key}
+                    className={cn(
+                      'px-3 py-3 border-b border-border/20 last:border-0',
+                      hasFailure ? 'bg-destructive/[0.05]' : 'bg-emerald-500/[0.04]',
+                    )}
+                  >
                     <div className="flex items-center gap-2.5">
-                      <Avatar className="w-7 h-7 ring-1 ring-emerald-500/30 shrink-0">
-                        <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
-                        <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-600">{member.name[0]}</AvatarFallback>
-                      </Avatar>
+                      {hasFailure ? (
+                        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-destructive/10 ring-1 ring-destructive/30 shrink-0">
+                          <AlertCircle className="w-4 h-4 text-destructive" />
+                        </div>
+                      ) : (
+                        <Avatar className="w-7 h-7 ring-1 ring-emerald-500/30 shrink-0">
+                          <AvatarImage src={getOptimizedUrl(member.avatar, { quality: 60 })} alt={member.name} />
+                          <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-600">{member.name[0]}</AvatarFallback>
+                        </Avatar>
+                      )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold truncate text-foreground">
-                          {isVideo ? (group.totalCount > 1 ? `${group.totalCount} videos are ready!` : 'Your video is ready!') 
+                        <p className={cn(
+                          'text-xs font-semibold truncate',
+                          hasFailure ? 'text-destructive' : 'text-foreground',
+                        )}>
+                          {hasFailure
+                            ? (group.job_type === 'upscale' ? 'Upscale failed' : 'Generation failed')
+                            : isVideo ? (group.totalCount > 1 ? `${group.totalCount} videos are ready!` : 'Your video is ready!')
                             : group.job_type === 'upscale' ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
                             : 'Your images are ready!'}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {member.name} finished the job ✨
+                          {hasFailure ? 'Credits refunded — please try again' : `${member.name} finished the job ✨`}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="shrink-0 gap-1 h-6 text-[11px] px-2"
-                        onClick={() => {
-                          if (group.job_type === 'video') {
-                            navigate('/app/video');
-                          } else if (location.pathname.startsWith('/app/library')) {
-                            window.dispatchEvent(new CustomEvent('library:focus-grid'));
-                          } else {
-                            navigate('/app/library');
-                          }
-                        }}
-                      >
-                        {group.job_type === 'video' ? 'View in Videos' : 'View'}
-                        <ArrowRight className="w-3 h-3" />
-                      </Button>
+                      {!hasFailure && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="shrink-0 gap-1 h-6 text-[11px] px-2"
+                          onClick={() => {
+                            if (group.job_type === 'video') {
+                              navigate('/app/video');
+                            } else if (location.pathname.startsWith('/app/library')) {
+                              window.dispatchEvent(new CustomEvent('library:focus-grid'));
+                            } else {
+                              navigate('/app/library');
+                            }
+                          }}
+                        >
+                          {group.job_type === 'video' ? 'View in Videos' : 'View'}
+                          <ArrowRight className="w-3 h-3" />
+                        </Button>
+                      )}
                       <button
                         className="shrink-0 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded"
                         onClick={() => setDismissedKeys((s) => new Set([...s, group.key]))}
