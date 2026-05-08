@@ -439,6 +439,7 @@ export default function VideoHub() {
                         selectMode={selectMode}
                         selected={selectedIds.has(v.id)}
                         onToggleSelect={() => toggleSelection(v.id)}
+                        highlight={recentlyCompleted.has(v.id)}
                       />
                     ))}
                   </div>
