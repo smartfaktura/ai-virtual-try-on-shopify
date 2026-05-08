@@ -5,13 +5,27 @@ import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
 import { useGenerateVideo, type GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { downloadVideosAsZip } from '@/lib/dropDownload';
 import { toSignedUrl } from '@/lib/signedUrl';
 import { toast } from 'sonner';
 import { buildVideoFileName } from '@/lib/videoFilename';
+
+/** Expected total duration (seconds) for a Kling job — used to estimate progress */
+function expectedSecondsForModel(model?: string | null): number {
+  if (!model) return 7 * 60;
+  if (model.includes('omni') || model.includes('audio')) return 9 * 60;
+  return 7 * 60;
+}
+
+function formatElapsed(s: number): string {
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return r === 0 ? `${m}m` : `${m}m ${r}s`;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Ratio helpers                                                      */
