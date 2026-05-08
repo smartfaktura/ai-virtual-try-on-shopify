@@ -224,23 +224,23 @@ function serviceNoticeEmail(data: { displayName?: string; stuckJobs?: number }):
   const name = data.displayName || "there";
   return emailWrapper(`
     <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
-      Your visuals are ready
+      We're back on track
     </h1>
     <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.navy};line-height:1.6;margin:0 0 8px 0;">
       Hey ${name},
     </p>
     <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 24px 0;">
-      Earlier today we experienced a temporary delay in our generation pipeline that affected some of your queued visuals. We want to let you know that the issue has been fully resolved — all your images have been processed and are waiting for you.
+      We recently experienced longer than usual queue waiting times that may have affected some of your generations. We're sorry for the delay.
     </p>
     <div style="background-color:${BRAND.stone};border-radius:8px;padding:20px;margin:0 0 8px 0;">
       <p style="font-family:'Inter',sans-serif;font-size:14px;color:${BRAND.navy};line-height:1.6;margin:0;">
-        Your credits were <strong>not affected</strong> by this delay. Everything has been processed as expected.
+        The issue has been fully resolved, and credits for any failed generations were <strong>automatically refunded</strong> to your account.
       </p>
     </div>
     <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:16px 0 0 0;">
-      We apologize for any inconvenience and appreciate your patience.
+      Everything is running smoothly now — jump back in and keep creating.
     </p>
-    ${ctaButton("View Your Creations", "https://vovv.ai/app/library")}
+    ${ctaButton("Start Creating", "https://vovv.ai/app")}
   `);
 }
 
@@ -361,7 +361,7 @@ serve(async (req) => {
         html = leadWelcomeEmail();
         break;
       case "service_notice":
-        subject = "Your visuals are ready — VOVV.‌AI";
+        subject = "We're back on track — VOVV.‌AI";
         html = serviceNoticeEmail(data || {});
         break;
       default:
