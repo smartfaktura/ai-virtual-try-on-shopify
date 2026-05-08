@@ -398,6 +398,7 @@ export default function VideoHub() {
                       selectMode={false}
                       selected={false}
                       onToggleSelect={() => {}}
+                      nowTick={nowTick}
                     />
                   ))}
                 </div>
