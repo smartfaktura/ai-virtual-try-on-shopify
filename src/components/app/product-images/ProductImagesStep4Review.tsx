@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User, Shirt, Settings2, ImageIcon, Sparkles, ChevronRight, Plus, RotateCcw, X } from 'lucide-react';
+import { Coins, Package, Layers, AlertTriangle, Pencil, Paintbrush, User, Shirt, Settings2, ImageIcon, Sparkles, ChevronRight, Plus, RotateCcw, X, ArrowUpRight } from 'lucide-react';
+import { useCredits } from '@/contexts/CreditContext';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
@@ -75,6 +76,7 @@ function friendlyLabel(val: string | undefined): string {
 }
 
 export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, details, balance, onEditStep, onDetailsChange, allProducts = [], selectedProductIds = new Set(), perCategoryScenes, categoryGroups }: Step4Props) {
+  const { openBuyModal } = useCredits();
   const { allScenes: dbScenes } = useProductImageScenes();
   const selectedScenes = dbScenes.filter(s => selectedSceneIds.has(s.id));
   const update = useCallback((partial: Partial<DetailSettings>) => {
@@ -456,6 +458,16 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <span>Your balance</span>
                 <span>{balance} credits</span>
               </div>
+              {!canAfford && (
+                <Button
+                  size="sm"
+                  className="w-full mt-3 gap-1.5"
+                  onClick={() => openBuyModal('product_images_review')}
+                >
+                  Get Credits
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
