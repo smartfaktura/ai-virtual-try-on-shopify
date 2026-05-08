@@ -145,9 +145,34 @@ export function GlobalGenerationBar() {
     });
 
     if (justFinished.length > 0) {
-      setCompletedGroups((prev) => {
+      // Look up the final statuses of jobs in just-finished groups so we can
+      // distinguish actual completion from failure (signing-keys 403 etc.)
+      const finishedJobIds = justFinished
+        .flatMap((key) => prevGroupsRef.current.find((g) => g.key === key)?.jobs ?? [])
+        .map((j) => j.id);
+
+      (async () => {
+        let failureMap = new Map<string, { status: string; error_message: string | null }>();
+        if (finishedJobIds.length > 0) {
+          const { data: finalRows } = await supabase
+            .from('generation_queue')
+            .select('id, status, error_message')
+            .in('id', finishedJobIds);
+          for (const r of finalRows ?? []) {
+            failureMap.set(r.id, { status: r.status, error_message: r.error_message });
+          }
+        }
+
         const newCompleted: BatchGroup[] = justFinished.map((key) => {
           const original = prevGroupsRef.current.find((g) => g.key === key);
+          const jobIds = (original?.jobs ?? []).map((j) => j.id);
+          let failedCount = 0;
+          for (const id of jobIds) {
+            const fr = failureMap.get(id);
+            if (fr && (fr.status === 'failed' || fr.status === 'cancelled')) failedCount++;
+          }
+          const total = original?.totalCount ?? 0;
+          const allFailed = failedCount > 0 && failedCount === total;
           return {
             key,
             workflow_id: original?.workflow_id ?? null,
@@ -155,12 +180,12 @@ export function GlobalGenerationBar() {
             workflow_slug: original?.workflow_slug ?? null,
             product_name: original?.product_name ?? null,
             jobs: [],
-            totalCount: original?.totalCount ?? 0,
-            completedCount: original?.totalCount ?? 0,
+            totalCount: total,
+            completedCount: Math.max(0, total - failedCount),
             processingCount: 0,
             queuedCount: 0,
-            failedCount: 0,
-            allCompleted: true,
+            failedCount,
+            allCompleted: !allFailed,
             created_at: new Date().toISOString(),
             job_type: original?.job_type ?? null,
             quality: original?.quality ?? null,
@@ -170,19 +195,27 @@ export function GlobalGenerationBar() {
             generatedImageCount: original?.generatedImageCount ?? 0,
           };
         });
-        return [...prev, ...newCompleted];
-      });
 
-      const hadUpscale = justFinished.some((key) =>
-        prevGroupsRef.current.find((g) => g.key === key && g.job_type === 'upscale')
-      );
-      if (hadUpscale) {
-        queryClient.invalidateQueries({ queryKey: ['library'] });
-      }
+        // Fire one error toast per newly-failed group key
+        for (const g of newCompleted) {
+          if (g.failedCount > 0 && !toastedFailedKeysRef.current.has(g.key)) {
+            toastedFailedKeysRef.current.add(g.key);
+            const label = g.job_type === 'upscale' ? 'Upscale' : 'Generation';
+            toast.error(`${label} failed — credits refunded. Please try again.`);
+          }
+        }
 
-      setTimeout(() => {
-        setCompletedGroups((prev) => prev.filter((g) => !justFinished.includes(g.key)));
-      }, 8000);
+        setCompletedGroups((prev) => [...prev, ...newCompleted]);
+
+        const hadUpscale = newCompleted.some((g) => g.job_type === 'upscale' && g.failedCount === 0);
+        if (hadUpscale) {
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+        }
+
+        setTimeout(() => {
+          setCompletedGroups((prev) => prev.filter((g) => !justFinished.includes(g.key)));
+        }, 8000);
+      })();
     }
 
     prevActiveKeysRef.current = currentKeys;
