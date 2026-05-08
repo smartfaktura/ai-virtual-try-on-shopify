@@ -60,6 +60,7 @@ export function GlobalGenerationBar() {
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
   const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
+  const toastedFailedKeysRef = useRef<Set<string>>(new Set());
 
   // Poll active jobs globally
   const { data: activeGroups = [] } = useQuery({
