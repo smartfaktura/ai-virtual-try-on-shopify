@@ -204,6 +204,47 @@ export default function VideoHub() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // Live tick (1s) — drives per-card elapsed timers + progress while anything processes
+  const hasProcessing = history.some(v => v.status === 'processing' || v.status === 'queued');
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [hasProcessing]);
+
+  // Track which video IDs *just* transitioned processing → complete this session,
+  // so we can briefly highlight them in the Completed grid.
+  const prevStatusRef = useRef<Map<string, string>>(new Map());
+  const [recentlyCompleted, setRecentlyCompleted] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    const newlyDone: string[] = [];
+    for (const v of history) {
+      const prior = prev.get(v.id);
+      if ((prior === 'processing' || prior === 'queued') && v.status === 'complete') {
+        newlyDone.push(v.id);
+      }
+      prev.set(v.id, v.status);
+    }
+    if (newlyDone.length > 0) {
+      setRecentlyCompleted(s => {
+        const next = new Set(s);
+        newlyDone.forEach(id => next.add(id));
+        return next;
+      });
+      // Fade highlight after 2s
+      const t = setTimeout(() => {
+        setRecentlyCompleted(s => {
+          const next = new Set(s);
+          newlyDone.forEach(id => next.delete(id));
+          return next;
+        });
+      }, 2000);
+      return () => clearTimeout(t);
+    }
+  }, [history]);
+
   const toggleSelectMode = useCallback(() => {
     setSelectMode(prev => {
       if (prev) setSelectedIds(new Set());
