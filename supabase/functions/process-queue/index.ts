@@ -27,9 +27,9 @@ function dispatchGenerationFunction(
   functionUrl: string,
   serviceRoleKey: string,
   payload: Record<string, unknown>,
-): void {
-  // Fire the request — intentionally NOT awaiting the response
-  fetch(functionUrl, {
+): Promise<{ ok: boolean; status?: number }> {
+  // Wait briefly for immediate rejection (403/500) but don't wait for full generation
+  return fetch(functionUrl, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${serviceRoleKey}`,
@@ -37,11 +37,18 @@ function dispatchGenerationFunction(
       "x-queue-internal": "true",
     },
     body: JSON.stringify(payload),
+  }).then(async (res) => {
+    if (!res.ok) {
+      // Read body for logging, then signal failure
+      const body = await res.text().catch(() => "");
+      console.error(`[process-queue] Dispatch rejected: ${res.status} ${body.slice(0, 300)}`);
+      return { ok: false, status: res.status };
+    }
+    // Don't await the body — the function is still running and will self-complete
+    return { ok: true };
   }).catch((err) => {
-    // Log but don't throw — the generation function handles its own
-    // queue status updates. If dispatch itself fails, cleanup_stale_jobs
-    // will catch the stuck job after 5 minutes.
     console.error(`[process-queue] Dispatch fetch error:`, err);
+    return { ok: false, status: 0 };
   });
 }
 
