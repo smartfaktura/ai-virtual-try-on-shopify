@@ -170,8 +170,23 @@ serve(async (req) => {
         credits_reserved: creditsReserved,
       };
 
-      // Fire-and-forget — don't wait for the generation to finish
-      dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
+      // Dispatch and check for immediate rejection
+      const dispatchResult = await dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
+
+      if (!dispatchResult.ok) {
+        // Target function rejected immediately (e.g. 403 auth mismatch) — fail the job
+        console.error(`[process-queue] Dispatch of job ${jobId} rejected with status ${dispatchResult.status} — failing job and refunding`);
+        await supabase
+          .from("generation_queue")
+          .update({
+            status: "failed",
+            error_message: `Dispatch rejected (${dispatchResult.status}). Please try again.`,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", jobId);
+        await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+        continue;
+      }
 
       dispatchedCount++;
 
