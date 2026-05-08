@@ -1,39 +1,43 @@
-## Real problem found
+## Root problem
 
-`/app/generate/product-images` works because it runs through `generate-workflow`, which accepts internal queue calls even when the service-role token format differs after key rotation.
+`ievute040@gmail.com` currently has active stuck jobs:
 
-`/app/freestyle` runs through `generate-freestyle`, and its internal auth guard is stricter:
+- Freestyle job `56cd0b33-3786-4924-9f49-41ba65228bf2` is still `processing`
+- Two newer Product Images jobs were also active, one queued and one processing
 
-```text
-x-queue-internal must be true AND Authorization must exactly equal the current service key
-```
+The cancel button is not failing because the frontend button is missing. It calls `cancel_queue_job`, but the database cancellation path is broken:
 
-If the internal key format differs, `generate-freestyle` returns `403` before generation starts. Because `process-queue` currently dispatches fire-and-forget, it logs “dispatched” but does not see that `generate-freestyle` rejected the call. The queue row then stays stuck in `processing`.
+1. `generation_queue` has duplicate cancellation triggers: `trg_queue_cancel` and `trg_queue_cancellation`
+2. Cancellation tries to refund credits by updating `profiles.credits_balance`
+3. Billing protection triggers on `profiles` can block that credit update unless it is safely handled as a backend-owned operation
+4. When the refund fails, the whole cancellation update rolls back, so the RPC returns false/error and the UI shows: “Could not cancel — generation may have already completed”
 
-That matches the live evidence:
+## Plan
 
-- `hello@123presets.store` has freestyle job `61a69321-1822-41be-94cb-871b089f5436` stuck in `processing`
-- `process-queue` says it dispatched that job
-- `generate-freestyle` only shows boot/shutdown logs, no generation logs
-- Product image workflow jobs for the same user completed successfully
+1. **Fix cancellation at the database layer**
+   - Replace the current `cancel_queue_job` implementation so cancellation and refund happen atomically inside the RPC
+   - Remove duplicate queue cancellation triggers so credits cannot be refunded twice
+   - Make the remaining cancellation path compatible with billing-field protection
+   - Keep the security rule: users can only cancel their own queued/processing jobs
 
-## Fix plan
+2. **Fix the frontend cancel error handling**
+   - In `useGenerationQueue`, show the real cancellation error in logs
+   - Keep the user-facing toast simple, but stop implying the generation completed when the real cause is a backend cancellation failure
+   - After cancellation succeeds, clear the active job and refresh credits
 
-1. **Make freestyle internal auth match product-images**
-   - Update `generate-freestyle` to use the same service-role JWT fallback logic already used by `generate-workflow`
-   - Add a clear warning log when an internal queue request is rejected, so this cannot fail silently again
-
-2. **Unstick the affected account**
-   - Cleanly fail/cancel the stuck freestyle job for `hello@123presets.store`
-   - Refund the reserved 6 credits if they were not already refunded
-
-3. **Add a small safety check in the dispatcher**
-   - Change `process-queue` dispatch from fully fire-and-forget to “confirm accepted” for immediate `403/500` responses
-   - If the target function rejects immediately, mark the job failed/refunded instead of leaving it in `processing`
+3. **Unstick `ievute040@gmail.com` safely**
+   - Cancel the stuck freestyle job and refund its reserved credits once
+   - Inspect the active Product Images jobs for the same account and only cancel/refund jobs that are still genuinely stuck or user-requested stuck
+   - Verify there are no remaining active jobs for that account on `/app/freestyle`
 
 4. **Validate**
-   - Confirm the stuck freestyle row is no longer active
-   - Trigger/observe a fresh freestyle queue call reaches the actual generation logic
-   - Confirm product-images remains unchanged
+   - Query the queue row after cancellation to confirm status becomes `cancelled` with `completed_at`
+   - Confirm credits are returned exactly once
+   - Re-check the cancellation function path so the button now works for queued and processing jobs
 
-No new cron jobs, no model/prompt changes, no generation rewrite.
+## Technical notes
+
+- This is a backend/RPC integrity fix, not a UI-only fix
+- I will not add a per-minute scheduled job
+- I will not change generation prompts, models, or Product Images logic
+- I will only touch the queue cancellation/refund path and the small frontend cancel handler
