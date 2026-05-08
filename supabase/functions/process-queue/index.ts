@@ -55,11 +55,13 @@ serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
   if (authHeader !== `Bearer ${serviceRoleKey}`) {
+    console.warn(`[process-queue] Auth REJECTED — header prefix="${authHeader?.substring(0, 20)}…" headerLen=${authHeader?.length ?? 0}, expectedLen=${("Bearer " + serviceRoleKey).length}`);
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  console.log("[process-queue] Auth OK — dispatching jobs");
 
   const startTime = Date.now();
   const MAX_RUNTIME_MS = 55_000; // 55 seconds — fire-and-forget dispatch, 1s stagger
