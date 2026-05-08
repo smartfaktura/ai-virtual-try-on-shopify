@@ -27,9 +27,9 @@ function dispatchGenerationFunction(
   functionUrl: string,
   serviceRoleKey: string,
   payload: Record<string, unknown>,
-): Promise<{ ok: boolean; status?: number }> {
-  // Wait briefly for immediate rejection (403/500) but don't wait for full generation
-  return fetch(functionUrl, {
+): void {
+  // Fire the request — intentionally NOT awaiting the response
+  fetch(functionUrl, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${serviceRoleKey}`,
@@ -37,18 +37,11 @@ function dispatchGenerationFunction(
       "x-queue-internal": "true",
     },
     body: JSON.stringify(payload),
-  }).then(async (res) => {
-    if (!res.ok) {
-      // Read body for logging, then signal failure
-      const body = await res.text().catch(() => "");
-      console.error(`[process-queue] Dispatch rejected: ${res.status} ${body.slice(0, 300)}`);
-      return { ok: false, status: res.status };
-    }
-    // Don't await the body — the function is still running and will self-complete
-    return { ok: true };
   }).catch((err) => {
+    // Log but don't throw — the generation function handles its own
+    // queue status updates. If dispatch itself fails, cleanup_stale_jobs
+    // will catch the stuck job after 5 minutes.
     console.error(`[process-queue] Dispatch fetch error:`, err);
-    return { ok: false, status: 0 };
   });
 }
 
@@ -57,41 +50,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth guard: only allow internal calls with service role key or x-queue-internal header
+  // Auth guard: only allow internal calls with service role key
   const authHeader = req.headers.get("authorization");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
 
-  // Accept: exact service role key match OR a valid service_role JWT from internal callers
-  let authOk = false;
-  if (authHeader === `Bearer ${serviceRoleKey}`) {
-    authOk = true;
-  } else if (isQueueInternal && authHeader?.startsWith("Bearer ")) {
-    // Internal callers (retry-queue, enqueue-generation) may have a different-format
-    // service role key after key rotation. Validate via Supabase auth.
-    try {
-      const token = authHeader.replace("Bearer ", "");
-      // Decode JWT payload to check role claim (service_role)
-      const payloadB64 = token.split(".")[1];
-      if (payloadB64) {
-        const payload = JSON.parse(atob(payloadB64));
-        if (payload.role === "service_role") {
-          authOk = true;
-        }
-      }
-    } catch {
-      // Invalid token format — fall through to reject
-    }
-  }
-
-  if (!authOk) {
-    console.warn(`[process-queue] Auth REJECTED — headerLen=${authHeader?.length ?? 0}, expectedLen=${("Bearer " + serviceRoleKey).length}, isQueueInternal=${isQueueInternal}`);
+  if (authHeader !== `Bearer ${serviceRoleKey}`) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  console.log("[process-queue] Auth OK — dispatching jobs");
 
   const startTime = Date.now();
   const MAX_RUNTIME_MS = 55_000; // 55 seconds — fire-and-forget dispatch, 1s stagger
@@ -170,23 +138,8 @@ serve(async (req) => {
         credits_reserved: creditsReserved,
       };
 
-      // Dispatch and check for immediate rejection
-      const dispatchResult = await dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
-
-      if (!dispatchResult.ok) {
-        // Target function rejected immediately (e.g. 403 auth mismatch) — fail the job
-        console.error(`[process-queue] Dispatch of job ${jobId} rejected with status ${dispatchResult.status} — failing job and refunding`);
-        await supabase
-          .from("generation_queue")
-          .update({
-            status: "failed",
-            error_message: `Dispatch rejected (${dispatchResult.status}). Please try again.`,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", jobId);
-        await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
-        continue;
-      }
+      // Fire-and-forget — don't wait for the generation to finish
+      dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
 
       dispatchedCount++;
 

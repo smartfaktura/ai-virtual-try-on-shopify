@@ -1146,31 +1146,15 @@ serve(async (req) => {
   }
 
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const authHeaderRaw = req.headers.get("authorization");
-  const hasQueueHeader = req.headers.get("x-queue-internal") === "true";
-  let isQueueInternal = hasQueueHeader && authHeaderRaw === `Bearer ${serviceRoleKey}`;
-
-  // Fallback: accept any valid service_role JWT when keys differ across deployments
-  // (matches generate-workflow auth logic)
-  if (!isQueueInternal && hasQueueHeader && authHeaderRaw?.startsWith("Bearer ")) {
-    try {
-      const token = authHeaderRaw.slice(7);
-      const payloadB64 = token.split(".")[1];
-      if (payloadB64) {
-        const payload = JSON.parse(atob(payloadB64));
-        if (payload.role === "service_role") {
-          isQueueInternal = true;
-        }
-      }
-    } catch { /* not a valid JWT — reject */ }
-  }
+  const authHeader = req.headers.get("authorization");
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true"
+    && authHeader === `Bearer ${serviceRoleKey}`;
 
   const requestStartTime = performance.now();
 
   try {
     // SECURITY: Only allow internal queue calls — reject direct access
     if (!isQueueInternal) {
-      console.warn(`[generate-freestyle] Auth REJECTED — headerLen=${authHeaderRaw?.length ?? 0}, expectedLen=${("Bearer " + serviceRoleKey).length}, hasQueueHeader=${hasQueueHeader}`);
       return new Response(
         JSON.stringify({ error: "Direct access not allowed. Use the generation queue." }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }

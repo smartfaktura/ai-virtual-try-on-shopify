@@ -289,12 +289,9 @@ The person in this image MUST be the EXACT same person shown in [MODEL IMAGE].
 - Do NOT alter, idealize, or change any facial features from the reference\n`
     : "";
 
-  // Bundle mode: variation.is_bundle flag means the instruction already contains full prompt with product listing, scale, arrangement
-  const isBundle = !!(variation as Record<string, unknown>).is_bundle;
-
-  // Additional products block for flat lay multi-product (skip for bundles — bundle prompt handles this)
+  // Additional products block for flat lay multi-product
   const totalProductCount = 1 + (additionalProducts?.length || 0);
-  const additionalProductsBlock = (!isBundle && additionalProducts && additionalProducts.length > 0)
+  const additionalProductsBlock = (additionalProducts && additionalProducts.length > 0)
     ? `\nADDITIONAL PRODUCTS IN COMPOSITION (${totalProductCount} TOTAL PRODUCTS — ALL MUST APPEAR):
 - Product 1 (PRIMARY): ${product.title} (${product.productType}) — see [PRODUCT IMAGE 1]
 ${additionalProducts.map((p, idx) => `- Product ${idx + 2}: ${p.title} (${p.productType})${p.description ? ` — ${p.description}` : ''} — see [PRODUCT IMAGE ${idx + 2}]`).join('\n')}
@@ -307,18 +304,16 @@ This flat lay MUST contain EXACTLY ${totalProductCount} distinct products. Each 
     ? `\nSTYLING & PROPS: ${stylingNotes}\nIncorporate these styling elements naturally into the flat lay composition.\n`
     : "";
 
-  // Prop style control for flat lay — prevents AI from adding extra commercial products (skip for bundles — their scenes define context)
+  // Prop style control for flat lay — prevents AI from adding extra commercial products
   let propStyleBlock = "";
-  if (!isBundle) {
-    if (propStyle === 'clean' || (!propStyle && additionalProducts !== undefined)) {
-      propStyleBlock = `\nCRITICAL COMPOSITION RULE (OVERRIDE ALL OTHER INSTRUCTIONS):
+  if (propStyle === 'clean' || (!propStyle && additionalProducts !== undefined)) {
+    propStyleBlock = `\nCRITICAL COMPOSITION RULE (OVERRIDE ALL OTHER INSTRUCTIONS):
 Show ONLY the selected products on the surface — NOTHING ELSE.
 IGNORE any mention of props, accents, flowers, botanicals, accessories, decorative items, or styling elements in the variation description above.
 The surface must contain ONLY the provided products. Zero additional items. No gold accents, no flowers, no ceramics, no leaves, no ribbons, no hardware, no decorative objects of any kind.
 This overrides everything — the variation description is for the SURFACE STYLE only, not for props.\n`;
-    } else if (propStyle === 'decorated') {
-      propStyleBlock = `\nCOMPOSITION RULE: You may add ONLY abstract/decorative styling elements around the products: natural textures, dried flowers, fabric swatches, paper, abstract shapes, ribbons. NEVER add extra commercial products like watches, cameras, electronics, earbuds, bags, or any item that could be mistaken for the user's own product.\n`;
-    }
+  } else if (propStyle === 'decorated') {
+    propStyleBlock = `\nCOMPOSITION RULE: You may add ONLY abstract/decorative styling elements around the products: natural textures, dried flowers, fabric swatches, paper, abstract shapes, ribbons. NEVER add extra commercial products like watches, cameras, electronics, earbuds, bags, or any item that could be mistaken for the user's own product.\n`;
   }
 
   // UGC mood and product interaction injection
@@ -599,14 +594,14 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
 
   return `${processedTemplate}
 ${themeBlock}
-${isBundle ? '' : `PRODUCT DETAILS:
+PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
 ${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
-`}${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
+${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
-${isBundle ? variation.instruction : (propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' '))}
+${propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' ')}
 
 ${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
 
@@ -619,7 +614,7 @@ CRITICAL REQUIREMENTS:
 4. Ultra high resolution, professional quality, no AI artifacts.
 5. This specific variation must clearly match the "${variation.label}" direction described above.
 ${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
-7. ${isBundle ? 'BACKGROUND ISOLATION (CRITICAL): Each [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE all backgrounds. Extract ONLY the product objects from ALL reference images. The output environment MUST come exclusively from the bundle scene instruction above.' : 'BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the variation instruction above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.'}
+7. BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the variation instruction above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.
 ${batchOutfitLock ? `8. OUTFIT CONSISTENCY (CRITICAL): If a person/model appears, they MUST wear the EXACT same outfit described in the variation instruction. Do NOT deviate — same colors, same garment types, same shoes. This is a multi-image batch and visual consistency across all shots is mandatory.` : ""}
 
 ${allNegatives ? `AVOID: ${allNegatives}, reference background, original background, source image background` : "AVOID: reference background, original background, source image background"}`;
@@ -767,10 +762,9 @@ async function generateImage(
   // Build content array: text prompt + labeled reference images
   const IMAGE_LABEL_MAP: Record<string, string> = {
     product: '[PRODUCT IMAGE] Product reference — reproduce ONLY the product object (shape, colors, labels, materials). IGNORE all background, surfaces, and environment in this image:',
-    product_2: '[PRODUCT IMAGE 2] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
-    product_3: '[PRODUCT IMAGE 3] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
-    product_4: '[PRODUCT IMAGE 4] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
-    product_5: '[PRODUCT IMAGE 5] Additional product — reproduce this product EXACTLY (shape, colors, labels, branding). IGNORE background:',
+    product_2: '[PRODUCT IMAGE 2] Additional product reference:',
+    product_3: '[PRODUCT IMAGE 3] Additional product reference:',
+    product_4: '[PRODUCT IMAGE 4] Additional product reference:',
     model: '[MODEL IMAGE] Identity reference — the person MUST look like this:',
     scene_reference: '[SCENE REFERENCE] Composition and style reference:',
     packaging_reference: '[PACKAGING REFERENCE] This is the REAL product packaging — reproduce its EXACT color, material, texture, shape, branding, and construction. Do NOT invent or change any packaging detail:',
@@ -1046,22 +1040,8 @@ serve(async (req) => {
 
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const authHeaderRaw = req.headers.get("authorization");
-  const hasQueueHeader = req.headers.get("x-queue-internal") === "true";
-  let isQueueInternal = hasQueueHeader && authHeaderRaw === `Bearer ${serviceRoleKey}`;
-
-  // Fallback: accept any valid service_role JWT when keys differ across deployments
-  if (!isQueueInternal && hasQueueHeader && authHeaderRaw?.startsWith("Bearer ")) {
-    try {
-      const token = authHeaderRaw.slice(7);
-      const payloadB64 = token.split(".")[1];
-      if (payloadB64) {
-        const payload = JSON.parse(atob(payloadB64));
-        if (payload.role === "service_role") {
-          isQueueInternal = true;
-        }
-      }
-    } catch { /* not a valid JWT — reject */ }
-  }
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true"
+    && authHeaderRaw === `Bearer ${serviceRoleKey}`;
 
   const FUNCTION_START = Date.now();
   const MAX_WALL_CLOCK_MS = 270_000; // 270s — leave 30s buffer before platform kills at 300s

@@ -22,7 +22,6 @@ const BriteShowcase = lazy(() => import('@/pages/showcase/BriteShowcase'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
 const ProductImages = lazy(() => import('@/pages/ProductImages'));
-const BundleVisuals = lazy(() => import('@/pages/BundleVisuals'));
 const TextToProduct = lazy(() => import('@/pages/TextToProduct'));
 
 const Templates = lazy(() => import('@/pages/Templates'));
@@ -240,7 +239,6 @@ const App = () => {
                         <Route path="/creative-drops" element={<CreativeDrops />} />
                         <Route path="/generate" element={<Generate />} />
                         <Route path="/generate/product-images" element={<ProductImages />} />
-                        <Route path="/generate/bundle-visuals" element={<BundleVisuals />} />
                         <Route path="/generate/text-to-product" element={<TextToProduct />} />
                         <Route path="/generate/:workflowSlug" element={<Generate />} />
                         <Route path="/library" element={<Jobs />} />
