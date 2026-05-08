@@ -1,27 +1,41 @@
-## Improve Bedroom Scenes & Add 6 New Trending Scenes
+## Problem found
 
-### Part 1: Update 12 Existing Bedroom Scenes
+Cancel is failing because the deployed `cancel_queue_job` function calls `set_config('role', 'service_role', true)` inside a `SECURITY DEFINER` function. PostgreSQL rejects that with:
 
-Add `COMPLETE INTERIOR COMPOSITION` directive to all 12 scenes, forcing the AI to generate fully furnished bedrooms (nightstands, lamps, rugs, art, seating) around any selected product. Also replace "visual hero" phrasing with "primary focal point within a fully furnished, balanced interior."
+```text
+cannot set parameter "role" within security-definer function
+```
 
-**Scenes:** Linen Cloud Suite, Parisian Pied-à-Terre, Coastal Dawn Retreat, Warm Walnut Sanctuary, Scandi Hygge Nest, Terracotta & Linen Villa, Japandi Sleep Temple, Hamptons Morning Suite, Milanese Atelier Bedroom, Desert Stone Retreat, Skyline Penthouse Bedroom, Garden Conservatory Bedroom.
+So the cancel request never reaches the queue update/refund path. The active stuck job for `ievute040@gmail.com` is:
 
-The directive includes conditional logic for beds, nightstands, dressers, wardrobes, chairs, rugs, and lamps — each product type gets appropriate complementary furniture.
+```text
+e58ac3b7-2e7f-4f72-a73b-33488ea97330 / freestyle / processing / 6 credits
+```
 
-### Part 2: Add 6 New Trending Bedroom Scenes
+## Plan
 
-Based on current 2025-2026 interior design trends:
+1. **Replace the broken database cancellation function**
+   - Remove the invalid `set_config('role', 'service_role', true)` call
+   - Rewrite `cancel_queue_job` so it:
+     - verifies the authenticated user owns the job
+     - locks the queue row
+     - only cancels `queued` or `processing` jobs
+     - marks the job `cancelled` and sets `completed_at`
+     - refunds `credits_reserved` exactly once in the same transaction
+   - Prevent double refunds by only refunding when the previous status was active
 
-1. **Quiet Luxury Moody Suite** — Dark chocolate fluted oak paneling, warm amber velvet, brass accents. The "quiet luxury" movement.
-2. **Curved Plaster Grotto** — Organic arched white lime plaster, tadelakt flooring, Mediterranean cave-like serenity. Curves-over-angles trend.
-3. **Moss Green Velvet Cocoon** — Deep forest green walls, biophilic accents (pothos, botanical prints), cognac leather. Nature-immersion trend.
-4. **Raw Earth Wabi-Sabi Room** — Imperfect clay plaster, reclaimed timber, mismatched vintage stools, undyed linen. Wabi-sabi movement.
-5. **Warm Minimalist Loft** — Polished concrete + whitewashed brick, industrial windows, warm putty tones. Warm minimalism trend.
-6. **Art Deco Revival Boudoir** — Deep emerald fluted velvet, brass sunburst mirror, chevron parquet, geometric mouldings. Neo-deco revival.
+2. **Make backend-owned credit updates pass billing protection safely**
+   - Update the billing protection trigger to allow trusted `SECURITY DEFINER` RPC functions (`refund_credits`, `deduct_credits`, `enqueue_generation`, `cancel_queue_job`) to update `credits_balance`
+   - Keep blocking direct user edits to billing fields
 
-All 6 new scenes include the full `COMPLETE INTERIOR COMPOSITION` directive, `PROPORTIONAL SCALE RULE`, and rich `STYLED INTERIOR DETAILS` blocks matching the existing bedroom scene pattern.
+3. **Disable trigger-based cancellation refund to avoid duplicate logic**
+   - Remove the `generation_queue` cancellation trigger or make it no-op
+   - Keep cancellation/refund logic centralized in `cancel_queue_job`
 
-### Technical Details
-- Two `UPDATE` statements via migration: one to inject the composition block, one to fix "visual hero" phrasing across 12 scenes.
-- Six `INSERT` statements for new scenes into `product_image_scenes` with `category_collection = 'furniture'`, `sub_category = 'Bedroom'`, `scene_type = 'lifestyle'`, sort_order 154-159.
-- No code file changes needed.
+4. **Unstick the current user’s job**
+   - After the migration is approved and applied, cancel job `e58ac3b7-2e7f-4f72-a73b-33488ea97330`
+   - Confirm status is `cancelled`, `completed_at` is set, and 6 credits are returned once
+
+5. **Validate in the browser signal**
+   - Confirm `cancel_queue_job` no longer returns 403
+   - Confirm the Freestyle active job UI clears after cancel
