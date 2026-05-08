@@ -458,6 +458,16 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <span>Your balance</span>
                 <span>{balance} credits</span>
               </div>
+              {!canAfford && (
+                <Button
+                  size="sm"
+                  className="w-full mt-3 gap-1.5"
+                  onClick={() => openBuyModal('product_images_review')}
+                >
+                  Get Credits
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
