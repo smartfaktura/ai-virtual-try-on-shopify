@@ -1,19 +1,30 @@
-## What's happening now
+## Problem
 
-Product Visuals already sends 1 image per queue job (this hasn't changed). But the frontend sends them in **chunks of 4** with a 300ms delay between chunks. So 12 images = 3 sequential rounds, taking ~1 second just in pacing overhead before the queue even starts processing.
+`process-queue` dispatches generation jobs **one at a time**, awaiting the full HTTP response from `generate-workflow` before moving to the next job. Since `generate-workflow` takes ~30s per image, a batch of 8 jobs takes ~4 minutes instead of ~30 seconds.
 
-The backend burst limits are generous (pro: 200/min, growth: 80/min), so we're being unnecessarily conservative on the client side.
+The enqueue side is fine — all 8 jobs in your last batch were queued within 1 second.
 
-## Plan
+## Solution
 
-### 1. `src/pages/ProductImages.tsx` — Increase CONCURRENCY and reduce pacing
+Modify `process-queue/index.ts` to dispatch jobs in **parallel batches** instead of sequentially:
 
-- Change `CONCURRENCY` from `4` to `20`
-- Remove the `paceDelay` between chunks (the server-side burst limiter + `enqueueWithRetry` backoff already handle rate protection)
-- Keep `skipWake: true` on individual calls and single `sendWake` at the end (already in place)
+1. **Claim multiple jobs at once** — claim up to 6 jobs in a loop (without awaiting dispatch), then fire all dispatches concurrently using `Promise.allSettled`.
 
-This means a typical 6-12 image batch fires all requests simultaneously in one round, and even large 30+ image batches complete in 2 rounds instead of 8+.
+2. **Don't await the generation response** — change `dispatchGenerationFunction` to only wait for the HTTP connection to be accepted (a brief 5-second timeout for immediate rejections like 403/500), not for the full generation to complete. The generation functions already self-complete by updating the queue directly.
 
-### No backend changes needed
+3. **Reduce stagger** — drop the 1-second sleep between dispatches to 200ms (just enough to avoid thundering herd on the AI gateway).
 
-The `enqueue_generation` RPC already has per-plan burst limits and `FOR UPDATE` row locking. The `enqueueWithRetry` wrapper handles 429s with exponential backoff. Everything is already protected server-side.
+### Technical changes
+
+**`supabase/functions/process-queue/index.ts`**:
+- Claim jobs in a batch loop (up to 6 at a time)
+- Fire all dispatches with `Promise.allSettled` — no sequential awaiting
+- Use a 5s `AbortController` timeout on the dispatch fetch so we only wait for connection acceptance, not full generation
+- Reduce stagger from 1000ms to 200ms between individual fetch calls within a batch
+- After dispatching a batch, immediately loop to claim the next batch (within the 55s runtime window)
+
+No changes needed to `generate-workflow` or `enqueue-generation` — the generation functions already update queue status independently.
+
+### Expected result
+
+8 jobs dispatched in ~2 seconds (instead of ~4 minutes), all running concurrently on the AI gateway. Total batch completion time drops from ~4 min to ~30-40 seconds.
