@@ -220,6 +220,30 @@ function leadWelcomeEmail(): string {
   `);
 }
 
+function serviceNoticeEmail(data: { displayName?: string; stuckJobs?: number }): string {
+  const name = data.displayName || "there";
+  return emailWrapper(`
+    <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
+      Your visuals are ready
+    </h1>
+    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.navy};line-height:1.6;margin:0 0 8px 0;">
+      Hey ${name},
+    </p>
+    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 24px 0;">
+      Earlier today we experienced a temporary delay in our generation pipeline that affected some of your queued visuals. We want to let you know that the issue has been fully resolved — all your images have been processed and are waiting for you.
+    </p>
+    <div style="background-color:${BRAND.stone};border-radius:8px;padding:20px;margin:0 0 8px 0;">
+      <p style="font-family:'Inter',sans-serif;font-size:14px;color:${BRAND.navy};line-height:1.6;margin:0;">
+        Your credits were <strong>not affected</strong> by this delay. Everything has been processed as expected.
+      </p>
+    </div>
+    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:16px 0 0 0;">
+      We apologize for any inconvenience and appreciate your patience.
+    </p>
+    ${ctaButton("View Your Creations", "https://vovv.ai/app/library")}
+  `);
+}
+
 
 function generationFailedEmail(data: { jobType?: string; errorMessage?: string; displayName?: string; prompt?: string; productName?: string; modelName?: string; sceneName?: string; workflowName?: string }): string {
   const typeMap: Record<string, string> = {
