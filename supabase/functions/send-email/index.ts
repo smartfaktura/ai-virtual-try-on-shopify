@@ -360,6 +360,10 @@ serve(async (req) => {
         subject = "You're in — VOVV.‌AI";
         html = leadWelcomeEmail();
         break;
+      case "service_notice":
+        subject = "Your visuals are ready — VOVV.‌AI";
+        html = serviceNoticeEmail(data || {});
+        break;
       default:
         return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
           status: 400,
