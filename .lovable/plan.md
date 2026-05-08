@@ -1,30 +1,18 @@
-## What is wrong
+## Problem
 
-The upscale backend is now completing correctly: the latest job finished and inserted a new `upscaled_4k` Library record.
+On mobile (no-hover devices), the Library card shows a persistent top action row with a status pill + favorite heart at `top-right`. The `4K` / `2K` resolution badge is also pinned to `top-right`, so it sits directly under (and bleeds through) the heart button and status pill on upscaled assets.
 
-The bad part is display: the Library thumbnail uses the image transform endpoint for every image. The new 4K PNG exists, but the transform endpoint returns `Invalid source image`, so the card shows a broken/empty tile even though the upscale completed.
+## Fix
 
-## Fix plan
+In `src/components/app/LibraryImageCard.tsx`:
 
-1. **Stop optimizing already-upscaled Library thumbnails**
-   - In `LibraryImageCard`, render `upscaled_2k` / `upscaled_4k` items with the original storage URL instead of `getOptimizedUrl(...?quality=60)`.
-   - Keep optimization for normal Library images.
-   - This avoids the broken transform endpoint for large Topaz PNGs.
+1. Move the resolution badge (`4K` / `2K`) from `top-3 right-3` to `bottom-3 right-3` so it never collides with the top action row on touch devices.
+2. Ensure it sits above the bottom hover gradient (`z-10` already set) and is hidden in `selectMode` (already the case).
+3. Keep the existing styling (primary pill, bold, shadow) — purely a position change.
 
-2. **Add a clean image-error fallback in Library cards**
-   - If a thumbnail fails to load, show a polished neutral fallback with a clear label instead of the browser’s broken-image icon.
-   - Keep the 4K/2K badge visible so users understand the asset exists.
-
-3. **Make successful upscale refresh the Library automatically**
-   - When an upscale job completes successfully, invalidate/refetch the Library query and the upscaling-source query.
-   - This makes the new upscaled image appear without requiring a page refresh.
-
-4. **Small mobile UI cleanup from the screenshot**
-   - Prevent long card labels like “Freestyle Creation” from visually floating/overlapping on the grid.
-   - Keep the mobile grid focused on thumbnails, badges, and actions.
+No business-logic, data, or other UI changes.
 
 ## Verification
 
-- Confirm the latest completed 4K image URL loads directly.
-- Confirm the Library card no longer requests the failing transformed URL for upscaled assets.
-- Confirm a completed upscale appears in Library after the job finishes without manual refresh.
+- Mobile viewport (440px): on an upscaled asset, heart + status pill render cleanly at top-right; `4K` badge sits at bottom-right, clear of the date/download row in the hover overlay (overlay is desktop-only so no conflict).
+- Desktop hover: badge visible at bottom-right and does not overlap the download button (download is on the right inside the hover gradient — we'll left-align the badge if needed; if conflict observed, move badge to `bottom-3 left-3` instead).
