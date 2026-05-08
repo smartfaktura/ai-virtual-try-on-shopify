@@ -1,30 +1,42 @@
-## Problem
 
-`process-queue` dispatches generation jobs **one at a time**, awaiting the full HTTP response from `generate-workflow` before moving to the next job. Since `generate-workflow` takes ~30s per image, a batch of 8 jobs takes ~4 minutes instead of ~30 seconds.
+## Send service notice emails to affected users
 
-The enqueue side is fine — all 8 jobs in your last batch were queued within 1 second.
+### Who receives the email (7 users)
 
-## Solution
+| Email | Failed jobs |
+|---|---|
+| stewartryananderson@gmail.com | 4 |
+| johns101609@gmail.com | 2 |
+| tyty.meadors@gmail.com | 2 |
+| b@x-art.com | 1 |
+| ievute040@gmail.com | 1 |
+| ileana.santana@aol.com | 1 |
+| mgdesigns@sbcglobal.net | 1 |
 
-Modify `process-queue/index.ts` to dispatch jobs in **parallel batches** instead of sequentially:
+Excluded: `hello@123presets.store` (your account), two Apple relay addresses.
 
-1. **Claim multiple jobs at once** — claim up to 6 jobs in a loop (without awaiting dispatch), then fire all dispatches concurrently using `Promise.allSettled`.
+### Email content
 
-2. **Don't await the generation response** — change `dispatchGenerationFunction` to only wait for the HTTP connection to be accepted (a brief 5-second timeout for immediate rejections like 403/500), not for the full generation to complete. The generation functions already self-complete by updating the queue directly.
+**Subject:** We're back on track — VOVV.AI
 
-3. **Reduce stagger** — drop the 1-second sleep between dispatches to 200ms (just enough to avoid thundering herd on the AI gateway).
+**Body:**
 
-### Technical changes
+> Hey there,
+>
+> We recently experienced longer than usual queue waiting times that may have affected some of your generations. We're sorry for the delay.
+>
+> The issue has been fully resolved, and credits for any failed generations were automatically refunded to your account.
+>
+> Everything is running smoothly now — jump back in and keep creating.
+>
+> **[CTA Button: "Start Creating" → https://vovv.ai/app]**
 
-**`supabase/functions/process-queue/index.ts`**:
-- Claim jobs in a batch loop (up to 6 at a time)
-- Fire all dispatches with `Promise.allSettled` — no sequential awaiting
-- Use a 5s `AbortController` timeout on the dispatch fetch so we only wait for connection acceptance, not full generation
-- Reduce stagger from 1000ms to 200ms between individual fetch calls within a batch
-- After dispatching a batch, immediately loop to claim the next batch (within the 55s runtime window)
+### How it will be sent
 
-No changes needed to `generate-workflow` or `enqueue-generation` — the generation functions already update queue status independently.
+1. **Update the `service_notice` template** in `send-email/index.ts` — replace the current copy with the message above (new subject line + updated body text).
 
-### Expected result
+2. **Deploy** the updated `send-email` edge function.
 
-8 jobs dispatched in ~2 seconds (instead of ~4 minutes), all running concurrently on the AI gateway. Total batch completion time drops from ~4 min to ~30-40 seconds.
+3. **Send emails** — Call `send-email` via `curl_edge_functions` once per user with `{ type: "service_notice", to: "<email>", data: {} }`. The function requires service_role auth, so each call will be made individually.
+
+No frontend code changes. The template update is permanent but generic enough to reuse for future service notices.
