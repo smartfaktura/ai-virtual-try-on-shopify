@@ -538,13 +538,30 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         p_job_id: jobIdRef.current,
       });
 
+      if (rpcError) {
+        console.error('[queue] cancel RPC error:', rpcError);
+      }
+
       if (!rpcError && cancelled === true) {
         stopPolling();
         setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
         toast.info('Cancelled — credits returned ✨');
         onCreditRefreshRef.current?.();
       } else {
-        toast.warning('Could not cancel — generation may have already completed.');
+        // Re-check current status — the job may have finished while the user pressed cancel
+        const { data: freshRow } = await supabase
+          .from('generation_queue')
+          .select('status')
+          .eq('id', jobIdRef.current!)
+          .maybeSingle();
+
+        if (freshRow?.status === 'completed') {
+          toast.info('Generation already completed!');
+        } else if (freshRow?.status === 'failed' || freshRow?.status === 'cancelled') {
+          toast.info('Generation already ended — credits refunded.');
+        } else {
+          toast.warning('Could not cancel right now — please try again.');
+        }
         pollJobStatus(jobIdRef.current!);
       }
     } finally {
