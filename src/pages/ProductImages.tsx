@@ -1008,12 +1008,11 @@ export default function ProductImages() {
       }
     }
 
-    // Phase 2: Send in parallel chunks of 4
-    const CONCURRENCY = 4;
+    // Phase 2: Send in parallel chunks of 20 (server-side burst limiter protects against overload)
+    const CONCURRENCY = 20;
     let aborted = false;
     for (let chunkStart = 0; chunkStart < allJobs.length && !aborted; chunkStart += CONCURRENCY) {
       const chunk = allJobs.slice(chunkStart, chunkStart + CONCURRENCY);
-      if (chunkStart > 0) await paceDelay(1); // one delay per chunk
 
       const results = await Promise.allSettled(
         chunk.map(job =>
