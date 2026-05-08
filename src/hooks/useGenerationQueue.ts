@@ -506,41 +506,49 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     }
   }, [user, pollJobStatus, stopPolling]);
 
+  const cancellingRef = useRef(false);
+
   const cancel = useCallback(async () => {
     if (!jobIdRef.current || !activeJob || (activeJob.status !== 'queued' && activeJob.status !== 'processing')) return;
+    if (cancellingRef.current) return; // Prevent duplicate clicks
+    cancellingRef.current = true;
 
-    // Check current job status before attempting cancel
-    const { data: checkRows } = await supabase
-      .from('generation_queue')
-      .select('status')
-      .eq('id', jobIdRef.current)
-      .maybeSingle();
+    try {
+      // Check current job status before attempting cancel
+      const { data: checkRows } = await supabase
+        .from('generation_queue')
+        .select('status')
+        .eq('id', jobIdRef.current)
+        .maybeSingle();
 
-    if (!checkRows || checkRows.status === 'completed') {
-      toast.info('Generation already completed!');
-      pollJobStatus(jobIdRef.current!);
-      return;
-    }
-    if (checkRows.status === 'failed' || checkRows.status === 'cancelled') {
-      toast.info('Generation already ended.');
-      stopPolling();
-      setActiveJob(prev => prev ? { ...prev, status: checkRows.status as QueueJobStatus } : null);
-      return;
-    }
+      if (!checkRows || checkRows.status === 'completed') {
+        toast.info('Generation already completed!');
+        pollJobStatus(jobIdRef.current!);
+        return;
+      }
+      if (checkRows.status === 'failed' || checkRows.status === 'cancelled') {
+        toast.info('Generation already ended.');
+        stopPolling();
+        setActiveJob(prev => prev ? { ...prev, status: checkRows.status as QueueJobStatus } : null);
+        return;
+      }
 
-    // Cancel via secure RPC (no direct UPDATE policy)
-    const { data: cancelled, error: rpcError } = await supabase.rpc('cancel_queue_job', {
-      p_job_id: jobIdRef.current,
-    });
+      // Cancel via secure RPC (no direct UPDATE policy)
+      const { data: cancelled, error: rpcError } = await supabase.rpc('cancel_queue_job', {
+        p_job_id: jobIdRef.current,
+      });
 
-    if (!rpcError && cancelled === true) {
-      stopPolling();
-      setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
-      toast.info('Cancelled — credits returned ✨');
-      onCreditRefreshRef.current?.();
-    } else {
-      toast.warning('Could not cancel — generation may have already completed.');
-      pollJobStatus(jobIdRef.current!);
+      if (!rpcError && cancelled === true) {
+        stopPolling();
+        setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
+        toast.info('Cancelled — credits returned ✨');
+        onCreditRefreshRef.current?.();
+      } else {
+        toast.warning('Could not cancel — generation may have already completed.');
+        pollJobStatus(jobIdRef.current!);
+      }
+    } finally {
+      cancellingRef.current = false;
     }
   }, [activeJob, stopPolling, pollJobStatus]);
 
