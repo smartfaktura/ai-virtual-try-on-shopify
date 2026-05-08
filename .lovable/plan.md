@@ -1,49 +1,39 @@
+## Real problem found
 
-## Problem
+`/app/generate/product-images` works because it runs through `generate-workflow`, which accepts internal queue calls even when the service-role token format differs after key rotation.
 
-The `cancel_queue_job` RPC function sets the job status to `cancelled` but **does not refund credits**. The toast says "credits returned" but that's misleading — credits are lost on cancel.
+`/app/freestyle` runs through `generate-freestyle`, and its internal auth guard is stricter:
 
-Additionally, looking at the screenshot, the user clicked cancel multiple times getting "Could not cancel — generation may have already completed" — this happens because after the first cancel attempt succeeds (sets status to `cancelled`), the local `activeJob` still shows `processing`, so subsequent clicks hit the RPC again which returns `false` (status is now `cancelled`, not in `('queued', 'processing')`).
-
-## Fix
-
-### 1. Update `cancel_queue_job` RPC to refund credits
-Add credit refund logic to the database function so cancelled jobs return credits to the user's balance.
-
-```sql
-CREATE OR REPLACE FUNCTION cancel_queue_job(p_job_id uuid)
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_user_id uuid;
-  v_credits integer;
-BEGIN
-  UPDATE generation_queue
-  SET status = 'cancelled', completed_at = now()
-  WHERE id = p_job_id
-    AND user_id = auth.uid()
-    AND status IN ('queued', 'processing')
-  RETURNING user_id, credits_reserved INTO v_user_id, v_credits;
-
-  IF v_user_id IS NULL THEN
-    RETURN false;
-  END IF;
-
-  IF v_credits > 0 THEN
-    UPDATE profiles
-    SET credits_balance = credits_balance + v_credits
-    WHERE user_id = v_user_id;
-  END IF;
-
-  RETURN true;
-END;
-$$;
+```text
+x-queue-internal must be true AND Authorization must exactly equal the current service key
 ```
 
-### 2. Prevent duplicate cancel clicks (frontend)
-In `src/hooks/useGenerationQueue.ts`, add a guard so the cancel function can't be called while already in-flight — preventing the repeated "Could not cancel" toasts.
+If the internal key format differs, `generate-freestyle` returns `403` before generation starts. Because `process-queue` currently dispatches fire-and-forget, it logs “dispatched” but does not see that `generate-freestyle` rejected the call. The queue row then stays stuck in `processing`.
 
-No cron jobs, no complex changes — just fix the cancel to actually work.
+That matches the live evidence:
+
+- `hello@123presets.store` has freestyle job `61a69321-1822-41be-94cb-871b089f5436` stuck in `processing`
+- `process-queue` says it dispatched that job
+- `generate-freestyle` only shows boot/shutdown logs, no generation logs
+- Product image workflow jobs for the same user completed successfully
+
+## Fix plan
+
+1. **Make freestyle internal auth match product-images**
+   - Update `generate-freestyle` to use the same service-role JWT fallback logic already used by `generate-workflow`
+   - Add a clear warning log when an internal queue request is rejected, so this cannot fail silently again
+
+2. **Unstick the affected account**
+   - Cleanly fail/cancel the stuck freestyle job for `hello@123presets.store`
+   - Refund the reserved 6 credits if they were not already refunded
+
+3. **Add a small safety check in the dispatcher**
+   - Change `process-queue` dispatch from fully fire-and-forget to “confirm accepted” for immediate `403/500` responses
+   - If the target function rejects immediately, mark the job failed/refunded instead of leaving it in `processing`
+
+4. **Validate**
+   - Confirm the stuck freestyle row is no longer active
+   - Trigger/observe a fresh freestyle queue call reaches the actual generation logic
+   - Confirm product-images remains unchanged
+
+No new cron jobs, no model/prompt changes, no generation rewrite.
