@@ -1,43 +1,41 @@
-## Root problem
+## Problem found
 
-`ievute040@gmail.com` currently has active stuck jobs:
+Cancel is failing because the deployed `cancel_queue_job` function calls `set_config('role', 'service_role', true)` inside a `SECURITY DEFINER` function. PostgreSQL rejects that with:
 
-- Freestyle job `56cd0b33-3786-4924-9f49-41ba65228bf2` is still `processing`
-- Two newer Product Images jobs were also active, one queued and one processing
+```text
+cannot set parameter "role" within security-definer function
+```
 
-The cancel button is not failing because the frontend button is missing. It calls `cancel_queue_job`, but the database cancellation path is broken:
+So the cancel request never reaches the queue update/refund path. The active stuck job for `ievute040@gmail.com` is:
 
-1. `generation_queue` has duplicate cancellation triggers: `trg_queue_cancel` and `trg_queue_cancellation`
-2. Cancellation tries to refund credits by updating `profiles.credits_balance`
-3. Billing protection triggers on `profiles` can block that credit update unless it is safely handled as a backend-owned operation
-4. When the refund fails, the whole cancellation update rolls back, so the RPC returns false/error and the UI shows: “Could not cancel — generation may have already completed”
+```text
+e58ac3b7-2e7f-4f72-a73b-33488ea97330 / freestyle / processing / 6 credits
+```
 
 ## Plan
 
-1. **Fix cancellation at the database layer**
-   - Replace the current `cancel_queue_job` implementation so cancellation and refund happen atomically inside the RPC
-   - Remove duplicate queue cancellation triggers so credits cannot be refunded twice
-   - Make the remaining cancellation path compatible with billing-field protection
-   - Keep the security rule: users can only cancel their own queued/processing jobs
+1. **Replace the broken database cancellation function**
+   - Remove the invalid `set_config('role', 'service_role', true)` call
+   - Rewrite `cancel_queue_job` so it:
+     - verifies the authenticated user owns the job
+     - locks the queue row
+     - only cancels `queued` or `processing` jobs
+     - marks the job `cancelled` and sets `completed_at`
+     - refunds `credits_reserved` exactly once in the same transaction
+   - Prevent double refunds by only refunding when the previous status was active
 
-2. **Fix the frontend cancel error handling**
-   - In `useGenerationQueue`, show the real cancellation error in logs
-   - Keep the user-facing toast simple, but stop implying the generation completed when the real cause is a backend cancellation failure
-   - After cancellation succeeds, clear the active job and refresh credits
+2. **Make backend-owned credit updates pass billing protection safely**
+   - Update the billing protection trigger to allow trusted `SECURITY DEFINER` RPC functions (`refund_credits`, `deduct_credits`, `enqueue_generation`, `cancel_queue_job`) to update `credits_balance`
+   - Keep blocking direct user edits to billing fields
 
-3. **Unstick `ievute040@gmail.com` safely**
-   - Cancel the stuck freestyle job and refund its reserved credits once
-   - Inspect the active Product Images jobs for the same account and only cancel/refund jobs that are still genuinely stuck or user-requested stuck
-   - Verify there are no remaining active jobs for that account on `/app/freestyle`
+3. **Disable trigger-based cancellation refund to avoid duplicate logic**
+   - Remove the `generation_queue` cancellation trigger or make it no-op
+   - Keep cancellation/refund logic centralized in `cancel_queue_job`
 
-4. **Validate**
-   - Query the queue row after cancellation to confirm status becomes `cancelled` with `completed_at`
-   - Confirm credits are returned exactly once
-   - Re-check the cancellation function path so the button now works for queued and processing jobs
+4. **Unstick the current user’s job**
+   - After the migration is approved and applied, cancel job `e58ac3b7-2e7f-4f72-a73b-33488ea97330`
+   - Confirm status is `cancelled`, `completed_at` is set, and 6 credits are returned once
 
-## Technical notes
-
-- This is a backend/RPC integrity fix, not a UI-only fix
-- I will not add a per-minute scheduled job
-- I will not change generation prompts, models, or Product Images logic
-- I will only touch the queue cancellation/refund path and the small frontend cancel handler
+5. **Validate in the browser signal**
+   - Confirm `cancel_queue_job` no longer returns 403
+   - Confirm the Freestyle active job UI clears after cancel
