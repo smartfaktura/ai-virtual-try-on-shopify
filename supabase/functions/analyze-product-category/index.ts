@@ -88,6 +88,29 @@ const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
   [/lingerie|\bbra\b|underwear|corset/i, "lingerie"],
 ];
 
+/**
+ * High-priority sport-intent override.
+ * If a sport keyword appears alongside an apparel noun (skirt, dress, shorts, polo,
+ * leggings, set, kit, jersey, etc.) the category MUST be activewear regardless of
+ * what the AI returned or which generic regex matched first.
+ * Examples it catches: "Tennis Skirt", "Padel Polo", "Golf Shorts", "Yoga Dress",
+ * "Pilates Set", "Running Tights", "Ski Jacket".
+ */
+const SPORT_INTENT_RE =
+  /\b(tennis|padel|pickleball|squash|badminton|golf|yoga|pilates|running|jogger|marathon|cycling|cyclist|ski(?:ing)?|snowboard|crossfit|gym|workout|training|athletic|performance|compression|athleisure|activewear|sportswear)\b[\s\S]{0,40}?\b(skirt|dress|short|shorts|top|polo|pant|pants|tight|tights|legging|leggings|jacket|jersey|set|kit|tee|t-shirt|tank|bra|hoodie|zip|onesie|romper|jumpsuit|unitard|catsuit|romper|outfit)\b/i;
+
+function applySportIntent(analysis: Record<string, unknown>, title: string, description: string): boolean {
+  const haystack = `${title || ""} ${description || ""}`;
+  if (SPORT_INTENT_RE.test(haystack)) {
+    if (analysis.category !== "activewear") {
+      console.log(`Sport intent override: "${analysis.category}" -> "activewear" (matched: "${title}")`);
+      analysis.category = "activewear";
+    }
+    return true;
+  }
+  return false;
+}
+
 function refineGenericGarments(analysis: Record<string, unknown>, title: string, description: string): void {
   if (analysis.category !== "garments") return;
   const haystack = `${title || ""} ${description || ""}`;
@@ -100,7 +123,7 @@ function refineGenericGarments(analysis: Record<string, unknown>, title: string,
   }
 }
 
-function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
+function applyCategoryFallback(analysis: Record<string, unknown>, title: string, description = ""): void {
   let cat = analysis.category as string | undefined;
 
   // Backward compat: remap deprecated hats-small to hats
@@ -108,6 +131,11 @@ function applyCategoryFallback(analysis: Record<string, unknown>, title: string)
     console.log(`Category alias: "hats-small" -> "hats"`);
     analysis.category = "hats";
     cat = "hats";
+  }
+
+  // Step 1: Sport-intent override wins over everything (tennis/padel/golf/yoga/etc.)
+  if (applySportIntent(analysis, title, description)) {
+    return;
   }
 
   // If valid category, still check specificity overrides
