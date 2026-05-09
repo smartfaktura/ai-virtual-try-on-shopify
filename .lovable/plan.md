@@ -1,26 +1,45 @@
-The issue is not the admin scene label anymore. The screenshot is from the Product Images shot picker, which has its own category maps and detection logic. That code still does not know `wedding-dress`, so it falls back to the raw slug and cached AI analysis can still route bridal products to `dresses`.
+Replace all 6 wedding-dress scenes with modern atelier/studio aesthetics — keep the structure (full-body bridal hero, dress accuracy directives, camera spec) but swap the wedding-photoshoot settings (chapel, garden, staircase, beach, ballroom) for contemporary studio environments. Existing previews stay until you regenerate them.
 
-Plan:
+New 6 scenes (titles, sub_category stays "Bridal Editorial"):
 
-1. Fix the shot-picker label
-   - Add `wedding-dress: 'Wedding Dress'` to the Product Images scene collection title map in `src/hooks/useProductImageScenes.ts`.
-   - Add `wedding-dress: 'Wedding Dress'` to the local labels in `src/components/app/product-images/ProductImagesStep2Scenes.tsx`.
+1. **Concrete Plinth** (`wedding-dress-chapel-altar` → retitled "Concrete Plinth")
+   - Polished microcement floor, large warm-grey concrete wall, single soft window light from camera-left
+   - Model standing centered, three-quarter body angle, train pooled on the concrete floor
+   - 50mm, f/2.8, eye-level, brutalist minimal mood
 
-2. Fix Wedding Dress detection in the Product Images flow
-   - Add `wedding-dress` to `CATEGORY_KEYWORDS` before generic `dresses`.
-   - Include bridal terms like `wedding dress`, `bridal gown`, `bridal dress`, `wedding gown`, `bride gown`, `bridalwear`.
-   - Add category aliases for `bridal`, `bridalwear`, `wedding_dress`, and similar values.
-   - Add specificity overrides so existing cached categories like `dresses` or `garments` become `wedding-dress` only when the product title/type/description contains wedding or bridal intent.
+2. **Atelier Mirror** (`wedding-dress-garden-veil` → retitled "Atelier Mirror")
+   - Modern bridal atelier: pale oak floor, full-length antique brass mirror, neutral linen drapery in background
+   - Model captured in a quiet fitting moment, reflection visible at edge, soft tulle/veil draped over a wooden stool
+   - Diffused north-window daylight, warm shadow falloff
 
-3. Fix cached/AI category normalization on the Product Images page
-   - Update `src/pages/ProductImages.tsx` so when it reads `analysis_json.category` or live analysis, it normalizes bridal/wedding products to `wedding-dress` instead of trusting stale `dresses`.
+3. **Sculpture Studio** (`wedding-dress-grand-staircase` → retitled "Sculpture Studio")
+   - High-ceiling concrete studio, plaster-finished walls, single tall industrial window
+   - Model on a low travertine block, train cascading off the platform like drapery on a sculpture
+   - Cinematic side light, deep shadow on opposite side, gallery-like calm
 
-4. Fix the backend analyzer for future products
-   - Update `supabase/functions/analyze-product-category/index.ts` valid category list and prompt to include `wedding-dress`.
-   - Add bridal/wedding fallback and refinement patterns before the generic `dresses` rules.
-   - Keep sport intent precedence, so “tennis dress” still stays `activewear`; only bridal/wedding terms become `wedding-dress`.
+4. **Seamless Bone** (`wedding-dress-beach-golden-hour` → retitled "Seamless Bone")
+   - Pure seamless paper backdrop in warm bone/ivory, raw concrete floor beneath
+   - Full-length editorial pose, train fanned forward on the floor
+   - Two soft strip-box lights, gentle gradient on backdrop, quiet luxury campaign feel
 
-Expected result:
-- The collapsed section displays **Wedding Dress** instead of `wedding-dress`.
-- Wedding/bridal products are detected as **Wedding Dress**.
-- Wedding Dress scenes are recommended/expanded for bridal products, including existing cached products when their metadata contains wedding/bridal terms.
+5. **Linen Curtain Studio** (`wedding-dress-ballroom-portrait` → retitled "Linen Curtain Studio")
+   - Soft floor-to-ceiling raw linen curtain backdrop, warm concrete floor
+   - Model standing relaxed, hands at sides, full silhouette of gown isolated against the curtain
+   - Large diffused softbox front-left, subtle wind movement on tulle/veil
+
+6. **Atelier Walk Away** (`wedding-dress-train-walk-away` → keep concept, restage)
+   - Modern atelier interior, polished concrete floor reflecting train
+   - Model walking away from camera, full back of dress and train as the hero
+   - Cool north-window daylight from the right, minimalist gallery mood
+
+Implementation:
+
+- Single `UPDATE` per scene on `product_image_scenes` modifying `title`, `description`, and `prompt_template`. Each new prompt keeps:
+  - `[MODEL IMAGE] wearing [PRODUCT IMAGE] {{productName}}`
+  - "wedding dress is the absolute hero of the frame"
+  - The closing "Render the dress with photographic accuracy…" directive
+  - Aspect ratio guidance (4:5 portrait via existing scene_type)
+- `scene_id`, `sort_order`, `category_collection`, `sub_category`, `trigger_blocks` (`personDetails`, `outfitConfig`, etc.), and previews stay untouched.
+- No frontend changes needed — these are DB-only updates via the data tool.
+
+After update, the preview thumbnails will still show the old wedding-photoshoot images until you regenerate them in the admin Scene Previews tool — call that out to the user.
