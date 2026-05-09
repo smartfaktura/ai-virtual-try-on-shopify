@@ -1380,127 +1380,82 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "home-furniture": [
     {
-      "subCategory": "Furniture · Editorial Room Heroes",
+      "subCategory": "Living Room",
       "cards": [
-        {
-          "label": "Front Room Hero",
-          "imageId": "1776250523409-wvjm1w"
-        },
-        {
-          "label": "Corner Placement Editorial",
-          "imageId": "1776250518879-ichrf6"
-        },
-        {
-          "label": "Wide Architectural Room Story",
-          "imageId": "1776250531819-qlzkd4"
-        },
-        {
-          "label": "Material and Form Interior Crop",
-          "imageId": "1776250525195-15w9cz"
-        },
-        {
-          "label": "Window Light Furniture Portrait",
-          "imageId": "1776250532597-b468sj"
-        },
-        {
-          "label": "Empty Space Hero",
-          "imageId": "1776250521728-6py20a"
-        }
+        { "label": "Front Room Hero", "imageId": "1776250523409-wvjm1w" },
+        { "label": "Lived-In Sofa Story", "imageId": "1776250524299-apb70u" },
+        { "label": "Coffee Table Context Room", "imageId": "1776250512009-ek1t22" },
+        { "label": "Color Lounge Interior Story", "imageId": "1776250514750-v3nwvg" },
+        { "label": "Reading Corner Lifestyle", "imageId": "1776250528236-z6mccs" },
+        { "label": "Window Light Living Portrait", "imageId": "1776250532597-b468sj" }
       ]
     },
     {
-      "subCategory": "Furniture · Lived-In Lifestyle",
+      "subCategory": "Bedroom",
       "cards": [
-        {
-          "label": "Lived-In Room Story",
-          "imageId": "1776250524299-apb70u"
-        },
-        {
-          "label": "Coffee Table Context Room",
-          "imageId": "1776250512009-ek1t22"
-        },
-        {
-          "label": "Reading Corner Lifestyle",
-          "imageId": "1776250528236-z6mccs"
-        },
-        {
-          "label": "Dining or Gathering Context",
-          "imageId": "1776250519754-rycxz5"
-        },
-        {
-          "label": "Bedroom Context Lifestyle",
-          "imageId": "1776250511053-p08yta"
-        },
-        {
-          "label": "Evening Ambience Room Story",
-          "imageId": "1776250522458-g19r44"
-        }
+        { "label": "Bedroom Context Lifestyle", "imageId": "1776250511053-p08yta" },
+        { "label": "Linen Calm Suite", "imageId": "1776250515732-4ijnc9" },
+        { "label": "Evening Ambience Room Story", "imageId": "1776250522458-g19r44" },
+        { "label": "Reading Corner Lifestyle", "imageId": "1776250528236-z6mccs" },
+        { "label": "Material and Form Interior Crop", "imageId": "1776250525195-15w9cz" },
+        { "label": "Window Light Bedroom Portrait", "imageId": "1776250532597-b468sj" }
       ]
     },
     {
-      "subCategory": "Furniture · Aesthetic Color",
+      "subCategory": "Dining Room",
       "cards": [
-        {
-          "label": "Color Wall Room Hero",
-          "imageId": "1776250517893-zqvyrr"
-        },
-        {
-          "label": "Color Lounge Interior Story",
-          "imageId": "1776250514750-v3nwvg"
-        },
-        {
-          "label": "Color Surface Furniture Still",
-          "imageId": "1776250516639-o02leo"
-        },
-        {
-          "label": "Color Corridor Furniture Story",
-          "imageId": "1776250513042-ezarjz"
-        },
-        {
-          "label": "Color Reflection Mood",
-          "imageId": "1776250515732-4ijnc9"
-        },
-        {
-          "label": "Color Hero Furniture Campaign",
-          "imageId": "1776250513910-ilg7us"
-        }
+        { "label": "Dining or Gathering Context", "imageId": "1776250519754-rycxz5" },
+        { "label": "Wide Architectural Dining Story", "imageId": "1776250531819-qlzkd4" },
+        { "label": "Color Corridor Dining Story", "imageId": "1776250513042-ezarjz" },
+        { "label": "Coffee Table Context Room", "imageId": "1776250512009-ek1t22" },
+        { "label": "Color Hero Dining Campaign", "imageId": "1776250513910-ilg7us" },
+        { "label": "Color Wall Dining Hero", "imageId": "1776250517893-zqvyrr" }
       ]
     },
     {
-      "subCategory": "Home Decor · Editorial",
+      "subCategory": "Home Office",
       "cards": [
-        {
-          "label": "Color Wall Decor Hero",
-          "imageId": "1776588673759-kwlh8f"
-        },
-        {
-          "label": "Color Console Story",
-          "imageId": "1776588668748-a0jx7p"
-        },
-        {
-          "label": "Color Surface Decor Still",
-          "imageId": "1776588672735-mvn4h5"
-        },
-        {
-          "label": "Color Shelf Story",
-          "imageId": "1776588671786-bt1ni3"
-        },
-        {
-          "label": "Color Reflection Mood",
-          "imageId": "1776588670775-e55grr"
-        },
-        {
-          "label": "Color Hero Decor Campaign",
-          "imageId": "1776588669730-33nh9d"
-        },
-        {
-          "label": "Console Placement Story",
-          "imageId": "1776588674825-uxohrz"
-        },
-        {
-          "label": "Coffee Table Decor Story",
-          "imageId": "1776588667525-zewx6z"
-        }
+        { "label": "Corner Placement Editorial", "imageId": "1776250518879-ichrf6" },
+        { "label": "Material and Form Desk Crop", "imageId": "1776250525195-15w9cz" },
+        { "label": "Color Surface Office Still", "imageId": "1776250516639-o02leo" },
+        { "label": "Reading Corner Lifestyle", "imageId": "1776250528236-z6mccs" },
+        { "label": "Empty Space Hero", "imageId": "1776250521728-6py20a" },
+        { "label": "Window Light Office Portrait", "imageId": "1776250532597-b468sj" }
+      ]
+    },
+    {
+      "subCategory": "Outdoor",
+      "cards": [
+        { "label": "Empty Space Outdoor Hero", "imageId": "1776250521728-6py20a" },
+        { "label": "Wide Architectural Terrace Story", "imageId": "1776250531819-qlzkd4" },
+        { "label": "Color Reflection Mood", "imageId": "1776250515732-4ijnc9" },
+        { "label": "Color Hero Outdoor Campaign", "imageId": "1776250513910-ilg7us" },
+        { "label": "Front Garden Hero", "imageId": "1776250523409-wvjm1w" },
+        { "label": "Color Wall Outdoor Hero", "imageId": "1776250517893-zqvyrr" }
+      ]
+    },
+    {
+      "subCategory": "Hallway",
+      "cards": [
+        { "label": "Color Corridor Furniture Story", "imageId": "1776250513042-ezarjz" },
+        { "label": "Console Placement Story", "imageId": "1776588674825-uxohrz" },
+        { "label": "Color Shelf Story", "imageId": "1776588671786-bt1ni3" },
+        { "label": "Color Wall Entry Hero", "imageId": "1776588673759-kwlh8f" },
+        { "label": "Coffee Table Decor Story", "imageId": "1776588667525-zewx6z" },
+        { "label": "Color Reflection Mood", "imageId": "1776588670775-e55grr" }
+      ]
+    },
+    {
+      "subCategory": "Home Decor",
+      "cards": [
+        { "label": "Color Wall Decor Hero", "imageId": "1776588673759-kwlh8f" },
+        { "label": "Color Console Story", "imageId": "1776588668748-a0jx7p" },
+        { "label": "Color Surface Decor Still", "imageId": "1776588672735-mvn4h5" },
+        { "label": "Color Shelf Story", "imageId": "1776588671786-bt1ni3" },
+        { "label": "Color Reflection Mood", "imageId": "1776588670775-e55grr" },
+        { "label": "Color Hero Decor Campaign", "imageId": "1776588669730-33nh9d" },
+        { "label": "Console Placement Story", "imageId": "1776588674825-uxohrz" },
+        { "label": "Coffee Table Decor Story", "imageId": "1776588667525-zewx6z" }
       ]
     }
   ],
