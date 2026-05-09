@@ -587,7 +587,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     h1Highlight: 'for Home & Furniture Brands',
     heroEyebrow: 'Furniture · Rooms · Decor',
     heroSubheadline:
-      'Place furniture and home decor into living rooms, bedrooms, dining rooms, home offices, hallways, and outdoor scenes — styled rooms, catalog visuals, and product page images from one photo.',
+      'Drop furniture and home decor into living rooms, bedrooms, dining rooms, home offices, hallways, and outdoor scenes — styled rooms, catalog visuals, and product page images from a single photo.',
     primaryKeyword: 'AI furniture product photography',
     secondaryKeywords: [
       'AI home decor product photography',
