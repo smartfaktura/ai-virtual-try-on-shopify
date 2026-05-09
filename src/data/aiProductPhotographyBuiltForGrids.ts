@@ -1382,80 +1382,92 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
     {
       "subCategory": "Living Room",
       "cards": [
-        { "label": "Front Room Hero", "imageId": "1776250523409-wvjm1w" },
-        { "label": "Lived-In Sofa Story", "imageId": "1776250524299-apb70u" },
-        { "label": "Coffee Table Context Room", "imageId": "1776250512009-ek1t22" },
-        { "label": "Color Lounge Interior Story", "imageId": "1776250514750-v3nwvg" },
-        { "label": "Reading Corner Lifestyle", "imageId": "1776250528236-z6mccs" },
-        { "label": "Window Light Living Portrait", "imageId": "1776250532597-b468sj" }
+        { "label": "Grand Atelier Salon", "imageId": "1778050204000-gl9kym" },
+        { "label": "Penthouse Panorama Lounge", "imageId": "1778050207308-nxynq0" },
+        { "label": "Ivory Bouclé Salon", "imageId": "1778050204949-3cyljh" },
+        { "label": "Walnut & Travertine Den", "imageId": "1778050210630-t4djeu" },
+        { "label": "Smoke & Stone Loft", "imageId": "1778050209033-bl9wtp" },
+        { "label": "Nordic Fjord Living", "imageId": "1778050206424-gruu5m" },
+        { "label": "Sunlit Marble Atrium", "imageId": "1778050210011-9ntaud" },
+        { "label": "Coastal Breeze Salon", "imageId": "1778050202649-1ymti7" }
       ]
     },
     {
       "subCategory": "Bedroom",
       "cards": [
-        { "label": "Bedroom Context Lifestyle", "imageId": "1776250511053-p08yta" },
-        { "label": "Linen Calm Suite", "imageId": "1776250515732-4ijnc9" },
-        { "label": "Evening Ambience Room Story", "imageId": "1776250522458-g19r44" },
-        { "label": "Reading Corner Lifestyle", "imageId": "1776250528236-z6mccs" },
-        { "label": "Material and Form Interior Crop", "imageId": "1776250525195-15w9cz" },
-        { "label": "Window Light Bedroom Portrait", "imageId": "1776250532597-b468sj" }
+        { "label": "Linen Cloud Suite", "imageId": "1778048568910-lx1q0n" },
+        { "label": "Parisian Pied-à-Terre", "imageId": "1778048570142-is382n" },
+        { "label": "Coastal Dawn Retreat", "imageId": "1778048564507-4i6yoj" },
+        { "label": "Warm Walnut Sanctuary", "imageId": "1778048573551-36a8ub" },
+        { "label": "Scandi Hygge Nest", "imageId": "1778048571221-2qg25t" },
+        { "label": "Terracotta & Linen Villa", "imageId": "1778048572810-kqdabt" },
+        { "label": "Japandi Sleep Temple", "imageId": "1778048568284-r6iw3o" },
+        { "label": "Hamptons Morning Suite", "imageId": "1778048567554-van8zj" }
       ]
     },
     {
       "subCategory": "Dining Room",
       "cards": [
-        { "label": "Dining or Gathering Context", "imageId": "1776250519754-rycxz5" },
-        { "label": "Wide Architectural Dining Story", "imageId": "1776250531819-qlzkd4" },
-        { "label": "Color Corridor Dining Story", "imageId": "1776250513042-ezarjz" },
-        { "label": "Coffee Table Context Room", "imageId": "1776250512009-ek1t22" },
-        { "label": "Color Hero Dining Campaign", "imageId": "1776250513910-ilg7us" },
-        { "label": "Color Wall Dining Hero", "imageId": "1776250517893-zqvyrr" }
+        { "label": "Warm Travertine Dining Hall", "imageId": "1778071100932-306rp9" },
+        { "label": "Midnight Lacquer Dining Room", "imageId": "1778071095634-2sibfj" },
+        { "label": "Scandi Birch Dining Nook", "imageId": "1778071098784-10a4rm" },
+        { "label": "Mediterranean Courtyard Dining", "imageId": "1778071091750-ffuk5g" },
+        { "label": "Brutalist Concrete Dining Loft", "imageId": "1778071087825-vws52z" },
+        { "label": "Blush & Fluted Stone Dining", "imageId": "1778071086528-6qglpw" },
+        { "label": "Limestone Arch Dining", "imageId": "1778071090587-x0ao8r" },
+        { "label": "Charcoal Plaster Dining", "imageId": "1778071089131-899oen" }
       ]
     },
     {
       "subCategory": "Home Office",
       "cards": [
-        { "label": "Corner Placement Editorial", "imageId": "1776250518879-ichrf6" },
-        { "label": "Material and Form Desk Crop", "imageId": "1776250525195-15w9cz" },
-        { "label": "Color Surface Office Still", "imageId": "1776250516639-o02leo" },
-        { "label": "Reading Corner Lifestyle", "imageId": "1776250528236-z6mccs" },
-        { "label": "Empty Space Hero", "imageId": "1776250521728-6py20a" },
-        { "label": "Window Light Office Portrait", "imageId": "1776250532597-b468sj" }
+        { "label": "Concrete Architect Studio", "imageId": "1778049958891-reu4vd" },
+        { "label": "Natural Oak Study", "imageId": "1778049960507-2b013v" },
+        { "label": "Travertine Executive Office", "imageId": "1778049961092-1zq8fo" },
+        { "label": "Clean White Home Office", "imageId": "1778049958192-qqz2m8" },
+        { "label": "Dark Walnut Library Office", "imageId": "1778049959415-spphcc" },
+        { "label": "Greige Wellness Office", "imageId": "1778049959959-y8gt3k" },
+        { "label": "Smoked Glass Loft Office", "imageId": "1778060012974-hpkjha" },
+        { "label": "Warm Terracotta Writer's Room", "imageId": "furniture-lifestyle-warm-terracotta-writers-room-1778060088928" }
       ]
     },
     {
       "subCategory": "Outdoor",
       "cards": [
-        { "label": "Empty Space Outdoor Hero", "imageId": "1776250521728-6py20a" },
-        { "label": "Wide Architectural Terrace Story", "imageId": "1776250531819-qlzkd4" },
-        { "label": "Color Reflection Mood", "imageId": "1776250515732-4ijnc9" },
-        { "label": "Color Hero Outdoor Campaign", "imageId": "1776250513910-ilg7us" },
-        { "label": "Front Garden Hero", "imageId": "1776250523409-wvjm1w" },
-        { "label": "Color Wall Outdoor Hero", "imageId": "1776250517893-zqvyrr" }
+        { "label": "Mediterranean Stone Terrace", "imageId": "1778061177176-1ii0an" },
+        { "label": "Brutalist Concrete Rooftop", "imageId": "1778061170581-ab6gta" },
+        { "label": "Hamptons White Porch", "imageId": "1778061174654-hrspoo" },
+        { "label": "Japandi Courtyard Deck", "imageId": "1778061175912-bdj3wh" },
+        { "label": "Tuscan Loggia Dining", "imageId": "1778061184571-q89pky" },
+        { "label": "Tropical Resort Poolside", "imageId": "1778061183188-l43bah" },
+        { "label": "Scandi Cabin Veranda", "imageId": "1778061181878-y2i7gv" },
+        { "label": "Desert Hacienda Patio", "imageId": "1778061173409-rhk0cl" }
       ]
     },
     {
       "subCategory": "Hallway",
       "cards": [
-        { "label": "Color Corridor Furniture Story", "imageId": "1776250513042-ezarjz" },
-        { "label": "Console Placement Story", "imageId": "1776588674825-uxohrz" },
-        { "label": "Color Shelf Story", "imageId": "1776588671786-bt1ni3" },
-        { "label": "Color Wall Entry Hero", "imageId": "1776588673759-kwlh8f" },
-        { "label": "Coffee Table Decor Story", "imageId": "1776588667525-zewx6z" },
-        { "label": "Color Reflection Mood", "imageId": "1776588670775-e55grr" }
+        { "label": "Parisian Entry Hall", "imageId": "1778058451812-aypoov" },
+        { "label": "Warm Walnut Mudroom", "imageId": "1778058453738-1lvsz6" },
+        { "label": "Marble Foyer Grand Entry", "imageId": "1778058450175-h3r5o0" },
+        { "label": "Scandi Birch Hallway", "imageId": "1778058452772-2afd4g" },
+        { "label": "Mediterranean Arch Corridor", "imageId": "1778058451030-6cf1b5" },
+        { "label": "Dark Paneled Gallery Hall", "imageId": "1778058449108-68d227" },
+        { "label": "Brutalist Concrete Entry", "imageId": "1778060208857-0z2lgv" },
+        { "label": "Japandi Genkan Hallway", "imageId": "1778060215973-icu600" }
       ]
     },
     {
       "subCategory": "Home Decor",
       "cards": [
-        { "label": "Color Wall Decor Hero", "imageId": "1776588673759-kwlh8f" },
-        { "label": "Color Console Story", "imageId": "1776588668748-a0jx7p" },
-        { "label": "Color Surface Decor Still", "imageId": "1776588672735-mvn4h5" },
-        { "label": "Color Shelf Story", "imageId": "1776588671786-bt1ni3" },
-        { "label": "Color Reflection Mood", "imageId": "1776588670775-e55grr" },
-        { "label": "Color Hero Decor Campaign", "imageId": "1776588669730-33nh9d" },
         { "label": "Console Placement Story", "imageId": "1776588674825-uxohrz" },
-        { "label": "Coffee Table Decor Story", "imageId": "1776588667525-zewx6z" }
+        { "label": "Coffee Table Decor Story", "imageId": "1776588667525-zewx6z" },
+        { "label": "Shelf or Niche Styling", "imageId": "1776588694747-gxl8ip" },
+        { "label": "Bedside or Side Table Story", "imageId": "1776588663193-0iekhe" },
+        { "label": "Dining Sideboard Styling", "imageId": "1776588675855-89t0py" },
+        { "label": "Evening Ambience Decor Story", "imageId": "1776588677859-2urwpn" },
+        { "label": "Color Wall Decor Hero", "imageId": "1776588673759-kwlh8f" },
+        { "label": "Color Console Story", "imageId": "1776588668748-a0jx7p" }
       ]
     }
   ],

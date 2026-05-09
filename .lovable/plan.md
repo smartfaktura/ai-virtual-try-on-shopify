@@ -1,52 +1,37 @@
-# Make the home-furniture gallery chips room-based
+# Fix home-furniture chips: real per-room images + mobile chip layout
 
-Right now the `home-furniture` page has two chip rails stacked on top of each other:
+Two issues:
 
-1. **"What we cover in home & furniture"** — pills like *Living Room, Bedroom, Dining Room, Home Office* that are just anchor links and don't filter anything.
-2. **"Built for every home & furniture shot"** — pills *Furniture / Home Decor*, each revealing a 6–8 image grid.
+1. **Wrong images** — every chip on `/ai-product-photography/home-furniture` shows the same boucle chair in the same handful of empty rooms because the previous patch re-bucketed the *same* 18 imageIds across all rooms. The "Outdoor" tab in the screenshot has no actual outdoor scenes.
+2. **Mobile chip rail** — with 7 chips at ~440px wide, the rail scrolls horizontally and only 3–4 chips are visible at once. The user wants them to fit cleanly on a mobile screen.
 
-The user wants these merged: the chips should be the **rooms / subcategories** (Bedroom, Living Room, Dining Room, Home Office, Outdoor, Hallway, Home Decor), and clicking each chip should show only images for that room.
+## Fix 1 — Source real per-room imageIds from the live scene catalog
 
-## What changes
+The `product_image_scenes` table already has true room-tagged scenes for furniture / decor (verified via DB query). I'll replace the `"home-furniture"` entry in `src/data/aiProductPhotographyBuiltForGrids.ts` with **8 real, distinct imageIds per chip**, pulled from these `sub_category` rows:
 
-### 1. `src/data/aiProductPhotographyBuiltForGrids.ts` — restructure the `"home-furniture"` entry
+| Chip | Source `sub_category` | Available scenes |
+|---|---|---|
+| Living Room | `Living Room` | 18 |
+| Bedroom | `Bedroom` | 18 |
+| Dining Room | `Dining Room` | 12 |
+| Home Office | `Home Office` | 12 |
+| Outdoor | `Outdoor Furniture` | 12 (real terraces / patios / pavilions) |
+| Hallway | `Hallway` | 12 |
+| Home Decor | `Aesthetic Color Decor Stories` + `Console / Table / Shelf Lifestyle` | 12 combined |
 
-Replace the current 4 groups (`Furniture · Editorial Room Heroes`, `Furniture · Lived-In Lifestyle`, `Furniture · Aesthetic Color`, `Home Decor · Editorial`, …) with **room-based groups**, matching the page's `subcategories` list:
+Each chip gets the first 8 scenes by `sort_order`, with the imageId extracted from `preview_image_url` (e.g. `1778048568910-lx1q0n`). Card `label` will be a clean human form of `scene_id` (e.g. `furniture-lifestyle-linen-cloud-suite` → `Linen Cloud Suite`).
 
-- Living Room
-- Bedroom
-- Dining Room
-- Home Office
-- Outdoor
-- Hallway / Entry
-- Home Decor
+This is a pure data swap in one file — no new images need to be generated. Identical URL pattern as today (`PREVIEW(imageId)` already resolves to `…/scene-previews/{imageId}.jpg`).
 
-Each group keeps 6–8 cards. We re-bucket the existing `imageId`s by best fit using the current card labels (e.g. `Bedroom Context Lifestyle`, `Reading Corner Lifestyle`, `Coffee Table Context Room`, `Dining or Gathering Context`, `Color Console Story`, `Console Placement Story`, etc.). Where a room has fewer than 6 obvious matches, we top it up with the generic "Editorial Room Heroes" / "Lived-In" / "Aesthetic Color" image IDs that read as that room.
+## Fix 2 — Make mobile chip row fit without horizontal scroll
 
-This is a pure data move — no new images are added, just rebucketed and relabeled so each chip has a coherent set.
+In `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`, the mobile rail is currently a horizontal `overflow-x-auto` scroller. With 7 short chips it's small enough to wrap cleanly into 2 rows on a phone.
 
-Because `getBuiltForGroupsForPage` keys by the subject (text before `·`), the chip rail in `CategoryBuiltForEveryCategory` will automatically render *Living Room, Bedroom, Dining Room, Home Office, Outdoor, Hallway, Home Decor* in that order.
-
-### 2. `src/pages/seo/AIProductPhotographyCategory.tsx` — remove the redundant chip strip on this page
-
-The standalone `CategorySubcategoryChips` block above the gallery becomes redundant once the gallery itself is chip-filtered by room. Two options:
-
-- **Preferred:** drop `<CategorySubcategoryChips />` from the render for `home-furniture` only (keep it for other category pages that still need it).
-- Alternative: keep it but make its pills scroll the gallery into view AND select the matching chip — heavier change, not needed.
-
-We'll go with the preferred option: a small conditional in the page render to skip `CategorySubcategoryChips` when `page.slug === 'home-furniture'`.
-
-### 3. Heading copy (small tweak)
-
-The gallery heading currently reads *"Built for every home & furniture shot."* with sub *"Switch between home & furniture subcategories…"* — that already fits the new behavior. No copy change needed.
+Change the mobile branch from a snap rail to a centered, wrapped flex container (same pattern the desktop branch already uses), with slightly tighter padding so all 7 chips are visible at once on a 360–440px screen. Keep the desktop branch as-is. Drop the now-unused peek-nudge / scroll-into-view logic for the mobile path.
 
 ## Out of scope
 
-- No changes to other category pages (jewelry, beauty, fashion, etc.).
-- No new image generations — we're only re-bucketing existing `imageId`s.
-- No changes to `CategoryBuiltForEveryCategory` component — its chip-grouping logic already supports this.
-- No changes to admin SEO slot overrides; slot keys derive from the new subcategory names automatically (existing overrides for `Furniture` / `Home Decor` slots will simply stop applying since those groups go away).
-
-## Risk / notes
-
-- Any admin image overrides previously set on `builtFor_furniture_*` / `builtFor_home-decor_*` slots will be orphaned. Acceptable — this page hasn't been heavily customized via the admin tool, and overrides can be re-applied to the new room-based slots.
+- Other category pages.
+- New image generation.
+- Heading / copy changes.
+- The standalone `CategorySubcategoryChips` strip (already hidden for `home-furniture`).
