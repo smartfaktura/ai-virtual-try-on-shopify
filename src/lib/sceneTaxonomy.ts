@@ -65,6 +65,7 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
 export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
   'garments': 'Clothing',
   'activewear': 'Activewear',
+  'wedding-dress': 'Wedding Dress',
   caps: 'Caps',
   hats: 'Hats',
   beanies: 'Beanies',
