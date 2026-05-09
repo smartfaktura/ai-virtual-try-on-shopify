@@ -19,6 +19,7 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
   lingerie: 'Fashion',
   kidswear: 'Fashion',
   streetwear: 'Fashion',
+  'wedding-dress': 'Fashion',
 
   shoes: 'Footwear',
   sneakers: 'Footwear',
@@ -64,6 +65,7 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
 export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
   'garments': 'Clothing',
   'activewear': 'Activewear',
+  'wedding-dress': 'Wedding Dress',
   caps: 'Caps',
   hats: 'Hats',
   beanies: 'Beanies',
@@ -96,7 +98,10 @@ export const FAMILY_ORDER = [
 
 /** Map onboarding product_categories slugs → category_collection slugs for personalisation. */
 export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
-  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear'],
+  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear', 'wedding-dress'],
+  'wedding-dress': ['wedding-dress'],
+  wedding: ['wedding-dress'],
+  bridal: ['wedding-dress'],
   footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
   shoes: ['shoes', 'sneakers', 'boots', 'high-heels'],
   bags: ['bags-accessories', 'backpacks', 'wallets-cardholders'],

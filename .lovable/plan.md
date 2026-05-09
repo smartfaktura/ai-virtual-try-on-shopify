@@ -1,58 +1,61 @@
-## Add Wedding Dress category + 6 bridal editorial scenes
+## Fix Wedding Dress category placement, label, and recommendations
 
-Create a new standalone collection `wedding-dress` in `product_image_scenes` with 6 with-model bridal editorial scenes (personDetails trigger active), and wire `wedding-dress` into the product detection logic so it surfaces as its own category.
+Three small issues to fix:
 
-### 1. Database — insert 6 scenes
+1. **Label** — sidebar shows raw slug `wedding-dress` instead of "Wedding Dress"
+2. **Wrong group** — sits at bottom on its own; should appear inside the **Fashion** family next to Dresses
+3. **Not recommended** — when a user's onboarding/product is wedding-related, Wedding Dress scenes should be served by the recommended rail
 
-Single SQL `INSERT INTO product_image_scenes (...) VALUES (...) x6;`
+All fixes are config-only — no schema or scene-data changes.
 
-**Common fields (all 6):**
-- `category_collection`: `wedding-dress`
-- `sub_category`: `Bridal Editorial`
-- `is_active`: `true`
-- `subject`: `with-model`
-- `shot_style`: `editorial`
-- `scene_type`: `lifestyle`
-- `requires_extra_reference`: `false`
-- `use_scene_reference`: `false`
-- `preview_image_url`: `null` (admin uploads later)
-- `trigger_blocks`: `['personDetails']`
-- `sub_category_sort_order`: 1–6
-- `category_sort_order`: 0
-- `sort_order`: 3000–3005
+### 1. `src/lib/sceneTaxonomy.ts`
 
-**The 6 scenes:**
+**Add to `CATEGORY_FAMILY_MAP`** (groups it under Fashion sidebar/family):
+```ts
+'wedding-dress': 'Fashion',
+```
 
-| scene_id | Title | Setting / moment |
-|---|---|---|
-| `wedding-dress-chapel-altar` | Chapel Altar | Standing at stone chapel altar, soft window light from side, candles in background |
-| `wedding-dress-garden-veil` | Garden Veil | Walking through formal garden, veil catching breeze, dappled afternoon light |
-| `wedding-dress-grand-staircase` | Grand Staircase Descent | Mid-step descending marble staircase, hand on banister, train flowing behind |
-| `wedding-dress-beach-golden-hour` | Beach Golden Hour | Standing on quiet sandy shore at sunset, hem brushing wet sand, hair moving in light wind |
-| `wedding-dress-ballroom-portrait` | Ballroom Portrait | Centered in classical ballroom, chandelier overhead, candid look to camera, long exposure stillness |
-| `wedding-dress-train-walk-away` | Train Walk Away | Back-of-dress hero shot, walking away through hallway/aisle, full train trailing, dramatic depth |
+**Add to `SUB_FAMILY_LABEL_OVERRIDES`** (proper display label):
+```ts
+'wedding-dress': 'Wedding Dress',
+```
 
-**Per-scene content:**
-- **prompt_template** — bridal editorial framing using `[MODEL IMAGE]` + `[PRODUCT IMAGE] {{productName}}`. Emphasises the dress as hero (silhouette, fabric movement, lace/satin/tulle texture). Calm, refined, never overproduced.
-- **outfit_hint** — bridal-only OUTFIT STYLING DIRECTION: hair styled (low chignon, soft waves, or veil-integrated updo) tuned to the scene; minimal jewellery (pearl drop earrings or thin diamond studs); natural luminous makeup; classic bridal bouquet appropriate to setting (white/cream/blush). Guardrails: no streetwear, no loud accessories, no fashion sneakers, dress remains hero, no graphic patterns added.
-- **suggested_colors** — null (palette is bridal whites/ivories driven by the actual product).
+**Add to `ONBOARDING_TO_COLLECTIONS_MAP`** (so users who picked fashion/dresses subniches get it in recommendations):
+- Extend the existing `fashion: [...]` array with `'wedding-dress'`
+- Add a dedicated entry: `'wedding-dress': ['wedding-dress']` (for users who pick that subcategory directly)
+- Add `'wedding': ['wedding-dress']` and `'bridal': ['wedding-dress']` aliases
 
-### 2. Detection — `src/lib/categoryUtils.ts`
+### 2. Seed `recommended_scenes` table
 
-- Add new detection rule **above** the generic `garments` block:
-  - keywords: `['wedding dress', 'bridal gown', 'bridal dress', 'wedding gown', 'bridesmaid dress', 'bridal']`
-  - category: `'wedding-dress'`
-- Add label entry: `'wedding-dress': 'Wedding Dress'`
+Insert 6 rows so `useRecommendedScenes` PASS 1 (sub-category curated) returns the new scenes when the user has `wedding-dress` in `product_subcategories`:
 
-### 3. Type — `src/types/index.ts`
+```sql
+INSERT INTO recommended_scenes (scene_id, category, sort_order, created_by)
+VALUES
+  ('wedding-dress-chapel-altar',       'wedding-dress', 1, <admin uuid>),
+  ('wedding-dress-garden-veil',        'wedding-dress', 2, <admin uuid>),
+  ('wedding-dress-grand-staircase',    'wedding-dress', 3, <admin uuid>),
+  ('wedding-dress-beach-golden-hour',  'wedding-dress', 4, <admin uuid>),
+  ('wedding-dress-ballroom-portrait',  'wedding-dress', 5, <admin uuid>),
+  ('wedding-dress-train-walk-away',    'wedding-dress', 6, <admin uuid>);
+```
 
-- Extend `TemplateCategory` union with `| 'wedding-dress'`.
+Also seed under family key for PASS 2 fallback when only family is picked:
+```sql
+INSERT INTO recommended_scenes (scene_id, category, sort_order, created_by)
+VALUES
+  ('wedding-dress-chapel-altar',       'fashion', 90, <admin uuid>),
+  ('wedding-dress-garden-veil',        'fashion', 91, <admin uuid>),
+  ('wedding-dress-ballroom-portrait',  'fashion', 92, <admin uuid>);
+```
 
-### 4. Visual library deep link (optional but consistent)
+(Will use the first existing admin uuid from the `user_roles` table — auto-detected at insert time.)
 
-- In `src/lib/visualLibraryDeepLink.ts`, add `'wedding-dress': { family: 'fashion', collection: 'wedding-dress' }` so a `/ai-product-photography/wedding-dress` slug routes correctly if/when one is added. Skip if not needed yet.
+### 3. Verify existing per-product flow already works
 
-### Notes / out of scope
-- No frontend tab/admin UI changes required — `category_collection` is data-driven and will appear automatically.
-- Preview thumbnails uploaded later via Admin Bulk Preview Upload.
-- No SEO landing page added (separate request).
+- `categoryUtils.detectProductCategory` already returns `'wedding-dress'` for any product with "wedding dress / bridal gown" keywords → Product Images automatically filters scenes to the new collection. No code change needed there.
+- `categoryLabels['wedding-dress']` already set to "Wedding Dress".
+
+### Out of scope
+- No new SEO landing page, no Visual Library family tab override, no admin UI changes.
+- Scene content / preview thumbnails unchanged (uploaded later via Bulk Preview Upload).
