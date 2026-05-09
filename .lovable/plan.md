@@ -1,18 +1,39 @@
-## Tiny update to force a fresh publish
+## Update `/ai-product-photography/home-furniture`
 
-Make a minimal, visible tweak to the Home & Furniture category page so the build hash changes and the next Publish/Update produces a new bundle.
+Three focused changes to the Home & Furniture category page — all data + a small page-template insertion. No new components.
 
-### Change
+### 1. Add a 4-image hero collage (matches other hub pages)
 
-In `src/data/aiProductPhotographyCategoryPages.ts`, on the `home-furniture` entry, lightly refine the hero subheadline copy (one-word polish, no punctuation added per brand rules) — e.g. tighten the intro sentence so the rendered HTML differs from the currently deployed version.
+Add a `heroCollage` array to the `home-furniture` entry in `src/data/aiProductPhotographyCategoryPages.ts`. Reuse 4 existing furniture scene images already wired into `sceneExamples` so the hero shows real, varied room types:
 
-That's enough to invalidate the cached chunk and confirm whether Publish → Update actually ships new code.
+- Tile 1 — Living Room — `1778050204000-gl9kym`
+- Tile 2 — Bedroom — `1778048568910-lx1q0n`
+- Tile 3 — Dining Room — `1778071100932-306rp9`
+- Tile 4 — Outdoor — `1778061177176-1ii0an`
 
-### After you approve
+`CategoryHero` already auto-switches to the staggered 2×2 collage layout when `heroCollage.length >= 4` — no component edits needed.
 
-1. I apply the copy tweak
-2. You click Publish → Update
-3. Hard refresh `vovv.ai/ai-product-photography/home-furniture`
-4. We verify the new rooms/scenes appear (they're already in the code — this just forces a rebuild)
+### 2. Render subcategory pills right after the hero
 
-If the page still shows old content after this, it confirms a publish-pipeline issue rather than a code issue, and we escalate.
+The component `CategorySubcategoryChips` already exists (white pill rail with mobile snap-scroll, tablet+ centered wrap) and reads `page.subcategories`. It just isn't mounted in `src/pages/seo/AIProductPhotographyCategory.tsx`.
+
+Insert `<CategorySubcategoryChips page={page} />` between `<CategoryHero />` and `<CategoryBuiltForEveryCategory />`. This lights up the chips on every category page that already defines subcategories (furniture, beauty, fragrance, jewelry, etc.) — consistent across the hub.
+
+### 3. Richer copy + more furniture scenes
+
+- **Hero subheadline** — rewrite to feel more editorial and specific to furniture/decor (mention materials + room moods, keep no terminal period).
+- **Meta description** — tighten and expand keyword coverage (Japandi, Mediterranean, Parisian moods).
+- **`sceneExamples`** — add 4 more entries to take the on-page library from 8 → 12 (Lived-in living room, Japandi bedroom, Sofa hero, Lighting decor moment) reusing existing furniture imageIds where available.
+- **`visualOutputs`** — light copy polish on 2-3 cards for sharper editorial tone.
+
+### Out of scope
+
+- No changes to other category pages' content.
+- No new React components.
+- No DB / RLS / edge function work.
+
+### Technical notes
+
+- File edits: `src/data/aiProductPhotographyCategoryPages.ts` (data), `src/pages/seo/AIProductPhotographyCategory.tsx` (one-line component insert).
+- LCP preload in `HeroPreload` already targets `heroCollage[0]` automatically when present — no extra wiring.
+- All imageIds reused are already in the `category-previews` storage bucket.
