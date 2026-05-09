@@ -192,6 +192,8 @@ VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories
 
 HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
 
+ACTIVEWEAR GUIDANCE: Any garment marketed for sport — tennis, padel, pickleball, squash, badminton, golf, yoga, pilates, running, cycling, ski, snowboard, gym, training, performance/compression, athleisure — MUST be categorised as "activewear", even if the silhouette is a dress, skirt, shorts, polo, set, or jacket. Examples: "Tennis Skirt" → activewear (NOT garments), "Padel Dress" → activewear (NOT dresses), "Golf Polo" → activewear, "Yoga Set" → activewear, "Ski Jacket" → activewear (NOT jackets). Only use "dresses"/"garments"/"jackets" when there is no sport context.
+
 FURNITURE vs HOME-DECOR: Use "furniture" for any seating (chairs, armchairs, sofas, stools, benches, recliners, ottomans), tables (dining tables, coffee tables, desks, side tables), storage (bookshelves, dressers, wardrobes, cabinets, sideboards), and bed frames. Use "home-decor" ONLY for decorative items: candles, vases, pillows, cushions, throws, planters, picture frames, lamps, wall art.
 
 GLOBAL VISUAL (always return):
