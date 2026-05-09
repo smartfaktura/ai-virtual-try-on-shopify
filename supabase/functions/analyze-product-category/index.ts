@@ -31,11 +31,12 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/sneaker|trainer|air max|nike dunk|jordan|running shoe/i, "sneakers"],
   [/\bboot\b|\bboots\b|ankle boot|chelsea boot|combat boot|hiking boot|cowboy boot/i, "boots"],
   [/high heel|stiletto|pump|platform heel|kitten heel|wedge heel/i, "high-heels"],
+  // NOTE: activewear is checked BEFORE dresses/garments so sport-context wins
+  [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression (?:wear|short|legging|tight)|legging|sports bra|rash guard|\bjersey\b|tracksuit|track suit|\byoga\b|pilates|\brunning\b|jogger|marathon|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|bike (?:short|jersey)|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
   [/hoodie|hooded sweatshirt/i, "hoodies"],
   [/\bjeans\b|denim|skinny jeans|wide-leg jeans|mom jeans/i, "jeans"],
   [/jacket|blazer|bomber|puffer|windbreaker|parka|trench coat/i, "jackets"],
-  [/activewear|sportswear|\byoga\b|gym wear|athletic|workout|legging|sports bra/i, "activewear"],
   [/swimwear|bikini|swimsuit|swim trunks|bathing suit/i, "swimwear"],
   [/lingerie|\bbra\b|underwear|corset|negligee|intimates/i, "lingerie"],
   [/\bkids\b|children|baby|toddler|infant|kidswear/i, "kidswear"],
