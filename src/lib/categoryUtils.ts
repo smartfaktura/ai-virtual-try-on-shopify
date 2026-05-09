@@ -97,6 +97,7 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   'jewellery-rings': 'Rings',
   watches: 'Watches',
   dresses: 'Dresses',
+  'wedding-dress': 'Wedding Dress',
   hoodies: 'Hoodies',
   sneakers: 'Sneakers',
   boots: 'Boots',
