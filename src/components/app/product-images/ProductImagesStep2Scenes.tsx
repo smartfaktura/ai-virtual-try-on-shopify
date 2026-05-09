@@ -29,6 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   boots: 'Boots', 'high-heels': 'High Heels', activewear: 'Activewear',
   eyewear: 'Eyewear', swimwear: 'Swimwear', lingerie: 'Lingerie',
   kidswear: 'Kidswear', jeans: 'Jeans', jackets: 'Jackets',
+  'wedding-dress': 'Wedding Dress',
 };
 
 interface Step2Props {

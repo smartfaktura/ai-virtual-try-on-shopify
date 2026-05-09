@@ -197,6 +197,7 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
     swimwear: 'Swimwear',
     lingerie: 'Lingerie',
     kidswear: 'Kidswear',
+    'wedding-dress': 'Wedding Dress',
     'jewellery-necklaces': 'Necklaces',
     'jewellery-earrings': 'Earrings',
     'jewellery-bracelets': 'Bracelets',
