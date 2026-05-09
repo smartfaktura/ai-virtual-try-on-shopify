@@ -83,7 +83,7 @@ const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
   [/\bjeans?\b|denim|skinny jean|wide-?leg|mom jean/i, "jeans"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
   [/jacket|blazer|bomber|puffer|parka|trench/i, "jackets"],
-  [/activewear|legging|sports bra|\byoga\b|gym wear/i, "activewear"],
+  [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression|legging|sports bra|rash guard|\bjersey\b|tracksuit|\byoga\b|pilates|\brunning\b|jogger|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
   [/swimwear|bikini|swimsuit|swim trunks/i, "swimwear"],
   [/lingerie|\bbra\b|underwear|corset/i, "lingerie"],
 ];
