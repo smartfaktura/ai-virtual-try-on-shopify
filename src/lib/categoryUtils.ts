@@ -23,6 +23,7 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['boot', 'ankle boot', 'chelsea boot', 'combat boot', 'hiking boot'], 'boots' as TemplateCategory],
   [['high heel', 'stiletto', 'pump', 'platform heel', 'kitten heel', 'wedge heel'], 'high-heels' as TemplateCategory],
   // Fashion
+  [['wedding dress', 'bridal gown', 'bridal dress', 'wedding gown', 'bridesmaid dress', 'bridal'], 'wedding-dress' as TemplateCategory],
   [['dress', 'gown', 'maxi dress', 'midi dress', 'sundress', 'cocktail dress'], 'dresses' as TemplateCategory],
   [['hoodie', 'hooded sweatshirt', 'zip-up hoodie', 'pullover hoodie'], 'hoodies' as TemplateCategory],
   [['jeans', 'denim', 'skinny jeans', 'wide-leg jeans', 'mom jeans'], 'jeans' as TemplateCategory],
@@ -96,6 +97,7 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   'jewellery-rings': 'Rings',
   watches: 'Watches',
   dresses: 'Dresses',
+  'wedding-dress': 'Wedding Dress',
   hoodies: 'Hoodies',
   sneakers: 'Sneakers',
   boots: 'Boots',
