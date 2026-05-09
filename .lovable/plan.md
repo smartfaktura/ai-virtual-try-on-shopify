@@ -1,44 +1,58 @@
-## Add 4 more natural Tennis Editorial scenes (with model)
+## Add Wedding Dress category + 6 bridal editorial scenes
 
-Insert 4 more scenes into `product_image_scenes` under `category_collection='activewear'` / `sub_category='Tennis Editorial'`. All include the `personDetails` trigger (so the user gets the model + visible-person controls activated automatically), plus the natural lifestyle tone of the previous batch. Spread evenly across the three surfaces.
+Create a new standalone collection `wedding-dress` in `product_image_scenes` with 6 with-model bridal editorial scenes (personDetails trigger active), and wire `wedding-dress` into the product detection logic so it surfaces as its own category.
 
-### New scenes
+### 1. Database — insert 6 scenes
 
-| scene_id | Title | Surface | Natural moment | sort_order |
-|---|---|---|---|---|
-| `activewear-tennis-clay-bench-rest` | Clay Court Bench Rest | European red clay | Sitting on courtside bench, towel over shoulder, water bottle in hand, racket leaning beside | 2542 |
-| `activewear-tennis-hard-court-blue-serve-prep` | Blue Hard Court Serve Prep | Blue acrylic hard court | Standing at baseline bouncing the ball before serve, focused gaze down, racket loose at side | 2543 |
-| `activewear-tennis-grass-court-volley-ready` | Grass Court Volley Ready | Manicured grass court | Slight crouch at the net, racket up in volley-ready stance, soft morning light | 2544 |
-| `activewear-tennis-clay-walk-off` | Clay Court Walk Off | European red clay | Walking off court toward camera, racket cover in hand, golden late-afternoon light, candid stride | 2545 |
+Single SQL `INSERT INTO product_image_scenes (...) VALUES (...) x6;`
 
-### Common fields (all 4)
-- `category_collection`: `activewear`
-- `sub_category`: `Tennis Editorial`
+**Common fields (all 6):**
+- `category_collection`: `wedding-dress`
+- `sub_category`: `Bridal Editorial`
 - `is_active`: `true`
 - `subject`: `with-model`
-- `shot_style`: `lifestyle`
+- `shot_style`: `editorial`
 - `scene_type`: `lifestyle`
 - `requires_extra_reference`: `false`
 - `use_scene_reference`: `false`
-- `preview_image_url`: `null` (admin can upload later)
-- `sub_category_sort_order`: continues sequence (9–12)
-- **`trigger_blocks`: `['personDetails']`** ← person trigger activated
-- `filter_tags`: `['tennis', surface tag, 'natural', 'lifestyle']`
+- `preview_image_url`: `null` (admin uploads later)
+- `trigger_blocks`: `['personDetails']`
+- `sub_category_sort_order`: 1–6
+- `category_sort_order`: 0
+- `sort_order`: 3000–3005
 
-### Per-scene content
-Each gets:
-- **prompt_template** — natural candid framing for that specific moment, using `[MODEL IMAGE]` + `[PRODUCT IMAGE] {{productName}}`. Mirrors the writing style of the previous 3 (Clay Between Points, Blue Hard Court Stride, Grass Court Morning) — natural, in-between-moment energy, never posed editorial.
-- **outfit_hint** — full OUTFIT STYLING DIRECTION block tuned to the surface, identical palette logic to the prior batch:
-  - **Clay (bench rest, walk off)**: white/cream tennis shoes with clay dust, low socks, optional visor/wristband — palette = white/cream/clay terracotta/forest green
-  - **Blue hard (serve prep)**: clean modern hard-court tennis shoes (herringbone outsole), white/black low socks, optional cap or headband — palette = white/black/cobalt accents/grey
-  - **Grass (volley ready)**: classic white grass-court shoes (smooth outsole), pristine white socks, optional white visor/headband — palette = pure white/cream/soft green/navy trim
-  - All include guardrails: no fashion sneakers, no streetwear, no loud branding, racket must be a real performance racket, hero stays the product
-- **suggested_colors** — null (outfit_hint drives palette)
+**The 6 scenes:**
 
-### Implementation
-Single SQL `INSERT INTO product_image_scenes (...) VALUES (...), (...), (...), (...);` — four rows.
+| scene_id | Title | Setting / moment |
+|---|---|---|
+| `wedding-dress-chapel-altar` | Chapel Altar | Standing at stone chapel altar, soft window light from side, candles in background |
+| `wedding-dress-garden-veil` | Garden Veil | Walking through formal garden, veil catching breeze, dappled afternoon light |
+| `wedding-dress-grand-staircase` | Grand Staircase Descent | Mid-step descending marble staircase, hand on banister, train flowing behind |
+| `wedding-dress-beach-golden-hour` | Beach Golden Hour | Standing on quiet sandy shore at sunset, hem brushing wet sand, hair moving in light wind |
+| `wedding-dress-ballroom-portrait` | Ballroom Portrait | Centered in classical ballroom, chandelier overhead, candid look to camera, long exposure stillness |
+| `wedding-dress-train-walk-away` | Train Walk Away | Back-of-dress hero shot, walking away through hallway/aisle, full train trailing, dramatic depth |
 
-### Notes
-- No frontend code changes needed; scenes are data-driven.
-- Preview thumbnails empty until uploaded via admin (consistent with prior batch).
-- After this, Tennis Editorial will have 9 scenes total (5 original + 3 prior natural + 4 new).
+**Per-scene content:**
+- **prompt_template** — bridal editorial framing using `[MODEL IMAGE]` + `[PRODUCT IMAGE] {{productName}}`. Emphasises the dress as hero (silhouette, fabric movement, lace/satin/tulle texture). Calm, refined, never overproduced.
+- **outfit_hint** — bridal-only OUTFIT STYLING DIRECTION: hair styled (low chignon, soft waves, or veil-integrated updo) tuned to the scene; minimal jewellery (pearl drop earrings or thin diamond studs); natural luminous makeup; classic bridal bouquet appropriate to setting (white/cream/blush). Guardrails: no streetwear, no loud accessories, no fashion sneakers, dress remains hero, no graphic patterns added.
+- **suggested_colors** — null (palette is bridal whites/ivories driven by the actual product).
+
+### 2. Detection — `src/lib/categoryUtils.ts`
+
+- Add new detection rule **above** the generic `garments` block:
+  - keywords: `['wedding dress', 'bridal gown', 'bridal dress', 'wedding gown', 'bridesmaid dress', 'bridal']`
+  - category: `'wedding-dress'`
+- Add label entry: `'wedding-dress': 'Wedding Dress'`
+
+### 3. Type — `src/types/index.ts`
+
+- Extend `TemplateCategory` union with `| 'wedding-dress'`.
+
+### 4. Visual library deep link (optional but consistent)
+
+- In `src/lib/visualLibraryDeepLink.ts`, add `'wedding-dress': { family: 'fashion', collection: 'wedding-dress' }` so a `/ai-product-photography/wedding-dress` slug routes correctly if/when one is added. Skip if not needed yet.
+
+### Notes / out of scope
+- No frontend tab/admin UI changes required — `category_collection` is data-driven and will appear automatically.
+- Preview thumbnails uploaded later via Admin Bulk Preview Upload.
+- No SEO landing page added (separate request).
