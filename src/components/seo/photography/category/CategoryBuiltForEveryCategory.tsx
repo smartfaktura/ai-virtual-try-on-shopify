@@ -27,33 +27,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
   const overrides = useSeoVisualOverridesMap();
   const [activeIdx, setActiveIdx] = useState(0);
-  const railRef = useRef<HTMLDivElement | null>(null);
   const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [hintNudge, setHintNudge] = useState(false);
-
-  // First-mount peek nudge so users see the rail is scrollable.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.matchMedia?.('(min-width: 1024px)').matches) return;
-    const el = railRef.current;
-    if (!el) return;
-    let didNudge = false;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting && !didNudge) {
-            didNudge = true;
-            setHintNudge(true);
-            window.setTimeout(() => setHintNudge(false), 600);
-            obs.disconnect();
-          }
-        }
-      },
-      { threshold: 0.4 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
 
   // Keep the active chip visible when the user changes it.
   // Skip on first mount so we don't pull the page down to this section
