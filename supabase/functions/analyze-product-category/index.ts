@@ -31,11 +31,12 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/sneaker|trainer|air max|nike dunk|jordan|running shoe/i, "sneakers"],
   [/\bboot\b|\bboots\b|ankle boot|chelsea boot|combat boot|hiking boot|cowboy boot/i, "boots"],
   [/high heel|stiletto|pump|platform heel|kitten heel|wedge heel/i, "high-heels"],
+  // NOTE: activewear is checked BEFORE dresses/garments so sport-context wins
+  [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression (?:wear|short|legging|tight)|legging|sports bra|rash guard|\bjersey\b|tracksuit|track suit|\byoga\b|pilates|\brunning\b|jogger|marathon|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|bike (?:short|jersey)|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
   [/hoodie|hooded sweatshirt/i, "hoodies"],
   [/\bjeans\b|denim|skinny jeans|wide-leg jeans|mom jeans/i, "jeans"],
   [/jacket|blazer|bomber|puffer|windbreaker|parka|trench coat/i, "jackets"],
-  [/activewear|sportswear|\byoga\b|gym wear|athletic|workout|legging|sports bra/i, "activewear"],
   [/swimwear|bikini|swimsuit|swim trunks|bathing suit/i, "swimwear"],
   [/lingerie|\bbra\b|underwear|corset|negligee|intimates/i, "lingerie"],
   [/\bkids\b|children|baby|toddler|infant|kidswear/i, "kidswear"],
@@ -82,10 +83,33 @@ const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
   [/\bjeans?\b|denim|skinny jean|wide-?leg|mom jean/i, "jeans"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
   [/jacket|blazer|bomber|puffer|parka|trench/i, "jackets"],
-  [/activewear|legging|sports bra|\byoga\b|gym wear/i, "activewear"],
+  [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression|legging|sports bra|rash guard|\bjersey\b|tracksuit|\byoga\b|pilates|\brunning\b|jogger|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
   [/swimwear|bikini|swimsuit|swim trunks/i, "swimwear"],
   [/lingerie|\bbra\b|underwear|corset/i, "lingerie"],
 ];
+
+/**
+ * High-priority sport-intent override.
+ * If a sport keyword appears alongside an apparel noun (skirt, dress, shorts, polo,
+ * leggings, set, kit, jersey, etc.) the category MUST be activewear regardless of
+ * what the AI returned or which generic regex matched first.
+ * Examples it catches: "Tennis Skirt", "Padel Polo", "Golf Shorts", "Yoga Dress",
+ * "Pilates Set", "Running Tights", "Ski Jacket".
+ */
+const SPORT_INTENT_RE =
+  /\b(tennis|padel|pickleball|squash|badminton|golf|yoga|pilates|running|jogger|marathon|cycling|cyclist|ski(?:ing)?|snowboard|crossfit|gym|workout|training|athletic|performance|compression|athleisure|activewear|sportswear)\b[\s\S]{0,40}?\b(skirt|dress|short|shorts|top|polo|pant|pants|tight|tights|legging|leggings|jacket|jersey|set|kit|tee|t-shirt|tank|bra|hoodie|zip|onesie|romper|jumpsuit|unitard|catsuit|romper|outfit)\b/i;
+
+function applySportIntent(analysis: Record<string, unknown>, title: string, description: string): boolean {
+  const haystack = `${title || ""} ${description || ""}`;
+  if (SPORT_INTENT_RE.test(haystack)) {
+    if (analysis.category !== "activewear") {
+      console.log(`Sport intent override: "${analysis.category}" -> "activewear" (matched: "${title}")`);
+      analysis.category = "activewear";
+    }
+    return true;
+  }
+  return false;
+}
 
 function refineGenericGarments(analysis: Record<string, unknown>, title: string, description: string): void {
   if (analysis.category !== "garments") return;
@@ -99,7 +123,7 @@ function refineGenericGarments(analysis: Record<string, unknown>, title: string,
   }
 }
 
-function applyCategoryFallback(analysis: Record<string, unknown>, title: string): void {
+function applyCategoryFallback(analysis: Record<string, unknown>, title: string, description = ""): void {
   let cat = analysis.category as string | undefined;
 
   // Backward compat: remap deprecated hats-small to hats
@@ -107,6 +131,11 @@ function applyCategoryFallback(analysis: Record<string, unknown>, title: string)
     console.log(`Category alias: "hats-small" -> "hats"`);
     analysis.category = "hats";
     cat = "hats";
+  }
+
+  // Step 1: Sport-intent override wins over everything (tennis/padel/golf/yoga/etc.)
+  if (applySportIntent(analysis, title, description)) {
+    return;
   }
 
   // If valid category, still check specificity overrides
@@ -162,6 +191,8 @@ IMPORTANT: Pay close attention to the product title — if the title says "perfu
 VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 
 HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
+
+ACTIVEWEAR GUIDANCE: Any garment marketed for sport — tennis, padel, pickleball, squash, badminton, golf, yoga, pilates, running, cycling, ski, snowboard, gym, training, performance/compression, athleisure — MUST be categorised as "activewear", even if the silhouette is a dress, skirt, shorts, polo, set, or jacket. Examples: "Tennis Skirt" → activewear (NOT garments), "Padel Dress" → activewear (NOT dresses), "Golf Polo" → activewear, "Yoga Set" → activewear, "Ski Jacket" → activewear (NOT jackets). Only use "dresses"/"garments"/"jackets" when there is no sport context.
 
 FURNITURE vs HOME-DECOR: Use "furniture" for any seating (chairs, armchairs, sofas, stools, benches, recliners, ottomans), tables (dining tables, coffee tables, desks, side tables), storage (bookshelves, dressers, wardrobes, cabinets, sideboards), and bed frames. Use "home-decor" ONLY for decorative items: candles, vases, pillows, cushions, throws, planters, picture frames, lamps, wall art.
 
@@ -282,9 +313,12 @@ Return ONLY the JSON object, no markdown fences, no explanation.`;
       });
     }
 
-    // Post-processing: demote overly-broad "garments" first, then title-based fallback
+    // Post-processing: sport-intent + specificity fallback runs first (handles tennis/padel/golf/yoga
+    // dresses/skirts/shorts that AI may have classified as "dresses" or "garments"), then refine generic garments.
+    applyCategoryFallback(analysis, title || "", description || "");
     refineGenericGarments(analysis, title || "", description || "");
-    applyCategoryFallback(analysis, title || "");
+    // Run sport-intent again in case refineGenericGarments demoted to a sport-mismatched bucket
+    applyCategoryFallback(analysis, title || "", description || "");
 
     // Normalize booleans
     if (typeof analysis.packagingRelevant === "string") {
