@@ -54,6 +54,10 @@ function applyFilters(query: any, filters: SceneCatalogFilters) {
   if (filters.settings?.length) q = q.in('setting', filters.settings);
 
   // Sub-family (single collection) takes top precedence, then family, then explicit collections.
+  const explicitlyWantsBundle =
+    filters.categoryCollection === 'bundle' ||
+    (filters.collections?.includes('bundle') ?? false);
+
   if (filters.categoryCollection) {
     q = q.eq('category_collection', filters.categoryCollection);
   } else {
@@ -63,6 +67,11 @@ function applyFilters(query: any, filters: SceneCatalogFilters) {
     } else if (filters.collections?.length) {
       q = q.in('category_collection', filters.collections);
     }
+  }
+
+  // Hide bundle scenes from generic catalog views — they live on /app/bundle-visuals only.
+  if (!explicitlyWantsBundle) {
+    q = q.neq('category_collection', 'bundle');
   }
 
   if (filters.filterTags?.length) q = q.contains('filter_tags', filters.filterTags);
@@ -181,6 +190,7 @@ export function useInterleavedSceneCatalog(
         .from('product_image_scenes')
         .select(SLIM_COLUMNS)
         .eq('is_active', true)
+        .neq('category_collection', 'bundle')
         .not('sub_category', 'ilike', '%essential%')
         .order('sort_order', { ascending: true })
         .limit(1500);

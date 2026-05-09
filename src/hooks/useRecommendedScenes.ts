@@ -123,7 +123,8 @@ export function useRecommendedScenes(enabled = true) {
           .from('product_image_scenes')
           .select(SLIM_COLUMNS)
           .in('scene_id', orderedSceneIds)
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .neq('category_collection', 'bundle');
         const rows = (data ?? []) as CatalogScene[];
         recommendedScenes = orderedSceneIds
           .map(id => rows.find(r => r.scene_id === id))
@@ -160,6 +161,7 @@ export function useRecommendedScenes(enabled = true) {
             .from('product_image_scenes')
             .select(SLIM_COLUMNS)
             .eq('is_active', true)
+            .neq('category_collection', 'bundle')
             .in('category_collection', collections)
             .order('sort_order', { ascending: true })
             .limit(targetMax);

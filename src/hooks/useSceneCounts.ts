@@ -34,6 +34,7 @@ export function useSceneCounts() {
           .from('product_image_scenes')
           .select('subject, shot_style, setting, category_collection, sub_category')
           .eq('is_active', true)
+          .neq('category_collection', 'bundle')
           .not('sub_category', 'ilike', '%essential%')
           .range(page * 1000, page * 1000 + 999);
         if (error) throw error;
