@@ -93,63 +93,28 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
           </p>
         </div>
 
-        {/* Chip rail — short subject-only labels */}
-        <div className="mb-8 lg:mb-10">
-          {/* Mobile: full-bleed scrollable rail with snap, edge fades, and a first-mount peek nudge */}
-          <div className="lg:hidden relative -mx-6">
-            <div
-              ref={railRef}
-              className={cn(
-                'flex gap-2 overflow-x-auto snap-x snap-mandatory px-6 pb-2 transition-transform duration-300 ease-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
-                hintNudge && '-translate-x-3',
-              )}
-            >
-              {groups.map((g, idx) => {
-                const { subject } = splitLabel(g.subCategory);
-                return (
-                  <button
-                    key={g.subCategory}
-                    ref={(el) => { chipRefs.current[idx] = el; }}
-                    type="button"
-                    onClick={() => setActiveIdx(idx)}
-                    className={cn(
-                      'snap-start shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
-                      activeIdx === idx
-                        ? 'bg-foreground text-background border-foreground shadow-sm'
-                        : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground',
-                    )}
-                  >
-                    {subject}
-                  </button>
-                );
-              })}
-            </div>
-            <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
-            <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background via-background/80 to-transparent" />
-          </div>
-
-          {/* Desktop: centered chip group — short labels keep it tidy on one or two rows */}
-          <div className="hidden lg:flex justify-center">
-            <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl">
-              {groups.map((g, idx) => {
-                const { subject } = splitLabel(g.subCategory);
-                return (
-                  <button
-                    key={g.subCategory}
-                    type="button"
-                    onClick={() => setActiveIdx(idx)}
-                    className={cn(
-                      'px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap border',
-                      activeIdx === idx
-                        ? 'bg-foreground text-background border-foreground shadow-sm'
-                        : 'bg-muted/50 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted',
-                    )}
-                  >
-                    {subject}
-                  </button>
-                );
-              })}
-            </div>
+        {/* Chip rail — short subject-only labels, wraps on every breakpoint */}
+        <div className="mb-8 lg:mb-10 flex justify-center">
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl px-2">
+            {groups.map((g, idx) => {
+              const { subject } = splitLabel(g.subCategory);
+              return (
+                <button
+                  key={g.subCategory}
+                  ref={(el) => { chipRefs.current[idx] = el; }}
+                  type="button"
+                  onClick={() => setActiveIdx(idx)}
+                  className={cn(
+                    'px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-sm font-medium transition-colors whitespace-nowrap border',
+                    activeIdx === idx
+                      ? 'bg-foreground text-background border-foreground shadow-sm'
+                      : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted',
+                  )}
+                >
+                  {subject}
+                </button>
+              );
+            })}
           </div>
         </div>
 
