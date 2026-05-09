@@ -1,39 +1,22 @@
-## Update `/ai-product-photography/home-furniture`
+## Goal
 
-Three focused changes to the Home & Furniture category page — all data + a small page-template insertion. No new components.
+The current hero on `/ai-product-photography/home-furniture` has an overlong H1 (4 lines on mobile) and a 4-line subheadline that lists too many products + too many room styles. We'll trim both for clarity and conversion, keeping the same SEO intent.
 
-### 1. Add a 4-image hero collage (matches other hub pages)
+## Changes (single file: `src/data/aiProductPhotographyCategoryPages.ts`, home-furniture entry)
 
-Add a `heroCollage` array to the `home-furniture` entry in `src/data/aiProductPhotographyCategoryPages.ts`. Reuse 4 existing furniture scene images already wired into `sceneExamples` so the hero shows real, varied room types:
+**1. H1 — shorter, single thought**
+- Before: `AI Furniture & Home Decor Product Photography` + `for Home & Furniture Brands`
+- After: `h1Lead: "AI Photography for"` + `h1Highlight: "Furniture & Home Decor"`
+- Result: 2 lines on mobile instead of 4, same keyword density.
 
-- Tile 1 — Living Room — `1778050204000-gl9kym`
-- Tile 2 — Bedroom — `1778048568910-lx1q0n`
-- Tile 3 — Dining Room — `1778071100932-306rp9`
-- Tile 4 — Outdoor — `1778061177176-1ii0an`
+**2. Subheadline — one tight sentence, no punch-list**
+- Before (43 words): "Place sofas, beds, dining sets, desks, vases, and lighting into editorial salons, linen-soft bedrooms, travertine dining halls, concrete studios, and Mediterranean terraces — material-true PDPs, lifestyle stories, and catalog visuals from a single photo"
+- After (~18 words): `"Drop any furniture or decor piece into styled rooms — PDPs, lifestyle, and catalog visuals from one photo"`
+- Removes redundant style list (already shown by the 4-image collage + subcategory chips below).
 
-`CategoryHero` already auto-switches to the staggered 2×2 collage layout when `heroCollage.length >= 4` — no component edits needed.
+**3. Eyebrow — keep** (`Furniture · Rooms · Decor`) — it's already tight.
 
-### 2. Render subcategory pills right after the hero
+**4. Meta description — keep** (still useful for SEO; not visible in the hero).
 
-The component `CategorySubcategoryChips` already exists (white pill rail with mobile snap-scroll, tablet+ centered wrap) and reads `page.subcategories`. It just isn't mounted in `src/pages/seo/AIProductPhotographyCategory.tsx`.
-
-Insert `<CategorySubcategoryChips page={page} />` between `<CategoryHero />` and `<CategoryBuiltForEveryCategory />`. This lights up the chips on every category page that already defines subcategories (furniture, beauty, fragrance, jewelry, etc.) — consistent across the hub.
-
-### 3. Richer copy + more furniture scenes
-
-- **Hero subheadline** — rewrite to feel more editorial and specific to furniture/decor (mention materials + room moods, keep no terminal period).
-- **Meta description** — tighten and expand keyword coverage (Japandi, Mediterranean, Parisian moods).
-- **`sceneExamples`** — add 4 more entries to take the on-page library from 8 → 12 (Lived-in living room, Japandi bedroom, Sofa hero, Lighting decor moment) reusing existing furniture imageIds where available.
-- **`visualOutputs`** — light copy polish on 2-3 cards for sharper editorial tone.
-
-### Out of scope
-
-- No changes to other category pages' content.
-- No new React components.
-- No DB / RLS / edge function work.
-
-### Technical notes
-
-- File edits: `src/data/aiProductPhotographyCategoryPages.ts` (data), `src/pages/seo/AIProductPhotographyCategory.tsx` (one-line component insert).
-- LCP preload in `HeroPreload` already targets `heroCollage[0]` automatically when present — no extra wiring.
-- All imageIds reused are already in the `category-previews` storage bucket.
+## Out of scope
+No component edits, no other pages, no CTA changes — copy-only edit to the one entry.
