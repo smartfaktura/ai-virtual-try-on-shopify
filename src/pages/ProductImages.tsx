@@ -540,15 +540,23 @@ export default function ProductImages() {
     [allScenes, selectedSceneIds],
   );
 
+  // Promote dresses/garments to wedding-dress when product clearly is bridal
+  const refineBridal = (cat: string, p: { title?: string; description?: string; product_type?: string; tags?: string[] }) => {
+    if (cat !== 'dresses' && cat !== 'garments' && cat !== 'other') return cat;
+    const text = `${p.title || ''} ${p.description || ''} ${p.product_type || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    if (/\b(wedding dress|bridal gown|bridal dress|wedding gown|bridesmaid dress|bridalwear|bridal)\b/i.test(text)) return 'wedding-dress';
+    return cat;
+  };
+
   // Primary category for outfit defaults
   const primaryCategory = useMemo(() => {
     for (const p of selectedProducts) {
       // Check live analyses map first
       const liveAnalysis = analyses[p.id];
-      if (liveAnalysis?.category) return liveAnalysis.category;
+      if (liveAnalysis?.category) return refineBridal(liveAnalysis.category, p);
       // Then cached analysis_json
       const analysis = p.analysis_json as any;
-      if (analysis?.category) return analysis.category as string;
+      if (analysis?.category) return refineBridal(analysis.category as string, p);
     }
     // Keyword fallback: map raw product_type to category ID
     const combined = selectedProducts.map(p =>
@@ -577,6 +585,7 @@ export default function ProductImages() {
           }
         }
       }
+      cat = refineBridal(cat, p);
       if (!groups.has(cat)) groups.set(cat, []);
       groups.get(cat)!.push(p.id);
     }

@@ -10,7 +10,7 @@ const corsHeaders = {
 const VALID_CATEGORIES = new Set([
   "fragrance", "beauty-skincare", "makeup-lipsticks", "bags-accessories", "backpacks",
   "wallets-cardholders", "belts", "scarves", "caps", "hats", "beanies", "shoes", "sneakers", "boots",
-  "high-heels", "garments", "dresses", "hoodies", "jeans", "jackets",
+  "high-heels", "garments", "dresses", "wedding-dress", "hoodies", "jeans", "jackets",
   "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
   "home-decor", "furniture", "tech-devices", "food", "beverages", "supplements-wellness",
@@ -33,6 +33,8 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/high heel|stiletto|pump|platform heel|kitten heel|wedge heel/i, "high-heels"],
   // NOTE: activewear is checked BEFORE dresses/garments so sport-context wins
   [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression (?:wear|short|legging|tight)|legging|sports bra|rash guard|\bjersey\b|tracksuit|track suit|\byoga\b|pilates|\brunning\b|jogger|marathon|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|bike (?:short|jersey)|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
+  // Bridal MUST be checked BEFORE generic dresses
+  [/wedding dress|bridal gown|bridal dress|wedding gown|bridesmaid dress|bridalwear|\bbridal\b/i, "wedding-dress"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
   [/hoodie|hooded sweatshirt/i, "hoodies"],
   [/\bjeans\b|denim|skinny jeans|wide-leg jeans|mom jeans/i, "jeans"],
@@ -67,6 +69,8 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["bags-accessories", /wallet|cardholder|card holder|card case/i, "wallets-cardholders"],
   ["bags-accessories", /\bbelt\b|waist belt/i, "belts"],
   ["bags-accessories", /backpack|rucksack|daypack/i, "backpacks"],
+  ["dresses", /wedding|bridal|bridesmaid/i, "wedding-dress"],
+  ["garments", /wedding dress|bridal gown|bridal dress|wedding gown|bridalwear/i, "wedding-dress"],
   ["garments", /\bdress\b|\bdresses\b|gown/i, "dresses"],
   ["garments", /hoodie|hooded sweatshirt/i, "hoodies"],
   ["garments", /\bjeans\b|denim/i, "jeans"],
@@ -81,6 +85,7 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
 const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
   [/hoodie|hooded sweatshirt|zip-?up hoodie/i, "hoodies"],
   [/\bjeans?\b|denim|skinny jean|wide-?leg|mom jean/i, "jeans"],
+  [/wedding dress|bridal gown|bridal dress|wedding gown|bridesmaid dress|bridalwear|\bbridal\b/i, "wedding-dress"],
   [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
   [/jacket|blazer|bomber|puffer|parka|trench/i, "jackets"],
   [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression|legging|sports bra|rash guard|\bjersey\b|tracksuit|\byoga\b|pilates|\brunning\b|jogger|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
@@ -188,7 +193,9 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+
+BRIDAL GUIDANCE: Any wedding dress, bridal gown, bridesmaid dress, or bridalwear MUST be categorised as "wedding-dress" (NOT "dresses" or "garments"). Examples: "Lace Wedding Dress" → wedding-dress, "Bridal Gown" → wedding-dress, "Bridesmaid Dress" → wedding-dress.
 
 HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
 

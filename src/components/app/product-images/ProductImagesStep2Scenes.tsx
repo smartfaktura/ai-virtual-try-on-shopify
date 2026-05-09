@@ -29,6 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   boots: 'Boots', 'high-heels': 'High Heels', activewear: 'Activewear',
   eyewear: 'Eyewear', swimwear: 'Swimwear', lingerie: 'Lingerie',
   kidswear: 'Kidswear', jeans: 'Jeans', jackets: 'Jackets',
+  'wedding-dress': 'Wedding Dress',
 };
 
 interface Step2Props {
@@ -70,7 +71,8 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'sneakers': ['sneaker', 'trainer', 'air max', 'nike dunk', 'jordan', 'running shoe', 'tennis shoe', 'skate shoe', 'new balance'],
   'boots': ['boot', 'ankle boot', 'chelsea boot', 'combat boot', 'hiking boot', 'cowboy boot', 'rain boot', 'lace-up boot'],
   'high-heels': ['high heel', 'stiletto', 'pump', 'platform heel', 'kitten heel', 'wedge heel', 'strappy heel', 'mule heel'],
-  // Fashion (before garments)
+  // Fashion (before garments) — wedding-dress checked BEFORE generic dresses
+  'wedding-dress': ['wedding dress', 'bridal gown', 'bridal dress', 'wedding gown', 'bride gown', 'bridalwear', 'bridesmaid dress'],
   'dresses': ['dress', 'gown', 'maxi dress', 'midi dress', 'mini dress', 'sundress', 'cocktail dress', 'evening dress', 'wrap dress'],
   'hoodies': ['hoodie', 'hooded sweatshirt', 'zip-up hoodie', 'pullover hoodie', 'oversized hoodie'],
   'jeans': ['jeans', 'denim', 'skinny jeans', 'wide-leg jeans', 'straight-leg jeans', 'mom jeans', 'boyfriend jeans', 'distressed jeans'],
@@ -108,7 +110,7 @@ const GRID_CLASSES: Record<GridSize, string> = {
 };
 
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'] },
+  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'wedding-dress', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'] },
   { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
   { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'caps', 'hats', 'beanies', 'watches', 'eyewear'] },
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
@@ -126,6 +128,8 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["bags-accessories", /wallet|cardholder|card holder|card case/i, "wallets-cardholders"],
   ["bags-accessories", /\bbelt\b|waist belt/i, "belts"],
   ["bags-accessories", /backpack|rucksack|daypack/i, "backpacks"],
+  ["dresses", /wedding|bridal|bridesmaid/i, "wedding-dress"],
+  ["garments", /wedding dress|bridal gown|bridal dress|wedding gown/i, "wedding-dress"],
   ["garments", /\bdress\b|\bdresses\b|gown/i, "dresses"],
   ["garments", /hoodie|hooded sweatshirt/i, "hoodies"],
   ["garments", /\bjeans\b|denim/i, "jeans"],
@@ -163,6 +167,11 @@ const CATEGORY_ALIASES: Record<string, string> = {
   "drinks": "beverages",
   "wallets": "wallets-cardholders",
   "hats-small": "hats",
+  "bridal": "wedding-dress",
+  "bridalwear": "wedding-dress",
+  "wedding": "wedding-dress",
+  "wedding_dress": "wedding-dress",
+  "weddingdress": "wedding-dress",
 };
 
 function refineCategory(cat: string, title: string): string {
