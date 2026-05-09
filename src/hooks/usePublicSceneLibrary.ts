@@ -31,6 +31,7 @@ async function fetchPublicScenes(): Promise<PublicScene[]> {
       .from('product_image_scenes' as any)
       .select(PUBLIC_COLUMNS)
       .eq('is_active', true)
+      .neq('category_collection', 'bundle')
       .order('category_sort_order', { ascending: true })
       .order('sub_category_sort_order', { ascending: true })
       .order('sort_order', { ascending: true })

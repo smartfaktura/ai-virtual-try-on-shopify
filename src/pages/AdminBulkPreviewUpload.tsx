@@ -142,7 +142,7 @@ function matchFileToScene(file: File, scenes: DbScene[]): { scene: DbScene | nul
 export default function AdminBulkPreviewUpload() {
   const { isAdmin } = useIsAdmin();
   const { user } = useAuth();
-  const { rawScenes, updateScene } = useProductImageScenes({ includePromptTemplate: true, includeInactive: true });
+  const { rawScenes, updateScene } = useProductImageScenes({ includePromptTemplate: true, includeInactive: true, includeBundle: true });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = useMemo(() => {

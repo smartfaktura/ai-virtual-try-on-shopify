@@ -75,7 +75,7 @@ async function fetchSceneById(sceneId: string): Promise<DbScene | null> {
   return (data as unknown as DbScene) ?? null;
 }
 
-async function fetchAllScenes(includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
+async function fetchAllScenes(includePromptTemplate = false, activeOnly = true, includeBundle = false): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
   let from = 0;
@@ -86,6 +86,7 @@ async function fetchAllScenes(includePromptTemplate = false, activeOnly = true):
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
     if (activeOnly) q = q.eq('is_active', true);
+    if (!includeBundle) q = q.neq('category_collection', 'bundle');
     const { data, error } = await q;
     if (error) throw error;
     const batch = (data || []) as unknown as DbScene[];
@@ -96,13 +97,15 @@ async function fetchAllScenes(includePromptTemplate = false, activeOnly = true):
   return all;
 }
 
-async function fetchScenesByCategories(categories: string[], includePromptTemplate = false, activeOnly = true): Promise<DbScene[]> {
+async function fetchScenesByCategories(categories: string[], includePromptTemplate = false, activeOnly = true, includeBundle = false): Promise<DbScene[]> {
   let q = supabase
     .from('product_image_scenes' as any)
     .select(selectCols(includePromptTemplate))
     .in('category_collection', categories)
     .order('sort_order', { ascending: true });
   if (activeOnly) q = q.eq('is_active', true);
+  // Only filter bundle when caller didn't explicitly request it as a category
+  if (!includeBundle && !categories.includes('bundle')) q = q.neq('category_collection', 'bundle');
   const { data, error } = await q;
   if (error) throw error;
   return (data || []) as unknown as DbScene[];
@@ -113,6 +116,7 @@ async function fetchScenesExcludingCategories(
   includePromptTemplate = false,
   activeOnly = true,
   slim = false,
+  includeBundle = false,
 ): Promise<DbScene[]> {
   const PAGE = 1000;
   let all: DbScene[] = [];
@@ -128,6 +132,7 @@ async function fetchScenesExcludingCategories(
       .order('sort_order', { ascending: true })
       .range(from, from + PAGE - 1);
     if (activeOnly) q = q.eq('is_active', true);
+    if (!includeBundle) q = q.neq('category_collection', 'bundle');
     const { data, error } = await q;
     if (error) throw error;
     const batch = (data || []) as unknown as DbScene[];
@@ -249,6 +254,8 @@ interface UseProductImageScenesOptions {
   includePromptTemplate?: boolean;
   /** Admin-only: include inactive (hidden) scenes too. Default false. */
   includeInactive?: boolean;
+  /** Bundle Visuals + admin: include scenes whose category_collection = 'bundle'. Default false. */
+  includeBundle?: boolean;
 }
 
 export function useProductImageScenes(options?: UseProductImageScenesOptions) {
@@ -259,15 +266,16 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // Client wizard NEEDS prompt_template (buildDynamicPrompt builds prompts locally).
   const includePromptTemplate = options?.includePromptTemplate ?? true;
   const activeOnly = !(options?.includeInactive ?? false);
+  const includeBundle = options?.includeBundle ?? false;
   // Slim mode = wizard client (priority + active only). Admin paths keep full payload.
   const useSlimRest = !!hasPriority && activeOnly;
-  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}${useSlimRest ? '-slimrest' : ''}`;
+  const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}${useSlimRest ? '-slimrest' : ''}${includeBundle ? '-bundle' : ''}`;
 
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
   const { data: priorityScenes, isLoading: isLoadingPriority } = useQuery({
     queryKey: [...QUERY_KEY_PRIORITY, cacheVariant, priorityCats],
-    queryFn: () => fetchScenesByCategories(priorityCats!, includePromptTemplate, activeOnly),
+    queryFn: () => fetchScenesByCategories(priorityCats!, includePromptTemplate, activeOnly, includeBundle),
     enabled: !!hasPriority,
     staleTime: 5 * 60 * 1000,
   });
@@ -283,7 +291,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
 
   const { data: restScenes, isLoading: isLoadingRest } = useQuery({
     queryKey: [...QUERY_KEY_REST, cacheVariant, priorityCats],
-    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly, useSlimRest),
+    queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly, useSlimRest, includeBundle),
     enabled: !!hasPriority && !!priorityScenes && restEnabled,
     staleTime: 5 * 60 * 1000,
   });
@@ -292,7 +300,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
 
   const { data: allRawScenes, isLoading: isLoadingAll } = useQuery({
     queryKey: [...QUERY_KEY_ALL, cacheVariant],
-    queryFn: () => fetchAllScenes(includePromptTemplate, activeOnly),
+    queryFn: () => fetchAllScenes(includePromptTemplate, activeOnly, includeBundle),
     enabled: !hasPriority,
     staleTime: 5 * 60 * 1000,
   });

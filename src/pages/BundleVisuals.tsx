@@ -86,7 +86,7 @@ export default function BundleVisuals() {
   });
 
   // Load bundle scenes (category_collection = 'bundle')
-  const { allScenes, isLoading: isLoadingScenes } = useProductImageScenes();
+  const { allScenes, isLoading: isLoadingScenes } = useProductImageScenes({ includeBundle: true });
 
   const bundleScenes = useMemo(
     () => allScenes.filter(s => s.categoryCollection === 'bundle'),

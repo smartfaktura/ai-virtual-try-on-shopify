@@ -190,7 +190,7 @@ function subCategorySummary(scenes: DbScene[]): string {
 
 export default function AdminProductImageScenes() {
   const { isAdmin } = useIsAdmin();
-  const { rawScenes, isLoading, updateScene, upsertScene, deleteScene } = useProductImageScenes({ includePromptTemplate: true, includeInactive: true });
+  const { rawScenes, isLoading, updateScene, upsertScene, deleteScene } = useProductImageScenes({ includePromptTemplate: true, includeInactive: true, includeBundle: true });
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showHidden, setShowHidden] = useState(false);
