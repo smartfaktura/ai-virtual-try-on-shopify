@@ -19,6 +19,7 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
   lingerie: 'Fashion',
   kidswear: 'Fashion',
   streetwear: 'Fashion',
+  'wedding-dress': 'Fashion',
 
   shoes: 'Footwear',
   sneakers: 'Footwear',
