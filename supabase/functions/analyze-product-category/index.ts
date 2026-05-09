@@ -311,9 +311,12 @@ Return ONLY the JSON object, no markdown fences, no explanation.`;
       });
     }
 
-    // Post-processing: demote overly-broad "garments" first, then title-based fallback
+    // Post-processing: sport-intent + specificity fallback runs first (handles tennis/padel/golf/yoga
+    // dresses/skirts/shorts that AI may have classified as "dresses" or "garments"), then refine generic garments.
+    applyCategoryFallback(analysis, title || "", description || "");
     refineGenericGarments(analysis, title || "", description || "");
-    applyCategoryFallback(analysis, title || "");
+    // Run sport-intent again in case refineGenericGarments demoted to a sport-mismatched bucket
+    applyCategoryFallback(analysis, title || "", description || "");
 
     // Normalize booleans
     if (typeof analysis.packagingRelevant === "string") {
