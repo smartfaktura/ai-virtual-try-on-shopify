@@ -1,61 +1,20 @@
-## Fix Wedding Dress category placement, label, and recommendations
+## Why "wedding-dress" shows raw slug
 
-Three small issues to fix:
+The admin Product Visual Scenes page (`src/pages/AdminProductImageScenes.tsx`) renders category headers using its own local `CATEGORIES` list (`CATEGORY_GROUPS` flattened, lines 33–127). That list does not include `wedding-dress`, so `catLabel()` falls back to the raw slug and the collection appears at the bottom in its own ungrouped row instead of inside Fashion.
 
-1. **Label** — sidebar shows raw slug `wedding-dress` instead of "Wedding Dress"
-2. **Wrong group** — sits at bottom on its own; should appear inside the **Fashion** family next to Dresses
-3. **Not recommended** — when a user's onboarding/product is wedding-related, Wedding Dress scenes should be served by the recommended rail
+The customer-facing taxonomy (`src/lib/sceneTaxonomy.ts`) already maps `wedding-dress` → Fashion family with the label "Wedding Dress" — that part is correct. This is purely an admin-UI registration gap.
 
-All fixes are config-only — no schema or scene-data changes.
+## Fix
 
-### 1. `src/lib/sceneTaxonomy.ts`
+**`src/pages/AdminProductImageScenes.tsx`** — add one line to the Fashion group in `CATEGORY_GROUPS` (after `kidswear`, line 45):
 
-**Add to `CATEGORY_FAMILY_MAP`** (groups it under Fashion sidebar/family):
 ```ts
-'wedding-dress': 'Fashion',
+{ value: 'wedding-dress', label: 'Wedding Dress' },
 ```
 
-**Add to `SUB_FAMILY_LABEL_OVERRIDES`** (proper display label):
-```ts
-'wedding-dress': 'Wedding Dress',
-```
+That single addition:
+- Renders the section header as **"Wedding Dress"** (not `wedding-dress`)
+- Groups it under **Fashion** in the category dropdown
+- Makes it selectable when editing/creating other scenes
 
-**Add to `ONBOARDING_TO_COLLECTIONS_MAP`** (so users who picked fashion/dresses subniches get it in recommendations):
-- Extend the existing `fashion: [...]` array with `'wedding-dress'`
-- Add a dedicated entry: `'wedding-dress': ['wedding-dress']` (for users who pick that subcategory directly)
-- Add `'wedding': ['wedding-dress']` and `'bridal': ['wedding-dress']` aliases
-
-### 2. Seed `recommended_scenes` table
-
-Insert 6 rows so `useRecommendedScenes` PASS 1 (sub-category curated) returns the new scenes when the user has `wedding-dress` in `product_subcategories`:
-
-```sql
-INSERT INTO recommended_scenes (scene_id, category, sort_order, created_by)
-VALUES
-  ('wedding-dress-chapel-altar',       'wedding-dress', 1, <admin uuid>),
-  ('wedding-dress-garden-veil',        'wedding-dress', 2, <admin uuid>),
-  ('wedding-dress-grand-staircase',    'wedding-dress', 3, <admin uuid>),
-  ('wedding-dress-beach-golden-hour',  'wedding-dress', 4, <admin uuid>),
-  ('wedding-dress-ballroom-portrait',  'wedding-dress', 5, <admin uuid>),
-  ('wedding-dress-train-walk-away',    'wedding-dress', 6, <admin uuid>);
-```
-
-Also seed under family key for PASS 2 fallback when only family is picked:
-```sql
-INSERT INTO recommended_scenes (scene_id, category, sort_order, created_by)
-VALUES
-  ('wedding-dress-chapel-altar',       'fashion', 90, <admin uuid>),
-  ('wedding-dress-garden-veil',        'fashion', 91, <admin uuid>),
-  ('wedding-dress-ballroom-portrait',  'fashion', 92, <admin uuid>);
-```
-
-(Will use the first existing admin uuid from the `user_roles` table — auto-detected at insert time.)
-
-### 3. Verify existing per-product flow already works
-
-- `categoryUtils.detectProductCategory` already returns `'wedding-dress'` for any product with "wedding dress / bridal gown" keywords → Product Images automatically filters scenes to the new collection. No code change needed there.
-- `categoryLabels['wedding-dress']` already set to "Wedding Dress".
-
-### Out of scope
-- No new SEO landing page, no Visual Library family tab override, no admin UI changes.
-- Scene content / preview thumbnails unchanged (uploaded later via Bulk Preview Upload).
+No DB changes, no other files.

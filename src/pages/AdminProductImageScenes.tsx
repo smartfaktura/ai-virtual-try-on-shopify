@@ -43,6 +43,7 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
       { value: 'swimwear', label: 'Swimwear' },
       { value: 'lingerie', label: 'Lingerie' },
       { value: 'kidswear', label: 'Kidswear' },
+      { value: 'wedding-dress', label: 'Wedding Dress' },
     ],
   },
   {
