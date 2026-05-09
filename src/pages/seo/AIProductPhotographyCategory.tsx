@@ -125,6 +125,7 @@ export default function AIProductPhotographyCategory() {
       <main>
         <CategoryBreadcrumbs page={page} />
         <CategoryHero page={page} />
+        <CategorySubcategoryChips page={page} />
         <CategoryBuiltForEveryCategory page={page} />
         
         <CategoryVisualOutputs page={page} />
