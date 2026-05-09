@@ -105,12 +105,12 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     slug: 'home-furniture',
     url: '/ai-product-photography/home-furniture',
     description:
-      'Place home decor and furniture products into realistic interiors, styled rooms, catalog visuals, and lifestyle scenes.',
-    subcategories: ['Home Decor', 'Furniture', 'Vases', 'Candles', 'Lighting', 'Tables', 'Chairs', 'Sofas'],
-    shotCount: 60,
-    previewImage: PREVIEW('1776250523409-wvjm1w'),
-    previewImages: ['1776250523409-wvjm1w', '1776669395926-r2grx3', '1776250518879-ichrf6'],
-    alt: 'AI home decor product photography example: color hero decor campaign visual.',
+      'Place furniture and home decor into living rooms, bedrooms, dining rooms, home offices, and outdoor scenes — catalog and PDP-ready.',
+    subcategories: ['Living Room', 'Bedroom', 'Dining Room', 'Home Office', 'Hallway', 'Outdoor Furniture', 'Home Decor', 'Vases', 'Candles', 'Lighting', 'Sofas', 'Chairs'],
+    shotCount: 150,
+    previewImage: PREVIEW('1778050204000-gl9kym'),
+    previewImages: ['1778050204000-gl9kym', '1778048568910-lx1q0n', '1776588673759-kwlh8f'],
+    alt: 'AI furniture product photography example: editorial living room salon scene.',
   },
   {
     name: 'Food & Beverage',
