@@ -582,12 +582,18 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     groupName: 'Home & Furniture',
     seoTitle: 'AI Home & Furniture Product Photography | VOVV.AI',
     metaDescription:
-      'AI furniture and home decor product photography. Place sofas, beds, dining sets, desks, and decor into living rooms, bedrooms, dining rooms, and outdoor scenes — from one photo.',
+      'AI furniture and home decor product photography. Place sofas, beds, dining sets, desks, vases, and lighting into Japandi, Parisian, Mediterranean, and modern interiors — styled rooms and catalog visuals from a single photo.',
     h1Lead: 'AI Furniture & Home Decor Product Photography',
     h1Highlight: 'for Home & Furniture Brands',
     heroEyebrow: 'Furniture · Rooms · Decor',
     heroSubheadline:
-      'Drop furniture and home decor into living rooms, bedrooms, dining rooms, home offices, hallways, and outdoor scenes — styled rooms, catalog visuals, and product page images from a single photo.',
+      'Place sofas, beds, dining sets, desks, vases, and lighting into editorial salons, linen-soft bedrooms, travertine dining halls, concrete studios, and Mediterranean terraces — material-true PDPs, lifestyle stories, and catalog visuals from a single photo',
+    heroCollage: [
+      { subCategory: 'Living Room',       imageId: '1778050204000-gl9kym', alt: 'AI furniture product photography example: grand atelier salon living room scene.' },
+      { subCategory: 'Bedroom',           imageId: '1778048568910-lx1q0n', alt: 'AI furniture product photography example: linen cloud bedroom suite.' },
+      { subCategory: 'Dining Room',       imageId: '1778071100932-306rp9', alt: 'AI furniture product photography example: warm travertine dining hall.' },
+      { subCategory: 'Outdoor Furniture', imageId: '1778061177176-1ii0an', alt: 'AI outdoor furniture product photography example: mediterranean stone terrace.' },
+    ],
     primaryKeyword: 'AI furniture product photography',
     secondaryKeywords: [
       'AI home decor product photography',
