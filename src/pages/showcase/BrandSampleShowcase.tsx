@@ -74,7 +74,7 @@ export default function BrandSampleShowcase() {
             Your product, your full campaign
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            Send one photo of anything — a dress, a hat, an energy drink, a sofa. We return a complete editorial library. The sample below was built for a dress brand.
+            Send one photo of anything - a dress, a hat, an energy drink, a sofa. We return a complete editorial library. The sample below was built for a dress brand.
           </p>
         </div>
       </section>
@@ -137,7 +137,7 @@ export default function BrandSampleShowcase() {
       <section className="pb-16 lg:pb-24">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-[#0f172a] text-lg sm:text-xl leading-relaxed font-medium">
-            Yours would look like this — but with your products
+            Yours would look like this - but with your products!
           </p>
         </div>
       </section>
