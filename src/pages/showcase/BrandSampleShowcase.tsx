@@ -67,15 +67,13 @@ export default function BrandSampleShowcase() {
       <section className="pt-28 pb-14 lg:pt-40 lg:pb-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-5">
-            Prepared for your brand
+            For your brand
           </p>
           <h1 className="text-[#0f172a] text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
-            A glimpse of your dress collection,{' '}
-            <br className="hidden sm:block" />
-            reimagined
+            Your collection, reimagined
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            From a single product photo, VOVV.AI generates a complete editorial library — campaign, on-model, essentials and detail shots. Below is a sample built from our Dresses scene library.
+            One product photo. A full editorial library. Below — a sample on dresses
           </p>
         </div>
       </section>
