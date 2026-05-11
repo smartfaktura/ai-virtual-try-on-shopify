@@ -1,26 +1,12 @@
-# Tighten copy on `/showcase/brandname`
+# Clarify hero subhead
 
-Trim the page to a punchier, less wordy version. Visual structure stays identical (hero → stats → gallery → mid-strip → final CTA).
+The current subhead "One product photo. A full editorial library. Below — a sample on dresses" reads ambiguously (sample of what? for whom?).
 
-## Copy changes
+## Change
 
-**Hero**
-- Eyebrow: `PREPARED FOR YOUR BRAND` → `FOR YOUR BRAND`
-- H1: `A glimpse of your dress collection, reimagined` → `Your collection, reimagined`
-- Subhead: long sentence → `One product photo. A full editorial library. Below — a sample on dresses.`
+In `src/pages/showcase/BrandSampleShowcase.tsx`, hero subhead only:
 
-**Stats** — labels only, more direct
-- `Sample Visuals` → `Visuals`
-- `Generation Time` → `Made in`
-- `Scene Categories` → `Scene Sets`
+- Old: `One product photo. A full editorial library. Below — a sample on dresses`
+- New: `One product photo. A full editorial library. Below — a sample we built for a dress brand like yours`
 
-**Mid CTA strip**
-- Old: "This is a sample. Your real collection would feature your products, your fit, your fabric — generated in minutes"
-- New: `Yours would look like this — but with your products`
-
-**Final CTA**
-- H2 stays: `Want this for your brand?`
-- Sub: `Send one product photo. We'll build the rest` (drop "your visual library")
-- Buttons unchanged
-
-No layout, color, image, or routing changes.
+Nothing else changes (eyebrow, H1, stats, gallery, CTAs all stay).
