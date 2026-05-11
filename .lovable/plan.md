@@ -1,45 +1,47 @@
-Redesign `/mnt/documents/scene-request-broadcast.html` to match the existing `vovv-newsletter-week-update.html` aesthetic and replace the awkward "Hey — quick one" copy with an engaging, sectioned layout.
+# Generic Brand Sample Showcase
 
-## New structure (620px white card on stone bg)
+Create a reusable, noindex sample landing page modeled after `/showcase/brite` that you can send to fashion brands as a "here's what we'd do for you" preview. Uses all 30 Dresses category preview images mixed into one editorial grid.
 
-1. **HERO** — dark gradient (#0f172a → #1e293b)
-   - Eyebrow chip: "OPEN REQUESTS · WEEK 19"
-   - Banner image (existing hosted `scene-request-banner.jpg`) full-bleed at top of hero with rounded corners
-   - Headline (28px, light + bold mix): "Tell us the scene you wish existed"
-   - Subhead: "Every week we add new scenes to VOVV.AI. This week, you pick what we build"
+## Route
 
-2. **HOW IT WORKS** — 3-column row
-   - Reply → one line, a screenshot, a mood
-   - We build → within 1–2 business days
-   - It's live → we email you when your scene ships
+- New page: `/showcase/brandname` (literal placeholder slug — easy to duplicate later as `/showcase/zara`, etc.)
+- Registered in `src/App.tsx` next to the existing Brite route, lazy-loaded
+- `noindex` via `SEOHead`
 
-3. **WHAT COUNTS AS A SCENE** — examples block
-   - Pill-style chips: "Parisian café · Tokyo neon · Tuscan villa · Brutalist loft · Maldives overwater · Aspen lodge · Soho rooftop · Marrakech riad"
-   - Short intro: "A setting, a mood, a reference shot. Real or imagined"
+## File
 
-4. **CTA SECTION** — pill-shaped dark button "Reply with your scene idea" → `mailto:hello@vovv.ai` with prefilled subject + body. Small note under: "or send a screenshot, mood reference, link — whatever's easiest"
+`src/pages/showcase/BrandSampleShowcase.tsx` — same structure/styling language as `BriteShowcase.tsx`:
 
-5. **FOUNDER NOTE** — short, signed
-   - "I read every reply personally. The best ideas usually take one line. — Tomas, founder of VOVV.AI"
+1. **Hero**
+   - Eyebrow: `PREPARED FOR YOUR BRAND`
+   - H1: `A glimpse of your dress collection, reimagined`
+   - Subhead: "From a single product photo, VOVV.AI generates a complete editorial library — campaign, on-model, essentials and detail shots. Below is a sample built from our Dresses scene library."
 
-6. **FOOTER** — unsubscribe merge tag `{{{RESEND_UNSUBSCRIBE_URL}}}`, © 2026 VOVV.AI · A product by 123Presets
+2. **Stats row** (3 cards, same style as Brite)
+   - `30` Sample Visuals
+   - `~60s` Generation Time
+   - `2` Scene Categories (Editorial Portraits + Essential Shots)
 
-## Visual matching
+3. **Gallery**
+   - Pulls all 30 Dresses preview images (hardcoded inline array of `{ url, scene, category }` — same pattern as Brite, no DB dependency at runtime)
+   - Order shuffled deterministically so Editorial Portraits and Essential Shots are mixed (not grouped) for a richer first impression
+   - 2 / 3 / 4-col responsive grid, 4:5 aspect, hover overlay shows scene title + small category label
+   - Click → lightbox (reuse Brite's lightbox pattern)
 
-- Stone `#f5f5f4` body bg, white `#ffffff` 620px card with `border-radius:16px`
-- Inter font, eyebrow labels 10px / 2px tracking / uppercase / `#999`
-- Section headers 20px / 600 / `#0f172a`
-- Body 14px / `#555` / line-height 1.7
-- 1px `#e7e5e4` dividers between sections
-- All inline styles, table-based, MSO-safe
-- Keep banner image URL: `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/landing-assets/email%2Fscene-request-banner.jpg`
+4. **Mid CTA strip** (new, not in Brite)
+   - One line: "This is a sample. Your real collection would feature your products, your fit, your fabric — generated in minutes."
 
-## Subject + preview
+5. **Final CTA** (same dark `#0f172a` block as Brite)
+   - H2: `Want this for your brand?`
+   - Sub: "Send us one product photo and we'll build your visual library."
+   - Buttons: `Try free now` → `/auth`, `Explore more examples` → `/discover`
 
-- Subject (default): "What scene should we build for you next?"
-- Preview text: "Reply with one line — we'll build your scene in 1–2 days"
+## Image source
+
+All 30 URLs already live at `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/...` (pulled from `product_image_scenes` where `category_collection='dresses'` and `is_active=true`). Hardcoded in the component so the page is fully static and load-fast.
 
 ## Out of scope
 
-- No code, edge function, or DB changes — still a manual Resend broadcast paste
-- No new image uploads (banner already hosted)
+- No CMS/dynamic brand prop (you asked for one sample page; if you later want `/showcase/[slug]` driven by params, that's a follow-up)
+- No DB or edge function changes
+- No nav link added (page is meant to be sent privately, like Brite)
