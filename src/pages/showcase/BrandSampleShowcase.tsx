@@ -46,9 +46,9 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: Images, value: '30', label: 'Sample Visuals' },
-  { icon: Clock, value: '~60s', label: 'Generation Time' },
-  { icon: Layers, value: '2', label: 'Scene Categories' },
+  { icon: Images, value: '30', label: 'Visuals' },
+  { icon: Clock, value: '~60s', label: 'Made in' },
+  { icon: Layers, value: '2', label: 'Scene Sets' },
 ];
 
 export default function BrandSampleShowcase() {
@@ -67,15 +67,13 @@ export default function BrandSampleShowcase() {
       <section className="pt-28 pb-14 lg:pt-40 lg:pb-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-5">
-            Prepared for your brand
+            For your brand
           </p>
           <h1 className="text-[#0f172a] text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
-            A glimpse of your dress collection,{' '}
-            <br className="hidden sm:block" />
-            reimagined
+            Your collection, reimagined
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            From a single product photo, VOVV.AI generates a complete editorial library — campaign, on-model, essentials and detail shots. Below is a sample built from our Dresses scene library.
+            One product photo. A full editorial library. Below — a sample on dresses
           </p>
         </div>
       </section>
@@ -138,7 +136,7 @@ export default function BrandSampleShowcase() {
       <section className="pb-16 lg:pb-24">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-[#0f172a] text-lg sm:text-xl leading-relaxed font-medium">
-            This is a sample. Your real collection would feature your products, your fit, your fabric — generated in minutes
+            Yours would look like this — but with your products
           </p>
         </div>
       </section>
@@ -175,7 +173,7 @@ export default function BrandSampleShowcase() {
             Want this for your brand?
           </h2>
           <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">
-            Send us one product photo and we'll build your visual library
+            Send one product photo. We'll build the rest
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
             <Link
