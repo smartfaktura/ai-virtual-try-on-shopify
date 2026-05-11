@@ -46,9 +46,9 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: Images, value: '30', label: 'Sample Visuals' },
-  { icon: Clock, value: '~60s', label: 'Generation Time' },
-  { icon: Layers, value: '2', label: 'Scene Categories' },
+  { icon: Images, value: '30', label: 'Visuals' },
+  { icon: Clock, value: '~60s', label: 'Made in' },
+  { icon: Layers, value: '2', label: 'Scene Sets' },
 ];
 
 export default function BrandSampleShowcase() {
