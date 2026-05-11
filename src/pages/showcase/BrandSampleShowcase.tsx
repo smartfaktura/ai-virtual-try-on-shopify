@@ -173,7 +173,7 @@ export default function BrandSampleShowcase() {
             Want this for your brand?
           </h2>
           <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">
-            Send us one product photo and we'll build your visual library
+            Send one product photo. We'll build the rest
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
             <Link
