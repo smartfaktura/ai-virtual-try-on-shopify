@@ -70,11 +70,11 @@ export default function BrandSampleShowcase() {
             For your brand
           </p>
           <h1 className="text-[#0f172a] text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
-            Your collection, reimagined
+            See your products as a full visual library
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            One product photo. A full editorial library.<br />
-            Dress, hat, energy drink, sofa — anything. Below, a sample for a dress brand like yours
+            Send us one product photo — a dress, a hat, an energy drink, a sofa, anything.<br />
+            We turn it into a full editorial library. Below is a sample we built for a dress brand.
           </p>
         </div>
       </section>
