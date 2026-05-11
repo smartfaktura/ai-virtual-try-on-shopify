@@ -1,29 +1,16 @@
-# Sharpen hero copy
+## Reshuffle gallery image order
 
-Two fixes on `src/pages/showcase/BrandSampleShowcase.tsx`:
+The current `IMAGES` array on `/showcase/brandname` (`src/pages/showcase/BrandSampleShowcase.tsx`) groups several Editorial shots in long runs (positions 15–29). Visually it starts mixed, then becomes a wall of editorial.
 
-## 1. H1 — "Your collection, reimagined" is too abstract
+### Change
 
-- Old: `Your collection, reimagined`
-- New: `See your products as a full visual library`
+Reorder the `IMAGES` array so:
+- Editorial and Essentials cards are **interleaved more evenly** across the full grid (no more than ~2 editorials in a row).
+- Adjacent cards have **visual contrast** — alternate between flat/ghost-mannequin shots, on-model portraits, full-body movement, and mood/location editorials so the eye keeps moving.
+- First row (4 cards on desktop) leads with a strong hero mix: hero portrait → ghost mannequin → editorial campaign → on-model.
+- No images added or removed; only order changes.
 
-Direct and benefit-led — no metaphor, immediately tells the visitor what they're about to see.
+### Out of scope
 
-## 2. Subhead — clearer wording + missing period
-
-The current copy is multi-sentence body copy, so it keeps full punctuation (per design rule). Currently the last sentence has no period.
-
-- Old:
-  ```
-  One product photo. A full editorial library.
-  Dress, hat, energy drink, sofa — anything. Below, a sample for a dress brand like yours
-  ```
-- New:
-  ```
-  Send us one product photo — a dress, a hat, an energy drink, a sofa, anything.
-  We turn it into a full editorial library. Below is a sample we built for a dress brand.
-  ```
-
-Two clean sentences, both end with a period. Removes the awkward "for a dress brand like yours" and the standalone "anything." fragment.
-
-Nothing else changes (eyebrow, stats, gallery, mid-strip, CTA all stay).
+- No copy, layout, lightbox, or styling changes
+- No changes to stats, hero, CTA sections
