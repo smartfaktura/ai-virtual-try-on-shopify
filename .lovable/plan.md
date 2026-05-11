@@ -1,45 +1,51 @@
-Replace all 6 wedding-dress scenes with modern atelier/studio aesthetics — keep the structure (full-body bridal hero, dress accuracy directives, camera spec) but swap the wedding-photoshoot settings (chapel, garden, staircase, beach, ballroom) for contemporary studio environments. Existing previews stay until you regenerate them.
+# Scene-Request Broadcast Email (for Resend)
 
-New 6 scenes (titles, sub_category stays "Bridal Editorial"):
+You already broadcast marketing through Resend (Admin → Email Marketing). This is a one-off broadcast you'll paste into Resend's editor — no code changes to the app.
 
-1. **Concrete Plinth** (`wedding-dress-chapel-altar` → retitled "Concrete Plinth")
-   - Polished microcement floor, large warm-grey concrete wall, single soft window light from camera-left
-   - Model standing centered, three-quarter body angle, train pooled on the concrete floor
-   - 50mm, f/2.8, eye-level, brutalist minimal mood
+## Deliverable
 
-2. **Atelier Mirror** (`wedding-dress-garden-veil` → retitled "Atelier Mirror")
-   - Modern bridal atelier: pale oak floor, full-length antique brass mirror, neutral linen drapery in background
-   - Model captured in a quiet fitting moment, reflection visible at edge, soft tulle/veil draped over a wooden stool
-   - Diffused north-window daylight, warm shadow falloff
+A standalone HTML file at `/mnt/documents/scene-request-broadcast.html` styled to match the existing VOVV.AI email shell (`supabase/functions/_shared/email-render.ts`):
+- Inter font, navy `#0f172a` headline, stone `#f5f5f4` accents, 560px container
+- "VOVV.AI" wordmark header
+- Short personal-feel body copy
+- Big visual placeholder block (dashed border, 16:9, "Drop your scene image here" hint) so you remember to drag in a reference image inside the Resend editor before sending
+- Single CTA: "Reply with your scene"
+- `mailto:hello@vovv.ai?subject=Scene%20idea` fallback so click also opens reply
+- Footer with unsubscribe merge tag (`{{{RESEND_UNSUBSCRIBE_URL}}}`) so it works with your Resend audience
 
-3. **Sculpture Studio** (`wedding-dress-grand-staircase` → retitled "Sculpture Studio")
-   - High-ceiling concrete studio, plaster-finished walls, single tall industrial window
-   - Model on a low travertine block, train cascading off the platform like drapery on a sculpture
-   - Cinematic side light, deep shadow on opposite side, gallery-like calm
+## Subject line options (3 to pick from in Resend)
 
-4. **Seamless Bone** (`wedding-dress-beach-golden-hour` → retitled "Seamless Bone")
-   - Pure seamless paper backdrop in warm bone/ivory, raw concrete floor beneath
-   - Full-length editorial pose, train fanned forward on the floor
-   - Two soft strip-box lights, gentle gradient on backdrop, quiet luxury campaign feel
+1. `What scene should we build next?`
+2. `Imagine a scene — we'll build it`
+3. `Tell us your dream scene. Reply with one line`
 
-5. **Linen Curtain Studio** (`wedding-dress-ballroom-portrait` → retitled "Linen Curtain Studio")
-   - Soft floor-to-ceiling raw linen curtain backdrop, warm concrete floor
-   - Model standing relaxed, hands at sides, full silhouette of gown isolated against the curtain
-   - Large diffused softbox front-left, subtle wind movement on tulle/veil
+Default in the file: option 1. Preview text: `Reply with the scene you wish existed in VOVV — we'll build it in 1–2 days`
 
-6. **Atelier Walk Away** (`wedding-dress-train-walk-away` → keep concept, restage)
-   - Modern atelier interior, polished concrete floor reflecting train
-   - Model walking away from camera, full back of dress and train as the hero
-   - Cool north-window daylight from the right, minimalist gallery mood
+## Body copy (draft)
 
-Implementation:
+> Hey —
+>
+> Quick one. We're adding new scenes every week, and we'd rather build the ones *you* actually need.
+>
+> Picture the scene you wish existed in VOVV.AI for your products — a setting, a mood, a vibe, a reference shot. Anything.
+>
+> **Just reply to this email.** One line, a moodboard, a screenshot — whatever's easiest. We'll build it within 1–2 business days and ping you when it's live.
+>
+> — Tomas, founder
 
-- Single `UPDATE` per scene on `product_image_scenes` modifying `title`, `description`, and `prompt_template`. Each new prompt keeps:
-  - `[MODEL IMAGE] wearing [PRODUCT IMAGE] {{productName}}`
-  - "wedding dress is the absolute hero of the frame"
-  - The closing "Render the dress with photographic accuracy…" directive
-  - Aspect ratio guidance (4:5 portrait via existing scene_type)
-- `scene_id`, `sort_order`, `category_collection`, `sub_category`, `trigger_blocks` (`personDetails`, `outfitConfig`, etc.), and previews stay untouched.
-- No frontend changes needed — these are DB-only updates via the data tool.
+## Image placeholder
 
-After update, the preview thumbnails will still show the old wedding-photoshoot images until you regenerate them in the admin Scene Previews tool — call that out to the user.
+A `<table>` block with dashed border + caption *"Optional: drag a reference image here in Resend before sending"*. You replace it inside the Resend editor with a real `<img>` (Resend lets you drag-drop into HTML blocks).
+
+## How you'll use it
+
+1. Open the file from `/mnt/documents/`
+2. Resend → Broadcasts → New → "Code" view → paste the HTML
+3. Pick subject from the 3 options above
+4. Drag your reference image into the placeholder block
+5. Select your audience (the one synced from `marketing_emails_opted_in` profiles) → Send
+
+## Out of scope
+
+- No new edge function, no template registration, no DB changes — this is a manual Resend broadcast
+- Not a transactional send (it goes to a list, so it lives in Resend, not in `send-transactional-email`)
