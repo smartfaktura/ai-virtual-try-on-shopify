@@ -136,7 +136,7 @@ export default function BrandSampleShowcase() {
       <section className="pb-16 lg:pb-24">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-[#0f172a] text-lg sm:text-xl leading-relaxed font-medium">
-            This is a sample. Your real collection would feature your products, your fit, your fabric — generated in minutes
+            Yours would look like this — but with your products
           </p>
         </div>
       </section>
