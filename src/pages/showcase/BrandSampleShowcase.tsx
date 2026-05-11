@@ -73,7 +73,7 @@ export default function BrandSampleShowcase() {
             Your collection, reimagined
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            One product photo. A full editorial library. Below — a sample on dresses
+            One product photo. A full editorial library. Below — a sample we built for a dress brand like yours
           </p>
         </div>
       </section>
