@@ -1,51 +1,24 @@
-# Scene-Request Broadcast Email (for Resend)
+Update `/mnt/documents/scene-request-broadcast.html` to lead with the uploaded banner image ("Scene Requests Open / What should we build next?"), then the body copy.
 
-You already broadcast marketing through Resend (Admin → Email Marketing). This is a one-off broadcast you'll paste into Resend's editor — no code changes to the app.
+## Steps
 
-## Deliverable
+1. Copy `user-uploads://vovv.ai-1-3.jpg` to `public/email/scene-request-banner.jpg` AND upload it to the public `landing-assets` Supabase storage bucket so the email has a stable absolute URL (Resend / Gmail need a hosted URL — local files won't render in inboxes).
+2. Rewrite the HTML email so the structure becomes:
+   - Full-width banner `<img>` (560px wide, responsive `max-width:100%`, `display:block`, alt text "Scene Requests Open — what should we build next?") at the very top, replacing the current "VOVV.AI" wordmark header. The banner already contains the headline so we drop the duplicate H1.
+   - Short intro line under the banner
+   - Existing body copy (slightly tightened since the banner now carries the headline)
+   - Keep the "Optional: drag a reference image here in Resend" placeholder REMOVED — banner replaces it
+   - Reply CTA + footer + unsubscribe merge tag unchanged
+3. Keep subject line options the same (default: "What scene should we build next?"). Update preview text to "Tell us the scene you wish existed in VOVV.AI — we'll build it in 1–2 days".
+4. Keep all styling inline, Inter font, 560px container, navy/stone palette — matches existing VOVV.AI email shell.
 
-A standalone HTML file at `/mnt/documents/scene-request-broadcast.html` styled to match the existing VOVV.AI email shell (`supabase/functions/_shared/email-render.ts`):
-- Inter font, navy `#0f172a` headline, stone `#f5f5f4` accents, 560px container
-- "VOVV.AI" wordmark header
-- Short personal-feel body copy
-- Big visual placeholder block (dashed border, 16:9, "Drop your scene image here" hint) so you remember to drag in a reference image inside the Resend editor before sending
-- Single CTA: "Reply with your scene"
-- `mailto:hello@vovv.ai?subject=Scene%20idea` fallback so click also opens reply
-- Footer with unsubscribe merge tag (`{{{RESEND_UNSUBSCRIBE_URL}}}`) so it works with your Resend audience
+## Technical notes
 
-## Subject line options (3 to pick from in Resend)
-
-1. `What scene should we build next?`
-2. `Imagine a scene — we'll build it`
-3. `Tell us your dream scene. Reply with one line`
-
-Default in the file: option 1. Preview text: `Reply with the scene you wish existed in VOVV — we'll build it in 1–2 days`
-
-## Body copy (draft)
-
-> Hey —
->
-> Quick one. We're adding new scenes every week, and we'd rather build the ones *you* actually need.
->
-> Picture the scene you wish existed in VOVV.AI for your products — a setting, a mood, a vibe, a reference shot. Anything.
->
-> **Just reply to this email.** One line, a moodboard, a screenshot — whatever's easiest. We'll build it within 1–2 business days and ping you when it's live.
->
-> — Tomas, founder
-
-## Image placeholder
-
-A `<table>` block with dashed border + caption *"Optional: drag a reference image here in Resend before sending"*. You replace it inside the Resend editor with a real `<img>` (Resend lets you drag-drop into HTML blocks).
-
-## How you'll use it
-
-1. Open the file from `/mnt/documents/`
-2. Resend → Broadcasts → New → "Code" view → paste the HTML
-3. Pick subject from the 3 options above
-4. Drag your reference image into the placeholder block
-5. Select your audience (the one synced from `marketing_emails_opted_in` profiles) → Send
+- Banner hosted at `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/landing-assets/email/scene-request-banner.jpg` (uses the existing public `landing-assets` bucket, no migration needed).
+- Image dimensions in HTML: `width="560"` with `style="max-width:100%;height:auto;display:block;"` for retina + mobile.
+- No code, DB, or edge function changes — still a manual Resend broadcast paste.
 
 ## Out of scope
 
-- No new edge function, no template registration, no DB changes — this is a manual Resend broadcast
-- Not a transactional send (it goes to a list, so it lives in Resend, not in `send-transactional-email`)
+- No new edge function, template registration, or audience changes
+- No image resizing/optimization beyond the original upload (file is already web-sized)
