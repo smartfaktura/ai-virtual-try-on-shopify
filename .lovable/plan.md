@@ -1,16 +1,17 @@
-## Reshuffle gallery image order
+## Tighten the showcase stats strip
 
-The current `IMAGES` array on `/showcase/brandname` (`src/pages/showcase/BrandSampleShowcase.tsx`) groups several Editorial shots in long runs (positions 15–29). Visually it starts mixed, then becomes a wall of editorial.
+On `/showcase/brandname` the stats row currently shows three cards: **30 Visuals · ~60s Made in · 2 Scene Sets**. Update it as follows.
 
-### Change
+### Changes (in `src/pages/showcase/BrandSampleShowcase.tsx`)
 
-Reorder the `IMAGES` array so:
-- Editorial and Essentials cards are **interleaved more evenly** across the full grid (no more than ~2 editorials in a row).
-- Adjacent cards have **visual contrast** — alternate between flat/ghost-mannequin shots, on-model portraits, full-body movement, and mood/location editorials so the eye keeps moving.
-- First row (4 cards on desktop) leads with a strong hero mix: hero portrait → ghost mannequin → editorial campaign → on-model.
-- No images added or removed; only order changes.
+1. **Remove the "Scene Sets" card** entirely. The grid drops from 3 columns to 2 columns and stays centered with a tighter `max-w-xl` so two cards don't look stranded.
+2. **Fix the time value** from `~60s` to `73s` (real generation time, no tilde).
+3. **Upgrade the icons** for a more refined, editorial feel:
+   - Visuals: swap `Images` → `LayoutGrid` (cleaner geometric mark that reads as "a library of shots")
+   - Made in: swap `Clock` → `Timer` (more dynamic, suggests speed rather than a wall clock)
+   - Bump icon size from `18` → `20` and color from muted slate `#94a3b8` to brand ink `#0f172a` at 70% opacity, so they feel intentional instead of decorative.
 
 ### Out of scope
 
-- No copy, layout, lightbox, or styling changes
-- No changes to stats, hero, CTA sections
+- No layout, hero, gallery, lightbox, or CTA changes
+- No copy changes outside the two stat cards

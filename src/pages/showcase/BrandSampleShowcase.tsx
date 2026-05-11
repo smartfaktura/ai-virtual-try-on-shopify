@@ -3,7 +3,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { LandingNav } from '@/components/landing/LandingNav';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { Clock, Images, Layers, X, ArrowRight } from 'lucide-react';
+import { LayoutGrid, Timer, X, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const BASE =
@@ -47,9 +47,8 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: Images, value: '30', label: 'Visuals' },
-  { icon: Clock, value: '~60s', label: 'Made in' },
-  { icon: Layers, value: '2', label: 'Scene Sets' },
+  { icon: LayoutGrid, value: '30', label: 'Visuals' },
+  { icon: Timer, value: '73s', label: 'Made in' },
 ];
 
 export default function BrandSampleShowcase() {
@@ -81,14 +80,14 @@ export default function BrandSampleShowcase() {
 
       {/* Stats */}
       <section className="pb-12 lg:pb-20">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="grid grid-cols-3 gap-4">
+        <div className="max-w-xl mx-auto px-6">
+          <div className="grid grid-cols-2 gap-4">
             {STATS.map((s) => (
               <div
                 key={s.label}
                 className="flex flex-col items-center gap-2 rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] py-6 px-3"
               >
-                <s.icon size={18} className="text-[#94a3b8]" />
+                <s.icon size={20} strokeWidth={1.75} className="text-[#0f172a]/70" />
                 <span className="text-[#0f172a] text-2xl sm:text-3xl font-semibold tracking-tight">
                   {s.value}
                 </span>
