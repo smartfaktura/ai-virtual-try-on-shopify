@@ -1549,5 +1549,13 @@ export function buildDynamicPrompt(
     prompt += ' ' + details.customNote;
   }
 
+  // ── Padel footwear validation saugiklis ──
+  // Repeated at the very end of the prompt so the image model gets one final, unambiguous
+  // shoe spec — earlier scene-level FOOTWEAR lines are often overridden by the model's
+  // default sneaker bias when an athlete is on a court.
+  if ((scene.id || '').toLowerCase().includes('padel')) {
+    prompt += ' PADEL FOOTWEAR VALIDATION (HARD CONSTRAINT — overrides any default sneaker styling): The model MUST wear authentic logo-free padel/tennis court shoes — low-cut court silhouette sitting below the ankle bone, rounded reinforced rubber toe cap wrapping the front, visible lateral side-support panels on the sidewalls, padded collar with a structured stable heel counter, firm flat non-marking gum or white rubber court sole with herringbone or clay-court tread on the outsole, predominantly pristine white with optional subtle cream/grey/tonal accents only. Worn with low white ankle socks. STRICTLY FORBIDDEN: running shoes, knit-upper sock-runner sneakers, chunky lifestyle sneakers, fashion trainers, basketball shoes, platform sneakers, retro dad-shoes, slip-ons, sandals, hiking shoes, skate shoes, Converse-style canvas shoes, Vans-style flat sneakers, ANY brand logos, wordmarks, swooshes, three-stripe motifs, monograms, or text on the footwear. The shoes must read at first glance as real performance padel/tennis court shoes.';
+  }
+
   return cleanupPrompt(prompt);
 }
