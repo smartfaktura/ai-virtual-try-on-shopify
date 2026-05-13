@@ -106,13 +106,13 @@ export default function MakaraWearShowcase() {
       <section className="pt-28 pb-14 lg:pt-40 lg:pb-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-5">
-            For MAKARA WEAR
+            Brand example · MAKARA WEAR
           </p>
           <h1 className="text-[#0f172a] text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
-            Your swimwear, a full editorial drop
+            This is what VOVV.AI makes from one product photo
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            From a single product photo, VOVV.AI built this complete swim campaign — 75 visuals, ready for web, social, and lookbook
+            A complete swim campaign — 75 visuals, ready for web, social, and lookbook
           </p>
         </div>
       </section>
