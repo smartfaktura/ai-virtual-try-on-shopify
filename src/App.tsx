@@ -18,6 +18,7 @@ const TryShot = lazy(() => import('@/pages/TryShot'));
 const Home = lazy(() => import('@/pages/Home'));
 const BriteShowcase = lazy(() => import('@/pages/showcase/BriteShowcase'));
 const BrandSampleShowcase = lazy(() => import('@/pages/showcase/BrandSampleShowcase'));
+const MakaraWearShowcase = lazy(() => import('@/pages/showcase/MakaraWearShowcase'));
 
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
