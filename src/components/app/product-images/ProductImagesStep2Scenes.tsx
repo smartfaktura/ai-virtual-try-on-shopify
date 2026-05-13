@@ -216,12 +216,17 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
 
     // Keyword fallback
     const text = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
+    let foundForProduct = false;
     for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      if (keywords.length === 0) continue; // skip 'other' (no keywords)
       if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(text))) {
         matched.add(catId);
+        foundForProduct = true;
         break;
       }
     }
+    // Nothing matched for this product → bucket it into the universal "Other" tab
+    if (!foundForProduct) matched.add('other');
   }
   return matched;
 }
