@@ -167,6 +167,7 @@ const App = () => {
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/showcase/brite" element={<BriteShowcase />} />
             <Route path="/showcase/brandname" element={<BrandSampleShowcase />} />
+            <Route path="/showcase/makarawear" element={<MakaraWearShowcase />} />
 
 
             {/* Feature pages */}
