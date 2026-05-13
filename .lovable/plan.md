@@ -1,30 +1,22 @@
 ## Scope
-Edit only `src/pages/showcase/MakaraWearShowcase.tsx`. No data, routing, or component changes.
+Edit only `src/pages/showcase/MakaraWearShowcase.tsx`. Update the `IMAGES` array and the visuals stat tile.
 
-## Changes
+## Remove these scenes (all variants)
+- `Aesthetic Color Towel and Fabric Story` (1)
+- `Rocky Coast Swim Editorial` (2)
+- `Shoreline Walk or Waterline Pause` (2)
+- `Towel Wrap After Swim` (2)
 
-### 1. Hero copy (lines 108–116)
-- Eyebrow: `Brand example · MAKARA WEAR`
-- H1: `This is what VOVV.AI makes from one product photo`
-- Subtitle: `A complete swim campaign — 75 visuals, ready for web, social, and lookbook`
+Total removed: **7 entries**. New count: **75 → 68 visuals**. Stat tile updated to `68`. Subtitle in hero updated from "75 visuals" to "68 visuals".
 
-### 2. Remove the "Yours would look like this" section (lines 161–167)
-Delete entire section block. Bottom dark CTA section (`Want this for your brand?` + buttons) stays untouched.
+## Reorder
+Move the **last 3 entries of the current list** to the top, preserving their order:
+1. `Walking Along Pool Edge`
+2. `Wide Frame Coastal Swim Editorial`
+3. `Yacht Bow Swim Editorial`
 
-### 3. Re-shuffle the image grid
-Replace current alternating order with a deterministic interleave that pulls bottom-half images upward and spreads variants:
-
-```text
-1. Split current IMAGES list in half: top[0..37], bottom[38..74]
-2. Build new list by interleaving bottom-first:
-   bottom[0], top[0], bottom[1], top[1], ...
-3. Apply a stride pass to ensure no two adjacent items share the same scene
-   (swap with next non-conflicting index when collision detected)
-```
-
-This produces a fresh visual mix where previously-bottom images appear near the top, while keeping all 75 entries.
-
-### 4. SEO `<title>` / `<description>` — leave as-is (already brand-example framed).
+These become positions 1, 2, 3. The remainder of the list keeps its current order (minus removed scenes).
 
 ## Out of scope
-- Stats tile values, lightbox behavior, dark CTA section, route, navigation.
+- No layout, CTA, lightbox, or routing changes.
+- SEO copy unchanged.
