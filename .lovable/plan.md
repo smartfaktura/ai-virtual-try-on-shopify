@@ -1,22 +1,10 @@
 ## Scope
-Edit only `src/pages/showcase/MakaraWearShowcase.tsx`. Update the `IMAGES` array and the visuals stat tile.
+Edit only `src/pages/showcase/MakaraWearShowcase.tsx`.
 
-## Remove these scenes (all variants)
-- `Aesthetic Color Towel and Fabric Story` (1)
-- `Rocky Coast Swim Editorial` (2)
-- `Shoreline Walk or Waterline Pause` (2)
-- `Towel Wrap After Swim` (2)
-
-Total removed: **7 entries**. New count: **75 → 68 visuals**. Stat tile updated to `68`. Subtitle in hero updated from "75 visuals" to "68 visuals".
-
-## Reorder
-Move the **last 3 entries of the current list** to the top, preserving their order:
-1. `Walking Along Pool Edge`
-2. `Wide Frame Coastal Swim Editorial`
-3. `Yacht Bow Swim Editorial`
-
-These become positions 1, 2, 3. The remainder of the list keeps its current order (minus removed scenes).
+## Changes
+1. Remove all entries with scene `Architectural Stair Swim Editorial` (2 variants).
+2. Move all entries of `Minimal Horizon Swim Editorial` and `Shoreline Wave Contact Editorial` to the very top of the list, preserving their relative order. `Minimal Horizon Swim Editorial` first, then `Shoreline Wave Contact Editorial`.
+3. Update visuals count: 68 → **66** (stat tile + hero subtitle).
 
 ## Out of scope
-- No layout, CTA, lightbox, or routing changes.
-- SEO copy unchanged.
+Layout, CTA, lightbox, routing, SEO unchanged.
