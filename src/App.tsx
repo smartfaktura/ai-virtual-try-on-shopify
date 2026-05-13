@@ -19,6 +19,7 @@ const Home = lazy(() => import('@/pages/Home'));
 const BriteShowcase = lazy(() => import('@/pages/showcase/BriteShowcase'));
 const BrandSampleShowcase = lazy(() => import('@/pages/showcase/BrandSampleShowcase'));
 const MakaraWearShowcase = lazy(() => import('@/pages/showcase/MakaraWearShowcase'));
+const ElfasNamuoseShowcase = lazy(() => import('@/pages/showcase/ElfasNamuoseShowcase'));
 
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -168,6 +169,7 @@ const App = () => {
             <Route path="/showcase/brite" element={<BriteShowcase />} />
             <Route path="/showcase/brandname" element={<BrandSampleShowcase />} />
             <Route path="/showcase/makarawear" element={<MakaraWearShowcase />} />
+            <Route path="/showcase/elfas-namuose" element={<ElfasNamuoseShowcase />} />
 
 
             {/* Feature pages */}
