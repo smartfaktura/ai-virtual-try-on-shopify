@@ -1,52 +1,47 @@
 ## Goal
 
-Replace the current padel scene prompts (which read as heavy cinematic film — sodium/teal chiaroscuro, hard backlight, atmospheric haze, lifted-black filmic grade) with a **fashion-forward, organic, beautiful influencer** aesthetic. Think: contemporary tennis/padel girl on Instagram — bright natural daylight, soft modern color, clean editorial styling, candid energy, premium but airy.
+Rewrite all 8 padel scenes as **simple, Instagram-style outdoor luxury padel club** moments. Match the reference photos: bright natural daylight, real outdoor courts (not enclosed cinematic cages), hard sun shadows OK, casual influencer poses, no towels, no cinematic / film grade, correct padel grip and racket use.
+
+## Reference direction
+
+From the uploaded images:
+- Outdoor courts at premium clubs (open sky, trees/palms behind glass, daylight)
+- Confident-but-casual poses: composed at the net, sitting on turf or deck chair, standing with racket at side, candid laugh shielding sun
+- Natural midday or late-afternoon sun, real hard shadows on court surface
+- Clean styling: white/cream/pastel kit, low socks, white court shoes, optional sunglasses or wristband
+- Plain phone-shot energy — no haze, no rim light, no cinematic chiaroscuro, no atmospheric beams
 
 ## Scope
 
-8 scenes in `product_image_scenes` (all `category_collection = 'activewear'`, `scene_id` prefix `activewear-padel-*`):
+8 scenes in `product_image_scenes` (`activewear-padel-*`). Single SQL migration updates `prompt_template` and `mood`. Triggers, sort order, scene_id, title, category, `is_active`, and `preview_image_url` untouched.
 
-1. `activewear-padel-glass-wall-hero` — **rebuild from scratch** (user asked for completely new scene)
-2. `activewear-padel-net-volley-ready`
-3. `activewear-padel-back-glass-recovery`
-4. `activewear-padel-club-bench-rest` — no towel
-5. `activewear-padel-clay-blue-warmup` — no racket
-6. `activewear-padel-court-walk-entrance`
-7. `activewear-padel-serve-prep-baseline`
-8. `activewear-padel-post-match-glass-lean` — no towel
+## New unified aesthetic (applied to every prompt)
 
-No DB schema changes. No frontend changes. Only `prompt_template` (and `mood` to match the new direction) updated via SQL.
+- **Setting:** Outdoor padel court at a premium club. Open sky visible above the cage, palms / trees / clubhouse architecture behind the glass. Real blue or terracotta court, crisp white lines.
+- **Light:** Bright natural daylight (late-morning or golden-hour). Hard sun shadows on the court are welcome. No sodium lights, no tungsten, no haze, no two-zone chiaroscuro.
+- **Camera:** 35mm or 50mm, true-to-life color, gentle modern Instagram grade. No film grain, no lifted blacks, no desaturated greens.
+- **Mood:** Off-duty padel-girl influencer. Natural, candid, fashion-aware. Soft confident half-smile or playful candid expression. Not stoic athlete, not cinematic.
+- **Styling:** Refined padel kit (tank/dress + skort, low white socks, white court shoes). Optional sunglasses, cap/visor, dainty jewelry, small wristband.
+- **Padel correctness:** Padel racket only when the action calls for it; correct grip; ball only in serve/ready scenes; no tennis-style strokes.
+- **Closing line:** "feels like a candid Instagram moment from a sunlit outdoor padel club — natural daylight, real shadows, off-duty influencer ease, fashion-forward but never cinematic."
 
-## New aesthetic direction — applied uniformly
+## Per-scene rewrite (pose intent + what changes)
 
-Each prompt keeps the existing structure (identity anchor, product anchor, scene name, action, styling, location, framing, light recipe, fabric physics, photo style, closing line) but swaps the cinematic-film direction for a fashion-influencer direction:
-
-- **Mood / tone**: confident, playful, sun-kissed, organic, fashion-forward, "off-duty padel girl" energy. Beautiful influencer presence — natural smile or soft confident expression, not stoic athlete.
-- **Light**: bright natural daylight (golden-hour or soft midday), large soft sources, gentle warm key + clean ambient fill. No hard sodium/cyan two-zone chiaroscuro, no atmospheric haze beams, no tungsten arena lights.
-- **Color story**: clean modern palette — sun-warmed whites, fresh court blues/clays, soft sage and sand neutrals, crisp shadows. Vibrant but elegant.
-- **Camera & grade**: 35mm or 50mm editorial lens, true-to-life color, gentle contrast, **clean modern fashion grade** (subtle warmth, slight matte, *no* heavy film grain, *no* lifted blacks, *no* desaturated greens).
-- **Styling**: same elevated padel kit (refined court shoes, low socks, optional minimal visor/cap/wristband/sunglasses) but lean into "fashion-aware influencer" — tonal pastels, modern minimalism, optional small gold studs / dainty necklace where appropriate.
-- **Closing line**: "feels organic, fashion-forward, sun-kissed, and effortlessly premium — a beautiful padel-girl moment captured with contemporary fashion editorial taste."
-
-## Per-scene action notes (preserve existing pose intent, refresh execution)
-
-- **Padel Glass Wall Hero (rebuilt)** — Hero portrait against the glass wall. Athlete leans one shoulder lightly into the glass, racket held casually low at her side, free hand brushing hair behind ear or resting on hip. Soft confident half-smile to camera. Golden-hour sun rakes through the cage from camera-left, glass picks up clean white-and-blue reflections of the court. 50mm, 3/4-body, eye-level, shallow DOF. Editorial influencer hero.
-- **Padel Net Volley Ready** — Athletic ready stance at the net, racket up; bright daylight, candid focused expression with a hint of smile.
-- **Back Glass Recovery** — Mid-rally pivot; replace the hard backlight + sodium spill with bright open daylight bouncing off the back glass, soft motion, energetic and joyful.
-- **Padel Club Bench Rest** — Seated bench, stainless bottle in hand, **no towel anywhere**. Soft daylight on a wooden courtside bench, relaxed influencer-on-break energy.
-- **Blue Court Warm-Up** — Arm-across-chest stretch on baseline, **absolutely no racket** anywhere in frame. Replace the side-door amber shaft with even soft late-afternoon daylight, warm but not chiaroscuro.
-- **Court Walk Entrance** — Walking through the side door mid-stride, racket in one hand, towel kept (only remove towels where explicitly requested). Bright natural exterior + clean cage interior, no two-zone tungsten chiaroscuro.
-- **Serve Prep at Baseline** — Composed pre-serve stance, racket and ball in hands, soft natural sun, calm confident expression.
-- **Post-Match Glass Lean** — Back/shoulder leaning on the glass after the match, **no towel**. Racket hanging loose. Golden post-match daylight, reflective glass, contemplative-but-warm influencer look.
+1. **Padel Glass Wall Hero** — Standing relaxed against outdoor cage, racket in one hand at side, free hand on hip or brushing hair. Soft confident look to camera. 50mm 3/4-body. Sunny outdoor club.
+2. **Padel Net Volley Ready** — Composed at the net, padel racket held in correct two-hand ready position, focused-but-soft expression, midday sun, hard court shadows.
+3. **Back Glass Recovery** — Mid-rally pivot near the back glass, **outdoor** court, bright daylight bouncing off glass, joyful athletic energy — no sodium spill, no haze.
+4. **Padel Club Bench Rest** — Seated on a wooden deck chair / courtside bench at the outdoor club (à la reference image 3), one leg crossed, sunglasses, candid soft smile, racket resting against chair. **No towel, no bottle prop required.**
+5. **Blue Court Warm-Up** — Standing on outdoor blue court doing a relaxed arm-across-chest stretch, **no racket**, even soft daylight, calm warmup vibe.
+6. **Court Walk Entrance** — Walking onto an outdoor court through the cage door mid-stride, racket in one hand, daylight, casual confident entrance. **No towel.**
+7. **Serve Prep at Baseline** — Composed pre-serve at the baseline of an outdoor court, padel racket in dominant hand, ball in non-dominant palm at hip, calm focused half-smile, natural sun.
+8. **Post-Match Glass Lean** — Leaning back/shoulder against the outdoor cage glass after the match, racket hanging loose at side, contemplative warm half-smile, golden post-match daylight, palms/trees visible behind. **No towel.**
 
 ## Implementation
 
-Single `supabase--migration` (UPDATE statements) that rewrites `prompt_template` and updates `mood` for each of the 8 scenes. All triggers (`{{productName}}`, `[MODEL IMAGE]`, `[PRODUCT IMAGE]`) preserved. No category, sort_order, scene_id, title, or trigger_blocks changes. `is_active` untouched.
-
-After the migration runs, ask the user to regenerate one or two padel scenes to validate the new look before regenerating the rest.
+Single `supabase--migration` (8 UPDATE statements). After it runs, ask the user to regenerate **Padel Glass Wall Hero** and **Padel Club Bench Rest** first to validate the new direction before doing the full set.
 
 ## Out of scope
 
-- Preview thumbnails — existing `preview_image_url` stays; user can refresh thumbnails later via admin if desired.
-- Frontend / category logic / scene picker UI.
-- Other (non-padel) tennis or court scenes.
+- Preview thumbnails (existing `preview_image_url` retained; user can refresh in admin later).
+- Frontend, scene picker, category logic.
+- Any non-padel scenes.
