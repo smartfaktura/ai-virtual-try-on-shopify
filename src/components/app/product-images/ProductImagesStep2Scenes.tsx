@@ -20,7 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   food: 'Food & Snacks', beverages: 'Beverages', furniture: 'Furniture', 'home-decor': 'Home Decor',
   'supplements-wellness': 'Supplements & Wellness', shoes: 'Shoes',
   'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
-  other: 'Other / Custom', backpacks: 'Backpacks',
+  other: 'Other', backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders', belts: 'Belts', scarves: 'Scarves',
   caps: 'Caps', hats: 'Hats', beanies: 'Beanies', 'jewellery-necklaces': 'Necklaces',
   'jewellery-earrings': 'Earrings', 'jewellery-bracelets': 'Bracelets',
