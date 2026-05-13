@@ -1,20 +1,30 @@
-## Issue
+## Scope
+Edit only `src/pages/showcase/MakaraWearShowcase.tsx`. No data, routing, or component changes.
 
-Images aren't loading on `/showcase/makarawear` because I constructed the storage URL from the **wrong ID**. The page uses `generation_jobs.id` as the folder name, but the actual storage path uses a different inner ID (likely the queue/batch ID). All 76 image URLs return HTTP 400.
+## Changes
 
-The correct URL for each job is already stored in `generation_jobs.results[0]` as a fully-qualified URL.
+### 1. Hero copy (lines 108–116)
+- Eyebrow: `Brand example · MAKARA WEAR`
+- H1: `This is what VOVV.AI makes from one product photo`
+- Subtitle: `A complete swim campaign — 75 visuals, ready for web, social, and lookbook`
 
-## Fix
+### 2. Remove the "Yours would look like this" section (lines 161–167)
+Delete entire section block. Bottom dark CTA section (`Want this for your brand?` + buttons) stays untouched.
 
-Rebuild the `IMAGES` array in `src/pages/showcase/MakaraWearShowcase.tsx` to embed the **full storage URL** (from `results->>0`) for each of the 76 jobs, instead of constructing URLs from job IDs.
+### 3. Re-shuffle the image grid
+Replace current alternating order with a deterministic interleave that pulls bottom-half images upward and spreads variants:
 
-- Drop the helper `url(jobId)` and the `USER_ID`/`BUCKET` constants.
-- Each image becomes `{ url: 'https://...', scene: '...', category: '...' }` — same shape as the Brite showcase.
-- 1 of the original 76 jobs (`1348d8dd...`, scene "Coastal Stillness Swim Frame") only has base64 data, no uploaded URL yet → drop it. Final count: **75 visuals**. Update the stat tile from "76" to "75".
-- Keep the round-robin interleaving order.
-- No other changes (route, layout, hero copy, CTAs all stay).
+```text
+1. Split current IMAGES list in half: top[0..37], bottom[38..74]
+2. Build new list by interleaving bottom-first:
+   bottom[0], top[0], bottom[1], top[1], ...
+3. Apply a stride pass to ensure no two adjacent items share the same scene
+   (swap with next non-conflicting index when collision detected)
+```
+
+This produces a fresh visual mix where previously-bottom images appear near the top, while keeping all 75 entries.
+
+### 4. SEO `<title>` / `<description>` — leave as-is (already brand-example framed).
 
 ## Out of scope
-
-- No DB, RLS, or generation pipeline changes.
-- No changes to other showcase pages.
+- Stats tile values, lightbox behavior, dark CTA section, route, navigation.
