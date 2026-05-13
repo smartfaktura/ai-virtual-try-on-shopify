@@ -80,7 +80,7 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: LayoutGrid, value: '75', label: 'Visuals' },
+  { icon: LayoutGrid, value: '68', label: 'Visuals' },
   { icon: Timer, value: '~3 min', label: 'Made in' },
 ];
 
@@ -105,7 +105,7 @@ export default function MakaraWearShowcase() {
             This is what VOVV.AI makes from one product photo
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            A complete swim campaign — 75 visuals, ready for web, social, and lookbook
+            A complete swim campaign — 68 visuals, ready for web, social, and lookbook
           </p>
         </div>
       </section>
