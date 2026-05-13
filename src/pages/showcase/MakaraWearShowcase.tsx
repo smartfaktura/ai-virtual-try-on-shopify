@@ -9,6 +9,10 @@ import { Link } from 'react-router-dom';
 type Img = { url: string; scene: string; category: 'Editorial' | 'Essentials' };
 
 const IMAGES: Img[] = [
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d71ecd3f-1af2-4657-a0e2-2da0c31c81a2/0-0.jpg', scene: "Minimal Horizon Swim Editorial", category: 'Editorial' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/6b1e5de8-1a42-4c18-bd0e-8d883eddf049/0-0.jpg', scene: "Minimal Horizon Swim Editorial", category: 'Editorial' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/23ce33e4-32f1-4500-8bd1-33ac9bd71175/0-0.jpg', scene: "Shoreline Wave Contact Editorial", category: 'Editorial' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d3c5add-4404-4f53-97a1-90fab385f696/0-0.jpg', scene: "Shoreline Wave Contact Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1936eded-d0dd-473f-b48f-c6e8b5579228/0-0.jpg', scene: "Yacht Sunset Swim Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/c1ae9049-2851-479b-b8e0-14ed59fb9c4c/0-0.jpg', scene: "Wide Frame Coastal Swim Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/edc7efe4-391f-4da8-a06b-0abe5790e69f/0-0.jpg', scene: "Yacht Bow Swim Editorial", category: 'Editorial' },
@@ -20,11 +24,9 @@ const IMAGES: Img[] = [
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d4b3267c-30d5-45ec-bee9-f537d9daca56/0-0.jpg', scene: "Aesthetic Color Sunset Resort Mood", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/a11e65bd-3f24-470f-a1c8-4e9236ca4d14/0-0.jpg', scene: "Aesthetic Color Resort Editorial Hero", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/e74c66d8-edab-4c63-a2a6-596565dffc47/0-0.jpg', scene: "Aesthetic Color Sunset Resort Mood", category: 'Editorial' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/e01f89e3-e33e-41f0-b442-d496f273e78a/0-0.jpg', scene: "Architectural Stair Swim Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/2de69ad1-53f3-426d-ab42-821fd91846b0/0-0.jpg', scene: "City Heat Rooftop Escape", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d3ffea2c-3af5-4bc7-8a62-98f1ef3b17d9/0-0.jpg', scene: "Beach Bag and Essentials Moment", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/cf9b4b45-ad1c-4b97-8b74-d0cb97f0f18b/0-0.jpg', scene: "City Heat Rooftop Escape", category: 'Editorial' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/3fd47300-7b52-4db5-adc6-64f9ffb82e43/0-0.jpg', scene: "Architectural Stair Swim Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/3bd61925-70a7-4500-829b-81d3926938d2/0-0.jpg', scene: "Beach Bag and Essentials Moment", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5f2b8d94-3378-48f0-8493-558bb777301e/0-0.jpg', scene: "Coastal Camera Moment", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5c5af193-0358-46ae-bbea-01478a26ab0b/0-0.jpg', scene: "Color-Washed Resort Wall", category: 'Editorial' },
@@ -33,12 +35,10 @@ const IMAGES: Img[] = [
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/00ae318d-0bdb-4242-a053-84f25ff3c44b/0-0.jpg', scene: "Color-Washed Resort Wall", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/0838ca15-6d42-4ea9-8273-e65a2f009825/0-0.jpg', scene: "Jungle Drive Editorial Heat", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d757d39-7364-4294-a376-69f177e08afd/0-0.jpg', scene: "Floating Pool Product Shot", category: 'Essentials' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d71ecd3f-1af2-4657-a0e2-2da0c31c81a2/0-0.jpg', scene: "Minimal Horizon Swim Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/ee770361-20e0-4178-bc0c-b1d4931d6a18/0-0.jpg', scene: "Ghost Mannequin Shot", category: 'Essentials' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/725e079a-2ca9-4a00-9085-dd688f4faecb/0-0.jpg', scene: "Movement Shot", category: 'Essentials' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5e1c25e8-be94-4123-8e55-bfb4289d9248/0-0.jpg', scene: "Jungle Drive Editorial Heat", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/49bef400-223b-48a0-87e7-6cbebe6f4240/0-0.jpg', scene: "On-Model Back", category: 'Essentials' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/6b1e5de8-1a42-4c18-bd0e-8d883eddf049/0-0.jpg', scene: "Minimal Horizon Swim Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d415fc29-93ee-4fc3-a94f-51df37d9dceb/0-0.jpg', scene: "On-Model Editorial", category: 'Essentials' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/39d744ef-58ee-4eb2-b86b-84d0dca1a8e6/0-0.jpg', scene: "Movement Shot", category: 'Essentials' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/438c7f3b-55fc-4856-97a0-e444dbc20894/0-0.jpg', scene: "On-Model Front", category: 'Essentials' },
@@ -58,11 +58,9 @@ const IMAGES: Img[] = [
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/4486c2d0-a806-467a-aebb-533afa5215f9/0-0.jpg', scene: "Resort Staircase Pose", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/dc3ae9a6-6254-4f3a-8367-301f6a35fecb/0-0.jpg', scene: "Shoreline Adjust Swim Moment", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/110d76e4-4959-4799-a727-6482505deaac/0-0.jpg', scene: "Seated Balcony Resort Portrait", category: 'Editorial' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/23ce33e4-32f1-4500-8bd1-33ac9bd71175/0-0.jpg', scene: "Shoreline Wave Contact Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/784d8f33-a720-4c6a-a651-c890f16121c7/0-0.jpg', scene: "Shoreline Adjust Swim Moment", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/8c313cc2-e1b2-4584-99b0-dd38900ca492/0-0.jpg', scene: "Sun Lounger Resort Pose", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/06070e09-6b76-482d-968b-a4b06900d52c/0-0.jpg', scene: "Sunbathing Swim Editorial", category: 'Editorial' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d3c5add-4404-4f53-97a1-90fab385f696/0-0.jpg', scene: "Shoreline Wave Contact Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/73a20f8b-1822-4632-b95e-2f2cbe88c4b8/0-0.jpg', scene: "Sunlit Arch Swim Editorial", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/0fad648c-f470-4cfe-a246-94b2fb1ef1fb/0-0.jpg', scene: "Sun Lounger Resort Pose", category: 'Editorial' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/dd1e6752-fce7-4b35-8837-50042ab0de7f/0-0.jpg', scene: "Sunstone Wall Swim Editorial", category: 'Editorial' },
@@ -80,7 +78,7 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: LayoutGrid, value: '68', label: 'Visuals' },
+  { icon: LayoutGrid, value: '66', label: 'Visuals' },
   { icon: Timer, value: '~3 min', label: 'Made in' },
 ];
 
@@ -105,7 +103,7 @@ export default function MakaraWearShowcase() {
             This is what VOVV.AI makes from one product photo
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            A complete swim campaign — 68 visuals, ready for web, social, and lookbook
+            A complete swim campaign — 66 visuals, ready for web, social, and lookbook
           </p>
         </div>
       </section>
