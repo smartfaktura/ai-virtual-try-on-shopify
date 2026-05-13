@@ -158,13 +158,6 @@ export default function MakaraWearShowcase() {
         </div>
       </section>
 
-      <section className="pb-16 lg:pb-24">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <p className="text-[#0f172a] text-lg sm:text-xl leading-relaxed font-medium">
-            Yours would look like this — but with your swimwear
-          </p>
-        </div>
-      </section>
 
       {lightbox !== null && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
