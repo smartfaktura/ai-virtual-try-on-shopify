@@ -20,7 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   food: 'Food & Snacks', beverages: 'Beverages', furniture: 'Furniture', 'home-decor': 'Home Decor',
   'supplements-wellness': 'Supplements & Wellness', shoes: 'Shoes',
   'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
-  other: 'Other / Custom', backpacks: 'Backpacks',
+  other: 'Other', backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders', belts: 'Belts', scarves: 'Scarves',
   caps: 'Caps', hats: 'Hats', beanies: 'Beanies', 'jewellery-necklaces': 'Necklaces',
   'jewellery-earrings': 'Earrings', 'jewellery-bracelets': 'Bracelets',
@@ -98,6 +98,8 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'food': ['food', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'candy', 'chips', 'cookie', 'protein bar', 'organic', 'artisan', 'olive oil'],
   'beverages': ['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'kombucha', 'smoothie', 'energy drink', 'drink', 'lemonade', 'milk'],
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
+  // Universal fallback bucket — no keywords; assigned when nothing else matches.
+  'other': [],
 };
 
 type GridSize = '6col' | '5col' | '4col' | '3col';
@@ -116,7 +118,7 @@ const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
   { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
   { label: 'Food & Drink', ids: ['food', 'beverages'] },
-  { label: 'Home & Lifestyle', ids: ['home-decor', 'furniture', 'tech-devices', 'supplements-wellness'] },
+  { label: 'Home & Lifestyle', ids: ['home-decor', 'furniture', 'tech-devices', 'supplements-wellness', 'other'] },
 ];
 
 /** Refine generic parent categories to specific child when title strongly matches */
@@ -214,12 +216,17 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
 
     // Keyword fallback
     const text = `${p.title} ${p.description} ${p.product_type} ${(p.tags || []).join(' ')}`.toLowerCase();
+    let foundForProduct = false;
     for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      if (keywords.length === 0) continue; // skip 'other' (no keywords)
       if (keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(text))) {
         matched.add(catId);
+        foundForProduct = true;
         break;
       }
     }
+    // Nothing matched for this product → bucket it into the universal "Other" tab
+    if (!foundForProduct) matched.add('other');
   }
   return matched;
 }
