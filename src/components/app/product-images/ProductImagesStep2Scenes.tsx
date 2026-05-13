@@ -118,7 +118,7 @@ const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
   { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
   { label: 'Food & Drink', ids: ['food', 'beverages'] },
-  { label: 'Home & Lifestyle', ids: ['home-decor', 'furniture', 'tech-devices', 'supplements-wellness'] },
+  { label: 'Home & Lifestyle', ids: ['home-decor', 'furniture', 'tech-devices', 'supplements-wellness', 'other'] },
 ];
 
 /** Refine generic parent categories to specific child when title strongly matches */
