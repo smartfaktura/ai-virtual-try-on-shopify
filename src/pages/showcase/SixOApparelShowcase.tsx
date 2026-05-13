@@ -141,15 +141,6 @@ export default function SixOApparelShowcase() {
         </div>
       </section>
 
-      {/* Mid CTA strip */}
-      <section className="pb-16 lg:pb-24">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <p className="text-[#0f172a] text-lg sm:text-xl leading-relaxed font-medium">
-            Yours would look like this — but with your products
-          </p>
-        </div>
-      </section>
-
       {/* Lightbox */}
       {lightbox !== null && (
         <div
@@ -179,10 +170,10 @@ export default function SixOApparelShowcase() {
       <section className="py-16 lg:py-28 bg-[#0f172a]">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">
-            Want this for your brand?
+            Ready to make this real for 6o Apparel?
           </h2>
           <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">
-            Send one product photo. We'll build the rest
+            Create your account and we'll generate your full set from your own product photos
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
             <Link
