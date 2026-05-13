@@ -79,10 +79,10 @@ export default function SixOApparelShowcase() {
             For 6o Apparel
           </p>
           <h1 className="text-[#0f172a] text-3xl sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1] font-semibold tracking-tight mb-5">
-            Your activewear, your full campaign
+            One 6o Apparel product, a full campaign
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            Send one photo of any product — a sports bra, a tennis skirt, a jacket. We return a complete editorial library across court, studio, lifestyle and aesthetic. The sample below was built from a single shot of the Red Sports Bra and Skirt Set.
+            We took a single shot of your Red Sports Bra and Skirt Set and turned it into a full editorial library — court, studio, lifestyle and aesthetic. Every visual below started from that one photo.
           </p>
         </div>
       </section>
