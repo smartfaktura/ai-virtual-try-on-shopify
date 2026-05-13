@@ -56,7 +56,7 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: LayoutGrid, value: '39', label: 'Visuals' },
+  { icon: LayoutGrid, value: '37', label: 'Visuals' },
   { icon: Timer, value: '53s', label: 'Made in' },
 ];
 
