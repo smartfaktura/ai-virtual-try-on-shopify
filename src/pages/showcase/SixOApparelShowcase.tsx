@@ -16,7 +16,7 @@ type Img = { url: string; scene: string; category: 'Editorial' | 'Essentials' };
 const IMAGES: Img[] = [
   { url: `${BASE}/5c0e5f97-384d-4e88-897f-a290aedbf359/0-0.jpg`, scene: 'Padel Glass Wall Hero', category: 'Editorial' },
   { url: `${BASE}/7bf0ae1c-aff4-47e5-8b8f-bf99cdb7aa77/0-0.jpg`, scene: 'On-Model Front', category: 'Essentials' },
-  { url: `${BASE}/f6a03884-a6cc-4cde-93fc-61ec6f5ebdd5/0-0.jpg`, scene: 'Grass Court Morning', category: 'Editorial' },
+  
   { url: `${BASE}/2baf5ccc-107d-493c-aa3b-9fbb51120504/0-0.jpg`, scene: 'Clay Court Warm-Up', category: 'Editorial' },
   { url: `${BASE}/5b98ac2f-65a7-4bf0-b7d4-2e184913b3ee/0-0.jpg`, scene: 'Aesthetic Sport Hero', category: 'Editorial' },
   { url: `${BASE}/c2ca9966-2fca-4f47-98a6-17bcbebb2b7c/0-0.jpg`, scene: 'Aesthetic Set Flat Lay', category: 'Essentials' },
