@@ -40,11 +40,11 @@ const IMAGES: Img[] = [
   { url: `${BASE}/92295dcb-e8f2-4f06-a047-e7959185121e/0-0.jpg`, scene: 'Blue Hard Court Serve Prep', category: 'Editorial' },
   { url: `${BASE}/16683e03-26db-4714-bf41-dc8e176a3056/0-0.jpg`, scene: 'Studio Motion Sculpt', category: 'Editorial' },
   { url: `${BASE}/ac2d3bf8-438e-49ee-8c31-a20d1f120f0e/0-0.jpg`, scene: 'Post-Match Glass Lean', category: 'Editorial' },
-  { url: `${BASE}/0febfb20-dd22-4dba-96fe-424f39a385cd/0-0.jpg`, scene: 'Gym Mirror Set', category: 'Editorial' },
+  
   { url: `${BASE}/15883712-24d6-4de7-b44b-a87d3e84a538/0-0.jpg`, scene: 'Clay Court Between Points', category: 'Editorial' },
   { url: `${BASE}/d508abc0-bb4c-4e53-9da3-0fc4e1ab3d76/0-0.jpg`, scene: 'Mirror UGC Fit', category: 'Editorial' },
   { url: `${BASE}/77b8e4ff-aa90-4634-b549-26751e492122/0-0.jpg`, scene: 'Tennis Court Baseline', category: 'Editorial' },
-  { url: `${BASE}/90f1dfa1-42e3-409b-8dec-71271ede950c/0-0.jpg`, scene: 'Studio Lounge Pause', category: 'Editorial' },
+  
   { url: `${BASE}/87faf94b-fca1-4037-9616-1a1e352c4848/0-0.jpg`, scene: 'Padel Club Bench Rest', category: 'Editorial' },
   { url: `${BASE}/e383ae4f-6977-4baa-af23-29076b444883/0-0.jpg`, scene: 'Aesthetic Court Story', category: 'Editorial' },
   { url: `${BASE}/81762bb1-79a8-45a1-8101-65cf30187d3e/0-0.jpg`, scene: 'Sunlit Sculpt', category: 'Editorial' },
@@ -56,7 +56,7 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: LayoutGrid, value: '39', label: 'Visuals' },
+  { icon: LayoutGrid, value: '37', label: 'Visuals' },
   { icon: Timer, value: '53s', label: 'Made in' },
 ];
 
