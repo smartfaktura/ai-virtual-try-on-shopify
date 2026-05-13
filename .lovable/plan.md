@@ -1,47 +1,41 @@
 ## Goal
 
-Rewrite all 8 padel scenes as **simple, Instagram-style outdoor luxury padel club** moments. Match the reference photos: bright natural daylight, real outdoor courts (not enclosed cinematic cages), hard sun shadows OK, casual influencer poses, no towels, no cinematic / film grade, correct padel grip and racket use.
+Refine the 8 padel scene prompts so generated images consistently show:
+1. **Proper padel-specific court shoes** (low-profile, herringbone/clay-court sole, reinforced toe cap, lateral support — no visible brand logos or wordmarks).
+2. **Correct padel court line geometry** — service boxes, service line, center line, and baseline placed accurately for a real padel court.
 
-## Reference direction
+No other aesthetic changes. The Instagram-vibe outdoor luxury club direction stays.
 
-From the uploaded images:
-- Outdoor courts at premium clubs (open sky, trees/palms behind glass, daylight)
-- Confident-but-casual poses: composed at the net, sitting on turf or deck chair, standing with racket at side, candid laugh shielding sun
-- Natural midday or late-afternoon sun, real hard shadows on court surface
-- Clean styling: white/cream/pastel kit, low socks, white court shoes, optional sunglasses or wristband
-- Plain phone-shot energy — no haze, no rim light, no cinematic chiaroscuro, no atmospheric beams
+## Padel shoe directive (added to every prompt)
 
-## Scope
+Replace the generic "white court shoes" line with a precise block, e.g.:
 
-8 scenes in `product_image_scenes` (`activewear-padel-*`). Single SQL migration updates `prompt_template` and `mood`. Triggers, sort order, scene_id, title, category, `is_active`, and `preview_image_url` untouched.
+> **Footwear:** Padel-specific court shoes — low-profile silhouette, reinforced toe cap, supportive midsole, herringbone or clay-court tread pattern, predominantly white with subtle tonal accents, **no visible brand logos, wordmarks, swooshes, stripes, or text of any kind**. Worn with low white ankle socks.
 
-## New unified aesthetic (applied to every prompt)
+## Padel court line directive (added to every prompt that shows the court)
 
-- **Setting:** Outdoor padel court at a premium club. Open sky visible above the cage, palms / trees / clubhouse architecture behind the glass. Real blue or terracotta court, crisp white lines.
-- **Light:** Bright natural daylight (late-morning or golden-hour). Hard sun shadows on the court are welcome. No sodium lights, no tungsten, no haze, no two-zone chiaroscuro.
-- **Camera:** 35mm or 50mm, true-to-life color, gentle modern Instagram grade. No film grain, no lifted blacks, no desaturated greens.
-- **Mood:** Off-duty padel-girl influencer. Natural, candid, fashion-aware. Soft confident half-smile or playful candid expression. Not stoic athlete, not cinematic.
-- **Styling:** Refined padel kit (tank/dress + skort, low white socks, white court shoes). Optional sunglasses, cap/visor, dainty jewelry, small wristband.
-- **Padel correctness:** Padel racket only when the action calls for it; correct grip; ball only in serve/ready scenes; no tennis-style strokes.
-- **Closing line:** "feels like a candid Instagram moment from a sunlit outdoor padel club — natural daylight, real shadows, off-duty influencer ease, fashion-forward but never cinematic."
+Add a "Court geometry" block describing real padel court lines so the model places them correctly:
 
-## Per-scene rewrite (pose intent + what changes)
+> **Court geometry (must be accurate):** Standard 20m × 10m padel court. Visible white lines limited to: the **baseline** along the back of each half, the **service line** drawn 2m in front of the back glass, and the **center service line** that splits the service area into left and right service boxes. **No outer sidelines** along the side glass walls (padel courts have no side singles/doubles lines like tennis). The net spans the full 10m width across the middle. Lines are crisp white, freshly painted, with realistic perspective.
 
-1. **Padel Glass Wall Hero** — Standing relaxed against outdoor cage, racket in one hand at side, free hand on hip or brushing hair. Soft confident look to camera. 50mm 3/4-body. Sunny outdoor club.
-2. **Padel Net Volley Ready** — Composed at the net, padel racket held in correct two-hand ready position, focused-but-soft expression, midday sun, hard court shadows.
-3. **Back Glass Recovery** — Mid-rally pivot near the back glass, **outdoor** court, bright daylight bouncing off glass, joyful athletic energy — no sodium spill, no haze.
-4. **Padel Club Bench Rest** — Seated on a wooden deck chair / courtside bench at the outdoor club (à la reference image 3), one leg crossed, sunglasses, candid soft smile, racket resting against chair. **No towel, no bottle prop required.**
-5. **Blue Court Warm-Up** — Standing on outdoor blue court doing a relaxed arm-across-chest stretch, **no racket**, even soft daylight, calm warmup vibe.
-6. **Court Walk Entrance** — Walking onto an outdoor court through the cage door mid-stride, racket in one hand, daylight, casual confident entrance. **No towel.**
-7. **Serve Prep at Baseline** — Composed pre-serve at the baseline of an outdoor court, padel racket in dominant hand, ball in non-dominant palm at hip, calm focused half-smile, natural sun.
-8. **Post-Match Glass Lean** — Leaning back/shoulder against the outdoor cage glass after the match, racket hanging loose at side, contemplative warm half-smile, golden post-match daylight, palms/trees visible behind. **No towel.**
+## Per-scene tailoring of the geometry block
+
+- **Glass Wall Hero / Post-Match Glass Lean** — court visible behind, baseline + service line + center line clearly placed in correct ratios.
+- **Net Volley Ready** — net dead center; service line ~2m behind player on her side; center service line meeting the service line in a T.
+- **Back Glass Recovery** — service line and center service line forming a clear T behind her toward the back glass; baseline visible at her feet.
+- **Club Bench Rest** — court visible behind glass; same geometry rules apply when court is in frame.
+- **Blue Court Warm-Up** — she stands inside the service box; T-junction of service line + center line near her feet.
+- **Court Walk Entrance** — court ahead through cage door; baseline + service line visible in correct perspective.
+- **Serve Prep at Baseline** — she stands behind the baseline; service line + center service line visible deep in the court ahead of her.
 
 ## Implementation
 
-Single `supabase--migration` (8 UPDATE statements). After it runs, ask the user to regenerate **Padel Glass Wall Hero** and **Padel Club Bench Rest** first to validate the new direction before doing the full set.
+Single `supabase--insert` call running 8 UPDATE statements rewriting `prompt_template` only (mood untouched). All other prompt content (subject anchor, scene action, framing, light, grade, closing line) preserved verbatim from the previous Instagram-vibe rewrite — only the **footwear** line is replaced and a new **Court geometry** block is inserted before the closing line.
+
+After it runs, ask the user to regenerate **Padel Net Volley Ready** and **Serve Prep at Baseline** first — those two best validate both the shoe detail and the line geometry.
 
 ## Out of scope
 
-- Preview thumbnails (existing `preview_image_url` retained; user can refresh in admin later).
-- Frontend, scene picker, category logic.
-- Any non-padel scenes.
+- Preview thumbnails, frontend, scene picker, category logic.
+- Non-padel scenes.
+- Mood text changes.
