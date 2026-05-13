@@ -1557,5 +1557,19 @@ export function buildDynamicPrompt(
     prompt += ' PADEL FOOTWEAR VALIDATION (HARD CONSTRAINT — overrides any default sneaker styling): The model MUST wear authentic logo-free padel/tennis court shoes — low-cut court silhouette sitting below the ankle bone, rounded reinforced rubber toe cap wrapping the front, visible lateral side-support panels on the sidewalls, padded collar with a structured stable heel counter, firm flat non-marking gum or white rubber court sole with herringbone or clay-court tread on the outsole, predominantly pristine white with optional subtle cream/grey/tonal accents only. Worn with low white ankle socks. STRICTLY FORBIDDEN: running shoes, knit-upper sock-runner sneakers, chunky lifestyle sneakers, fashion trainers, basketball shoes, platform sneakers, retro dad-shoes, slip-ons, sandals, hiking shoes, skate shoes, Converse-style canvas shoes, Vans-style flat sneakers, ANY brand logos, wordmarks, swooshes, three-stripe motifs, monograms, or text on the footwear. The shoes must read at first glance as real performance padel/tennis court shoes.';
   }
 
+  // ── Tennis footwear + clean-light validation saugiklis ──
+  // Final unambiguous shoe spec for activewear tennis editorial scenes, plus a clean-daylight
+  // reminder to prevent the model from defaulting to harsh blown-out midday sun.
+  if ((scene.id || '').toLowerCase().includes('activewear-tennis')) {
+    const sid = (scene.id || '').toLowerCase();
+    const surface = sid.includes('grass')
+      ? 'smooth nub/pimple grass-court outsole'
+      : sid.includes('clay')
+        ? 'full herringbone clay-court outsole (light reddish clay dust patina allowed on the toe and sidewall)'
+        : 'durable modified-herringbone hard-court outsole';
+    prompt += ` TENNIS FOOTWEAR VALIDATION (HARD CONSTRAINT — overrides any default sneaker styling): The model MUST wear authentic logo-free tennis court shoes — low-cut court silhouette sitting below the ankle bone, rounded reinforced rubber toe cap, visible lateral side-support panels on the sidewalls, padded collar with a structured stable heel counter, firm flat non-marking court sole with ${surface}, predominantly pristine white with optional subtle cream/grey/tonal accents only. Worn with low white ankle socks. STRICTLY FORBIDDEN: running shoes, knit-upper sock-runner sneakers, chunky lifestyle sneakers, fashion trainers, basketball shoes, platform sneakers, retro dad-shoes, slip-ons, sandals, hiking shoes, skate shoes, Converse-style canvas shoes, Vans-style flat sneakers, ANY brand logos, wordmarks, swooshes, three-stripe motifs, monograms, or text on the footwear. The shoes must read at first glance as real performance tennis court shoes.`;
+    prompt += ' SCENE LIGHT VALIDATION (HARD CONSTRAINT — clean, not too bright): Use soft, cloud-diffused or open-shade daylight with balanced clean exposure. Highlights stay creamy, shadows airy and short, contrast medium-low. STRICTLY NO harsh midday sun, no blown-out white highlights on the garment, no hot spots on skin or court, no heavy lens flare, no overexposed sky. The court surface must be evenly lit and read clean and refined.';
+  }
+
   return cleanupPrompt(prompt);
 }
