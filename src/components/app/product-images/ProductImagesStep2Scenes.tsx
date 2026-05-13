@@ -98,6 +98,8 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'food': ['food', 'chocolate', 'snack', 'cereal', 'granola', 'sauce', 'honey', 'jam', 'candy', 'chips', 'cookie', 'protein bar', 'organic', 'artisan', 'olive oil'],
   'beverages': ['coffee', 'tea', 'juice', 'beverage', 'soda', 'wine', 'beer', 'water', 'kombucha', 'smoothie', 'energy drink', 'drink', 'lemonade', 'milk'],
   'supplements-wellness': ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'],
+  // Universal fallback bucket — no keywords; assigned when nothing else matches.
+  'other': [],
 };
 
 type GridSize = '6col' | '5col' | '4col' | '3col';
