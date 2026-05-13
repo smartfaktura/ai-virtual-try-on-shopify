@@ -171,6 +171,7 @@ const App = () => {
             <Route path="/showcase/brandname" element={<BrandSampleShowcase />} />
             <Route path="/showcase/makarawear" element={<MakaraWearShowcase />} />
             <Route path="/showcase/elfas-namuose" element={<ElfasNamuoseShowcase />} />
+            <Route path="/showcase/6o-apparel" element={<SixOApparelShowcase />} />
 
 
             {/* Feature pages */}
