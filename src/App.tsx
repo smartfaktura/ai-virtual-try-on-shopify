@@ -169,6 +169,7 @@ const App = () => {
             <Route path="/showcase/brite" element={<BriteShowcase />} />
             <Route path="/showcase/brandname" element={<BrandSampleShowcase />} />
             <Route path="/showcase/makarawear" element={<MakaraWearShowcase />} />
+            <Route path="/showcase/elfas-namuose" element={<ElfasNamuoseShowcase />} />
 
 
             {/* Feature pages */}
