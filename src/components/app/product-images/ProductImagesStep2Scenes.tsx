@@ -552,13 +552,15 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               gridClass={gridClass}
             />
           ))}
-          <SceneRequestBanner />
         </div>
       )}
 
       {(unifiedOther.length > 0 || isLoadingRest) && (
         <div className="space-y-4">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
+          <div className="space-y-1">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
+            <p className="text-xs text-muted-foreground/80">Browse any category — you can mix shots from anywhere into one generation</p>
+          </div>
           {isLoadingRest && unifiedOther.length === 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -651,6 +653,8 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
           })()}
         </div>
       )}
+
+      <SceneRequestBanner />
     </div>
   );
 }
