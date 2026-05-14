@@ -1,4 +1,12 @@
-Update the hero in `src/pages/showcase/SixOApparelShowcase.tsx` to make it clear this is a personalised sample built from a single 6o Apparel product photo:
+## Remove wedding-dress from dashboard recommendations
 
-- H1: `One 6o Apparel product, a full campaign`
-- Subhead: `We took a single shot of your Red Sports Bra and Skirt Set and turned it into a full editorial library — court, studio, lifestyle and aesthetic. Every visual below started from that one photo`
+Delete all rows in `recommended_scenes` where `category = 'wedding-dress'`. This removes them from the dashboard "Steal the Look" rail (which sources from `recommended_scenes`) while keeping the underlying scenes in `product_image_scenes` so they remain reachable via the full Discover page and direct deep links.
+
+### Steps
+1. Run a quick `SELECT COUNT(*)` on `recommended_scenes WHERE category = 'wedding-dress'` to confirm scope.
+2. `DELETE FROM recommended_scenes WHERE category = 'wedding-dress'` via the insert/data tool.
+3. No code changes needed — `useRecommendedDiscoverItems` and `useRecommendedScenes` will simply return fewer rows.
+
+### Not changed
+- `product_image_scenes` rows with `category_collection = 'wedding-dress'` stay intact.
+- `sceneTaxonomy.ts` fashion sub-family list stays as-is.
