@@ -653,6 +653,8 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
           })()}
         </div>
       )}
+
+      <SceneRequestBanner />
     </div>
   );
 }
