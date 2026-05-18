@@ -75,14 +75,36 @@ async function savePreview(svc: SvcClient, coverUrl: string, userId: string, tas
   }
 }
 
-async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: "completed" | "failed", videoUrl?: string, errorMsg?: string) {
-  // Find queue rows where result->>'kling_task_id' matches and they're still open
-  const { data: jobs } = await svc
-    .from("generation_queue")
-    .select("id, user_id, credits_reserved, status")
-    .in("job_type", ["video", "video_multishot", "talking_video"])
-    .in("status", ["processing", "queued"])
-    .filter("result->>kling_task_id", "eq", taskId);
+async function resolveQueueForTask(
+  svc: SvcClient,
+  taskId: string,
+  finalStatus: "completed" | "failed",
+  videoUrl?: string,
+  errorMsg?: string,
+  queueJobId?: string,
+) {
+  // Prefer queue_job_id (set in generated_videos.metadata) — it's stable across
+  // stage transitions. Fall back to task-id match for legacy rows.
+  let jobs: { id: string; user_id: string; credits_reserved: number; status: string }[] | null = null;
+
+  if (queueJobId) {
+    const { data } = await svc
+      .from("generation_queue")
+      .select("id, user_id, credits_reserved, status")
+      .eq("id", queueJobId)
+      .in("status", ["processing", "queued"]);
+    jobs = data ?? null;
+  }
+
+  if (!jobs || jobs.length === 0) {
+    const { data } = await svc
+      .from("generation_queue")
+      .select("id, user_id, credits_reserved, status")
+      .in("job_type", ["video", "video_multishot", "talking_video"])
+      .in("status", ["processing", "queued"])
+      .filter("result->>kling_task_id", "eq", taskId);
+    jobs = data ?? null;
+  }
 
   if (!jobs || jobs.length === 0) return;
 
@@ -90,7 +112,7 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
     if (finalStatus === "completed") {
       await svc.from("generation_queue").update({
         status: "completed",
-        result: { kling_task_id: taskId, video_url: videoUrl },
+        result: { kling_task_id: taskId, video_url: videoUrl, stage: "complete" },
         completed_at: new Date().toISOString(),
       }).eq("id", j.id);
     } else {
@@ -99,7 +121,6 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
         error_message: errorMsg || "Video generation failed",
         completed_at: new Date().toISOString(),
       }).eq("id", j.id);
-      // Refund credits
       if (j.credits_reserved && j.credits_reserved > 0) {
         await svc.rpc("refund_credits", {
           p_user_id: j.user_id,
