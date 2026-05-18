@@ -1,45 +1,54 @@
-## What I found
+# Add audio download to preview modal (talking videos)
 
-The latest talking video is currently stuck at the first stage:
+## What changes
 
-- `generated_videos.status`: `processing`
-- `metadata.stage`: `base_video`
-- queue job: `847844c0-48a7-4669-9bfe-6c14ed17fff2`
-- Kling base task: `885330189557833790`
-- audio was generated successfully: `6.4s`
-- lip-sync has not started yet because the base video has not completed
+In `src/components/app/video/VideoDetailModal.tsx`:
 
-The backend itself is healthy. The job was dispatched correctly and did not error.
+1. Detect talking videos by checking `video.metadata?.audio_storage_path` (and/or `video.metadata?.kind === 'talking_video'`).
+2. Keep the existing **Download Video** button as the primary action.
+3. Add a secondary **Download Audio (MP3)** button directly under it, shown only when an audio path exists and the video is complete.
+4. New handler `handleDownloadAudio`:
+   - Calls `supabase.storage.from('generated-audio').createSignedUrl(path, 3600)`.
+   - Fetches the signed URL, downloads as blob, triggers `<a download>` with filename `{projectTitle||'voiceover'}-{videoId}.mp3`.
+   - Toast on success/failure, separate `downloadingAudio` loading state so it doesn't block the video download spinner.
+5. Update the `GeneratedVideo` type usage (already includes `metadata`) — no schema change needed. The `generated-audio` bucket is private; signed URLs work because the row's RLS already grants the owner read access on the path (paths are user-scoped: `{user_id}/talking-video/...`).
 
-## Why it looks stuck
+No backend / edge function changes are needed for the download itself.
 
-The UI shows it as “In Progress” because the job is still waiting for the Kling base video result. After that completes, the poller should submit the ElevenLabs audio to Kling lip-sync, then swap in the final video.
+## Files touched
 
-## Plan to improve this
+- `src/components/app/video/VideoDetailModal.tsx` — UI + handler (single file edit).
 
-1. **Add clearer stage visibility**
-   - Show whether a talking video is in:
-     - `Voice created`
-     - `Generating base motion`
-     - `Lip-syncing voice`
-     - `Finalizing`
-   - This avoids the current vague “Processing” state.
+## Out of scope
 
-2. **Add a recovery path for base-video stage stalls**
-   - If a talking video stays in `base_video` too long, mark it failed or retry cleanly instead of leaving it spinning.
-   - Keep the existing refund behavior for true failures.
+- No changes to `VideoResultsPanel` row-level menus (modal-only as the user requested).
+- No changes to silent/regular videos (button is conditional).
 
-3. **Add manual/automatic retry for lip-sync-safe failures**
-   - For a base video that exists but lip-sync fails, retry lip-sync before falling back to silent output.
+---
 
-4. **Improve backend logs for this exact flow**
-   - Log base task status, lip-sync task status, and timeout decisions with the queue job id so future stuck jobs can be diagnosed immediately.
+# How to make lip-sync even better
 
-## Technical notes
+These are tuning options — I'll only apply the ones you pick.
 
-- Main files involved:
-  - `supabase/functions/poll-stuck-videos/index.ts`
-  - `supabase/functions/generate-talking-video/index.ts`
-  - `src/pages/video/TalkingVideo.tsx`
-- No database schema change is required unless we decide to store richer stage fields outside `metadata`.
-- The current job may still complete naturally; it is not currently showing an API failure.
+1. **Cleaner base clip (highest impact)**
+   - Already added "lips closed" instruction + negative-prompt "talking, mouthing words". Can go further: force `camera_fixed: true` on talking videos so the head stays stable — Kling lip-sync hates jitter and parallax.
+   - Crop/zoom guidance in the base prompt: "MCU framing, head fills upper third, no hand-near-mouth, no hair across lips".
+
+2. **Audio prep**
+   - ElevenLabs: set `stability` ~0.5, `similarity_boost` ~0.85, `style` 0–0.2 for talking heads. Lower `style` = less mumbling = sharper phonemes for Kling to align.
+   - Trim leading/trailing silence on the MP3 before upload (Kling treats silence as mouth-open frames). Easy to add in `generate-talking-video` with a tiny WAV/MP3 trim using the existing duration measurement.
+   - Light compression / loudness normalize to -16 LUFS so quiet phonemes register.
+
+3. **Duration matching**
+   - Already padding 0.3s. Better: pick base duration = `ceil(audio_duration + 0.4)` capped at 10s, and pass `audio_duration_sec` AND `voice_language` (already added) so Kling can crossfade the tail to closed mouth.
+
+4. **Per-language phoneme model**
+   - Already wired `voice_language`. Add explicit override in UI for EN vs ZH (Kling has best results when language matches the spoken language, not the script language).
+
+5. **Reference image quality**
+   - Strongly recommend front-facing, lips-closed, evenly lit, no sunglasses-over-mouth, no occlusion. Add a preflight warning if the source image fails a simple face-detect / mouth-visibility check (would need a small client check or Gemini vision call).
+
+6. **Fallback retry**
+   - If Kling lip-sync returns low confidence (it sometimes reports it), auto-retry once with `camera_fixed=true` before delivering.
+
+Tell me which of these you want and I'll implement together with the audio-download button.

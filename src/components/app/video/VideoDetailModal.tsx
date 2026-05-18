@@ -61,6 +61,7 @@ interface VideoDetailModalProps {
 export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingAudio, setDownloadingAudio] = useState(false);
   const [videoMetadata, setVideoMetadata] = useState<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
@@ -141,6 +142,37 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
       toast.error('Failed to download video');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const audioStoragePath = (video.metadata as any)?.audio_storage_path as string | undefined;
+  const hasAudio = !!audioStoragePath;
+
+  const handleDownloadAudio = async () => {
+    if (!audioStoragePath) return;
+    setDownloadingAudio(true);
+    try {
+      const { data, error } = await supabase
+        .storage
+        .from('generated-audio')
+        .createSignedUrl(audioStoragePath, 3600, { download: true });
+      if (error || !data?.signedUrl) throw error || new Error('No signed URL');
+      const res = await fetch(data.signedUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const base = (video.project_title || 'voiceover').replace(/[^\w-]+/g, '-');
+      a.download = `${base}-${video.id.slice(0, 8)}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Audio download started');
+    } catch {
+      toast.error('Failed to download audio');
+    } finally {
+      setDownloadingAudio(false);
     }
   };
 
@@ -243,6 +275,18 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
                 >
                   {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
                   {downloading ? 'Preparing Download…' : 'Download Video'}
+                </Button>
+              )}
+
+              {isComplete && hasAudio && (
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadAudio}
+                  disabled={downloadingAudio}
+                  className="w-full font-medium"
+                >
+                  {downloadingAudio ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Volume2 className="w-4 h-4 mr-2" />}
+                  {downloadingAudio ? 'Preparing Audio…' : 'Download Audio (MP3)'}
                 </Button>
               )}
 
