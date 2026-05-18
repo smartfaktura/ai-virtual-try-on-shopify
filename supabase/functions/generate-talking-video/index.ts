@@ -406,11 +406,12 @@ serve(async (req) => {
     const ALLOWED_MOTIONS: Motion[] = ["locked", "natural", "presenter", "expressive", "cinematic"];
     const motion: Motion = ALLOWED_MOTIONS.includes(perf.motion as Motion) ? (perf.motion as Motion) : "natural";
     const gaze: Gaze = perf.gaze === "soft" ? "soft" : "camera";
-    const ALLOWED_CAMERA: CameraMove[] = ["none", "push_in", "pull_out", "arc"];
-    const cameraMove: CameraMove = motion === "cinematic" && ALLOWED_CAMERA.includes(perf.cameraMove as CameraMove)
+    const ALLOWED_CAMERA: CameraMove[] = ["none", "push_in", "pull_out", "arc", "orbit_lr", "orbit_rl"];
+    const cameraAllowedAtLevel = motion === "expressive" || motion === "cinematic";
+    const cameraMove: CameraMove = cameraAllowedAtLevel && ALLOWED_CAMERA.includes(perf.cameraMove as CameraMove)
       ? (perf.cameraMove as CameraMove)
       : "none";
-    const actionPrompt = typeof perf.actionPrompt === "string" ? perf.actionPrompt.slice(0, 240) : "";
+    const actionPrompt = typeof perf.actionPrompt === "string" ? perf.actionPrompt.slice(0, 600) : "";
 
     if (!imageUrl) throw new Error("image_url (reference model) is required");
     if (!rawScript) throw new Error("script is required");
