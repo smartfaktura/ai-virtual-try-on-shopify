@@ -87,13 +87,20 @@ function sanitizeTtsModel(raw: unknown): string {
 type Motion = "locked" | "natural" | "presenter";
 type Gaze = "camera" | "soft";
 
+// IMPORTANT: Base clip must be a CLEAN CANVAS for the lip-sync pass.
+// We intentionally do NOT describe any speaking motion here — Kling lip-sync
+// will drive the mouth from the ElevenLabs audio. If we let the base clip
+// "mouth words" on its own, two problems appear:
+//   1. Lip-sync fights pre-existing motion → softer/mushier sync.
+//   2. After the audio ends, the un-synced tail keeps mouthing silently.
+// Keeping the mouth closed/relaxed throughout the base clip fixes both.
 const MOTION_LINES: Record<Motion, string> = {
   locked:
-    "Body completely static. Only mouth, jaw, lips, teeth, eyes and gentle breathing animate. Shoulders, torso, hair stay locked.",
+    "Body completely static. Mouth softly closed and relaxed throughout. Only eyes, gentle breathing and tiny micro-expressions animate. Shoulders, torso, hair stay locked.",
   natural:
-    "Subtle facial life. Small natural blinks, gentle breathing, micro head settle. No shoulder or torso motion.",
+    "Subtle facial life. Mouth softly closed and relaxed throughout. Small natural blinks, gentle breathing, the faintest head settle. No shoulder or torso motion.",
   presenter:
-    "Confident delivery. Small assertive nods on stressed words, light brow lift, controlled shoulders. No hand gestures.",
+    "Confident, attentive posture. Mouth softly closed and relaxed throughout. Small assertive micro-nods, light brow engagement, controlled shoulders. No hand gestures.",
 };
 
 const GAZE_LINES: Record<Gaze, string> = {
@@ -106,7 +113,12 @@ const NEGATIVE_PROMPT =
   "head turning away, profile turn, looking sideways, mouth covered, hand over mouth, " +
   "hand near face, finger near mouth, object crossing mouth, teeth warping, lip distortion, " +
   "face melting, duplicate face, two heads, extra person, crowd, dramatic gesture, " +
-  "warping, watermark, text overlay, blur, motion blur on face, jitter";
+  "warping, watermark, text overlay, blur, motion blur on face, jitter, " +
+  // Critical: prevent the base clip from animating speech on its own —
+  // that interferes with the downstream lip-sync pass and causes the head
+  // to keep "mouthing" after the voiceover ends.
+  "talking, speaking, mouthing words, silent speech, lip flapping, jaw chewing, " +
+  "open mouth, parted lips, exaggerated mouth movement, teeth showing, tongue visible";
 
 function buildStructuredPrompt(
   motion: Motion,
@@ -122,7 +134,7 @@ function buildStructuredPrompt(
     "SUBJECT: Single person, medium close-up. Head and shoulders visible. Face fully unobstructed. Mouth fully visible to camera at all times.",
     `PERFORMANCE: ${MOTION_LINES[motion]}`,
     `GAZE: ${GAZE_LINES[gaze]}`,
-    "SPEECH READINESS: Natural jaw and lip articulation as if speaking. Soft natural blinks. Quiet breathing. Engaged expression.",
+    "MOUTH: Lips softly closed and relaxed for the entire shot. Do NOT animate speaking, do NOT mouth words, do NOT open the mouth. Lip motion will be applied in a separate pass — keep the mouth a clean, still canvas.",
     "SAFETY: Hands stay completely out of frame. Nothing crosses the mouth. No profile turn. No exaggerated gestures.",
     styleLine,
   ].join(" ");
@@ -166,12 +178,30 @@ async function generateVoiceover(args: {
   return new Uint8Array(buf);
 }
 
-// Estimate seconds of speech: rough proxy from script word count + speed.
-// Used only for choosing 5 vs 10s base video — Kling sets the actual length.
+// Measure real audio duration from the MP3 bytes returned by ElevenLabs.
+// We request `mp3_44100_128` which is CBR 128 kbps, so:
+//   duration_sec ≈ (audio_byte_length * 8) / 128000
+// Skip an ID3v2 tag if present (header "ID3" + 6 bytes + 4 syncsafe-int size).
+function measureMp3DurationSec(bytes: Uint8Array, bitrateKbps = 128): number {
+  let audioBytes = bytes.length;
+  if (bytes.length > 10 && bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
+    // ID3v2 size is a 4-byte syncsafe integer at offset 6..9
+    const size =
+      ((bytes[6] & 0x7f) << 21) |
+      ((bytes[7] & 0x7f) << 14) |
+      ((bytes[8] & 0x7f) << 7) |
+      (bytes[9] & 0x7f);
+    audioBytes = Math.max(0, bytes.length - (10 + size));
+  }
+  return (audioBytes * 8) / (bitrateKbps * 1000);
+}
+
+// Rough fallback for clients still on the old word-count path. Only used if
+// measureMp3DurationSec returns something obviously bad.
 function roughDurationSeconds(script: string, speed: number): number {
   const words = script.trim().split(/\s+/).filter(Boolean).length;
   const wpm = 155 * Math.max(0.5, Math.min(2, speed || 1));
-  return (words / wpm) * 60 + 0.6; // +intro/outro padding
+  return (words / wpm) * 60 + 0.6;
 }
 
 // --- JWT helpers (HS256) for Kling ---
@@ -311,13 +341,12 @@ serve(async (req) => {
     if (!rawScript) throw new Error("script is required");
     if (rawScript.length > 220) throw new Error("Script too long (max 220 characters)");
 
-    // Auto-bump duration if the estimated speech overflows 5s.
-    const estDur = roughDurationSeconds(rawScript, voiceSpeed);
-    const duration: "5" | "10" =
-      requestedDuration === "10" ? "10" : estDur > 5 ? "10" : "5";
-    if (duration !== requestedDuration) {
-      console.log(`[talking-video] Auto-bumped duration 5s → 10s (est ${estDur.toFixed(1)}s)`);
-    }
+    // We pick the base video duration AFTER generating the voiceover, using
+    // the measured audio length. That's much more accurate than the
+    // word-count guess and avoids 10s base clips for 4s scripts (which is
+    // what caused the "still talking after audio ends" feel).
+    // Provisional pick for logging; will be re-picked below.
+    const rough = roughDurationSeconds(rawScript, voiceSpeed);
 
     // --- Stage 0: generate ElevenLabs voiceover + upload to storage ---
     console.log(`[talking-video] Job ${jobId} — generating voiceover (${rawScript.length} chars, voice=${voiceId}, model=${ttsModel})`);
@@ -328,6 +357,30 @@ serve(async (req) => {
       voiceSettings,
       elevenKey: ELEVENLABS_API_KEY,
     });
+
+    // Real audio duration from the CBR 128kbps MP3 ElevenLabs returned.
+    const measuredAudioSec = measureMp3DurationSec(audioBytes, 128);
+    const audioDurationSec = measuredAudioSec > 0.2 && measuredAudioSec < 60
+      ? measuredAudioSec
+      : rough;
+
+    // Pick the tightest base-video length that still fits the audio plus a
+    // small ~0.3s tail so lip-sync has room to settle the mouth closed.
+    const TAIL_PAD = 0.3;
+    const duration: "5" | "10" =
+      requestedDuration === "10" ? "10"
+        : audioDurationSec + TAIL_PAD > 5 ? "10" : "5";
+    if (duration !== requestedDuration) {
+      console.log(
+        `[talking-video] Auto-bumped duration ${requestedDuration}s → ${duration}s ` +
+        `(measured audio ${audioDurationSec.toFixed(2)}s, rough est ${rough.toFixed(2)}s)`,
+      );
+    } else {
+      console.log(
+        `[talking-video] Using duration=${duration}s ` +
+        `(measured audio ${audioDurationSec.toFixed(2)}s)`,
+      );
+    }
 
     const audioPath = `${userId}/talking/${jobId}.mp3`;
     const { error: uploadErr } = await svc.storage
@@ -340,7 +393,7 @@ serve(async (req) => {
       console.error("[talking-video] Audio upload error:", uploadErr);
       throw new Error("Failed to save voiceover audio");
     }
-    console.log(`[talking-video] Job ${jobId} — voiceover uploaded (${audioBytes.length} bytes) at ${audioPath}`);
+    console.log(`[talking-video] Job ${jobId} — voiceover uploaded (${audioBytes.length} bytes, ${audioDurationSec.toFixed(2)}s) at ${audioPath}`);
 
     // --- Stage 1: submit Kling image2video (locked talking-head) ---
     const sceneHint = (body.scene_hint as string) || null;
@@ -392,7 +445,7 @@ serve(async (req) => {
       voice_settings: voiceSettings,
       tts_model: ttsModel,
       audio_storage_path: audioPath,
-      audio_duration_sec: Math.round(estDur * 10) / 10,
+      audio_duration_sec: Math.round(audioDurationSec * 10) / 10,
       base_video_url: null as string | null,
       lipsync_task_id: null as string | null,
       silent_fallback: false,

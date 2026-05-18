@@ -265,20 +265,22 @@ serve(async (req) => {
               }
               const audioUrl = signedAudio.signedUrl;
 
+              const voiceLanguage = (meta.voice_language as string) === "zh" ? "zh" : "en";
+              const lipsyncInput: Record<string, unknown> = {
+                video_url: lipsyncSourceUrl,
+                mode: "audio2video",
+                audio_type: "url",
+                audio_url: audioUrl,
+                // Tell Kling which phoneme model to use — improves sync accuracy
+                voice_language: voiceLanguage,
+              };
               const lipRes = await fetch(`${KLING_API_BASE}/videos/lip-sync`, {
                 method: "POST",
                 headers,
-                body: JSON.stringify({
-                  input: {
-                    video_url: lipsyncSourceUrl,
-                    mode: "audio2video",
-                    audio_type: "url",
-                    audio_url: audioUrl,
-                  },
-                }),
+                body: JSON.stringify({ input: lipsyncInput }),
               });
               const lipJson = await lipRes.json();
-              console.log(`[poll-stuck-videos] talking-video stage 2 submit:`, JSON.stringify(lipJson).slice(0, 300));
+              console.log(`[poll-stuck-videos] talking-video stage 2 submit (lang=${voiceLanguage}):`, JSON.stringify(lipJson).slice(0, 300));
 
               if (!lipRes.ok || lipJson.code !== 0) {
                 // Lip-sync submission failed → silent fallback, partial refund
