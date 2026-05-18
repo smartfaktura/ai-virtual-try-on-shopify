@@ -238,6 +238,7 @@ export default function TalkingVideo() {
         <TalkingVideoGenerating
           estimatedSeconds={duration === '10' ? 7 * 60 : 5 * 60}
           status={phase === 'queued' ? 'queued' : phase === 'processing' ? 'processing' : phase === 'complete' ? 'complete' : 'failed'}
+          stage={stage}
           videoUrl={resultVideoUrl}
           errorMessage={resultError}
           thumbnailUrl={imageUrl}
