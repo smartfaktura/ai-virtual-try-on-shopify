@@ -413,105 +413,60 @@ export default function VideoHub() {
         </div>
       </div>
 
-      {/* In Progress + Completed Videos */}
-      {(() => {
-        // Build a set of kling_task_ids that already have a completed row,
-        // so a stale "processing" duplicate can never appear in the In Progress strip.
-        const completedTaskIds = new Set(
-          history
-            .filter(v => v.status === 'complete' && v.kling_task_id)
-            .map(v => v.kling_task_id as string),
-        );
-        const processingVideos = history.filter(v =>
-          (v.status === 'processing' || v.status === 'queued') &&
-          !(v.kling_task_id && completedTaskIds.has(v.kling_task_id))
-        );
-        const completedVideos = history.filter(v => v.status !== 'processing' && v.status !== 'queued');
-
-        return (
+      {/* Completed Videos */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
+            {completedVideos.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
+              </Badge>
+            )}
+          </div>
+          {completedVideos.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
+              {selectMode ? 'Done' : 'Select'}
+            </Button>
+          )}
+        </div>
+        {isLoadingHistory ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-xl bg-muted/30 animate-pulse" />
+            ))}
+          </div>
+        ) : completedVideos.length > 0 ? (
           <>
-            {processingVideos.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
-                  <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
-                    {processingVideos.length}
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {processingVideos.map((v) => (
-                    <RecentVideoCard
-                      key={v.id}
-                      video={v}
-                      onClick={() => setSelectedVideo(v)}
-                      selectMode={false}
-                      selected={false}
-                      onToggleSelect={() => {}}
-                      nowTick={nowTick}
-                    />
-                  ))}
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {completedVideos.map((v) => (
+                <RecentVideoCard
+                  key={v.id}
+                  video={v}
+                  onClick={() => setSelectedVideo(v)}
+                  selectMode={selectMode}
+                  selected={selectedIds.has(v.id)}
+                  onToggleSelect={() => toggleSelection(v.id)}
+                  highlight={recentlyCompleted.has(v.id)}
+                />
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center pt-2">
+                <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
+                  {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Load More Videos
+                </Button>
               </div>
             )}
-
-            {/* Completed Videos */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
-                  {completedVideos.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
-                    </Badge>
-                  )}
-                </div>
-                {completedVideos.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
-                    {selectMode ? 'Done' : 'Select'}
-                  </Button>
-                )}
-              </div>
-              {isLoadingHistory ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="aspect-[3/4] rounded-xl bg-muted/30 animate-pulse" />
-                  ))}
-                </div>
-              ) : completedVideos.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {completedVideos.map((v) => (
-                      <RecentVideoCard
-                        key={v.id}
-                        video={v}
-                        onClick={() => setSelectedVideo(v)}
-                        selectMode={selectMode}
-                        selected={selectedIds.has(v.id)}
-                        onToggleSelect={() => toggleSelection(v.id)}
-                        highlight={recentlyCompleted.has(v.id)}
-                      />
-                    ))}
-                  </div>
-                  {hasMore && (
-                    <div className="flex justify-center pt-2">
-                      <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
-                        {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                        Load More Videos
-                      </Button>
-                    </div>
-                  )}
-                </>
-              ) : !isLoadingHistory && processingVideos.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border p-8 text-center">
-                  <Film className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No videos yet. Create your first one above.</p>
-                </div>
-              ) : null}
-            </div>
           </>
-        );
-      })()}
+        ) : !isLoadingHistory && processingVideos.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border p-8 text-center">
+            <Film className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No videos yet. Create your first one above.</p>
+          </div>
+        ) : null}
+      </div>
 
       {/* Sticky bulk download bar */}
       {selectedIds.size > 0 && (
