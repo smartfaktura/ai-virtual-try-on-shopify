@@ -1,28 +1,28 @@
-# Fix: Preview voice always errors
+## Diagnosis
 
-## Root cause
+`Preview voice` is reaching the backend now, but the function returns `401 {"error":"Unauthorized"}`. The request includes a valid signed-in user token, so the problem is in the new `preview-talking-voice` function’s auth validation path, not CORS.
 
-`supabase.functions.invoke()` sends extra headers (`x-supabase-client-platform`, `x-supabase-client-platform-version`, `x-supabase-client-runtime`, `x-supabase-client-runtime-version`). The `preview-talking-voice` edge function's `Access-Control-Allow-Headers` only lists `authorization, x-client-info, apikey, content-type`, so the browser blocks the POST after a successful OPTIONS preflight. Gateway logs confirm: only `OPTIONS | 200`, no POST ever recorded.
+## Plan
 
-This is identical to the existing `generate-talking-video` CORS header set, which works.
+1. **Fix backend auth validation**
+   - Update `preview-talking-voice` to validate the incoming bearer token with the same working pattern used by existing functions like `studio-chat` / `kling-lip-sync`.
+   - Explicitly extract `Authorization: Bearer ...`, call `auth.getUser(token)`, and use `user.id` for rate limiting.
+   - Return clearer errors for missing auth vs expired auth.
 
-## Change
+2. **Make the frontend error message useful**
+   - Replace the generic `Edge Function returned a non-2xx status code` toast with the backend’s actual JSON error when available.
+   - If auth is missing/expired, show `Please sign in again to preview voice` instead of a technical error.
 
-**`supabase/functions/preview-talking-voice/index.ts`** — expand `Access-Control-Allow-Headers` to match the working `generate-talking-video` function:
+3. **Harden playback**
+   - Keep the existing base64 data-URI playback, but catch `audio.play()` browser failures separately so users see `Click again to play preview` if autoplay is blocked.
+   - Reset cached preview audio when script, voice, or speed changes so stale audio is not replayed.
 
-```ts
-"Access-Control-Allow-Headers":
-  "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-```
+4. **Deploy and verify**
+   - Deploy `preview-talking-voice`.
+   - Test the function directly and in the browser: click `Preview voice`, confirm the request returns `200`, and confirm the button changes to `Stop preview` / `Play preview` without showing the app error modal.
 
-Then redeploy `preview-talking-voice`.
+## Technical notes
 
-## Verification
-
-1. Open `/app/video/talking`, type a short script, click **Preview voice**.
-2. Expect an MP3 to play within ~2s.
-3. Confirm in gateway logs that a `POST | 200` row appears for `preview-talking-voice`.
-
-## Out of scope
-
-No other behavior, voice mapping, UI, or rate-limit changes.
+- No database changes needed.
+- No change to credit charging; voice preview stays free and rate-limited.
+- The current CORS header fix stays in place.

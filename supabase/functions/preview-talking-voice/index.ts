@@ -49,18 +49,24 @@ serve(async (req) => {
       });
     }
 
-    // Auth check
+    // Auth check — validate the bearer token explicitly (matches the
+    // working pattern used by studio-chat / kling-lip-sync).
     const authHeader = req.headers.get("Authorization") || "";
-    const supa = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: claimsData, error: claimsErr } = await supa.auth.getClaims();
-    if (claimsErr || !claimsData?.claims?.sub) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Please sign in to preview voice" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub as string;
+    const token = authHeader.replace("Bearer ", "");
+    const supa = createClient(supabaseUrl, anonKey);
+    const { data: { user }, error: userErr } = await supa.auth.getUser(token);
+    if (userErr || !user) {
+      console.warn("[preview-talking-voice] auth failed:", userErr?.message);
+      return new Response(JSON.stringify({ error: "Your session expired — please sign in again" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = user.id;
 
     if (rateLimited(userId)) {
       return new Response(JSON.stringify({ error: "Too many previews — try again in a minute" }), {
