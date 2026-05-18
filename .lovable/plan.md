@@ -1,51 +1,72 @@
-# Talking Video — two real bugs found in the last two generations
+## Root cause: queue job timed out and got auto-retried mid-pipeline
 
-I checked the last two Talking Video rows in the database and traced both failures end-to-end.
+The Talking Video pipeline is two Kling stages (base video ~5–15 min, then lip-sync ~5–15 min) — easily 20–30 minutes end to end. But the underlying queue job uses a generic 5-minute timeout, so the cleanup cron killed the job while it was still legitimately running.
 
-## What happened
+Forensic trace for the affected row (`5f279313…`):
 
-### Job 1 — infinite "queued" (the loading one)
+- 07:34 — queue created, `generate-talking-video` dispatched, base video task submitted.
+- ~07:45 — `cleanup_stale_jobs` saw `generation_queue.timeout_at` (started_at + **5 min**) elapsed, no partial results → **auto-retry** (`retry_count: 0 → 1`, status back to `queued`).
+- ~07:50 — `process-queue` re-dispatched `generate-talking-video` for the same job. This stomped the `generated_videos` row back to `status='processing'` with a **new** base-video `kling_task_id`, wiping any in-flight stage-1 state.
+- Meanwhile the original base video finished. `poll-stuck-videos` submitted lip-sync (task `885271263831916599`) and updated metadata to `stage='lipsync'`. But the queue's `result.stage` was never updated, so cleanup still saw the job as stale.
+- 08:40 — second attempt also hit the 5-min cutoff. `retry_count` was already 1 → full failure: queue marked `failed` ("Timed out after retry (attempt 2)") with **no refund to the generated_videos row**.
+- The lip-sync video on Kling's side likely did complete, but by then `poll-stuck-videos` had already passed its own `TIMEOUT_MIN=30` cutoff (measured from row `created_at`, not from when lip-sync was submitted) and triggered the silent fallback — which is what you saw.
+- The manual repair I did last turn locked in that silent fallback. So the video you're watching is the base Kling clip with no audio, exactly because the lip-sync result was thrown away.
 
-- **Row:** `bbbb8992…`, script "If you run a swimwear brand…" (119 chars, within the 120 limit)
-- **Queue job:** `2cda8810…` → `failed` with `Dispatch rejected (500). Please try again.`
-- **Cause:** `generate-talking-video` returned 500 to `process-queue` (Kling API rejected the request — likely because the script contains a curly apostrophe `'` and/or special chars that tripped validation; logs are already rotated so we can't see the exact reason).
-- **Why it shows as "infinite loading":** `enqueue-generation` inserts a placeholder `generated_videos` row with `status='queued'` before dispatch. When dispatch fails, `process-queue` marks the **queue** job failed and refunds, but **nobody updates the placeholder**, so it stays `queued` forever and the Video Hub card spins indefinitely.
+There are three independent bugs feeding into this:
 
-### Job 2 — "failed" (previously generated silently, this time disappeared)
+1. **`generation_queue.timeout_at` is hard-coded to 5 minutes in `claim_next_job`** — fine for image jobs, fatal for talking_video.
+2. **`cleanup_stale_jobs` retries any "stale" queue job** — including talking_video jobs that are still legitimately running on Kling. Each retry re-dispatches `generate-talking-video` and corrupts the row.
+3. **`poll-stuck-videos.TIMEOUT_MIN` is measured from `created_at`** — so the cutoff fires mid-lip-sync even when stage 2 is healthy. And the queue's `result.stage` is never advanced to `lipsync`, so cleanup can't tell the job is making progress.
 
-- **Row:** `5f279313…`, script "hey its vov ai"
-- **Result:** Base video **did generate successfully** — a silent .mp4 is sitting in storage at the saved URL. But `status='failed'`, `error_message='Timed out waiting for Kling result after 30 minutes'`.
-- **Cause:** Stage 1 (base video) finished and was saved, but stage 2 (Kling lip-sync) never reached `stage='lipsync'` cleanly — metadata still shows `stage='base_video'` and `lipsync_task_id=null`. After 30 min, the poller's timeout branch only applies the silent-video fallback when `isLipsyncStage` is true. Anywhere else it just marks the row failed, throwing away the working silent base video.
-- **Why the user previously got "successful but without sound":** exactly the silent fallback path — it used to fire correctly. Now the row gets into a state where the fallback condition doesn't match, so the user loses the video they paid for.
+## Plan
 
-## What I'll change
+### 1. Give talking_video a realistic queue timeout
 
-### 1. `supabase/functions/process-queue/index.ts` — clean up the placeholder on dispatch failure
-When `dispatchGenerationFunction` returns non-OK for a `talking_video` job, also update the placeholder `generated_videos` row (matched via `metadata->>queue_job_id = job.id`) to `status='failed'` with the same error message and `completed_at=now()`. This kills the infinite loading card and lets the Video Hub show a normal failed card.
+Edit `public.claim_next_job` (migration):
 
-### 2. `supabase/functions/poll-stuck-videos/index.ts` — fall back to silent video whenever `base_video_url` exists OR `video_url` is already set
-Broaden the timeout fallback so it fires whenever a talking-video row has *any* usable base video URL (`meta.base_video_url` OR the row's `video_url`), not only when `isLipsyncStage` is true. On timeout for a talking-video row:
-- If a base URL is available → mark `status='complete'`, set `video_url` to it, write `metadata.silent_fallback=true` + `lipsync_error='Lip-sync timed out'`, resolve the queue as completed, refund the 8 lip-sync credits.
-- Only fall through to "mark failed" when there is genuinely no base video.
+- When the claimed job's `job_type = 'talking_video'`, set `timeout_at = now() + interval '45 minutes'`.
+- All other job types keep the existing 5-minute timeout.
 
-This recovers cases like Job 2 where stage 1 succeeded but the metadata transition to `lipsync` didn't land cleanly.
+### 2. Stop auto-retrying talking_video jobs
 
-### 3. One-time cleanup for the two existing rows
-- `bbbb8992…` → mark `status='failed'` with a clear error so the card stops spinning.
-- `5f279313…` → flip to `status='complete'` using the existing `video_url`, set `metadata.silent_fallback=true`, refund 8 credits to the user.
+Edit `public.cleanup_stale_jobs` (migration):
 
-Done via a SQL migration (or a direct one-shot update if you'd rather not migrate). No data is destroyed.
+- Skip `job_type = 'talking_video'` entirely — let `poll-stuck-videos` own the lifecycle for these (it already has the right semantics: silent fallback, partial refund, completion).
+- Existing behavior for image jobs is unchanged.
 
-## Out of scope
+### 3. Keep the queue's stage marker in sync (`supabase/functions/poll-stuck-videos/index.ts`)
 
-- Not changing the Kling request body or the 120-char script limit.
-- Not changing the Video Hub layout or the In Progress section.
-- Not adding any new voice samples / preview audio (that was an earlier thread).
+When stage 1 finishes and stage 2 (lip-sync) is submitted, also update the matching `generation_queue` row's `result` to `{ kling_task_id: <lipsync task>, stage: 'lipsync' }` and bump `timeout_at` to `now() + interval '45 minutes'`. This way even if rule #2 is bypassed by a future change, cleanup sees a fresh deadline.
 
-## Technical notes
+### 4. Measure the silent-fallback cutoff from the right starting point (`poll-stuck-videos`)
 
-- `enqueue-generation` already writes `metadata.queue_job_id = result.job_id` on the placeholder, so the dispatch-failure update can target it with `.filter("metadata->>queue_job_id", "eq", jobId)`.
-- The 8-credit refund matches the existing `refund_credits` call in the lip-sync silent-fallback branches.
-- No edge-function config or RLS changes required.
+- Track lip-sync submission time in metadata as `lipsync_started_at` (set when stage-2 is submitted).
+- When deciding whether to time out and silent-fall-back, compare against `max(row.created_at, lipsync_started_at) + TIMEOUT_MIN` instead of `row.created_at + TIMEOUT_MIN`.
+- Bump `TIMEOUT_MIN` from 30 → 45 minutes so a healthy stage 2 isn't killed early.
 
-Reply "go" (or tweak any of the three steps) and I'll implement.
+### 5. Guard `generate-talking-video` against re-dispatch on a non-queued row
+
+Defensive only — to make sure a future bug can't cause the same corruption:
+
+- Before doing any work, fetch the matching `generated_videos` row via `metadata->>queue_job_id`. If `status` is already `complete` or `failed`, exit early (mark queue completed, no refund) instead of stomping the row.
+
+### 6. Repair the specific affected job
+
+One-time SQL (service-role migration) for row `5f279313-051f-4eaa-938e-3b06d24d8063`:
+
+- Re-check Kling task `885271263831916599` (the lip-sync task) directly. If Kling still has the lip-synced result, swap `video_url` to the lip-synced file, clear `silent_fallback`, set `metadata.stage='complete'`, and **reverse the 8-credit silent-fallback refund** (since the user is getting the full product).
+- If Kling no longer has the result available, leave the silent fallback in place but credit back the full 8 lip-sync credits (already done) and surface a clearer message in the Video Hub card ("Voiceover failed — silent version delivered").
+
+The Kling lookup will happen inside the migration via an edge-function call, since it requires Kling API credentials.
+
+### Out of scope
+
+- No UI changes to Video Hub.
+- No changes to image/freestyle queue paths.
+- Don't touch `enqueue-generation` — the bug is downstream of enqueue.
+
+### Files touched
+
+- `supabase/migrations/<new>.sql` — `claim_next_job`, `cleanup_stale_jobs`, repair for `5f279313…`.
+- `supabase/functions/poll-stuck-videos/index.ts` — queue stage sync, `lipsync_started_at`, bumped `TIMEOUT_MIN`.
+- `supabase/functions/generate-talking-video/index.ts` — early-exit guard for completed/failed rows.
