@@ -1,4 +1,5 @@
-import { HelpCircle, Sparkles } from 'lucide-react';
+import { HelpCircle, Sparkles, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -6,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 export type Motion = 'locked' | 'natural' | 'presenter' | 'expressive' | 'cinematic';
 export type Gaze = 'camera' | 'soft';
-export type CameraMove = 'none' | 'push_in' | 'pull_out' | 'arc';
+export type CameraMove = 'none' | 'push_in' | 'pull_out' | 'arc' | 'orbit_lr' | 'orbit_rl';
 
 export interface Performance {
   motion: Motion;
@@ -19,8 +20,8 @@ const ENERGY: { value: Motion; label: string; desc: string }[] = [
   { value: 'locked',     label: 'Still',      desc: 'Only mouth, eyes, breathing' },
   { value: 'natural',    label: 'Natural',    desc: 'Subtle facial life, micro nods' },
   { value: 'presenter',  label: 'Presenter',  desc: 'Confident delivery, small nods' },
-  { value: 'expressive', label: 'Expressive', desc: 'Hand gestures, shoulder sway, scene life' },
-  { value: 'cinematic',  label: 'Cinematic',  desc: 'Editorial motion + slow camera move' },
+  { value: 'expressive', label: 'Expressive', desc: 'Hand gestures, steps, scene life' },
+  { value: 'cinematic',  label: 'Cinematic',  desc: 'Walking, full-body, camera moves' },
 ];
 
 const EYE_CONTACT: { value: Gaze; label: string; desc: string }[] = [
@@ -33,18 +34,27 @@ const CAMERA_MOVES: { value: CameraMove; label: string }[] = [
   { value: 'push_in',  label: 'Slow push-in' },
   { value: 'pull_out', label: 'Slow pull-out' },
   { value: 'arc',      label: 'Slow arc' },
+  { value: 'orbit_lr', label: 'Orbit L → R' },
+  { value: 'orbit_rl', label: 'Orbit R → L' },
 ];
 
 const ACTION_SUGGESTIONS = [
   'soft hand gesture',
   'lift product to camera',
   'slow step forward',
+  'walk slowly toward camera',
+  'gentle orbit around subject',
+  'subtle pose change',
   'hair in light breeze',
   'turn shoulder gently',
   'ambient steam in scene',
 ];
 
-const MAX_ACTION_LEN = 240;
+const MAX_ACTION_LEN = 600;
+
+// Words that hint the user wants real motion. If they're typing this on
+// Still/Natural we surface a chip to bump the action level.
+const HIGH_MOTION_REGEX = /\b(walk|walking|orbit|side angle|profile|full[- ]?body|turn around|step forward|runway|campaign|pose change)\b/i;
 
 interface Props {
   value: Performance;
@@ -74,8 +84,13 @@ function Option({
 export function TalkingPerformancePicker({ value, onChange }: Props) {
   const cameraMove = value.cameraMove ?? 'none';
   const actionPrompt = value.actionPrompt ?? '';
-  const isCinematic = value.motion === 'cinematic';
+  const allowsCamera = value.motion === 'expressive' || value.motion === 'cinematic';
   const allowsAction = value.motion !== 'locked';
+
+  const needsLevelBump =
+    actionPrompt.length > 0 &&
+    HIGH_MOTION_REGEX.test(actionPrompt) &&
+    (value.motion === 'locked' || value.motion === 'natural' || value.motion === 'presenter');
 
   const appendChip = (chip: string) => {
     const next = actionPrompt.trim().length === 0
@@ -95,8 +110,8 @@ export function TalkingPerformancePicker({ value, onChange }: Props) {
                 <HelpCircle className="h-3.5 w-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-[240px] text-xs">
-              These shape how the model performs and how the scene moves — they don't change the voice. The mouth is always handled by lip-sync.
+            <TooltipContent side="right" className="max-w-[260px] text-xs">
+              These shape how the model performs and how the scene moves — they don't change the voice. The mouth is always handled by lip-sync, so it stays closed in the base render.
             </TooltipContent>
           </Tooltip>
           <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Delivery & action</span>
@@ -109,11 +124,14 @@ export function TalkingPerformancePicker({ value, onChange }: Props) {
               <Option
                 key={m.value}
                 active={value.motion === m.value}
-                onClick={() => onChange({
-                  ...value,
-                  motion: m.value,
-                  cameraMove: m.value === 'cinematic' ? (value.cameraMove ?? 'push_in') : 'none',
-                })}
+                onClick={() => {
+                  const nextAllowsCamera = m.value === 'expressive' || m.value === 'cinematic';
+                  onChange({
+                    ...value,
+                    motion: m.value,
+                    cameraMove: nextAllowsCamera ? (value.cameraMove ?? 'none') : 'none',
+                  });
+                }}
                 label={m.label}
                 desc={m.desc}
               />
@@ -136,7 +154,7 @@ export function TalkingPerformancePicker({ value, onChange }: Props) {
           </div>
         </div>
 
-        {isCinematic && (
+        {allowsCamera && (
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Camera move</Label>
             <div className="flex flex-wrap gap-1.5">
@@ -172,8 +190,8 @@ export function TalkingPerformancePicker({ value, onChange }: Props) {
               const v = e.target.value.slice(0, MAX_ACTION_LEN);
               onChange({ ...value, actionPrompt: v });
             }}
-            placeholder="e.g. holds the bottle up to the light, soft scarf flutter, slow step forward"
-            rows={2}
+            placeholder="e.g. walks slowly toward camera, gently adjusts the strap, orbit camera left to right capturing 3/4 angles"
+            rows={3}
             disabled={!allowsAction}
             className="text-sm resize-none"
           />
@@ -190,11 +208,38 @@ export function TalkingPerformancePicker({ value, onChange }: Props) {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-muted-foreground">
+
+          {needsLevelBump && (
+            <button
+              type="button"
+              onClick={() => onChange({
+                ...value,
+                motion: 'cinematic',
+                cameraMove: value.cameraMove && value.cameraMove !== 'none' ? value.cameraMove : 'orbit_lr',
+              })}
+              className="w-full flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-left hover:border-amber-500/50 transition"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+              <div className="text-[11px] text-muted-foreground">
+                <span className="text-foreground font-medium">Bump to Cinematic for this prompt.</span>{' '}
+                Walking, orbit camera, full-body and side-angle motion only render at Expressive or Cinematic.
+              </div>
+            </button>
+          )}
+
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
             {allowsAction
-              ? "Describe body, hands, scene or camera motion. Mouth and lip-sync are handled automatically — don't describe speaking"
+              ? "Talking Video keeps the face toward camera and the mouth closed so lip-sync can paint speech on top. Walking, hand gestures, orbit camera and pose changes all work — full back turns and hands near the mouth do not"
               : 'Action prompt is ignored at Still level — pick Natural or higher'}
           </p>
+
+          <Link
+            to="/app/video/start-end"
+            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition"
+          >
+            Pure fashion or runway video without speech? Try Start → End Video
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
         </div>
       </div>
     </TooltipProvider>
