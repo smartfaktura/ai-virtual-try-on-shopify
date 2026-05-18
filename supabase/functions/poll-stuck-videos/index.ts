@@ -13,7 +13,7 @@ const corsHeaders = {
 
 const KLING_API_BASE = "https://api-singapore.klingai.com/v1";
 const MAX_BATCH = 100;
-const TIMEOUT_MIN = 30;
+const TIMEOUT_MIN = 45; // upper bound for any single Kling stage (base or lipsync)
 
 function base64url(data: Uint8Array): string {
   let bin = "";
