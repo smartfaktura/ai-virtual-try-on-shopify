@@ -14,10 +14,27 @@ import { toast } from 'sonner';
 import { buildVideoFileName } from '@/lib/videoFilename';
 
 /** Expected total duration (seconds) for a Kling job — used to estimate progress */
-function expectedSecondsForModel(model?: string | null): number {
+function expectedSecondsForModel(model?: string | null, workflowType?: string | null): number {
+  // Talking videos are a two-stage pipeline (base motion + lip-sync), so they
+  // realistically need closer to ~12 minutes end-to-end.
+  if (workflowType === 'talking_video') return 12 * 60;
   if (!model) return 7 * 60;
   if (model.includes('omni') || model.includes('audio')) return 9 * 60;
   return 7 * 60;
+}
+
+/** Human-friendly stage label for the processing pill on a video card. */
+function talkingStageLabel(stage: string | undefined): string {
+  switch (stage) {
+    case 'base_video':
+      return 'Generating motion';
+    case 'lipsync':
+      return 'Lip-syncing voice';
+    case 'complete':
+      return 'Finalizing';
+    default:
+      return 'Processing';
+  }
 }
 
 function formatElapsed(s: number): string {
