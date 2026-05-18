@@ -5,8 +5,10 @@ import { toast } from '@/lib/brandedToast';
 import { serializeForKling } from '@/lib/talkingDuration';
 
 export interface TalkingPerformance {
-  motion: 'locked' | 'natural' | 'presenter';
+  motion: 'locked' | 'natural' | 'presenter' | 'expressive' | 'cinematic';
   gaze: 'camera' | 'soft';
+  cameraMove?: 'none' | 'push_in' | 'pull_out' | 'arc';
+  actionPrompt?: string;
 }
 
 export interface TalkingVoiceSettings {
