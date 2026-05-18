@@ -41,7 +41,16 @@ export default function TalkingVideo() {
 
   const hasEnough = (balance ?? 0) >= cost;
   const charCount = script.trim().length;
-  const canGenerate = !!imageUrl && charCount > 0 && charCount <= MAX_SCRIPT && !isSubmitting;
+
+  const hasImage = !!imageUrl;
+  const hasScript = charCount > 0 && charCount <= MAX_SCRIPT;
+  const missingHint = !hasImage
+    ? 'Add a reference photo to continue'
+    : charCount === 0
+      ? 'Write a short script to continue'
+      : charCount > MAX_SCRIPT
+        ? `Script is too long — keep it under ${MAX_SCRIPT} characters`
+        : null;
 
   const handleFile = useCallback(async (file: File) => {
     const url = await upload(file);
@@ -49,12 +58,27 @@ export default function TalkingVideo() {
   }, [upload]);
 
   const handleGenerate = useCallback(async () => {
+    if (isSubmitting) return;
+    if (!imageUrl) {
+      toast.error('Add a reference photo first');
+      document.getElementById('talking-step-reference')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (charCount === 0) {
+      toast.error('Write a short script first');
+      document.getElementById('script')?.focus();
+      return;
+    }
+    if (charCount > MAX_SCRIPT) {
+      toast.error(`Script must be ${MAX_SCRIPT} characters or fewer`);
+      return;
+    }
     if (!hasEnough) {
       setNoCreditsOpen(true);
       return;
     }
     const ok = await start({
-      imageUrl: imageUrl!,
+      imageUrl,
       script,
       voiceId,
       voiceSpeed,
@@ -62,10 +86,9 @@ export default function TalkingVideo() {
       aspectRatio: '9:16',
     });
     if (ok) {
-      // Navigate to Video Hub where the user can watch the queue progress.
       setTimeout(() => navigate('/app/video'), 800);
     }
-  }, [hasEnough, imageUrl, script, voiceId, voiceSpeed, duration, start, navigate]);
+  }, [isSubmitting, imageUrl, charCount, hasEnough, script, voiceId, voiceSpeed, duration, start, navigate]);
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
