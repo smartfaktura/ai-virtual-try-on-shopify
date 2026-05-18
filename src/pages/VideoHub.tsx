@@ -109,7 +109,12 @@ function RecentVideoCard({
   const elapsedSec = isProcessing && nowTick
     ? Math.max(0, Math.floor((nowTick - new Date(video.created_at).getTime()) / 1000))
     : 0;
-  const expected = expectedSecondsForModel(video.model_name);
+  const expected = expectedSecondsForModel(video.model_name, video.workflow_type);
+  const stage = (video.metadata as Record<string, unknown> | null | undefined)?.stage as string | undefined;
+  const isTalking = video.workflow_type === 'talking_video';
+  const processingLabel = isTalking
+    ? talkingStageLabel(stage)
+    : (video.status === 'processing' ? 'Processing' : 'Queued');
   const progressPct = isProcessing
     ? Math.min(95, Math.round((elapsedSec / expected) * 100))
     : 0;
