@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, FolderOpen, Mic2, Loader2, Info } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
@@ -9,20 +9,24 @@ import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { LibraryPickerModal } from '@/components/app/video/LibraryPickerModal';
 import { KlingVoicePicker, VOICE_IDS } from '@/components/app/video/KlingVoicePicker';
+import { TalkingVideoGenerating } from '@/components/app/video/TalkingVideoGenerating';
 import { useTalkingVideoProject } from '@/hooks/useTalkingVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
 import { VIDEO_CREDIT_RULES } from '@/config/videoCreditPricing';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { toast } from '@/lib/brandedToast';
+import { supabase } from '@/integrations/supabase/client';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 type Duration = '5' | '10';
+type Phase = 'idle' | 'queued' | 'processing' | 'complete' | 'failed';
 
 const MAX_SCRIPT = 120;
 
 export default function TalkingVideo() {
   const navigate = useNavigate();
-  const { balance } = useCredits();
+  const { balance, refreshBalance } = useCredits();
   const { upload, isUploading } = useFileUpload();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -34,7 +38,12 @@ export default function TalkingVideo() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
-  const { isSubmitting, start, jobId } = useTalkingVideoProject();
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [resultVideoUrl, setResultVideoUrl] = useState<string | null>(null);
+  const [resultError, setResultError] = useState<string | null>(null);
+
+  const { isSubmitting, start } = useTalkingVideoProject();
 
   const cost = duration === '10'
     ? VIDEO_CREDIT_RULES.talkingVideo.base10s
@@ -47,7 +56,6 @@ export default function TalkingVideo() {
   const charCount = script.trim().length;
 
   const hasImage = !!imageUrl;
-  const hasScript = charCount > 0 && charCount <= MAX_SCRIPT;
   const missingHint = !hasImage
     ? 'Add a reference photo to continue'
     : charCount === 0
@@ -64,6 +72,67 @@ export default function TalkingVideo() {
     const url = await upload(file);
     if (url) setImageUrl(url);
   }, [upload]);
+
+  // Poll the queue + generated_videos row while a job is active
+  useEffect(() => {
+    if (!activeJobId || phase === 'idle' || phase === 'complete' || phase === 'failed') return;
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const { data: queueRow } = await supabase
+          .from('generation_queue')
+          .select('status, error_message')
+          .eq('id', activeJobId)
+          .maybeSingle();
+
+        if (cancelled || !queueRow) return;
+
+        if (queueRow.status === 'failed' || queueRow.status === 'cancelled') {
+          setResultError(queueRow.error_message || 'Generation failed');
+          setPhase('failed');
+          refreshBalance();
+          return;
+        }
+
+        // Look up the matching generated_videos row by queue_job_id
+        const { data: videoRow } = await supabase
+          .from('generated_videos')
+          .select('id, status, video_url, error_message')
+          .eq('workflow_type', 'talking_video')
+          .filter('metadata->>queue_job_id', 'eq', activeJobId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (videoRow?.status === 'complete' && videoRow.video_url) {
+          const signed = await toSignedUrl(videoRow.video_url);
+          if (cancelled) return;
+          setResultVideoUrl(signed || videoRow.video_url);
+          setPhase('complete');
+          refreshBalance();
+          return;
+        }
+        if (videoRow?.status === 'failed') {
+          setResultError(videoRow.error_message || 'Generation failed');
+          setPhase('failed');
+          refreshBalance();
+          return;
+        }
+        if (videoRow?.status === 'processing' && phase !== 'processing') {
+          setPhase('processing');
+        }
+      } catch (e) {
+        console.warn('[TalkingVideo] poll error', e);
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [activeJobId, phase, refreshBalance]);
 
   const handleGenerate = useCallback(async () => {
     if (isSubmitting) return;
@@ -90,7 +159,7 @@ export default function TalkingVideo() {
       setNoCreditsOpen(true);
       return;
     }
-    const ok = await start({
+    const result = await start({
       imageUrl,
       script,
       voiceId,
@@ -98,10 +167,21 @@ export default function TalkingVideo() {
       duration,
       aspectRatio: '9:16',
     });
-    if (ok) {
-      setTimeout(() => navigate('/app/video'), 800);
+    if (result.ok && result.jobId) {
+      setActiveJobId(result.jobId);
+      setResultVideoUrl(null);
+      setResultError(null);
+      setPhase('queued');
+      refreshBalance();
     }
-  }, [isSubmitting, imageUrl, charCount, balanceReady, hasEnough, cost, duration, displayBalance, script, voiceId, voiceSpeed, start, navigate]);
+  }, [isSubmitting, imageUrl, charCount, balanceReady, hasEnough, cost, duration, displayBalance, script, voiceId, voiceSpeed, start, refreshBalance]);
+
+  const resetToForm = useCallback(() => {
+    setPhase('idle');
+    setActiveJobId(null);
+    setResultVideoUrl(null);
+    setResultError(null);
+  }, []);
 
   const generateLabel = isSubmitting
     ? 'Queuing…'
@@ -110,6 +190,29 @@ export default function TalkingVideo() {
       : !hasEnough
         ? 'Top up to generate'
         : 'Generate talking video';
+
+  // === Generating / complete / failed screen ===
+  if (phase !== 'idle') {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <PageHeader
+          title="Talking Video"
+          subtitle="Your video is being generated"
+        >
+          <div />
+        </PageHeader>
+        <TalkingVideoGenerating
+          estimatedSeconds={duration === '10' ? 7 * 60 : 5 * 60}
+          status={phase === 'queued' ? 'queued' : phase === 'processing' ? 'processing' : phase === 'complete' ? 'complete' : 'failed'}
+          videoUrl={resultVideoUrl}
+          errorMessage={resultError}
+          thumbnailUrl={imageUrl}
+          onGoToHub={() => navigate('/app/video')}
+          onReset={resetToForm}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
