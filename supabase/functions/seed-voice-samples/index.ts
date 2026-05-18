@@ -16,10 +16,12 @@ const corsHeaders = {
 
 // Map our Kling voice IDs → ElevenLabs voice IDs (public defaults)
 const VOICE_MAP: Record<string, { elevenlabs_id: string; label: string }> = {
-  ai_kaiya:      { elevenlabs_id: "9BWtsMINqrJLrRacOk9x", label: "Kaiya" },  // Aria
-  oversea_male1: { elevenlabs_id: "nPczCjzI2devNBz1zQrb", label: "Oliver" }, // Brian
-  uk_man2:       { elevenlabs_id: "JBFqnCBsd6RMkjVDRZzb", label: "James" },  // George — British male
-  uk_boy1:       { elevenlabs_id: "N2lVS1w4EtoT3dr4eOWO", label: "Theo" },   // Callum — younger British
+  ai_kaiya:              { elevenlabs_id: "9BWtsMINqrJLrRacOk9x", label: "Kaiya" },  // Aria
+  girlfriend_4_speech02: { elevenlabs_id: "EXAVITQu4vr4xnSDxMaL", label: "Mia" },    // Sarah — conversational
+  calm_story1:           { elevenlabs_id: "XrExE9yKIg1WjnnlVkGX", label: "Lila" },   // Matilda — narrator
+  oversea_male1:         { elevenlabs_id: "nPczCjzI2devNBz1zQrb", label: "Oliver" }, // Brian
+  uk_man2:               { elevenlabs_id: "JBFqnCBsd6RMkjVDRZzb", label: "James" },  // George
+  uk_boy1:               { elevenlabs_id: "N2lVS1w4EtoT3dr4eOWO", label: "Theo" },   // Callum
 };
 
 const SAMPLE_SENTENCE = "Hi, welcome to our new collection";
