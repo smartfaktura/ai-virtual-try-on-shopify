@@ -13,7 +13,7 @@ const corsHeaders = {
 
 const KLING_API_BASE = "https://api-singapore.klingai.com/v1";
 const MAX_BATCH = 100;
-const TIMEOUT_MIN = 45; // upper bound for any single Kling stage (base or lipsync)
+const TIMEOUT_MIN = 30;
 
 function base64url(data: Uint8Array): string {
   let bin = "";
@@ -75,36 +75,14 @@ async function savePreview(svc: SvcClient, coverUrl: string, userId: string, tas
   }
 }
 
-async function resolveQueueForTask(
-  svc: SvcClient,
-  taskId: string,
-  finalStatus: "completed" | "failed",
-  videoUrl?: string,
-  errorMsg?: string,
-  queueJobId?: string,
-) {
-  // Prefer queue_job_id (set in generated_videos.metadata) — it's stable across
-  // stage transitions. Fall back to task-id match for legacy rows.
-  let jobs: { id: string; user_id: string; credits_reserved: number; status: string }[] | null = null;
-
-  if (queueJobId) {
-    const { data } = await svc
-      .from("generation_queue")
-      .select("id, user_id, credits_reserved, status")
-      .eq("id", queueJobId)
-      .in("status", ["processing", "queued"]);
-    jobs = data ?? null;
-  }
-
-  if (!jobs || jobs.length === 0) {
-    const { data } = await svc
-      .from("generation_queue")
-      .select("id, user_id, credits_reserved, status")
-      .in("job_type", ["video", "video_multishot", "talking_video"])
-      .in("status", ["processing", "queued"])
-      .filter("result->>kling_task_id", "eq", taskId);
-    jobs = data ?? null;
-  }
+async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: "completed" | "failed", videoUrl?: string, errorMsg?: string) {
+  // Find queue rows where result->>'kling_task_id' matches and they're still open
+  const { data: jobs } = await svc
+    .from("generation_queue")
+    .select("id, user_id, credits_reserved, status")
+    .in("job_type", ["video", "video_multishot"])
+    .in("status", ["processing", "queued"])
+    .filter("result->>kling_task_id", "eq", taskId);
 
   if (!jobs || jobs.length === 0) return;
 
@@ -112,7 +90,7 @@ async function resolveQueueForTask(
     if (finalStatus === "completed") {
       await svc.from("generation_queue").update({
         status: "completed",
-        result: { kling_task_id: taskId, video_url: videoUrl, stage: "complete" },
+        result: { kling_task_id: taskId, video_url: videoUrl },
         completed_at: new Date().toISOString(),
       }).eq("id", j.id);
     } else {
@@ -121,6 +99,7 @@ async function resolveQueueForTask(
         error_message: errorMsg || "Video generation failed",
         completed_at: new Date().toISOString(),
       }).eq("id", j.id);
+      // Refund credits
       if (j.credits_reserved && j.credits_reserved > 0) {
         await svc.rpc("refund_credits", {
           p_user_id: j.user_id,
@@ -128,28 +107,6 @@ async function resolveQueueForTask(
         });
       }
     }
-  }
-}
-
-// Advance the queue's bookkeeping when stage 1 (base) → stage 2 (lipsync).
-// Updates result.kling_task_id to the lipsync task and extends timeout_at so
-// cleanup_stale_jobs can't kill it mid-stage-2 even if its job_type guard is
-// later relaxed.
-async function advanceQueueToLipsync(svc: SvcClient, baseTaskId: string, lipsyncTaskId: string) {
-  const { data: jobs } = await svc
-    .from("generation_queue")
-    .select("id")
-    .eq("job_type", "talking_video")
-    .in("status", ["processing", "queued"])
-    .filter("result->>kling_task_id", "eq", baseTaskId);
-
-  if (!jobs || jobs.length === 0) return;
-  const fortyFiveMin = new Date(Date.now() + 45 * 60 * 1000).toISOString();
-  for (const j of jobs) {
-    await svc.from("generation_queue").update({
-      result: { kling_task_id: lipsyncTaskId, stage: "lipsync" },
-      timeout_at: fortyFiveMin,
-    }).eq("id", j.id);
   }
 }
 
@@ -167,7 +124,7 @@ serve(async (req) => {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data: stuck, error: qErr } = await svc
       .from("generated_videos")
-      .select("id, user_id, kling_task_id, model_name, created_at, workflow_type, metadata")
+      .select("id, user_id, kling_task_id, model_name, created_at")
       .eq("status", "processing")
       .not("kling_task_id", "is", null)
       .gte("created_at", since)
@@ -183,66 +140,28 @@ serve(async (req) => {
 
     const rows = stuck || [];
     let completed = 0, failed = 0, timedOut = 0, pending = 0, errors = 0;
-    const TIMEOUT_MS = TIMEOUT_MIN * 60 * 1000;
+    const timeoutCutoff = Date.now() - TIMEOUT_MIN * 60 * 1000;
 
     await Promise.all(rows.map(async (row) => {
       const taskId = row.kling_task_id as string;
       const isOmni = row.model_name === "kling-v3-omni";
-      const isTalking = row.workflow_type === "talking_video";
-      const meta = (row.metadata || {}) as Record<string, unknown>;
-      const stage = (meta.stage as string) || "base_video";
-      const isLipsyncStage = isTalking && stage === "lipsync";
-
-      // For lip-sync, measure timeout from when stage 2 was submitted, not from
-      // when the queue row was created. Otherwise a healthy stage 2 gets killed
-      // just because base video took 10–15 min.
-      const stageStartMs = isLipsyncStage && typeof meta.lipsync_started_at === "string"
-        ? new Date(meta.lipsync_started_at as string).getTime()
-        : new Date(row.created_at).getTime();
-      const isPastTimeout = (Date.now() - stageStartMs) > TIMEOUT_MS;
-
-      const url = isLipsyncStage
-        ? `${KLING_API_BASE}/videos/lip-sync/${taskId}`
-        : isOmni
-          ? `${KLING_API_BASE}/videos/omni-video/${taskId}`
-          : `${KLING_API_BASE}/videos/image2video/${taskId}`;
+      const url = isOmni
+        ? `${KLING_API_BASE}/videos/omni-video/${taskId}`
+        : `${KLING_API_BASE}/videos/image2video/${taskId}`;
 
       try {
         const res = await fetch(url, { method: "GET", headers });
         const result = await res.json();
-        const queueJobId = (meta.queue_job_id as string | undefined) || "?";
-        if (isTalking) {
-          const elapsedSec = Math.round((Date.now() - stageStartMs) / 1000);
-          console.log(
-            `[poll-stuck-videos] talking job=${queueJobId} stage=${stage} task=${taskId} ` +
-            `kling_status=${result?.data?.task_status || "?"} elapsed=${elapsedSec}s`,
-          );
-        }
 
         if (!res.ok || result.code !== 0) {
-          if (isPastTimeout) {
-            // Talking video lip-sync failure → silent fallback (keep base video)
-            if (isLipsyncStage && meta.base_video_url) {
-              const baseUrl = meta.base_video_url as string;
-              await svc.from("generated_videos").update({
-                status: "complete",
-                video_url: baseUrl,
-                completed_at: new Date().toISOString(),
-                metadata: { ...meta, stage: "complete", silent_fallback: true,
-                            lipsync_error: result.message || "Lip-sync API error" },
-              }).eq("id", row.id);
-              await resolveQueueForTask(svc, taskId, "completed", baseUrl, (meta.queue_job_id as string | undefined));
-              // Partial refund for lip-sync portion
-              await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
-              completed++;
-              return;
-            }
+          // Treat unknown task as a failure if we're past the timeout
+          if (new Date(row.created_at).getTime() < timeoutCutoff) {
             await svc.from("generated_videos").update({
               status: "failed",
               error_message: result.message || `Kling status error ${res.status}`,
               completed_at: new Date().toISOString(),
             }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "failed", undefined, result.message || "Kling status error", (meta.queue_job_id as string | undefined));
+            await resolveQueueForTask(svc, taskId, "failed", undefined, result.message || "Kling status error");
             timedOut++;
           } else {
             pending++;
@@ -256,126 +175,12 @@ serve(async (req) => {
         if (tStatus === "succeed" && taskData?.task_result?.videos?.length > 0) {
           const tempUrl = taskData.task_result.videos[0].url as string;
           let permanentUrl = tempUrl;
-          try {
-            permanentUrl = await saveVideoToStorage(svc, tempUrl, row.user_id, taskId);
-          } catch { /* keep temp */ }
+          try { permanentUrl = await saveVideoToStorage(svc, tempUrl, row.user_id, taskId); } catch { /* keep temp */ }
 
           let previewUrl: string | null = null;
           const coverUrl = taskData.task_result.videos[0].cover_image_url as string | undefined;
           if (coverUrl) previewUrl = await savePreview(svc, coverUrl, row.user_id, taskId);
 
-          // === TALKING VIDEO — Stage 1 (base_video) finished → submit lip-sync ===
-          if (isTalking && stage === "base_video") {
-            try {
-              // Kling needs to fetch BOTH the video and the audio itself — our
-              // private buckets reject /object/public/... URLs. Sign them.
-              let lipsyncSourceUrl = permanentUrl;
-              try {
-                const path = `${row.user_id}/${taskId}.mp4`;
-                const { data: signed } = await svc.storage
-                  .from("generated-videos")
-                  .createSignedUrl(path, 3600);
-                if (signed?.signedUrl) lipsyncSourceUrl = signed.signedUrl;
-              } catch (signErr) {
-                console.warn(`[poll-stuck-videos] sign base video failed:`, signErr);
-              }
-
-              // Resolve audio URL from the ElevenLabs voiceover we uploaded in
-              // generate-talking-video. Sign it fresh — Kling will pull it.
-              const audioPath = meta.audio_storage_path as string | undefined;
-              if (!audioPath) {
-                throw new Error("Missing audio_storage_path on talking_video metadata");
-              }
-              const { data: signedAudio, error: signedAudioErr } = await svc.storage
-                .from("generated-audio")
-                .createSignedUrl(audioPath, 3600);
-              if (signedAudioErr || !signedAudio?.signedUrl) {
-                throw new Error(`Failed to sign voiceover audio: ${signedAudioErr?.message || "no url"}`);
-              }
-              const audioUrl = signedAudio.signedUrl;
-
-              const voiceLanguage = (meta.voice_language as string) === "zh" ? "zh" : "en";
-              const lipsyncInput: Record<string, unknown> = {
-                video_url: lipsyncSourceUrl,
-                mode: "audio2video",
-                audio_type: "url",
-                audio_url: audioUrl,
-                // Tell Kling which phoneme model to use — improves sync accuracy
-                voice_language: voiceLanguage,
-              };
-              const lipRes = await fetch(`${KLING_API_BASE}/videos/lip-sync`, {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ input: lipsyncInput }),
-              });
-              const lipJson = await lipRes.json();
-              console.log(`[poll-stuck-videos] talking-video stage 2 submit (lang=${voiceLanguage}):`, JSON.stringify(lipJson).slice(0, 300));
-
-              if (!lipRes.ok || lipJson.code !== 0) {
-                // Lip-sync submission failed → silent fallback, partial refund
-                const updateMeta = { ...meta, stage: "complete", base_video_url: permanentUrl,
-                                     silent_fallback: true, lipsync_error: lipJson.message || "Lip-sync submit failed" };
-                const update: Record<string, unknown> = {
-                  status: "complete",
-                  video_url: permanentUrl,
-                  completed_at: new Date().toISOString(),
-                  metadata: updateMeta,
-                };
-                if (previewUrl) update.preview_url = previewUrl;
-                await svc.from("generated_videos").update(update).eq("id", row.id);
-                await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
-                await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
-                completed++;
-                return;
-              }
-
-              const lipsyncTaskId = lipJson.data.task_id as string;
-              const updateMeta = { ...meta, stage: "lipsync", base_video_url: permanentUrl,
-                                   lipsync_task_id: lipsyncTaskId,
-                                   lipsync_started_at: new Date().toISOString() };
-              const update: Record<string, unknown> = {
-                kling_task_id: lipsyncTaskId,
-                metadata: updateMeta,
-                // status stays 'processing'
-              };
-              if (previewUrl) update.preview_url = previewUrl;
-              await svc.from("generated_videos").update(update).eq("id", row.id);
-              // Keep the queue row in sync so cleanup_stale_jobs sees fresh state.
-              await advanceQueueToLipsync(svc, taskId, lipsyncTaskId);
-              pending++;
-              return;
-            } catch (err) {
-              // Network error on lip-sync submit → silent fallback
-              const msg = err instanceof Error ? err.message : "Lip-sync submit error";
-              console.error(`[poll-stuck-videos] talking-video stage 2 submit error:`, msg);
-              await svc.from("generated_videos").update({
-                status: "complete",
-                video_url: permanentUrl,
-                completed_at: new Date().toISOString(),
-                metadata: { ...meta, stage: "complete", base_video_url: permanentUrl,
-                            silent_fallback: true, lipsync_error: msg },
-              }).eq("id", row.id);
-              await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
-              await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
-              completed++;
-              return;
-            }
-          }
-
-          // === TALKING VIDEO — Stage 2 (lipsync) finished → swap URL ===
-          if (isLipsyncStage) {
-            await svc.from("generated_videos").update({
-              status: "complete",
-              video_url: permanentUrl,
-              completed_at: new Date().toISOString(),
-              metadata: { ...meta, stage: "complete" },
-            }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
-            completed++;
-            return;
-          }
-
-          // === Default video flow ===
           const update: Record<string, unknown> = {
             video_url: permanentUrl,
             status: "complete",
@@ -384,57 +189,27 @@ serve(async (req) => {
           if (previewUrl) update.preview_url = previewUrl;
 
           await svc.from("generated_videos").update(update).eq("id", row.id);
-          await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
+          await resolveQueueForTask(svc, taskId, "completed", permanentUrl);
           completed++;
         } else if (tStatus === "failed") {
           const msg = taskData?.task_status_msg || "Video generation failed";
-          // Talking video stage 2 failure → silent fallback
-          if (isLipsyncStage && meta.base_video_url) {
-            const baseUrl = meta.base_video_url as string;
-            await svc.from("generated_videos").update({
-              status: "complete",
-              video_url: baseUrl,
-              completed_at: new Date().toISOString(),
-              metadata: { ...meta, stage: "complete", silent_fallback: true, lipsync_error: msg },
-            }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "completed", baseUrl, (meta.queue_job_id as string | undefined));
-            await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
-            completed++;
-            return;
-          }
           await svc.from("generated_videos").update({
             status: "failed",
             error_message: msg,
             completed_at: new Date().toISOString(),
           }).eq("id", row.id);
-          await resolveQueueForTask(svc, taskId, "failed", undefined, msg, (meta.queue_job_id as string | undefined));
+          await resolveQueueForTask(svc, taskId, "failed", undefined, msg);
           failed++;
         } else {
           // submitted / processing → check timeout
-          if (isPastTimeout) {
-            // Talking video timeout → if we already have a usable base video,
-            // fall back to the silent version instead of throwing the work away.
-            const baseUrl = (meta.base_video_url as string | null) || (row.video_url as string | null);
-            if (isTalking && baseUrl) {
-              await svc.from("generated_videos").update({
-                status: "complete",
-                video_url: baseUrl,
-                completed_at: new Date().toISOString(),
-                metadata: { ...meta, stage: "complete", base_video_url: baseUrl,
-                            silent_fallback: true, lipsync_error: "Lip-sync timed out" },
-              }).eq("id", row.id);
-              await resolveQueueForTask(svc, taskId, "completed", baseUrl, (meta.queue_job_id as string | undefined));
-              await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
-              completed++;
-              return;
-            }
+          if (new Date(row.created_at).getTime() < timeoutCutoff) {
             const msg = `Timed out waiting for Kling result after ${TIMEOUT_MIN} minutes`;
             await svc.from("generated_videos").update({
               status: "failed",
               error_message: msg,
               completed_at: new Date().toISOString(),
             }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "failed", undefined, msg, (meta.queue_job_id as string | undefined));
+            await resolveQueueForTask(svc, taskId, "failed", undefined, msg);
             timedOut++;
           } else {
             pending++;

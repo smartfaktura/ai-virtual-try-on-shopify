@@ -25,8 +25,6 @@ export interface GeneratedVideo {
   workflow_type: string | null;
   settings_json: Record<string, unknown> | null;
   project_title: string | null;
-  metadata?: Record<string, unknown> | null;
-  error_message?: string | null;
 }
 
 interface UseGenerateVideoResult {

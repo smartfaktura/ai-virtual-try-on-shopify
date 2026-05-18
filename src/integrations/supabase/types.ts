@@ -876,7 +876,6 @@ export type Database = {
           error_message: string | null
           id: string
           kling_task_id: string | null
-          metadata: Json
           model_name: string
           negative_prompt: string | null
           preview_url: string | null
@@ -898,7 +897,6 @@ export type Database = {
           error_message?: string | null
           id?: string
           kling_task_id?: string | null
-          metadata?: Json
           model_name?: string
           negative_prompt?: string | null
           preview_url?: string | null
@@ -920,7 +918,6 @@ export type Database = {
           error_message?: string | null
           id?: string
           kling_task_id?: string | null
-          metadata?: Json
           model_name?: string
           negative_prompt?: string | null
           preview_url?: string | null

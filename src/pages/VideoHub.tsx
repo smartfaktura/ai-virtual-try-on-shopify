@@ -1,4 +1,4 @@
-import { Film, Layers, Users, ArrowRightLeft, Clapperboard, MessageCircle, Play, Loader2, Check, Download } from 'lucide-react';
+import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Loader2, Check, Download } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { VideoWorkflowCard } from '@/components/app/video/VideoWorkflowCard';
 import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
@@ -14,27 +14,10 @@ import { toast } from 'sonner';
 import { buildVideoFileName } from '@/lib/videoFilename';
 
 /** Expected total duration (seconds) for a Kling job — used to estimate progress */
-function expectedSecondsForModel(model?: string | null, workflowType?: string | null): number {
-  // Talking videos are a two-stage pipeline (base motion + lip-sync), so they
-  // realistically need closer to ~12 minutes end-to-end.
-  if (workflowType === 'talking_video') return 12 * 60;
+function expectedSecondsForModel(model?: string | null): number {
   if (!model) return 7 * 60;
   if (model.includes('omni') || model.includes('audio')) return 9 * 60;
   return 7 * 60;
-}
-
-/** Human-friendly stage label for the processing pill on a video card. */
-function talkingStageLabel(stage: string | undefined): string {
-  switch (stage) {
-    case 'base_video':
-      return 'Motion';
-    case 'lipsync':
-      return 'Lip-sync';
-    case 'complete':
-      return 'Finishing';
-    default:
-      return 'Processing';
-  }
 }
 
 function formatElapsed(s: number): string {
@@ -109,12 +92,7 @@ function RecentVideoCard({
   const elapsedSec = isProcessing && nowTick
     ? Math.max(0, Math.floor((nowTick - new Date(video.created_at).getTime()) / 1000))
     : 0;
-  const expected = expectedSecondsForModel(video.model_name, video.workflow_type);
-  const stage = (video.metadata as Record<string, unknown> | null | undefined)?.stage as string | undefined;
-  const isTalking = video.workflow_type === 'talking_video';
-  const processingLabel = isTalking
-    ? talkingStageLabel(stage)
-    : (video.status === 'processing' ? 'Processing' : 'Queued');
+  const expected = expectedSecondsForModel(video.model_name);
   const progressPct = isProcessing
     ? Math.min(95, Math.round((elapsedSec / expected) * 100))
     : 0;
@@ -170,7 +148,13 @@ function RecentVideoCard({
               className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900"
             >
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              {processingLabel}
+              {video.status === 'processing' ? 'Processing' : 'Queued'}
+            </Badge>
+            <Badge
+              variant="secondary"
+              className="absolute top-2 left-2 text-[10px] bg-background/80 backdrop-blur-sm text-muted-foreground"
+            >
+              Source frame
             </Badge>
             {/* Live elapsed pill */}
             <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
@@ -220,24 +204,8 @@ export default function VideoHub() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Partition into fresh in-progress vs everything else.
-  // Stale rows (>30 min stuck in processing/queued) fall through to Completed so they don't
-  // pollute the In Progress strip with weeks-old abandoned jobs.
-  const STALE_MS = 30 * 60 * 1000;
-  const completedTaskIds = new Set(
-    history.filter(v => v.status === 'complete' && v.kling_task_id).map(v => v.kling_task_id as string),
-  );
-  const processingVideos = history.filter(v => {
-    if (v.status !== 'processing' && v.status !== 'queued') return false;
-    if (v.kling_task_id && completedTaskIds.has(v.kling_task_id)) return false;
-    const ageMs = Date.now() - new Date(v.created_at).getTime();
-    return ageMs < STALE_MS;
-  });
-  const processingIds = new Set(processingVideos.map(v => v.id));
-  const completedVideos = history.filter(v => !processingIds.has(v.id));
-
-  // Live tick (1s) — drives per-card elapsed timers + progress while anything fresh is processing
-  const hasProcessing = processingVideos.length > 0;
+  // Live tick (1s) — drives per-card elapsed timers + progress while anything processes
+  const hasProcessing = history.some(v => v.status === 'processing' || v.status === 'queued');
   const [nowTick, setNowTick] = useState(() => Date.now());
   useEffect(() => {
     if (!hasProcessing) return;
@@ -328,32 +296,6 @@ export default function VideoHub() {
         <div />
       </PageHeader>
 
-      {/* In Progress — surfaced at the top so users don't scroll to find active generations */}
-      {processingVideos.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
-            <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
-              {processingVideos.length}
-            </Badge>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {processingVideos.map((v) => (
-              <RecentVideoCard
-                key={v.id}
-                video={v}
-                onClick={() => setSelectedVideo(v)}
-                selectMode={false}
-                selected={false}
-                onToggleSelect={() => {}}
-                nowTick={nowTick}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Workflow Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <VideoWorkflowCard
@@ -397,14 +339,6 @@ export default function VideoHub() {
           to="/app/video/short-film"
           beta
         />
-        <VideoWorkflowCard
-          icon={MessageCircle}
-          title="Talking Video"
-          description="Bring a model to life with synced speech from a short script"
-          bestFor={['Spokesmodel', 'UGC voiceover', 'Product pitch']}
-          to="/app/video/talking"
-          beta
-        />
       </div>
 
       {/* Showcase */}
@@ -429,60 +363,105 @@ export default function VideoHub() {
         </div>
       </div>
 
-      {/* Completed Videos */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
-            {completedVideos.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
-              </Badge>
-            )}
-          </div>
-          {completedVideos.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
-              {selectMode ? 'Done' : 'Select'}
-            </Button>
-          )}
-        </div>
-        {isLoadingHistory ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-xl bg-muted/30 animate-pulse" />
-            ))}
-          </div>
-        ) : completedVideos.length > 0 ? (
+      {/* In Progress + Completed Videos */}
+      {(() => {
+        // Build a set of kling_task_ids that already have a completed row,
+        // so a stale "processing" duplicate can never appear in the In Progress strip.
+        const completedTaskIds = new Set(
+          history
+            .filter(v => v.status === 'complete' && v.kling_task_id)
+            .map(v => v.kling_task_id as string),
+        );
+        const processingVideos = history.filter(v =>
+          (v.status === 'processing' || v.status === 'queued') &&
+          !(v.kling_task_id && completedTaskIds.has(v.kling_task_id))
+        );
+        const completedVideos = history.filter(v => v.status !== 'processing' && v.status !== 'queued');
+
+        return (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {completedVideos.map((v) => (
-                <RecentVideoCard
-                  key={v.id}
-                  video={v}
-                  onClick={() => setSelectedVideo(v)}
-                  selectMode={selectMode}
-                  selected={selectedIds.has(v.id)}
-                  onToggleSelect={() => toggleSelection(v.id)}
-                  highlight={recentlyCompleted.has(v.id)}
-                />
-              ))}
-            </div>
-            {hasMore && (
-              <div className="flex justify-center pt-2">
-                <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
-                  {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Load More Videos
-                </Button>
+            {processingVideos.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                  <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
+                  <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
+                    {processingVideos.length}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {processingVideos.map((v) => (
+                    <RecentVideoCard
+                      key={v.id}
+                      video={v}
+                      onClick={() => setSelectedVideo(v)}
+                      selectMode={false}
+                      selected={false}
+                      onToggleSelect={() => {}}
+                      nowTick={nowTick}
+                    />
+                  ))}
+                </div>
               </div>
             )}
+
+            {/* Completed Videos */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
+                  {completedVideos.length > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
+                    </Badge>
+                  )}
+                </div>
+                {completedVideos.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
+                    {selectMode ? 'Done' : 'Select'}
+                  </Button>
+                )}
+              </div>
+              {isLoadingHistory ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="aspect-[3/4] rounded-xl bg-muted/30 animate-pulse" />
+                  ))}
+                </div>
+              ) : completedVideos.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {completedVideos.map((v) => (
+                      <RecentVideoCard
+                        key={v.id}
+                        video={v}
+                        onClick={() => setSelectedVideo(v)}
+                        selectMode={selectMode}
+                        selected={selectedIds.has(v.id)}
+                        onToggleSelect={() => toggleSelection(v.id)}
+                        highlight={recentlyCompleted.has(v.id)}
+                      />
+                    ))}
+                  </div>
+                  {hasMore && (
+                    <div className="flex justify-center pt-2">
+                      <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
+                        {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                        Load More Videos
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : !isLoadingHistory && processingVideos.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border p-8 text-center">
+                  <Film className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No videos yet. Create your first one above.</p>
+                </div>
+              ) : null}
+            </div>
           </>
-        ) : !isLoadingHistory && processingVideos.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center">
-            <Film className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No videos yet. Create your first one above.</p>
-          </div>
-        ) : null}
-      </div>
+        );
+      })()}
 
       {/* Sticky bulk download bar */}
       {selectedIds.size > 0 && (

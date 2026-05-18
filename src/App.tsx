@@ -49,7 +49,6 @@ const VideoHub = lazy(() => import('@/pages/VideoHub'));
 const AnimateVideo = lazy(() => import('@/pages/video/AnimateVideo'));
 const ShortFilm = lazy(() => import('@/pages/video/ShortFilm'));
 const StartEndVideo = lazy(() => import('@/pages/video/StartEndVideo'));
-const TalkingVideo = lazy(() => import('@/pages/video/TalkingVideo'));
 const Freestyle = lazy(() => import('@/pages/Freestyle'));
 const CatalogHub = lazy(() => import('@/pages/CatalogHub'));
 const CatalogGenerate = lazy(() => import('@/pages/CatalogGenerate'));
@@ -264,7 +263,6 @@ const App = () => {
                         <Route path="/video/animate" element={<AnimateVideo />} />
                         <Route path="/video/short-film" element={<ShortFilm />} />
                         <Route path="/video/start-end" element={<StartEndVideo />} />
-                        <Route path="/video/talking" element={<TalkingVideo />} />
                         <Route path="/video/legacy" element={<VideoGenerate />} />
                         <Route path="/freestyle" element={<Freestyle />} />
                         <Route path="/catalog" element={<CatalogHub />} />

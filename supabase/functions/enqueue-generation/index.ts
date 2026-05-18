@@ -27,12 +27,6 @@ function calculateCreditCost(
   resolution?: string,
   payload?: Record<string, unknown>,
 ): number {
-  // Talking video — flat per duration
-  if (jobType === "talking_video") {
-    const dur = String(payload?.duration || "5");
-    return dur === "10" ? 36 : 22;
-  }
-
   // Video jobs use dedicated pricing
   if (jobType === "video" || jobType === "video_multishot") {
     const dur = String(payload?.duration || "5");
@@ -125,7 +119,7 @@ serve(async (req) => {
       );
     }
 
-    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale", "video", "video_multishot", "catalog", "text-product", "talking_video"];
+    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale", "video", "video_multishot", "catalog", "text-product"];
     if (!validJobTypes.includes(jobType)) {
       return new Response(
         JSON.stringify({ error: `Invalid job type: ${jobType}` }),
@@ -216,33 +210,6 @@ serve(async (req) => {
         },
         body: JSON.stringify({ trigger: "enqueue" }),
       }).catch((e) => console.warn(`[enqueue] process-queue wake failed:`, (e as Error).message));
-    }
-
-    // For talking_video: insert a placeholder generated_videos row so the
-    // Video Hub shows the queued card immediately (before the worker picks it up).
-    if (jobType === "talking_video") {
-      try {
-        await supabase.from("generated_videos").insert({
-          user_id: userId,
-          source_image_url: String(payload?.image_url || ""),
-          prompt: String(payload?.script || ""),
-          model_name: "kling-v2-master",
-          duration: String(payload?.duration || "5"),
-          aspect_ratio: String(payload?.aspect_ratio || "9:16"),
-          status: "queued",
-          workflow_type: "talking_video",
-          metadata: {
-            queue_job_id: result.job_id,
-            stage: "queued",
-            voice_id: payload?.voice_id,
-            voice_language: payload?.voice_language,
-            voice_speed: payload?.voice_speed,
-            script: payload?.script,
-          },
-        });
-      } catch (e) {
-        console.warn(`[enqueue] talking_video placeholder row failed:`, (e as Error).message);
-      }
     }
 
     console.log(`[enqueue] Job ${result.job_id} enqueued for user ${userId}, type=${jobType}, cost=${creditsCost}, priority=${result.priority}`);

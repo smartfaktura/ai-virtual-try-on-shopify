@@ -32,11 +32,6 @@ export const VIDEO_CREDIT_RULES = {
     voice: 12,
     planningFee: 5,     // AI shot-plan generation
   },
-  talkingVideo: {
-    base5s: 22,
-    base10s: 36,
-    lipsyncPortion: 8,  // refunded if Stage 2 (lip-sync) fails
-  },
 } as const;
 
 export type VideoWorkflowType = 'animate' | 'startEnd' | 'adSequence' | 'consistentModel';
