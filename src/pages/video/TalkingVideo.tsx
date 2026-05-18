@@ -14,6 +14,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
 import { VIDEO_CREDIT_RULES } from '@/config/videoCreditPricing';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+import { toast } from '@/lib/brandedToast';
 
 type Duration = '5' | '10';
 
@@ -41,7 +42,16 @@ export default function TalkingVideo() {
 
   const hasEnough = (balance ?? 0) >= cost;
   const charCount = script.trim().length;
-  const canGenerate = !!imageUrl && charCount > 0 && charCount <= MAX_SCRIPT && !isSubmitting;
+
+  const hasImage = !!imageUrl;
+  const hasScript = charCount > 0 && charCount <= MAX_SCRIPT;
+  const missingHint = !hasImage
+    ? 'Add a reference photo to continue'
+    : charCount === 0
+      ? 'Write a short script to continue'
+      : charCount > MAX_SCRIPT
+        ? `Script is too long — keep it under ${MAX_SCRIPT} characters`
+        : null;
 
   const handleFile = useCallback(async (file: File) => {
     const url = await upload(file);
@@ -49,12 +59,27 @@ export default function TalkingVideo() {
   }, [upload]);
 
   const handleGenerate = useCallback(async () => {
+    if (isSubmitting) return;
+    if (!imageUrl) {
+      toast.error('Add a reference photo first');
+      document.getElementById('talking-step-reference')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (charCount === 0) {
+      toast.error('Write a short script first');
+      document.getElementById('script')?.focus();
+      return;
+    }
+    if (charCount > MAX_SCRIPT) {
+      toast.error(`Script must be ${MAX_SCRIPT} characters or fewer`);
+      return;
+    }
     if (!hasEnough) {
       setNoCreditsOpen(true);
       return;
     }
     const ok = await start({
-      imageUrl: imageUrl!,
+      imageUrl,
       script,
       voiceId,
       voiceSpeed,
@@ -62,10 +87,9 @@ export default function TalkingVideo() {
       aspectRatio: '9:16',
     });
     if (ok) {
-      // Navigate to Video Hub where the user can watch the queue progress.
       setTimeout(() => navigate('/app/video'), 800);
     }
-  }, [hasEnough, imageUrl, script, voiceId, voiceSpeed, duration, start, navigate]);
+  }, [isSubmitting, imageUrl, charCount, hasEnough, script, voiceId, voiceSpeed, duration, start, navigate]);
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -77,7 +101,7 @@ export default function TalkingVideo() {
       </PageHeader>
 
       {/* Step 1 — Reference */}
-      <section className="space-y-3">
+      <section id="talking-step-reference" className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium">Reference photo</Label>
           <span className="text-xs text-muted-foreground">Model, scene, or any portrait</span>
@@ -209,12 +233,13 @@ export default function TalkingVideo() {
 
       {/* Generate */}
       <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 bg-background/95 backdrop-blur border-t border-border/60 flex items-center justify-between gap-4">
-        <div className="text-xs text-muted-foreground">
-          Cost <span className="text-foreground font-medium">{cost} credits</span> · balance {balance ?? 0}
+        <div className="text-xs text-muted-foreground space-y-0.5">
+          <div>Cost <span className="text-foreground font-medium">{cost} credits</span> · balance {balance ?? 0}</div>
+          {missingHint && <div className="text-[11px] text-muted-foreground/80">{missingHint}</div>}
         </div>
         <Button
           onClick={handleGenerate}
-          disabled={!canGenerate}
+          disabled={isSubmitting}
           size="lg"
           className="min-w-[180px]"
         >
