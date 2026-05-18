@@ -1,54 +1,47 @@
-# Add audio download to preview modal (talking videos)
+# Shorter stage labels + fix stuck talking videos
 
-## What changes
+## A. Shorter labels on video cards (`src/pages/VideoHub.tsx`)
 
-In `src/components/app/video/VideoDetailModal.tsx`:
+1. `talkingStageLabel()`:
+   - `base_video` → **Motion** (was "Generating motion")
+   - `lipsync` → **Lip-sync** (was "Lip-syncing voice")
+   - `complete` → **Finishing** (was "Finalizing")
+2. Remove the **"Source frame"** badge at top-left of the processing card — it's redundant (the source frame is literally what's shown), and competes with the stage badge.
+3. In `src/components/app/video/TalkingVideoGenerating.tsx` (the full-page generating view) keep the longer headings — that screen has space. No change there.
 
-1. Detect talking videos by checking `video.metadata?.audio_storage_path` (and/or `video.metadata?.kind === 'talking_video'`).
-2. Keep the existing **Download Video** button as the primary action.
-3. Add a secondary **Download Audio (MP3)** button directly under it, shown only when an audio path exists and the video is complete.
-4. New handler `handleDownloadAudio`:
-   - Calls `supabase.storage.from('generated-audio').createSignedUrl(path, 3600)`.
-   - Fetches the signed URL, downloads as blob, triggers `<a download>` with filename `{projectTitle||'voiceover'}-{videoId}.mp3`.
-   - Toast on success/failure, separate `downloadingAudio` loading state so it doesn't block the video download spinner.
-5. Update the `GeneratedVideo` type usage (already includes `metadata`) — no schema change needed. The `generated-audio` bucket is private; signed URLs work because the row's RLS already grants the owner read access on the path (paths are user-scoped: `{user_id}/talking-video/...`).
+## B. Stuck talking videos in `/app/video`
 
-No backend / edge function changes are needed for the download itself.
+Database check confirms two talking videos are stuck:
+- `cfe2264f…` — stage `lipsync`, started 12:34 UTC, **timeout_at already passed (13:28 UTC)**, no `lipsync_task_id` written to queue result.
+- `639de233…` — stage `base_video`, started 12:41 UTC, timeout 13:26, similar pattern.
+
+The `poll-stuck-videos` cron is supposed to either finish or fail+refund these. It isn't reconciling them because:
+- The queue row has `status='processing'` past `timeout_at`, but talking-video jobs are excluded from `cleanup_stale_jobs` (intentional, by design — it says "owned by poll-stuck-videos").
+- `poll-stuck-videos` looks for talking jobs by `metadata->>'queue_job_id'` but only acts while it can still talk to Kling. If a Kling task disappears or returns an unexpected payload, the row stays in limbo.
+
+### Fixes (server-side)
+
+1. **Add a hard backstop in `poll-stuck-videos`**: any talking job where `queue.started_at < now() - interval '40 minutes'` AND no `lipsync_task_id` recorded → mark queue `failed`, refund credits, mark `generated_videos` row `failed` with `error_message = 'Lip-sync stage timed out'`. (Lip-sync alone should never take >15 min; 40 min is a safe ceiling.)
+2. **Persist `lipsync_task_id` immediately** when we kick off the lip-sync call (today it's only saved on success in some paths) so we always have a recovery handle.
+3. **Reconcile-now button**: add a tiny admin/owner endpoint `reconcile-talking-video?id=…` that the frontend can call from the video card's overflow menu for any talking video stuck > 25 min. It re-queries Kling and either finalizes or fails+refunds. (Optional but unblocks users without waiting for cron.)
+
+### Frontend touch (`VideoHub.tsx` only)
+
+4. When a processing talking video's `elapsedSec > expected * 1.6` (≈ 20 min), add a small **"Stuck? Refresh status"** link inside the card that triggers the reconcile endpoint, then refetches the list. No new component — inline button next to the elapsed pill.
+
+### One-time cleanup
+
+5. Manually fail+refund the two currently stuck rows so the user's `/app/video` stops showing them as in-progress. Single migration with two `UPDATE` statements + credit refund via `refund_credits()`.
 
 ## Files touched
 
-- `src/components/app/video/VideoDetailModal.tsx` — UI + handler (single file edit).
+- `src/pages/VideoHub.tsx` — labels + remove Source frame badge + optional reconcile link
+- `supabase/functions/poll-stuck-videos/index.ts` — 40-min backstop + always-persist `lipsync_task_id`
+- `supabase/functions/generate-talking-video/index.ts` — minor: always write `lipsync_task_id` when dispatched (if applicable)
+- New: `supabase/functions/reconcile-talking-video/index.ts` (small, optional)
+- Migration to clear the two stuck rows + refund credits
 
 ## Out of scope
 
-- No changes to `VideoResultsPanel` row-level menus (modal-only as the user requested).
-- No changes to silent/regular videos (button is conditional).
-
----
-
-# How to make lip-sync even better
-
-These are tuning options — I'll only apply the ones you pick.
-
-1. **Cleaner base clip (highest impact)**
-   - Already added "lips closed" instruction + negative-prompt "talking, mouthing words". Can go further: force `camera_fixed: true` on talking videos so the head stays stable — Kling lip-sync hates jitter and parallax.
-   - Crop/zoom guidance in the base prompt: "MCU framing, head fills upper third, no hand-near-mouth, no hair across lips".
-
-2. **Audio prep**
-   - ElevenLabs: set `stability` ~0.5, `similarity_boost` ~0.85, `style` 0–0.2 for talking heads. Lower `style` = less mumbling = sharper phonemes for Kling to align.
-   - Trim leading/trailing silence on the MP3 before upload (Kling treats silence as mouth-open frames). Easy to add in `generate-talking-video` with a tiny WAV/MP3 trim using the existing duration measurement.
-   - Light compression / loudness normalize to -16 LUFS so quiet phonemes register.
-
-3. **Duration matching**
-   - Already padding 0.3s. Better: pick base duration = `ceil(audio_duration + 0.4)` capped at 10s, and pass `audio_duration_sec` AND `voice_language` (already added) so Kling can crossfade the tail to closed mouth.
-
-4. **Per-language phoneme model**
-   - Already wired `voice_language`. Add explicit override in UI for EN vs ZH (Kling has best results when language matches the spoken language, not the script language).
-
-5. **Reference image quality**
-   - Strongly recommend front-facing, lips-closed, evenly lit, no sunglasses-over-mouth, no occlusion. Add a preflight warning if the source image fails a simple face-detect / mouth-visibility check (would need a small client check or Gemini vision call).
-
-6. **Fallback retry**
-   - If Kling lip-sync returns low confidence (it sometimes reports it), auto-retry once with `camera_fixed=true` before delivering.
-
-Tell me which of these you want and I'll implement together with the audio-download button.
+- Lip-sync quality improvements from previous plan (separate ticket).
+- Audio download button (already shipped).
