@@ -170,7 +170,7 @@ function RecentVideoCard({
               className="absolute top-2 right-2 text-[10px] bg-amber-50 text-amber-900"
             >
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              {video.status === 'processing' ? 'Processing' : 'Queued'}
+              {processingLabel}
             </Badge>
             <Badge
               variant="secondary"
