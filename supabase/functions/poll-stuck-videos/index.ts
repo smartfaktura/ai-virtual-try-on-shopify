@@ -360,7 +360,7 @@ serve(async (req) => {
           failed++;
         } else {
           // submitted / processing → check timeout
-          if (new Date(row.created_at).getTime() < timeoutCutoff) {
+          if (isPastTimeout) {
             // Talking video timeout → if we already have a usable base video,
             // fall back to the silent version instead of throwing the work away.
             const baseUrl = (meta.base_video_url as string | null) || (row.video_url as string | null);
