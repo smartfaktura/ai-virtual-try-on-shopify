@@ -230,6 +230,7 @@ serve(async (req) => {
       base_video_url: null as string | null,
       lipsync_task_id: null as string | null,
       silent_fallback: false,
+      performance: perf,
     };
 
     // Prefer updating the placeholder row created at enqueue time (so the
