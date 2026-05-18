@@ -53,8 +53,7 @@ export function BackgroundJobPill({ jobIds, onResolved, onOpenHub }: Props) {
             const signed = await toSignedUrl(videoRow.video_url);
             toast.success('A background talking video is ready in Video Hub', {
               action: { label: 'Open', onClick: onOpenHub },
-            } as never);
-            // suppress unused-var lint
+            });
             void signed;
             onResolved(jobId);
           } else if (videoRow.status === 'failed') {
