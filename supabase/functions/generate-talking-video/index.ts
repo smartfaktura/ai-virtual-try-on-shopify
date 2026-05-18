@@ -451,7 +451,8 @@ serve(async (req) => {
 
     // --- Stage 1: submit Kling image2video (locked talking-head) ---
     const sceneHint = (body.scene_hint as string) || null;
-    const fullPrompt = buildStructuredPrompt(motion, gaze, sceneHint);
+    const fullPrompt = buildStructuredPrompt(motion, gaze, sceneHint, cameraMove, actionPrompt);
+    const negativePrompt = negativePromptFor(motion, cameraMove);
 
     const jwt = await createKlingJWT(KLING_ACCESS_KEY, KLING_SECRET_KEY);
     const headers = { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" };
