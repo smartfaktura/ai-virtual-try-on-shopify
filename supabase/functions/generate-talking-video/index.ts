@@ -86,7 +86,24 @@ serve(async (req) => {
 
   const KLING_ACCESS_KEY = Deno.env.get("KLING_ACCESS_KEY");
   const KLING_SECRET_KEY = Deno.env.get("KLING_SECRET_KEY");
+  const KILL_SWITCH = (Deno.env.get("TALKING_VIDEO_ENABLED") || "true").toLowerCase() !== "false";
   const svc = getServiceClient();
+
+  if (!KILL_SWITCH) {
+    console.warn("[talking-video] Disabled by TALKING_VIDEO_ENABLED=false — failing job and refunding");
+    await svc.from("generation_queue").update({
+      status: "failed",
+      error_message: "Talking Video is temporarily disabled",
+      completed_at: new Date().toISOString(),
+    }).eq("id", jobId);
+    if (creditsReserved > 0) {
+      await svc.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+    }
+    return new Response(JSON.stringify({ error: "Disabled" }), {
+      status: 503,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   if (!KLING_ACCESS_KEY || !KLING_SECRET_KEY) {
     console.error("[talking-video] Missing Kling credentials");
