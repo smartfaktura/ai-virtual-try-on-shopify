@@ -461,7 +461,7 @@ serve(async (req) => {
       model_name: "kling-v2-master",
       image: imageUrl,
       prompt: fullPrompt,
-      negative_prompt: NEGATIVE_PROMPT,
+      negative_prompt: negativePrompt,
       duration,
       mode: "std",
       cfg_scale: 0.5,
