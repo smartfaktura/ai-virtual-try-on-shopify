@@ -1,63 +1,57 @@
-# More action in Talking Video
+## Why your prompt is ignored
 
-## Why it feels static today
+Your prompt is ~1,250 characters describing walking, hand placement, orbit camera, multiple angles, full-body fashion campaign. None of it survives the Talking Video pipeline because **5 hard-coded rules in `generate-talking-video/index.ts` overrule it**:
 
-Talking Video runs in two stages: Kling generates the base clip from the photo, then Kling lip-sync paints the mouth onto it from the ElevenLabs audio. To keep lip-sync clean, the current base prompt locks almost everything: tripod camera, no body movement, mouth closed, no hand gestures, no scene motion. That's why even "Presenter" still feels like a stiff portrait. The constraint that matters is the **mouth** — body, scene, lighting and slow camera motion can all move freely without hurting the sync.
+1. **Action prompt is clamped to 240 chars** (`sanitizeActionPrompt`). Your prompt is silently truncated — Kling only sees the first sentence or two, not the orbit camera, not the strap touch, not the walking.
+2. **SUBJECT line forces "medium close-up, head and shoulders visible"** in every prompt — this kills walking, full-body swimwear shots, and side angles by design.
+3. **SAFETY line says "Hands stay completely out of frame"** at Still / Natural / Presenter levels. Touching the bikini strap is literally listed as a negative unless you pick Expressive or Cinematic.
+4. **Camera move picker only shows at Cinematic**, and even then it's push-in / pull-out / arc ≤10°. Your "smooth orbit, left-to-right, front + 3/4 + side angles" can't be selected at all — and the negative prompt actively blocks `orbit, tracking shot, pan` unless you're on Cinematic.
+5. **MOUTH lock is non-negotiable** ("Lips softly closed… do NOT animate speaking"). This is correct for lip-sync, but it also locks the head from turning past ~15°, so side angles and confident profile poses are filtered out.
 
-## Model choice
+In short: Talking Video is a **head-and-shoulders lip-sync tool**, not a campaign-video tool. Your prompt was 80% truncated and the surviving 20% got overridden by the framing/safety rules. The "old instructions" suspicion is correct — the SUBJECT, SAFETY and MOUTH blocks are the ones killing motion.
 
-Stay on Kling for both stages. It's the only path that accepts user-uploaded real faces, gives us motion control, and already powers the lip-sync. Seedance 2.0 was ruled out earlier (no real faces). Sync.so only replaces lip-sync, not the base clip — it would not add action. The win here is **prompt and UI**, not a new model.
+## What to change
 
-## What changes
+Two-part fix. Keep lip-sync safe, but stop silently throwing away the user's intent.
 
-### 1. New "Action & scene" panel (between Performance and Duration)
-A dedicated section so users can dial in motion without fighting the existing Energy/Eye-contact controls.
+### A. Stop discarding the prompt (edge function — `supabase/functions/generate-talking-video/index.ts`)
 
-- **Action level** (4 chips, replaces today's 3-tier Energy):
-  - Still — current `locked`
-  - Natural — current `natural`
-  - Presenter — current `presenter`
-  - **Expressive (new)** — subtle hand-in-frame gestures, light shoulder/torso sway, head turns within ±15°, gentle ambient scene motion (hair, fabric, background life)
-  - **Cinematic (new)** — Expressive plus slow controlled camera push-in OR slow pull-out (one choice, never both), shallow parallax, atmospheric motion (steam, dust, soft wind)
-- **Custom action prompt** (textarea, optional, max 240 chars):
-  - Placeholder: `e.g. holds the bottle up to the light, soft scarf flutter, slow step forward`
-  - Live chip suggestions inserted into the field: "hand gesture", "slow walk forward", "hair in breeze", "turn shoulder", "lift product", "ambient steam"
-  - Helper line under it: "Describe body, hands, scene or camera motion. Mouth and lip-sync are handled automatically — don't describe speaking."
-- **Camera move** (only visible when level = Cinematic): None / Slow push-in / Slow pull-out / Slow arc — single select chip row
+- Raise `sanitizeActionPrompt` cap from **240 → 600 chars** and raise the final prompt cap from 1800 → 2400.
+- Raise the picker textarea cap (`MAX_ACTION_LEN`) to 600 and the client clamp in `useTalkingVideoProject.start()` to match.
+- Move the `ACTION:` block **above** PERFORMANCE/SAFETY (currently it's buried after MOUTH), and prefix it as `PRIMARY ACTION (highest priority): …` so Kling weights it first.
+- Make `SUBJECT` framing dynamic:
+  - locked / natural / presenter → keep "medium close-up, head and shoulders"
+  - expressive → "medium shot, head to hips, hands may enter frame"
+  - cinematic → "medium to wide shot, full body may be visible, camera may reframe gently"
+- Make `SAFETY` dynamic: drop "Hands stay completely out of frame" for expressive+, keep only "hands never cross or cover the mouth, face stays toward lens, mouth visible".
 
-### 2. Prompt builder rewrite (edge function)
-`buildStructuredPrompt` is split into MOUTH-LOCKED block (always strict) + BODY/SCENE/CAMERA block (driven by the new controls).
+### B. Give the user the controls their prompt needs
 
-- MOUTH block stays exactly as today (closed, relaxed, clean canvas for lip-sync). Non-negotiable.
-- BODY/PERFORMANCE block expands per Action level. Expressive adds: "Natural hand gestures may briefly enter frame below the chin; gentle shoulder shift; head free to settle ±15°". Cinematic adds the chosen camera move sentence.
-- SCENE block appends the custom action prompt verbatim, prefixed with `ACTION:` and clamped to 240 chars. We sanitize it server-side by stripping any words that would interfere with lip-sync (regex on `talk|speak|mouth|lip|smile|laugh|shout|sing|whisper`) and append a short reminder if any were stripped.
-- NEGATIVE prompt becomes tiered:
-  - Always-on (mouth/face): keep today's `talking, mouthing, lip flapping, open mouth, teeth, tongue, hand over mouth, finger near mouth`
-  - Drop when level ≥ Expressive: `dramatic gesture, fast motion, head turning away`
-  - Drop when level = Cinematic: `camera movement, pan, zoom, dolly` (replaced by an explicit allowed-camera-move clause)
+- Unlock the **Camera move** row at Expressive (not only Cinematic), and add two more options: `orbit_lr` (slow orbit left→right) and `orbit_rl` (slow orbit right→left). Update `CAMERA_LINES` to describe each, and drop them from the negative prompt for those levels.
+- Add a helper line above the textarea: *"Talking Video keeps the face toward the camera and the mouth closed for lip-sync. Walking, hand gestures, orbit camera and pose changes all work — full back turns, side profiles past 30°, and hands near the mouth do not."*
+- Inline warning if the user types `walk|orbit|side angle|profile|full body|turn around` while on Still/Natural — surface a chip: "Switch to Expressive or Cinematic to enable this motion." (No autoswitch — user decides.)
+- Optional: an "Apply suggested level" button that bumps to Cinematic + selects `orbit_lr` when the typed prompt contains orbit/walk keywords.
 
-### 3. Types and payload
-- `Motion` type gains `'expressive' | 'cinematic'`.
-- `Performance` interface gains `cameraMove?: 'none' | 'push_in' | 'pull_out' | 'arc'` and `actionPrompt?: string`.
-- `useTalkingVideoProject.start()` forwards them through to the existing `payload.performance` and `payload.scene_hint` fields (no queue contract change).
+### C. Set the right expectation in the UI (`TalkingPerformancePicker.tsx` + `TalkingVideo.tsx`)
 
-### 4. Pricing (no change)
-Same Kling base cost — we're only changing the prompt and a few UI fields, not adding a render pass. Credit rules stay 22/36.
-
-### 5. Safeguards
-- If both a strong custom prompt AND level = Still are selected, show inline warning "Action prompt is ignored at Still level — pick Natural or higher".
-- Strip the custom prompt to ASCII-friendly punctuation and clamp 240 chars client-side before submit (server re-clamps).
-- Keep `scene_hint` as a separate optional field (it controls styling), distinct from `actionPrompt` (controls motion).
+Add a small note under the action panel: *"For pure fashion / runway videos without speech, use **Start→End Video** or **Short Film** — those don't lock the mouth and can do full orbits and walking shots."* Deep-link to `/app/video/start-end` so users with prompts like yours land on the right tool.
 
 ## Files touched
 
-- `src/pages/video/TalkingVideo.tsx` — render new section, wire state
-- `src/components/app/video/TalkingPerformancePicker.tsx` — extend Energy chips, add camera-move row, add action-prompt textarea + chip suggestions
-- `src/hooks/useTalkingVideoProject.ts` — pass new fields in payload
-- `supabase/functions/generate-talking-video/index.ts` — `Motion` type, `MOTION_LINES`, `buildStructuredPrompt`, tiered `NEGATIVE_PROMPT`, sanitizer for custom prompt
+- `supabase/functions/generate-talking-video/index.ts` — cap raise, reorder, dynamic SUBJECT/SAFETY, new camera moves, weaker negatives at higher levels.
+- `src/components/app/video/TalkingPerformancePicker.tsx` — MAX_ACTION_LEN to 600, camera row visible at Expressive+, new orbit options, helper copy, conflict warning, deep link.
+- `src/hooks/useTalkingVideoProject.ts` — `CameraMove` type adds `orbit_lr | orbit_rl`, client clamp to 600.
+- `src/pages/video/TalkingVideo.tsx` — wire updated picker.
 
 ## Out of scope
 
-- No new provider (Sync.so, Seedance) — those were evaluated above and don't fit.
-- No change to lip-sync stage, polling, or queue resolver.
-- No change to credit pricing.
+- Switching providers (Sync.so / Seedance) — ruled out earlier in this thread, no real-face support or no lip-sync.
+- Removing the MOUTH lock — it's load-bearing for lip-sync quality.
+- Changing credit pricing.
+
+## Open question
+
+Your prompt is 100% a fashion runway shot — there's no speech in it. Do you want me to:
+(a) just unlock Talking Video to allow walking + orbit while keeping the mouth lip-synced to a script, **or**
+(b) also wire your prompt straight into Start→End Video / Short Film where there's no mouth lock and orbits already work, **or**
+(c) both?
