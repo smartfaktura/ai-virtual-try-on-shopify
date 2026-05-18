@@ -162,7 +162,7 @@ serve(async (req) => {
 
     const rows = stuck || [];
     let completed = 0, failed = 0, timedOut = 0, pending = 0, errors = 0;
-    const timeoutCutoff = Date.now() - TIMEOUT_MIN * 60 * 1000;
+    const TIMEOUT_MS = TIMEOUT_MIN * 60 * 1000;
 
     await Promise.all(rows.map(async (row) => {
       const taskId = row.kling_task_id as string;
@@ -171,6 +171,14 @@ serve(async (req) => {
       const meta = (row.metadata || {}) as Record<string, unknown>;
       const stage = (meta.stage as string) || "base_video";
       const isLipsyncStage = isTalking && stage === "lipsync";
+
+      // For lip-sync, measure timeout from when stage 2 was submitted, not from
+      // when the queue row was created. Otherwise a healthy stage 2 gets killed
+      // just because base video took 10–15 min.
+      const stageStartMs = isLipsyncStage && typeof meta.lipsync_started_at === "string"
+        ? new Date(meta.lipsync_started_at as string).getTime()
+        : new Date(row.created_at).getTime();
+      const isPastTimeout = (Date.now() - stageStartMs) > TIMEOUT_MS;
 
       const url = isLipsyncStage
         ? `${KLING_API_BASE}/videos/lip-sync/${taskId}`
@@ -183,7 +191,7 @@ serve(async (req) => {
         const result = await res.json();
 
         if (!res.ok || result.code !== 0) {
-          if (new Date(row.created_at).getTime() < timeoutCutoff) {
+          if (isPastTimeout) {
             // Talking video lip-sync failure → silent fallback (keep base video)
             if (isLipsyncStage && meta.base_video_url) {
               const baseUrl = meta.base_video_url as string;
