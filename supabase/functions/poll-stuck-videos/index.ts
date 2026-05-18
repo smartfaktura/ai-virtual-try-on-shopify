@@ -272,7 +272,8 @@ serve(async (req) => {
 
               const lipsyncTaskId = lipJson.data.task_id as string;
               const updateMeta = { ...meta, stage: "lipsync", base_video_url: permanentUrl,
-                                   lipsync_task_id: lipsyncTaskId };
+                                   lipsync_task_id: lipsyncTaskId,
+                                   lipsync_started_at: new Date().toISOString() };
               const update: Record<string, unknown> = {
                 kling_task_id: lipsyncTaskId,
                 metadata: updateMeta,
@@ -280,7 +281,8 @@ serve(async (req) => {
               };
               if (previewUrl) update.preview_url = previewUrl;
               await svc.from("generated_videos").update(update).eq("id", row.id);
-              // queue stays open until stage 2 finishes
+              // Keep the queue row in sync so cleanup_stale_jobs sees fresh state.
+              await advanceQueueToLipsync(svc, taskId, lipsyncTaskId);
               pending++;
               return;
             } catch (err) {
