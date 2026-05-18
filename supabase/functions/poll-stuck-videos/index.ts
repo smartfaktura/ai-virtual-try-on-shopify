@@ -238,14 +238,8 @@ serve(async (req) => {
           // === TALKING VIDEO — Stage 1 (base_video) finished → submit lip-sync ===
           if (isTalking && stage === "base_video") {
             try {
-              const script = (meta.script as string) || "";
-              const voiceId = (meta.voice_id as string) || "oversea_male1";
-              const voiceLanguage = (meta.voice_language as string) || "en";
-              const voiceSpeed = Number(meta.voice_speed ?? 1) || 1;
-
-              // Kling needs to fetch the video itself — our `generated-videos`
-              // bucket is private, so a /object/public/... URL returns 400.
-              // Sign the storage object for 1h so Kling can pull it.
+              // Kling needs to fetch BOTH the video and the audio itself — our
+              // private buckets reject /object/public/... URLs. Sign them.
               let lipsyncSourceUrl = permanentUrl;
               try {
                 const path = `${row.user_id}/${taskId}.mp4`;
@@ -257,17 +251,29 @@ serve(async (req) => {
                 console.warn(`[poll-stuck-videos] sign base video failed:`, signErr);
               }
 
+              // Resolve audio URL from the ElevenLabs voiceover we uploaded in
+              // generate-talking-video. Sign it fresh — Kling will pull it.
+              const audioPath = meta.audio_storage_path as string | undefined;
+              if (!audioPath) {
+                throw new Error("Missing audio_storage_path on talking_video metadata");
+              }
+              const { data: signedAudio, error: signedAudioErr } = await svc.storage
+                .from("generated-audio")
+                .createSignedUrl(audioPath, 3600);
+              if (signedAudioErr || !signedAudio?.signedUrl) {
+                throw new Error(`Failed to sign voiceover audio: ${signedAudioErr?.message || "no url"}`);
+              }
+              const audioUrl = signedAudio.signedUrl;
+
               const lipRes = await fetch(`${KLING_API_BASE}/videos/lip-sync`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
                   input: {
                     video_url: lipsyncSourceUrl,
-                    mode: "text2video",
-                    text: script.slice(0, 120),
-                    voice_id: voiceId,
-                    voice_language: voiceLanguage,
-                    voice_speed: voiceSpeed,
+                    mode: "audio2video",
+                    audio_type: "url",
+                    audio_url: audioUrl,
                   },
                 }),
               });

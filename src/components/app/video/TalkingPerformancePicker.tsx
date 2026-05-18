@@ -1,7 +1,7 @@
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-export type Motion = 'still' | 'natural' | 'expressive';
+export type Motion = 'locked' | 'natural' | 'presenter';
 export type Gaze = 'camera' | 'soft';
 
 export interface Performance {
@@ -10,14 +10,14 @@ export interface Performance {
 }
 
 const MOTIONS: { value: Motion; label: string; desc: string }[] = [
-  { value: 'still', label: 'Still', desc: 'Only mouth & eyes move' },
-  { value: 'natural', label: 'Natural', desc: 'Default, subtle life' },
-  { value: 'expressive', label: 'Expressive', desc: 'Light head & shoulder shifts' },
+  { value: 'locked',    label: 'Locked',    desc: 'Mouth & eyes only' },
+  { value: 'natural',   label: 'Natural',   desc: 'Subtle facial life' },
+  { value: 'presenter', label: 'Presenter', desc: 'Confident, small nods' },
 ];
 
 const GAZES: { value: Gaze; label: string }[] = [
   { value: 'camera', label: 'To camera' },
-  { value: 'soft', label: 'Soft / off-camera' },
+  { value: 'soft',   label: 'Soft glance' },
 ];
 
 interface Props {

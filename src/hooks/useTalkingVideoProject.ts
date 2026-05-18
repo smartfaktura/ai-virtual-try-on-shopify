@@ -5,7 +5,7 @@ import { toast } from '@/lib/brandedToast';
 import { serializeForKling } from '@/lib/talkingDuration';
 
 export interface TalkingPerformance {
-  motion: 'still' | 'natural' | 'expressive';
+  motion: 'locked' | 'natural' | 'presenter';
   gaze: 'camera' | 'soft';
 }
 

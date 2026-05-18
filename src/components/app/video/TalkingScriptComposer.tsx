@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Pause, Play, Sparkles, Volume2 } from 'lucide-react';
+import { Loader2, Pause, Play, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   estimateDuration,
@@ -57,22 +57,11 @@ export function TalkingScriptComposer({
       const start = ta.selectionStart ?? script.length;
       const end = ta.selectionEnd ?? script.length;
       const before = script.slice(0, start);
-      const sel = script.slice(start, end);
       const after = script.slice(end);
-      let next: string;
-      let caret: number;
-      if (token === '[em]' && sel) {
-        next = `${before}[em]${sel}[/em]${after}`;
-        caret = before.length + 4 + sel.length + 5;
-      } else if (token === '[em]') {
-        next = `${before}[em][/em]${after}`;
-        caret = before.length + 4;
-      } else {
-        const needsSpaceBefore = before.length > 0 && !/\s$/.test(before);
-        const insert = (needsSpaceBefore ? ' ' : '') + token + ' ';
-        next = before + insert + after;
-        caret = (before + insert).length;
-      }
+      const needsSpaceBefore = before.length > 0 && !/\s$/.test(before);
+      const insert = (needsSpaceBefore ? ' ' : '') + token + ' ';
+      const next = before + insert + after;
+      const caret = (before + insert).length;
       if (next.length > MAX_RAW_CHARS) return;
       onScriptChange(next);
       requestAnimationFrame(() => {
@@ -118,8 +107,6 @@ export function TalkingScriptComposer({
         body: { script: serialized, voice_id: voiceId, speed: voiceSpeed },
       });
       if (error) {
-        // Try to surface the backend's actual error message instead of the
-        // generic "Edge Function returned a non-2xx status code".
         let msg = error.message || 'Preview failed';
         const ctx = (error as { context?: Response }).context;
         if (ctx && typeof ctx.json === 'function') {
@@ -205,15 +192,6 @@ export function TalkingScriptComposer({
           </span>
           Long pause
         </button>
-        <button
-          type="button"
-          onClick={() => insertToken('[em]')}
-          className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium hover:border-primary/40 transition"
-          title="Emphasis on selected words"
-        >
-          <Sparkles className="w-3 h-3" />
-          Emphasis
-        </button>
 
         <div className="ml-auto">
           <Button
@@ -298,7 +276,7 @@ export function TalkingScriptComposer({
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Use pauses to control rhythm. Preview voice is an audio approximation — Kling matches the pacing in the final video.
+        Preview is the exact voice and pacing used in the final video
       </p>
     </section>
   );

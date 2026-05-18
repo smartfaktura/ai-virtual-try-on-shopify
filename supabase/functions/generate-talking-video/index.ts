@@ -1,13 +1,20 @@
-// Talking Video orchestrator — stage 1 of the Kling-only pipeline.
+// Talking Video orchestrator — stage 1 of the new audio-first pipeline.
 //
-// Worker mode (dispatched by process-queue):
-//   1. Validate payload (script + voice + reference image).
-//   2. Submit Kling image2video with locked camera / talking-head prompt.
-//   3. Insert generated_videos row with workflow_type='talking_video',
-//      metadata = { stage: 'base_video', voice_id, voice_language, voice_speed, script }.
-//   4. Save kling_task_id to queue.result so poll-stuck-videos can advance to stage 2.
+// Pipeline (worker mode, dispatched by process-queue):
+//   0. Validate payload (script + voice + reference image + performance).
+//   1. Generate ElevenLabs voiceover (mapped from the chosen Kling voice id),
+//      upload it to the private `generated-audio` bucket. We store the bucket
+//      PATH (not the URL) — poll-stuck-videos signs it fresh when Kling needs it.
+//   2. Submit Kling image2video with a structured talking-head prompt.
+//   3. Persist generated_videos row with metadata = {
+//        stage: 'base_video', script, voice_id, voice_speed,
+//        audio_storage_path, audio_duration_sec, performance
+//      }.
+//   4. Save kling_task_id to queue.result so poll-stuck-videos advances stage 2.
 //
-// The chained lip-sync call happens inside poll-stuck-videos when stage 1 completes.
+// poll-stuck-videos then calls /videos/lip-sync with audio_type:"file" and the
+// freshly signed audio URL — Kling no longer does any TTS, so the user hears
+// the exact ElevenLabs voice they previewed.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -20,16 +27,115 @@ const corsHeaders = {
 
 const KLING_API_BASE = "https://api-singapore.klingai.com/v1";
 
-const STABLE_PROMPT_PREFIX =
-  "Locked-off camera, zero camera movement, no pan, no zoom, no dolly. " +
-  "Subject centred in frame, medium close-up talking-head composition, " +
-  "shoulders and head visible, mouth fully visible to camera. " +
-  "Eyes engaged with lens. Natural breathing, gentle blinks, subtle micro-expressions. ";
+// Kling voice id -> ElevenLabs voice id. Mirrors VOICE_MAP in
+// preview-talking-voice / seed-voice-samples — keep in sync.
+const VOICE_MAP: Record<string, string> = {
+  ai_kaiya: "9BWtsMINqrJLrRacOk9x",
+  girlfriend_4_speech02: "EXAVITQu4vr4xnSDxMaL",
+  calm_story1: "XrExE9yKIg1WjnnlVkGX",
+  oversea_male1: "nPczCjzI2devNBz1zQrb",
+  uk_man2: "JBFqnCBsd6RMkjVDRZzb",
+  uk_boy1: "N2lVS1w4EtoT3dr4eOWO",
+};
+
+// --- Structured talking-head prompt builder -----------------------------------
+
+type Motion = "locked" | "natural" | "presenter";
+type Gaze = "camera" | "soft";
+
+const MOTION_LINES: Record<Motion, string> = {
+  locked:
+    "Body completely static. Only mouth, jaw, lips, teeth, eyes and gentle breathing animate. Shoulders, torso, hair stay locked.",
+  natural:
+    "Subtle facial life. Small natural blinks, gentle breathing, micro head settle. No shoulder or torso motion.",
+  presenter:
+    "Confident delivery. Small assertive nods on stressed words, light brow lift, controlled shoulders. No hand gestures.",
+};
+
+const GAZE_LINES: Record<Gaze, string> = {
+  camera: "Eyes locked on the lens the entire time. Direct, engaged eye contact.",
+  soft: "Eyes mostly on the lens, occasional soft glance to a point just off-camera. Never turns face away.",
+};
 
 const NEGATIVE_PROMPT =
-  "camera movement, panning, zooming, dolly, tracking shot, fast motion, " +
-  "head turning away, mouth occluded, hand over mouth, dramatic action, " +
-  "warping, distortion, multiple people, crowd";
+  "camera movement, pan, zoom, dolly, tracking shot, orbit, shake, reframe, fast motion, " +
+  "head turning away, profile turn, looking sideways, mouth covered, hand over mouth, " +
+  "hand near face, finger near mouth, object crossing mouth, teeth warping, lip distortion, " +
+  "face melting, duplicate face, two heads, extra person, crowd, dramatic gesture, " +
+  "warping, watermark, text overlay, blur, motion blur on face, jitter";
+
+function buildStructuredPrompt(
+  motion: Motion,
+  gaze: Gaze,
+  sceneHint: string | null,
+): string {
+  const styleLine = sceneHint
+    ? `STYLE: ${sceneHint}. Otherwise preserve the reference identity, wardrobe, lighting and background exactly.`
+    : "STYLE: Preserve the reference identity, wardrobe, lighting and background exactly. Do not restyle.";
+
+  const prompt = [
+    "CAMERA: Locked-off vertical frame, tripod-stable. No pan, zoom, dolly, orbit, shake or reframe.",
+    "SUBJECT: Single person, medium close-up. Head and shoulders visible. Face fully unobstructed. Mouth fully visible to camera at all times.",
+    `PERFORMANCE: ${MOTION_LINES[motion]}`,
+    `GAZE: ${GAZE_LINES[gaze]}`,
+    "SPEECH READINESS: Natural jaw and lip articulation as if speaking. Soft natural blinks. Quiet breathing. Engaged expression.",
+    "SAFETY: Hands stay completely out of frame. Nothing crosses the mouth. No profile turn. No exaggerated gestures.",
+    styleLine,
+  ].join(" ");
+
+  return prompt.slice(0, 1800);
+}
+
+// --- ElevenLabs voiceover ----------------------------------------------------
+
+const ELEVEN_TTS_MODEL = "eleven_multilingual_v2";
+
+async function generateVoiceover(args: {
+  script: string;
+  klingVoiceId: string;
+  speed: number;
+  elevenKey: string;
+}): Promise<Uint8Array> {
+  const elevenVoiceId = VOICE_MAP[args.klingVoiceId] || VOICE_MAP.oversea_male1;
+
+  const res = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${elevenVoiceId}?output_format=mp3_44100_128`,
+    {
+      method: "POST",
+      headers: {
+        "xi-api-key": args.elevenKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: args.script,
+        model_id: ELEVEN_TTS_MODEL,
+        voice_settings: {
+          stability: 0.55,
+          similarity_boost: 0.8,
+          style: 0.25,
+          use_speaker_boost: true,
+          speed: args.speed,
+        },
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`Voiceover generation failed (${res.status}): ${errText.slice(0, 200)}`);
+  }
+
+  const buf = await res.arrayBuffer();
+  return new Uint8Array(buf);
+}
+
+// Estimate seconds of speech: rough proxy from script word count + speed.
+// Used only for choosing 5 vs 10s base video — Kling sets the actual length.
+function roughDurationSeconds(script: string, speed: number): number {
+  const words = script.trim().split(/\s+/).filter(Boolean).length;
+  const wpm = 155 * Math.max(0.5, Math.min(2, speed || 1));
+  return (words / wpm) * 60 + 0.6; // +intro/outro padding
+}
 
 // --- JWT helpers (HS256) for Kling ---
 function base64url(data: Uint8Array): string {
@@ -86,43 +192,41 @@ serve(async (req) => {
 
   const KLING_ACCESS_KEY = Deno.env.get("KLING_ACCESS_KEY");
   const KLING_SECRET_KEY = Deno.env.get("KLING_SECRET_KEY");
+  const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
   const KILL_SWITCH = (Deno.env.get("TALKING_VIDEO_ENABLED") || "true").toLowerCase() !== "false";
   const svc = getServiceClient();
 
-  if (!KILL_SWITCH) {
-    console.warn("[talking-video] Disabled by TALKING_VIDEO_ENABLED=false — failing job and refunding");
+  const failJob = async (msg: string, status = 500) => {
     await svc.from("generation_queue").update({
       status: "failed",
-      error_message: "Talking Video is temporarily disabled",
+      error_message: msg,
       completed_at: new Date().toISOString(),
     }).eq("id", jobId);
     if (creditsReserved > 0) {
       await svc.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
     }
-    return new Response(JSON.stringify({ error: "Disabled" }), {
-      status: 503,
+    return new Response(JSON.stringify({ error: msg }), {
+      status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  };
+
+  if (!KILL_SWITCH) {
+    console.warn("[talking-video] Disabled by TALKING_VIDEO_ENABLED=false");
+    return failJob("Talking Video is temporarily disabled", 503);
   }
 
   if (!KLING_ACCESS_KEY || !KLING_SECRET_KEY) {
     console.error("[talking-video] Missing Kling credentials");
-    await svc.from("generation_queue").update({
-      status: "failed",
-      error_message: "Video service not configured",
-      completed_at: new Date().toISOString(),
-    }).eq("id", jobId);
-    await svc.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
-    return new Response(JSON.stringify({ error: "Kling not configured" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return failJob("Video service not configured", 500);
   }
 
-  // Defensive guard: if a generated_videos row already exists for this queue
-  // job and is already complete/failed, do NOT re-dispatch — that would stomp
-  // the row back to processing and submit duplicate Kling tasks. This protects
-  // against re-dispatch from cleanup_stale_jobs auto-retry edge cases.
+  if (!ELEVENLABS_API_KEY) {
+    console.error("[talking-video] Missing ELEVENLABS_API_KEY");
+    return failJob("Voice service not configured", 500);
+  }
+
+  // Defensive guard: avoid re-dispatching a job whose row is already terminal.
   try {
     const { data: existingRow } = await svc
       .from("generated_videos")
@@ -155,38 +259,52 @@ serve(async (req) => {
     const voiceId = (body.voice_id as string) || "oversea_male1";
     const voiceLanguage = (body.voice_language as string) || "en";
     const voiceSpeedRaw = Number(body.voice_speed ?? 1);
-    const voiceSpeed = Math.min(2.0, Math.max(0.8, isFinite(voiceSpeedRaw) ? voiceSpeedRaw : 1));
-    const duration = (body.duration as string) === "10" ? "10" : "5";
+    const voiceSpeed = Math.min(1.2, Math.max(0.7, isFinite(voiceSpeedRaw) ? voiceSpeedRaw : 1));
+    const requestedDuration = (body.duration as string) === "10" ? "10" : "5";
     const aspectRatio = (body.aspect_ratio as string) || "9:16";
+
+    const perf = (body.performance as { motion?: Motion; gaze?: Gaze } | undefined) || {};
+    const motion: Motion = perf.motion === "locked" || perf.motion === "presenter" ? perf.motion : "natural";
+    const gaze: Gaze = perf.gaze === "soft" ? "soft" : "camera";
 
     if (!imageUrl) throw new Error("image_url (reference model) is required");
     if (!rawScript) throw new Error("script is required");
-    if (rawScript.length > 200) throw new Error("Script too long (max 200 characters)");
+    if (rawScript.length > 220) throw new Error("Script too long (max 220 characters)");
 
-    // Performance controls (optional). Append additive directives to the base
-    // prefix — never overrides the locked-camera guarantees.
-    const perf = (body.performance as { motion?: string; gaze?: string } | undefined) || {};
-    let performanceLines = "";
-    if (perf.motion === "still") {
-      performanceLines += "Body remains static, only mouth, jaw and eyes animate, shoulders fixed. ";
-    } else if (perf.motion === "expressive") {
-      performanceLines += "Allow subtle natural head tilts and light shoulder shifts; hands remain out of frame. ";
-    }
-    if (perf.gaze === "soft") {
-      performanceLines += "Eyes drift gently between camera and a soft off-camera point, never fully turning away. ";
+    // Auto-bump duration if the estimated speech overflows 5s.
+    const estDur = roughDurationSeconds(rawScript, voiceSpeed);
+    const duration: "5" | "10" =
+      requestedDuration === "10" ? "10" : estDur > 5 ? "10" : "5";
+    if (duration !== requestedDuration) {
+      console.log(`[talking-video] Auto-bumped duration 5s → 10s (est ${estDur.toFixed(1)}s)`);
     }
 
-    // Truncate prompt to safe length
-    const userIntent = (body.scene_hint as string) || "professional studio setting, neutral background";
-    const fullPrompt =
-      `${STABLE_PROMPT_PREFIX}${performanceLines}${userIntent}. The person is speaking calmly to the camera.`.slice(0, 1800);
+    // --- Stage 0: generate ElevenLabs voiceover + upload to storage ---
+    console.log(`[talking-video] Job ${jobId} — generating voiceover (${rawScript.length} chars, voice=${voiceId})`);
+    const audioBytes = await generateVoiceover({
+      script: rawScript,
+      klingVoiceId: voiceId,
+      speed: voiceSpeed,
+      elevenKey: ELEVENLABS_API_KEY,
+    });
 
-    console.log(
-      `[talking-video] Job ${jobId} user ${userId} — submitting base video. ` +
-      `duration=${duration} ratio=${aspectRatio} voice=${voiceId}/${voiceLanguage} speed=${voiceSpeed}`,
-    );
+    const audioPath = `${userId}/talking/${jobId}.mp3`;
+    const { error: uploadErr } = await svc.storage
+      .from("generated-audio")
+      .upload(audioPath, audioBytes, {
+        contentType: "audio/mpeg",
+        upsert: true,
+      });
+    if (uploadErr) {
+      console.error("[talking-video] Audio upload error:", uploadErr);
+      throw new Error("Failed to save voiceover audio");
+    }
+    console.log(`[talking-video] Job ${jobId} — voiceover uploaded (${audioBytes.length} bytes) at ${audioPath}`);
 
-    // --- Stage 1: submit Kling image2video (locked camera, talking-head) ---
+    // --- Stage 1: submit Kling image2video (locked talking-head) ---
+    const sceneHint = (body.scene_hint as string) || null;
+    const fullPrompt = buildStructuredPrompt(motion, gaze, sceneHint);
+
     const jwt = await createKlingJWT(KLING_ACCESS_KEY, KLING_SECRET_KEY);
     const headers = { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" };
 
@@ -198,9 +316,12 @@ serve(async (req) => {
       duration,
       mode: "std",
       cfg_scale: 0.5,
-      // Note: kling-v2-master does not support camera_control — locked framing
-      // is enforced via STABLE_PROMPT_PREFIX + NEGATIVE_PROMPT instead.
     };
+
+    console.log(
+      `[talking-video] Job ${jobId} — submitting base video. ` +
+      `duration=${duration} ratio=${aspectRatio} motion=${motion} gaze=${gaze}`,
+    );
 
     const createRes = await fetch(`${KLING_API_BASE}/videos/image2video`, {
       method: "POST",
@@ -222,19 +343,20 @@ serve(async (req) => {
     }).eq("id", jobId);
 
     const metadata = {
-      stage: "base_video",
+      stage: "base_video" as const,
       script: rawScript,
       voice_id: voiceId,
       voice_language: voiceLanguage,
       voice_speed: voiceSpeed,
+      audio_storage_path: audioPath,
+      audio_duration_sec: Math.round(estDur * 10) / 10,
       base_video_url: null as string | null,
       lipsync_task_id: null as string | null,
       silent_fallback: false,
-      performance: perf,
+      performance: { motion, gaze },
     };
 
-    // Prefer updating the placeholder row created at enqueue time (so the
-    // Video Hub card transitions from queued → processing without dupes).
+    // Prefer updating the placeholder row created at enqueue time.
     const { data: existing } = await svc
       .from("generated_videos")
       .select("id")
@@ -278,20 +400,6 @@ serve(async (req) => {
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : "Unknown error";
     console.error(`[talking-video] Job ${jobId} error:`, errorMsg);
-
-    await svc.from("generation_queue").update({
-      status: "failed",
-      error_message: errorMsg,
-      completed_at: new Date().toISOString(),
-    }).eq("id", jobId);
-
-    if (creditsReserved > 0) {
-      await svc.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
-    }
-
-    return new Response(JSON.stringify({ error: errorMsg }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return failJob(errorMsg, 500);
   }
 });
