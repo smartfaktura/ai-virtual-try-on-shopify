@@ -445,7 +445,7 @@ serve(async (req) => {
       voice_settings: voiceSettings,
       tts_model: ttsModel,
       audio_storage_path: audioPath,
-      audio_duration_sec: Math.round(estDur * 10) / 10,
+      audio_duration_sec: Math.round(audioDurationSec * 10) / 10,
       base_video_url: null as string | null,
       lipsync_task_id: null as string | null,
       silent_fallback: false,
