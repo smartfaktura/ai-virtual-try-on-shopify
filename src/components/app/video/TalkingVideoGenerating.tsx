@@ -210,11 +210,21 @@ export function TalkingVideoGenerating({
           </p>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:justify-center">
+          {onStartAnother && (
+            <Button variant="default" size="sm" onClick={onStartAnother} className="text-xs">
+              Start another
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onGoToHub} className="text-xs">
             Go to Video Hub
           </Button>
         </div>
+        {onStartAnother && (
+          <p className="text-[11px] text-muted-foreground text-center">
+            Your current video keeps generating in the background
+          </p>
+        )}
       </div>
     </div>
   );
