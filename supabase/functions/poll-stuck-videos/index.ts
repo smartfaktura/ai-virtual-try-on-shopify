@@ -329,15 +329,16 @@ serve(async (req) => {
         } else {
           // submitted / processing → check timeout
           if (new Date(row.created_at).getTime() < timeoutCutoff) {
-            // Talking video lip-sync timeout → silent fallback
-            if (isLipsyncStage && meta.base_video_url) {
-              const baseUrl = meta.base_video_url as string;
+            // Talking video timeout → if we already have a usable base video,
+            // fall back to the silent version instead of throwing the work away.
+            const baseUrl = (meta.base_video_url as string | null) || (row.video_url as string | null);
+            if (isTalking && baseUrl) {
               await svc.from("generated_videos").update({
                 status: "complete",
                 video_url: baseUrl,
                 completed_at: new Date().toISOString(),
-                metadata: { ...meta, stage: "complete", silent_fallback: true,
-                            lipsync_error: "Lip-sync timed out" },
+                metadata: { ...meta, stage: "complete", base_video_url: baseUrl,
+                            silent_fallback: true, lipsync_error: "Lip-sync timed out" },
               }).eq("id", row.id);
               await resolveQueueForTask(svc, taskId, "completed", baseUrl);
               await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
