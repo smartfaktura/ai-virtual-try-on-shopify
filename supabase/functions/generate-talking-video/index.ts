@@ -190,18 +190,42 @@ serve(async (req) => {
       silent_fallback: false,
     };
 
-    await svc.from("generated_videos").insert({
-      user_id: userId,
-      source_image_url: imageUrl,
-      prompt: rawScript,
-      kling_task_id: taskId,
-      model_name: "kling-v2-master",
-      duration,
-      aspect_ratio: aspectRatio,
-      status: "processing",
-      workflow_type: "talking_video",
-      metadata,
-    });
+    // Prefer updating the placeholder row created at enqueue time (so the
+    // Video Hub card transitions from queued → processing without dupes).
+    const { data: existing } = await svc
+      .from("generated_videos")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("workflow_type", "talking_video")
+      .filter("metadata->>queue_job_id", "eq", jobId)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await svc.from("generated_videos").update({
+        kling_task_id: taskId,
+        status: "processing",
+        source_image_url: imageUrl,
+        prompt: rawScript,
+        model_name: "kling-v2-master",
+        duration,
+        aspect_ratio: aspectRatio,
+        metadata: { ...metadata, queue_job_id: jobId },
+      }).eq("id", existing.id);
+    } else {
+      await svc.from("generated_videos").insert({
+        user_id: userId,
+        source_image_url: imageUrl,
+        prompt: rawScript,
+        kling_task_id: taskId,
+        model_name: "kling-v2-master",
+        duration,
+        aspect_ratio: aspectRatio,
+        status: "processing",
+        workflow_type: "talking_video",
+        metadata: { ...metadata, queue_job_id: jobId },
+      });
+    }
 
     console.log(`[talking-video] Job ${jobId} stage=base_video submitted, kling_task_id=${taskId}`);
 
