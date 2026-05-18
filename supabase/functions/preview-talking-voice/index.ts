@@ -79,7 +79,20 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const rawScript = String(body.script || "").trim();
     const voiceId = String(body.voice_id || "");
-    const speed = Math.max(0.7, Math.min(1.2, Number(body.speed ?? 1)));
+    const speed = clamp(Number(body.speed ?? 1), 0.7, 1.2);
+    const vs = (body.voice_settings || {}) as Record<string, unknown>;
+    const num = (v: unknown, d: number) => {
+      const n = Number(v); return Number.isFinite(n) ? n : d;
+    };
+    const voiceSettings = {
+      stability: clamp(num(vs.stability, 0.5), 0, 1),
+      similarity_boost: clamp(num(vs.similarity_boost, 0.75), 0, 1),
+      style: clamp(num(vs.style, 0.3), 0, 1),
+      use_speaker_boost: typeof vs.use_speaker_boost === "boolean" ? vs.use_speaker_boost : true,
+      speed: clamp(num(vs.speed, speed), 0.7, 1.2),
+    };
+    const ttsModel = typeof body.tts_model === "string" && ALLOWED_TTS_MODELS.has(body.tts_model)
+      ? body.tts_model : "eleven_multilingual_v2";
 
     if (!rawScript) {
       return new Response(JSON.stringify({ error: "Script is required" }), {
@@ -88,7 +101,7 @@ serve(async (req) => {
     }
     // Trim to keep preview cheap (~8s of speech)
     const script = rawScript.slice(0, 220);
-    const elevenVoiceId = VOICE_MAP[voiceId] || VOICE_MAP.ai_kaiya;
+    const elevenVoiceId = LEGACY_VOICE_MAP[voiceId] || voiceId || "nPczCjzI2devNBz1zQrb";
 
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${elevenVoiceId}?output_format=mp3_44100_128`,
@@ -97,14 +110,8 @@ serve(async (req) => {
         headers: { "xi-api-key": elevenKey, "Content-Type": "application/json" },
         body: JSON.stringify({
           text: script,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.3,
-            use_speaker_boost: true,
-            speed,
-          },
+          model_id: ttsModel,
+          voice_settings: voiceSettings,
         }),
       },
     );
