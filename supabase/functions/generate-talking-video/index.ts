@@ -178,12 +178,30 @@ async function generateVoiceover(args: {
   return new Uint8Array(buf);
 }
 
-// Estimate seconds of speech: rough proxy from script word count + speed.
-// Used only for choosing 5 vs 10s base video — Kling sets the actual length.
+// Measure real audio duration from the MP3 bytes returned by ElevenLabs.
+// We request `mp3_44100_128` which is CBR 128 kbps, so:
+//   duration_sec ≈ (audio_byte_length * 8) / 128000
+// Skip an ID3v2 tag if present (header "ID3" + 6 bytes + 4 syncsafe-int size).
+function measureMp3DurationSec(bytes: Uint8Array, bitrateKbps = 128): number {
+  let audioBytes = bytes.length;
+  if (bytes.length > 10 && bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
+    // ID3v2 size is a 4-byte syncsafe integer at offset 6..9
+    const size =
+      ((bytes[6] & 0x7f) << 21) |
+      ((bytes[7] & 0x7f) << 14) |
+      ((bytes[8] & 0x7f) << 7) |
+      (bytes[9] & 0x7f);
+    audioBytes = Math.max(0, bytes.length - (10 + size));
+  }
+  return (audioBytes * 8) / (bitrateKbps * 1000);
+}
+
+// Rough fallback for clients still on the old word-count path. Only used if
+// measureMp3DurationSec returns something obviously bad.
 function roughDurationSeconds(script: string, speed: number): number {
   const words = script.trim().split(/\s+/).filter(Boolean).length;
   const wpm = 155 * Math.max(0.5, Math.min(2, speed || 1));
-  return (words / wpm) * 60 + 0.6; // +intro/outro padding
+  return (words / wpm) * 60 + 0.6;
 }
 
 // --- JWT helpers (HS256) for Kling ---
