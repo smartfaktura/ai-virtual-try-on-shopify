@@ -243,12 +243,26 @@ serve(async (req) => {
               const voiceLanguage = (meta.voice_language as string) || "en";
               const voiceSpeed = Number(meta.voice_speed ?? 1) || 1;
 
+              // Kling needs to fetch the video itself — our `generated-videos`
+              // bucket is private, so a /object/public/... URL returns 400.
+              // Sign the storage object for 1h so Kling can pull it.
+              let lipsyncSourceUrl = permanentUrl;
+              try {
+                const path = `${row.user_id}/${taskId}.mp4`;
+                const { data: signed } = await svc.storage
+                  .from("generated-videos")
+                  .createSignedUrl(path, 3600);
+                if (signed?.signedUrl) lipsyncSourceUrl = signed.signedUrl;
+              } catch (signErr) {
+                console.warn(`[poll-stuck-videos] sign base video failed:`, signErr);
+              }
+
               const lipRes = await fetch(`${KLING_API_BASE}/videos/lip-sync`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
                   input: {
-                    video_url: permanentUrl,
+                    video_url: lipsyncSourceUrl,
                     mode: "text2video",
                     text: script.slice(0, 120),
                     voice_id: voiceId,
