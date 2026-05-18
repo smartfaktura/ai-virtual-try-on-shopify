@@ -1,15 +1,17 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, FolderOpen, Mic2, Loader2, Info } from 'lucide-react';
+import { Upload, X, FolderOpen, Mic2, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { LibraryPickerModal } from '@/components/app/video/LibraryPickerModal';
 import { KlingVoicePicker, VOICE_IDS } from '@/components/app/video/KlingVoicePicker';
 import { TalkingVideoGenerating } from '@/components/app/video/TalkingVideoGenerating';
+import { TalkingScriptComposer } from '@/components/app/video/TalkingScriptComposer';
+import { TalkingPerformancePicker, type Performance } from '@/components/app/video/TalkingPerformancePicker';
+import { BackgroundJobPill } from '@/components/app/video/BackgroundJobPill';
 import { useTalkingVideoProject } from '@/hooks/useTalkingVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
@@ -18,11 +20,12 @@ import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { toSignedUrl } from '@/lib/signedUrl';
+import { estimateDuration, serializeForKling } from '@/lib/talkingDuration';
 
 type Duration = '5' | '10';
 type Phase = 'idle' | 'queued' | 'processing' | 'complete' | 'failed';
 
-const MAX_SCRIPT = 120;
+const DEFAULT_PERFORMANCE: Performance = { motion: 'natural', gaze: 'camera' };
 
 export default function TalkingVideo() {
   const navigate = useNavigate();
@@ -35,6 +38,7 @@ export default function TalkingVideo() {
   const [voiceId, setVoiceId] = useState(VOICE_IDS[0]);
   const [voiceSpeed, setVoiceSpeed] = useState(1);
   const [duration, setDuration] = useState<Duration>('5');
+  const [performance, setPerformance] = useState<Performance>(DEFAULT_PERFORMANCE);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
@@ -42,6 +46,7 @@ export default function TalkingVideo() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [resultVideoUrl, setResultVideoUrl] = useState<string | null>(null);
   const [resultError, setResultError] = useState<string | null>(null);
+  const [backgroundJobIds, setBackgroundJobIds] = useState<string[]>([]);
 
   const { isSubmitting, start } = useTalkingVideoProject();
 
@@ -53,15 +58,20 @@ export default function TalkingVideo() {
   const displayBalance = balance ?? 0;
   const hasEnough = balanceReady && displayBalance >= cost;
   const creditShortfall = balanceReady ? Math.max(cost - displayBalance, 0) : 0;
-  const charCount = script.trim().length;
+
+  const target = duration === '10' ? 10 : 5;
+  const est = estimateDuration(script, voiceId, voiceSpeed, target);
+  const serialized = serializeForKling(script);
+  const scriptEmpty = serialized.trim().length === 0;
+  const scriptOver = est.fits === 'over' || serialized.length > 200;
 
   const hasImage = !!imageUrl;
   const missingHint = !hasImage
     ? 'Add a reference photo to continue'
-    : charCount === 0
+    : scriptEmpty
       ? 'Write a short script to continue'
-      : charCount > MAX_SCRIPT
-        ? `Script is too long — keep it under ${MAX_SCRIPT} characters`
+      : scriptOver
+        ? `Script is over ${target}s — trim it or switch to ${duration === '5' ? '10s' : 'a shorter clip'}`
         : !balanceReady
           ? 'Checking your credits…'
           : !hasEnough
@@ -73,7 +83,7 @@ export default function TalkingVideo() {
     if (url) setImageUrl(url);
   }, [upload]);
 
-  // Poll the queue + generated_videos row while a job is active
+  // Poll the queue + generated_videos row while a foreground job is active
   useEffect(() => {
     if (!activeJobId || phase === 'idle' || phase === 'complete' || phase === 'failed') return;
     let cancelled = false;
@@ -95,7 +105,6 @@ export default function TalkingVideo() {
           return;
         }
 
-        // Look up the matching generated_videos row by queue_job_id
         const { data: videoRow } = await supabase
           .from('generated_videos')
           .select('id, status, video_url, error_message')
@@ -141,13 +150,13 @@ export default function TalkingVideo() {
       document.getElementById('talking-step-reference')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    if (charCount === 0) {
+    if (scriptEmpty) {
       toast.error('Write a short script first');
       document.getElementById('script')?.focus();
       return;
     }
-    if (charCount > MAX_SCRIPT) {
-      toast.error(`Script must be ${MAX_SCRIPT} characters or fewer`);
+    if (scriptOver) {
+      toast.error(`Script is over ${target}s — trim it or switch to ${duration === '5' ? '10s' : 'a shorter clip'}`);
       return;
     }
     if (!balanceReady) {
@@ -166,6 +175,7 @@ export default function TalkingVideo() {
       voiceSpeed,
       duration,
       aspectRatio: '9:16',
+      performance,
     });
     if (result.ok && result.jobId) {
       setActiveJobId(result.jobId);
@@ -174,7 +184,7 @@ export default function TalkingVideo() {
       setPhase('queued');
       refreshBalance();
     }
-  }, [isSubmitting, imageUrl, charCount, balanceReady, hasEnough, cost, duration, displayBalance, script, voiceId, voiceSpeed, start, refreshBalance]);
+  }, [isSubmitting, imageUrl, scriptEmpty, scriptOver, target, balanceReady, hasEnough, cost, duration, displayBalance, script, voiceId, voiceSpeed, performance, start, refreshBalance]);
 
   const resetToForm = useCallback(() => {
     setPhase('idle');
@@ -182,6 +192,23 @@ export default function TalkingVideo() {
     setResultVideoUrl(null);
     setResultError(null);
   }, []);
+
+  // "Start another" while current job keeps generating in background
+  const startAnother = useCallback(() => {
+    if (activeJobId) {
+      setBackgroundJobIds((prev) => [...new Set([...prev, activeJobId])]);
+    }
+    setScript('');
+    setResultVideoUrl(null);
+    setResultError(null);
+    setActiveJobId(null);
+    setPhase('idle');
+  }, [activeJobId]);
+
+  const removeBackgroundJob = useCallback((jobId: string) => {
+    setBackgroundJobIds((prev) => prev.filter((id) => id !== jobId));
+    refreshBalance();
+  }, [refreshBalance]);
 
   const generateLabel = isSubmitting
     ? 'Queuing…'
@@ -209,6 +236,7 @@ export default function TalkingVideo() {
           thumbnailUrl={imageUrl}
           onGoToHub={() => navigate('/app/video')}
           onReset={resetToForm}
+          onStartAnother={phase === 'queued' || phase === 'processing' ? startAnother : undefined}
         />
       </div>
     );
@@ -222,6 +250,12 @@ export default function TalkingVideo() {
       >
         <div />
       </PageHeader>
+
+      <BackgroundJobPill
+        jobIds={backgroundJobIds}
+        onResolved={removeBackgroundJob}
+        onOpenHub={() => navigate('/app/video')}
+      />
 
       {/* Step 1 — Reference */}
       <section id="talking-step-reference" className="space-y-3">
@@ -280,31 +314,15 @@ export default function TalkingVideo() {
         />
       </section>
 
-      {/* Step 2 — Script */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="script" className="text-sm font-medium">Script</Label>
-          <span className={cn(
-            "text-xs tabular-nums",
-            charCount > MAX_SCRIPT ? "text-destructive" : "text-muted-foreground"
-          )}>
-            {charCount}/{MAX_SCRIPT}
-          </span>
-        </div>
-        <Textarea
-          id="script"
-          value={script}
-          onChange={(e) => setScript(e.target.value)}
-          placeholder="Hi, welcome to our new collection."
-          rows={3}
-          maxLength={MAX_SCRIPT + 20}
-          className="resize-none"
-        />
-        <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-          <Info className="h-3 w-3 mt-0.5 shrink-0" />
-          Keep it short for natural lip-sync. Roughly 2 seconds per 8 words.
-        </p>
-      </section>
+      {/* Step 2 — Script composer */}
+      <TalkingScriptComposer
+        script={script}
+        onScriptChange={setScript}
+        voiceId={voiceId}
+        voiceSpeed={voiceSpeed}
+        duration={duration}
+        onDurationChange={setDuration}
+      />
 
       {/* Step 3 — Voice */}
       <section className="space-y-3">
@@ -327,7 +345,13 @@ export default function TalkingVideo() {
         </div>
       </section>
 
-      {/* Step 4 — Duration */}
+      {/* Step 4 — Performance */}
+      <section className="space-y-3">
+        <Label className="text-sm font-medium">Performance</Label>
+        <TalkingPerformancePicker value={performance} onChange={setPerformance} />
+      </section>
+
+      {/* Step 5 — Duration */}
       <section className="space-y-3">
         <Label className="text-sm font-medium">Duration</Label>
         <div className="grid grid-cols-2 gap-2 max-w-xs">
