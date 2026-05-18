@@ -67,9 +67,9 @@ Deno.serve(async (req) => {
           } else {
             const bytes = new Uint8Array(await vr.arrayBuffer());
             const path = `probe/${label}.mp4`;
-            const { error: upErr } = await svc.storage.from("voice-samples").upload(path, bytes, { contentType: "video/mp4", upsert: true });
+            const { error: upErr } = await svc.storage.from("scratch-uploads").upload(path, bytes, { contentType: "video/mp4", upsert: true });
             if (upErr) err = `upload: ${upErr.message}`;
-            else publicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/voice-samples/${path}`;
+            else publicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/scratch-uploads/${path}`;
           }
         } catch (e) { err = String(e); }
       } else {
