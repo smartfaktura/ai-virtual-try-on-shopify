@@ -1,37 +1,27 @@
-# Fix: "Generate talking video" button does nothing
+Root cause found: the Talking Video button is responding, but it is blocked before enqueue because the current balance is 8 credits and the selected 5s Talking Video costs 22 credits. That is why no `enqueue-generation` network request appears. The app fires the low-credits modal instead, but the page does not make that obvious enough.
 
-## Root cause
+Plan:
 
-From the session replay: you typed a script and clicked the button, but the button is **`disabled`** (rrweb confirms the `disabled` attribute is set). No network request fires, no logs are produced — that's why the button "doesn't work".
+1. Make the CTA state explicit
+   - When balance is below the selected duration cost, change the button copy from `Generate talking video` to a clear top-up/credits message
+   - Keep the button clickable so it opens the existing low-credits/top-up modal
+   - Add an inline message near the cost line: `Need 14 more credits to generate this video`
 
-It's disabled because `canGenerate` in `src/pages/video/TalkingVideo.tsx` requires:
+2. Add a toast for the low-credit path
+   - On click with insufficient credits, show a branded toast explaining the exact issue
+   - Example: `You need 22 credits for a 5s Talking Video. Your balance is 8.`
 
-```ts
-const canGenerate = !!imageUrl && charCount > 0 && charCount <= MAX_SCRIPT && !isSubmitting;
-```
+3. Prevent accidental queue changes
+   - Do not change `process-queue`
+   - Do not change `generate-talking-video`
+   - Do not change `enqueue-generation`
+   - Do not change database schema or credit deduction logic
 
-You haven't uploaded a reference photo yet, so `imageUrl` is null and the button silently locks. There's no message explaining what's missing — that's the real bug.
+4. Optional small safety check
+   - If the balance is still loading, show `Checking credits…` instead of treating it as zero
+   - This avoids a false low-credit block while the balance context is loading
 
-The backend (`enqueue-generation`, `generate-talking-video`, `process-queue` routing) is wired correctly and ready; we just never reach it.
-
-## Fix (frontend only — no backend changes)
-
-In `src/pages/video/TalkingVideo.tsx`:
-
-1. **Stop disabling the button silently.** Keep it enabled, run a validation function on click, and show a clear toast for each missing piece:
-   - "Add a reference photo first" → scrolls to Step 1
-   - "Write a short script first"
-   - "Script is too long — keep it under 120 characters"
-   - Only disable while `isSubmitting` (with the existing spinner)
-2. **Inline hint under the CTA** when something is missing, e.g. *"Add a reference photo to continue"* in muted text — so the user sees the blocker without having to click.
-3. **Step badges** ("1 Reference · 2 Script · 3 Voice · 4 Duration") get a subtle ✓ when complete and a faint dot when pending, so missing steps are visible at a glance.
-4. Keep all current validation logic in `useTalkingVideoProject.start` as a safety net (already there).
-
-## Out of scope
-
-- No edge function changes, no `enqueue-generation` changes, no DB changes, no Kling pipeline changes. Existing queue/video workflows are untouched.
-
-## Acceptance
-
-- Clicking the button with no image shows a toast and the inline hint — no silent failure.
-- Once a photo is uploaded and a script is entered, the button enqueues the job and navigates to `/app/video` as before.
+Expected result:
+- If all required fields are selected but credits are too low, the user gets a clear reason immediately
+- If credits are sufficient, the existing `talking_video` enqueue flow continues unchanged
+- No existing video queue workflow is touched
