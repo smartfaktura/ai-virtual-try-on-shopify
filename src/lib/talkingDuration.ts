@@ -25,10 +25,11 @@ export const PAUSE_TOKEN = {
   long: '[...]',
 } as const;
 
-const ALL_TOKEN_RE = /\[\.{1,3}\]|\[em\]|\[\/em\]/g;
+const ALL_TOKEN_RE = /\[\.{1,3}\]|\[\/?em\]/g;
 const SHORT_RE = /\[\.\](?!\.)/g;
 const MEDIUM_RE = /\[\.\.\](?!\.)/g;
 const LONG_RE = /\[\.\.\.\]/g;
+const LEGACY_EM_RE = /\[\/?em\]/g;
 
 export interface DurationEstimate {
   low: number;
@@ -92,8 +93,7 @@ export function serializeForKling(script: string): string {
     .replace(LONG_RE, '. … ')
     .replace(MEDIUM_RE, '… ')
     .replace(SHORT_RE, ', ')
-    .replace(/\[em\]/g, '*')
-    .replace(/\[\/em\]/g, '*')
+    .replace(LEGACY_EM_RE, '')
     .replace(/\s+([,.…])/g, '$1')
     .replace(/\s{2,}/g, ' ')
     .trim();
