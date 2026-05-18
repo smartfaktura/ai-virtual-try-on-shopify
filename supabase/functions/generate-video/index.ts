@@ -589,10 +589,14 @@ serve(async (req) => {
       const serviceClient = getServiceClient();
       const { data: stuckVideos, error: queryError } = await serviceClient
         .from("generated_videos")
-        .select("kling_task_id, model_name")
+        .select("kling_task_id, model_name, workflow_type")
         .eq("user_id", userId)
         .eq("status", "processing")
-        .not("kling_task_id", "is", null);
+        .not("kling_task_id", "is", null)
+        // Talking Video is a two-stage pipeline (base → lip-sync) owned by
+        // poll-stuck-videos. Recovering it here would mark the silent base
+        // clip as 'complete' and skip the ElevenLabs lip-sync stage.
+        .neq("workflow_type", "talking_video");
 
       if (queryError) {
         return new Response(JSON.stringify({ recovered: 0, error: queryError.message }), {
@@ -609,6 +613,8 @@ serve(async (req) => {
       let recovered = 0;
       for (const video of stuckVideos) {
         if (!video.kling_task_id) continue;
+        // Defensive: never recover talking_video rows from this endpoint.
+        if ((video as { workflow_type?: string }).workflow_type === "talking_video") continue;
         try {
           // Determine endpoint based on model name
           const isOmni = video.model_name === "kling-v3-omni";
