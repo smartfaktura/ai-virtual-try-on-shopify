@@ -278,6 +278,18 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
                 </Button>
               )}
 
+              {isComplete && hasAudio && (
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadAudio}
+                  disabled={downloadingAudio}
+                  className="w-full font-medium"
+                >
+                  {downloadingAudio ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Volume2 className="w-4 h-4 mr-2" />}
+                  {downloadingAudio ? 'Preparing Audio…' : 'Download Audio (MP3)'}
+                </Button>
+              )}
+
               <Button
                 variant="ghost"
                 onClick={handleDelete}
