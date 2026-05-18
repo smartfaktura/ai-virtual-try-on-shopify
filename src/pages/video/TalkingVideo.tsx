@@ -24,6 +24,7 @@ import { estimateDuration, serializeForKling } from '@/lib/talkingDuration';
 
 type Duration = '5' | '10';
 type Phase = 'idle' | 'queued' | 'processing' | 'complete' | 'failed';
+type TalkingStage = 'base_video' | 'lipsync' | 'complete' | null;
 
 const DEFAULT_PERFORMANCE: Performance = { motion: 'natural', gaze: 'camera' };
 
