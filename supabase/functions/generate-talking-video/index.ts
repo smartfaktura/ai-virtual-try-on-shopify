@@ -341,13 +341,12 @@ serve(async (req) => {
     if (!rawScript) throw new Error("script is required");
     if (rawScript.length > 220) throw new Error("Script too long (max 220 characters)");
 
-    // Auto-bump duration if the estimated speech overflows 5s.
-    const estDur = roughDurationSeconds(rawScript, voiceSpeed);
-    const duration: "5" | "10" =
-      requestedDuration === "10" ? "10" : estDur > 5 ? "10" : "5";
-    if (duration !== requestedDuration) {
-      console.log(`[talking-video] Auto-bumped duration 5s → 10s (est ${estDur.toFixed(1)}s)`);
-    }
+    // We pick the base video duration AFTER generating the voiceover, using
+    // the measured audio length. That's much more accurate than the
+    // word-count guess and avoids 10s base clips for 4s scripts (which is
+    // what caused the "still talking after audio ends" feel).
+    // Provisional pick for logging; will be re-picked below.
+    const rough = roughDurationSeconds(rawScript, voiceSpeed);
 
     // --- Stage 0: generate ElevenLabs voiceover + upload to storage ---
     console.log(`[talking-video] Job ${jobId} — generating voiceover (${rawScript.length} chars, voice=${voiceId}, model=${ttsModel})`);
@@ -358,6 +357,30 @@ serve(async (req) => {
       voiceSettings,
       elevenKey: ELEVENLABS_API_KEY,
     });
+
+    // Real audio duration from the CBR 128kbps MP3 ElevenLabs returned.
+    const measuredAudioSec = measureMp3DurationSec(audioBytes, 128);
+    const audioDurationSec = measuredAudioSec > 0.2 && measuredAudioSec < 60
+      ? measuredAudioSec
+      : rough;
+
+    // Pick the tightest base-video length that still fits the audio plus a
+    // small ~0.3s tail so lip-sync has room to settle the mouth closed.
+    const TAIL_PAD = 0.3;
+    const duration: "5" | "10" =
+      requestedDuration === "10" ? "10"
+        : audioDurationSec + TAIL_PAD > 5 ? "10" : "5";
+    if (duration !== requestedDuration) {
+      console.log(
+        `[talking-video] Auto-bumped duration ${requestedDuration}s → ${duration}s ` +
+        `(measured audio ${audioDurationSec.toFixed(2)}s, rough est ${rough.toFixed(2)}s)`,
+      );
+    } else {
+      console.log(
+        `[talking-video] Using duration=${duration}s ` +
+        `(measured audio ${audioDurationSec.toFixed(2)}s)`,
+      );
+    }
 
     const audioPath = `${userId}/talking/${jobId}.mp3`;
     const { error: uploadErr } = await svc.storage
@@ -370,7 +393,7 @@ serve(async (req) => {
       console.error("[talking-video] Audio upload error:", uploadErr);
       throw new Error("Failed to save voiceover audio");
     }
-    console.log(`[talking-video] Job ${jobId} — voiceover uploaded (${audioBytes.length} bytes) at ${audioPath}`);
+    console.log(`[talking-video] Job ${jobId} — voiceover uploaded (${audioBytes.length} bytes, ${audioDurationSec.toFixed(2)}s) at ${audioPath}`);
 
     // --- Stage 1: submit Kling image2video (locked talking-head) ---
     const sceneHint = (body.scene_hint as string) || null;
