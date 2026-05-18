@@ -233,12 +233,13 @@ export default function TalkingVideo() {
 
       {/* Generate */}
       <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 bg-background/95 backdrop-blur border-t border-border/60 flex items-center justify-between gap-4">
-        <div className="text-xs text-muted-foreground">
-          Cost <span className="text-foreground font-medium">{cost} credits</span> · balance {balance ?? 0}
+        <div className="text-xs text-muted-foreground space-y-0.5">
+          <div>Cost <span className="text-foreground font-medium">{cost} credits</span> · balance {balance ?? 0}</div>
+          {missingHint && <div className="text-[11px] text-muted-foreground/80">{missingHint}</div>}
         </div>
         <Button
           onClick={handleGenerate}
-          disabled={!canGenerate}
+          disabled={isSubmitting}
           size="lg"
           className="min-w-[180px]"
         >
