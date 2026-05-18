@@ -158,12 +158,19 @@ export function TalkingVideoGenerating({
 
         <div className="text-center space-y-1.5">
           <h2 className="text-lg sm:text-xl font-semibold tracking-tight">
-            {phase === 'queuing'   && 'Queueing your talking video'}
-            {phase === 'generating' && 'Generating your talking video'}
-            {phase === 'finishing' && 'Polishing the final cut'}
+            {status === 'queued' && 'Queueing your talking video'}
+            {status === 'processing' && stage === 'base_video' && 'Generating motion'}
+            {status === 'processing' && stage === 'lipsync' && 'Lip-syncing your voice'}
+            {status === 'processing' && (!stage || stage === 'complete') && (
+              phase === 'finishing' ? 'Polishing the final cut' : 'Generating your talking video'
+            )}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Typically 4–6 minutes — base render then lip-sync
+            {stage === 'lipsync'
+              ? 'Aligning lip movement to your ElevenLabs voice — about 1–2 minutes'
+              : stage === 'base_video'
+                ? 'Building the base talking-head shot — about 4–6 minutes'
+                : 'Typically 4–6 minutes — base render then lip-sync'}
           </p>
         </div>
 
