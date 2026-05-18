@@ -1,47 +1,32 @@
-# Shorter stage labels + fix stuck talking videos
+**What’s happening**
+- The newest Talking Video finished successfully at **13:02 UTC**.
+- Three older Talking Video queue rows are still marked `processing`, but their `generated_videos` rows already completed.
+- So the app can show “stuck/generating” even when the actual video record is done, because the queue status and video status are out of sync.
 
-## A. Shorter labels on video cards (`src/pages/VideoHub.tsx`)
+**Why it happens**
+- Talking Video uses a two-stage flow: base motion → lip-sync.
+- The poller updates `generated_videos` correctly, but some older queue rows kept the previous `kling_task_id` or stage metadata.
+- Then `resolveQueueForTask()` can’t match the final provider task back to the queue row, leaving the queue row in `processing` forever.
 
-1. `talkingStageLabel()`:
-   - `base_video` → **Motion** (was "Generating motion")
-   - `lipsync` → **Lip-sync** (was "Lip-syncing voice")
-   - `complete` → **Finishing** (was "Finalizing")
-2. Remove the **"Source frame"** badge at top-left of the processing card — it's redundant (the source frame is literally what's shown), and competes with the stage badge.
-3. In `src/components/app/video/TalkingVideoGenerating.tsx` (the full-page generating view) keep the longer headings — that screen has space. No change there.
+**Recommended fix**
+1. **Repair existing stale rows**
+   - Mark queue rows as completed when their linked Talking Video row is already `complete`.
+   - Preserve the final `video_url` in `generation_queue.result`.
 
-## B. Stuck talking videos in `/app/video`
+2. **Harden the poller**
+   - Resolve Talking Video queue rows by `metadata.queue_job_id` first, not only by `result.kling_task_id`.
+   - Preserve stage metadata when moving base → lip-sync.
+   - When a video is completed, always update the linked queue row by queue id.
 
-Database check confirms two talking videos are stuck:
-- `cfe2264f…` — stage `lipsync`, started 12:34 UTC, **timeout_at already passed (13:28 UTC)**, no `lipsync_task_id` written to queue result.
-- `639de233…` — stage `base_video`, started 12:41 UTC, timeout 13:26, similar pattern.
+3. **Add a timeout backstop**
+   - If base motion or lip-sync exceeds the allowed window, fail/refund precisely.
+   - If base video exists but lip-sync stalls, complete with silent fallback + partial refund instead of showing endless progress.
 
-The `poll-stuck-videos` cron is supposed to either finish or fail+refund these. It isn't reconciling them because:
-- The queue row has `status='processing'` past `timeout_at`, but talking-video jobs are excluded from `cleanup_stale_jobs` (intentional, by design — it says "owned by poll-stuck-videos").
-- `poll-stuck-videos` looks for talking jobs by `metadata->>'queue_job_id'` but only acts while it can still talk to Kling. If a Kling task disappears or returns an unexpected payload, the row stays in limbo.
+4. **Clean up UI state**
+   - Keep short labels: `Motion`, `Lip-sync`, `Processing`.
+   - Treat completed `generated_videos` as authoritative so stale queue rows don’t keep cards “in progress”.
 
-### Fixes (server-side)
-
-1. **Add a hard backstop in `poll-stuck-videos`**: any talking job where `queue.started_at < now() - interval '40 minutes'` AND no `lipsync_task_id` recorded → mark queue `failed`, refund credits, mark `generated_videos` row `failed` with `error_message = 'Lip-sync stage timed out'`. (Lip-sync alone should never take >15 min; 40 min is a safe ceiling.)
-2. **Persist `lipsync_task_id` immediately** when we kick off the lip-sync call (today it's only saved on success in some paths) so we always have a recovery handle.
-3. **Reconcile-now button**: add a tiny admin/owner endpoint `reconcile-talking-video?id=…` that the frontend can call from the video card's overflow menu for any talking video stuck > 25 min. It re-queries Kling and either finalizes or fails+refunds. (Optional but unblocks users without waiting for cron.)
-
-### Frontend touch (`VideoHub.tsx` only)
-
-4. When a processing talking video's `elapsedSec > expected * 1.6` (≈ 20 min), add a small **"Stuck? Refresh status"** link inside the card that triggers the reconcile endpoint, then refetches the list. No new component — inline button next to the elapsed pill.
-
-### One-time cleanup
-
-5. Manually fail+refund the two currently stuck rows so the user's `/app/video` stops showing them as in-progress. Single migration with two `UPDATE` statements + credit refund via `refund_credits()`.
-
-## Files touched
-
-- `src/pages/VideoHub.tsx` — labels + remove Source frame badge + optional reconcile link
-- `supabase/functions/poll-stuck-videos/index.ts` — 40-min backstop + always-persist `lipsync_task_id`
-- `supabase/functions/generate-talking-video/index.ts` — minor: always write `lipsync_task_id` when dispatched (if applicable)
-- New: `supabase/functions/reconcile-talking-video/index.ts` (small, optional)
-- Migration to clear the two stuck rows + refund credits
-
-## Out of scope
-
-- Lip-sync quality improvements from previous plan (separate ticket).
-- Audio download button (already shipped).
+**Technical files likely touched**
+- `supabase/functions/poll-stuck-videos/index.ts`
+- possible one-time database repair migration for the stale queue rows
+- small UI guard in `/app/video` if needed

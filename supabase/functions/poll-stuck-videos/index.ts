@@ -75,14 +75,36 @@ async function savePreview(svc: SvcClient, coverUrl: string, userId: string, tas
   }
 }
 
-async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: "completed" | "failed", videoUrl?: string, errorMsg?: string) {
-  // Find queue rows where result->>'kling_task_id' matches and they're still open
-  const { data: jobs } = await svc
-    .from("generation_queue")
-    .select("id, user_id, credits_reserved, status")
-    .in("job_type", ["video", "video_multishot", "talking_video"])
-    .in("status", ["processing", "queued"])
-    .filter("result->>kling_task_id", "eq", taskId);
+async function resolveQueueForTask(
+  svc: SvcClient,
+  taskId: string,
+  finalStatus: "completed" | "failed",
+  videoUrl?: string,
+  errorMsg?: string,
+  queueJobId?: string,
+) {
+  // Prefer queue_job_id (set in generated_videos.metadata) — it's stable across
+  // stage transitions. Fall back to task-id match for legacy rows.
+  let jobs: { id: string; user_id: string; credits_reserved: number; status: string }[] | null = null;
+
+  if (queueJobId) {
+    const { data } = await svc
+      .from("generation_queue")
+      .select("id, user_id, credits_reserved, status")
+      .eq("id", queueJobId)
+      .in("status", ["processing", "queued"]);
+    jobs = data ?? null;
+  }
+
+  if (!jobs || jobs.length === 0) {
+    const { data } = await svc
+      .from("generation_queue")
+      .select("id, user_id, credits_reserved, status")
+      .in("job_type", ["video", "video_multishot", "talking_video"])
+      .in("status", ["processing", "queued"])
+      .filter("result->>kling_task_id", "eq", taskId);
+    jobs = data ?? null;
+  }
 
   if (!jobs || jobs.length === 0) return;
 
@@ -90,7 +112,7 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
     if (finalStatus === "completed") {
       await svc.from("generation_queue").update({
         status: "completed",
-        result: { kling_task_id: taskId, video_url: videoUrl },
+        result: { kling_task_id: taskId, video_url: videoUrl, stage: "complete" },
         completed_at: new Date().toISOString(),
       }).eq("id", j.id);
     } else {
@@ -99,7 +121,6 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
         error_message: errorMsg || "Video generation failed",
         completed_at: new Date().toISOString(),
       }).eq("id", j.id);
-      // Refund credits
       if (j.credits_reserved && j.credits_reserved > 0) {
         await svc.rpc("refund_credits", {
           p_user_id: j.user_id,
@@ -210,7 +231,7 @@ serve(async (req) => {
                 metadata: { ...meta, stage: "complete", silent_fallback: true,
                             lipsync_error: result.message || "Lip-sync API error" },
               }).eq("id", row.id);
-              await resolveQueueForTask(svc, taskId, "completed", baseUrl);
+              await resolveQueueForTask(svc, taskId, "completed", baseUrl, (meta.queue_job_id as string | undefined));
               // Partial refund for lip-sync portion
               await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
               completed++;
@@ -221,7 +242,7 @@ serve(async (req) => {
               error_message: result.message || `Kling status error ${res.status}`,
               completed_at: new Date().toISOString(),
             }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "failed", undefined, result.message || "Kling status error");
+            await resolveQueueForTask(svc, taskId, "failed", undefined, result.message || "Kling status error", (meta.queue_job_id as string | undefined));
             timedOut++;
           } else {
             pending++;
@@ -302,7 +323,7 @@ serve(async (req) => {
                 };
                 if (previewUrl) update.preview_url = previewUrl;
                 await svc.from("generated_videos").update(update).eq("id", row.id);
-                await resolveQueueForTask(svc, taskId, "completed", permanentUrl);
+                await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
                 await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
                 completed++;
                 return;
@@ -334,7 +355,7 @@ serve(async (req) => {
                 metadata: { ...meta, stage: "complete", base_video_url: permanentUrl,
                             silent_fallback: true, lipsync_error: msg },
               }).eq("id", row.id);
-              await resolveQueueForTask(svc, taskId, "completed", permanentUrl);
+              await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
               await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
               completed++;
               return;
@@ -349,7 +370,7 @@ serve(async (req) => {
               completed_at: new Date().toISOString(),
               metadata: { ...meta, stage: "complete" },
             }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "completed", permanentUrl);
+            await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
             completed++;
             return;
           }
@@ -363,7 +384,7 @@ serve(async (req) => {
           if (previewUrl) update.preview_url = previewUrl;
 
           await svc.from("generated_videos").update(update).eq("id", row.id);
-          await resolveQueueForTask(svc, taskId, "completed", permanentUrl);
+          await resolveQueueForTask(svc, taskId, "completed", permanentUrl, (meta.queue_job_id as string | undefined));
           completed++;
         } else if (tStatus === "failed") {
           const msg = taskData?.task_status_msg || "Video generation failed";
@@ -376,7 +397,7 @@ serve(async (req) => {
               completed_at: new Date().toISOString(),
               metadata: { ...meta, stage: "complete", silent_fallback: true, lipsync_error: msg },
             }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "completed", baseUrl);
+            await resolveQueueForTask(svc, taskId, "completed", baseUrl, (meta.queue_job_id as string | undefined));
             await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
             completed++;
             return;
@@ -386,7 +407,7 @@ serve(async (req) => {
             error_message: msg,
             completed_at: new Date().toISOString(),
           }).eq("id", row.id);
-          await resolveQueueForTask(svc, taskId, "failed", undefined, msg);
+          await resolveQueueForTask(svc, taskId, "failed", undefined, msg, (meta.queue_job_id as string | undefined));
           failed++;
         } else {
           // submitted / processing → check timeout
@@ -402,7 +423,7 @@ serve(async (req) => {
                 metadata: { ...meta, stage: "complete", base_video_url: baseUrl,
                             silent_fallback: true, lipsync_error: "Lip-sync timed out" },
               }).eq("id", row.id);
-              await resolveQueueForTask(svc, taskId, "completed", baseUrl);
+              await resolveQueueForTask(svc, taskId, "completed", baseUrl, (meta.queue_job_id as string | undefined));
               await svc.rpc("refund_credits", { p_user_id: row.user_id, p_amount: 8 });
               completed++;
               return;
@@ -413,7 +434,7 @@ serve(async (req) => {
               error_message: msg,
               completed_at: new Date().toISOString(),
             }).eq("id", row.id);
-            await resolveQueueForTask(svc, taskId, "failed", undefined, msg);
+            await resolveQueueForTask(svc, taskId, "failed", undefined, msg, (meta.queue_job_id as string | undefined));
             timedOut++;
           } else {
             pending++;
