@@ -84,23 +84,23 @@ function sanitizeTtsModel(raw: unknown): string {
 
 // --- Structured talking-head prompt builder -----------------------------------
 
-type Motion = "locked" | "natural" | "presenter";
+type Motion = "locked" | "natural" | "presenter" | "expressive" | "cinematic";
 type Gaze = "camera" | "soft";
+type CameraMove = "none" | "push_in" | "pull_out" | "arc";
 
-// IMPORTANT: Base clip must be a CLEAN CANVAS for the lip-sync pass.
-// We intentionally do NOT describe any speaking motion here — Kling lip-sync
-// will drive the mouth from the ElevenLabs audio. If we let the base clip
-// "mouth words" on its own, two problems appear:
-//   1. Lip-sync fights pre-existing motion → softer/mushier sync.
-//   2. After the audio ends, the un-synced tail keeps mouthing silently.
-// Keeping the mouth closed/relaxed throughout the base clip fixes both.
+// IMPORTANT: Mouth must stay a CLEAN CANVAS for the lip-sync pass.
+// Body, scene and camera motion can move freely — only the mouth is locked.
 const MOTION_LINES: Record<Motion, string> = {
   locked:
-    "Body completely static. Mouth softly closed and relaxed throughout. Only eyes, gentle breathing and tiny micro-expressions animate. Shoulders, torso, hair stay locked.",
+    "Body completely static. Only eyes, gentle breathing and tiny micro-expressions animate. Shoulders, torso, hair stay locked.",
   natural:
-    "Subtle facial life. Mouth softly closed and relaxed throughout. Small natural blinks, gentle breathing, the faintest head settle. No shoulder or torso motion.",
+    "Subtle facial life. Small natural blinks, gentle breathing, the faintest head settle. No shoulder or torso motion.",
   presenter:
-    "Confident, attentive posture. Mouth softly closed and relaxed throughout. Small assertive micro-nods, light brow engagement, controlled shoulders. No hand gestures.",
+    "Confident, attentive posture. Small assertive micro-nods, light brow engagement, controlled shoulders. No hand gestures.",
+  expressive:
+    "Lively, expressive performance. Natural hand gestures may briefly enter the frame below the chin, gentle shoulder shift, head free to settle within about 15 degrees. Hair and clothing carry soft ambient motion. Scene has gentle environmental life (background figures, soft light shifts, fabric or hair in light air).",
+  cinematic:
+    "Editorial cinematic performance. Confident body language, expressive natural hand gestures entering frame below the chin, deliberate shoulder shift and slow head motion within about 15 degrees. Atmospheric scene motion: soft wind on hair and fabric, ambient steam, dust motes or gentle background activity. Shallow parallax between subject and background.",
 };
 
 const GAZE_LINES: Record<Gaze, string> = {
@@ -108,36 +108,84 @@ const GAZE_LINES: Record<Gaze, string> = {
   soft: "Eyes mostly on the lens, occasional soft glance to a point just off-camera. Never turns face away.",
 };
 
-const NEGATIVE_PROMPT =
-  "camera movement, pan, zoom, dolly, tracking shot, orbit, shake, reframe, fast motion, " +
-  "head turning away, profile turn, looking sideways, mouth covered, hand over mouth, " +
-  "hand near face, finger near mouth, object crossing mouth, teeth warping, lip distortion, " +
-  "face melting, duplicate face, two heads, extra person, crowd, dramatic gesture, " +
-  "warping, watermark, text overlay, blur, motion blur on face, jitter, " +
-  // Critical: prevent the base clip from animating speech on its own —
-  // that interferes with the downstream lip-sync pass and causes the head
-  // to keep "mouthing" after the voiceover ends.
+const CAMERA_LINES: Record<CameraMove, string> = {
+  none: "CAMERA: Locked-off vertical frame, tripod-stable. No pan, zoom, dolly, orbit, shake or reframe.",
+  push_in: "CAMERA: Slow, smooth cinematic push-in toward the subject across the full clip. Subtle, controlled, no shake or reframe. Mouth stays fully visible the entire time.",
+  pull_out: "CAMERA: Slow, smooth cinematic pull-out from the subject across the full clip. Subtle, controlled, no shake or reframe. Mouth stays fully visible the entire time.",
+  arc: "CAMERA: Slow, gentle arc around the subject (no more than about 10 degrees total). Subtle, controlled, no shake or reframe. Face stays toward the lens and mouth stays fully visible.",
+};
+
+// Always-on negatives that protect the lip-sync pass (mouth/face).
+const MOUTH_NEGATIVES =
+  "mouth covered, hand over mouth, hand near face, finger near mouth, object crossing mouth, " +
+  "teeth warping, lip distortion, face melting, duplicate face, two heads, extra person, crowd, " +
+  "warping, watermark, text overlay, blur, motion blur on face, " +
   "talking, speaking, mouthing words, silent speech, lip flapping, jaw chewing, " +
   "open mouth, parted lips, exaggerated mouth movement, teeth showing, tongue visible";
+
+// Body/camera negatives — relaxed at higher action levels.
+const BODY_NEGATIVES_STRICT =
+  "camera movement, pan, zoom, dolly, tracking shot, orbit, shake, reframe, fast motion, " +
+  "head turning away, profile turn, looking sideways, dramatic gesture, jitter";
+const BODY_NEGATIVES_EXPRESSIVE =
+  "camera movement, pan, zoom, dolly, tracking shot, orbit, shake, reframe, fast motion, " +
+  "profile turn, jitter";
+const BODY_NEGATIVES_CINEMATIC =
+  "shake, reframe, fast motion, profile turn, jitter, whip pan, snap zoom";
+
+function negativePromptFor(motion: Motion, cameraMove: CameraMove): string {
+  if (motion === "cinematic" || cameraMove !== "none") {
+    return `${MOUTH_NEGATIVES}, ${BODY_NEGATIVES_CINEMATIC}`;
+  }
+  if (motion === "expressive") {
+    return `${MOUTH_NEGATIVES}, ${BODY_NEGATIVES_EXPRESSIVE}`;
+  }
+  return `${MOUTH_NEGATIVES}, ${BODY_NEGATIVES_STRICT}`;
+}
+
+// Strip phrases that would conflict with the downstream lip-sync pass.
+function sanitizeActionPrompt(raw: string): string {
+  if (!raw) return "";
+  const cleaned = raw
+    .replace(/\b(talk(?:s|ing)?|speak(?:s|ing)?|say(?:s|ing)?|mouth(?:s|ing)?|lip[- ]?sync|whisper(?:s|ing)?|shout(?:s|ing)?|sing(?:s|ing)?|laugh(?:s|ing)?|smile(?:s|ing)?|yell(?:s|ing)?)\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return cleaned.slice(0, 240);
+}
 
 function buildStructuredPrompt(
   motion: Motion,
   gaze: Gaze,
   sceneHint: string | null,
+  cameraMove: CameraMove,
+  actionPrompt: string | null,
 ): string {
   const styleLine = sceneHint
     ? `STYLE: ${sceneHint}. Otherwise preserve the reference identity, wardrobe, lighting and background exactly.`
     : "STYLE: Preserve the reference identity, wardrobe, lighting and background exactly. Do not restyle.";
 
+  const allowsBodyMotion = motion === "expressive" || motion === "cinematic";
+
+  const safetyLine = allowsBodyMotion
+    ? "SAFETY: Hands never cross or cover the mouth. Face stays toward the lens and the mouth is fully visible the entire shot. No profile turn beyond about 15 degrees."
+    : "SAFETY: Hands stay completely out of frame. Nothing crosses the mouth. No profile turn. No exaggerated gestures.";
+
+  const camera = CAMERA_LINES[cameraMove] || CAMERA_LINES.none;
+  const cleanAction = sanitizeActionPrompt(actionPrompt || "");
+  const actionLine = cleanAction && motion !== "locked"
+    ? `ACTION: ${cleanAction}. All described motion is body, hands, scene or camera only — the mouth stays a clean still canvas.`
+    : "";
+
   const prompt = [
-    "CAMERA: Locked-off vertical frame, tripod-stable. No pan, zoom, dolly, orbit, shake or reframe.",
+    camera,
     "SUBJECT: Single person, medium close-up. Head and shoulders visible. Face fully unobstructed. Mouth fully visible to camera at all times.",
     `PERFORMANCE: ${MOTION_LINES[motion]}`,
     `GAZE: ${GAZE_LINES[gaze]}`,
     "MOUTH: Lips softly closed and relaxed for the entire shot. Do NOT animate speaking, do NOT mouth words, do NOT open the mouth. Lip motion will be applied in a separate pass — keep the mouth a clean, still canvas.",
-    "SAFETY: Hands stay completely out of frame. Nothing crosses the mouth. No profile turn. No exaggerated gestures.",
+    actionLine,
+    safetyLine,
     styleLine,
-  ].join(" ");
+  ].filter(Boolean).join(" ");
 
   return prompt.slice(0, 1800);
 }
