@@ -80,7 +80,7 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
   const { data: jobs } = await svc
     .from("generation_queue")
     .select("id, user_id, credits_reserved, status")
-    .in("job_type", ["video", "video_multishot"])
+    .in("job_type", ["video", "video_multishot", "talking_video"])
     .in("status", ["processing", "queued"])
     .filter("result->>kling_task_id", "eq", taskId);
 
@@ -107,6 +107,28 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
         });
       }
     }
+  }
+}
+
+// Advance the queue's bookkeeping when stage 1 (base) → stage 2 (lipsync).
+// Updates result.kling_task_id to the lipsync task and extends timeout_at so
+// cleanup_stale_jobs can't kill it mid-stage-2 even if its job_type guard is
+// later relaxed.
+async function advanceQueueToLipsync(svc: SvcClient, baseTaskId: string, lipsyncTaskId: string) {
+  const { data: jobs } = await svc
+    .from("generation_queue")
+    .select("id")
+    .eq("job_type", "talking_video")
+    .in("status", ["processing", "queued"])
+    .filter("result->>kling_task_id", "eq", baseTaskId);
+
+  if (!jobs || jobs.length === 0) return;
+  const fortyFiveMin = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+  for (const j of jobs) {
+    await svc.from("generation_queue").update({
+      result: { kling_task_id: lipsyncTaskId, stage: "lipsync" },
+      timeout_at: fortyFiveMin,
+    }).eq("id", j.id);
   }
 }
 
