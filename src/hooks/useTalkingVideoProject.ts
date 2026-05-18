@@ -2,6 +2,12 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError } from '@/lib/enqueueGeneration';
 import { toast } from '@/lib/brandedToast';
+import { serializeForKling } from '@/lib/talkingDuration';
+
+export interface TalkingPerformance {
+  motion: 'still' | 'natural' | 'expressive';
+  gaze: 'camera' | 'soft';
+}
 
 export interface StartTalkingVideoParams {
   imageUrl: string;
@@ -12,6 +18,7 @@ export interface StartTalkingVideoParams {
   duration: '5' | '10';
   aspectRatio?: '9:16' | '1:1' | '16:9';
   sceneHint?: string;
+  performance?: TalkingPerformance;
 }
 
 export function useTalkingVideoProject() {
