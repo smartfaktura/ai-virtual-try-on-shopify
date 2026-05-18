@@ -16,11 +16,15 @@ const corsHeaders = {
 
 // Map our Kling voice IDs → ElevenLabs voice IDs (public defaults)
 const VOICE_MAP: Record<string, { elevenlabs_id: string; label: string }> = {
-  oversea_male1:   { elevenlabs_id: "nPczCjzI2devNBz1zQrb", label: "Oliver" },  // Brian (warm male)
-  oversea_male2:   { elevenlabs_id: "TX3LPaxmHKxFdv7VOQHJ", label: "Marcus" },  // Liam (younger male)
-  oversea_female1: { elevenlabs_id: "EXAVITQu4vr4xnSDxMaL", label: "Sophia" },  // Sarah (clear female)
-  oversea_female2: { elevenlabs_id: "XB0fDUnXU5powFXDhCwa", label: "Ava" },     // Charlotte (soft female)
-  ai_kaiya:        { elevenlabs_id: "9BWtsMINqrJLrRacOk9x", label: "Kaiya" },   // Aria (warm female)
+  oversea_male1:             { elevenlabs_id: "nPczCjzI2devNBz1zQrb", label: "Oliver" }, // Brian
+  oversea_male2:             { elevenlabs_id: "TX3LPaxmHKxFdv7VOQHJ", label: "Marcus" }, // Liam
+  oversea_female1:           { elevenlabs_id: "EXAVITQu4vr4xnSDxMaL", label: "Sophia" }, // Sarah
+  oversea_female2:           { elevenlabs_id: "XB0fDUnXU5powFXDhCwa", label: "Ava" },    // Charlotte
+  ai_kaiya:                  { elevenlabs_id: "9BWtsMINqrJLrRacOk9x", label: "Kaiya" },  // Aria
+  "commercial_lady_en_f-v1": { elevenlabs_id: "cgSgspJ2msm6clMCkdW9", label: "Isla" },   // Jessica — commercial VO
+  "reader_en_m-v1":          { elevenlabs_id: "onwK4e9ZLuTAKqWW03F9", label: "Henry" },  // Daniel — narrator
+  uk_man2:                   { elevenlabs_id: "JBFqnCBsd6RMkjVDRZzb", label: "James" },  // George — British male
+  uk_boy1:                   { elevenlabs_id: "N2lVS1w4EtoT3dr4eOWO", label: "Theo" },   // Callum — younger British
 };
 
 const SAMPLE_SENTENCE = "Hi, welcome to our new collection";

@@ -11,11 +11,15 @@ export interface KlingVoice {
 
 /** Curated Kling voice IDs — see Kling lip-sync docs. */
 export const KLING_VOICES: KlingVoice[] = [
-  { id: 'oversea_male1',   label: 'Oliver',   language: 'en', gender: 'male' },
-  { id: 'oversea_male2',   label: 'Marcus',   language: 'en', gender: 'male' },
-  { id: 'oversea_female1', label: 'Sophia',   language: 'en', gender: 'female' },
-  { id: 'oversea_female2', label: 'Ava',      language: 'en', gender: 'female' },
-  { id: 'ai_kaiya',        label: 'Kaiya',    language: 'en', gender: 'female' },
+  { id: 'oversea_male1',           label: 'Oliver', language: 'en', gender: 'male' },
+  { id: 'oversea_male2',           label: 'Marcus', language: 'en', gender: 'male' },
+  { id: 'oversea_female1',         label: 'Sophia', language: 'en', gender: 'female' },
+  { id: 'oversea_female2',         label: 'Ava',    language: 'en', gender: 'female' },
+  { id: 'ai_kaiya',                label: 'Kaiya',  language: 'en', gender: 'female' },
+  { id: 'commercial_lady_en_f-v1', label: 'Isla',   language: 'en', gender: 'female' },
+  { id: 'reader_en_m-v1',          label: 'Henry',  language: 'en', gender: 'male' },
+  { id: 'uk_man2',                 label: 'James',  language: 'en', gender: 'male' },
+  { id: 'uk_boy1',                 label: 'Theo',   language: 'en', gender: 'male' },
 ];
 
 export const VOICE_IDS = KLING_VOICES.map(v => v.id);
