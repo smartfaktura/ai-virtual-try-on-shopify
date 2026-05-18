@@ -613,6 +613,8 @@ serve(async (req) => {
       let recovered = 0;
       for (const video of stuckVideos) {
         if (!video.kling_task_id) continue;
+        // Defensive: never recover talking_video rows from this endpoint.
+        if ((video as { workflow_type?: string }).workflow_type === "talking_video") continue;
         try {
           // Determine endpoint based on model name
           const isOmni = video.model_name === "kling-v3-omni";
