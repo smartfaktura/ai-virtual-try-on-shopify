@@ -156,8 +156,8 @@ serve(async (req) => {
       duration,
       mode: "std",
       cfg_scale: 0.5,
-      // camera_control "static" + camera_fixed-like locked framing.
-      camera_control: { type: "simple", config: { horizontal: 0, vertical: 0, pan: 0, tilt: 0, roll: 0, zoom: 0 } },
+      // Note: kling-v2-master does not support camera_control — locked framing
+      // is enforced via STABLE_PROMPT_PREFIX + NEGATIVE_PROMPT instead.
     };
 
     const createRes = await fetch(`${KLING_API_BASE}/videos/image2video`, {
