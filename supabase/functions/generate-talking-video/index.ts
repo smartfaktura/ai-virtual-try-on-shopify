@@ -293,10 +293,13 @@ serve(async (req) => {
     // --- Payload extraction + validation ---
     const imageUrl = body.image_url as string;
     const rawScript = ((body.script as string) || "").trim();
-    const voiceId = (body.voice_id as string) || "oversea_male1";
+    const voiceId = (body.voice_id as string) || "nPczCjzI2devNBz1zQrb";
     const voiceLanguage = (body.voice_language as string) || "en";
     const voiceSpeedRaw = Number(body.voice_speed ?? 1);
-    const voiceSpeed = Math.min(1.2, Math.max(0.7, isFinite(voiceSpeedRaw) ? voiceSpeedRaw : 1));
+    const voiceSpeedFallback = Math.min(1.2, Math.max(0.7, isFinite(voiceSpeedRaw) ? voiceSpeedRaw : 1));
+    const voiceSettings = sanitizeVoiceSettings(body.voice_settings, voiceSpeedFallback);
+    const ttsModel = sanitizeTtsModel(body.tts_model);
+    const voiceSpeed = voiceSettings.speed;
     const requestedDuration = (body.duration as string) === "10" ? "10" : "5";
     const aspectRatio = (body.aspect_ratio as string) || "9:16";
 
@@ -317,11 +320,12 @@ serve(async (req) => {
     }
 
     // --- Stage 0: generate ElevenLabs voiceover + upload to storage ---
-    console.log(`[talking-video] Job ${jobId} — generating voiceover (${rawScript.length} chars, voice=${voiceId})`);
+    console.log(`[talking-video] Job ${jobId} — generating voiceover (${rawScript.length} chars, voice=${voiceId}, model=${ttsModel})`);
     const audioBytes = await generateVoiceover({
       script: rawScript,
-      klingVoiceId: voiceId,
-      speed: voiceSpeed,
+      voiceId,
+      model: ttsModel,
+      voiceSettings,
       elevenKey: ELEVENLABS_API_KEY,
     });
 
