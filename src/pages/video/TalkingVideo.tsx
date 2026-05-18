@@ -101,7 +101,7 @@ export default function TalkingVideo() {
       </PageHeader>
 
       {/* Step 1 — Reference */}
-      <section className="space-y-3">
+      <section id="talking-step-reference" className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium">Reference photo</Label>
           <span className="text-xs text-muted-foreground">Model, scene, or any portrait</span>
