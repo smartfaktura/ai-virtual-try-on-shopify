@@ -191,12 +191,27 @@ serve(async (req) => {
           setTimeout(async () => {
             const result = await dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
             if (!result.ok) {
+              const errMsg = `Dispatch rejected (${result.status}). Please try again.`;
               console.error(`[process-queue] Dispatch of job ${job.id} rejected with status ${result.status} — failing job and refunding`);
               await supabase
                 .from("generation_queue")
-                .update({ status: "failed", error_message: `Dispatch rejected (${result.status}). Please try again.`, completed_at: new Date().toISOString() })
+                .update({ status: "failed", error_message: errMsg, completed_at: new Date().toISOString() })
                 .eq("id", job.id);
               await supabase.rpc("refund_credits", { p_user_id: job.user_id, p_amount: job.credits_reserved });
+              // Clean up any placeholder generated_videos row tied to this queue job
+              // so the Video Hub card flips from "queued" → "failed" instead of spinning forever.
+              if (job.job_type === "talking_video") {
+                try {
+                  await supabase
+                    .from("generated_videos")
+                    .update({ status: "failed", error_message: errMsg, completed_at: new Date().toISOString() })
+                    .eq("user_id", job.user_id)
+                    .eq("workflow_type", "talking_video")
+                    .filter("metadata->>queue_job_id", "eq", job.id);
+                } catch (e) {
+                  console.warn(`[process-queue] failed to clean up talking_video placeholder for job ${job.id}:`, (e as Error).message);
+                }
+              }
             }
             resolve({ job, ok: result.ok });
           }, idx * STAGGER_MS);
