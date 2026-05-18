@@ -249,7 +249,7 @@ serve(async (req) => {
                 body: JSON.stringify({
                   input: {
                     video_url: permanentUrl,
-                    audio_type: "text",
+                    mode: "text2video",
                     text: script.slice(0, 120),
                     voice_id: voiceId,
                     voice_language: voiceLanguage,
