@@ -12,8 +12,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Mirror of VOICE_MAP in seed-voice-samples — keep in sync.
-const VOICE_MAP: Record<string, string> = {
+// Legacy Kling alias → ElevenLabs voice id. New clients send ElevenLabs ids directly.
+const LEGACY_VOICE_MAP: Record<string, string> = {
   ai_kaiya: "9BWtsMINqrJLrRacOk9x",
   girlfriend_4_speech02: "EXAVITQu4vr4xnSDxMaL",
   calm_story1: "XrExE9yKIg1WjnnlVkGX",
@@ -21,6 +21,8 @@ const VOICE_MAP: Record<string, string> = {
   uk_man2: "JBFqnCBsd6RMkjVDRZzb",
   uk_boy1: "N2lVS1w4EtoT3dr4eOWO",
 };
+const ALLOWED_TTS_MODELS = new Set(["eleven_multilingual_v2", "eleven_turbo_v2_5"]);
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
 // In-memory rate limit: 10 previews per user per minute.
 const HITS = new Map<string, number[]>();
