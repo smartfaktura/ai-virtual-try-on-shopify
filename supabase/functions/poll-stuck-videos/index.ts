@@ -189,6 +189,14 @@ serve(async (req) => {
       try {
         const res = await fetch(url, { method: "GET", headers });
         const result = await res.json();
+        const queueJobId = (meta.queue_job_id as string | undefined) || "?";
+        if (isTalking) {
+          const elapsedSec = Math.round((Date.now() - stageStartMs) / 1000);
+          console.log(
+            `[poll-stuck-videos] talking job=${queueJobId} stage=${stage} task=${taskId} ` +
+            `kling_status=${result?.data?.task_status || "?"} elapsed=${elapsedSec}s`,
+          );
+        }
 
         if (!res.ok || result.code !== 0) {
           if (isPastTimeout) {
