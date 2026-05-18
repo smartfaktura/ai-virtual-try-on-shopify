@@ -469,7 +469,7 @@ serve(async (req) => {
 
     console.log(
       `[talking-video] Job ${jobId} — submitting base video. ` +
-      `duration=${duration} ratio=${aspectRatio} motion=${motion} gaze=${gaze}`,
+      `duration=${duration} ratio=${aspectRatio} motion=${motion} gaze=${gaze} camera=${cameraMove} actionLen=${actionPrompt.length}`,
     );
 
     const createRes = await fetch(`${KLING_API_BASE}/videos/image2video`, {
