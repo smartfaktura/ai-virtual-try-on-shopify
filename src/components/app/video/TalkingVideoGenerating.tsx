@@ -31,6 +31,8 @@ interface Props {
   thumbnailUrl?: string | null;
   onGoToHub: () => void;
   onReset: () => void;
+  /** Optional: start another video while this one keeps generating in background. */
+  onStartAnother?: () => void;
 }
 
 export function TalkingVideoGenerating({
@@ -41,6 +43,7 @@ export function TalkingVideoGenerating({
   thumbnailUrl,
   onGoToHub,
   onReset,
+  onStartAnother,
 }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [msgIndex, setMsgIndex] = useState(0);
