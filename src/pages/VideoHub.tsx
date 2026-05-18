@@ -1,4 +1,4 @@
-import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Loader2, Check, Download } from 'lucide-react';
+import { Film, Layers, Users, ArrowRightLeft, Clapperboard, MessageCircle, Play, Loader2, Check, Download } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { VideoWorkflowCard } from '@/components/app/video/VideoWorkflowCard';
 import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
