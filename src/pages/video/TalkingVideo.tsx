@@ -40,7 +40,10 @@ export default function TalkingVideo() {
     ? VIDEO_CREDIT_RULES.talkingVideo.base10s
     : VIDEO_CREDIT_RULES.talkingVideo.base5s;
 
-  const hasEnough = (balance ?? 0) >= cost;
+  const balanceReady = balance !== null && balance !== undefined;
+  const displayBalance = balance ?? 0;
+  const hasEnough = balanceReady && displayBalance >= cost;
+  const creditShortfall = balanceReady ? Math.max(cost - displayBalance, 0) : 0;
   const charCount = script.trim().length;
 
   const hasImage = !!imageUrl;
@@ -51,7 +54,11 @@ export default function TalkingVideo() {
       ? 'Write a short script to continue'
       : charCount > MAX_SCRIPT
         ? `Script is too long — keep it under ${MAX_SCRIPT} characters`
-        : null;
+        : !balanceReady
+          ? 'Checking your credits…'
+          : !hasEnough
+            ? `Need ${creditShortfall} more credits to generate this video`
+            : null;
 
   const handleFile = useCallback(async (file: File) => {
     const url = await upload(file);
@@ -74,7 +81,12 @@ export default function TalkingVideo() {
       toast.error(`Script must be ${MAX_SCRIPT} characters or fewer`);
       return;
     }
+    if (!balanceReady) {
+      toast('Checking credits — try again in a moment');
+      return;
+    }
     if (!hasEnough) {
+      toast.error(`You need ${cost} credits for a ${duration}s Talking Video. Your balance is ${displayBalance}.`);
       setNoCreditsOpen(true);
       return;
     }
@@ -89,7 +101,15 @@ export default function TalkingVideo() {
     if (ok) {
       setTimeout(() => navigate('/app/video'), 800);
     }
-  }, [isSubmitting, imageUrl, charCount, hasEnough, script, voiceId, voiceSpeed, duration, start, navigate]);
+  }, [isSubmitting, imageUrl, charCount, balanceReady, hasEnough, cost, duration, displayBalance, script, voiceId, voiceSpeed, start, navigate]);
+
+  const generateLabel = isSubmitting
+    ? 'Queuing…'
+    : !balanceReady
+      ? 'Checking credits…'
+      : !hasEnough
+        ? 'Top up to generate'
+        : 'Generate talking video';
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -234,7 +254,7 @@ export default function TalkingVideo() {
       {/* Generate */}
       <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 bg-background/95 backdrop-blur border-t border-border/60 flex items-center justify-between gap-4">
         <div className="text-xs text-muted-foreground space-y-0.5">
-          <div>Cost <span className="text-foreground font-medium">{cost} credits</span> · balance {balance ?? 0}</div>
+          <div>Cost <span className="text-foreground font-medium">{cost} credits</span> · balance {displayBalance}</div>
           {missingHint && <div className="text-[11px] text-muted-foreground/80">{missingHint}</div>}
         </div>
         <Button
@@ -243,7 +263,7 @@ export default function TalkingVideo() {
           size="lg"
           className="min-w-[180px]"
         >
-          {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Queuing…</> : 'Generate talking video'}
+          {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{generateLabel}</> : generateLabel}
         </Button>
       </div>
 
