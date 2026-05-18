@@ -4,10 +4,10 @@ import { Upload, X, FolderOpen, Mic2, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { LibraryPickerModal } from '@/components/app/video/LibraryPickerModal';
-import { KlingVoicePicker, VOICE_IDS } from '@/components/app/video/KlingVoicePicker';
+import { ElevenLabsVoicePicker, ELEVEN_VOICE_IDS, normalizeVoiceId } from '@/components/app/video/ElevenLabsVoicePicker';
+import { VoiceTuningPanel, DEFAULT_VOICE_SETTINGS, DEFAULT_TTS_MODEL, type VoiceSettings, type TtsModel } from '@/components/app/video/VoiceTuningPanel';
 import { TalkingVideoGenerating } from '@/components/app/video/TalkingVideoGenerating';
 import { TalkingScriptComposer } from '@/components/app/video/TalkingScriptComposer';
 import { TalkingPerformancePicker, type Performance } from '@/components/app/video/TalkingPerformancePicker';
@@ -35,8 +35,9 @@ export default function TalkingVideo() {
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [script, setScript] = useState('');
-  const [voiceId, setVoiceId] = useState(VOICE_IDS[0]);
-  const [voiceSpeed, setVoiceSpeed] = useState(1);
+  const [voiceId, setVoiceId] = useState(ELEVEN_VOICE_IDS[0]);
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(DEFAULT_VOICE_SETTINGS);
+  const [ttsModel, setTtsModel] = useState<TtsModel>(DEFAULT_TTS_MODEL);
   const [duration, setDuration] = useState<Duration>('5');
   const [performance, setPerformance] = useState<Performance>(DEFAULT_PERFORMANCE);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -60,7 +61,7 @@ export default function TalkingVideo() {
   const creditShortfall = balanceReady ? Math.max(cost - displayBalance, 0) : 0;
 
   const target = duration === '10' ? 10 : 5;
-  const est = estimateDuration(script, voiceId, voiceSpeed, target);
+  const est = estimateDuration(script, voiceId, voiceSettings.speed, target);
   const serialized = serializeForKling(script);
   const scriptEmpty = serialized.trim().length === 0;
   const scriptOver = est.fits === 'over' || serialized.length > 200;
@@ -172,7 +173,8 @@ export default function TalkingVideo() {
       imageUrl,
       script,
       voiceId,
-      voiceSpeed,
+      voiceSettings,
+      ttsModel,
       duration,
       aspectRatio: '9:16',
       performance,
@@ -184,7 +186,7 @@ export default function TalkingVideo() {
       setPhase('queued');
       refreshBalance();
     }
-  }, [isSubmitting, imageUrl, scriptEmpty, scriptOver, target, balanceReady, hasEnough, cost, duration, displayBalance, script, voiceId, voiceSpeed, performance, start, refreshBalance]);
+  }, [isSubmitting, imageUrl, scriptEmpty, scriptOver, target, balanceReady, hasEnough, cost, duration, displayBalance, script, voiceId, voiceSettings, ttsModel, performance, start, refreshBalance]);
 
   const resetToForm = useCallback(() => {
     setPhase('idle');
@@ -319,7 +321,7 @@ export default function TalkingVideo() {
         script={script}
         onScriptChange={setScript}
         voiceId={voiceId}
-        voiceSpeed={voiceSpeed}
+        voiceSpeed={voiceSettings.speed}
         duration={duration}
         onDurationChange={setDuration}
       />
@@ -329,20 +331,13 @@ export default function TalkingVideo() {
         <Label className="text-sm font-medium flex items-center gap-2">
           <Mic2 className="h-3.5 w-3.5" /> Voice
         </Label>
-        <KlingVoicePicker value={voiceId} onChange={setVoiceId} />
-        <div className="space-y-2 pt-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs text-muted-foreground">Speed</Label>
-            <span className="text-xs tabular-nums text-muted-foreground">{voiceSpeed.toFixed(2)}x</span>
-          </div>
-          <Slider
-            value={[voiceSpeed]}
-            onValueChange={(v) => setVoiceSpeed(v[0])}
-            min={0.8}
-            max={1.5}
-            step={0.05}
-          />
-        </div>
+        <ElevenLabsVoicePicker value={normalizeVoiceId(voiceId)} onChange={setVoiceId} />
+        <VoiceTuningPanel
+          settings={voiceSettings}
+          onSettingsChange={setVoiceSettings}
+          model={ttsModel}
+          onModelChange={setTtsModel}
+        />
       </section>
 
       {/* Step 4 — Performance */}

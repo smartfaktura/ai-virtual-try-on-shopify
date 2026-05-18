@@ -27,9 +27,9 @@ const corsHeaders = {
 
 const KLING_API_BASE = "https://api-singapore.klingai.com/v1";
 
-// Kling voice id -> ElevenLabs voice id. Mirrors VOICE_MAP in
-// preview-talking-voice / seed-voice-samples — keep in sync.
-const VOICE_MAP: Record<string, string> = {
+// Back-compat: legacy Kling alias ids -> ElevenLabs voice ids.
+// New clients send ElevenLabs ids directly; we pass them through unchanged.
+const LEGACY_VOICE_MAP: Record<string, string> = {
   ai_kaiya: "9BWtsMINqrJLrRacOk9x",
   girlfriend_4_speech02: "EXAVITQu4vr4xnSDxMaL",
   calm_story1: "XrExE9yKIg1WjnnlVkGX",
@@ -37,6 +37,50 @@ const VOICE_MAP: Record<string, string> = {
   uk_man2: "JBFqnCBsd6RMkjVDRZzb",
   uk_boy1: "N2lVS1w4EtoT3dr4eOWO",
 };
+
+function resolveElevenVoiceId(id: string): string {
+  return LEGACY_VOICE_MAP[id] || id || "nPczCjzI2devNBz1zQrb";
+}
+
+type ElevenVoiceSettings = {
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  use_speaker_boost: boolean;
+  speed: number;
+};
+
+const DEFAULT_VOICE_SETTINGS: ElevenVoiceSettings = {
+  stability: 0.55,
+  similarity_boost: 0.8,
+  style: 0.25,
+  use_speaker_boost: true,
+  speed: 1,
+};
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
+
+function sanitizeVoiceSettings(raw: unknown, speedFallback: number): ElevenVoiceSettings {
+  const r = (raw as Partial<ElevenVoiceSettings>) || {};
+  const num = (v: unknown, d: number) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  return {
+    stability:        clamp(num(r.stability, DEFAULT_VOICE_SETTINGS.stability), 0, 1),
+    similarity_boost: clamp(num(r.similarity_boost, DEFAULT_VOICE_SETTINGS.similarity_boost), 0, 1),
+    style:            clamp(num(r.style, DEFAULT_VOICE_SETTINGS.style), 0, 1),
+    use_speaker_boost: typeof r.use_speaker_boost === "boolean" ? r.use_speaker_boost : DEFAULT_VOICE_SETTINGS.use_speaker_boost,
+    speed:            clamp(num(r.speed, speedFallback), 0.7, 1.2),
+  };
+}
+
+const ALLOWED_TTS_MODELS = new Set(["eleven_multilingual_v2", "eleven_turbo_v2_5"]);
+function sanitizeTtsModel(raw: unknown): string {
+  return typeof raw === "string" && ALLOWED_TTS_MODELS.has(raw) ? raw : "eleven_multilingual_v2";
+}
 
 // --- Structured talking-head prompt builder -----------------------------------
 
@@ -88,15 +132,14 @@ function buildStructuredPrompt(
 
 // --- ElevenLabs voiceover ----------------------------------------------------
 
-const ELEVEN_TTS_MODEL = "eleven_multilingual_v2";
-
 async function generateVoiceover(args: {
   script: string;
-  klingVoiceId: string;
-  speed: number;
+  voiceId: string;
+  model: string;
+  voiceSettings: ElevenVoiceSettings;
   elevenKey: string;
 }): Promise<Uint8Array> {
-  const elevenVoiceId = VOICE_MAP[args.klingVoiceId] || VOICE_MAP.oversea_male1;
+  const elevenVoiceId = resolveElevenVoiceId(args.voiceId);
 
   const res = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${elevenVoiceId}?output_format=mp3_44100_128`,
@@ -108,14 +151,8 @@ async function generateVoiceover(args: {
       },
       body: JSON.stringify({
         text: args.script,
-        model_id: ELEVEN_TTS_MODEL,
-        voice_settings: {
-          stability: 0.55,
-          similarity_boost: 0.8,
-          style: 0.25,
-          use_speaker_boost: true,
-          speed: args.speed,
-        },
+        model_id: args.model,
+        voice_settings: args.voiceSettings,
       }),
     },
   );
@@ -256,10 +293,13 @@ serve(async (req) => {
     // --- Payload extraction + validation ---
     const imageUrl = body.image_url as string;
     const rawScript = ((body.script as string) || "").trim();
-    const voiceId = (body.voice_id as string) || "oversea_male1";
+    const voiceId = (body.voice_id as string) || "nPczCjzI2devNBz1zQrb";
     const voiceLanguage = (body.voice_language as string) || "en";
     const voiceSpeedRaw = Number(body.voice_speed ?? 1);
-    const voiceSpeed = Math.min(1.2, Math.max(0.7, isFinite(voiceSpeedRaw) ? voiceSpeedRaw : 1));
+    const voiceSpeedFallback = Math.min(1.2, Math.max(0.7, isFinite(voiceSpeedRaw) ? voiceSpeedRaw : 1));
+    const voiceSettings = sanitizeVoiceSettings(body.voice_settings, voiceSpeedFallback);
+    const ttsModel = sanitizeTtsModel(body.tts_model);
+    const voiceSpeed = voiceSettings.speed;
     const requestedDuration = (body.duration as string) === "10" ? "10" : "5";
     const aspectRatio = (body.aspect_ratio as string) || "9:16";
 
@@ -280,11 +320,12 @@ serve(async (req) => {
     }
 
     // --- Stage 0: generate ElevenLabs voiceover + upload to storage ---
-    console.log(`[talking-video] Job ${jobId} — generating voiceover (${rawScript.length} chars, voice=${voiceId})`);
+    console.log(`[talking-video] Job ${jobId} — generating voiceover (${rawScript.length} chars, voice=${voiceId}, model=${ttsModel})`);
     const audioBytes = await generateVoiceover({
       script: rawScript,
-      klingVoiceId: voiceId,
-      speed: voiceSpeed,
+      voiceId,
+      model: ttsModel,
+      voiceSettings,
       elevenKey: ELEVENLABS_API_KEY,
     });
 
@@ -348,6 +389,8 @@ serve(async (req) => {
       voice_id: voiceId,
       voice_language: voiceLanguage,
       voice_speed: voiceSpeed,
+      voice_settings: voiceSettings,
+      tts_model: ttsModel,
       audio_storage_path: audioPath,
       audio_duration_sec: Math.round(estDur * 10) / 10,
       base_video_url: null as string | null,
