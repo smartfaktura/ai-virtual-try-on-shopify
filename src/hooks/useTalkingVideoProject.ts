@@ -9,12 +9,22 @@ export interface TalkingPerformance {
   gaze: 'camera' | 'soft';
 }
 
+export interface TalkingVoiceSettings {
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  use_speaker_boost: boolean;
+  speed: number;
+}
+
 export interface StartTalkingVideoParams {
   imageUrl: string;
   script: string;
   voiceId: string;
   voiceLanguage?: 'en' | 'zh';
   voiceSpeed?: number;
+  voiceSettings?: TalkingVoiceSettings;
+  ttsModel?: 'eleven_multilingual_v2' | 'eleven_turbo_v2_5';
   duration: '5' | '10';
   aspectRatio?: '9:16' | '1:1' | '16:9';
   sceneHint?: string;
