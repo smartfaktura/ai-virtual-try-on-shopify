@@ -132,15 +132,14 @@ function buildStructuredPrompt(
 
 // --- ElevenLabs voiceover ----------------------------------------------------
 
-const ELEVEN_TTS_MODEL = "eleven_multilingual_v2";
-
 async function generateVoiceover(args: {
   script: string;
-  klingVoiceId: string;
-  speed: number;
+  voiceId: string;
+  model: string;
+  voiceSettings: ElevenVoiceSettings;
   elevenKey: string;
 }): Promise<Uint8Array> {
-  const elevenVoiceId = VOICE_MAP[args.klingVoiceId] || VOICE_MAP.oversea_male1;
+  const elevenVoiceId = resolveElevenVoiceId(args.voiceId);
 
   const res = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${elevenVoiceId}?output_format=mp3_44100_128`,
@@ -152,14 +151,8 @@ async function generateVoiceover(args: {
       },
       body: JSON.stringify({
         text: args.script,
-        model_id: ELEVEN_TTS_MODEL,
-        voice_settings: {
-          stability: 0.55,
-          similarity_boost: 0.8,
-          style: 0.25,
-          use_speaker_boost: true,
-          speed: args.speed,
-        },
+        model_id: args.model,
+        voice_settings: args.voiceSettings,
       }),
     },
   );
