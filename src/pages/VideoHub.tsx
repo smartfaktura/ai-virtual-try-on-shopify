@@ -204,8 +204,24 @@ export default function VideoHub() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Live tick (1s) — drives per-card elapsed timers + progress while anything processes
-  const hasProcessing = history.some(v => v.status === 'processing' || v.status === 'queued');
+  // Partition into fresh in-progress vs everything else.
+  // Stale rows (>30 min stuck in processing/queued) fall through to Completed so they don't
+  // pollute the In Progress strip with weeks-old abandoned jobs.
+  const STALE_MS = 30 * 60 * 1000;
+  const completedTaskIds = new Set(
+    history.filter(v => v.status === 'complete' && v.kling_task_id).map(v => v.kling_task_id as string),
+  );
+  const processingVideos = history.filter(v => {
+    if (v.status !== 'processing' && v.status !== 'queued') return false;
+    if (v.kling_task_id && completedTaskIds.has(v.kling_task_id)) return false;
+    const ageMs = Date.now() - new Date(v.created_at).getTime();
+    return ageMs < STALE_MS;
+  });
+  const processingIds = new Set(processingVideos.map(v => v.id));
+  const completedVideos = history.filter(v => !processingIds.has(v.id));
+
+  // Live tick (1s) — drives per-card elapsed timers + progress while anything fresh is processing
+  const hasProcessing = processingVideos.length > 0;
   const [nowTick, setNowTick] = useState(() => Date.now());
   useEffect(() => {
     if (!hasProcessing) return;
