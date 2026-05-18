@@ -44,7 +44,7 @@ export default function TalkingVideo() {
   const canGenerate = !!imageUrl && charCount > 0 && charCount <= MAX_SCRIPT && !isSubmitting;
 
   const handleFile = useCallback(async (file: File) => {
-    const url = await upload(file, 'generation-inputs');
+    const url = await upload(file);
     if (url) setImageUrl(url);
   }, [upload]);
 
@@ -227,7 +227,7 @@ export default function TalkingVideo() {
         onOpenChange={setPickerOpen}
         onSelect={(url) => { setImageUrl(url); setPickerOpen(false); }}
       />
-      <NoCreditsModal open={noCreditsOpen} onOpenChange={setNoCreditsOpen} />
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} />
     </div>
   );
 }
