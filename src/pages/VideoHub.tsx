@@ -27,11 +27,11 @@ function expectedSecondsForModel(model?: string | null, workflowType?: string | 
 function talkingStageLabel(stage: string | undefined): string {
   switch (stage) {
     case 'base_video':
-      return 'Generating motion';
+      return 'Motion';
     case 'lipsync':
-      return 'Lip-syncing voice';
+      return 'Lip-sync';
     case 'complete':
-      return 'Finalizing';
+      return 'Finishing';
     default:
       return 'Processing';
   }
