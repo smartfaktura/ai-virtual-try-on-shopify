@@ -312,6 +312,32 @@ export default function VideoHub() {
         <div />
       </PageHeader>
 
+      {/* In Progress — surfaced at the top so users don't scroll to find active generations */}
+      {processingVideos.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
+            <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
+              {processingVideos.length}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {processingVideos.map((v) => (
+              <RecentVideoCard
+                key={v.id}
+                video={v}
+                onClick={() => setSelectedVideo(v)}
+                selectMode={false}
+                selected={false}
+                onToggleSelect={() => {}}
+                nowTick={nowTick}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Workflow Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <VideoWorkflowCard
