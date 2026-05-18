@@ -110,7 +110,7 @@ export default function TalkingVideo() {
 
         const { data: videoRow } = await supabase
           .from('generated_videos')
-          .select('id, status, video_url, error_message')
+          .select('id, status, video_url, error_message, metadata')
           .eq('workflow_type', 'talking_video')
           .filter('metadata->>queue_job_id', 'eq', activeJobId)
           .order('created_at', { ascending: false })
@@ -123,6 +123,7 @@ export default function TalkingVideo() {
           const signed = await toSignedUrl(videoRow.video_url);
           if (cancelled) return;
           setResultVideoUrl(signed || videoRow.video_url);
+          setStage('complete');
           setPhase('complete');
           refreshBalance();
           return;
@@ -133,6 +134,8 @@ export default function TalkingVideo() {
           refreshBalance();
           return;
         }
+        const nextStage = (videoRow?.metadata as Record<string, unknown> | null)?.stage as TalkingStage | undefined;
+        if (nextStage && nextStage !== stage) setStage(nextStage);
         if (videoRow?.status === 'processing' && phase !== 'processing') {
           setPhase('processing');
         }
