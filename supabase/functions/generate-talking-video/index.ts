@@ -87,13 +87,20 @@ function sanitizeTtsModel(raw: unknown): string {
 type Motion = "locked" | "natural" | "presenter";
 type Gaze = "camera" | "soft";
 
+// IMPORTANT: Base clip must be a CLEAN CANVAS for the lip-sync pass.
+// We intentionally do NOT describe any speaking motion here — Kling lip-sync
+// will drive the mouth from the ElevenLabs audio. If we let the base clip
+// "mouth words" on its own, two problems appear:
+//   1. Lip-sync fights pre-existing motion → softer/mushier sync.
+//   2. After the audio ends, the un-synced tail keeps mouthing silently.
+// Keeping the mouth closed/relaxed throughout the base clip fixes both.
 const MOTION_LINES: Record<Motion, string> = {
   locked:
-    "Body completely static. Only mouth, jaw, lips, teeth, eyes and gentle breathing animate. Shoulders, torso, hair stay locked.",
+    "Body completely static. Mouth softly closed and relaxed throughout. Only eyes, gentle breathing and tiny micro-expressions animate. Shoulders, torso, hair stay locked.",
   natural:
-    "Subtle facial life. Small natural blinks, gentle breathing, micro head settle. No shoulder or torso motion.",
+    "Subtle facial life. Mouth softly closed and relaxed throughout. Small natural blinks, gentle breathing, the faintest head settle. No shoulder or torso motion.",
   presenter:
-    "Confident delivery. Small assertive nods on stressed words, light brow lift, controlled shoulders. No hand gestures.",
+    "Confident, attentive posture. Mouth softly closed and relaxed throughout. Small assertive micro-nods, light brow engagement, controlled shoulders. No hand gestures.",
 };
 
 const GAZE_LINES: Record<Gaze, string> = {
@@ -106,7 +113,12 @@ const NEGATIVE_PROMPT =
   "head turning away, profile turn, looking sideways, mouth covered, hand over mouth, " +
   "hand near face, finger near mouth, object crossing mouth, teeth warping, lip distortion, " +
   "face melting, duplicate face, two heads, extra person, crowd, dramatic gesture, " +
-  "warping, watermark, text overlay, blur, motion blur on face, jitter";
+  "warping, watermark, text overlay, blur, motion blur on face, jitter, " +
+  // Critical: prevent the base clip from animating speech on its own —
+  // that interferes with the downstream lip-sync pass and causes the head
+  // to keep "mouthing" after the voiceover ends.
+  "talking, speaking, mouthing words, silent speech, lip flapping, jaw chewing, " +
+  "open mouth, parted lips, exaggerated mouth movement, teeth showing, tongue visible";
 
 function buildStructuredPrompt(
   motion: Motion,
@@ -122,7 +134,7 @@ function buildStructuredPrompt(
     "SUBJECT: Single person, medium close-up. Head and shoulders visible. Face fully unobstructed. Mouth fully visible to camera at all times.",
     `PERFORMANCE: ${MOTION_LINES[motion]}`,
     `GAZE: ${GAZE_LINES[gaze]}`,
-    "SPEECH READINESS: Natural jaw and lip articulation as if speaking. Soft natural blinks. Quiet breathing. Engaged expression.",
+    "MOUTH: Lips softly closed and relaxed for the entire shot. Do NOT animate speaking, do NOT mouth words, do NOT open the mouth. Lip motion will be applied in a separate pass — keep the mouth a clean, still canvas.",
     "SAFETY: Hands stay completely out of frame. Nothing crosses the mouth. No profile turn. No exaggerated gestures.",
     styleLine,
   ].join(" ");
