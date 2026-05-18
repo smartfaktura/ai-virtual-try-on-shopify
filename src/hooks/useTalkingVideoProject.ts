@@ -25,7 +25,7 @@ export function useTalkingVideoProject() {
     setError(null);
   }, []);
 
-  const start = useCallback(async (params: StartTalkingVideoParams): Promise<boolean> => {
+  const start = useCallback(async (params: StartTalkingVideoParams): Promise<{ ok: boolean; jobId?: string }> => {
     setError(null);
     setIsSubmitting(true);
     try {
@@ -33,17 +33,17 @@ export function useTalkingVideoProject() {
       if (!trimmed) {
         setError('Script is required');
         toast.error('Add a short script first');
-        return false;
+        return { ok: false };
       }
       if (trimmed.length > 120) {
         setError('Script must be 120 characters or fewer');
         toast.error('Script must be 120 characters or fewer');
-        return false;
+        return { ok: false };
       }
       if (!params.imageUrl) {
         setError('Reference image is required');
         toast.error('Pick a reference photo first');
-        return false;
+        return { ok: false };
       }
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -51,7 +51,7 @@ export function useTalkingVideoProject() {
       if (!token) {
         setError('Sign in required');
         toast.error('Please sign in to generate');
-        return false;
+        return { ok: false };
       }
 
       const result = await enqueueWithRetry({
@@ -77,17 +77,17 @@ export function useTalkingVideoProject() {
         } else {
           toast.error(result.message);
         }
-        return false;
+        return { ok: false };
       }
 
       setJobId(result.jobId);
-      toast.success('Talking video queued — we will notify you when ready');
-      return true;
+      toast.success('Talking video queued — generating now');
+      return { ok: true, jobId: result.jobId };
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to start';
       setError(msg);
       toast.error(msg);
-      return false;
+      return { ok: false };
     } finally {
       setIsSubmitting(false);
     }
