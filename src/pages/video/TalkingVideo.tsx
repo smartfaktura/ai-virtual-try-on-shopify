@@ -14,6 +14,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
 import { VIDEO_CREDIT_RULES } from '@/config/videoCreditPricing';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+import { toast } from '@/lib/brandedToast';
 
 type Duration = '5' | '10';
 
