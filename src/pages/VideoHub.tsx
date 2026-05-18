@@ -339,6 +339,14 @@ export default function VideoHub() {
           to="/app/video/short-film"
           beta
         />
+        <VideoWorkflowCard
+          icon={MessageCircle}
+          title="Talking Video"
+          description="Bring a model to life with synced speech from a short script"
+          bestFor={['Spokesmodel', 'UGC voiceover', 'Product pitch']}
+          to="/app/video/talking"
+          beta
+        />
       </div>
 
       {/* Showcase */}
