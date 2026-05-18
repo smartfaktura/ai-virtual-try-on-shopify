@@ -27,11 +27,11 @@ function expectedSecondsForModel(model?: string | null, workflowType?: string | 
 function talkingStageLabel(stage: string | undefined): string {
   switch (stage) {
     case 'base_video':
-      return 'Generating motion';
+      return 'Motion';
     case 'lipsync':
-      return 'Lip-syncing voice';
+      return 'Lip-sync';
     case 'complete':
-      return 'Finalizing';
+      return 'Finishing';
     default:
       return 'Processing';
   }
@@ -171,12 +171,6 @@ function RecentVideoCard({
             >
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
               {processingLabel}
-            </Badge>
-            <Badge
-              variant="secondary"
-              className="absolute top-2 left-2 text-[10px] bg-background/80 backdrop-blur-sm text-muted-foreground"
-            >
-              Source frame
             </Badge>
             {/* Live elapsed pill */}
             <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
