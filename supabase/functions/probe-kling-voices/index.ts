@@ -58,20 +58,24 @@ Deno.serve(async (req) => {
       const j = await r.json();
       const videoUrl = j.data?.task_result?.videos?.[0]?.url;
       let publicUrl: string | null = null;
+      let err: string | null = null;
       if (videoUrl) {
         try {
           const vr = await fetch(videoUrl);
-          if (vr.ok) {
+          if (!vr.ok) {
+            err = `fetch ${vr.status}`;
+          } else {
             const bytes = new Uint8Array(await vr.arrayBuffer());
             const path = `probe/${label}.mp4`;
             const { error: upErr } = await svc.storage.from("voice-samples").upload(path, bytes, { contentType: "video/mp4", upsert: true });
-            if (!upErr) {
-              publicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/voice-samples/${path}`;
-            }
+            if (upErr) err = `upload: ${upErr.message}`;
+            else publicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/voice-samples/${path}`;
           }
-        } catch (_) { /* ignore */ }
+        } catch (e) { err = String(e); }
+      } else {
+        err = "no video url";
       }
-      out.push({ task_id: id, label, status: j.data?.task_status, public_url: publicUrl });
+      out.push({ task_id: id, label, status: j.data?.task_status, public_url: publicUrl, err });
     }
     return new Response(JSON.stringify(out, null, 2), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
