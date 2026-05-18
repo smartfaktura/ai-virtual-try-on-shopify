@@ -45,6 +45,7 @@ export default function TalkingVideo() {
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   const [phase, setPhase] = useState<Phase>('idle');
+  const [stage, setStage] = useState<TalkingStage>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [resultVideoUrl, setResultVideoUrl] = useState<string | null>(null);
   const [resultError, setResultError] = useState<string | null>(null);
