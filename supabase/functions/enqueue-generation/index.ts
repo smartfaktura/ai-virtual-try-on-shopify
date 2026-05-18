@@ -27,6 +27,12 @@ function calculateCreditCost(
   resolution?: string,
   payload?: Record<string, unknown>,
 ): number {
+  // Talking video — flat per duration
+  if (jobType === "talking_video") {
+    const dur = String(payload?.duration || "5");
+    return dur === "10" ? 36 : 22;
+  }
+
   // Video jobs use dedicated pricing
   if (jobType === "video" || jobType === "video_multishot") {
     const dur = String(payload?.duration || "5");
@@ -119,7 +125,7 @@ serve(async (req) => {
       );
     }
 
-    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale", "video", "video_multishot", "catalog", "text-product"];
+    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale", "video", "video_multishot", "catalog", "text-product", "talking_video"];
     if (!validJobTypes.includes(jobType)) {
       return new Response(
         JSON.stringify({ error: `Invalid job type: ${jobType}` }),

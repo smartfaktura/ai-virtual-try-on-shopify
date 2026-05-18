@@ -1,112 +1,93 @@
-## Talking Video Workflow — Kling-only (revised)
+# Talking Video — Safe Rollout Plan
 
-A new video workflow alongside Animate / Start-End / Ad Sequence / Consistent Model: pick a model reference (+ optional scene), write a script, pick a Kling voice — Kling generates the base video AND the speech + lip-sync in one pipeline. No ElevenLabs.
+Kling-only pipeline (TTS + lip-sync, no ElevenLabs, no ffmpeg). Two stages chained via the existing `poll-stuck-videos` cron, fully isolated from current video flows.
 
-### User flow
+## Why this is safe
 
-1. **New "Talking Video" card** in `VideoHub` workflows grid.
-2. Modal with 4 compact steps:
-   - **Reference**: pick a model from library (required, reuses `LibraryPickerModal`). Optional scene reference for background.
-   - **Script**: textarea, max 280 chars (~15s @ 2 words/sec, well within one 5s or 10s shot). Live duration estimate + char counter.
-   - **Voice**: Kling preset voices grid (8 curated: 4 EN male/female, 2 ES, 2 multilingual). Speed slider 0.8–1.5 (Kling supported range).
-   - **Settings**: aspect ratio 9:16 / 1:1 / 16:9, duration auto (5s if ≤10 words, otherwise 10s).
-3. **Credit estimate** live.
-4. Submit → queued → progress card in Recent Videos.
+- **Additive only** — no edits to logic of `generate-video`, `generate-freestyle`, `mux-video-audio`, ElevenLabs functions, billing RLS, or `enqueue_generation` RPC.
+- **New job_type `talking_video`** routes to a brand-new worker. The route map is a pure lookup — adding one key cannot affect any other key.
+- **Kill switch** — `generate-talking-video` checks `TALKING_VIDEO_ENABLED` env var; flip to `false` to disable instantly without redeploys.
+- **Existing safety net** — `process-queue` already fails + refunds on unknown job types, so even a typo cannot wedge the dispatcher.
+- **No schema changes beyond what shipped** (`generated_videos.metadata` JSONB + `workflow_type` index).
+- **Reuses proven billing** — `enqueue_generation` reserves, `refund_credits` / `cancel_queue_job` handle failures and cancels.
 
-### Pipeline (single edge function: `generate-talking-video`)
+## Pipeline
 
 ```text
-Stage 1: Kling text-to-video (or image-to-video from model reference)
-         model: kling-v2-master, camera_fixed=true, prompt enforces
-         "stable medium close-up, mouth visible, subtle natural motion,
-          no camera movement, no head turns"
-         ──► silent base video URL
-
-Stage 2: Kling Lip-Sync API
-         POST /v1/videos/lip-sync with:
-           input.video_url = base video URL
-           input.audio_type = "text"        ← key change: text-to-speech native
-           input.text = script
-           input.voice_id = selected_voice
-           input.voice_language = "en" | "es" | etc
-           input.voice_speed = speed
-         ──► final talking video URL
-
-Stage 3: Download → upload to generated-videos bucket → mark complete
+TalkingVideoModal
+  -> enqueue-generation (job_type='talking_video', credits=22 or 36)
+  -> process-queue dispatches -> generate-talking-video (Stage 1)
+       - submit Kling image2video, camera_fixed, talking-head prompt
+       - insert generated_videos { workflow_type:'talking_video',
+                                   status:'processing',
+                                   metadata:{ stage:'base_video',
+                                              script, voice_id,
+                                              voice_language, voice_speed } }
+       - write kling_task_id into queue.result
+  -> poll-stuck-videos (every 1 min, EXISTING cron)
+       - stage 'base_video' done -> call kling-lip-sync
+                                    (audio_type='text', text, voice_id, speed)
+                                    set metadata.stage='lipsync',
+                                        metadata.lipsync_task_id=...
+       - stage 'lipsync'   done -> swap video_url, status='complete'
+       - stage 'lipsync' failed -> keep base video, status='complete',
+                                   metadata.silent_fallback=true,
+                                   refund 8 credits
 ```
 
-This uses **Kling's built-in TTS via lip-sync** (`audio_type: "text"`) — same API call, no separate audio file, no ffmpeg muxing, no ElevenLabs. One vendor, one bill, one less failure mode.
+## Files
 
-### Camera stability (your requirement)
+### New
+- `supabase/functions/generate-talking-video/index.ts` — already scaffolded; finish Stage 1 + add `TALKING_VIDEO_ENABLED` kill switch.
+- `src/components/app/video/TalkingVideoModal.tsx` — script field (≤120 chars), voice picker, reference image picker (model or scene), Generate.
+- `src/components/app/video/KlingVoicePicker.tsx` — curated Kling voice IDs grouped by language (e.g. `oversea_male1`, `oversea_female1`, `ai_kaiya`).
+- `src/hooks/useTalkingVideoProject.ts` — calls `enqueue-generation`, optimistic toast, subscribes to `generated_videos` via existing realtime channel.
+- `src/lib/talkingVideoPromptBuilder.ts` — locked-camera prompt + negative prompt + 120-char clamp.
 
-Hard-coded for every talking-video job:
-- `camera_fixed: true` in Kling call
-- Prompt prefix: `"locked-off camera, no pan, no zoom, no dolly, subject centered and steady, talking-head framing, mouth fully visible, natural blinking and breathing only"`
-- Negative prompt: `"camera movement, panning, zooming, head turning away, fast motion, mouth occluded"`
+### Edited (additive only)
+- `supabase/functions/process-queue/index.ts` — add one key:
+  ```ts
+  talking_video: "generate-talking-video",
+  ```
+  Existing keys untouched. Dispatcher behavior identical for every other job_type.
+- `supabase/functions/poll-stuck-videos/index.ts` — branch on `workflow_type='talking_video'`: when Stage 1 completes, call `kling-lip-sync` (action `create`, `audio_type:"text"`); when Stage 2 completes, swap URL. Silent-fallback path on Stage 2 failure + 8-credit refund via `refund_credits`. Existing `generate-video`/`video_multishot` paths unchanged.
+- `src/lib/videoCreditPricing.ts` — add `talkingVideo: { base5s: 22, base10s: 36 }`.
+- `src/pages/VideoHub.tsx` — add a `VideoWorkflowCard` "Talking Video" that opens `TalkingVideoModal`. No existing cards modified.
 
-### Credits (revised, lower since no ElevenLabs)
+### Not touched
+`generate-video`, `generate-freestyle`, `mux-video-audio`, `elevenlabs-*`, billing triggers/RPCs, RLS policies, `generation_queue` schema, `enqueue_generation` RPC.
 
-Add to `VIDEO_CREDIT_RULES`:
-```ts
-talkingVideo: {
-  base5s: 22,    // kling v2-master 5s (~16) + lip-sync (~6)
-  base10s: 36,   // kling v2-master 10s (~26) + lip-sync (~10)
-}
-```
+## Validation (Stage 1, server-side)
 
-### Resilience (your "make sure it will work" requirement)
+- `script`: 1–120 chars, ASCII + common punctuation → 400 if invalid.
+- `voice_id`: must match curated allowlist.
+- `reference_image_url`: required; must be on our storage origin.
+- `duration`: `5` or `10`.
 
-1. **Pre-flight validation**: reject script > 280 chars, reject if Kling credentials missing, reject if model reference image fails to load.
-2. **Stage 1 retry**: if Kling base video fails, retry once with simpler prompt (just model + "talking to camera"). After 2 fails → refund, mark failed.
-3. **Stage 2 polling**: 5s interval, max 8 min timeout. If lip-sync fails → keep the silent base video as a deliverable, mark `status='complete_silent'`, partial refund of lip-sync portion (~6 credits), surface clear UI message: "Lip-sync unavailable — base video delivered."
-4. **Idempotency**: store stage state in `generated_videos.metadata.stage` (`tts → base → lipsync → done`). Re-entrant poller picks up where it left off.
-5. **Pre-launch smoke test**: deploy function, run one end-to-end test with my model + "Hello, this is a test" before exposing the UI card. UI card hidden behind `feature_flag: 'talking_video'` until verified.
-6. **Logging**: every Kling API call logs `[talking-video] stage=X taskId=Y` so failures are diagnosable in 30 seconds.
+## Credits
 
-### Data
+- 5s: **22 credits** · 10s: **36 credits**
+- Reserved upfront by `enqueue_generation`.
+- Stage 1 fails → full refund (existing path).
+- Stage 2 fails → refund 8 credits, keep silent base video.
+- User cancels → existing `cancel_queue_job` handles full refund.
 
-No schema changes. Reuses:
-- `generation_queue` with `job_type='talking_video'`
-- `generated_videos` with `metadata = { script, voice_id, stage, base_video_url, lipsync_task_id, silent_fallback: boolean }`
-- Existing RLS policies (owner-only)
+## Acceptance tests
 
-### Files
+1. Built-in model + "Hello, welcome to our store." (5s) → mp4 in ~5 min, mouth in sync.
+2. Script 200 chars → 400 "Script must be ≤120 characters".
+3. Force Stage 2 failure → silent base video delivered + 8-credit refund.
+4. Cancel mid-Stage-1 → full refund, no row stuck in `processing`.
+5. Regression: existing `generate-video` workflow still works unchanged.
+6. Set `TALKING_VIDEO_ENABLED=false` → new requests fail fast with full refund; all other queue traffic unaffected.
 
-**New**
-- `supabase/functions/generate-talking-video/index.ts` — orchestrator + Kling calls + Kling lip-sync (text mode)
-- `src/components/app/video/talking/TalkingVideoModal.tsx` — 4-step wizard
-- `src/components/app/video/talking/KlingVoicePicker.tsx` — 8 curated voices, preview disabled (Kling has no preview endpoint — show voice description + sample subtitle)
-- `src/hooks/useTalkingVideoProject.ts` — local state + enqueue
-- `src/lib/talkingVideoPromptBuilder.ts` — stable-camera prompt builder
+## Rollout order (each step independently revertible)
 
-**Edited**
-- `src/pages/VideoHub.tsx` — add Talking Video workflow card (feature-flagged off initially)
-- `src/config/videoCreditPricing.ts` — add `talkingVideo` rules
-- `supabase/functions/poll-stuck-videos/index.ts` — handle `talking_video` state machine
-- `src/hooks/useGenerateVideo.ts` — extend types
+1. Finish `generate-talking-video` Stage 1 + kill switch.
+2. Add `talking_video` line to `process-queue` route map.
+3. Extend `poll-stuck-videos` with Stage 2 chain + silent fallback.
+4. Add pricing constant.
+5. Build UI (modal + voice picker + hook + VideoHub card).
+6. Run acceptance tests, then announce.
 
-### What this does NOT touch
-
-- ElevenLabs functions (untouched)
-- Existing video workflows (Animate, Start-End, Short Film) — zero shared code paths edited
-- `mux-video-audio` — not used (Kling delivers final muxed video)
-- DB schema — no migrations
-- Billing/credits trigger — no changes
-- RLS policies — no changes
-
-### Risks & mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Kling text mode voice quality varies | Curate only the 8 voices we test and approve |
-| Lip-sync misalignment on stylized models | Forced camera_fixed + framing prompt; silent fallback if it fails |
-| Long script overflows 10s video | Hard cap at 280 chars enforced client + server |
-| Kling API outage | Feature flag lets us hide the card instantly |
-| Cost overrun | Credit price set above measured cost; 1-click refund on failure |
-
-### Acceptance test before turning the flag on
-
-1. Generate talking video with built-in model + "Hello, welcome to our store" → expect a 5s talking video in <5 min.
-2. Generate with intentionally long script → expect 422 client validation error.
-3. Force Kling lip-sync 500 → expect silent fallback + partial refund.
-4. Cancel mid-generation → expect full refund, no orphan rows.
+If any step misbehaves, the previous deploy keeps every other workflow fully working.

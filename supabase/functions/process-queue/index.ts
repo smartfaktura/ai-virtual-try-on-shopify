@@ -17,6 +17,7 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   video_multishot: "generate-video",
   catalog: "generate-catalog",
   "text-product": "generate-text-product",
+  talking_video: "generate-talking-video",
 };
 
 const BATCH_SIZE = 6; // max concurrent dispatches per round

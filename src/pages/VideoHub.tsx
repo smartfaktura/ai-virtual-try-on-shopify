@@ -1,4 +1,4 @@
-import { Film, Layers, Users, ArrowRightLeft, Clapperboard, Play, Loader2, Check, Download } from 'lucide-react';
+import { Film, Layers, Users, ArrowRightLeft, Clapperboard, MessageCircle, Play, Loader2, Check, Download } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { VideoWorkflowCard } from '@/components/app/video/VideoWorkflowCard';
 import { VideoDetailModal } from '@/components/app/video/VideoDetailModal';
@@ -337,6 +337,14 @@ export default function VideoHub() {
           description="Plan and generate a premium multi-shot brand film"
           bestFor={['Brand storytelling', 'Multi-shot', 'Campaign films']}
           to="/app/video/short-film"
+          beta
+        />
+        <VideoWorkflowCard
+          icon={MessageCircle}
+          title="Talking Video"
+          description="Bring a model to life with synced speech from a short script"
+          bestFor={['Spokesmodel', 'UGC voiceover', 'Product pitch']}
+          to="/app/video/talking"
           beta
         />
       </div>
