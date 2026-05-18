@@ -26,6 +26,8 @@ interface Props {
   /** Approximate target seconds — talking pipeline = base video + lip-sync. */
   estimatedSeconds?: number;
   status: 'queued' | 'processing' | 'complete' | 'failed';
+  /** Backend pipeline stage: 'base_video' (Kling motion) or 'lipsync' (audio drive). */
+  stage?: 'base_video' | 'lipsync' | 'complete' | null;
   videoUrl?: string | null;
   errorMessage?: string | null;
   thumbnailUrl?: string | null;
@@ -38,6 +40,7 @@ interface Props {
 export function TalkingVideoGenerating({
   estimatedSeconds = 5 * 60,
   status,
+  stage,
   videoUrl,
   errorMessage,
   thumbnailUrl,
