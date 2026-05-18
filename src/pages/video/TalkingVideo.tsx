@@ -35,8 +35,9 @@ export default function TalkingVideo() {
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [script, setScript] = useState('');
-  const [voiceId, setVoiceId] = useState(VOICE_IDS[0]);
-  const [voiceSpeed, setVoiceSpeed] = useState(1);
+  const [voiceId, setVoiceId] = useState(ELEVEN_VOICE_IDS[0]);
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(DEFAULT_VOICE_SETTINGS);
+  const [ttsModel, setTtsModel] = useState<TtsModel>(DEFAULT_TTS_MODEL);
   const [duration, setDuration] = useState<Duration>('5');
   const [performance, setPerformance] = useState<Performance>(DEFAULT_PERFORMANCE);
   const [pickerOpen, setPickerOpen] = useState(false);
