@@ -161,12 +161,25 @@ serve(async (req) => {
 
     if (!imageUrl) throw new Error("image_url (reference model) is required");
     if (!rawScript) throw new Error("script is required");
-    if (rawScript.length > 120) throw new Error("Script too long (max 120 characters)");
+    if (rawScript.length > 200) throw new Error("Script too long (max 200 characters)");
+
+    // Performance controls (optional). Append additive directives to the base
+    // prefix — never overrides the locked-camera guarantees.
+    const perf = (body.performance as { motion?: string; gaze?: string } | undefined) || {};
+    let performanceLines = "";
+    if (perf.motion === "still") {
+      performanceLines += "Body remains static, only mouth, jaw and eyes animate, shoulders fixed. ";
+    } else if (perf.motion === "expressive") {
+      performanceLines += "Allow subtle natural head tilts and light shoulder shifts; hands remain out of frame. ";
+    }
+    if (perf.gaze === "soft") {
+      performanceLines += "Eyes drift gently between camera and a soft off-camera point, never fully turning away. ";
+    }
 
     // Truncate prompt to safe length
     const userIntent = (body.scene_hint as string) || "professional studio setting, neutral background";
     const fullPrompt =
-      `${STABLE_PROMPT_PREFIX}${userIntent}. The person is speaking calmly to the camera.`.slice(0, 1800);
+      `${STABLE_PROMPT_PREFIX}${performanceLines}${userIntent}. The person is speaking calmly to the camera.`.slice(0, 1800);
 
     console.log(
       `[talking-video] Job ${jobId} user ${userId} — submitting base video. ` +
@@ -217,6 +230,7 @@ serve(async (req) => {
       base_video_url: null as string | null,
       lipsync_task_id: null as string | null,
       silent_fallback: false,
+      performance: perf,
     };
 
     // Prefer updating the placeholder row created at enqueue time (so the

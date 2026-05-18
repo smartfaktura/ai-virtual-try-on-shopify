@@ -2,6 +2,12 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { enqueueWithRetry, isEnqueueError } from '@/lib/enqueueGeneration';
 import { toast } from '@/lib/brandedToast';
+import { serializeForKling } from '@/lib/talkingDuration';
+
+export interface TalkingPerformance {
+  motion: 'still' | 'natural' | 'expressive';
+  gaze: 'camera' | 'soft';
+}
 
 export interface StartTalkingVideoParams {
   imageUrl: string;
@@ -12,6 +18,7 @@ export interface StartTalkingVideoParams {
   duration: '5' | '10';
   aspectRatio?: '9:16' | '1:1' | '16:9';
   sceneHint?: string;
+  performance?: TalkingPerformance;
 }
 
 export function useTalkingVideoProject() {
@@ -35,9 +42,12 @@ export function useTalkingVideoProject() {
         toast.error('Add a short script first');
         return { ok: false };
       }
-      if (trimmed.length > 120) {
-        setError('Script must be 120 characters or fewer');
-        toast.error('Script must be 120 characters or fewer');
+      // Convert composer tokens ([.] [..] [...] [em]) to Kling-friendly
+      // punctuation so the lip-sync TTS interprets pacing correctly.
+      const klingScript = serializeForKling(trimmed);
+      if (klingScript.length > 200) {
+        setError('Script is too long after expanding pauses — trim a bit');
+        toast.error('Script is too long — trim a bit');
         return { ok: false };
       }
       if (!params.imageUrl) {
@@ -60,13 +70,14 @@ export function useTalkingVideoProject() {
         quality: 'standard',
         payload: {
           image_url: params.imageUrl,
-          script: trimmed,
+          script: klingScript,
           voice_id: params.voiceId,
           voice_language: params.voiceLanguage || 'en',
           voice_speed: params.voiceSpeed ?? 1,
           duration: params.duration,
           aspect_ratio: params.aspectRatio || '9:16',
           scene_hint: params.sceneHint || undefined,
+          performance: params.performance || undefined,
         },
       }, token);
 
