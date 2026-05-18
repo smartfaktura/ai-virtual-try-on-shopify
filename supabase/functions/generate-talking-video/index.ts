@@ -27,9 +27,9 @@ const corsHeaders = {
 
 const KLING_API_BASE = "https://api-singapore.klingai.com/v1";
 
-// Kling voice id -> ElevenLabs voice id. Mirrors VOICE_MAP in
-// preview-talking-voice / seed-voice-samples — keep in sync.
-const VOICE_MAP: Record<string, string> = {
+// Back-compat: legacy Kling alias ids -> ElevenLabs voice ids.
+// New clients send ElevenLabs ids directly; we pass them through unchanged.
+const LEGACY_VOICE_MAP: Record<string, string> = {
   ai_kaiya: "9BWtsMINqrJLrRacOk9x",
   girlfriend_4_speech02: "EXAVITQu4vr4xnSDxMaL",
   calm_story1: "XrExE9yKIg1WjnnlVkGX",
@@ -37,6 +37,50 @@ const VOICE_MAP: Record<string, string> = {
   uk_man2: "JBFqnCBsd6RMkjVDRZzb",
   uk_boy1: "N2lVS1w4EtoT3dr4eOWO",
 };
+
+function resolveElevenVoiceId(id: string): string {
+  return LEGACY_VOICE_MAP[id] || id || "nPczCjzI2devNBz1zQrb";
+}
+
+type ElevenVoiceSettings = {
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  use_speaker_boost: boolean;
+  speed: number;
+};
+
+const DEFAULT_VOICE_SETTINGS: ElevenVoiceSettings = {
+  stability: 0.55,
+  similarity_boost: 0.8,
+  style: 0.25,
+  use_speaker_boost: true,
+  speed: 1,
+};
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
+
+function sanitizeVoiceSettings(raw: unknown, speedFallback: number): ElevenVoiceSettings {
+  const r = (raw as Partial<ElevenVoiceSettings>) || {};
+  const num = (v: unknown, d: number) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  return {
+    stability:        clamp(num(r.stability, DEFAULT_VOICE_SETTINGS.stability), 0, 1),
+    similarity_boost: clamp(num(r.similarity_boost, DEFAULT_VOICE_SETTINGS.similarity_boost), 0, 1),
+    style:            clamp(num(r.style, DEFAULT_VOICE_SETTINGS.style), 0, 1),
+    use_speaker_boost: typeof r.use_speaker_boost === "boolean" ? r.use_speaker_boost : DEFAULT_VOICE_SETTINGS.use_speaker_boost,
+    speed:            clamp(num(r.speed, speedFallback), 0.7, 1.2),
+  };
+}
+
+const ALLOWED_TTS_MODELS = new Set(["eleven_multilingual_v2", "eleven_turbo_v2_5"]);
+function sanitizeTtsModel(raw: unknown): string {
+  return typeof raw === "string" && ALLOWED_TTS_MODELS.has(raw) ? raw : "eleven_multilingual_v2";
+}
 
 // --- Structured talking-head prompt builder -----------------------------------
 
