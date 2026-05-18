@@ -147,7 +147,7 @@ export default function TalkingVideo() {
     poll();
     const interval = setInterval(poll, 5000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [activeJobId, phase, refreshBalance]);
+  }, [activeJobId, phase, stage, refreshBalance]);
 
   const handleGenerate = useCallback(async () => {
     if (isSubmitting) return;
