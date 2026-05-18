@@ -389,6 +389,8 @@ serve(async (req) => {
       voice_id: voiceId,
       voice_language: voiceLanguage,
       voice_speed: voiceSpeed,
+      voice_settings: voiceSettings,
+      tts_model: ttsModel,
       audio_storage_path: audioPath,
       audio_duration_sec: Math.round(estDur * 10) / 10,
       base_video_url: null as string | null,
