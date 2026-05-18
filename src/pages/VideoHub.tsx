@@ -172,12 +172,6 @@ function RecentVideoCard({
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
               {processingLabel}
             </Badge>
-            <Badge
-              variant="secondary"
-              className="absolute top-2 left-2 text-[10px] bg-background/80 backdrop-blur-sm text-muted-foreground"
-            >
-              Source frame
-            </Badge>
             {/* Live elapsed pill */}
             <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
               <span className="text-[10px] font-medium text-background bg-foreground/70 backdrop-blur-sm rounded-full px-2 py-0.5">
