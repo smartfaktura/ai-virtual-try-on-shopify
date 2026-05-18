@@ -49,11 +49,29 @@ Deno.serve(async (req) => {
 
   if (action === "poll-all") {
     const ids = (url.searchParams.get("ids") || "").split(",").filter(Boolean);
+    const labels = (url.searchParams.get("labels") || "").split(",");
     const out: any[] = [];
-    for (const id of ids) {
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      const label = labels[i] || id;
       const r = await fetch(`${KLING_API_BASE}/videos/lip-sync/${id}`, { headers });
       const j = await r.json();
-      out.push({ task_id: id, status: j.data?.task_status, message: j.message, video_url: j.data?.task_result?.videos?.[0]?.url });
+      const videoUrl = j.data?.task_result?.videos?.[0]?.url;
+      let publicUrl: string | null = null;
+      if (videoUrl) {
+        try {
+          const vr = await fetch(videoUrl);
+          if (vr.ok) {
+            const bytes = new Uint8Array(await vr.arrayBuffer());
+            const path = `probe/${label}.mp4`;
+            const { error: upErr } = await svc.storage.from("voice-samples").upload(path, bytes, { contentType: "video/mp4", upsert: true });
+            if (!upErr) {
+              publicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/voice-samples/${path}`;
+            }
+          }
+        } catch (_) { /* ignore */ }
+      }
+      out.push({ task_id: id, label, status: j.data?.task_status, public_url: publicUrl });
     }
     return new Response(JSON.stringify(out, null, 2), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
