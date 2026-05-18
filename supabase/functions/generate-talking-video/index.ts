@@ -119,6 +119,35 @@ serve(async (req) => {
     });
   }
 
+  // Defensive guard: if a generated_videos row already exists for this queue
+  // job and is already complete/failed, do NOT re-dispatch — that would stomp
+  // the row back to processing and submit duplicate Kling tasks. This protects
+  // against re-dispatch from cleanup_stale_jobs auto-retry edge cases.
+  try {
+    const { data: existingRow } = await svc
+      .from("generated_videos")
+      .select("id, status")
+      .eq("user_id", userId)
+      .eq("workflow_type", "talking_video")
+      .filter("metadata->>queue_job_id", "eq", jobId)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingRow && (existingRow.status === "complete" || existingRow.status === "failed")) {
+      console.warn(`[talking-video] Job ${jobId} skipped — generated_videos row already ${existingRow.status}`);
+      await svc.from("generation_queue").update({
+        status: "completed",
+        error_message: `Skipped re-dispatch — video row already ${existingRow.status}`,
+        completed_at: new Date().toISOString(),
+      }).eq("id", jobId);
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: existingRow.status }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  } catch (guardErr) {
+    console.error(`[talking-video] Guard check failed (continuing):`, guardErr);
+  }
+
   try {
     // --- Payload extraction + validation ---
     const imageUrl = body.image_url as string;

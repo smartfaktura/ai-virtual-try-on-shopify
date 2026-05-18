@@ -13,7 +13,7 @@ const corsHeaders = {
 
 const KLING_API_BASE = "https://api-singapore.klingai.com/v1";
 const MAX_BATCH = 100;
-const TIMEOUT_MIN = 30;
+const TIMEOUT_MIN = 45; // upper bound for any single Kling stage (base or lipsync)
 
 function base64url(data: Uint8Array): string {
   let bin = "";
@@ -80,7 +80,7 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
   const { data: jobs } = await svc
     .from("generation_queue")
     .select("id, user_id, credits_reserved, status")
-    .in("job_type", ["video", "video_multishot"])
+    .in("job_type", ["video", "video_multishot", "talking_video"])
     .in("status", ["processing", "queued"])
     .filter("result->>kling_task_id", "eq", taskId);
 
@@ -107,6 +107,28 @@ async function resolveQueueForTask(svc: SvcClient, taskId: string, finalStatus: 
         });
       }
     }
+  }
+}
+
+// Advance the queue's bookkeeping when stage 1 (base) → stage 2 (lipsync).
+// Updates result.kling_task_id to the lipsync task and extends timeout_at so
+// cleanup_stale_jobs can't kill it mid-stage-2 even if its job_type guard is
+// later relaxed.
+async function advanceQueueToLipsync(svc: SvcClient, baseTaskId: string, lipsyncTaskId: string) {
+  const { data: jobs } = await svc
+    .from("generation_queue")
+    .select("id")
+    .eq("job_type", "talking_video")
+    .in("status", ["processing", "queued"])
+    .filter("result->>kling_task_id", "eq", baseTaskId);
+
+  if (!jobs || jobs.length === 0) return;
+  const fortyFiveMin = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+  for (const j of jobs) {
+    await svc.from("generation_queue").update({
+      result: { kling_task_id: lipsyncTaskId, stage: "lipsync" },
+      timeout_at: fortyFiveMin,
+    }).eq("id", j.id);
   }
 }
 
@@ -140,7 +162,7 @@ serve(async (req) => {
 
     const rows = stuck || [];
     let completed = 0, failed = 0, timedOut = 0, pending = 0, errors = 0;
-    const timeoutCutoff = Date.now() - TIMEOUT_MIN * 60 * 1000;
+    const TIMEOUT_MS = TIMEOUT_MIN * 60 * 1000;
 
     await Promise.all(rows.map(async (row) => {
       const taskId = row.kling_task_id as string;
@@ -149,6 +171,14 @@ serve(async (req) => {
       const meta = (row.metadata || {}) as Record<string, unknown>;
       const stage = (meta.stage as string) || "base_video";
       const isLipsyncStage = isTalking && stage === "lipsync";
+
+      // For lip-sync, measure timeout from when stage 2 was submitted, not from
+      // when the queue row was created. Otherwise a healthy stage 2 gets killed
+      // just because base video took 10–15 min.
+      const stageStartMs = isLipsyncStage && typeof meta.lipsync_started_at === "string"
+        ? new Date(meta.lipsync_started_at as string).getTime()
+        : new Date(row.created_at).getTime();
+      const isPastTimeout = (Date.now() - stageStartMs) > TIMEOUT_MS;
 
       const url = isLipsyncStage
         ? `${KLING_API_BASE}/videos/lip-sync/${taskId}`
@@ -161,7 +191,7 @@ serve(async (req) => {
         const result = await res.json();
 
         if (!res.ok || result.code !== 0) {
-          if (new Date(row.created_at).getTime() < timeoutCutoff) {
+          if (isPastTimeout) {
             // Talking video lip-sync failure → silent fallback (keep base video)
             if (isLipsyncStage && meta.base_video_url) {
               const baseUrl = meta.base_video_url as string;
@@ -250,7 +280,8 @@ serve(async (req) => {
 
               const lipsyncTaskId = lipJson.data.task_id as string;
               const updateMeta = { ...meta, stage: "lipsync", base_video_url: permanentUrl,
-                                   lipsync_task_id: lipsyncTaskId };
+                                   lipsync_task_id: lipsyncTaskId,
+                                   lipsync_started_at: new Date().toISOString() };
               const update: Record<string, unknown> = {
                 kling_task_id: lipsyncTaskId,
                 metadata: updateMeta,
@@ -258,7 +289,8 @@ serve(async (req) => {
               };
               if (previewUrl) update.preview_url = previewUrl;
               await svc.from("generated_videos").update(update).eq("id", row.id);
-              // queue stays open until stage 2 finishes
+              // Keep the queue row in sync so cleanup_stale_jobs sees fresh state.
+              await advanceQueueToLipsync(svc, taskId, lipsyncTaskId);
               pending++;
               return;
             } catch (err) {
@@ -328,7 +360,7 @@ serve(async (req) => {
           failed++;
         } else {
           // submitted / processing → check timeout
-          if (new Date(row.created_at).getTime() < timeoutCutoff) {
+          if (isPastTimeout) {
             // Talking video timeout → if we already have a usable base video,
             // fall back to the silent version instead of throwing the work away.
             const baseUrl = (meta.base_video_url as string | null) || (row.video_url as string | null);
