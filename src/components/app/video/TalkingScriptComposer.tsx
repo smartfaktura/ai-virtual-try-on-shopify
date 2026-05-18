@@ -83,12 +83,14 @@ export function TalkingScriptComposer({
     [script, onScriptChange],
   );
 
-  // Stop audio when script/voice changes
+  // Reset cached preview audio when script/voice/speed changes so stale
+  // audio is not replayed.
   useEffect(() => {
     if (audio) {
       audio.pause();
-      setPlaying(false);
     }
+    setAudio(null);
+    setPlaying(false);
   }, [script, voiceId, voiceSpeed]); // eslint-disable-line
 
   const previewVoice = useCallback(async () => {
@@ -102,8 +104,12 @@ export function TalkingScriptComposer({
       return;
     }
     if (audio && !playing) {
-      audio.play();
-      setPlaying(true);
+      try {
+        await audio.play();
+        setPlaying(true);
+      } catch {
+        toast.error('Tap again to play preview');
+      }
       return;
     }
     setPreviewing(true);
@@ -111,14 +117,30 @@ export function TalkingScriptComposer({
       const { data, error } = await supabase.functions.invoke('preview-talking-voice', {
         body: { script: serialized, voice_id: voiceId, speed: voiceSpeed },
       });
-      if (error) throw error;
+      if (error) {
+        // Try to surface the backend's actual error message instead of the
+        // generic "Edge Function returned a non-2xx status code".
+        let msg = error.message || 'Preview failed';
+        const ctx = (error as { context?: Response }).context;
+        if (ctx && typeof ctx.json === 'function') {
+          try {
+            const body = await ctx.clone().json();
+            if (body?.error) msg = body.error;
+          } catch { /* ignore */ }
+        }
+        throw new Error(msg);
+      }
       if (!data?.audio_base64) throw new Error('No audio returned');
       const a = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
       a.onended = () => setPlaying(false);
       a.onpause = () => setPlaying(false);
       a.onplay = () => setPlaying(true);
       setAudio(a);
-      await a.play();
+      try {
+        await a.play();
+      } catch {
+        toast.error('Tap again to play preview');
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Preview failed';
       toast.error(msg);
