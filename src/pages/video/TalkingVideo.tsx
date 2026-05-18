@@ -24,6 +24,7 @@ import { estimateDuration, serializeForKling } from '@/lib/talkingDuration';
 
 type Duration = '5' | '10';
 type Phase = 'idle' | 'queued' | 'processing' | 'complete' | 'failed';
+type TalkingStage = 'base_video' | 'lipsync' | 'complete' | null;
 
 const DEFAULT_PERFORMANCE: Performance = { motion: 'natural', gaze: 'camera' };
 
@@ -44,6 +45,7 @@ export default function TalkingVideo() {
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   const [phase, setPhase] = useState<Phase>('idle');
+  const [stage, setStage] = useState<TalkingStage>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [resultVideoUrl, setResultVideoUrl] = useState<string | null>(null);
   const [resultError, setResultError] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export default function TalkingVideo() {
 
         const { data: videoRow } = await supabase
           .from('generated_videos')
-          .select('id, status, video_url, error_message')
+          .select('id, status, video_url, error_message, metadata')
           .eq('workflow_type', 'talking_video')
           .filter('metadata->>queue_job_id', 'eq', activeJobId)
           .order('created_at', { ascending: false })
@@ -121,6 +123,7 @@ export default function TalkingVideo() {
           const signed = await toSignedUrl(videoRow.video_url);
           if (cancelled) return;
           setResultVideoUrl(signed || videoRow.video_url);
+          setStage('complete');
           setPhase('complete');
           refreshBalance();
           return;
@@ -131,6 +134,8 @@ export default function TalkingVideo() {
           refreshBalance();
           return;
         }
+        const nextStage = (videoRow?.metadata as Record<string, unknown> | null)?.stage as TalkingStage | undefined;
+        if (nextStage && nextStage !== stage) setStage(nextStage);
         if (videoRow?.status === 'processing' && phase !== 'processing') {
           setPhase('processing');
         }
@@ -142,7 +147,7 @@ export default function TalkingVideo() {
     poll();
     const interval = setInterval(poll, 5000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [activeJobId, phase, refreshBalance]);
+  }, [activeJobId, phase, stage, refreshBalance]);
 
   const handleGenerate = useCallback(async () => {
     if (isSubmitting) return;
@@ -190,6 +195,7 @@ export default function TalkingVideo() {
 
   const resetToForm = useCallback(() => {
     setPhase('idle');
+    setStage(null);
     setActiveJobId(null);
     setResultVideoUrl(null);
     setResultError(null);
@@ -204,6 +210,7 @@ export default function TalkingVideo() {
     setResultVideoUrl(null);
     setResultError(null);
     setActiveJobId(null);
+    setStage(null);
     setPhase('idle');
   }, [activeJobId]);
 
@@ -233,6 +240,7 @@ export default function TalkingVideo() {
         <TalkingVideoGenerating
           estimatedSeconds={duration === '10' ? 7 * 60 : 5 * 60}
           status={phase === 'queued' ? 'queued' : phase === 'processing' ? 'processing' : phase === 'complete' ? 'complete' : 'failed'}
+          stage={stage}
           videoUrl={resultVideoUrl}
           errorMessage={resultError}
           thumbnailUrl={imageUrl}
