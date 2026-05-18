@@ -195,6 +195,7 @@ export default function TalkingVideo() {
 
   const resetToForm = useCallback(() => {
     setPhase('idle');
+    setStage(null);
     setActiveJobId(null);
     setResultVideoUrl(null);
     setResultError(null);
@@ -209,6 +210,7 @@ export default function TalkingVideo() {
     setResultVideoUrl(null);
     setResultError(null);
     setActiveJobId(null);
+    setStage(null);
     setPhase('idle');
   }, [activeJobId]);
 
