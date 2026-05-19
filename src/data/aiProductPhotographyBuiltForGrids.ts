@@ -2283,13 +2283,13 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       "subCategory": "Swimwear · Beach UGC",
       "cards": [
         { "label": "Towel Wrap After Swim",         "imageId": "1776246331485-jyrtgf" },
-        { "label": "Sun-Dried Swimwear",            "imageId": "1776522793804-125kin" },
-        { "label": "Floating Pool Product Shot",    "imageId": "1776522770907-dwn2ay" },
+        { "label": "Sun-Dried Swimwear",            "imageId": "1777996837190-gozhuc" },
+        { "label": "Floating Pool Product Shot",    "imageId": "1777996831843-l3w3d6" },
         { "label": "Palm Shadow Swim Editorial",    "imageId": "1776522783936-8h56rb" },
-        { "label": "Walking Along Pool Edge",       "imageId": "1776522832053-f1h9ck" },
+        { "label": "Walking Along Pool Edge",       "imageId": "1777996839874-rwutl7" },
         { "label": "Beach Towel Sitting Moment",    "imageId": "1776246304639-tjof8z" },
         { "label": "Beach Bag and Essentials",      "imageId": "1776246303699-b50y33" },
-        { "label": "Shoreline Walk Pause",          "imageId": "1776246326918-ofopok" }
+        { "label": "Shoreline Walk Pause",          "imageId": "1777996836335-qaub4x" }
       ]
     },
     {
