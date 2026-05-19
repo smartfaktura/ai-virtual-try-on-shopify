@@ -277,6 +277,7 @@ const App = () => {
                         <Route path="/bug-bounty" element={<BugBounty />} />
                         
                         <Route path="/models" element={<BrandModels />} />
+                        <Route path="/models/new" element={<BrandModelNew />} />
                         <Route path="/brand-scenes" element={<BrandScenes />} />
                         <Route path="/admin/models" element={<AdminModels />} />
                         <Route path="/admin/scenes" element={<AdminScenes />} />
