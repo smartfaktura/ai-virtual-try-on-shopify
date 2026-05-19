@@ -483,28 +483,33 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   // ── Form content blocks (shared between layouts) ──
   const essentialsBlock = (
     <div className="space-y-5">
-      <div className="space-y-2">
-        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Model Name</Label>
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between">
+          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Model Name</Label>
+          <span className={cn(
+            "text-[10px] tabular-nums",
+            modelName.length >= 28 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50"
+          )}>{modelName.length}/32</span>
+        </div>
         <Input
-          placeholder="e.g. Sarah, Alex, Brand Ambassador..."
+          placeholder="e.g. Sarah, Alex, Brand Ambassador"
           value={modelName}
           onChange={(e) => setModelName(e.target.value)}
-          maxLength={40}
+          maxLength={32}
           className="h-9"
         />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-5">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gender</Label>
-          <ChipSelect options={['Female', 'Male']} value={gender} onChange={setGender} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {age[0]}</Label>
-          <Slider min={4} max={70} step={1} value={age} onValueChange={setAge} />
-          <div className="flex justify-between text-[10px] text-muted-foreground/50">
-            <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
-          </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gender</Label>
+        <ChipSelect options={['Female', 'Male']} value={gender} onChange={setGender} />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {age[0]}</Label>
+        <Slider min={4} max={70} step={1} value={age} onValueChange={setAge} />
+        <div className="flex justify-between text-[10px] text-muted-foreground/50">
+          <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
         </div>
       </div>
 
@@ -536,6 +541,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           </SelectContent>
         </Select>
       </div>
+
       <div className="space-y-2">
         <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Morphology</Label>
         <ChipSelect options={['slim', 'athletic', 'average', 'plus-size']} value={morphology} onChange={setMorphology} />
