@@ -275,6 +275,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const { balance, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const processFile = async (file: File) => {
     const reader = new FileReader();
