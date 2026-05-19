@@ -23,10 +23,11 @@ import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
   Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
-  Pencil, Info, Plus, ArrowRight,
+  Pencil, Info, Plus, ArrowRight, ChevronDown,
 } from 'lucide-react';
 
 /* ── Plan gate upgrade prompt ── */
@@ -274,8 +275,15 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     return () => document.removeEventListener('paste', handlePaste);
   }, [useReference, previewUrl]);
 
-  const canGenerate = !generating && (makePublic || balance >= 20) && !isUploading &&
-    (!uploadedUrl || termsAccepted);
+  const trimmedName = modelName.trim();
+  const validationError: string | null =
+    trimmedName.length < 2 ? 'Add a model name (min 2 characters)' :
+    isUploading ? 'Waiting for upload to finish…' :
+    uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
+    !makePublic && balance < 20 ? 'Not enough credits — top up to continue' :
+    null;
+  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!uploadedUrl || termsAccepted);
+  const canGenerate = !generating && !validationError;
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
@@ -665,7 +673,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           Content &amp; rights policy
         </div>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload. Violations may result in account suspension.
+          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload.
         </p>
       </div>
 
