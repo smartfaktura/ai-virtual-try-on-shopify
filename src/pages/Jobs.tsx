@@ -10,6 +10,7 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { LibrarySkeletonGrid } from '@/components/app/LibrarySkeletonGrid';
+import { DotPulse } from '@/components/ui/dot-pulse';
 import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
