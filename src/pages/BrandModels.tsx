@@ -825,61 +825,36 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
 
         <Section title="Summary">
-          <div className="flex items-center gap-3">
-            {previewUrl ? (
-              <img src={previewUrl} alt="" className="w-12 h-12 rounded-lg object-cover border border-border/60" />
-            ) : (
-              <div className="flex items-end -space-x-2 shrink-0">
-                {mockModels.slice(0, 3).map((m, i) => (
-                  <img
-                    key={m.modelId}
-                    src={m.previewUrl}
-                    alt=""
-                    loading="lazy"
-                    className={cn(
-                      "w-9 h-12 rounded-md object-cover ring-2 ring-background shadow-sm",
-                      i === 1 && "z-10"
-                    )}
-                  />
-                ))}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium truncate">
-                {modelName.trim() || <span className="text-muted-foreground">New brand model</span>}
-              </p>
-              {(() => {
-                const chips = [
-                  gender,
-                  age?.[0] != null ? `${age[0]} yrs` : null,
-                  ethnicity,
-                  morphology && morphology !== 'average' ? morphology : null,
-                  hairColor,
-                ].filter(Boolean) as string[];
-                if (chips.length === 0) return null;
-                return (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {chips.map((c) => (
-                      <span key={c} className="text-[10px] uppercase tracking-wider text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
+          <div>
+            <p className="text-sm font-medium">
+              {modelName.trim() || <span className="text-muted-foreground">New brand model</span>}
+            </p>
+            {(() => {
+              const chips = [
+                gender,
+                age?.[0] != null ? `${age[0]} yrs` : null,
+                ethnicity,
+                morphology && morphology !== 'average' ? morphology : null,
+                hairColor,
+              ].filter(Boolean) as string[];
+              if (chips.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {chips.map((c) => (
+                    <span key={c} className="text-[10px] uppercase tracking-wider text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="h-px bg-border/50 my-4" />
 
-          <div className="flex items-center justify-between text-xs">
-            <span>
-              <span className="font-medium text-foreground">3 variations</span>
-              <span className="text-muted-foreground"> · {makePublic ? 'Free' : '20 credits'}</span>
-            </span>
-            {!makePublic && (
-              <span className="text-muted-foreground">Balance {balance}</span>
-            )}
+          <div className="text-xs">
+            <span className="font-medium text-foreground">3 variations</span>
+            <span className="text-muted-foreground"> · {makePublic ? 'Free' : '20 credits'}</span>
           </div>
 
           {validationError && (
@@ -916,9 +891,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
                 <span className="text-xs text-muted-foreground text-center flex-1">{validationError}</span>
               )
             ) : (
-              <span className="text-xs text-muted-foreground text-center flex-1 hidden sm:inline">
-                {makePublic ? 'Public model · free' : `20 credits · Balance ${balance}`}
-              </span>
+              <span className="flex-1" />
             )}
             <Button
               disabled={!canGenerate}
