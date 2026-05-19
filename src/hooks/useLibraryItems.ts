@@ -225,6 +225,37 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
         const skipJobs = !!cursor.jobsDone || sourceFilter === 'freestyle';
         const skipFs = !!cursor.fsDone || sourceFilter === 'workflow';
 
+        // For freestyle search: resolve model/scene names → IDs (mock + custom) and add to .or()
+        if (esc && !skipFs) {
+          const matchedModelIds = mockModels.filter(m => m.name.toLowerCase().includes(q)).map(m => m.modelId);
+          const matchedPoseIds = mockTryOnPoses.filter(p => p.name.toLowerCase().includes(q)).map(p => p.poseId);
+
+          const [customModelMatch, customSceneMatch] = await Promise.all([
+            supabase.from('custom_models').select('id').ilike('name', `%${esc}%`).limit(50),
+            supabase.rpc('get_public_custom_scenes').then(res => ({
+              data: (res.data as any[] ?? []).filter((s: any) => (s.name || '').toLowerCase().includes(q)).slice(0, 50),
+            })),
+          ]);
+
+          const allModelIds = [
+            ...matchedModelIds,
+            ...((customModelMatch.data as any[]) ?? []).map((m: any) => `custom-${m.id}`),
+          ];
+          const allSceneIds = [
+            ...matchedPoseIds,
+            ...((customSceneMatch.data as any[]) ?? []).map((s: any) => `custom-${s.id}`),
+          ];
+
+          const clauses = [
+            `prompt.ilike.%${esc}%`,
+            `user_prompt.ilike.%${esc}%`,
+            `workflow_label.ilike.%${esc}%`,
+          ];
+          if (allModelIds.length) clauses.push(`model_id.in.(${allModelIds.join(',')})`);
+          if (allSceneIds.length) clauses.push(`scene_id.in.(${allSceneIds.join(',')})`);
+          fsQuery = fsQuery.or(clauses.join(','));
+        }
+
         const [jobsResult, freestyleResult] = await Promise.all([
           skipJobs ? Promise.resolve({ data: [], error: null }) : jobsQuery,
           skipFs ? Promise.resolve({ data: [], error: null }) : fsQuery,
