@@ -762,6 +762,12 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
         <Badge className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground backdrop-blur-sm text-[9px] font-bold uppercase tracking-wider">
           Brand Model
         </Badge>
+        <Link
+          to={`/app/workflows?model=${model.id}`}
+          className="absolute inset-x-2 bottom-2 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 bg-background/95 backdrop-blur-sm rounded-lg px-3 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 hover:bg-primary hover:text-primary-foreground shadow-sm"
+        >
+          Use in Visual Studio <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
       <div className="p-3 space-y-1.5">
         <div className="flex items-center gap-1.5 group/name">
