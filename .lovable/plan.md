@@ -1,25 +1,30 @@
-## Add generation summary section (mobile credit visibility)
+## Polish Summary card
 
-On mobile, the floating sticky pill hides the "20 credits · Balance N" hint (`hidden sm:inline`), so mobile users have no signal of the cost before tapping Generate. Add a recap section in the wizard form so the info is visible on every viewport.
+Refine the Summary section in `src/pages/BrandModels.tsx` (lines ~827-895) for a cleaner, calmer look.
 
-### Change
+### Visual: replace the `Users` icon placeholder
 
-Insert a new `<Section title="Summary">` between `Reference` and the admin block in the `sections` layout (`src/pages/BrandModels.tsx` around line 825), using the existing `Section` wrapper so styling matches Essentials / Appearance / Reference.
+When no reference image is uploaded, render a small overlapped trio of the same `mockModels.slice(0, 3)` previews already used in the empty state — keeps the aesthetic consistent and makes the card feel populated.
 
-Contents (all read from existing state — no new logic):
-- **Top row**: small avatar thumbnail (24×24 rounded, `previewUrl` if uploaded, else `Users` icon in `bg-muted`) + model name (or muted "New brand model" placeholder).
-- **Trait chips row** (only chips with values render — same `text-[10px] uppercase tracking-wider text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded` style already used in `ModelCard`): gender, age, ethnicity, region, body type, hair color. Skipped silently if empty.
-- **Divider** (`h-px bg-border/50 my-3`).
-- **Cost + balance row** (`flex items-center justify-between text-xs`):
-  - Left: `Sparkles` icon + `"3 variations · 20 credits"` (or `"3 variations · Free (Public)"` when `makePublic`).
-  - Right: `text-muted-foreground` → `Balance {balance}` (hidden when `makePublic`).
-- If `validationError` present (e.g. no credits), show it underneath in `text-[11px] text-destructive` — tappable when `isLowCreditsError` to open `NoCreditsModal` (reuse same handler the sticky bar uses).
+- Container: `flex items-end -space-x-2` (subtle overlap, no scale tricks).
+- Each: `w-9 h-12 rounded-md object-cover ring-2 ring-background shadow-sm`, middle one `z-10` so the stack reads cleanly.
+- When `previewUrl` exists (user uploaded a reference), show a single `w-12 h-12 rounded-lg` thumbnail instead — same as today.
 
-### Mechanics
-- Pure presentational; reads `modelName`, `previewUrl`, `gender`, `age`, `ethnicity`, `region`, `bodyType`, `hairColor`, `makePublic`, `balance`, `validationError`, `isLowCreditsError` — all already in `UnifiedGenerator` scope.
-- Render only inside `if (layout === 'sections')` branch — legacy default layout still has its `inlineFooterBlock` and is unchanged.
-- Keep the sticky bar as-is; this is additive context, not a replacement.
+### Drop the `Sparkles` icon
+
+The cost row reads cleaner without the decorative icon. Plain text only.
+
+### Tighten the layout
+
+- Header row: thumbnail + title block aligned with `items-center gap-3`. Title `text-sm font-medium`, sublabel removed (the "3 variations" info is already in the cost line below — no duplication).
+- Trait chips: smaller gap (`gap-1.5`), `mt-3.5`. Drop `morphology` ("average") from the chips when it's the default value to reduce noise — keep `gender`, `age`, `ethnicity`, plus `hairColor` when set.
+- Divider: keep `h-px bg-border/50 my-4`.
+- Cost row: `flex items-center justify-between text-xs`.
+  - Left: `<span className="font-medium text-foreground">3 variations</span><span className="text-muted-foreground"> · 20 credits</span>` (or "Free" when public).
+  - Right: `text-muted-foreground` → `Balance {balance}`.
+- Validation error stays as the small destructive line beneath.
 
 ### Out of scope
-- No changes to sticky bar, generation logic, validation, or other pages.
-- No new icons beyond the already-imported `Sparkles`, `Users`.
+- No changes outside the Summary block.
+- No new imports beyond `mockModels` (already imported).
+- `Sparkles` import stays (still used elsewhere in file — verify with grep before removing).
