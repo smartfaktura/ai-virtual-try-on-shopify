@@ -727,18 +727,32 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         </div>
       )}
 
-      <Button className="w-full gap-2" disabled={!canGenerate} onClick={handleGenerate}>
+      {validationError && (
+        <p className={cn(
+          "text-[11px] text-center",
+          isLowCreditsError ? "text-destructive" : "text-muted-foreground"
+        )}>
+          {validationError}
+        </p>
+      )}
+
+      <Button
+        className="w-full gap-2"
+        disabled={!canGenerate}
+        onClick={handleGenerate}
+        title={validationError || undefined}
+      >
         <Wand2 className="h-4 w-4" />
         {makePublic ? 'Generate Public Model (free)' : 'Generate Brand Model (20 credits)'}
       </Button>
 
-      {!makePublic && balance < 20 && (
+      {isLowCreditsError && (
         <button
           type="button"
           onClick={() => setNoCreditsOpen(true)}
           className="text-xs text-destructive text-center w-full hover:underline cursor-pointer"
         >
-          Not enough credits. You need at least 20. <span className="font-medium">Buy credits →</span>
+          Buy credits →
         </button>
       )}
       <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
@@ -767,39 +781,66 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     return (
       <div className="space-y-5 pb-32">
         <Section title="Essentials">{essentialsBlock}</Section>
-        <Section title="Appearance" hint="All optional">{appearanceBlock}</Section>
+
+        <Collapsible>
+          <Card className="p-6 border-border/60">
+            <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
+              <div className="flex items-baseline gap-3">
+                <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">Appearance</h3>
+                <span className="text-[10px] text-muted-foreground/70">All optional</span>
+              </div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+              <div className="mt-5 pt-5 border-t border-border/50">
+                {appearanceBlock}
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
         {/* Sticky footer action bar */}
         <div className="fixed bottom-0 left-0 right-0 lg:left-[260px] z-40 border-t border-border/60 bg-background/85 backdrop-blur-md">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-            <div className="text-xs flex flex-col leading-tight">
+            <div className="text-xs flex flex-col leading-tight min-w-0 flex-1">
               {!makePublic ? (
-                <>
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">20 credits</strong> · Balance{' '}
-                    <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span>
-                  </span>
-                  {balance < 20 && (
-                    <button
-                      type="button"
-                      onClick={() => setNoCreditsOpen(true)}
-                      className="text-[11px] text-destructive hover:underline text-left mt-0.5"
-                    >
-                      Not enough credits — buy more →
-                    </button>
-                  )}
-                </>
+                <span className="text-muted-foreground truncate">
+                  <strong className="text-foreground">20 credits</strong> · Balance{' '}
+                  <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span>
+                </span>
               ) : (
                 <span className="text-muted-foreground">Public model — <strong className="text-foreground">free</strong></span>
               )}
+              {validationError && (
+                <span className={cn(
+                  "text-[11px] mt-0.5 truncate",
+                  isLowCreditsError ? "text-destructive" : "text-muted-foreground/80"
+                )}>
+                  {isLowCreditsError ? (
+                    <button
+                      type="button"
+                      onClick={() => setNoCreditsOpen(true)}
+                      className="hover:underline text-left"
+                    >
+                      {validationError} →
+                    </button>
+                  ) : validationError}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Button variant="ghost" size="sm" onClick={onSuccess} disabled={generating}>
                 Cancel
               </Button>
-              <Button className="gap-2" disabled={!canGenerate} onClick={handleGenerate}>
+              <Button
+                className="gap-2"
+                disabled={!canGenerate}
+                onClick={handleGenerate}
+                title={validationError || undefined}
+              >
                 <Wand2 className="h-4 w-4" />
                 {makePublic ? 'Generate (free)' : 'Generate Brand Model'}
               </Button>
