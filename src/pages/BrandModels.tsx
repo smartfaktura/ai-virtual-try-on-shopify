@@ -23,7 +23,7 @@ import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { mockModels } from '@/data/mockData';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
@@ -769,15 +769,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   // ── Sections layout (premium wizard) ──
   if (layout === 'sections') {
-    const Section = ({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) => (
-      <Card className="p-4 sm:p-6 border-border/60">
-        <div className="flex items-baseline justify-between mb-5 pb-3 border-b border-border/50">
-          <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">{title}</h3>
-          {hint && <span className="text-[10px] text-muted-foreground/70">{hint}</span>}
-        </div>
-        {children}
-      </Card>
-    );
+
 
     return (
       <div className="space-y-5 pb-32">
@@ -804,43 +796,45 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
         {/* Sticky footer action bar — matches Generate (Product Visuals) pattern */}
-        <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-30 bg-card border-t border-border p-4 shadow-lg">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-            <div className="text-xs flex flex-col leading-tight min-w-0 flex-1">
-              {!makePublic ? (
-                <span className="text-muted-foreground truncate">
-                  <strong className="text-foreground">20 credits</strong> · Balance{' '}
-                  <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span>
-                </span>
-              ) : (
-                <span className="text-muted-foreground">Public model — <strong className="text-foreground">free</strong></span>
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-30 lg:left-60">
+          {validationError && (
+            <button
+              type="button"
+              onClick={isLowCreditsError ? () => setNoCreditsOpen(true) : undefined}
+              disabled={!isLowCreditsError}
+              className={cn(
+                "w-full bg-destructive/10 border-b border-destructive/20 text-destructive text-[11px] px-4 py-1.5 text-center",
+                isLowCreditsError && "hover:bg-destructive/15 cursor-pointer"
               )}
-              {validationError && (
-                <span className={cn(
-                  "text-[11px] mt-0.5 truncate",
-                  isLowCreditsError ? "text-destructive" : "text-muted-foreground/80"
-                )}>
-                  {isLowCreditsError ? (
-                    <button
-                      type="button"
-                      onClick={() => setNoCreditsOpen(true)}
-                      className="hover:underline text-left"
-                    >
-                      {validationError} →
-                    </button>
-                  ) : validationError}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="ghost" size="sm" onClick={onSuccess} disabled={generating} className="flex-1 sm:flex-none">
-                Cancel
-              </Button>
+            >
+              {validationError}{isLowCreditsError ? ' →' : ''}
+            </button>
+          )}
+          <div className="p-4">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{modelName.trim() || 'New brand model'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {makePublic
+                      ? 'Public model · free'
+                      : <>20 credits · Balance <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span></>
+                    }
+                  </p>
+                </div>
+              </div>
               <Button
-                className="flex-1 sm:flex-none min-w-[120px]"
                 disabled={!canGenerate}
                 onClick={handleGenerate}
                 title={validationError || undefined}
+                className="shrink-0"
               >
                 {makePublic ? 'Generate · free' : 'Generate'}
               </Button>
@@ -1028,15 +1022,11 @@ export default function BrandModels() {
       ) : models.length === 0 ? (
         <div className="flex flex-col items-center text-center py-24 px-4 max-w-lg mx-auto gap-7">
           <div className="flex items-end justify-center">
-            {[
-              'models/model-female-slim-nordic.jpg',
-              'models/model-male-athletic-european.jpg',
-              'models/model-female-athletic-indian.jpg',
-            ].map((path, i) => (
+            {mockModels.slice(0, 3).map((m, i) => (
               <img
-                key={path}
-                src={getLandingAssetUrl(path)}
-                alt=""
+                key={m.modelId}
+                src={m.previewUrl}
+                alt={m.name}
                 loading="lazy"
                 className={cn(
                   "w-24 aspect-[3/4] rounded-xl object-cover shadow-sm ring-2 ring-background",
