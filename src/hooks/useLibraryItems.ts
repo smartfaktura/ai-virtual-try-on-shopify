@@ -67,10 +67,18 @@ function jobsToRawItems(jobsData: any[], q: string): RawItem[] {
         ? `${workflowName} — ${productTitle}`
         : workflowName || productTitle || 'Generated';
       const promptText = job.prompt_final || '';
+      const sceneName = (job.scene_name || '').toLowerCase();
+      const modelName = (job.model_name || '').toLowerCase();
+      const productName = ((job as any).product_name || '').toLowerCase();
+      const workflowSlug = (job.workflow_slug || '').toLowerCase();
 
       if (q && !label.toLowerCase().includes(q) &&
           !promptText.toLowerCase().includes(q) &&
-          !productTitle.toLowerCase().includes(q)) continue;
+          !productTitle.toLowerCase().includes(q) &&
+          !sceneName.includes(q) &&
+          !modelName.includes(q) &&
+          !productName.includes(q) &&
+          !workflowSlug.includes(q)) continue;
 
       items.push({
         url,
