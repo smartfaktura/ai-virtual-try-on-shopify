@@ -749,28 +749,26 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
   };
 
   return (
-    <Card className="overflow-hidden group border-border/60 hover:border-border transition-colors duration-150">
+    <Card className="overflow-hidden group border-border/50 hover:border-border transition-all duration-200 hover:shadow-md bg-card">
       <div className="aspect-[3/4] relative bg-muted">
         <img src={getOptimizedUrl(model.image_url, { quality: 60 })} alt={model.name} className="w-full h-full object-cover" />
         <button
           type="button"
           onClick={() => onDelete(model.id)}
-          className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-150 hover:bg-destructive hover:text-destructive-foreground"
+          className="absolute top-1.5 right-1.5 bg-background/70 backdrop-blur-md rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-150 hover:bg-destructive hover:text-destructive-foreground"
+          aria-label="Delete model"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </button>
-        <Badge className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground backdrop-blur-sm text-[9px] font-bold uppercase tracking-wider">
-          Brand Model
-        </Badge>
         <Link
           to={`/app/workflows?model=${model.id}`}
-          className="absolute inset-x-2 bottom-2 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 bg-background/95 backdrop-blur-sm rounded-lg px-3 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 hover:bg-primary hover:text-primary-foreground shadow-sm"
+          className="absolute inset-x-1.5 bottom-1.5 translate-y-1 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 bg-background/95 backdrop-blur-md rounded-md px-2 py-1.5 text-[10px] font-semibold tracking-wide flex items-center justify-center gap-1 hover:bg-primary hover:text-primary-foreground shadow-sm"
         >
-          Use in Visual Studio <ArrowRight className="h-3 w-3" />
+          Use in Studio <ArrowRight className="h-2.5 w-2.5" />
         </Link>
       </div>
-      <div className="p-3 space-y-1.5">
-        <div className="flex items-center gap-1.5 group/name">
+      <div className="px-2.5 py-2 space-y-1.5">
+        <div className="flex items-center gap-1 group/name min-h-[18px]">
           {isEditing ? (
             <input
               ref={inputRef}
@@ -779,25 +777,25 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
               onBlur={handleSave}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') { setEditName(model.name); setIsEditing(false); } }}
               maxLength={40}
-              className="font-semibold text-sm w-full bg-transparent border-b border-primary outline-none"
+              className="font-medium text-[13px] w-full bg-transparent border-b border-primary outline-none"
             />
           ) : (
             <>
-              <p className="font-semibold text-sm truncate flex-1">{model.name}</p>
+              <p className="font-medium text-[13px] truncate flex-1">{model.name}</p>
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
                 className="opacity-0 group-hover/name:opacity-100 transition-opacity p-0.5 hover:text-primary"
+                aria-label="Rename model"
               >
-                <Pencil className="h-3 w-3" />
+                <Pencil className="h-2.5 w-2.5" />
               </button>
             </>
           )}
         </div>
         <div className="flex flex-wrap gap-1">
-          {model.gender && <Badge variant="outline" className="text-[10px] border-border/60">{model.gender}</Badge>}
-          {model.ethnicity && <Badge variant="outline" className="text-[10px] border-border/60">{model.ethnicity}</Badge>}
-          {model.age_range && <Badge variant="outline" className="text-[10px] border-border/60">{model.age_range}</Badge>}
+          {model.gender && <span className="text-[9px] uppercase tracking-wider text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded">{model.gender}</span>}
+          {model.ethnicity && <span className="text-[9px] uppercase tracking-wider text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded">{model.ethnicity}</span>}
         </div>
       </div>
     </Card>
