@@ -198,6 +198,17 @@ function BrandedLoadingState() {
   );
 }
 
+/* ── Section card (hoisted to module scope to prevent input remount/focus loss) ── */
+const Section = ({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) => (
+  <Card className="p-4 sm:p-6 border-border/60">
+    <div className="flex items-baseline justify-between mb-5 pb-3 border-b border-border/50">
+      <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">{title}</h3>
+      {hint && <span className="text-[10px] text-muted-foreground/70">{hint}</span>}
+    </div>
+    {children}
+  </Card>
+);
+
 /* ── Unified Generator ── */
 export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSuccess: () => void; isAdmin: boolean; layout?: 'card' | 'sections' }) {
   // Model name

@@ -57,7 +57,14 @@ export function StudioChat() {
   }, [hiddenByPage, isOpen]);
 
   const isProductImagesPage = location.pathname === '/app/generate/product-images';
+  // Hard-hide on new brand model page across all viewports
+  if (location.pathname === '/app/models/new') return null;
+
   const hideOnMobile = isMobile && (
+    location.pathname === '/app/models'
+  );
+  if (hideOnMobile) return null;
+
     location.pathname === '/app/creative-drops' ||
     location.pathname === '/app/freestyle' ||
     location.pathname === '/app/perspectives' ||
