@@ -3,6 +3,18 @@
  * This is necessary for AI models to access local/relative images.
  */
 export async function convertImageToBase64(imageUrl: string): Promise<string> {
+  // Reject obviously invalid inputs up front to avoid silently base64-ing
+  // SPA fallback HTML (e.g. when a metadata flag like 'generator' leaks through).
+  if (
+    !imageUrl ||
+    (!/^https?:\/\//i.test(imageUrl) &&
+      !imageUrl.startsWith('data:') &&
+      !imageUrl.startsWith('blob:') &&
+      !imageUrl.startsWith('/'))
+  ) {
+    throw new Error(`[imageUtils] Invalid image URL: ${imageUrl}`);
+  }
+
   // If already base64 or data URL - return as is
   if (imageUrl.startsWith('data:')) {
     return imageUrl;
@@ -20,7 +32,18 @@ export async function convertImageToBase64(imageUrl: string): Promise<string> {
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status}`);
     }
-    
+
+    const contentType = response.headers.get('content-type') || '';
+    if (
+      contentType &&
+      !contentType.startsWith('image/') &&
+      contentType !== 'application/octet-stream'
+    ) {
+      throw new Error(
+        `[imageUtils] Expected image response, got content-type "${contentType}" for ${imageUrl}`,
+      );
+    }
+
     const blob = await response.blob();
     
     return new Promise((resolve, reject) => {
