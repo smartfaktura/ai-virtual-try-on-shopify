@@ -1,82 +1,103 @@
-## Scope
+## Audit findings — `/app/models` and `/app/models/new`
 
-Six small fixes across `/app/models` and `/app/models/new`.
-
----
-
-### 1. Fix empty state on `/app/models`
-
-Currently the empty state shows AND the `PageHeader` "Create New Model" button still renders above it → two CTAs.
-
-- When `models.length === 0` (paid users), suppress the header's "Create New Model" action — render `PageHeader` without the button so only the single "Create your first model" pill in the empty state remains.
-- Polish empty-state copy/visual to match the platform's editorial restraint:
-  - Slightly lighter title weight (`font-medium`) to match other surfaces
-  - Wider body text container, calmer line-height
-  - Subtle dashed-border illustration tile (matches the dashed "New model" tile in the grid) instead of the filled muted square
-  - Single primary pill CTA stays: "Create your first model"
-
-### 2. `Create New Model` → header CTA stays only when grid is populated (no redundancy fix needed beyond #1)
-
-### 3. Appearance section collapsed by default
-
-In `UnifiedGenerator` sections layout, wrap the **Appearance** section in a collapsible (using existing `Collapsible` primitive). Header row shows title + "All optional" hint + chevron. Collapsed by default. Reference section stays expanded (it's now always-open by design). Essentials always expanded.
-
-### 4. Age inline with the other essentials, not in its own column
-
-Right now Essentials uses `grid sm:grid-cols-2` putting Gender / Age side-by-side and Region / Morphology stacked below. Restructure to a single coherent rhythm:
-
-- Row 1: **Model name** (full width)
-- Row 2: **Gender** chips (full width, compact)
-- Row 3: **Age** slider (full width — slider needs the room and reads more naturally horizontal)
-- Row 4: **Region / Look** select (full width)
-- Row 5: **Morphology** chips (full width)
-
-Removes the awkward orphaned column and gives the slider proper breathing room.
-
-### 5. Model name length restriction
-
-- Hard cap input `maxLength={32}` (was 40)
-- Add a small character counter under the input (`{modelName.length}/32`) that turns muted → warning at ≥28
-- Minimum 2 chars validated for generation
-
-### 6. Validation + disabled-button hint message
-
-Today the Generate button greys out silently when something is missing. Add a derived `validationError` string with priority:
-
-1. `!modelName.trim() || modelName.trim().length < 2` → "Add a model name (min 2 characters)"
-2. `uploadedUrl && !termsAccepted` → "Confirm the content & rights policy to continue"
-3. `isUploading` → "Waiting for upload to finish…"
-4. `!makePublic && balance < 20` → "Not enough credits — top up to continue" (this one keeps the existing buy-credits link)
-5. otherwise `null`
-
-UI:
-- Sticky footer (sections layout): when `validationError` is set, show it as a small inline message left of the Cancel/Generate buttons, in `text-destructive/80` for the credit case and `text-muted-foreground` for the other cases. Button stays disabled.
-- Also show it inside the inline (legacy) footer for symmetry.
-- Add a `title={validationError}` tooltip attribute on the disabled Generate button so hover also reveals the reason.
-
-Also tighten `canGenerate` to require `modelName.trim().length >= 2`.
-
-### 7. Content policy copy
-
-Drop the sentence `"Violations may result in account suspension."` from the reference policy callout. Keep the rest.
+Reviewed both pages against the rest of the `/app` shell (Catalog Studio, Bundle Visuals, Generate). Fixes grouped by surface.
 
 ---
 
-## Files
+### A. `/app/models/new` — header
 
+**Issues**
+- Title "Create new model" — vague verb. Other create flows in the app use noun-led titles ("New Brand Model", "New Catalog", "New Bundle"). Brand mention is also missing.
+- Floating "20 credits per generation" pill on the right duplicates the sticky footer (which already shows cost + balance live).
+- Subtitle "Describe your ideal model" is generic.
+- Local back link + custom h1 diverges from `PageHeader.backAction` used everywhere else in the app — visual inconsistency.
+
+**Fixes**
+- Title → **"New brand model"** (matches "New catalog" / "New bundle" pattern).
+- Subtitle → **"Describe the person you want VOVV.AI to create"** (more specific, human).
+- Remove the credit pill from the header entirely — the sticky bar is the single source of truth.
+- Replace the custom header block with the standard `<PageHeader title subtitle backAction>` component so the back-action button matches Brand Scenes / Catalog / Add Product. This also restores keyboard semantics (real `<Button>` vs link).
+
+### B. `/app/models/new` — sticky action bar
+
+**Issues**
+- Bar currently uses `fixed bottom-0 left-0 right-0 lg:left-[260px]` with `bg-background/85 backdrop-blur-md` and a `max-w-3xl` inner container — different from every other workflow:
+  - **BundleVisuals**: `border-t border-border bg-background/95 backdrop-blur-sm`, `max-w-5xl`, simple Back/Next.
+  - **Generate**: `bg-card border-t border-border shadow-lg`, `lg:left-60`, content + CTA.
+- Inconsistent inner width (`max-w-3xl` vs the rest of the app's `max-w-5xl/7xl`).
+- The error/validation line wraps inside a tight column; not aligned with the cost row.
+- The `lg:left-[260px]` magic number doesn't match the sidebar (others use `lg:left-60` = 240px) → bar is offset slightly on desktop.
+
+**Fixes**
+- Adopt the **BundleVisuals pattern** verbatim for visual consistency:
+  - `fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm`
+  - Inner: `max-w-5xl mx-auto flex items-center justify-between px-4 py-3`
+  - Use `lg:left-60` instead of `lg:left-[260px]` to match `Generate.tsx`.
+- Layout left → right:
+  - **Left**: stacked, single column — line 1 cost/balance (`20 credits · Balance N`), line 2 validation hint (when present) or "Public model — free".
+  - **Right**: `Cancel` (ghost) + primary `Generate brand model` (with `<Wand2/>` icon kept).
+- Keep `pb-32` page padding so content clears the bar.
+
+### C. `/app/models/new` — mobile experience
+
+**Issues**
+- Section cards use `p-6` → uncomfortably tight horizontal padding on small screens, especially with the model-name counter pushed against the edge.
+- Sticky footer has `px-4 sm:px-6` but inner buttons currently wrap awkwardly on 360px (cost text + two buttons in one row).
+- "Reference image" content-policy callout is fairly tall; the consent checkbox label + policy stack makes the page feel long on mobile.
+- The dashed upload tile has `p-8` which feels oversized on phones.
+- `BrandedLoadingState` has `w-32 h-32` avatar block + 6 dots — fine but `max-w-xs` info box gets clipped padding on 320px.
+
+**Fixes**
+- Section card: `p-4 sm:p-6`.
+- Sticky footer at <`sm`: stack vertically — cost row on top, buttons on a second row taking full width (`flex-col sm:flex-row gap-2 sm:gap-4`). Buttons go `flex-1 sm:flex-none`.
+- Upload dropzone: `p-6 sm:p-8`.
+- Header: title `text-2xl sm:text-3xl` (already PageHeader default — confirms switch in A).
+- Loading state: `max-w-xs` → `max-w-[280px] sm:max-w-xs`.
+
+### D. `/app/models` — grid + page polish
+
+**Issues**
+- Header CTA reads **"Create New Model"** — Title Case + vague. Sidebar and other CTAs use sentence case ("Create visuals", "Add product").
+- Dashed "New model" tile label uses "+ New model" lowercase, but the page CTA says "Create New Model" — two different names for the same action.
+- `ModelCard` hover pill says "Use in Studio" but the platform terminology is **Visual Studio** (core memory rule). Should match.
+- `ModelCard` chips bg `bg-muted/50` slightly heavier than other chips in the app — minor.
+
+**Fixes**
+- Page header CTA → **"New brand model"** (sentence case, matches /new page title).
+- Empty-state CTA → **"Create your first brand model"** (was "Create your first model").
+- Dashed tile label → **"New brand model"**.
+- ModelCard hover pill → **"Use in Visual Studio"** (matches sidebar terminology rule).
+
+### E. Misc consistency
+
+- Empty-state body copy currently has no terminal period — correct per memory rule (single-sentence subtitle). Keep.
+- `UnifiedGenerator` legacy `inlineFooterBlock` button label still says "Generate Brand Model (20 credits)" — fine for the (unused now?) card layout; leave.
+- "Reference image" callout sentence currently ends with "any reference you upload." — keep (multi-sentence body).
+- Make sure the new title casing follows the no-terminal-period rule for short subtitles (it does).
+
+---
+
+## Files to touch
+
+- `src/pages/BrandModelNew.tsx`
+  - Replace custom header with `PageHeader` (`title="New brand model"`, `subtitle="Describe the person you want VOVV.AI to create"`, `backAction={{ content: 'Brand Models', onAction: …}}`).
+  - Drop the credit pill.
 - `src/pages/BrandModels.tsx`
-  - Empty-state block (~line 971-987): refine layout/typography, switch tile to dashed style
-  - Page header (~line 930-938): only render the `<Button>` action when `models.length > 0`
-  - `UnifiedGenerator`:
-    - `essentialsBlock`: restructure to single-column ordering above
-    - `modelName` `Input`: `maxLength={32}` + counter below
-    - Add `validationError` derived value; tighten `canGenerate` to require name length
-    - Wrap Appearance section in `Collapsible` (sections layout only), default closed
-    - Sticky footer + inline footer: surface `validationError` next to the Generate button; pass to `title=` on the button
-    - Reference policy: remove the "Violations may result in account suspension." sentence
+  - Header CTA copy: `Create New Model` → `New brand model`.
+  - Empty-state CTA copy: `Create your first model` → `Create your first brand model`.
+  - Dashed tile label: `New model` → `New brand model` (verify current copy).
+  - `ModelCard` hover pill: `Use in Studio` → `Use in Visual Studio`.
+  - `UnifiedGenerator` sticky footer (sections layout):
+    - Use Bundle-style classes: `border-border bg-background/95 backdrop-blur-sm` (drop `border-border/60` and `/85`).
+    - `lg:left-[260px]` → `lg:left-60`.
+    - Inner container `max-w-5xl`.
+    - Wrap left column at `<sm`; stack buttons full-width on mobile (`flex-col sm:flex-row`, `flex-1 sm:flex-none` on the two buttons).
+  - Section card padding: `p-6` → `p-4 sm:p-6`.
+  - Reference dropzone: `p-8` → `p-6 sm:p-8`.
+  - `BrandedLoadingState` info box max width: `max-w-xs` → `max-w-[280px] sm:max-w-xs`.
 
 ## Out of scope
 
-- No backend / edge function / DB changes (the existing edge function already validates server-side; this is purely client-side UX clarification)
-- No `ModelCard` grid changes
-- No changes to the upgrade-gated (free) view
+- No DB / edge function changes.
+- No restructure of fields inside the form (already done in prior pass).
+- No changes to free/upgrade-gated view.
