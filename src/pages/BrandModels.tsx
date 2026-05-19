@@ -10,7 +10,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -105,15 +105,13 @@ const LOADING_TIPS = [
   "Almost there — finalizing your brand model...",
 ];
 
-const LOADING_AVATARS = TEAM_MEMBERS.slice(0, 6);
+const FALLBACK_AVATAR = TEAM_MEMBERS[0]?.avatar;
 
-function BrandedLoadingState() {
+function BrandedLoadingState({ previewUrl }: { previewUrl?: string }) {
   const [tipIndex, setTipIndex] = useState(0);
-  const [activeAvatar, setActiveAvatar] = useState(0);
   const [elapsed, setElapsed] = useState(0);
 
   const estimateSeconds = 90;
-  const estimateLabel = '~1–2 min';
   const ratio = elapsed / estimateSeconds;
   const progress = ratio <= 1 ? Math.min(ratio * 90, 90) : Math.min(90 + (ratio - 1) * 5, 95);
 
@@ -126,75 +124,48 @@ function BrandedLoadingState() {
     const tipTimer = setInterval(() => {
       setTipIndex((i) => (i + 1) % LOADING_TIPS.length);
     }, 3500);
-    const avatarTimer = setInterval(() => {
-      setActiveAvatar((i) => (i + 1) % LOADING_AVATARS.length);
-    }, 2200);
-    const elapsed = setInterval(() => setElapsed((s) => s + 1), 1000);
-    return () => { clearInterval(tipTimer); clearInterval(avatarTimer); clearInterval(elapsed); };
+    const elapsedTimer = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => { clearInterval(tipTimer); clearInterval(elapsedTimer); };
   }, []);
 
+  const avatarSrc = previewUrl || (FALLBACK_AVATAR ? getOptimizedUrl(FALLBACK_AVATAR, { quality: 60 }) : '');
+
   return (
-    <div className="flex flex-col items-center justify-center py-12 gap-6">
-      {/* Team avatar carousel */}
-      <div className="relative w-32 h-32">
-        {LOADING_AVATARS.map((member, i) => (
-          <div
-            key={member.name}
-            className={cn(
-              "absolute inset-0 flex items-center justify-center transition-all duration-700",
-              i === activeAvatar ? "opacity-100 scale-100" : "opacity-0 scale-90"
-            )}
-          >
-            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
-              <img
-                src={getOptimizedUrl(member.avatar, { quality: 60 })}
-                alt={member.name}
-                className="w-full h-full object-cover"
-              />
+    <Card>
+      <CardContent className="p-10 flex flex-col items-center gap-6">
+        <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle">
+          {avatarSrc ? (
+            <img src={avatarSrc} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+              <Users className="w-7 h-7 text-primary" />
             </div>
-          </div>
-        ))}
-        {/* Pulse ring */}
-        <div className="absolute inset-0 rounded-2xl border-2 border-primary/10 animate-pulse" />
-      </div>
-
-      {/* Active member name */}
-      <div className="text-center space-y-0.5">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">
-          {LOADING_AVATARS[activeAvatar]?.name} · {LOADING_AVATARS[activeAvatar]?.expertiseTag}
-        </p>
-      </div>
-
-      <div className="text-center space-y-2">
-        <p className="text-sm font-semibold text-foreground">
-          Generating 3 model variations…
-        </p>
-        <p className="text-xs text-muted-foreground h-4 transition-all duration-300">{overtimeMsg || LOADING_TIPS[tipIndex]}</p>
-      </div>
-
-      {/* Progress bar + time info */}
-      <div className="w-full max-w-xs space-y-2">
-        <Progress value={progress} className="h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear" />
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>Est. {estimateLabel}</span>
-          <span className="font-mono">{elapsed}s elapsed</span>
+          )}
         </div>
-      </div>
 
-      <div className="flex gap-1.5">
-        {LOADING_TIPS.map((_, i) => (
-          <div key={i} className={cn("w-1.5 h-1.5 rounded-full transition-colors duration-300", i === tipIndex ? "bg-primary" : "bg-muted")} />
-        ))}
-      </div>
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Creating your brand model…</h2>
+          <p className="text-sm text-muted-foreground mt-1 h-5 transition-all duration-300">
+            {overtimeMsg || LOADING_TIPS[tipIndex]}
+          </p>
+        </div>
 
-      {/* Server-side info */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 border border-border/40 max-w-xs">
-        <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          Generation happens server-side. You can safely navigate away — your model will appear here when ready.
-        </p>
-      </div>
-    </div>
+        <div className="w-full max-w-md space-y-2">
+          <Progress value={progress} className="h-2 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear" />
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Est. ~1–2 min</span>
+            <span className="font-mono">{elapsed}s elapsed</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 border border-border/40 max-w-md">
+          <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Stay on this page — you'll pick your favorite of 3 variations next
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -441,78 +412,82 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   // ── Variation picker screen ──
   if (variations.length > 0) {
     return (
-      <div className="space-y-5">
-        <div className="text-center space-y-1">
-          <h3 className="font-semibold text-base">Choose the Best Variation</h3>
-          <p className="text-xs text-muted-foreground">{variations.length} variations generated · Select your favorite and publish</p>
-        </div>
+      <Card>
+        <CardContent className="p-8 sm:p-10 space-y-8">
+          <div className="text-center space-y-1.5">
+            <h3 className="font-semibold text-lg">Choose the Best Variation</h3>
+            <p className="text-xs text-muted-foreground">
+              {variations.length} variations generated · Select your favorite and publish
+            </p>
+          </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          {variations.map((url, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setSelectedVariation(i)}
-              className={cn(
-                "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-200",
-                selectedVariation === i
-                  ? "border-primary shadow-lg ring-2 ring-primary/20 scale-[1.02]"
-                  : "border-border/60 hover:border-border opacity-80 hover:opacity-100"
-              )}
-            >
-              <img src={url} alt={`Variation ${i + 1}`} className="w-full h-full object-cover" />
-              {selectedVariation === i && (
-                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
-                  <Check className="h-3.5 w-3.5" />
+          <div className="grid grid-cols-3 gap-4 sm:gap-5 mt-2">
+            {variations.map((url, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setSelectedVariation(i)}
+                className={cn(
+                  "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-200",
+                  selectedVariation === i
+                    ? "border-primary shadow-lg ring-2 ring-primary/20 scale-[1.02]"
+                    : "border-border/60 hover:border-border opacity-80 hover:opacity-100"
+                )}
+              >
+                <img src={url} alt={`Variation ${i + 1}`} className="w-full h-full object-cover" />
+                {selectedVariation === i && (
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                )}
+                <div className="absolute bottom-2 left-2">
+                  <Badge className={cn(
+                    "text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm",
+                    selectedVariation === i ? "bg-primary/90 text-primary-foreground" : "bg-background/80 text-foreground"
+                  )}>
+                    #{i + 1}
+                  </Badge>
                 </div>
-              )}
-              <div className="absolute bottom-2 left-2">
-                <Badge className={cn(
-                  "text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm",
-                  selectedVariation === i ? "bg-primary/90 text-primary-foreground" : "bg-background/80 text-foreground"
-                )}>
-                  #{i + 1}
-                </Badge>
-              </div>
-            </button>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={handleCancelVariations}
-            disabled={publishing}
-          >
-            Cancel
-          </Button>
-          {makePublic ? (
+          <div className="flex gap-3 pt-4 border-t border-border/50">
             <Button
-              className="flex-1 gap-2"
-              onClick={handlePublishVariation}
+              variant="outline"
+              className="flex-1"
+              onClick={handleCancelVariations}
               disabled={publishing}
             >
-              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
-              Publish as Public Model
+              Cancel
             </Button>
-          ) : (
-            <Button
-              className="flex-1 gap-2"
-              onClick={handleSaveBrandModel}
-              disabled={publishing}
-            >
-              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              Save as Brand Model (20 credits)
-            </Button>
-          )}
-        </div>
-      </div>
+            {makePublic ? (
+              <Button
+                className="flex-1 gap-2"
+                onClick={handlePublishVariation}
+                disabled={publishing}
+              >
+                {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+                Publish as Public Model
+              </Button>
+            ) : (
+              <Button
+                className="flex-1 gap-2"
+                onClick={handleSaveBrandModel}
+                disabled={publishing}
+              >
+                {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                Save as Brand Model
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (generating) {
-    return <BrandedLoadingState />;
+    return <BrandedLoadingState previewUrl={previewUrl ?? undefined} />;
   }
 
   // ── Form content blocks (shared between layouts) ──
@@ -816,7 +791,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
         <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          Generation happens server-side. You can safely navigate away — your model will appear here when ready.
+          Stay on this page — you'll pick your favorite of 3 variations next
         </p>
       </div>
     </div>
