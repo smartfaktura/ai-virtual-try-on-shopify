@@ -131,7 +131,17 @@ function freestyleToRawItems(
       : (userPrompt ? userPrompt.slice(0, 40) + (userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
     const displayLabel = wfLabel || freestyleLabel;
 
-    if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
+    const modelNameL = (modelInfo.name || '').toLowerCase();
+    const sceneNameL = (sceneInfo.name || '').toLowerCase();
+    const userPromptL = (userPrompt || '').toLowerCase();
+    const wfLabelL = (wfLabel || '').toLowerCase();
+
+    if (q && !displayLabel.toLowerCase().includes(q) &&
+        !f.prompt.toLowerCase().includes(q) &&
+        !userPromptL.includes(q) &&
+        !wfLabelL.includes(q) &&
+        !modelNameL.includes(q) &&
+        !sceneNameL.includes(q)) continue;
 
     items.push({
       url: f.image_url,
