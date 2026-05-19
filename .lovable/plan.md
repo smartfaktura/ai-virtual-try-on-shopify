@@ -1,87 +1,42 @@
-## Fix runaway credit refill in `check-subscription`
+## Add "Brand Scenes" — Coming Soon
 
-### The bug (confirmed in production)
-`supabase/functions/check-subscription/index.ts` line 284 detects new billing cycles with a **string comparison**:
+Add a new nav item in the sidebar's **Assets** group that links to a dedicated "coming soon" page explaining that brands will soon be able to create their own custom scenes.
 
-```ts
-periodEnd !== currentProfile?.current_period_end
-```
+### 1. Sidebar nav (`src/components/app/AppShell.tsx`)
 
-- Postgres returns: `2026-06-01 20:56:46+00`
-- Stripe (re-serialized): `2026-06-01T20:56:46.000Z`
-
-Same moment, different text format → comparison is **always true** → `reset_plan_credits` fires on every call to `check-subscription` (login, page load, Stripe poll). Paid users get refilled to the full plan allotment many times per day.
-
-Live evidence:
-- Logs: `"oldPeriodEnd":"2026-06-15T21:51:15+00:00","newPeriodEnd":"2026-06-15T21:51:15.000Z"` → "Billing cycle rolled over" fires repeatedly within the same second
-- lvsa0902@gmail.com (Growth, 1,500/mo): spent ~14,000 credits in 18 days, `credits_renewed_at` keeps resetting to "today"
-
-### The correct rule
-**Refill credits ONLY when Stripe has successfully charged a new invoice and advanced the billing period.**
-
-That single source of truth is Stripe's `current_period_end` moving **strictly forward**. Stripe only advances that field after a successful payment of the renewal invoice — if a charge fails, the subscription goes to `past_due` and `current_period_end` stays put. So the right gate is:
-
-1. Subscription status is **active or trialing** (NOT `past_due`, `unpaid`, `incomplete`)
-2. Plan is unchanged
-3. `new current_period_end` > `old current_period_end` (compared as timestamps, not strings)
-
-No timers, no 25-day windows — just "did Stripe actually renew?".
-
-### The fix
-**One file, one condition:** `supabase/functions/check-subscription/index.ts`, around lines 277–296. Replace the string check with:
+Add a new item to the `Assets` group, between **Brand Models** and **Library**:
 
 ```ts
-const oldPeriodMs = currentProfile?.current_period_end
-  ? new Date(currentProfile.current_period_end).getTime()
-  : 0;
-const newPeriodMs = periodEnd ? new Date(periodEnd).getTime() : 0;
-
-// Only refill when Stripe has CHARGED a new cycle:
-//  - same plan (plan changes handled separately)
-//  - subscription is paid (active/trialing — NOT past_due/unpaid)
-//  - Stripe moved current_period_end strictly forward
-const isPaidStatus =
-  subscriptionStatus === "active" ||
-  subscriptionStatus === "trialing" ||
-  subscriptionStatus === "canceling"; // canceling = still paid through period end
-
-if (
-  plan === currentProfile?.plan &&
-  plan !== "free" &&
-  planInfo.credits > 0 &&
-  isPaidStatus &&
-  newPeriodMs > oldPeriodMs        // ← real renewal, not string-format noise
-) {
-  logStep("Billing cycle rolled over — resetting credits", {
-    plan,
-    oldPeriodEnd: currentProfile?.current_period_end,
-    newPeriodEnd: periodEnd,
-    allotment: planInfo.credits,
-  });
-  await supabaseAdmin.rpc("reset_plan_credits", {
-    p_user_id: userId,
-    p_plan_credits: planInfo.credits,
-  });
-}
+{ label: 'Brand Scenes', icon: Mountain, path: '/app/brand-scenes' }
 ```
 
-Behavior after fix:
-- Same instant, different format → numerically equal → **no reset** ✅
-- Failed charge / `past_due` → period_end doesn't advance → **no reset** ✅
-- Stripe successfully renewed → period_end advances → reset fires **exactly once** per cycle ✅
-- Plan upgrades/downgrades → handled by the existing separate branch, unaffected ✅
-- First-time sync (DB has `null`) → `oldPeriodMs = 0`, fresh paid subscription initializes once ✅
+- Import `Mountain` from `lucide-react`
+- Add prefetch entry in `prefetchMap` for `/app/brand-scenes`
 
-### Scope (what is NOT touched)
-- No DB migration, no RPC changes
-- No changes to Stripe checkout, webhooks, top-up flow (`add_purchased_credits` is correct)
-- No retroactive clawback of credits already given to users
-- No 25-day timer (you correctly rejected that — semantics should be "Stripe charged", not "time passed")
+### 2. New page (`src/pages/BrandScenes.tsx`)
 
-### Rollout
-1. Edit `supabase/functions/check-subscription/index.ts` — auto-deploys
-2. Verify in edge function logs: "Billing cycle rolled over" should only appear for users whose period actually advanced (it should essentially **stop appearing** for the next several days, then reappear once per user on their real renewal date)
-3. Spot-check lvsa0902, teleportwatches, haleigh.james accounts — `credits_renewed_at` should stop moving until their actual `current_period_end`
+A clean, minimalist "coming soon" page following the project's luxury-restraint aesthetic:
 
-### Open question for you
-lvsa0902@gmail.com currently sits at exactly 1,500 (their Growth allotment). The fix stops future over-refills immediately. Leave their balance as-is (goodwill), or reset to a lower number? I'd recommend leaving it — the bug was on us.
+- `SEOHead` with `noindex`, title "Brand Scenes — VOVV.AI"
+- Page header with title **"Brand Scenes"** and subtitle: *Coming soon — create your own custom scenes for your brand*
+- Centered card explaining the feature:
+  - Icon (Mountain in primary/10 circle)
+  - Heading: "Custom scenes are coming soon"
+  - Body: Brands will soon be able to design and save their own signature scenes — backgrounds, environments, and moods that match their visual identity. Generate any product inside scenes built exclusively for your brand.
+  - "What to expect" bullets: Design your own scenes from references or prompts · Save and reuse across all products · Share across your team
+  - Secondary CTA back to **Visual Studio** (`/app/workflows`) so users have somewhere to go
+- Inter font, semantic tokens only, no terminal periods in headers/subtitles per project memory
+
+### 3. Route (`src/App.tsx`)
+
+- Lazy import: `const BrandScenes = lazy(() => import('@/pages/BrandScenes'))`
+- Add route inside `/app/*` Routes: `<Route path="/brand-scenes" element={<BrandScenes />} />`
+
+### 4. Studio Chat sync
+
+Per the `studio-chat-knowledge-source` memory, sidebar label changes must be reflected in the studio-chat knowledge. After implementation, add a brief mention of "Brand Scenes (coming soon)" to the studio-chat SYSTEM_PROMPT so the assistant knows about it.
+
+### Out of scope
+
+- No backend work, no DB tables, no actual custom-scene creation UI — purely a placeholder page.
+- No changes to the Library or Products pages.
