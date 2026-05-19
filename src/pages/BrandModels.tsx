@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
@@ -25,7 +26,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
   Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
-  Pencil, Info,
+  Pencil, Info, Plus, ArrowRight,
 } from 'lucide-react';
 
 /* ── Plan gate upgrade prompt ── */
@@ -196,7 +197,7 @@ function BrandedLoadingState() {
 }
 
 /* ── Unified Generator ── */
-function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdmin: boolean }) {
+export function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdmin: boolean }) {
   // Model name
   const [modelName, setModelName] = useState('');
 
@@ -761,6 +762,12 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
         <Badge className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground backdrop-blur-sm text-[9px] font-bold uppercase tracking-wider">
           Brand Model
         </Badge>
+        <Link
+          to={`/app/workflows?model=${model.id}`}
+          className="absolute inset-x-2 bottom-2 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 bg-background/95 backdrop-blur-sm rounded-lg px-3 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 hover:bg-primary hover:text-primary-foreground shadow-sm"
+        >
+          Use in Visual Studio <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
       <div className="p-3 space-y-1.5">
         <div className="flex items-center gap-1.5 group/name">
@@ -839,8 +846,12 @@ export default function BrandModels() {
   return (
     <div className="space-y-6">
       {isPaid && (
-        <PageHeader title="My Brand Models" subtitle="Custom AI models that match your brand">
-          <div />
+        <PageHeader title="Brand Models" subtitle="Custom AI models that match your brand">
+          <Button asChild className="gap-2">
+            <Link to="/app/models/new">
+              <Plus className="h-4 w-4" /> Create New Model
+            </Link>
+          </Button>
         </PageHeader>
       )}
 
@@ -875,46 +886,41 @@ export default function BrandModels() {
             </div>
           )}
         </>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-8 mt-2">
-          {/* Creation panel */}
-          <Card className="p-6 h-fit border-border/60">
-            <h3 className="font-semibold mb-1 flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4 text-primary" /> Create New Model
-            </h3>
-            <p className="text-xs text-muted-foreground mb-5">Describe your ideal model · 20 credits per generation</p>
-
-            <UnifiedGenerator onSuccess={() => refetch()} isAdmin={isAdmin} />
-          </Card>
-
-          {/* Models grid */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <h3 className="font-semibold flex items-center gap-2 text-base">
-                <Users className="h-4 w-4 text-muted-foreground" /> My Brand Models
-              </h3>
-              {models.length > 0 && <Badge variant="secondary" className="text-[10px]">{models.length}</Badge>}
-            </div>
-            {models.length === 0 ? (
-              <Card className="p-12 flex flex-col items-center gap-4 text-center border-dashed border-border/60">
-                <div className="rounded-full bg-muted p-4">
-                  <Users className="h-8 w-8 text-muted-foreground/40" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">No models yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Create your first brand model using the panel on the left.</p>
-                </div>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-                {models.map((m) => (
-                  <ModelCard key={m.id} model={m} onDelete={handleDelete} onRename={handleRename} />
-                ))}
-              </div>
-            )}
+      ) : models.length === 0 ? (
+        <div className="flex flex-col items-center text-center py-20 px-4 max-w-xl mx-auto gap-6">
+          <div className="rounded-2xl bg-muted/60 p-5">
+            <Users className="h-10 w-10 text-muted-foreground/50" />
           </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">No brand models yet</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Brand models are custom AI faces you reuse across every campaign — same person, every scene, fully on-brand
+            </p>
+          </div>
+          <Button asChild size="pill" className="gap-2">
+            <Link to="/app/models/new">
+              <Plus className="h-4 w-4" /> Create your first model
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+          {/* Dashed "New model" tile */}
+          <Link
+            to="/app/models/new"
+            className="aspect-[3/4] rounded-xl border-2 border-dashed border-border/70 hover:border-primary/50 hover:bg-muted/30 transition-all duration-150 flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-primary group"
+          >
+            <div className="rounded-full bg-muted/60 p-3 group-hover:bg-primary/10 transition-colors">
+              <Plus className="h-5 w-5" />
+            </div>
+            <span className="text-xs font-medium">New model</span>
+          </Link>
+          {models.map((m) => (
+            <ModelCard key={m.id} model={m} onDelete={handleDelete} onRename={handleRename} />
+          ))}
         </div>
       )}
     </div>
   );
 }
+
