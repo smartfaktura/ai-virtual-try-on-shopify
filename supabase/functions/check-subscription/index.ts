@@ -275,18 +275,34 @@ serve(async (req) => {
     }
 
     // Detect billing cycle rollover → reset credits (use-it-or-lose-it)
-    // Only when plan is UNCHANGED but current_period_end has changed (new billing cycle)
+    // Refill ONLY when Stripe has successfully charged a new invoice and
+    // advanced current_period_end strictly forward. Compare as timestamps
+    // (not strings) because Postgres returns "+00" while Stripe returns ".000Z"
+    // for the same instant — a string compare always returned true and caused
+    // credits to be refilled on every check-subscription call.
+    const oldPeriodMs = currentProfile?.current_period_end
+      ? new Date(currentProfile.current_period_end).getTime()
+      : 0;
+    const newPeriodMs = periodEnd ? new Date(periodEnd).getTime() : 0;
+    const isPaidStatus =
+      subscriptionStatus === "active" ||
+      subscriptionStatus === "trialing" ||
+      subscriptionStatus === "canceling"; // canceling = still paid through period end
+
     if (
       plan === currentProfile?.plan &&
       plan !== "free" &&
       planInfo &&
-      periodEnd &&
-      periodEnd !== currentProfile?.current_period_end
+      planInfo.credits > 0 &&
+      isPaidStatus &&
+      newPeriodMs > 0 &&
+      newPeriodMs > oldPeriodMs
     ) {
       logStep("Billing cycle rolled over — resetting credits", {
         plan,
         oldPeriodEnd: currentProfile?.current_period_end,
         newPeriodEnd: periodEnd,
+        subscriptionStatus,
         allotment: planInfo.credits,
       });
       await supabaseAdmin.rpc("reset_plan_credits", {
