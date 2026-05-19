@@ -23,10 +23,11 @@ import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
   Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
-  Pencil, Info, Plus, ArrowRight,
+  Pencil, Info, Plus, ArrowRight, ChevronDown,
 } from 'lucide-react';
 
 /* ── Plan gate upgrade prompt ── */
@@ -274,8 +275,15 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     return () => document.removeEventListener('paste', handlePaste);
   }, [useReference, previewUrl]);
 
-  const canGenerate = !generating && (makePublic || balance >= 20) && !isUploading &&
-    (!uploadedUrl || termsAccepted);
+  const trimmedName = modelName.trim();
+  const validationError: string | null =
+    trimmedName.length < 2 ? 'Add a model name (min 2 characters)' :
+    isUploading ? 'Waiting for upload to finish…' :
+    uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
+    !makePublic && balance < 20 ? 'Not enough credits — top up to continue' :
+    null;
+  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!uploadedUrl || termsAccepted);
+  const canGenerate = !generating && !validationError;
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
@@ -475,28 +483,33 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   // ── Form content blocks (shared between layouts) ──
   const essentialsBlock = (
     <div className="space-y-5">
-      <div className="space-y-2">
-        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Model Name</Label>
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between">
+          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Model Name</Label>
+          <span className={cn(
+            "text-[10px] tabular-nums",
+            modelName.length >= 28 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50"
+          )}>{modelName.length}/32</span>
+        </div>
         <Input
-          placeholder="e.g. Sarah, Alex, Brand Ambassador..."
+          placeholder="e.g. Sarah, Alex, Brand Ambassador"
           value={modelName}
           onChange={(e) => setModelName(e.target.value)}
-          maxLength={40}
+          maxLength={32}
           className="h-9"
         />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-5">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gender</Label>
-          <ChipSelect options={['Female', 'Male']} value={gender} onChange={setGender} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {age[0]}</Label>
-          <Slider min={4} max={70} step={1} value={age} onValueChange={setAge} />
-          <div className="flex justify-between text-[10px] text-muted-foreground/50">
-            <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
-          </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gender</Label>
+        <ChipSelect options={['Female', 'Male']} value={gender} onChange={setGender} />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {age[0]}</Label>
+        <Slider min={4} max={70} step={1} value={age} onValueChange={setAge} />
+        <div className="flex justify-between text-[10px] text-muted-foreground/50">
+          <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
         </div>
       </div>
 
@@ -528,6 +541,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           </SelectContent>
         </Select>
       </div>
+
       <div className="space-y-2">
         <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Morphology</Label>
         <ChipSelect options={['slim', 'athletic', 'average', 'plus-size']} value={morphology} onChange={setMorphology} />
@@ -665,7 +679,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           Content &amp; rights policy
         </div>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload. Violations may result in account suspension.
+          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload.
         </p>
       </div>
 
@@ -713,18 +727,32 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         </div>
       )}
 
-      <Button className="w-full gap-2" disabled={!canGenerate} onClick={handleGenerate}>
+      {validationError && (
+        <p className={cn(
+          "text-[11px] text-center",
+          isLowCreditsError ? "text-destructive" : "text-muted-foreground"
+        )}>
+          {validationError}
+        </p>
+      )}
+
+      <Button
+        className="w-full gap-2"
+        disabled={!canGenerate}
+        onClick={handleGenerate}
+        title={validationError || undefined}
+      >
         <Wand2 className="h-4 w-4" />
         {makePublic ? 'Generate Public Model (free)' : 'Generate Brand Model (20 credits)'}
       </Button>
 
-      {!makePublic && balance < 20 && (
+      {isLowCreditsError && (
         <button
           type="button"
           onClick={() => setNoCreditsOpen(true)}
           className="text-xs text-destructive text-center w-full hover:underline cursor-pointer"
         >
-          Not enough credits. You need at least 20. <span className="font-medium">Buy credits →</span>
+          Buy credits →
         </button>
       )}
       <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
@@ -753,39 +781,66 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     return (
       <div className="space-y-5 pb-32">
         <Section title="Essentials">{essentialsBlock}</Section>
-        <Section title="Appearance" hint="All optional">{appearanceBlock}</Section>
+
+        <Collapsible>
+          <Card className="p-6 border-border/60">
+            <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
+              <div className="flex items-baseline gap-3">
+                <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">Appearance</h3>
+                <span className="text-[10px] text-muted-foreground/70">All optional</span>
+              </div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-5 pt-5 border-t border-border/50">
+                {appearanceBlock}
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
         {/* Sticky footer action bar */}
         <div className="fixed bottom-0 left-0 right-0 lg:left-[260px] z-40 border-t border-border/60 bg-background/85 backdrop-blur-md">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-            <div className="text-xs flex flex-col leading-tight">
+            <div className="text-xs flex flex-col leading-tight min-w-0 flex-1">
               {!makePublic ? (
-                <>
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">20 credits</strong> · Balance{' '}
-                    <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span>
-                  </span>
-                  {balance < 20 && (
-                    <button
-                      type="button"
-                      onClick={() => setNoCreditsOpen(true)}
-                      className="text-[11px] text-destructive hover:underline text-left mt-0.5"
-                    >
-                      Not enough credits — buy more →
-                    </button>
-                  )}
-                </>
+                <span className="text-muted-foreground truncate">
+                  <strong className="text-foreground">20 credits</strong> · Balance{' '}
+                  <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span>
+                </span>
               ) : (
                 <span className="text-muted-foreground">Public model — <strong className="text-foreground">free</strong></span>
               )}
+              {validationError && (
+                <span className={cn(
+                  "text-[11px] mt-0.5 truncate",
+                  isLowCreditsError ? "text-destructive" : "text-muted-foreground/80"
+                )}>
+                  {isLowCreditsError ? (
+                    <button
+                      type="button"
+                      onClick={() => setNoCreditsOpen(true)}
+                      className="hover:underline text-left"
+                    >
+                      {validationError} →
+                    </button>
+                  ) : validationError}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Button variant="ghost" size="sm" onClick={onSuccess} disabled={generating}>
                 Cancel
               </Button>
-              <Button className="gap-2" disabled={!canGenerate} onClick={handleGenerate}>
+              <Button
+                className="gap-2"
+                disabled={!canGenerate}
+                onClick={handleGenerate}
+                title={validationError || undefined}
+              >
                 <Wand2 className="h-4 w-4" />
                 {makePublic ? 'Generate (free)' : 'Generate Brand Model'}
               </Button>
@@ -929,11 +984,13 @@ export default function BrandModels() {
     <div className="space-y-6">
       {isPaid && (
         <PageHeader title="Brand Models" subtitle="Custom AI models that match your brand">
-          <Button asChild className="gap-2">
-            <Link to="/app/models/new">
-              <Plus className="h-4 w-4" /> Create New Model
-            </Link>
-          </Button>
+          {models.length > 0 ? (
+            <Button asChild className="gap-2">
+              <Link to="/app/models/new">
+                <Plus className="h-4 w-4" /> Create New Model
+              </Link>
+            </Button>
+          ) : null}
         </PageHeader>
       )}
 
@@ -969,13 +1026,13 @@ export default function BrandModels() {
           )}
         </>
       ) : models.length === 0 ? (
-        <div className="flex flex-col items-center text-center py-20 px-4 max-w-xl mx-auto gap-6">
-          <div className="rounded-2xl bg-muted/60 p-5">
-            <Users className="h-10 w-10 text-muted-foreground/50" />
+        <div className="flex flex-col items-center text-center py-24 px-4 max-w-lg mx-auto gap-7">
+          <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-6">
+            <Users className="h-9 w-9 text-muted-foreground/40" strokeWidth={1.5} />
           </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight">No brand models yet</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+          <div className="space-y-2.5">
+            <h2 className="text-2xl font-medium tracking-tight">No brand models yet</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
               Brand models are custom AI faces you reuse across every campaign — same person, every scene, fully on-brand
             </p>
           </div>
