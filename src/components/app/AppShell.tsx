@@ -4,7 +4,7 @@ import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare, Gift, Users,
-  TrendingUp, BookOpen, Clock, Camera, GraduationCap, LifeBuoy, Bug, Star, Mail,
+  TrendingUp, BookOpen, Clock, Camera, GraduationCap, LifeBuoy, Bug, Star, Mail, Mountain,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
@@ -43,6 +43,7 @@ const prefetchMap: Record<string, () => void> = {
   '/app/catalog/new': () => { import('@/pages/CatalogGenerate'); },
   '/app/learn': () => { import('@/pages/Learn'); },
   '/app/help': () => { import('@/pages/AppHelp'); },
+  '/app/brand-scenes': () => { import('@/pages/BrandScenes'); },
 };
 const prefetched = new Set<string>();
 const prefetchRoute = (path: string) => {
@@ -73,6 +74,7 @@ const navGroups = [
     items: [
       { label: 'Products', icon: Package, path: '/app/products' },
       { label: 'Brand Models', icon: Users, path: '/app/models' },
+      { label: 'Brand Scenes', icon: Mountain, path: '/app/brand-scenes' },
       { label: 'Library', icon: Image, path: '/app/library' },
     ],
   },

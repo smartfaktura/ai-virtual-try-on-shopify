@@ -80,6 +80,7 @@ const EmailMarketing = lazy(() => import('@/pages/admin/EmailMarketing'));
 const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
+const BrandScenes = lazy(() => import('@/pages/BrandScenes'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
@@ -275,6 +276,7 @@ const App = () => {
                         <Route path="/bug-bounty" element={<BugBounty />} />
                         
                         <Route path="/models" element={<BrandModels />} />
+                        <Route path="/brand-scenes" element={<BrandScenes />} />
                         <Route path="/admin/models" element={<AdminModels />} />
                         <Route path="/admin/scenes" element={<AdminScenes />} />
                         <Route path="/admin/scene-upload" element={<AdminSceneUpload />} />
