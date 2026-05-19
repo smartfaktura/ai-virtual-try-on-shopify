@@ -10,6 +10,7 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { LibrarySkeletonGrid } from '@/components/app/LibrarySkeletonGrid';
+import { DotPulse } from '@/components/ui/dot-pulse';
 import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
@@ -445,8 +446,22 @@ export default function Jobs() {
               placeholder="Search..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
+            {searchQuery && isFetching ? (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <DotPulse size="sm" />
+              </div>
+            ) : searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
@@ -597,13 +612,6 @@ export default function Jobs() {
         ) : (
           <>
             <div className="relative">
-              {isFetching && !isLoading && smartView === 'all' && (
-                <div className="absolute inset-0 z-10 flex items-start justify-center pointer-events-none">
-                  <div className="sticky top-[40vh]">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                  </div>
-                </div>
-              )}
               <div className="flex gap-3">
                 {columns.map((col, i) => (
                   <div key={i} className="flex-1 flex flex-col gap-3">
