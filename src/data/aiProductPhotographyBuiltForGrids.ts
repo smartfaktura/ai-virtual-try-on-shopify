@@ -2069,6 +2069,19 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "bags": [
     {
+      "subCategory": "Bags · Campaign Statements",
+      "cards": [
+        { "label": "Wind Shoulder Editorial",      "imageId": "1776749559127-ra3hur" },
+        { "label": "Alpine Carry Motion",          "imageId": "1776749505968-dxsavu" },
+        { "label": "Desert Depth Carry",           "imageId": "1776749521938-mh0bhs" },
+        { "label": "Distant Horizon Campaign",     "imageId": "1776749523574-vyjz0j" },
+        { "label": "Vintage Cinematic Bag Campaign", "imageId": "1776239462616-qs3ut8" },
+        { "label": "Super Editorial Bag Campaign", "imageId": "1776239458153-wzp51p" },
+        { "label": "Soft Motion Carry Editorial",  "imageId": "1776749550097-x6afn4" },
+        { "label": "Misty Lake Still",             "imageId": "1776749538873-3xu16l" }
+      ]
+    },
+    {
       "subCategory": "Bags · Editorial Studio",
       "cards": [
         { "label": "Sculptural Bag Studio Hero", "imageId": "1776239449949-ygljai" },
@@ -2090,19 +2103,6 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "Alpine Minimalism",               "imageId": "1776749510995-txj24j" },
         { "label": "Lakeside Quiet Luxury",           "imageId": "1776749534061-yvcf06" },
         { "label": "Windblown Studio Edge",           "imageId": "1776749560624-xw3yec" }
-      ]
-    },
-    {
-      "subCategory": "Bags · Campaign Statements",
-      "cards": [
-        { "label": "Wind Shoulder Editorial",      "imageId": "1776749559127-ra3hur" },
-        { "label": "Alpine Carry Motion",          "imageId": "1776749505968-dxsavu" },
-        { "label": "Desert Depth Carry",           "imageId": "1776749521938-mh0bhs" },
-        { "label": "Distant Horizon Campaign",     "imageId": "1776749523574-vyjz0j" },
-        { "label": "Vintage Cinematic Bag Campaign", "imageId": "1776239462616-qs3ut8" },
-        { "label": "Super Editorial Bag Campaign", "imageId": "1776239458153-wzp51p" },
-        { "label": "Soft Motion Carry Editorial",  "imageId": "1776749550097-x6afn4" },
-        { "label": "Misty Lake Still",             "imageId": "1776749538873-3xu16l" }
       ]
     },
     {
