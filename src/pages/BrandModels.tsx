@@ -984,11 +984,13 @@ export default function BrandModels() {
     <div className="space-y-6">
       {isPaid && (
         <PageHeader title="Brand Models" subtitle="Custom AI models that match your brand">
-          <Button asChild className="gap-2">
-            <Link to="/app/models/new">
-              <Plus className="h-4 w-4" /> Create New Model
-            </Link>
-          </Button>
+          {models.length > 0 ? (
+            <Button asChild className="gap-2">
+              <Link to="/app/models/new">
+                <Plus className="h-4 w-4" /> Create New Model
+              </Link>
+            </Button>
+          ) : null}
         </PageHeader>
       )}
 
@@ -1024,13 +1026,13 @@ export default function BrandModels() {
           )}
         </>
       ) : models.length === 0 ? (
-        <div className="flex flex-col items-center text-center py-20 px-4 max-w-xl mx-auto gap-6">
-          <div className="rounded-2xl bg-muted/60 p-5">
-            <Users className="h-10 w-10 text-muted-foreground/50" />
+        <div className="flex flex-col items-center text-center py-24 px-4 max-w-lg mx-auto gap-7">
+          <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-6">
+            <Users className="h-9 w-9 text-muted-foreground/40" strokeWidth={1.5} />
           </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight">No brand models yet</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+          <div className="space-y-2.5">
+            <h2 className="text-2xl font-medium tracking-tight">No brand models yet</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
               Brand models are custom AI faces you reuse across every campaign — same person, every scene, fully on-brand
             </p>
           </div>
