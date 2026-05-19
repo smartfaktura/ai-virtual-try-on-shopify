@@ -647,7 +647,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
+          className="w-full border-2 border-dashed border-border rounded-xl p-6 sm:p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
         >
           <div className="rounded-full bg-muted p-2.5">
             <Camera className="h-5 w-5 text-muted-foreground" />
@@ -769,7 +769,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   // ── Sections layout (premium wizard) ──
   if (layout === 'sections') {
     const Section = ({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) => (
-      <Card className="p-6 border-border/60">
+      <Card className="p-4 sm:p-6 border-border/60">
         <div className="flex items-baseline justify-between mb-5 pb-3 border-b border-border/50">
           <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">{title}</h3>
           {hint && <span className="text-[10px] text-muted-foreground/70">{hint}</span>}
@@ -783,7 +783,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <Section title="Essentials">{essentialsBlock}</Section>
 
         <Collapsible>
-          <Card className="p-6 border-border/60">
+          <Card className="p-4 sm:p-6 border-border/60">
             <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
               <div className="flex items-baseline gap-3">
                 <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">Appearance</h3>
@@ -802,9 +802,9 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
-        {/* Sticky footer action bar */}
-        <div className="fixed bottom-0 left-0 right-0 lg:left-[260px] z-40 border-t border-border/60 bg-background/85 backdrop-blur-md">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        {/* Sticky footer action bar — matches BundleVisuals pattern */}
+        <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-40 border-t border-border bg-background/95 backdrop-blur-sm">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
             <div className="text-xs flex flex-col leading-tight min-w-0 flex-1">
               {!makePublic ? (
                 <span className="text-muted-foreground truncate">
@@ -832,17 +832,17 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Button variant="ghost" size="sm" onClick={onSuccess} disabled={generating}>
+              <Button variant="ghost" size="sm" onClick={onSuccess} disabled={generating} className="flex-1 sm:flex-none">
                 Cancel
               </Button>
               <Button
-                className="gap-2"
+                className="gap-2 flex-1 sm:flex-none min-w-[140px]"
                 disabled={!canGenerate}
                 onClick={handleGenerate}
                 title={validationError || undefined}
               >
                 <Wand2 className="h-4 w-4" />
-                {makePublic ? 'Generate (free)' : 'Generate Brand Model'}
+                {makePublic ? 'Generate (free)' : 'Generate brand model'}
               </Button>
             </div>
           </div>
@@ -903,7 +903,7 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
           to={`/app/workflows?model=${model.id}`}
           className="absolute inset-x-1.5 bottom-1.5 translate-y-1 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 bg-background/95 backdrop-blur-md rounded-md px-2 py-1.5 text-[10px] font-semibold tracking-wide flex items-center justify-center gap-1 hover:bg-primary hover:text-primary-foreground shadow-sm"
         >
-          Use in Studio <ArrowRight className="h-2.5 w-2.5" />
+          Use in Visual Studio <ArrowRight className="h-2.5 w-2.5" />
         </Link>
       </div>
       <div className="px-2.5 py-2 space-y-1.5">
@@ -987,7 +987,7 @@ export default function BrandModels() {
           {models.length > 0 ? (
             <Button asChild className="gap-2">
               <Link to="/app/models/new">
-                <Plus className="h-4 w-4" /> Create New Model
+                <Plus className="h-4 w-4" /> New brand model
               </Link>
             </Button>
           ) : null}
@@ -1038,7 +1038,7 @@ export default function BrandModels() {
           </div>
           <Button asChild size="pill" className="gap-2">
             <Link to="/app/models/new">
-              <Plus className="h-4 w-4" /> Create your first model
+              <Plus className="h-4 w-4" /> Create your first brand model
             </Link>
           </Button>
         </div>
@@ -1052,7 +1052,7 @@ export default function BrandModels() {
             <div className="rounded-full bg-muted/50 p-2 group-hover:bg-primary/10 transition-colors">
               <Plus className="h-4 w-4" />
             </div>
-            <span className="text-[11px] font-medium tracking-wide">New model</span>
+            <span className="text-[11px] font-medium tracking-wide">New brand model</span>
           </Link>
           {models.map((m) => (
             <ModelCard key={m.id} model={m} onDelete={handleDelete} onRename={handleRename} />
