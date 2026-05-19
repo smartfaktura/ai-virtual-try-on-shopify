@@ -2266,7 +2266,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "Resort Bokeh Swim Editorial",  "imageId": "1776522789403-pnvcux" },
         { "label": "Seated Balcony Resort Portrait", "imageId": "1776246325971-mrh821" },
         { "label": "Cabana Curtain Movement",      "imageId": "1776522770222-za8n2n" },
-        { "label": "Yacht Deck Editorial Pose",    "imageId": "1776246335378-kw9z8c" }
+        { "label": "Yacht Deck Editorial Pose",    "imageId": "1777996843133-j8fyxu" }
       ]
     },
     {
