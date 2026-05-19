@@ -902,16 +902,16 @@ export default function BrandModels() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {/* Dashed "New model" tile */}
           <Link
             to="/app/models/new"
-            className="aspect-[3/4] rounded-xl border-2 border-dashed border-border/70 hover:border-primary/50 hover:bg-muted/30 transition-all duration-150 flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-primary group"
+            className="aspect-[3/4] rounded-lg border border-dashed border-border/60 hover:border-primary/50 hover:bg-muted/20 transition-all duration-200 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary group"
           >
-            <div className="rounded-full bg-muted/60 p-3 group-hover:bg-primary/10 transition-colors">
-              <Plus className="h-5 w-5" />
+            <div className="rounded-full bg-muted/50 p-2 group-hover:bg-primary/10 transition-colors">
+              <Plus className="h-4 w-4" />
             </div>
-            <span className="text-xs font-medium">New model</span>
+            <span className="text-[11px] font-medium tracking-wide">New model</span>
           </Link>
           {models.map((m) => (
             <ModelCard key={m.id} model={m} onDelete={handleDelete} onRename={handleRename} />
