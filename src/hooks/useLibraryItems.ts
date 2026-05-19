@@ -197,6 +197,18 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
             : jobsQuery.lt('created_at', cursor.jobCursor);
         }
 
+        // Sanitize search term for Supabase .or() (strip chars that break syntax)
+        const esc = q.replace(/[%,()]/g, ' ').trim();
+        if (esc) {
+          jobsQuery = jobsQuery.or([
+            `product_name.ilike.%${esc}%`,
+            `scene_name.ilike.%${esc}%`,
+            `model_name.ilike.%${esc}%`,
+            `workflow_slug.ilike.%${esc}%`,
+            `prompt_final.ilike.%${esc}%`,
+          ].join(','));
+        }
+
         // Build freestyle query
         let fsQuery = supabase
           .from('freestyle_generations')
