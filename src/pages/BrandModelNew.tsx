@@ -9,7 +9,7 @@ export default function BrandModelNew() {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-3xl mx-auto pb-32">
+    <div className="max-w-3xl mx-auto pb-28">
       <div className="mb-4 sm:mb-6">
         <Button
           variant="ghost"
