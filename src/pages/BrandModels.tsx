@@ -209,6 +209,28 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
   </Card>
 );
 
+/* ── Age slider (local state, commits on release — avoids re-rendering heavy parent on every drag pixel) ── */
+const AgeSlider = ({ value, onCommit }: { value: number; onCommit: (n: number) => void }) => {
+  const [local, setLocal] = useState(value);
+  useEffect(() => { setLocal(value); }, [value]);
+  return (
+    <div className="space-y-2">
+      <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {local}</Label>
+      <Slider
+        min={4}
+        max={70}
+        step={1}
+        value={[local]}
+        onValueChange={(v) => setLocal(v[0])}
+        onValueCommit={(v) => onCommit(v[0])}
+      />
+      <div className="flex justify-between text-[10px] text-muted-foreground/50">
+        <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
+      </div>
+    </div>
+  );
+};
+
 /* ── Unified Generator ── */
 export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSuccess: () => void; isAdmin: boolean; layout?: 'card' | 'sections' }) {
   // Model name
