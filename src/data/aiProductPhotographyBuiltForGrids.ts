@@ -2308,9 +2308,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "On-Model Front",       "imageId": "1776246318297-apxkit" },
         { "label": "On-Model Back",        "imageId": "1776246316545-ge07py" },
         { "label": "On-Model Editorial",   "imageId": "1776246317384-rtaqcj" },
-        { "label": "Movement Shot",        "imageId": "1776246314604-0psi6v" },
-        { "label": "Texture Detail",       "imageId": "1776523395800-pxcl00" },
-        { "label": "Product + Packaging",  "imageId": "1776523394657-7rfvtd" }
+        { "label": "Movement Shot",        "imageId": "1776246314604-0psi6v" }
       ]
     }
   ],
