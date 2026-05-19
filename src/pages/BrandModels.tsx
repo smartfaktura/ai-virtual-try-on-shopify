@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from '@/components/ui/select';
 import { toast } from '@/lib/brandedToast';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
@@ -209,6 +209,28 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
   </Card>
 );
 
+/* ── Age slider (local state, commits on release — avoids re-rendering heavy parent on every drag pixel) ── */
+const AgeSlider = ({ value, onCommit }: { value: number; onCommit: (n: number) => void }) => {
+  const [local, setLocal] = useState(value);
+  useEffect(() => { setLocal(value); }, [value]);
+  return (
+    <div className="space-y-2">
+      <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {local}</Label>
+      <Slider
+        min={4}
+        max={70}
+        step={1}
+        value={[local]}
+        onValueChange={(v) => setLocal(v[0])}
+        onValueCommit={(v) => onCommit(v[0])}
+      />
+      <div className="flex justify-between text-[10px] text-muted-foreground/50">
+        <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
+      </div>
+    </div>
+  );
+};
+
 /* ── Unified Generator ── */
 export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSuccess: () => void; isAdmin: boolean; layout?: 'card' | 'sections' }) {
   // Model name
@@ -253,6 +275,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const { balance, refreshBalance } = useCredits();
   const queryClient = useQueryClient();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const processFile = async (file: File) => {
     const reader = new FileReader();
@@ -517,13 +540,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <ChipSelect options={['Female', 'Male']} value={gender} onChange={setGender} />
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {age[0]}</Label>
-        <Slider min={4} max={70} step={1} value={age} onValueChange={setAge} />
-        <div className="flex justify-between text-[10px] text-muted-foreground/50">
-          <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
-        </div>
-      </div>
+      <AgeSlider value={age[0]} onCommit={(n) => setAge([n])} />
 
       <div className="space-y-2">
         <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Region / Look</Label>
@@ -531,23 +548,27 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent className="max-h-80">
             <SelectGroup>
-              <SelectLabel>European</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">European</SelectLabel>
               {['Northern European', 'British / Irish', 'Scandinavian', 'Mediterranean', 'Eastern European'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>Latin / Hispanic</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Latin / Hispanic</SelectLabel>
               {['Latin American', 'Iberian'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>Asian</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Asian</SelectLabel>
               {['East Asian', 'South Asian', 'Southeast Asian'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>African / Afro-descendant</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">African / Afro-descendant</SelectLabel>
               {['African', 'Afro-Caribbean', 'Afro-European'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>Other</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Other</SelectLabel>
               {['Middle Eastern / North African', 'Mixed heritage'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
           </SelectContent>
@@ -659,12 +680,25 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-border rounded-xl p-6 sm:p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file && file.type.startsWith('image/')) processFile(file);
+          }}
+          className={cn(
+            "w-full border-2 border-dashed rounded-xl p-6 sm:p-8 flex flex-col items-center gap-2.5 transition-all duration-150",
+            isDragging
+              ? "border-primary bg-primary/5"
+              : "border-border hover:border-primary/40 hover:bg-muted/20"
+          )}
         >
           <div className="rounded-full bg-muted p-2.5">
             <Camera className="h-5 w-5 text-muted-foreground" />
           </div>
-          <span className="text-xs text-muted-foreground">Click or paste (⌘V) reference photo</span>
+          <span className="text-xs text-muted-foreground">Click, drag, or paste (⌘V) reference photo</span>
           <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
         </button>
       ) : (
@@ -695,36 +729,46 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         </p>
       </div>
 
-      <div className={cn(
-        "flex items-start gap-3 p-3 rounded-lg border transition-colors",
-        uploadedUrl ? "bg-muted/40 border-border/60" : "bg-muted/20 border-border/30 opacity-60"
-      )}>
+      <div
+        role={uploadedUrl ? 'button' : undefined}
+        onClick={() => { if (uploadedUrl) setTermsAccepted((v) => !v); }}
+        className={cn(
+          "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+          uploadedUrl ? "bg-muted/40 border-border/60 cursor-pointer hover:bg-muted/60" : "bg-muted/20 border-border/30 opacity-60"
+        )}
+      >
         <Checkbox
           id="terms"
           checked={termsAccepted}
           disabled={!uploadedUrl}
           onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+          onClick={(e) => e.stopPropagation()}
           className="mt-0.5"
         />
-        <label htmlFor="terms" className={cn("text-[11px] leading-relaxed", uploadedUrl ? "text-muted-foreground cursor-pointer" : "text-muted-foreground/70")}>
+        <span className={cn("text-[11px] leading-relaxed", uploadedUrl ? "text-muted-foreground" : "text-muted-foreground/70")}>
           I confirm I own or have explicit permission to use this image, and I accept full responsibility under the VOVV.AI Content Policy.
-        </label>
+        </span>
       </div>
     </div>
   );
 
   const adminBlock = isAdmin ? (
-    <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+    <div
+      role="button"
+      onClick={() => setMakePublic((v) => !v)}
+      className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors"
+    >
       <Checkbox
         id="make-public"
         checked={makePublic}
         onCheckedChange={(checked) => setMakePublic(checked === true)}
+        onClick={(e) => e.stopPropagation()}
         className="mt-0.5"
       />
-      <label htmlFor="make-public" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
+      <span className="text-[11px] text-muted-foreground leading-relaxed">
         <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
         <strong>Add as public model</strong> — visible to all users, no credits charged
-      </label>
+      </span>
     </div>
   ) : null;
 
@@ -806,50 +850,34 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
-        {/* Sticky footer action bar — matches Generate (Product Visuals) pattern */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-30 lg:left-60">
-          {validationError && (
-            <button
-              type="button"
-              onClick={isLowCreditsError ? () => setNoCreditsOpen(true) : undefined}
-              disabled={!isLowCreditsError}
-              className={cn(
-                "w-full bg-destructive/10 border-b border-destructive/20 text-destructive text-[11px] px-4 py-1.5 text-center",
-                isLowCreditsError && "hover:bg-destructive/15 cursor-pointer"
-              )}
+        {/* Sticky footer — floating pill (matches /app/generate/product-images) */}
+        <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
+          <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
+            <Button variant="outline" onClick={onSuccess}>Back</Button>
+            {validationError ? (
+              isLowCreditsError ? (
+                <button
+                  type="button"
+                  onClick={() => setNoCreditsOpen(true)}
+                  className="text-xs text-destructive text-center flex-1 hover:underline cursor-pointer"
+                >
+                  {validationError} →
+                </button>
+              ) : (
+                <span className="text-xs text-muted-foreground text-center flex-1">{validationError}</span>
+              )
+            ) : (
+              <span className="text-xs text-muted-foreground text-center flex-1 hidden sm:inline">
+                {makePublic ? 'Public model · free' : `20 credits · Balance ${balance}`}
+              </span>
+            )}
+            <Button
+              disabled={!canGenerate}
+              onClick={handleGenerate}
+              title={validationError || undefined}
             >
-              {validationError}{isLowCreditsError ? ' →' : ''}
-            </button>
-          )}
-          <div className="p-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                {previewUrl ? (
-                  <img src={previewUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold truncate">{modelName.trim() || 'New brand model'}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {makePublic
-                      ? 'Public model · free'
-                      : <>20 credits · Balance <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span></>
-                    }
-                  </p>
-                </div>
-              </div>
-              <Button
-                disabled={!canGenerate}
-                onClick={handleGenerate}
-                title={validationError || undefined}
-                className="shrink-0"
-              >
-                {makePublic ? 'Generate · free' : 'Generate'}
-              </Button>
-            </div>
+              {makePublic ? 'Generate · free' : 'Generate'}
+            </Button>
           </div>
         </div>
         <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
