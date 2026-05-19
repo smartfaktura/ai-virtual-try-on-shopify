@@ -23,6 +23,7 @@ interface Step5Props {
   completedJobs: number;
   productCount: number;
   products?: UserProduct[];
+  scenes?: Array<{ id: string; title: string; previewUrl?: string }>;
   jobMap?: Map<string, string>;
   completedJobIds?: Set<string>;
   failedJobIds?: Set<string>;
@@ -43,6 +44,7 @@ export function ProductImagesStep5Generating({
   completedJobs,
   productCount,
   products = [],
+  scenes = [],
   jobMap,
   completedJobIds,
   failedJobIds,
@@ -129,11 +131,35 @@ export function ProductImagesStep5Generating({
     <div className="flex items-center justify-center px-4 py-10 sm:py-16 lg:py-20">
       <div className="w-full max-w-md sm:max-w-lg rounded-2xl border border-border bg-background p-6 sm:p-10 lg:p-12 space-y-6 sm:space-y-8">
 
-        {/* Phase icon */}
+        {/* Phase icon / scene thumbnails */}
         <div className="flex justify-center">
           {phase === 'finishing' ? (
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+            </div>
+          ) : scenes.length > 0 ? (
+            <div className="flex items-center gap-2 animate-pulse">
+              {scenes.slice(0, 3).map((scene) => (
+                <div
+                  key={scene.id}
+                  className="w-12 h-12 rounded-full overflow-hidden border border-border bg-muted flex items-center justify-center"
+                >
+                  {scene.previewUrl ? (
+                    <img
+                      src={getOptimizedUrl(scene.previewUrl, { quality: 50 })}
+                      alt={scene.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Camera className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+              ))}
+              {scenes.length > 3 && (
+                <div className="w-12 h-12 rounded-full border border-border bg-muted flex items-center justify-center text-xs font-medium text-foreground">
+                  +{scenes.length - 3}
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
