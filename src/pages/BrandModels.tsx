@@ -472,9 +472,9 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     return <BrandedLoadingState />;
   }
 
-  return (
-    <div className="space-y-5 pt-1">
-      {/* ── Model Name ── */}
+  // ── Form content blocks (shared between layouts) ──
+  const essentialsBlock = (
+    <div className="space-y-5">
       <div className="space-y-2">
         <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Model Name</Label>
         <Input
@@ -486,8 +486,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         />
       </div>
 
-      {/* ── Essentials ── */}
-      <div className="space-y-4">
+      <div className="grid sm:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Gender</Label>
           <ChipSelect options={['Female', 'Male']} value={gender} onChange={setGender} />
@@ -499,231 +498,296 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
             <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
           </div>
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Ethnicity</Label>
-          <ChipSelect options={['Caucasian', 'Asian', 'African', 'Hispanic', 'Middle Eastern', 'South Asian', 'Mixed']} value={ethnicity} onChange={setEthnicity} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Morphology</Label>
-          <ChipSelect options={['slim', 'athletic', 'average', 'plus-size']} value={morphology} onChange={setMorphology} />
-        </div>
       </div>
 
-      {/* ── Separator ── */}
-      <div className="h-px bg-border/60" />
+      <div className="space-y-2">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Ethnicity</Label>
+        <ChipSelect options={['Caucasian', 'Asian', 'African', 'Hispanic', 'Middle Eastern', 'South Asian', 'Mixed']} value={ethnicity} onChange={setEthnicity} />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Morphology</Label>
+        <ChipSelect options={['slim', 'athletic', 'average', 'plus-size']} value={morphology} onChange={setMorphology} />
+      </div>
+    </div>
+  );
 
-      {/* ── Details (open by default) ── */}
-      <div className="space-y-4">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Appearance Details</p>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Eye Color</Label>
-            <Select value={eyeColor} onValueChange={setEyeColor}>
-              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
-              <SelectContent>
-                {['Brown', 'Blue', 'Green', 'Hazel', 'Gray', 'Amber'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Skin Tone</Label>
-            <Select value={skinTone} onValueChange={setSkinTone}>
-              <SelectTrigger><SelectValue placeholder="Natural" /></SelectTrigger>
-              <SelectContent>
-                {['Fair', 'Light', 'Medium', 'Olive', 'Tan', 'Brown', 'Dark'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Hair Style</Label>
-            <Select value={hairStyle} onValueChange={setHairStyle}>
-              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
-              <SelectContent>
-                {(gender === 'Male'
-                  ? ['Short straight', 'Short curly', 'Buzz cut', 'Crew cut', 'Fade', 'Slicked back', 'Medium wavy', 'Bald', 'Afro', 'Man bun']
-                  : ['Long straight', 'Long curly', 'Medium wavy', 'Short straight', 'Short curly', 'Bob', 'Braids', 'Ponytail', 'Bun', 'Pixie cut']
-                ).map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Hair Color</Label>
-            <Select value={hairColor} onValueChange={setHairColor}>
-              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
-              <SelectContent>
-                {['Black', 'Dark brown', 'Light brown', 'Blonde', 'Red', 'Auburn', 'Gray', 'White', 'Platinum'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Face Shape</Label>
-            <Select value={faceShape} onValueChange={setFaceShape}>
-              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
-              <SelectContent>
-                {['Oval', 'Round', 'Square', 'Heart', 'Diamond', 'Oblong'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Expression</Label>
-            <Select value={expression} onValueChange={setExpression}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['Neutral', 'Smile', 'Serious', 'Confident', 'Soft'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Facial hair — male only */}
-        {gender === 'Male' && (
-          <div className="space-y-1.5">
-            <Label className="text-xs">Facial Hair</Label>
-            <ChipSelect options={['None', 'Stubble', 'Short beard', 'Full beard', 'Goatee', 'Mustache']} value={facialHair} onChange={setFacialHair} />
-          </div>
-        )}
-
+  const appearanceBlock = (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Signature Feature</Label>
-          <p className="text-[10px] text-muted-foreground/60 -mt-0.5">Add a unique characteristic to make your model stand out</p>
-          <Select value={distinctive} onValueChange={setDistinctive}>
-            <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+          <Label className="text-xs">Eye Color</Label>
+          <Select value={eyeColor} onValueChange={setEyeColor}>
+            <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
             <SelectContent>
-              {['Freckles', 'Dimples', 'Sharp jawline', 'High cheekbones', 'Full lips', 'Tattoos', 'Glasses', 'Beauty mark'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              {['Brown', 'Blue', 'Green', 'Hazel', 'Gray', 'Amber'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Skin Tone</Label>
+          <Select value={skinTone} onValueChange={setSkinTone}>
+            <SelectTrigger><SelectValue placeholder="Natural" /></SelectTrigger>
+            <SelectContent>
+              {['Fair', 'Light', 'Medium', 'Olive', 'Tan', 'Brown', 'Dark'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Hair Style</Label>
+          <Select value={hairStyle} onValueChange={setHairStyle}>
+            <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+            <SelectContent>
+              {(gender === 'Male'
+                ? ['Short straight', 'Short curly', 'Buzz cut', 'Crew cut', 'Fade', 'Slicked back', 'Medium wavy', 'Bald', 'Afro', 'Man bun']
+                : ['Long straight', 'Long curly', 'Medium wavy', 'Short straight', 'Short curly', 'Bob', 'Braids', 'Ponytail', 'Bun', 'Pixie cut']
+              ).map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Hair Color</Label>
+          <Select value={hairColor} onValueChange={setHairColor}>
+            <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+            <SelectContent>
+              {['Black', 'Dark brown', 'Light brown', 'Blonde', 'Red', 'Auburn', 'Gray', 'White', 'Platinum'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Face Shape</Label>
+          <Select value={faceShape} onValueChange={setFaceShape}>
+            <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+            <SelectContent>
+              {['Oval', 'Round', 'Square', 'Heart', 'Diamond', 'Oblong'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Expression</Label>
+          <Select value={expression} onValueChange={setExpression}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {['Neutral', 'Smile', 'Serious', 'Confident', 'Soft'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* ── Separator ── */}
-      <div className="h-px bg-border/60" />
-
-      {/* ── Optional reference image ── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ImagePlus className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="ref-toggle" className="text-xs font-medium cursor-pointer">Use reference image</Label>
-          </div>
-          <Switch
-            id="ref-toggle"
-            checked={useReference}
-            onCheckedChange={(v) => {
-              setUseReference(v);
-              if (!v) { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }
-            }}
-          />
-        </div>
-
-        {useReference && (
-          <div className="space-y-3 pl-1">
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Upload a reference photo to guide the AI. The generated model will resemble the person in the image while using your settings above.
-            </p>
-
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-
-            {!previewUrl ? (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
-              >
-                <div className="rounded-full bg-muted p-2.5">
-                  <Camera className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <span className="text-xs text-muted-foreground">Click or paste (⌘V) reference photo</span>
-                <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
-              </button>
-            ) : (
-              <div className="relative w-28 h-36 rounded-xl overflow-hidden mx-auto border border-border shadow-sm">
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur rounded-full p-1 hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                  onClick={() => { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-                {isUploading && (
-                  <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Terms & Conditions */}
-            {uploadedUrl && (
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border/60">
-                <Checkbox
-                  id="terms"
-                  checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                  className="mt-0.5"
-                />
-                <label htmlFor="terms" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
-                  <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
-                  I confirm I own the rights to this image or have permission to use it as a reference. I accept full responsibility for the content I upload and agree to the terms of service.
-                </label>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── Admin: Make Public ── */}
-      {isAdmin && (
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-          <Checkbox
-            id="make-public"
-            checked={makePublic}
-            onCheckedChange={(checked) => setMakePublic(checked === true)}
-            className="mt-0.5"
-          />
-          <label htmlFor="make-public" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
-            <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
-            <strong>Add as public model</strong> — visible to all users, no credits charged
-          </label>
+      {gender === 'Male' && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Facial Hair</Label>
+          <ChipSelect options={['None', 'Stubble', 'Short beard', 'Full beard', 'Goatee', 'Mustache']} value={facialHair} onChange={setFacialHair} />
         </div>
       )}
 
-      {/* ── Credit info & Generate ── */}
-      <div className="space-y-3 pt-1">
-        {!makePublic && (
-          <div className="flex items-center justify-between text-xs px-0.5">
-            <span className="text-muted-foreground">Cost: <strong className="text-foreground">20 credits</strong></span>
-            <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>
-              Balance: {balance} credits
-            </span>
-          </div>
-        )}
-
-        <Button className="w-full gap-2" disabled={!canGenerate} onClick={handleGenerate}>
-          <Wand2 className="h-4 w-4" />
-          {makePublic ? 'Generate Public Model (free)' : 'Generate Brand Model (20 credits)'}
-        </Button>
-
-        {!makePublic && balance < 20 && (
-          <button
-            type="button"
-            onClick={() => setNoCreditsOpen(true)}
-            className="text-xs text-destructive text-center w-full hover:underline cursor-pointer"
-          >
-            Not enough credits. You need at least 20. <span className="font-medium">Buy credits →</span>
-          </button>
-        )}
-        <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
-
-        {/* Server-side generation note */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
-          <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <p className="text-[10px] text-muted-foreground leading-relaxed">
-            Generation happens server-side. You can safely navigate away — your model will appear here when ready.
-          </p>
-        </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Signature Feature</Label>
+        <p className="text-[10px] text-muted-foreground/60 -mt-0.5">Add a unique characteristic to make your model stand out</p>
+        <Select value={distinctive} onValueChange={setDistinctive}>
+          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+          <SelectContent>
+            {['Freckles', 'Dimples', 'Sharp jawline', 'High cheekbones', 'Full lips', 'Tattoos', 'Glasses', 'Beauty mark'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
+    </div>
+  );
+
+  const referenceBlock = (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ImagePlus className="h-4 w-4 text-muted-foreground" />
+          <Label htmlFor="ref-toggle" className="text-xs font-medium cursor-pointer">Use reference image</Label>
+        </div>
+        <Switch
+          id="ref-toggle"
+          checked={useReference}
+          onCheckedChange={(v) => {
+            setUseReference(v);
+            if (!v) { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }
+          }}
+        />
+      </div>
+
+      {useReference && (
+        <div className="space-y-3 pl-1">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Upload a reference photo to guide the AI. The generated model will resemble the person in the image while using your settings above.
+          </p>
+
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+
+          {!previewUrl ? (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
+            >
+              <div className="rounded-full bg-muted p-2.5">
+                <Camera className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <span className="text-xs text-muted-foreground">Click or paste (⌘V) reference photo</span>
+              <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
+            </button>
+          ) : (
+            <div className="relative w-28 h-36 rounded-xl overflow-hidden mx-auto border border-border shadow-sm">
+              <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur rounded-full p-1 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                onClick={() => { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+              {isUploading && (
+                <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {uploadedUrl && (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border/60">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="terms" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
+                <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
+                I confirm I own the rights to this image or have permission to use it as a reference. I accept full responsibility for the content I upload and agree to the terms of service.
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  const adminBlock = isAdmin ? (
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+      <Checkbox
+        id="make-public"
+        checked={makePublic}
+        onCheckedChange={(checked) => setMakePublic(checked === true)}
+        className="mt-0.5"
+      />
+      <label htmlFor="make-public" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
+        <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
+        <strong>Add as public model</strong> — visible to all users, no credits charged
+      </label>
+    </div>
+  ) : null;
+
+  const inlineFooterBlock = (
+    <div className="space-y-3 pt-1">
+      {!makePublic && (
+        <div className="flex items-center justify-between text-xs px-0.5">
+          <span className="text-muted-foreground">Cost: <strong className="text-foreground">20 credits</strong></span>
+          <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>
+            Balance: {balance} credits
+          </span>
+        </div>
+      )}
+
+      <Button className="w-full gap-2" disabled={!canGenerate} onClick={handleGenerate}>
+        <Wand2 className="h-4 w-4" />
+        {makePublic ? 'Generate Public Model (free)' : 'Generate Brand Model (20 credits)'}
+      </Button>
+
+      {!makePublic && balance < 20 && (
+        <button
+          type="button"
+          onClick={() => setNoCreditsOpen(true)}
+          className="text-xs text-destructive text-center w-full hover:underline cursor-pointer"
+        >
+          Not enough credits. You need at least 20. <span className="font-medium">Buy credits →</span>
+        </button>
+      )}
+      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
+
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
+        <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          Generation happens server-side. You can safely navigate away — your model will appear here when ready.
+        </p>
+      </div>
+    </div>
+  );
+
+  // ── Sections layout (premium wizard) ──
+  if (layout === 'sections') {
+    const Section = ({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) => (
+      <Card className="p-6 border-border/60">
+        <div className="flex items-baseline justify-between mb-5 pb-3 border-b border-border/50">
+          <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">{title}</h3>
+          {hint && <span className="text-[10px] text-muted-foreground/70">{hint}</span>}
+        </div>
+        {children}
+      </Card>
+    );
+
+    return (
+      <div className="space-y-5 pb-32">
+        <Section title="Essentials">{essentialsBlock}</Section>
+        <Section title="Appearance" hint="All optional">{appearanceBlock}</Section>
+        <Section title="Reference" hint="Optional">{referenceBlock}</Section>
+        {adminBlock && <Section title="Admin">{adminBlock}</Section>}
+
+        {/* Sticky footer action bar */}
+        <div className="fixed bottom-0 left-0 right-0 lg:left-[260px] z-40 border-t border-border/60 bg-background/85 backdrop-blur-md">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+            <div className="text-xs flex flex-col leading-tight">
+              {!makePublic ? (
+                <>
+                  <span className="text-muted-foreground">
+                    <strong className="text-foreground">20 credits</strong> · Balance{' '}
+                    <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span>
+                  </span>
+                  {balance < 20 && (
+                    <button
+                      type="button"
+                      onClick={() => setNoCreditsOpen(true)}
+                      className="text-[11px] text-destructive hover:underline text-left mt-0.5"
+                    >
+                      Not enough credits — buy more →
+                    </button>
+                  )}
+                </>
+              ) : (
+                <span className="text-muted-foreground">Public model — <strong className="text-foreground">free</strong></span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={onSuccess} disabled={generating}>
+                Cancel
+              </Button>
+              <Button className="gap-2" disabled={!canGenerate} onClick={handleGenerate}>
+                <Wand2 className="h-4 w-4" />
+                {makePublic ? 'Generate (free)' : 'Generate Brand Model'}
+              </Button>
+            </div>
+          </div>
+        </div>
+        <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
+      </div>
+    );
+  }
+
+  // ── Default single-card layout (legacy) ──
+  return (
+    <div className="space-y-5 pt-1">
+      {essentialsBlock}
+      <div className="h-px bg-border/60" />
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Appearance Details</p>
+      {appearanceBlock}
+      <div className="h-px bg-border/60" />
+      {referenceBlock}
+      {adminBlock}
+      {inlineFooterBlock}
     </div>
   );
 }
