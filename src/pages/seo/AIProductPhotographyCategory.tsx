@@ -125,7 +125,7 @@ export default function AIProductPhotographyCategory() {
       <main>
         <CategoryBreadcrumbs page={page} />
         <CategoryHero page={page} />
-        {!['home-furniture', 'swimwear', 'activewear'].includes(page.slug) && <CategorySubcategoryChips page={page} />}
+        {!['home-furniture', 'swimwear', 'activewear', 'bags-accessories'].includes(page.slug) && <CategorySubcategoryChips page={page} />}
         <CategoryBuiltForEveryCategory page={page} />
         
         <CategoryVisualOutputs page={page} />
