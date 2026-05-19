@@ -1027,12 +1027,22 @@ export default function BrandModels() {
         </>
       ) : models.length === 0 ? (
         <div className="flex flex-col items-center text-center py-24 px-4 max-w-lg mx-auto gap-7">
-          <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-6">
-            <Users className="h-9 w-9 text-muted-foreground/40" strokeWidth={1.5} />
+          <div className="flex items-center justify-center">
+            {[TEAM_MEMBERS[0], TEAM_MEMBERS[1], TEAM_MEMBERS[3]].map((m, i) => (
+              <img
+                key={m.name}
+                src={m.avatar}
+                alt=""
+                className={cn(
+                  "w-20 h-20 rounded-full object-cover ring-2 ring-background shadow-sm",
+                  i > 0 && "-ml-5"
+                )}
+              />
+            ))}
           </div>
-          <div className="space-y-2.5">
-            <h2 className="text-2xl font-medium tracking-tight">No brand models yet</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold tracking-tight">No brand models yet</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Brand models are custom AI faces you reuse across every campaign — same person, every scene, fully on-brand
             </p>
           </div>
