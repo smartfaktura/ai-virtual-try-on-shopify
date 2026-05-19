@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { toast } from '@/lib/brandedToast';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
@@ -204,7 +204,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   // Essentials
   const [gender, setGender] = useState('Female');
   const [age, setAge] = useState([28]);
-  const [ethnicity, setEthnicity] = useState('Caucasian');
+  const [ethnicity, setEthnicity] = useState('Northern European');
   const [morphology, setMorphology] = useState('average');
 
   // Details
@@ -275,7 +275,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   }, [useReference, previewUrl]);
 
   const canGenerate = !generating && (makePublic || balance >= 20) && !isUploading &&
-    (!useReference || (uploadedUrl && termsAccepted));
+    (!uploadedUrl || termsAccepted);
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
@@ -501,8 +501,32 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       </div>
 
       <div className="space-y-2">
-        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Ethnicity</Label>
-        <ChipSelect options={['Caucasian', 'Asian', 'African', 'Hispanic', 'Middle Eastern', 'South Asian', 'Mixed']} value={ethnicity} onChange={setEthnicity} />
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Region / Look</Label>
+        <Select value={ethnicity} onValueChange={setEthnicity}>
+          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+          <SelectContent className="max-h-80">
+            <SelectGroup>
+              <SelectLabel>European</SelectLabel>
+              {['Northern European', 'British / Irish', 'Scandinavian', 'Mediterranean', 'Eastern European'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>Latin / Hispanic</SelectLabel>
+              {['Latin American', 'Iberian'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>Asian</SelectLabel>
+              {['East Asian', 'South Asian', 'Southeast Asian'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>African / Afro-descendant</SelectLabel>
+              {['African', 'Afro-Caribbean', 'Afro-European'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>Other</SelectLabel>
+              {['Middle Eastern / North African', 'Mixed heritage'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-2">
         <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Morphology</Label>
@@ -595,75 +619,71 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   const referenceBlock = (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ImagePlus className="h-4 w-4 text-muted-foreground" />
-          <Label htmlFor="ref-toggle" className="text-xs font-medium cursor-pointer">Use reference image</Label>
-        </div>
-        <Switch
-          id="ref-toggle"
-          checked={useReference}
-          onCheckedChange={(v) => {
-            setUseReference(v);
-            if (!v) { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }
-          }}
-        />
+      <div className="flex items-center gap-2">
+        <ImagePlus className="h-4 w-4 text-muted-foreground" />
+        <Label className="text-xs font-medium">Reference image <span className="text-muted-foreground/60 font-normal">· optional</span></Label>
       </div>
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
+        Upload a photo to guide the AI. The generated model will resemble the person in the image while using your settings above.
+      </p>
 
-      {useReference && (
-        <div className="space-y-3 pl-1">
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Upload a reference photo to guide the AI. The generated model will resemble the person in the image while using your settings above.
-          </p>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-
-          {!previewUrl ? (
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
-            >
-              <div className="rounded-full bg-muted p-2.5">
-                <Camera className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <span className="text-xs text-muted-foreground">Click or paste (⌘V) reference photo</span>
-              <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
-            </button>
-          ) : (
-            <div className="relative w-28 h-36 rounded-xl overflow-hidden mx-auto border border-border shadow-sm">
-              <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur rounded-full p-1 hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                onClick={() => { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }}
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-              {isUploading && (
-                <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                </div>
-              )}
-            </div>
-          )}
-
-          {uploadedUrl && (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border/60">
-              <Checkbox
-                id="terms"
-                checked={termsAccepted}
-                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                className="mt-0.5"
-              />
-              <label htmlFor="terms" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
-                <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
-                I confirm I own the rights to this image or have permission to use it as a reference. I accept full responsibility for the content I upload and agree to the terms of service.
-              </label>
+      {!previewUrl ? (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
+        >
+          <div className="rounded-full bg-muted p-2.5">
+            <Camera className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <span className="text-xs text-muted-foreground">Click or paste (⌘V) reference photo</span>
+          <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
+        </button>
+      ) : (
+        <div className="relative w-28 h-36 rounded-xl overflow-hidden mx-auto border border-border shadow-sm">
+          <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+          <button
+            type="button"
+            className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur rounded-full p-1 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            onClick={() => { setPreviewUrl(null); setUploadedUrl(null); setTermsAccepted(false); }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+          {isUploading && (
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
             </div>
           )}
         </div>
       )}
+
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-destructive/90">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Content &amp; rights policy
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload. Violations may result in account suspension.
+        </p>
+      </div>
+
+      <div className={cn(
+        "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+        uploadedUrl ? "bg-muted/40 border-border/60" : "bg-muted/20 border-border/30 opacity-60"
+      )}>
+        <Checkbox
+          id="terms"
+          checked={termsAccepted}
+          disabled={!uploadedUrl}
+          onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+          className="mt-0.5"
+        />
+        <label htmlFor="terms" className={cn("text-[11px] leading-relaxed", uploadedUrl ? "text-muted-foreground cursor-pointer" : "text-muted-foreground/70")}>
+          I confirm I own or have explicit permission to use this image, and I accept full responsibility under the VOVV.AI Content Policy.
+        </label>
+      </div>
     </div>
   );
 
