@@ -1,58 +1,84 @@
-## Polish pass — `/app/models` and `/app/models/new`
+## Four fixes — `/app/models` and `/app/models/new`
 
-### 1. Header layout on `/app/models/new`
-Current `PageHeader` puts back button inline with the title (sm: same row). On wide screens it produces the awkward "Brand Models  New brand model" alignment in the screenshot.
+### 1. Bug: model name input loses focus after 1 character
 
-Use a local header inside `BrandModelNew.tsx` instead of `PageHeader`:
-- Row 1: back button alone (`ghost`, `<ArrowLeft/>` + "Brand Models").
-- Row 2: `<h1 class="text-2xl sm:text-3xl font-bold tracking-tight">New brand model</h1>`.
-- Row 3: subtitle `<p class="text-base text-muted-foreground mt-1.5">Describe the person you want VOVV.AI to create</p>`.
-- Wrap UnifiedGenerator below (no PageHeader wrapper).
+**Root cause**: `UnifiedGenerator` defines `Section` as a function expression **inside** the component body (~line 771). Every keystroke re-renders `UnifiedGenerator`, which produces a new `Section` function identity. React treats it as a different component type and remounts the entire subtree (including the model-name `<Input>`), stealing focus. User can only type one character before focus is lost.
 
-### 2. Hide StudioChat launcher on /app/models routes (mobile only)
-In `src/components/app/StudioChat.tsx`, extend `hideOnMobile` to include:
-- `/app/models`
-- `/app/models/new`
+**Fix**: Move `Section` out of `UnifiedGenerator` into a module-scope component (before the `UnifiedGenerator` export). Same signature, no behavior change.
 
-Desktop stays unchanged.
+### 2. Sticky bar — adopt the exact Generate.tsx pattern
 
-### 3. Sticky bar — match other workflows
-Current bar in `BrandModels.tsx` (sections layout) still differs from peer flows. Align to the **Generate.tsx** pattern (the canonical "Product Visuals" sticky bar):
-
+Generate.tsx pattern (canonical):
 ```
-fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 shadow-lg z-30 lg:left-60
+<div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 shadow-lg z-30 lg:left-60">
+  <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <img w-10 h-10 rounded-lg /> {/* preview */}
+      <div>
+        <p className="text-sm font-semibold">Title</p>
+        <p className="text-xs text-muted-foreground">N credits</p>
+      </div>
+    </div>
+    <Button>Continue</Button>
+  </div>
+</div>
 ```
 
-Inner container: `max-w-7xl mx-auto flex items-center justify-between` (matches Generate exactly). Drop the `backdrop-blur` and `bg-background/95` (those are BundleVisuals' lighter style; user wants the Generate / Product Visuals look since that's the dominant workflow pattern).
+Apply to BrandModels sections-layout footer:
+- Left cluster: 40×40 rounded-lg thumbnail of the selected gender's first model preview (or a static dashed placeholder when no reference is uploaded — use the uploaded preview thumb if present, else a small `Users` icon tile `bg-muted`).
+- Text stack:
+  - Line 1 (`text-sm font-semibold`): `modelName || 'New brand model'`
+  - Line 2 (`text-xs text-muted-foreground`): `20 credits · Balance N` (or `Public model · free` when public toggle on)
+- Right: single primary `Generate` button. Disabled when `!canGenerate`; `title={validationError}` for hover hint. Public variant text → `Generate · free`.
+- Validation error displayed as a thin red bar above the row when present:
+  ```
+  <div className="bg-destructive/10 border-b border-destructive/20 text-destructive text-[11px] px-4 py-1.5 text-center">{validationError}</div>
+  ```
+  Sits above the main row, full-width.
+- Remove the Cancel button (Generate flow uses single CTA; back nav is in the page header).
+- Keep `lg:left-60`, drop `backdrop-blur`, drop `max-w-5xl` → `max-w-7xl`.
 
-Mobile stacking stays (flex-col → flex-row at sm).
+### 3. Hide chat launcher on `/app/models/new` everywhere
 
-### 4. Generate button copy + icon
-In sections-layout sticky footer:
-- Button label: `Generate brand model` → **`Generate`**.
-- Public variant: `Generate (free)` → **`Generate · free`** (keeps free signal without the parenthetical).
-- Remove the `<Wand2/>` icon.
-- Drop the `gap-2` class since no icon.
+In `src/components/app/StudioChat.tsx`:
+- Add a `hideAlways` route check above `hideOnMobile`:
+  ```ts
+  if (location.pathname === '/app/models/new') return null;
+  ```
+- Remove `/app/models/new` from the mobile-only list (still hidden on `/app/models` mobile, but visible on desktop for the list page).
 
-### 5. Empty state — use real full-body model photos
-Current uses `TEAM_MEMBERS` avatar headshots (160px square crops). Replace with three real brand-model portraits already shipped under `getLandingAssetUrl('models/...')` (referenced in `src/data/mockData.ts`):
+### 4. Empty state — use real mockModels
 
-- `models/model-female-slim-nordic.jpg`
-- `models/model-male-athletic-european.jpg`
-- `models/model-female-athletic-indian.jpg`
+Replace the three landing-asset paths with `mockModels` from `src/data/mockData.ts` — these are the actual model previews shown across the product-images / catalog flows. Use the first three (Freya, Zara, Anders) which already represent the brand's canonical opening sequence.
 
-Render as a horizontal strip of three `aspect-[3/4]` portrait cards (`w-24` each, `rounded-xl`, subtle `ring-1 ring-border/60`, slight `-ml-3` overlap with `ring-2 ring-background` for cohesion). This matches what the actual `ModelCard` looks like once populated, so the empty state previews the real output format — not avatar circles.
+```tsx
+import { mockModels } from '@/data/mockData';
+// …
+{mockModels.slice(0, 3).map((m, i) => (
+  <img
+    key={m.modelId}
+    src={m.previewUrl}
+    alt={m.name}
+    loading="lazy"
+    className={cn(
+      "w-24 aspect-[3/4] rounded-xl object-cover shadow-sm ring-2 ring-background",
+      i === 1 ? "z-10 scale-110" : "opacity-90",
+      i > 0 && "-ml-3"
+    )}
+  />
+))}
+```
 
-Use `getLandingAssetUrl` directly (import in `BrandModels.tsx`); no new TEAM_MEMBERS coupling.
+Remove the unused `getLandingAssetUrl` import added in the prior pass.
 
 ### Files
-- `src/pages/BrandModelNew.tsx` — replace `PageHeader` with local header block.
-- `src/components/app/StudioChat.tsx` — extend `hideOnMobile` route list.
 - `src/pages/BrandModels.tsx`
-  - Empty state: swap avatars for 3 full-body portraits via `getLandingAssetUrl`.
-  - Sticky footer: align classes to Generate pattern, drop icon, shorten label.
+  - Hoist `Section` to module scope (fixes input focus loss).
+  - Replace sticky footer with Generate.tsx pattern (thumbnail + text + single button + thin validation banner).
+  - Swap empty-state image source to `mockModels`.
+- `src/components/app/StudioChat.tsx`
+  - Hard-hide on `/app/models/new` (all viewports); keep `/app/models` mobile-only hide.
 
 ### Out of scope
-- No DB/edge changes.
-- No populated-grid changes.
-- No StudioChat desktop visibility change.
+- No DB / edge function changes.
+- No changes to fields, form sections, populated grid, or upgrade-gated view.
