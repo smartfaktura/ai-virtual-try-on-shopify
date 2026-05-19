@@ -2272,11 +2272,11 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
     {
       "subCategory": "Swimwear · Aesthetic Color",
       "cards": [
-        { "label": "Color-Washed Resort Wall",         "imageId": "1776246306554-a1y4nz" },
-        { "label": "Aesthetic Color Poolside Story",   "imageId": "1776246296252-lf70sc" },
-        { "label": "Aesthetic Color Towel and Fabric Story", "imageId": "1776246299612-uidzat" },
-        { "label": "Aesthetic Color Sunset Resort Mood", "imageId": "1776246298538-xb12wj" },
-        { "label": "Aesthetic Color Resort Editorial Hero", "imageId": "1776246297359-aecrip" }
+        { "label": "Color-Washed Resort Wall",         "imageId": "1777996990945-7t4iqw" },
+        { "label": "Aesthetic Color Poolside Story",   "imageId": "1777996986914-n16g2p" },
+        { "label": "Aesthetic Color Towel and Fabric Story", "imageId": "1777996989794-75995p" },
+        { "label": "Aesthetic Color Sunset Resort Mood", "imageId": "1777996988655-w0z9fg" },
+        { "label": "Aesthetic Color Resort Editorial Hero", "imageId": "1777996987704-clgu3v" }
       ]
     },
     {
