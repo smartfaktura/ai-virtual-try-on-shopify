@@ -1069,43 +1069,6 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "bags-accessories": [
     {
-      "subCategory": "Bags · On-Body Editorial",
-      "cards": [
-        {
-          "label": "Architectural On-Body Editorial",
-          "imageId": "1776239415973-p3m8bq"
-        },
-        {
-          "label": "Close Body Bag Portrait",
-          "imageId": "1776239422417-a959mo"
-        },
-        {
-          "label": "Winter Bokeh Detail",
-          "imageId": "1776749562121-bqgti4"
-        },
-        {
-          "label": "Retro Car Editorial",
-          "imageId": "1776749545971-gv6zst"
-        },
-        {
-          "label": "City Icon Portrait",
-          "imageId": "1776749519182-i9w68k"
-        },
-        {
-          "label": "Alpine Minimalism",
-          "imageId": "1776749510995-txj24j"
-        },
-        {
-          "label": "Lakeside Quiet Luxury",
-          "imageId": "1776749534061-yvcf06"
-        },
-        {
-          "label": "Windblown Studio Edge",
-          "imageId": "1776749560624-xw3yec"
-        }
-      ]
-    },
-    {
       "subCategory": "Bags · Campaign Statements",
       "cards": [
         {
@@ -1139,6 +1102,43 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         {
           "label": "Soft Motion Carry Editorial",
           "imageId": "1776749550097-x6afn4"
+        }
+      ]
+    },
+    {
+      "subCategory": "Bags · On-Body Editorial",
+      "cards": [
+        {
+          "label": "Architectural On-Body Editorial",
+          "imageId": "1776239415973-p3m8bq"
+        },
+        {
+          "label": "Close Body Bag Portrait",
+          "imageId": "1776239422417-a959mo"
+        },
+        {
+          "label": "Winter Bokeh Detail",
+          "imageId": "1776749562121-bqgti4"
+        },
+        {
+          "label": "Retro Car Editorial",
+          "imageId": "1776749545971-gv6zst"
+        },
+        {
+          "label": "City Icon Portrait",
+          "imageId": "1776749519182-i9w68k"
+        },
+        {
+          "label": "Alpine Minimalism",
+          "imageId": "1776749510995-txj24j"
+        },
+        {
+          "label": "Lakeside Quiet Luxury",
+          "imageId": "1776749534061-yvcf06"
+        },
+        {
+          "label": "Windblown Studio Edge",
+          "imageId": "1776749560624-xw3yec"
         }
       ]
     },
