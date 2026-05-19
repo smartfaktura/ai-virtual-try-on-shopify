@@ -850,50 +850,34 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
-        {/* Sticky footer action bar — matches Generate (Product Visuals) pattern */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-30 lg:left-60">
-          {validationError && (
-            <button
-              type="button"
-              onClick={isLowCreditsError ? () => setNoCreditsOpen(true) : undefined}
-              disabled={!isLowCreditsError}
-              className={cn(
-                "w-full bg-destructive/10 border-b border-destructive/20 text-destructive text-[11px] px-4 py-1.5 text-center",
-                isLowCreditsError && "hover:bg-destructive/15 cursor-pointer"
-              )}
+        {/* Sticky footer — floating pill (matches /app/generate/product-images) */}
+        <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
+          <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
+            <Button variant="outline" onClick={onSuccess}>Back</Button>
+            {validationError ? (
+              isLowCreditsError ? (
+                <button
+                  type="button"
+                  onClick={() => setNoCreditsOpen(true)}
+                  className="text-xs text-destructive text-center flex-1 hover:underline cursor-pointer"
+                >
+                  {validationError} →
+                </button>
+              ) : (
+                <span className="text-xs text-muted-foreground text-center flex-1">{validationError}</span>
+              )
+            ) : (
+              <span className="text-xs text-muted-foreground text-center flex-1 hidden sm:inline">
+                {makePublic ? 'Public model · free' : `20 credits · Balance ${balance}`}
+              </span>
+            )}
+            <Button
+              disabled={!canGenerate}
+              onClick={handleGenerate}
+              title={validationError || undefined}
             >
-              {validationError}{isLowCreditsError ? ' →' : ''}
-            </button>
-          )}
-          <div className="p-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                {previewUrl ? (
-                  <img src={previewUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold truncate">{modelName.trim() || 'New brand model'}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {makePublic
-                      ? 'Public model · free'
-                      : <>20 credits · Balance <span className={cn("font-medium", balance >= 20 ? "text-foreground" : "text-destructive")}>{balance}</span></>
-                    }
-                  </p>
-                </div>
-              </div>
-              <Button
-                disabled={!canGenerate}
-                onClick={handleGenerate}
-                title={validationError || undefined}
-                className="shrink-0"
-              >
-                {makePublic ? 'Generate · free' : 'Generate'}
-              </Button>
-            </div>
+              {makePublic ? 'Generate · free' : 'Generate'}
+            </Button>
           </div>
         </div>
         <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
