@@ -1,34 +1,51 @@
 ## Goal
-Upgrade single user `leskauskaite@gmail.com` (id `32153738-b8e9-472e-b355-a86fb3f5ffcc`, currently `free` / 0 credits) to **Pro plan** with **10,000 credits** — safely, without touching billing-protected fields directly.
+On `/ai-product-photography/swimwear`:
+1. Remove the "What we cover in swimwear" chips section (Bikinis / One-Pieces / Swim Shorts / Cover-Ups / Resort Wear).
+2. Refresh the "One swimsuit · Every shot" grid (`BUILT_FOR_GRIDS.swimwear`) so each chip group shows real, current scene library images instead of stale/missing ones.
 
-## Why this is safe
-- No schema changes, no code changes.
-- Uses existing `SECURITY DEFINER` RPCs designed exactly for this:
-  - `change_user_plan(user_id, 'pro', 4500)` — sets plan to `pro` (validated against allowed plans) and lifts balance up to plan allotment.
-  - `add_purchased_credits(user_id, delta)` — atomic positive credit add via the same path Stripe uses for credit pack fulfillment.
-- Both bypass `protect_billing_fields` correctly (service_role / definer), so no trigger errors and no risk of corrupting Stripe-synced fields.
-- Scoped to one `user_id` — zero blast radius.
-- Does NOT touch `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, or `billing_interval`. Stripe stays the source of truth; if the user later subscribes, `check-subscription` will reconcile cleanly.
+No backend, RLS, schema, edge function, or data-model changes. Pure frontend edits to two files.
 
-## Caveat to confirm
-Because we are not creating a real Stripe subscription, `subscription_status` will stay `none` and `current_period_end` will be `null`. This means the **use-it-or-lose-it monthly reset will NOT fire** for this user — the 10,000 credits persist until spent. That is the desired behavior for a manual grant. Confirm this is acceptable.
+## Changes
 
-## Steps (executed via Supabase insert tool on approval)
-1. `SELECT change_user_plan('32153738-b8e9-472e-b355-a86fb3f5ffcc', 'pro', 4500);`
-   → Plan becomes `pro`, balance becomes at least 4500.
-2. `SELECT add_purchased_credits('32153738-b8e9-472e-b355-a86fb3f5ffcc', 10000 - <new_balance>);`
-   → Top up to exactly 10,000. (Or simpler: a single guarded UPDATE through the same definer path — see alternative below.)
-3. Verify: `SELECT plan, credits_balance FROM profiles WHERE user_id = '...'` → expect `pro`, `10000`.
+### 1. Hide subcategory chips for swimwear
+**File:** `src/pages/seo/AIProductPhotographyCategory.tsx`
 
-### Simpler alternative (preferred)
-Run both effects in one statement using the existing functions:
-```sql
-SELECT change_user_plan('32153738-...'::uuid, 'pro', 0);  -- set plan, no balance bump
-SELECT add_purchased_credits('32153738-...'::uuid, 10000 - (SELECT credits_balance FROM profiles WHERE user_id='32153738-...'));
+Extend the existing conditional that already hides chips for `home-furniture`:
+```tsx
+{!['home-furniture', 'swimwear'].includes(page.slug) && <CategorySubcategoryChips page={page} />}
 ```
-Final state: `plan='pro'`, `credits_balance=10000`.
+The `subcategories` array stays in the data file (used elsewhere for SEO copy). No other section is affected.
+
+### 2. Refresh swimwear Built-For grid images
+**File:** `src/data/aiProductPhotographyBuiltForGrids.ts` (swimwear block)
+
+Replace stale `imageId`s with live IDs verified against `product_image_scenes`:
+
+| Group | Old (stale) | New (live in scene library) |
+|---|---|---|
+| Resort Editorial | `1776246335378-kw9z8c` Yacht Deck | `1777996843133-j8fyxu` |
+| Aesthetic Color | `1776246306554-a1y4nz` | `1777996990945-7t4iqw` |
+| Aesthetic Color | `1776246296252-lf70sc` | `1777996986914-n16g2p` |
+| Aesthetic Color | `1776246299612-uidzat` | `1777996989794-75995p` |
+| Aesthetic Color | `1776246298538-xb12wj` | `1777996988655-w0z9fg` |
+| Aesthetic Color | `1776246297359-aecrip` | `1777996987704-clgu3v` |
+| Beach UGC | `1776522793804-125kin` | `1777996837190-gozhuc` |
+| Beach UGC | `1776522770907-dwn2ay` | `1777996831843-l3w3d6` |
+| Beach UGC | `1776522832053-f1h9ck` | `1777996839874-rwutl7` |
+| Beach UGC | `1776246326918-ofopok` | `1777996836335-qaub4x` |
+
+**Essential Shots** drops from 7 → 5 cards (keep: Ghost Mannequin, On-Model Front, On-Model Back, On-Model Editorial, Movement Shot). Remove `Texture Detail` and `Product + Packaging` — they do not exist in the live library for swimwear.
+
+`PREVIEW(id)` constructs `…/scene-previews/{id}.jpg` which matches the live `preview_image_url` filenames, so the swap is sufficient — images render immediately.
+
+## Safety
+- Only two frontend files touched.
+- No DB writes, no migrations, no edge function deploys.
+- Admin `seo_page_visuals` has zero override rows for swimwear `builtFor_*` slots, so defaults render through.
+- `home-furniture` chip-hide behavior is preserved exactly.
+- Other categories (`apparel`, `eyewear`, etc.) are untouched.
 
 ## Rollback
-If needed: `SELECT change_user_plan('<id>', 'free', 0);` and adjust balance via `add_purchased_credits` with a negative-equivalent (would require a tiny one-off; easier: just leave credits and downgrade plan).
+Revert the two files — no state to clean up.
 
-Approve to execute.
+Approve to implement.

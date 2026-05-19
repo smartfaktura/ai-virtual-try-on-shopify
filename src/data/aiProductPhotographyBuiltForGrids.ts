@@ -2266,30 +2266,30 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "Resort Bokeh Swim Editorial",  "imageId": "1776522789403-pnvcux" },
         { "label": "Seated Balcony Resort Portrait", "imageId": "1776246325971-mrh821" },
         { "label": "Cabana Curtain Movement",      "imageId": "1776522770222-za8n2n" },
-        { "label": "Yacht Deck Editorial Pose",    "imageId": "1776246335378-kw9z8c" }
+        { "label": "Yacht Deck Editorial Pose",    "imageId": "1777996843133-j8fyxu" }
       ]
     },
     {
       "subCategory": "Swimwear · Aesthetic Color",
       "cards": [
-        { "label": "Color-Washed Resort Wall",         "imageId": "1776246306554-a1y4nz" },
-        { "label": "Aesthetic Color Poolside Story",   "imageId": "1776246296252-lf70sc" },
-        { "label": "Aesthetic Color Towel and Fabric Story", "imageId": "1776246299612-uidzat" },
-        { "label": "Aesthetic Color Sunset Resort Mood", "imageId": "1776246298538-xb12wj" },
-        { "label": "Aesthetic Color Resort Editorial Hero", "imageId": "1776246297359-aecrip" }
+        { "label": "Color-Washed Resort Wall",         "imageId": "1777996990945-7t4iqw" },
+        { "label": "Aesthetic Color Poolside Story",   "imageId": "1777996986914-n16g2p" },
+        { "label": "Aesthetic Color Towel and Fabric Story", "imageId": "1777996989794-75995p" },
+        { "label": "Aesthetic Color Sunset Resort Mood", "imageId": "1777996988655-w0z9fg" },
+        { "label": "Aesthetic Color Resort Editorial Hero", "imageId": "1777996987704-clgu3v" }
       ]
     },
     {
       "subCategory": "Swimwear · Beach UGC",
       "cards": [
         { "label": "Towel Wrap After Swim",         "imageId": "1776246331485-jyrtgf" },
-        { "label": "Sun-Dried Swimwear",            "imageId": "1776522793804-125kin" },
-        { "label": "Floating Pool Product Shot",    "imageId": "1776522770907-dwn2ay" },
+        { "label": "Sun-Dried Swimwear",            "imageId": "1777996837190-gozhuc" },
+        { "label": "Floating Pool Product Shot",    "imageId": "1777996831843-l3w3d6" },
         { "label": "Palm Shadow Swim Editorial",    "imageId": "1776522783936-8h56rb" },
-        { "label": "Walking Along Pool Edge",       "imageId": "1776522832053-f1h9ck" },
+        { "label": "Walking Along Pool Edge",       "imageId": "1777996839874-rwutl7" },
         { "label": "Beach Towel Sitting Moment",    "imageId": "1776246304639-tjof8z" },
         { "label": "Beach Bag and Essentials",      "imageId": "1776246303699-b50y33" },
-        { "label": "Shoreline Walk Pause",          "imageId": "1776246326918-ofopok" }
+        { "label": "Shoreline Walk Pause",          "imageId": "1777996836335-qaub4x" }
       ]
     },
     {
@@ -2308,9 +2308,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "On-Model Front",       "imageId": "1776246318297-apxkit" },
         { "label": "On-Model Back",        "imageId": "1776246316545-ge07py" },
         { "label": "On-Model Editorial",   "imageId": "1776246317384-rtaqcj" },
-        { "label": "Movement Shot",        "imageId": "1776246314604-0psi6v" },
-        { "label": "Texture Detail",       "imageId": "1776523395800-pxcl00" },
-        { "label": "Product + Packaging",  "imageId": "1776523394657-7rfvtd" }
+        { "label": "Movement Shot",        "imageId": "1776246314604-0psi6v" }
       ]
     }
   ],
