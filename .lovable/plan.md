@@ -1,73 +1,82 @@
-## Goals
+## Scope
 
-Three focused refinements to `/app/models/new`:
-
-1. Ethnicity chips that reflect the actual user base (Western Europe / UK-leaning) without losing inclusivity
-2. Reference image section always visible (no toggle) + mandatory consent + visible safety policy
-3. Cleaner header rhythm (back link + title + subtitle)
+Six small fixes across `/app/models` and `/app/models/new`.
 
 ---
 
-## 1. Ethnicity — better-curated options
+### 1. Fix empty state on `/app/models`
 
-Current chips are generic continental buckets ("Caucasian / Asian / African / Hispanic / Middle Eastern / South Asian / Mixed") that don't match how Western / UK brands actually brief models.
+Currently the empty state shows AND the `PageHeader` "Create New Model" button still renders above it → two CTAs.
 
-**New approach — two-level, descriptive:**
+- When `models.length === 0` (paid users), suppress the header's "Create New Model" action — render `PageHeader` without the button so only the single "Create your first model" pill in the empty state remains.
+- Polish empty-state copy/visual to match the platform's editorial restraint:
+  - Slightly lighter title weight (`font-medium`) to match other surfaces
+  - Wider body text container, calmer line-height
+  - Subtle dashed-border illustration tile (matches the dashed "New model" tile in the grid) instead of the filled muted square
+  - Single primary pill CTA stays: "Create your first model"
 
-Replace `ChipSelect` with a more useful **Region/Look** select, grouped:
+### 2. `Create New Model` → header CTA stays only when grid is populated (no redundancy fix needed beyond #1)
 
-- **European** — Northern European, British / Irish, Mediterranean, Eastern European, Scandinavian
-- **Latin / Hispanic** — Latin American, Iberian
-- **Asian** — East Asian, South Asian, Southeast Asian
-- **African / Afro-descendant** — African, Afro-Caribbean, Afro-European
-- **Middle Eastern / North African**
-- **Mixed heritage**
+### 3. Appearance section collapsed by default
 
-Rendered as a single `Select` (grouped with `SelectGroup` / `SelectLabel`) so it stays compact and isn't dominated by 15 chips. Default value changes from `"Caucasian"` to `"Northern European"`. The string is passed through to the prompt as-is, so the edge function keeps working unchanged.
+In `UnifiedGenerator` sections layout, wrap the **Appearance** section in a collapsible (using existing `Collapsible` primitive). Header row shows title + "All optional" hint + chevron. Collapsed by default. Reference section stays expanded (it's now always-open by design). Essentials always expanded.
 
-Rationale: gives Western/UK-targeted brands the precise look they brief for (e.g. "British / Irish", "Scandinavian") while still covering global diversity in a clean dropdown.
+### 4. Age inline with the other essentials, not in its own column
+
+Right now Essentials uses `grid sm:grid-cols-2` putting Gender / Age side-by-side and Region / Morphology stacked below. Restructure to a single coherent rhythm:
+
+- Row 1: **Model name** (full width)
+- Row 2: **Gender** chips (full width, compact)
+- Row 3: **Age** slider (full width — slider needs the room and reads more naturally horizontal)
+- Row 4: **Region / Look** select (full width)
+- Row 5: **Morphology** chips (full width)
+
+Removes the awkward orphaned column and gives the slider proper breathing room.
+
+### 5. Model name length restriction
+
+- Hard cap input `maxLength={32}` (was 40)
+- Add a small character counter under the input (`{modelName.length}/32`) that turns muted → warning at ≥28
+- Minimum 2 chars validated for generation
+
+### 6. Validation + disabled-button hint message
+
+Today the Generate button greys out silently when something is missing. Add a derived `validationError` string with priority:
+
+1. `!modelName.trim() || modelName.trim().length < 2` → "Add a model name (min 2 characters)"
+2. `uploadedUrl && !termsAccepted` → "Confirm the content & rights policy to continue"
+3. `isUploading` → "Waiting for upload to finish…"
+4. `!makePublic && balance < 20` → "Not enough credits — top up to continue" (this one keeps the existing buy-credits link)
+5. otherwise `null`
+
+UI:
+- Sticky footer (sections layout): when `validationError` is set, show it as a small inline message left of the Cancel/Generate buttons, in `text-destructive/80` for the credit case and `text-muted-foreground` for the other cases. Button stays disabled.
+- Also show it inside the inline (legacy) footer for symmetry.
+- Add a `title={validationError}` tooltip attribute on the disabled Generate button so hover also reveals the reason.
+
+Also tighten `canGenerate` to require `modelName.trim().length >= 2`.
+
+### 7. Content policy copy
+
+Drop the sentence `"Violations may result in account suspension."` from the reference policy callout. Keep the rest.
 
 ---
 
-## 2. Reference image — always open + consent gate + policy
+## Files
 
-- Remove the `Switch` toggle. The upload tile is always rendered.
-- Drop `useReference` state (or default it to `true` permanently) — uploader, preview, and consent live inline.
-- Consent checkbox is **always visible** below the uploader (not only after upload), but only becomes *required* when an image is uploaded. When no image is uploaded it shows as informational/disabled.
-- Strengthen the policy copy and lift it into a small bordered "Content Policy" callout above the checkbox:
-
-  > **Content & rights policy.** Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload. Violations may result in account suspension.
-
-- Checkbox label tightens to:
-  > "I confirm I own or have explicit permission to use this image, and I accept full responsibility under the VOVV.AI Content Policy."
-
-- `canGenerate` logic update: if `uploadedUrl` exists, require `termsAccepted`. If no upload, generation proceeds without the checkbox.
-- "Reference is optional" hint sits under the section title so users know they can skip.
-
----
-
-## 3. Header spacing / layout polish
-
-Current header stacks: `← Brand Models` (ghost button) / `Create New Model` (h1) / `Describe your ideal model · 20 credits per generation` — spacing feels loose and the back button visually fights the title.
-
-Changes in `BrandModelNew.tsx` only (no shared `PageHeader` edits):
-
-- Replace `PageHeader` usage with a local header block that gives a cleaner hierarchy:
-  - Tiny back link rendered above as a quiet breadcrumb: `← Brand Models` in `text-xs text-muted-foreground hover:text-foreground`, `mb-3`, not a button-shaped element
-  - Title `text-3xl font-semibold tracking-tight` (drop bold for editorial feel matching the rest of the platform), `mb-1.5`
-  - Subtitle `text-sm text-muted-foreground` with the credit cost rendered as a subtle pill on the right: `20 credits per generation`
-- Outer container: keep `max-w-3xl mx-auto`, add `pt-2 pb-32` (room for sticky footer), and tighten the header block to `mb-6`.
-- The three section cards inside `UnifiedGenerator layout="sections"` get consistent `space-y-5` between them (already close — verify).
-
----
-
-## Technical details
-
-**Files:**
 - `src/pages/BrandModels.tsx`
-  - Replace ethnicity `ChipSelect` (line 504-506) with a grouped `Select` using the new region list. Update default `useState('Caucasian')` → `useState('Northern European')`.
-  - Refactor `referenceBlock` (lines 596-668): remove the `Switch`/`useReference` gating, always render uploader; always render consent box (disabled-looking until file uploaded); add policy callout above; tighten `canGenerate` to require `termsAccepted` only when `uploadedUrl` is set.
-- `src/pages/BrandModelNew.tsx`
-  - Stop using `PageHeader`; render a local header (back breadcrumb + title + subtitle/credit pill) with the spacing described above. Keep `UnifiedGenerator layout="sections"`.
+  - Empty-state block (~line 971-987): refine layout/typography, switch tile to dashed style
+  - Page header (~line 930-938): only render the `<Button>` action when `models.length > 0`
+  - `UnifiedGenerator`:
+    - `essentialsBlock`: restructure to single-column ordering above
+    - `modelName` `Input`: `maxLength={32}` + counter below
+    - Add `validationError` derived value; tighten `canGenerate` to require name length
+    - Wrap Appearance section in `Collapsible` (sections layout only), default closed
+    - Sticky footer + inline footer: surface `validationError` next to the Generate button; pass to `title=` on the button
+    - Reference policy: remove the "Violations may result in account suspension." sentence
 
-**Out of scope:** edge function, DB, prompt template changes (the new ethnicity strings are free-text and pass straight through). No changes to `/app/models` grid.
+## Out of scope
+
+- No backend / edge function / DB changes (the existing edge function already validates server-side; this is purely client-side UX clarification)
+- No `ModelCard` grid changes
+- No changes to the upgrade-gated (free) view
