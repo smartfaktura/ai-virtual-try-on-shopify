@@ -67,10 +67,18 @@ function jobsToRawItems(jobsData: any[], q: string): RawItem[] {
         ? `${workflowName} — ${productTitle}`
         : workflowName || productTitle || 'Generated';
       const promptText = job.prompt_final || '';
+      const sceneName = (job.scene_name || '').toLowerCase();
+      const modelName = (job.model_name || '').toLowerCase();
+      const productName = ((job as any).product_name || '').toLowerCase();
+      const workflowSlug = (job.workflow_slug || '').toLowerCase();
 
       if (q && !label.toLowerCase().includes(q) &&
           !promptText.toLowerCase().includes(q) &&
-          !productTitle.toLowerCase().includes(q)) continue;
+          !productTitle.toLowerCase().includes(q) &&
+          !sceneName.includes(q) &&
+          !modelName.includes(q) &&
+          !productName.includes(q) &&
+          !workflowSlug.includes(q)) continue;
 
       items.push({
         url,
@@ -123,7 +131,17 @@ function freestyleToRawItems(
       : (userPrompt ? userPrompt.slice(0, 40) + (userPrompt.length > 40 ? '…' : '') : 'Freestyle Creation');
     const displayLabel = wfLabel || freestyleLabel;
 
-    if (q && !displayLabel.toLowerCase().includes(q) && !f.prompt.toLowerCase().includes(q)) continue;
+    const modelNameL = (modelInfo.name || '').toLowerCase();
+    const sceneNameL = (sceneInfo.name || '').toLowerCase();
+    const userPromptL = (userPrompt || '').toLowerCase();
+    const wfLabelL = (wfLabel || '').toLowerCase();
+
+    if (q && !displayLabel.toLowerCase().includes(q) &&
+        !f.prompt.toLowerCase().includes(q) &&
+        !userPromptL.includes(q) &&
+        !wfLabelL.includes(q) &&
+        !modelNameL.includes(q) &&
+        !sceneNameL.includes(q)) continue;
 
     items.push({
       url: f.image_url,
@@ -179,6 +197,18 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
             : jobsQuery.lt('created_at', cursor.jobCursor);
         }
 
+        // Sanitize search term for Supabase .or() (strip chars that break syntax)
+        const esc = q.replace(/[%,()]/g, ' ').trim();
+        if (esc) {
+          jobsQuery = jobsQuery.or([
+            `product_name.ilike.%${esc}%`,
+            `scene_name.ilike.%${esc}%`,
+            `model_name.ilike.%${esc}%`,
+            `workflow_slug.ilike.%${esc}%`,
+            `prompt_final.ilike.%${esc}%`,
+          ].join(','));
+        }
+
         // Build freestyle query
         let fsQuery = supabase
           .from('freestyle_generations')
@@ -194,6 +224,37 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
 
         const skipJobs = !!cursor.jobsDone || sourceFilter === 'freestyle';
         const skipFs = !!cursor.fsDone || sourceFilter === 'workflow';
+
+        // For freestyle search: resolve model/scene names → IDs (mock + custom) and add to .or()
+        if (esc && !skipFs) {
+          const matchedModelIds = mockModels.filter(m => m.name.toLowerCase().includes(q)).map(m => m.modelId);
+          const matchedPoseIds = mockTryOnPoses.filter(p => p.name.toLowerCase().includes(q)).map(p => p.poseId);
+
+          const [customModelMatch, customSceneMatch] = await Promise.all([
+            supabase.from('custom_models').select('id').ilike('name', `%${esc}%`).limit(50),
+            supabase.rpc('get_public_custom_scenes').then(res => ({
+              data: (res.data as any[] ?? []).filter((s: any) => (s.name || '').toLowerCase().includes(q)).slice(0, 50),
+            })),
+          ]);
+
+          const allModelIds = [
+            ...matchedModelIds,
+            ...((customModelMatch.data as any[]) ?? []).map((m: any) => `custom-${m.id}`),
+          ];
+          const allSceneIds = [
+            ...matchedPoseIds,
+            ...((customSceneMatch.data as any[]) ?? []).map((s: any) => `custom-${s.id}`),
+          ];
+
+          const clauses = [
+            `prompt.ilike.%${esc}%`,
+            `user_prompt.ilike.%${esc}%`,
+            `workflow_label.ilike.%${esc}%`,
+          ];
+          if (allModelIds.length) clauses.push(`model_id.in.(${allModelIds.join(',')})`);
+          if (allSceneIds.length) clauses.push(`scene_id.in.(${allSceneIds.join(',')})`);
+          fsQuery = fsQuery.or(clauses.join(','));
+        }
 
         const [jobsResult, freestyleResult] = await Promise.all([
           skipJobs ? Promise.resolve({ data: [], error: null }) : jobsQuery,
