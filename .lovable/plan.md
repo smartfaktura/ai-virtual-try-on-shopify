@@ -1,96 +1,61 @@
-## Five fixes — `/app/models/new`
+## Three fixes — Brand Model generation flow
 
-### 1. Sticky bar — copy the exact Product Visuals pattern
+### 1. "Generation happens server-side..." copy — change intent
 
-Source of truth = `Generate.tsx` line 3514 (the bar shown after a product is selected):
+Current copy says navigate away and "your model will appear here when ready" — wrong, because the user still needs to choose between 3 variations before saving. Replace in both places it appears (loader and inline footer):
+
+- Loader (`BrandedLoadingState`, line ~191-196): change to **"Stay on this page — you'll pick your favorite of 3 variations next"** with the same `Info` icon styling.
+- Inline footer block (line ~811-816): same replacement copy.
+
+### 2. Variation picker — clean up the cramped layout
+
+The end-results screen currently stacks: page title → page subtitle → "Choose the Best Variation" → meta line → 3 images → buttons, all packed tightly. Restructure for breathing room (lines ~419-489):
+
+- Wrap the whole picker in the same `Card` container the Generate loader uses (`<Card><CardContent className="p-8 sm:p-10 space-y-8">`) so it visually separates from the page heading.
+- Header: `text-lg font-semibold` (was `text-base`), subtitle `text-xs text-muted-foreground` with more space (`space-y-1.5`).
+- Image grid: increase gap from `gap-3` → `gap-4 sm:gap-5`, give container `mt-2`.
+- Action row: keep two buttons but give it `pt-4 border-t border-border/50` separator and `gap-3`.
+- Button labels:
+  - Save flow: **"Save as Brand Model"** (no `(20 credits)` suffix — already shown elsewhere, redundant).
+  - Public flow: keep "Publish as Public Model" (already clean).
+- Keep `Check`/`Star` icons on the primary buttons.
+
+### 3. Loading animation — match the canonical Generate.tsx pattern
+
+The current `BrandedLoadingState` uses a 32×32 carousel of team-avatar squares with rotating names. The rest of the product (`Generate.tsx` line ~4417) uses a much simpler, consistent pattern:
 
 ```tsx
-<div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
-  <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
-    <Button variant="outline" onClick={back}>Back</Button>
-    {needsHelp && <span className="text-xs text-muted-foreground text-center flex-1">…hint…</span>}
-    <Button disabled={!canGenerate} onClick={handleGenerate}>Generate</Button>
+<Card><CardContent className="p-10 flex flex-col items-center gap-6">
+  <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle">
+    <img src={…} className="w-full h-full object-cover" />
   </div>
-</div>
+  <div className="text-center">
+    <h2 className="text-lg font-semibold">Creating Your Images…</h2>
+    <p className="text-sm text-muted-foreground mt-1">…subtitle…</p>
+  </div>
+  <Progress … />
+</Card>
 ```
 
-Apply to BrandModels sections-layout footer:
-- Floating pill (not edge-to-edge): `fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4` + inner `max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4`.
-- Left: `Back` (`variant="outline"`, calls `onSuccess` to go back to `/app/models`).
-- Center (only when `validationError`): `text-xs text-muted-foreground text-center flex-1`. If `isLowCreditsError`, render as a `<button>` opening `NoCreditsModal` with `→` suffix.
-- Right: `Generate` primary button. Label `Generate` (or `Generate · free` when public). No icon. `disabled={!canGenerate}`.
-- Remove the thumbnail + meta block, remove the `bg-card border-t shadow-lg` full-width container, remove the "20 credits · Balance N" copy from this bar (cost shown elsewhere on page).
-- Bottom padding on container: change `pb-32` → `pb-28` to match pill clearance.
+Rebuild `BrandedLoadingState` to follow this:
+- `<Card><CardContent className="p-10 flex flex-col items-center gap-6">` wrapper (matches Generate loader card).
+- Single circular avatar `w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle`. Use the reference photo if uploaded, else first `TEAM_MEMBERS` avatar — no carousel, no rotating name chip.
+- Title: `text-lg font-semibold` → **"Creating your brand model…"** (matches Generate's "Creating Your Images…" cadence).
+- Subtitle: `text-sm text-muted-foreground mt-1` → cycles through `LOADING_TIPS` (keep tip rotation, drop the "overtime" copy unless `ratio >= 1.3`).
+- `Progress` bar `h-2` + small `Est. ~1–2 min · Ns elapsed` row underneath (matches Generate batch progress row).
+- Drop: the 6-dot progress-step indicator, the avatar carousel pulse ring, the name/expertise tag.
+- Server-side info pill: replace copy per fix #1.
 
-### 2. Age slider — eliminate drag lag
-
-Root cause: `<Slider value={age} onValueChange={setAge} />` updates parent state on every pixel-step. Every change re-renders `UnifiedGenerator` with ~10 Radix `<Select>` trees → frame drops on drag.
-
-Fix: extract a tiny self-contained `AgeSlider` component (defined at module scope, not inside UnifiedGenerator). It holds its own `local` state synced to the prop, updates internal display instantly during drag, and **commits to parent only on `onValueCommit`** (drag release / keyboard step).
-
-```tsx
-const AgeSlider = ({ value, onCommit }: { value: number; onCommit: (n: number) => void }) => {
-  const [local, setLocal] = useState(value);
-  useEffect(() => setLocal(value), [value]);
-  return (
-    <>
-      <Label …>Age — {local}</Label>
-      <Slider min={4} max={70} step={1} value={[local]}
-        onValueChange={(v) => setLocal(v[0])}
-        onValueCommit={(v) => onCommit(v[0])} />
-      <div className="flex justify-between text-[10px] text-muted-foreground/50">
-        <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
-      </div>
-    </>
-  );
-};
-```
-
-Replace inline slider usage with `<AgeSlider value={age[0]} onCommit={(n) => setAge([n])} />`. Display value updates instantly, parent updates once on release — no lag.
-
-### 3. Region / Look dropdown — clearer non-clickable group labels
-
-`SelectLabel` is correctly non-interactive in Radix, but currently styled like an item (same indent, similar weight), making users think they're tappable.
-
-Fix: differentiate `<SelectLabel>` visually:
-- `className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60"` (smaller, uppercase, more muted).
-- Add `<SelectSeparator />` between groups for clearer hierarchy.
-- Trigger height aligned to other selects (`h-9` already).
-
-This applies only to the Region/Look select — keep other selects unchanged.
-
-### 4. Reference image — drag-drop support (paste already works, keep it)
-
-Currently: click-to-upload + clipboard paste (via `useEffect` listening for paste events). No drag-drop.
-
-Fix on the dropzone button:
-- Add state `const [isDragging, setIsDragging] = useState(false);`
-- Add handlers `onDragOver` (preventDefault + setIsDragging(true)), `onDragLeave` (setIsDragging(false)), `onDrop` (preventDefault, get `e.dataTransfer.files[0]`, validate `type.startsWith('image/')`, call existing `processFile`).
-- When `isDragging`, swap border to `border-primary bg-primary/5`.
-- Update microcopy: `Click, drag, or paste (⌘V) reference photo`.
-
-### 5. "I confirm" checkbox — stop the jump-to-top
-
-Likely cause: clicking `<label htmlFor="terms">` triggers a focus on the Radix Checkbox button. When validationError disappears the sticky bar's error row collapses, and the focus shift combined with layout settling reads as a "jump."
-
-Fix:
-- Remove `htmlFor="terms"` from the label and instead make the wrapper row clickable: `onClick={() => uploadedUrl && setTermsAccepted(v => !v)}` on the outer container, with `cursor-pointer` when enabled.
-- Add `e.preventDefault()` on the label click to block native focus-scroll behavior.
-- Keep the `<Checkbox>` visually present and synchronized via `checked={termsAccepted}` — pointer events on the checkbox itself still toggle via `onCheckedChange`.
-
-Same pattern applied to the admin "Add as public model" checkbox row for consistency.
-
-### Out of scope
-- No DB / edge-function changes.
-- No changes to fields list, generation logic, or empty-state grid.
-- No changes to `/app/models` list page (sticky bar only lives in the `sections` layout used by `/new`).
+Accept an optional `previewUrl?: string` prop so the loader can show the user's reference photo when present; default to first TEAM_MEMBER avatar otherwise. Pass `previewUrl` from `UnifiedGenerator` where `BrandedLoadingState` is rendered (line ~492).
 
 ### Files
+
 - `src/pages/BrandModels.tsx`
-  - Hoist `AgeSlider` to module scope; swap inline slider for it.
-  - Restyle Region/Look `SelectLabel`s + add separators.
-  - Add drag-drop handlers + isDragging state on reference dropzone; update microcopy.
-  - Replace sticky footer JSX with the Product Visuals pill pattern.
-  - Convert terms + make-public label rows from `htmlFor` to wrapper-`onClick` to stop focus jump.
-- `src/pages/BrandModelNew.tsx`
-  - `pb-32` → `pb-28`.
+  - Rewrite `BrandedLoadingState` (lines 99-199) per fix #3.
+  - Pass `previewUrl` when rendering it (line ~492): `<BrandedLoadingState previewUrl={previewUrl ?? undefined} />`.
+  - Update inline footer info-pill copy (line ~813) per fix #1.
+  - Restructure variation picker JSX (lines 419-489) per fix #2 + drop `(20 credits)` from save button label.
+
+### Out of scope
+- No changes to generation logic, edge functions, credit handling, or other pages.
+- No changes to the sticky bar from previous turn.
