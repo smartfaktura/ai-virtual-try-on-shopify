@@ -823,6 +823,75 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         </Collapsible>
 
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
+
+        <Section title="Summary">
+          <div className="flex items-center gap-3">
+            {previewUrl ? (
+              <img src={previewUrl} alt="" className="w-10 h-10 rounded-lg object-cover border border-border/60" />
+            ) : (
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium truncate">
+                {modelName.trim() || <span className="text-muted-foreground">New brand model</span>}
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70 mt-0.5">
+                {makePublic ? 'Public model' : '3 variations'}
+              </p>
+            </div>
+          </div>
+
+          {(() => {
+            const chips = [
+              gender,
+              age?.[0] != null ? `${age[0]} yrs` : null,
+              ethnicity,
+              morphology,
+              hairColor,
+            ].filter(Boolean) as string[];
+            if (chips.length === 0) return null;
+            return (
+              <div className="flex flex-wrap gap-1 mt-3">
+                {chips.map((c) => (
+                  <span key={c} className="text-[10px] uppercase tracking-wider text-muted-foreground/80 bg-muted/50 px-1.5 py-0.5 rounded">
+                    {c}
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
+
+          <div className="h-px bg-border/50 my-4" />
+
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5 text-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="font-medium">
+                {makePublic ? '3 variations · Free (Public)' : '3 variations · 20 credits'}
+              </span>
+            </div>
+            {!makePublic && (
+              <span className="text-muted-foreground">Balance {balance}</span>
+            )}
+          </div>
+
+          {validationError && (
+            isLowCreditsError ? (
+              <button
+                type="button"
+                onClick={() => setNoCreditsOpen(true)}
+                className="mt-2 text-[11px] text-destructive hover:underline cursor-pointer block"
+              >
+                {validationError} →
+              </button>
+            ) : (
+              <p className="mt-2 text-[11px] text-destructive">{validationError}</p>
+            )
+          )}
+        </Section>
+
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
         {/* Sticky footer — floating pill (matches /app/generate/product-images) */}
