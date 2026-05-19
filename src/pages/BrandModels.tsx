@@ -753,17 +753,22 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   );
 
   const adminBlock = isAdmin ? (
-    <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+    <div
+      role="button"
+      onClick={() => setMakePublic((v) => !v)}
+      className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors"
+    >
       <Checkbox
         id="make-public"
         checked={makePublic}
         onCheckedChange={(checked) => setMakePublic(checked === true)}
+        onClick={(e) => e.stopPropagation()}
         className="mt-0.5"
       />
-      <label htmlFor="make-public" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer">
+      <span className="text-[11px] text-muted-foreground leading-relaxed">
         <ShieldCheck className="h-3.5 w-3.5 inline mr-1 text-primary" />
         <strong>Add as public model</strong> — visible to all users, no credits charged
-      </label>
+      </span>
     </div>
   ) : null;
 
