@@ -1786,6 +1786,7 @@ export default function ProductImages() {
                 completedJobs={completedJobs}
                 productCount={selectedProducts.length}
                 products={selectedProducts}
+                scenes={selectedScenes}
                 jobMap={jobMap}
                 completedJobIds={completedJobIds}
                 failedJobIds={failedJobIds}
