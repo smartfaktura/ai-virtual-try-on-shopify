@@ -1027,15 +1027,21 @@ export default function BrandModels() {
         </>
       ) : models.length === 0 ? (
         <div className="flex flex-col items-center text-center py-24 px-4 max-w-lg mx-auto gap-7">
-          <div className="flex items-center justify-center">
-            {[TEAM_MEMBERS[0], TEAM_MEMBERS[1], TEAM_MEMBERS[3]].map((m, i) => (
+          <div className="flex items-end justify-center">
+            {[
+              'models/model-female-slim-nordic.jpg',
+              'models/model-male-athletic-european.jpg',
+              'models/model-female-athletic-indian.jpg',
+            ].map((path, i) => (
               <img
-                key={m.name}
-                src={m.avatar}
+                key={path}
+                src={getLandingAssetUrl(path)}
                 alt=""
+                loading="lazy"
                 className={cn(
-                  "w-20 h-20 rounded-full object-cover ring-2 ring-background shadow-sm",
-                  i > 0 && "-ml-5"
+                  "w-24 aspect-[3/4] rounded-xl object-cover shadow-sm ring-2 ring-background",
+                  i === 1 ? "z-10 scale-110" : "opacity-90",
+                  i > 0 && "-ml-3"
                 )}
               />
             ))}
