@@ -1,47 +1,73 @@
 ## Goals
 
-Bring `/app/models` and `/app/models/new` up to the platform's premium aesthetic. Fix oversized cards on the grid, fix the mismatched back link + flat form on the wizard.
+Three focused refinements to `/app/models/new`:
 
-## /app/models — grid polish
+1. Ethnicity chips that reflect the actual user base (Western Europe / UK-leaning) without losing inclusivity
+2. Reference image section always visible (no toggle) + mandatory consent + visible safety policy
+3. Cleaner header rhythm (back link + title + subtitle)
 
-- **Tighter density**: grid becomes `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3` (currently maxes at 4 cols and `gap-4`) — cards visually smaller and more refined on wide screens.
-- **Card refinement** (`ModelCard`):
-  - Drop the always-on "BRAND MODEL" badge on the image — feels noisy on a page already titled Brand Models
-  - Trim card padding `p-3` → `p-2.5`, name to `text-[13px]`, chips to `text-[10px]` with lighter `bg-muted/40` borderless pill style
-  - Show only 2 chips max (gender · ethnicity); hide age if absent
-  - Hover CTA pill: smaller (`text-[10px]`, `py-1.5`), more subtle background, single arrow
-  - Delete button stays top-right, smaller icon
-- **Dashed "New model" tile**: same height as cards (already aspect-[3/4]), thinner border, smaller `+` icon, label `text-[11px]`, removed extra padding chunk
+---
 
-## /app/models/new — premium wizard
+## 1. Ethnicity — better-curated options
 
-- **Replace custom back link with `PageHeader` + `backAction`** — same component used by Catalog Studio / Add Product, guarantees visual consistency. Title `Create New Model`, subtitle `Describe your ideal model · 20 credits per generation`. Drops the Sparkles icon (PageHeader doesn't carry icons elsewhere).
-- **Wider, segmented form layout** (still single-scroll, no tabs):
-  - Container: `max-w-3xl` (was `max-w-2xl`) — more breathing room
-  - Replace one big `Card` wrapping everything with **three stacked section cards**: `Essentials`, `Appearance`, `Reference (optional)` — each card has a small uppercase section label header + thin divider, matching the platform's section rhythm
-  - Inside each card: same fields, but tighter vertical spacing (`space-y-4` not `space-y-5`), grid for Essentials (gender + age in one row on desktop, ethnicity + morphology in another)
-  - Section dividers visually separate without nesting noise
-- **Sticky bottom action bar** (replacing inline Generate button at the end of the form):
-  - Pinned at the bottom of the viewport with `sticky bottom-0`, subtle top border + blurred background
-  - Left: credit cost + balance (red if low)
-  - Right: `Cancel` (ghost) + `Generate Brand Model` (primary)
-  - Mirrors the look of existing wizard footers (Catalog Studio, AddProduct)
-- **Move admin "Make Public" toggle** into the sticky bar as a small switch on the left so it doesn't break the form rhythm (admin only).
+Current chips are generic continental buckets ("Caucasian / Asian / African / Hispanic / Middle Eastern / South Asian / Mixed") that don't match how Western / UK brands actually brief models.
 
-## Implementation
+**New approach — two-level, descriptive:**
 
-To avoid a heavy refactor of `UnifiedGenerator`, I'll:
-1. Keep `UnifiedGenerator` as-is for the generation logic + variation picker + loading state
-2. Add an **optional `layout?: 'card' | 'sections'` prop** (default `card`) that, when set to `sections`, renders the form across the 3 section cards instead of one big card, and renders the sticky bar at the bottom
-3. `BrandModelNew.tsx` uses `<UnifiedGenerator layout="sections" ... />` wrapped in `PageHeader`
+Replace `ChipSelect` with a more useful **Region/Look** select, grouped:
 
-## Files
+- **European** — Northern European, British / Irish, Mediterranean, Eastern European, Scandinavian
+- **Latin / Hispanic** — Latin American, Iberian
+- **Asian** — East Asian, South Asian, Southeast Asian
+- **African / Afro-descendant** — African, Afro-Caribbean, Afro-European
+- **Middle Eastern / North African**
+- **Mixed heritage**
 
-- `src/pages/BrandModels.tsx` — refine `ModelCard` (no top badge, smaller chips, tighter spacing, hover pill polish), tighten grid columns/gap, refine dashed tile, add `layout` prop to `UnifiedGenerator` and restructure form rendering into Essentials / Appearance / Reference section cards + sticky footer when `layout === 'sections'`
-- `src/pages/BrandModelNew.tsx` — swap custom back link for `PageHeader` w/ `backAction`, drop the wrapping Card, render `<UnifiedGenerator layout="sections" />`
+Rendered as a single `Select` (grouped with `SelectGroup` / `SelectLabel`) so it stays compact and isn't dominated by 15 chips. Default value changes from `"Caucasian"` to `"Northern European"`. The string is passed through to the prompt as-is, so the edge function keeps working unchanged.
 
-## Out of scope
+Rationale: gives Western/UK-targeted brands the precise look they brief for (e.g. "British / Irish", "Scandinavian") while still covering global diversity in a clean dropdown.
 
-- No backend / edge function changes
-- No live preview card (still a follow-up if you want it)
-- No mobile-specific reflow beyond what Tailwind classes give us
+---
+
+## 2. Reference image — always open + consent gate + policy
+
+- Remove the `Switch` toggle. The upload tile is always rendered.
+- Drop `useReference` state (or default it to `true` permanently) — uploader, preview, and consent live inline.
+- Consent checkbox is **always visible** below the uploader (not only after upload), but only becomes *required* when an image is uploaded. When no image is uploaded it shows as informational/disabled.
+- Strengthen the policy copy and lift it into a small bordered "Content Policy" callout above the checkbox:
+
+  > **Content & rights policy.** Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload. Violations may result in account suspension.
+
+- Checkbox label tightens to:
+  > "I confirm I own or have explicit permission to use this image, and I accept full responsibility under the VOVV.AI Content Policy."
+
+- `canGenerate` logic update: if `uploadedUrl` exists, require `termsAccepted`. If no upload, generation proceeds without the checkbox.
+- "Reference is optional" hint sits under the section title so users know they can skip.
+
+---
+
+## 3. Header spacing / layout polish
+
+Current header stacks: `← Brand Models` (ghost button) / `Create New Model` (h1) / `Describe your ideal model · 20 credits per generation` — spacing feels loose and the back button visually fights the title.
+
+Changes in `BrandModelNew.tsx` only (no shared `PageHeader` edits):
+
+- Replace `PageHeader` usage with a local header block that gives a cleaner hierarchy:
+  - Tiny back link rendered above as a quiet breadcrumb: `← Brand Models` in `text-xs text-muted-foreground hover:text-foreground`, `mb-3`, not a button-shaped element
+  - Title `text-3xl font-semibold tracking-tight` (drop bold for editorial feel matching the rest of the platform), `mb-1.5`
+  - Subtitle `text-sm text-muted-foreground` with the credit cost rendered as a subtle pill on the right: `20 credits per generation`
+- Outer container: keep `max-w-3xl mx-auto`, add `pt-2 pb-32` (room for sticky footer), and tighten the header block to `mb-6`.
+- The three section cards inside `UnifiedGenerator layout="sections"` get consistent `space-y-5` between them (already close — verify).
+
+---
+
+## Technical details
+
+**Files:**
+- `src/pages/BrandModels.tsx`
+  - Replace ethnicity `ChipSelect` (line 504-506) with a grouped `Select` using the new region list. Update default `useState('Caucasian')` → `useState('Northern European')`.
+  - Refactor `referenceBlock` (lines 596-668): remove the `Switch`/`useReference` gating, always render uploader; always render consent box (disabled-looking until file uploaded); add policy callout above; tighten `canGenerate` to require `termsAccepted` only when `uploadedUrl` is set.
+- `src/pages/BrandModelNew.tsx`
+  - Stop using `PageHeader`; render a local header (back breadcrumb + title + subtitle/credit pill) with the spacing described above. Keep `UnifiedGenerator layout="sections"`.
+
+**Out of scope:** edge function, DB, prompt template changes (the new ethnicity strings are free-text and pass straight through). No changes to `/app/models` grid.
