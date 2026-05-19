@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { PageHeader } from '@/components/app/PageHeader';
 import { UnifiedGenerator } from '@/pages/BrandModels';
 
 export default function BrandModelNew() {
@@ -9,17 +10,27 @@ export default function BrandModelNew() {
 
   return (
     <div className="max-w-3xl mx-auto pb-32">
-      <PageHeader
-        title="New brand model"
-        subtitle="Describe the person you want VOVV.AI to create"
-        backAction={{ content: 'Brand Models', onAction: () => navigate('/app/models') }}
-      >
-        <UnifiedGenerator
-          layout="sections"
-          onSuccess={() => navigate('/app/models')}
-          isAdmin={isAdmin}
-        />
-      </PageHeader>
+      <div className="mb-4 sm:mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/app/models')}
+          className="gap-1.5 -ml-2 mb-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Brand Models
+        </Button>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">New brand model</h1>
+        <p className="text-base text-muted-foreground mt-1.5">
+          Describe the person you want VOVV.AI to create
+        </p>
+      </div>
+
+      <UnifiedGenerator
+        layout="sections"
+        onSuccess={() => navigate('/app/models')}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }

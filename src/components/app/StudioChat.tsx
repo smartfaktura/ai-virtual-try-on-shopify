@@ -60,7 +60,9 @@ export function StudioChat() {
   const hideOnMobile = isMobile && (
     location.pathname === '/app/creative-drops' ||
     location.pathname === '/app/freestyle' ||
-    location.pathname === '/app/perspectives'
+    location.pathname === '/app/perspectives' ||
+    location.pathname === '/app/models' ||
+    location.pathname === '/app/models/new'
   );
 
   if (isProductImagesPage) return null;

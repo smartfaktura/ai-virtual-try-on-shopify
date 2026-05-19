@@ -23,6 +23,7 @@ import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
@@ -802,9 +803,9 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <Section title="Reference" hint="Optional">{referenceBlock}</Section>
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
-        {/* Sticky footer action bar — matches BundleVisuals pattern */}
-        <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-40 border-t border-border bg-background/95 backdrop-blur-sm">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+        {/* Sticky footer action bar — matches Generate (Product Visuals) pattern */}
+        <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-30 bg-card border-t border-border p-4 shadow-lg">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
             <div className="text-xs flex flex-col leading-tight min-w-0 flex-1">
               {!makePublic ? (
                 <span className="text-muted-foreground truncate">
@@ -836,13 +837,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
                 Cancel
               </Button>
               <Button
-                className="gap-2 flex-1 sm:flex-none min-w-[140px]"
+                className="flex-1 sm:flex-none min-w-[120px]"
                 disabled={!canGenerate}
                 onClick={handleGenerate}
                 title={validationError || undefined}
               >
-                <Wand2 className="h-4 w-4" />
-                {makePublic ? 'Generate (free)' : 'Generate brand model'}
+                {makePublic ? 'Generate · free' : 'Generate'}
               </Button>
             </div>
           </div>
@@ -1027,15 +1027,21 @@ export default function BrandModels() {
         </>
       ) : models.length === 0 ? (
         <div className="flex flex-col items-center text-center py-24 px-4 max-w-lg mx-auto gap-7">
-          <div className="flex items-center justify-center">
-            {[TEAM_MEMBERS[0], TEAM_MEMBERS[1], TEAM_MEMBERS[3]].map((m, i) => (
+          <div className="flex items-end justify-center">
+            {[
+              'models/model-female-slim-nordic.jpg',
+              'models/model-male-athletic-european.jpg',
+              'models/model-female-athletic-indian.jpg',
+            ].map((path, i) => (
               <img
-                key={m.name}
-                src={m.avatar}
+                key={path}
+                src={getLandingAssetUrl(path)}
                 alt=""
+                loading="lazy"
                 className={cn(
-                  "w-20 h-20 rounded-full object-cover ring-2 ring-background shadow-sm",
-                  i > 0 && "-ml-5"
+                  "w-24 aspect-[3/4] rounded-xl object-cover shadow-sm ring-2 ring-background",
+                  i === 1 ? "z-10 scale-110" : "opacity-90",
+                  i > 0 && "-ml-3"
                 )}
               />
             ))}
