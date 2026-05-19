@@ -80,6 +80,7 @@ const EmailMarketing = lazy(() => import('@/pages/admin/EmailMarketing'));
 const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
+const BrandModelNew = lazy(() => import('@/pages/BrandModelNew'));
 const BrandScenes = lazy(() => import('@/pages/BrandScenes'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
 const About = lazy(() => import('@/pages/About'));
