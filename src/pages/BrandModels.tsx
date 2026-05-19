@@ -197,7 +197,7 @@ function BrandedLoadingState() {
 }
 
 /* ── Unified Generator ── */
-export function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdmin: boolean }) {
+export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSuccess: () => void; isAdmin: boolean; layout?: 'card' | 'sections' }) {
   // Model name
   const [modelName, setModelName] = useState('');
 
