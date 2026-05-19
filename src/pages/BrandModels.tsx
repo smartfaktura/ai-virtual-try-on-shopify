@@ -26,7 +26,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
   Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
-  Pencil, Info,
+  Pencil, Info, Plus, ArrowRight,
 } from 'lucide-react';
 
 /* ── Plan gate upgrade prompt ── */
