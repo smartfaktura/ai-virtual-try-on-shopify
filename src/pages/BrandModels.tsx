@@ -680,12 +680,25 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-border rounded-xl p-6 sm:p-8 flex flex-col items-center gap-2.5 hover:border-primary/40 hover:bg-muted/20 transition-all duration-150"
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file && file.type.startsWith('image/')) processFile(file);
+          }}
+          className={cn(
+            "w-full border-2 border-dashed rounded-xl p-6 sm:p-8 flex flex-col items-center gap-2.5 transition-all duration-150",
+            isDragging
+              ? "border-primary bg-primary/5"
+              : "border-border hover:border-primary/40 hover:bg-muted/20"
+          )}
         >
           <div className="rounded-full bg-muted p-2.5">
             <Camera className="h-5 w-5 text-muted-foreground" />
           </div>
-          <span className="text-xs text-muted-foreground">Click or paste (⌘V) reference photo</span>
+          <span className="text-xs text-muted-foreground">Click, drag, or paste (⌘V) reference photo</span>
           <span className="text-[10px] text-muted-foreground/60">JPG, PNG · Clear face visible</span>
         </button>
       ) : (
@@ -716,20 +729,25 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         </p>
       </div>
 
-      <div className={cn(
-        "flex items-start gap-3 p-3 rounded-lg border transition-colors",
-        uploadedUrl ? "bg-muted/40 border-border/60" : "bg-muted/20 border-border/30 opacity-60"
-      )}>
+      <div
+        role={uploadedUrl ? 'button' : undefined}
+        onClick={() => { if (uploadedUrl) setTermsAccepted((v) => !v); }}
+        className={cn(
+          "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+          uploadedUrl ? "bg-muted/40 border-border/60 cursor-pointer hover:bg-muted/60" : "bg-muted/20 border-border/30 opacity-60"
+        )}
+      >
         <Checkbox
           id="terms"
           checked={termsAccepted}
           disabled={!uploadedUrl}
           onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+          onClick={(e) => e.stopPropagation()}
           className="mt-0.5"
         />
-        <label htmlFor="terms" className={cn("text-[11px] leading-relaxed", uploadedUrl ? "text-muted-foreground cursor-pointer" : "text-muted-foreground/70")}>
+        <span className={cn("text-[11px] leading-relaxed", uploadedUrl ? "text-muted-foreground" : "text-muted-foreground/70")}>
           I confirm I own or have explicit permission to use this image, and I accept full responsibility under the VOVV.AI Content Policy.
-        </label>
+        </span>
       </div>
     </div>
   );
