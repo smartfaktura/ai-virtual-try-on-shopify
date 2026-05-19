@@ -539,13 +539,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         <ChipSelect options={['Female', 'Male']} value={gender} onChange={setGender} />
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age — {age[0]}</Label>
-        <Slider min={4} max={70} step={1} value={age} onValueChange={setAge} />
-        <div className="flex justify-between text-[10px] text-muted-foreground/50">
-          <span>4</span><span>18</span><span>35</span><span>50</span><span>70</span>
-        </div>
-      </div>
+      <AgeSlider value={age[0]} onCommit={(n) => setAge([n])} />
 
       <div className="space-y-2">
         <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Region / Look</Label>
@@ -553,23 +547,27 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent className="max-h-80">
             <SelectGroup>
-              <SelectLabel>European</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">European</SelectLabel>
               {['Northern European', 'British / Irish', 'Scandinavian', 'Mediterranean', 'Eastern European'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>Latin / Hispanic</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Latin / Hispanic</SelectLabel>
               {['Latin American', 'Iberian'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>Asian</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Asian</SelectLabel>
               {['East Asian', 'South Asian', 'Southeast Asian'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>African / Afro-descendant</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">African / Afro-descendant</SelectLabel>
               {['African', 'Afro-Caribbean', 'Afro-European'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
+            <SelectSeparator />
             <SelectGroup>
-              <SelectLabel>Other</SelectLabel>
+              <SelectLabel className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Other</SelectLabel>
               {['Middle Eastern / North African', 'Mixed heritage'].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectGroup>
           </SelectContent>
