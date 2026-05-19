@@ -196,7 +196,7 @@ function BrandedLoadingState() {
 }
 
 /* ── Unified Generator ── */
-function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdmin: boolean }) {
+export function UnifiedGenerator({ onSuccess, isAdmin }: { onSuccess: () => void; isAdmin: boolean }) {
   // Model name
   const [modelName, setModelName] = useState('');
 
