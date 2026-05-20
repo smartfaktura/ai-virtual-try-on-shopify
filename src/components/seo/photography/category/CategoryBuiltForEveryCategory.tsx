@@ -107,7 +107,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 lg:gap-4 animate-in fade-in duration-500" key={active.subCategory}>
           {active.cards.map((card, i) => {
             const slotKey = `builtFor_${slotSlugify(active.subCategory)}_${i + 1}`;
-            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId));
+            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId), scenePreviewById);
             const resolvedLabel = resolveSlotLabel(overrides, page.url, slotKey, card.label, sceneTitleById);
             return (
               <div
