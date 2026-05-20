@@ -161,12 +161,8 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
     const reduceMotion =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const saveData =
-      typeof navigator !== 'undefined' &&
-      // @ts-expect-error - non-standard but widely shipped
-      Boolean(navigator.connection?.saveData);
 
-    if (reduceMotion || saveData) {
+    if (reduceMotion) {
       setDegraded(true);
       return;
     }
@@ -181,7 +177,10 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
               visibleQueue.current.add(idx);
             }
             const v = videoRefs.current[idx];
-            if (v && v.readyState >= 2) v.play().catch(() => {});
+            if (v) {
+              v.muted = true;
+              if (v.readyState >= 2) v.play().catch(() => {});
+            }
           } else {
             const v = videoRefs.current[idx];
             if (v) v.pause();
@@ -198,14 +197,24 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onLoadedData = (i: number) => {
+  // When a video element is mounted (after loadStates[i] flips), explicitly
+  // call load()+play(). Mobile browsers often need this for inline autoplay.
+  const attachVideoRef = (i: number) => (el: HTMLVideoElement | null) => {
+    videoRefs.current[i] = el;
+    if (!el) return;
+    el.muted = true;
+    try { el.load(); } catch {}
+    const p = el.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  };
+
+  const onReady = (i: number) => {
     setReadyStates((prev) => {
       if (prev[i]) return prev;
       const c = prev.slice();
       c[i] = true;
       return c;
     });
-    // First frame is decoded — free the slot for the next pending tile
     if (activeLoads.current.has(i)) {
       activeLoads.current.delete(i);
       flushQueue();
