@@ -1,17 +1,17 @@
-# Reorder eyewear "Built for every shot" pills
+# Add 300 credits to info@skillluckgo.com
 
-Make **Color Vintage** the first pill on `/ai-product-photography/eyewear` in the "Built for every eyewear shot" section.
+Current balance: **64 credits** (plan: starter)
+New balance after top-up: **364 credits**
 
 ## Change
 
-In `src/data/aiProductPhotographyBuiltForGrids.ts`, inside the `"eyewear"` array, move the `"Eyewear · Color Vintage"` group to the first position. The remaining groups stay in their current relative order:
+Run a one-off migration that updates the `profiles` row for `info@skillluckgo.com`:
 
-1. Color Vintage (moved to top)
-2. Editorial Portraits
-3. Aesthetic Color
-4. Vintage Film
-5. Brutalist UGC
-6. Creative
-7. Essential Shots
+```sql
+UPDATE public.profiles
+SET credits_balance = credits_balance + 300,
+    updated_at = now()
+WHERE email = 'info@skillluckgo.com';
+```
 
-No other files change. Card contents and image IDs are untouched, so admin slot overrides remain valid.
+No code changes, no schema changes. Just a manual credit grant.
