@@ -1,19 +1,17 @@
-## Show only 3 related categories per page
+## Convert "What VOVV creates" cards to a swipeable carousel on mobile
 
-Revert the "show all" change and go back to the curated 3-per-page list, but keep Related as the final section on every page (the section-order change stays).
+Applies to every category page (already shared component).
 
-### Changes
+### File
+`src/components/seo/photography/category/CategoryVisualOutputs.tsx`
 
-`src/components/seo/photography/category/CategoryRelatedCategories.tsx`
-- Swap import back to `getRelatedPages` (drop `getAllOtherCategoryPages`).
-- `const related = getRelatedPages(page.relatedCategories);`
-- Restore grid to `grid-cols-1 md:grid-cols-3` (3 cards fit cleanly, no need for the 4-col xl layout).
-- Restore card padding to `p-5 lg:p-6`.
+### Change
+Replace the cards grid with a responsive layout:
 
-`src/data/aiProductPhotographyCategoryPages.ts`
-- Keep `getAllOtherCategoryPages` helper in place (harmless, no other callers) OR remove it. Default: remove, since it's now unused.
+- **Mobile (`< sm`)**: horizontal scroll-snap carousel. One flex row, each card `min-w-[78%]`, `snap-start`, parent `overflow-x-auto snap-x snap-mandatory` with `scrollbar-hide` and `-mx-6 px-6` so cards bleed into the page edge for a "peek" of the next card. Reveals there's more without taking 4× the vertical space.
+- **`sm` and up**: keep the existing `sm:grid-cols-2 lg:grid-cols-4` grid exactly as-is.
+
+Implementation: single wrapper with `flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none scrollbar-hide -mx-6 px-6 sm:mx-0 sm:px-0`. Each card gets `min-w-[78%] sm:min-w-0 snap-start sm:snap-align-none shrink-0 sm:shrink`. Card styling unchanged.
 
 ### Untouched
-- Section order in `AIProductPhotographyCategory.tsx` — Related stays as last section after FAQ + FinalCTA on every page.
-- Swimwear pain/use cases hide stays.
-- Each page's existing `relatedCategories: string[]` data drives which 3 show. No data edits.
+Headline, eyebrow, subhead, card content, desktop grid, all other sections.
