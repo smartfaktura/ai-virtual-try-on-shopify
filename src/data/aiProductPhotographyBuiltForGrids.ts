@@ -2386,6 +2386,17 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "eyewear": [
     {
+      "subCategory": "Eyewear · Color Vintage",
+      "cards": [
+        { "label": "Candy Flash",     "imageId": "1776102176417-iih747" },
+        { "label": "Sunset Drive",    "imageId": "1776102204479-9rlc0n" },
+        { "label": "Dessert Table",   "imageId": "1776102181320-jisnae" },
+        { "label": "Hotel Flash",     "imageId": "1776102187711-askbvg" },
+        { "label": "Office Story",    "imageId": "1776102196841-qahufa" },
+        { "label": "Summer Wall",     "imageId": "pool-wall-vintage-summer-eyewear-1776150336684" }
+      ]
+    },
+    {
       "subCategory": "Eyewear · Editorial Portraits",
       "cards": [
         { "label": "Beauty Closeup",   "imageId": "beauty-closeup-oversized-eyewear-1776150210659" },
@@ -2414,17 +2425,6 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "Cafe Film",       "imageId": "1776102174244-t76i6k" },
         { "label": "Bedroom Flash",   "imageId": "1776102169917-uiog3f" },
         { "label": "Office Film",     "imageId": "1776102194379-tuhreu" }
-      ]
-    },
-    {
-      "subCategory": "Eyewear · Color Vintage",
-      "cards": [
-        { "label": "Candy Flash",     "imageId": "1776102176417-iih747" },
-        { "label": "Sunset Drive",    "imageId": "1776102204479-9rlc0n" },
-        { "label": "Dessert Table",   "imageId": "1776102181320-jisnae" },
-        { "label": "Hotel Flash",     "imageId": "1776102187711-askbvg" },
-        { "label": "Office Story",    "imageId": "1776102196841-qahufa" },
-        { "label": "Summer Wall",     "imageId": "pool-wall-vintage-summer-eyewear-1776150336684" }
       ]
     },
     {
