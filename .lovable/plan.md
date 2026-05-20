@@ -1,14 +1,35 @@
-## Remove "What we cover in {category}" section from all SEO category pages
+## Goal
 
-That section is rendered by `<CategorySubcategoryChips />` inside `src/pages/seo/AIProductPhotographyCategory.tsx`. It's currently excluded for a handful of slugs (home-furniture, swimwear, activewear, bags-accessories, bags) via an inline allow-list.
+Undo the earlier text rename across the codebase. Restore original chip/section names everywhere.
 
-### Change
+## Renames to revert (case-sensitive, whole-word)
 
-In `src/pages/seo/AIProductPhotographyCategory.tsx`, remove the `<CategorySubcategoryChips page={page} />` render (and its conditional + the now-unused import).
+- `EDITORIAL` → original term (two sources, see below)
+- `Studio Shots` → `Campaign Statements`
 
-That single edit hides the chips section across every `/ai-product-photography/{slug}` page — fashion, footwear, beauty-skincare, fragrance, jewelry, food-beverage, home-furniture, electronics, bags, watches, hoodies, swimwear, lingerie, eyewear, activewear, dresses, caps-hats, and any future category — without touching the underlying data (subcategories arrays stay intact for SEO/JSON-LD).
+The earlier edit mapped two different originals to the same new word `EDITORIAL`:
+- `Hardware` → `EDITORIAL`
+- `Essential Shots` → `EDITORIAL`
 
-### Not changing
+To revert correctly, restore each occurrence to its original term based on context (Bags/Watches/Tech/Jewelry typically used `Hardware`; Apparel/Fragrance/Beauty/Food/Sneakers/Lingerie/Swimwear/etc. used `Essential Shots`).
 
-- `CategorySubcategoryChips.tsx` component file stays in the repo (unused) in case you want to revive it later. Say the word if you'd like it deleted too.
-- `subcategories: [...]` arrays in `aiProductPhotographyCategoryPages.ts` stay — they're still useful for keyword targeting and aren't visually rendered anywhere else.
+## Files to update
+
+- `src/data/aiProductPhotographyBuiltForGrids.ts` — primary source; ~25+ `EDITORIAL` occurrences and the `Studio Shots` ones in Bags subCategories and inner labels (e.g. `EDITORIAL & Craft Closeup`, `EDITORIAL Close-Up`, `EDITORIAL Material Closeup`, `Dial & EDITORIAL Closeup`, `Material and EDITORIAL Detail`).
+- `src/data/promptTokenReference.ts` — doc strings referencing `EDITORIAL`.
+- Any other files surfaced by a repo-wide `rg` for `EDITORIAL`, `Studio Shots`, and the renamed labels (admin scene files mentioned in the prior turn: `AdminProductImageScenes.tsx` etc.).
+
+## Approach
+
+1. Repo-wide `rg "EDITORIAL"` and `rg "Studio Shots"` to enumerate every hit introduced by the prior rename.
+2. For each hit, decide original term from context:
+   - Bags / Watches / Tech / Jewelry hardware-style chips → `Hardware`
+   - Generic product staple-shot chips (Apparel, Fragrance, Beauty, Food, Sneakers, Shoes, Lingerie, Swimwear, Eyewear, Hoodies, Supplements) → `Essential Shots`
+   - Bags `subCategory: "Bags · Studio Shots"` → `Bags · Campaign Statements`
+3. Apply targeted line edits; do not touch unrelated copy.
+4. Spot-check `/ai-product-photography/bags` chips render as: `Campaign Statements · Editorial Studio · On-Body Editorial · Hardware · Everyday UGC`.
+
+## Out of scope
+
+- No visual/design changes.
+- No data shape changes; labels only.
