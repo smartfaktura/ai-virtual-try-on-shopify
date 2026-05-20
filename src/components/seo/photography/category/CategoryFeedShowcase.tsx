@@ -47,6 +47,7 @@ const FEED_BY_SLUG: Record<FeedSlug, {
  */
 export function CategoryFeedShowcase({ page }: { page: CategoryPage }) {
   const slug = page.slug as FeedSlug;
+  const [isLoaded, setIsLoaded] = useState(false);
   if (!(slug in FEED_BY_SLUG)) return null;
   const copy = FEED_BY_SLUG[slug];
 
