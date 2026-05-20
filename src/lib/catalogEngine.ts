@@ -568,7 +568,7 @@ export const SHOT_DEFINITIONS: ShotDefinition[] = [
   },
   {
     id: 'hardware_detail',
-    label: 'EDITORIAL',
+    label: 'Hardware Detail',
     group: 'product-only',
     compatibleCategories: new Set(['bag', 'belt', 'jewelry']),
     defaultRenderPath: 'product_only_generate',

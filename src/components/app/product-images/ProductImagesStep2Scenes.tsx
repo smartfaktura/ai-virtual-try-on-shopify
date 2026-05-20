@@ -708,7 +708,7 @@ function CategoryExpandedContent({ catId, catTitle, essentialScenes, categorySce
   const essentialSubGroups = useMemo(() => {
     const map = new Map<string, ProductImageScene[]>();
     for (const s of essentialScenes) {
-      const key = resolveLabel(s, 'EDITORIAL');
+      const key = resolveLabel(s, 'Essential Shots');
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(s);
     }
@@ -783,7 +783,7 @@ function UnifiedCategorySectionWithSelectAll({
   const essentialSubGroups = useMemo(() => {
     const map = new Map<string, ProductImageScene[]>();
     for (const s of essentialScenes) {
-      const key = resolveLabel(s, 'EDITORIAL');
+      const key = resolveLabel(s, 'Essential Shots');
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(s);
     }
