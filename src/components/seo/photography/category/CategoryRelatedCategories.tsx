@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
 import { SmartImage } from './SmartImage';
-import { PREVIEW, getRelatedPages, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
+import { PREVIEW, getAllOtherCategoryPages, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
 
@@ -31,7 +31,7 @@ function getRelatedThumbs(rel: CategoryPage): { id: string; alt: string }[] {
 }
 
 export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
-  const related = getRelatedPages(page.relatedCategories);
+  const related = getAllOtherCategoryPages(page.slug);
   const overrides = useSeoVisualOverridesMap();
 
   return (
@@ -55,7 +55,7 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
           {related.map((rel) => {
             const thumbs = getRelatedThumbs(rel);
             return (
@@ -88,7 +88,7 @@ export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
                   </div>
                 </div>
 
-                <div className="flex flex-col p-5 lg:p-6">
+                <div className="flex flex-col p-4 lg:p-5">
                   <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-semibold mb-2">
                     AI Product Photography
                   </span>

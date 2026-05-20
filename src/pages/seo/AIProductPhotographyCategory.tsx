@@ -73,7 +73,7 @@ export default function AIProductPhotographyCategory() {
   }
 
   const PAGE_URL = `${SITE_URL}${page.url}`;
-  const isBags = page.slug === 'bags';
+  const hidePainAndUseCases = page.slug === 'bags' || page.slug === 'swimwear';
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -134,14 +134,13 @@ export default function AIProductPhotographyCategory() {
         <CategoryFeedShowcase page={page} />
         
         <CategoryVisualOutputs page={page} />
-        {!isBags && <CategoryPainPoints page={page} />}
+        {!hidePainAndUseCases && <CategoryPainPoints page={page} />}
         <CategorySceneExamples page={page} />
         <PhotographyHowItWorks />
-        {!isBags && <CategoryUseCases page={page} />}
-        {!isBags && <CategoryRelatedCategories page={page} />}
+        {!hidePainAndUseCases && <CategoryUseCases page={page} />}
         <CategoryFAQ page={page} />
         <PhotographyFinalCTA />
-        {isBags && <CategoryRelatedCategories page={page} />}
+        <CategoryRelatedCategories page={page} />
       </main>
       <LandingFooter />
     </div>
