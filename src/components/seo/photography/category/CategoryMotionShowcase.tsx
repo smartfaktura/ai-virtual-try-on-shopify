@@ -3,23 +3,52 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import type { CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { getVisualLibraryHrefForCategory } from '@/lib/visualLibraryDeepLink';
-import v1 from '@/assets/seo/bags-motion-1.mp4';
-import v2 from '@/assets/seo/bags-motion-2.mp4';
-import v3 from '@/assets/seo/bags-motion-3.mp4';
-import v4 from '@/assets/seo/bags-motion-4.mp4';
-import v5 from '@/assets/seo/bags-motion-5.mp4';
-import v6 from '@/assets/seo/bags-motion-6.mp4';
+import bv1 from '@/assets/seo/bags-motion-1.mp4';
+import bv2 from '@/assets/seo/bags-motion-2.mp4';
+import bv3 from '@/assets/seo/bags-motion-3.mp4';
+import bv4 from '@/assets/seo/bags-motion-4.mp4';
+import bv5 from '@/assets/seo/bags-motion-5.mp4';
+import bv6 from '@/assets/seo/bags-motion-6.mp4';
+import sv1 from '@/assets/seo/swimwear-motion-1.mp4';
+import sv2 from '@/assets/seo/swimwear-motion-2.mp4';
+import sv3 from '@/assets/seo/swimwear-motion-3.mp4';
+import sv4 from '@/assets/seo/swimwear-motion-4.mp4';
+import sv5 from '@/assets/seo/swimwear-motion-5.mp4';
+import sv6 from '@/assets/seo/swimwear-motion-6.mp4';
 
-const CLIPS = [v1, v2, v3, v4, v5, v6];
+type MotionSlug = 'bags' | 'swimwear';
+
+const CLIPS_BY_SLUG: Record<MotionSlug, string[]> = {
+  bags: [bv1, bv2, bv3, bv4, bv5, bv6],
+  swimwear: [sv1, sv2, sv3, sv4, sv5, sv6],
+};
+
+const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
+  bags: {
+    eyebrow: 'Motion · Bags in movement',
+    heading: 'Your bag, brought to life',
+    sub: 'Turn one product photo into scroll-stopping motion for ads, reels and PDP loops',
+    aria: 'AI-generated bag motion clip',
+  },
+  swimwear: {
+    eyebrow: 'Motion · Resort in movement',
+    heading: 'Your swimwear, brought to life',
+    sub: 'Turn one swim photo into scroll-stopping motion for ads, reels and resort campaigns',
+    aria: 'AI-generated swimwear motion clip',
+  },
+};
 
 /**
- * "Motion · Bags in movement" — bag-page only.
+ * "Motion · {Category} in movement" — gated to slugs with curated clips.
  * Six 9:16 looping clips arranged as 2×2 on mobile (last two hidden),
  * 3×2 on sm, and a 6-up cinematic strip on lg. Tokens and rhythm match
  * CategoryFeedShowcase / CategoryBuiltForEveryCategory token-for-token.
  */
 export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
-  if (page.slug !== 'bags') return null;
+  const slug = page.slug as MotionSlug;
+  if (!(slug in CLIPS_BY_SLUG)) return null;
+  const CLIPS = CLIPS_BY_SLUG[slug];
+  const copy = COPY_BY_SLUG[slug];
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
@@ -69,13 +98,13 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16 animate-in fade-in slide-in-from-bottom-2 duration-700">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Motion · Bags in movement
+            {copy.eyebrow}
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
-            Your bag, brought to life
+            {copy.heading}
           </h2>
           <p className="mt-4 text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
-            Turn one product photo into scroll-stopping motion for ads, reels and PDP loops
+            {copy.sub}
           </p>
         </div>
 
@@ -104,7 +133,7 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
                 playsInline
                 preload={i === 0 ? 'auto' : 'metadata'}
                 disableRemotePlayback
-                aria-label="AI-generated bag motion clip"
+                aria-label={copy.aria}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
               />
               {i === 0 && (
