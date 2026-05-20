@@ -7,7 +7,8 @@ import { SmartImage } from './SmartImage';
 import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { getBuiltForGroupsForPage, slotSlugify } from '@/data/builtForGridGroups';
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
-import { resolveSlotImageUrl } from '@/lib/resolveSlotImage';
+import { resolveSlotImageUrl, resolveSlotLabel } from '@/lib/resolveSlotImage';
+import { usePublicSceneLibrary } from '@/hooks/usePublicSceneLibrary';
 import { getVisualLibraryHrefForCategory } from '@/lib/visualLibraryDeepLink';
 
 /**
