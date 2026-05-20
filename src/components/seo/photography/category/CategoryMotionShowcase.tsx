@@ -9,25 +9,65 @@ import bv3 from '@/assets/seo/bags-motion-3.mp4';
 import bv4 from '@/assets/seo/bags-motion-4.mp4';
 import bv5 from '@/assets/seo/bags-motion-5.mp4';
 import bv6 from '@/assets/seo/bags-motion-6.mp4';
+import bp1 from '@/assets/seo/bags-motion-1.jpg';
+import bp2 from '@/assets/seo/bags-motion-2.jpg';
+import bp3 from '@/assets/seo/bags-motion-3.jpg';
+import bp4 from '@/assets/seo/bags-motion-4.jpg';
+import bp5 from '@/assets/seo/bags-motion-5.jpg';
+import bp6 from '@/assets/seo/bags-motion-6.jpg';
 import sv1 from '@/assets/seo/swimwear-motion-1.mp4';
 import sv2 from '@/assets/seo/swimwear-motion-2.mp4';
 import sv3 from '@/assets/seo/swimwear-motion-3.mp4';
 import sv4 from '@/assets/seo/swimwear-motion-4.mp4';
 import sv5 from '@/assets/seo/swimwear-motion-5.mp4';
 import sv6 from '@/assets/seo/swimwear-motion-6.mp4';
+import sp1 from '@/assets/seo/swimwear-motion-1.jpg';
+import sp2 from '@/assets/seo/swimwear-motion-2.jpg';
+import sp3 from '@/assets/seo/swimwear-motion-3.jpg';
+import sp4 from '@/assets/seo/swimwear-motion-4.jpg';
+import sp5 from '@/assets/seo/swimwear-motion-5.jpg';
+import sp6 from '@/assets/seo/swimwear-motion-6.jpg';
 import av1 from '@/assets/seo/activewear-motion-1.mp4';
 import av2 from '@/assets/seo/activewear-motion-2.mp4';
 import av3 from '@/assets/seo/activewear-motion-3.mp4';
 import av4 from '@/assets/seo/activewear-motion-4.mp4';
 import av5 from '@/assets/seo/activewear-motion-5.mp4';
 import av6 from '@/assets/seo/activewear-motion-6.mp4';
+import ap1 from '@/assets/seo/activewear-motion-1.jpg';
+import ap2 from '@/assets/seo/activewear-motion-2.jpg';
+import ap3 from '@/assets/seo/activewear-motion-3.jpg';
+import ap4 from '@/assets/seo/activewear-motion-4.jpg';
+import ap5 from '@/assets/seo/activewear-motion-5.jpg';
+import ap6 from '@/assets/seo/activewear-motion-6.jpg';
 
 type MotionSlug = 'bags' | 'swimwear' | 'activewear';
+type Clip = { video: string; poster: string };
 
-const CLIPS_BY_SLUG: Record<MotionSlug, string[]> = {
-  bags: [bv1, bv2, bv3, bv4, bv5, bv6],
-  swimwear: [sv1, sv2, sv3, sv4, sv5, sv6],
-  activewear: [av1, av2, av3, av4, av5, av6],
+const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
+  bags: [
+    { video: bv1, poster: bp1 },
+    { video: bv2, poster: bp2 },
+    { video: bv3, poster: bp3 },
+    { video: bv4, poster: bp4 },
+    { video: bv5, poster: bp5 },
+    { video: bv6, poster: bp6 },
+  ],
+  swimwear: [
+    { video: sv1, poster: sp1 },
+    { video: sv2, poster: sp2 },
+    { video: sv3, poster: sp3 },
+    { video: sv4, poster: sp4 },
+    { video: sv5, poster: sp5 },
+    { video: sv6, poster: sp6 },
+  ],
+  activewear: [
+    { video: av1, poster: ap1 },
+    { video: av2, poster: ap2 },
+    { video: av3, poster: ap3 },
+    { video: av4, poster: ap4 },
+    { video: av5, poster: ap5 },
+    { video: av6, poster: ap6 },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
@@ -53,9 +93,10 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
 
 /**
  * "Motion · {Category} in movement" — gated to slugs with curated clips.
- * Six 9:16 looping clips arranged as 2×2 on mobile (last two hidden),
- * 3×2 on sm, and a 6-up cinematic strip on lg. Tokens and rhythm match
- * CategoryFeedShowcase / CategoryBuiltForEveryCategory token-for-token.
+ * Posters render immediately as the visible base layer. Videos load lazily
+ * via IntersectionObserver (preload=metadata, throttled to 3 concurrent)
+ * and fade in once the first frame decodes. On reduced-motion or save-data,
+ * the poster stays as the final image with no video request.
  */
 export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
   const slug = page.slug as MotionSlug;
@@ -64,16 +105,15 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
   const copy = COPY_BY_SLUG[slug];
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  // Per-tile state: has the tile entered viewport and been allowed to load?
+  // Per-tile state: has the tile been allowed to mount its <video>?
   const [loadStates, setLoadStates] = useState<boolean[]>(() => CLIPS.map(() => false));
-  // Per-tile readiness (first frame decoded) and buffering (mid-playback stall)
+  // Per-tile readiness (first frame decoded)
   const [readyStates, setReadyStates] = useState<boolean[]>(() => CLIPS.map(() => false));
-  const [bufferingStates, setBufferingStates] = useState<boolean[]>(() => CLIPS.map(() => false));
-  // Save-data / reduced-motion: skip videos entirely, keep skeleton
+  // Save-data / reduced-motion: skip videos entirely, posters remain
   const [degraded, setDegraded] = useState(false);
 
   // Throttled load queue — at most MAX_CONCURRENT tiles fetching at once
-  const MAX_CONCURRENT = 2;
+  const MAX_CONCURRENT = 3;
   const visibleQueue = useRef<Set<number>>(new Set());
   const activeLoads = useRef<Set<number>>(new Set());
 
@@ -111,11 +151,11 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
           const idx = Number((entry.target as HTMLElement).dataset.idx);
           if (Number.isNaN(idx)) continue;
           if (entry.isIntersecting) {
-            if (!loadStates[idx] && !visibleQueue.current.has(idx) && !activeLoads.current.has(idx)) {
+            if (!activeLoads.current.has(idx) && !visibleQueue.current.has(idx)) {
               visibleQueue.current.add(idx);
             }
             const v = videoRefs.current[idx];
-            if (v && v.readyState >= 3) v.play().catch(() => {});
+            if (v && v.readyState >= 2) v.play().catch(() => {});
           } else {
             const v = videoRefs.current[idx];
             if (v) v.pause();
@@ -123,7 +163,7 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
         }
         flushQueue();
       },
-      { rootMargin: '400px 0px', threshold: 0.01 },
+      { rootMargin: '500px 0px', threshold: 0.01 },
     );
 
     const tiles = document.querySelectorAll('[data-motion-tile="1"]');
@@ -139,31 +179,13 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
       c[i] = true;
       return c;
     });
-  };
-  const onCanPlay = (i: number) => {
-    const v = videoRefs.current[i];
-    if (v) v.play().catch(() => {});
-  };
-  const onWaiting = (i: number) => {
-    setBufferingStates((prev) => {
-      if (prev[i]) return prev;
-      const c = prev.slice();
-      c[i] = true;
-      return c;
-    });
-  };
-  const onPlaying = (i: number) => {
-    setBufferingStates((prev) => {
-      if (!prev[i]) return prev;
-      const c = prev.slice();
-      c[i] = false;
-      return c;
-    });
-    // Free the load slot for the next pending tile
+    // First frame is decoded — free the slot for the next pending tile
     if (activeLoads.current.has(i)) {
       activeLoads.current.delete(i);
       flushQueue();
     }
+    const v = videoRefs.current[i];
+    if (v) v.play().catch(() => {});
   };
 
   return (
@@ -187,59 +209,55 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
 
         {/* Video grid: 2 cols (4 tiles) on mobile, 3×2 on sm, 6-up strip on lg */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-          {CLIPS.map((src, i) => {
-            const showSkeleton = degraded || !readyStates[i] || bufferingStates[i];
-            return (
-              <div
-                key={src}
-                data-motion-tile="1"
-                data-idx={i}
-                className={[
-                  'group relative aspect-[9/16] rounded-2xl overflow-hidden',
-                  'ring-1 ring-foreground/[0.06] bg-muted/30',
-                  'shadow-[0_20px_50px_-30px_rgba(15,23,42,0.22)]',
-                  'transition-transform duration-700 hover:scale-[1.015]',
-                  'motion-reduce:transition-none motion-reduce:hover:scale-100',
-                  'animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-backwards',
-                  i >= 4 ? 'hidden sm:block' : '',
-                ].join(' ')}
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                {/* Skeleton shimmer */}
-                <div
-                  aria-hidden="true"
-                  className={`absolute inset-0 bg-gradient-to-br from-muted/60 via-muted/30 to-muted/60 transition-opacity duration-500 ${
-                    showSkeleton ? 'opacity-100 animate-pulse' : 'opacity-0'
+          {CLIPS.map((clip, i) => (
+            <div
+              key={clip.video}
+              data-motion-tile="1"
+              data-idx={i}
+              className={[
+                'group relative aspect-[9/16] rounded-2xl overflow-hidden',
+                'ring-1 ring-foreground/[0.06] bg-muted/30',
+                'shadow-[0_20px_50px_-30px_rgba(15,23,42,0.22)]',
+                'transition-transform duration-700 hover:scale-[1.015]',
+                'motion-reduce:transition-none motion-reduce:hover:scale-100',
+                'animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-backwards',
+                i >= 4 ? 'hidden sm:block' : '',
+              ].join(' ')}
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              {/* Poster — always present, decodes fast, visible immediately */}
+              <img
+                src={clip.poster}
+                alt={copy.aria}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Video — mounts when near viewport, fades in over the poster */}
+              {!degraded && loadStates[i] && (
+                <video
+                  ref={(el) => { videoRefs.current[i] = el; }}
+                  src={clip.video}
+                  poster={clip.poster}
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  disableRemotePlayback
+                  aria-label={copy.aria}
+                  onLoadedData={() => onLoadedData(i)}
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 group-hover:scale-[1.03] ${
+                    readyStates[i] ? 'opacity-100' : 'opacity-0'
                   }`}
                 />
-                {!degraded && loadStates[i] && (
-                  <video
-                    ref={(el) => { videoRefs.current[i] = el; }}
-                    src={src}
-                    muted
-                    loop
-                    playsInline
-                    preload="auto"
-                    disableRemotePlayback
-                    aria-label={copy.aria}
-                    onLoadedData={() => onLoadedData(i)}
-                    onCanPlay={() => onCanPlay(i)}
-                    onWaiting={() => onWaiting(i)}
-                    onStalled={() => onWaiting(i)}
-                    onPlaying={() => onPlaying(i)}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 group-hover:scale-[1.03] ${
-                      readyStates[i] ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  />
-                )}
-                {i === 0 && (
-                  <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-foreground/85 backdrop-blur-md px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-background ring-1 ring-foreground/10 shadow-sm">
-                    New
-                  </span>
-                )}
-              </div>
-            );
-          })}
+              )}
+              {i === 0 && (
+                <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-foreground/85 backdrop-blur-md px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-background ring-1 ring-foreground/10 shadow-sm">
+                  New
+                </span>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* CTAs — token-for-token match with CategoryFeedShowcase */}
