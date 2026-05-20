@@ -34,14 +34,15 @@ export function resolveSlotAlt(
 }
 
 /**
- * Returns the label to render for a SEO image slot's hover caption.
+ * Returns the visible hover-caption label for a SEO image slot.
  * Resolution order:
- * 1. Admin-provided alt_text on the override row
- * 2. The override scene's title from the public scene library
- * 3. The hardcoded fallback label
+ * 1. The override scene's title from the public scene library (matches what
+ *    the admin sees in the picker)
+ * 2. The hardcoded fallback label
  *
- * This keeps hover names in sync whenever an admin swaps a scene via
- * /app/admin/seo-page-visuals — no per-page code change required.
+ * NOTE: We intentionally do NOT use the override row's `alt_text` here —
+ * `alt_text` is the SEO image alt (often a long descriptive sentence),
+ * not a UI label. Use `resolveSlotAlt` for the `<img alt>` attribute.
  */
 export function resolveSlotLabel(
   overrides: Map<string, SeoVisualOverride> | undefined,
@@ -53,7 +54,6 @@ export function resolveSlotLabel(
   if (!overrides) return fallbackLabel;
   const row = overrides.get(getOverrideKey(pageRoute, slotKey));
   if (!row) return fallbackLabel;
-  if (row.alt_text && row.alt_text.trim()) return row.alt_text;
   const title = sceneTitleById?.get(row.scene_id);
   if (title && title.trim()) return title;
   return fallbackLabel;
