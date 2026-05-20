@@ -28,10 +28,14 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
   const overrides = useSeoVisualOverridesMap();
   const { scenes } = usePublicSceneLibrary();
-  const sceneTitleById = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const s of scenes) m.set(s.scene_id, s.title);
-    return m;
+  const { sceneTitleById, scenePreviewById } = useMemo(() => {
+    const titles = new Map<string, string>();
+    const previews = new Map<string, string>();
+    for (const s of scenes) {
+      titles.set(s.scene_id, s.title);
+      if (s.preview_image_url) previews.set(s.scene_id, s.preview_image_url);
+    }
+    return { sceneTitleById: titles, scenePreviewById: previews };
   }, [scenes]);
   const [activeIdx, setActiveIdx] = useState(0);
   const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
