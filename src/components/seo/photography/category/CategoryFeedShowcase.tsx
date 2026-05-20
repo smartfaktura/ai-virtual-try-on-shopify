@@ -97,8 +97,8 @@ export function CategoryFeedShowcase({ page }: { page: CategoryPage }) {
           {/* Feed image frame */}
           <div className="relative w-full max-w-[420px] sm:max-w-[460px] lg:max-w-none lg:w-[480px] mx-auto lg:mx-0 aspect-[1127/2000] rounded-3xl overflow-hidden ring-1 ring-foreground/[0.06] bg-muted/30 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.25)] transition-transform duration-700 hover:scale-[1.01] motion-reduce:transition-none motion-reduce:hover:scale-100 animate-in fade-in duration-700">
             <img
-              src={feedImage}
-              alt="Curated Instagram-style feed of bag campaigns, on-body editorials, studio shots and detail closeups — all generated from a single product upload"
+              src={copy.image}
+              alt={copy.alt}
               loading="lazy"
               decoding="async"
               {...({ fetchpriority: 'low' } as any)}
