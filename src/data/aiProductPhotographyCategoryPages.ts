@@ -7,8 +7,10 @@
  * All `imageId` values come from the live `product_image_scenes` catalog
  * (the same data backing /product-visual-library), so previews are exactly
  * on-topic for each page.
+ */
 
 import bagsMotion4 from '@/assets/seo/bags-motion-4.mp4';
+
 
 
 
