@@ -77,27 +77,27 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
         <div className="text-center max-w-2xl mx-auto mb-10 lg:mb-12">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
             {page.slug === 'bags'
-              ? 'One bag · Every shot'
+              ? 'AI photoshoots for bag brands'
               : page.slug === 'swimwear'
-                ? 'One swimsuit · Every shot'
+                ? 'AI photoshoots for swimwear'
                 : page.slug === 'activewear'
                   ? 'One sport set · Every shot'
                   : `One ${noun} · Every shot`}
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
             {page.slug === 'bags'
-              ? 'Create every bag shot from one product photo'
+              ? 'Bag visuals without the photoshoot'
               : page.slug === 'swimwear'
-                ? 'Create every swim shot from one product photo'
+                ? 'Swimwear visuals without the photoshoot'
                 : page.slug === 'activewear'
                   ? 'Create every activewear shot from one product photo'
                   : `Built for every ${page.groupName.toLowerCase()} shot.`}
           </h2>
           <p className="mt-4 text-sm sm:text-base text-muted-foreground">
             {page.slug === 'bags'
-              ? 'Generate campaign, editorial, studio, on-model, and UGC-style visuals in minutes — no photoshoot needed'
+              ? 'Upload one product photo and create ads, product images, and social content in minutes'
               : page.slug === 'swimwear'
-                ? 'Generate resort, editorial, lifestyle, on-model and UGC-style visuals in minutes — no destination shoot needed'
+                ? 'Upload one product photo and create campaign-ready visuals in minutes'
                 : page.slug === 'activewear'
                   ? 'Generate pilates, editorial, studio, on-model and UGC-style visuals in minutes — no fitness shoot needed'
                   : 'Every chip — real scenes from a single upload'}
