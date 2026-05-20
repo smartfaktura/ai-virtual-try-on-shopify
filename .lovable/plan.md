@@ -1,9 +1,15 @@
-Swap the activewear hero collage video from `activewear-motion-4.mp4` to `activewear-motion-5.mp4`.
+Update the "second section" (CategoryBuiltForEveryCategory) eyebrow, headline, and subheadline for swimwear and bags.
 
-## Change
+## Changes in `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`
 
-In `src/data/aiProductPhotographyCategoryPages.ts`:
-- Replace the `activewearMotion4` import with `activewearMotion5` (from `@/assets/seo/activewear-motion-5.mp4`).
-- Update `heroCollage[1].videoSrc` on the activewear page entry to reference `activewearMotion5`.
+**Bags branch:**
+- Eyebrow: `AI photoshoots for bag brands` (rendered uppercase by existing tracking style)
+- Headline: `Bag visuals without the photoshoot`
+- Subheadline: `Upload one product photo and create ads, product images, and social content in minutes`
 
-No other files or sections change. The motion showcase carousel still uses clips 1–6.
+**Swimwear branch:**
+- Eyebrow: `AI photoshoots for swimwear`
+- Headline: `Swimwear visuals without the photoshoot`
+- Subheadline: `Upload one product photo and create campaign-ready visuals in minutes`
+
+Activewear and the default fallback stay unchanged. No terminal periods (per core memory).
