@@ -1,28 +1,28 @@
-Polish the loading experience on the swimwear / bags / activewear pages so feed images and motion grids don't pop or stutter on slow connections.
+Two changes.
 
-## 1. Feed image (`CategoryFeedShowcase.tsx`)
+## 1. Hero collage video tile (`CategoryHero.tsx`, ~lines 136–170)
 
-- Add `isLoaded` state on the image; render it `opacity-0` until `onLoad`, then transition to `opacity-100` over 500ms.
-- Keep a low-cost shimmer behind it: inside the framed div add an absolutely-positioned skeleton layer (`bg-muted/40` with a soft `animate-pulse`) that fades out via `isLoaded`.
-- Add explicit `width`/`height` attributes derived from the existing `1127 / 2000` aspect to prevent any CLS while loading.
+The current tile uses the `poster` attribute and `preload="metadata"`, so the poster paints, then the video later swaps in — that's the "cut". Replace with a layered tile that always shows the poster as a base image and crossfades the video in once its first frame is decoded.
 
-## 2. Motion grid (`CategoryMotionShowcase.tsx`)
+- Convert the tile to a small client component with `useRef`/`useState` for `ready`.
+- Always render the poster `<img>` (same `posterSrc`) absolutely positioned, full-bleed, decoding="async" — this is the base layer.
+- Render the `<video>` on top with `opacity-0` and `preload="auto"`, `autoPlay`, `muted`, `loop`, `playsInline`, `disableRemotePlayback`. Drop the `poster` attribute (the base image already covers that role).
+- On `onLoadedData`, set `ready=true` and transition video to `opacity-100` over 400ms. On `canplay`, call `play().catch(...)`.
+- Because the base image stays mounted behind the video forever, there is no flash and no perceived swap; the video simply fades in over a matching still frame.
+- Keep the `motion-reduce:hidden` path for the video; the poster `<img>` remains visible in reduce-motion mode (replaces the old separate `motion-reduce:block` img).
 
-Replace the all-autoplay strategy with a gated, per-tile load+play state machine.
+This applies to all three hero pages (activewear / bags / swimwear) because they share the same `HeroCollageTile`.
 
-- Each tile owns `{ ready, buffering }` state.
-- Default `preload="none"` and `autoPlay={false}` on every `<video>`. Drop the `src` attribute initially; mount it only when the tile enters a 400px rootMargin window via the existing `IntersectionObserver`.
-- Listen for:
-  - `loadeddata` → set `ready=true` (fade tile from skeleton to video).
-  - `canplay` → call `.play().catch(...)`.
-  - `waiting` / `stalled` → set `buffering=true` (shimmer overlay returns).
-  - `playing` → `buffering=false`.
-- Render a skeleton layer (gradient + `animate-pulse`) behind each video, visible while `!ready || buffering`. Video sits at `opacity-0` until `ready` then transitions to `opacity-100` over 400ms.
-- Honor existing `prefers-reduced-motion` and `navigator.connection.saveData` short-circuits: in those modes, never set the `src`, just keep the skeleton with a tiny static frame badge.
-- Throttle concurrent loads: only attach `src` for at most 2 tiles at a time; when a tile reaches `playing`, allow the next pending tile to start. This avoids the "everything competes for bandwidth" cut-cut-cut effect on slower networks.
+## 2. Activewear "every shot" section copy (`CategoryBuiltForEveryCategory.tsx`)
+
+Update the `activewear` branch only:
+- Eyebrow: `AI photoshoots for activewear`
+- Headline: `Activewear visuals without the fitness shoot`
+- Subheadline: `Upload one product photo and create ad-ready visuals in minutes`
+
+Bags and swimwear branches stay as they are. No terminal periods on single-sentence subtitles (per core memory).
 
 ## Out of scope
 
-- No copy, layout, or visual hierarchy changes.
-- No new dependencies.
-- Other category pages are untouched (gating already limits the components to bags/swimwear/activewear).
+- No layout, sizing, or other copy changes.
+- Motion grid (`CategoryMotionShowcase`) already has its skeleton/throttle pipeline; not touched.
