@@ -88,7 +88,7 @@ function getFocusOptions(sceneIds: string[]): { value: string; label: string }[]
   return [
     { value: 'material', label: 'Material / Texture' },
     { value: 'label', label: 'Label / Logo' },
-    { value: 'hardware', label: 'Hardware / Details' },
+    { value: 'hardware', label: 'EDITORIAL / Details' },
     { value: 'packaging', label: 'Packaging' },
     { value: 'full-product', label: 'Full Product' },
   ];
