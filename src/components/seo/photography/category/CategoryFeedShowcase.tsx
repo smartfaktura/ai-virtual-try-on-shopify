@@ -80,12 +80,12 @@ export function CategoryFeedShowcase({ page }: { page: CategoryPage }) {
             />
 
             {/* Top-right tag: input */}
-            <span className="absolute right-4 top-4 hidden xs:inline-flex items-center gap-1.5 rounded-full bg-foreground/85 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-background ring-1 ring-foreground/10 shadow-sm">
+            <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-foreground/85 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-background ring-1 ring-foreground/10 shadow-sm">
               One upload
             </span>
 
             {/* Bottom-left chip: output stats */}
-            <span className="absolute left-4 bottom-4 hidden xs:inline-flex items-center gap-1.5 rounded-full bg-background/85 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/80 ring-1 ring-foreground/[0.06] shadow-sm">
+            <span className="absolute left-4 bottom-4 inline-flex items-center gap-1.5 rounded-full bg-background/85 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/80 ring-1 ring-foreground/[0.06] shadow-sm">
               12 posts · 3 reels
             </span>
           </div>
