@@ -134,28 +134,33 @@ function HeroTile({
   const src = resolveSlotImageUrl(overrides, pageRoute, slotKey, PREVIEW(tile.imageId));
   const alt = resolveSlotAlt(overrides, pageRoute, slotKey, tile.alt);
   const posterSrc = getOptimizedUrl(src, { width: 640, height: 800, quality: 75, resize: 'cover' });
+  const [videoReady, setVideoReady] = useState(false);
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
       {tile.videoSrc ? (
-        <video
-          src={tile.videoSrc}
-          poster={posterSrc}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          disableRemotePlayback
-          aria-label={alt}
-          className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
-        />
-      ) : null}
-      {tile.videoSrc ? (
-        <img
-          src={posterSrc}
-          alt={alt}
-          className="absolute inset-0 h-full w-full object-cover hidden motion-reduce:block"
-        />
+        <>
+          {/* Always-on poster base — no flash when video swaps in */}
+          <img
+            src={posterSrc}
+            alt={alt}
+            decoding="async"
+            loading={priority ? 'eager' : 'lazy'}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <video
+            src={tile.videoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            disableRemotePlayback
+            aria-label={alt}
+            onLoadedData={() => setVideoReady(true)}
+            onCanPlay={(e) => { (e.currentTarget as HTMLVideoElement).play().catch(() => {}); }}
+            className={`absolute inset-0 h-full w-full object-cover motion-reduce:hidden transition-opacity duration-500 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+          />
+        </>
       ) : (
         <SmartImage
           src={posterSrc}
