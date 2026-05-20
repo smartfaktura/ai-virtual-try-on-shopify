@@ -63,7 +63,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
             Built for every {page.groupName.toLowerCase()} shot.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-muted-foreground">
-            Switch between {page.groupName.toLowerCase()} subcategories — every chip reveals real scenes generated from a single upload.
+            Every chip — real scenes from a single upload
           </p>
         </div>
 
