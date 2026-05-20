@@ -64,6 +64,32 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
   const copy = COPY_BY_SLUG[slug];
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  // Per-tile state: has the tile entered viewport and been allowed to load?
+  const [loadStates, setLoadStates] = useState<boolean[]>(() => CLIPS.map(() => false));
+  // Per-tile readiness (first frame decoded) and buffering (mid-playback stall)
+  const [readyStates, setReadyStates] = useState<boolean[]>(() => CLIPS.map(() => false));
+  const [bufferingStates, setBufferingStates] = useState<boolean[]>(() => CLIPS.map(() => false));
+  // Save-data / reduced-motion: skip videos entirely, keep skeleton
+  const [degraded, setDegraded] = useState(false);
+
+  // Throttled load queue — at most MAX_CONCURRENT tiles fetching at once
+  const MAX_CONCURRENT = 2;
+  const visibleQueue = useRef<Set<number>>(new Set());
+  const activeLoads = useRef<Set<number>>(new Set());
+
+  const flushQueue = () => {
+    while (activeLoads.current.size < MAX_CONCURRENT && visibleQueue.current.size > 0) {
+      const next = visibleQueue.current.values().next().value as number;
+      visibleQueue.current.delete(next);
+      activeLoads.current.add(next);
+      setLoadStates((prev) => {
+        if (prev[next]) return prev;
+        const copyArr = prev.slice();
+        copyArr[next] = true;
+        return copyArr;
+      });
+    }
+  };
 
   useEffect(() => {
     const reduceMotion =
@@ -75,32 +101,70 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
       Boolean(navigator.connection?.saveData);
 
     if (reduceMotion || saveData) {
-      videoRefs.current.forEach((v) => {
-        if (v) {
-          v.autoplay = false;
-          v.pause();
-        }
-      });
+      setDegraded(true);
       return;
     }
 
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          const el = entry.target as HTMLVideoElement;
+          const idx = Number((entry.target as HTMLElement).dataset.idx);
+          if (Number.isNaN(idx)) continue;
           if (entry.isIntersecting) {
-            el.play().catch(() => {});
+            if (!loadStates[idx] && !visibleQueue.current.has(idx) && !activeLoads.current.has(idx)) {
+              visibleQueue.current.add(idx);
+            }
+            const v = videoRefs.current[idx];
+            if (v && v.readyState >= 3) v.play().catch(() => {});
           } else {
-            el.pause();
+            const v = videoRefs.current[idx];
+            if (v) v.pause();
           }
         }
+        flushQueue();
       },
-      { rootMargin: '200px 0px', threshold: 0.01 },
+      { rootMargin: '400px 0px', threshold: 0.01 },
     );
 
-    videoRefs.current.forEach((v) => v && io.observe(v));
+    const tiles = document.querySelectorAll('[data-motion-tile="1"]');
+    tiles.forEach((t) => io.observe(t));
     return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const onLoadedData = (i: number) => {
+    setReadyStates((prev) => {
+      if (prev[i]) return prev;
+      const c = prev.slice();
+      c[i] = true;
+      return c;
+    });
+  };
+  const onCanPlay = (i: number) => {
+    const v = videoRefs.current[i];
+    if (v) v.play().catch(() => {});
+  };
+  const onWaiting = (i: number) => {
+    setBufferingStates((prev) => {
+      if (prev[i]) return prev;
+      const c = prev.slice();
+      c[i] = true;
+      return c;
+    });
+  };
+  const onPlaying = (i: number) => {
+    setBufferingStates((prev) => {
+      if (!prev[i]) return prev;
+      const c = prev.slice();
+      c[i] = false;
+      return c;
+    });
+    // Free the load slot for the next pending tile
+    if (activeLoads.current.has(i)) {
+      activeLoads.current.delete(i);
+      flushQueue();
+    }
+  };
 
   return (
     <section
@@ -123,39 +187,59 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
 
         {/* Video grid: 2 cols (4 tiles) on mobile, 3×2 on sm, 6-up strip on lg */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-          {CLIPS.map((src, i) => (
-            <div
-              key={src}
-              className={[
-                'group relative aspect-[9/16] rounded-2xl overflow-hidden',
-                'ring-1 ring-foreground/[0.06] bg-muted/30',
-                'shadow-[0_20px_50px_-30px_rgba(15,23,42,0.22)]',
-                'transition-transform duration-700 hover:scale-[1.015]',
-                'motion-reduce:transition-none motion-reduce:hover:scale-100',
-                'animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-backwards',
-                i >= 4 ? 'hidden sm:block' : '',
-              ].join(' ')}
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <video
-                ref={(el) => { videoRefs.current[i] = el; }}
-                src={src}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload={i === 0 ? 'auto' : 'metadata'}
-                disableRemotePlayback
-                aria-label={copy.aria}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-              />
-              {i === 0 && (
-                <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-foreground/85 backdrop-blur-md px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-background ring-1 ring-foreground/10 shadow-sm">
-                  New
-                </span>
-              )}
-            </div>
-          ))}
+          {CLIPS.map((src, i) => {
+            const showSkeleton = degraded || !readyStates[i] || bufferingStates[i];
+            return (
+              <div
+                key={src}
+                data-motion-tile="1"
+                data-idx={i}
+                className={[
+                  'group relative aspect-[9/16] rounded-2xl overflow-hidden',
+                  'ring-1 ring-foreground/[0.06] bg-muted/30',
+                  'shadow-[0_20px_50px_-30px_rgba(15,23,42,0.22)]',
+                  'transition-transform duration-700 hover:scale-[1.015]',
+                  'motion-reduce:transition-none motion-reduce:hover:scale-100',
+                  'animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-backwards',
+                  i >= 4 ? 'hidden sm:block' : '',
+                ].join(' ')}
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                {/* Skeleton shimmer */}
+                <div
+                  aria-hidden="true"
+                  className={`absolute inset-0 bg-gradient-to-br from-muted/60 via-muted/30 to-muted/60 transition-opacity duration-500 ${
+                    showSkeleton ? 'opacity-100 animate-pulse' : 'opacity-0'
+                  }`}
+                />
+                {!degraded && loadStates[i] && (
+                  <video
+                    ref={(el) => { videoRefs.current[i] = el; }}
+                    src={src}
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    disableRemotePlayback
+                    aria-label={copy.aria}
+                    onLoadedData={() => onLoadedData(i)}
+                    onCanPlay={() => onCanPlay(i)}
+                    onWaiting={() => onWaiting(i)}
+                    onStalled={() => onWaiting(i)}
+                    onPlaying={() => onPlaying(i)}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 group-hover:scale-[1.03] ${
+                      readyStates[i] ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+                )}
+                {i === 0 && (
+                  <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-foreground/85 backdrop-blur-md px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-background ring-1 ring-foreground/10 shadow-sm">
+                    New
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* CTAs — token-for-token match with CategoryFeedShowcase */}
