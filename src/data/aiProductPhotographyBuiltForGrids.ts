@@ -2108,14 +2108,14 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
     {
       "subCategory": "Bags · Studio Shots",
       "cards": [
-        { "label": "Front View",            "imageId": "1776239427925-pwgn3u" },
-        { "label": "Angle View",            "imageId": "1776239414811-nvmu94" },
-        { "label": "Side View",             "imageId": "1776239451433-7djvm9" },
-        { "label": "In-Hand Studio",        "imageId": "1776239434540-tt9f6t" },
-        { "label": "Reclined Studio Editorial", "imageId": "1776749544620-sn4eh1" },
-        { "label": "Mid Portrait Hold",     "imageId": "1776239441102-rgbtr9" },
-        { "label": "Hardware Close-Up",     "imageId": "1776239431078-3zb6n1" },
-        { "label": "Sculptural Product Still", "imageId": "1776749548695-11dzfk" }
+        { "label": "Front View",                "imageId": "1779254030949-v68n45" },
+        { "label": "Side View",                 "imageId": "1779254041863-k3zxv4" },
+        { "label": "In-Hand Studio",            "imageId": "1779254031965-rv0m89" },
+        { "label": "Reclined Studio Editorial", "imageId": "1779254040532-4kp20n" },
+        { "label": "Mid Portrait Hold",         "imageId": "1779254035988-crjdso" },
+        { "label": "Back Minimal Carry",        "imageId": "1779254025567-r5307n" },
+        { "label": "Close-Up Detail",           "imageId": "1779254029922-zqx2b6" },
+        { "label": "Interior View",             "imageId": "1779254033291-hid7c1" }
       ]
     },
     {
