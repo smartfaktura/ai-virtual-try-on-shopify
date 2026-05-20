@@ -6,8 +6,9 @@ import { getVisualLibraryHrefForCategory } from '@/lib/visualLibraryDeepLink';
 import bagsFeed from '@/assets/seo/bags-feed.jpg';
 import swimwearFeed from '@/assets/seo/swimwear-feed.jpg';
 import activewearFeed from '@/assets/seo/activewear-feed.jpg';
+import eyewearFeed from '@/assets/seo/eyewear-feed.jpg';
 
-type FeedSlug = 'bags' | 'swimwear' | 'activewear';
+type FeedSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear';
 
 const FEED_BY_SLUG: Record<FeedSlug, {
   image: string;
@@ -36,6 +37,13 @@ const FEED_BY_SLUG: Record<FeedSlug, {
     heading: 'Your entire sport feed from a single upload',
     sub: 'One activewear photo in — a month of editorials, reels and pilates studios out, on brand and on rhythm',
     alt: 'Curated Instagram-style feed of activewear pilates editorials, studio portraits and aesthetic UGC — all generated from a single product upload',
+  },
+  eyewear: {
+    image: eyewearFeed,
+    eyebrow: 'One frame · Whole feed',
+    heading: 'Your entire eyewear feed from a single upload',
+    sub: 'One frame photo in — a season of editorials, reels and PDP details out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of eyewear editorial portraits, vintage film campaigns and product still life — all generated from a single frame upload',
   },
 };
 
