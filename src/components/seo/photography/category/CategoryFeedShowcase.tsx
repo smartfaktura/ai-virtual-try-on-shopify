@@ -106,13 +106,25 @@ export function CategoryFeedShowcase({ page }: { page: CategoryPage }) {
 
           {/* Feed image frame */}
           <div className="relative w-full max-w-[420px] sm:max-w-[460px] lg:max-w-none lg:w-[480px] mx-auto lg:mx-0 aspect-[1127/2000] rounded-3xl overflow-hidden ring-1 ring-foreground/[0.06] bg-muted/30 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.25)] transition-transform duration-700 hover:scale-[1.01] motion-reduce:transition-none motion-reduce:hover:scale-100 animate-in fade-in duration-700">
+            {/* Skeleton shimmer — fades out when image is decoded */}
+            <div
+              aria-hidden="true"
+              className={`absolute inset-0 bg-gradient-to-br from-muted/60 via-muted/30 to-muted/60 animate-pulse transition-opacity duration-500 ${
+                isLoaded ? 'opacity-0' : 'opacity-100'
+              }`}
+            />
             <img
               src={copy.image}
               alt={copy.alt}
+              width={1127}
+              height={2000}
               loading="lazy"
               decoding="async"
+              onLoad={() => setIsLoaded(true)}
               {...({ fetchpriority: 'low' } as any)}
-              className="absolute inset-0 w-full h-full object-cover"
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                isLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
             />
 
             {/* Top-right tag: input */}
