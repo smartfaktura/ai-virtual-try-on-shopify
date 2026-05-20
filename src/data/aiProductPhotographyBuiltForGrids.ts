@@ -2069,7 +2069,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "bags": [
     {
-      "subCategory": "Bags · Campaign Statements",
+      "subCategory": "Bags · Campaigns",
       "cards": [
         { "label": "Wind Shoulder Editorial",      "imageId": "1776749559127-ra3hur" },
         { "label": "Alpine Carry Motion",          "imageId": "1776749505968-dxsavu" },
@@ -2082,7 +2082,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Bags · Editorial Studio",
+      "subCategory": "Bags · Editorial Shots",
       "cards": [
         { "label": "Sculptural Bag Studio Hero", "imageId": "1776239449949-ygljai" },
         { "label": "Hardware & Craft Closeup",   "imageId": "1776749772492-j9qpsv" },
@@ -2106,7 +2106,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Bags · Essential Shots",
+      "subCategory": "Bags · Studio Shots",
       "cards": [
         { "label": "Front View",            "imageId": "1776239427925-pwgn3u" },
         { "label": "Angle View",            "imageId": "1776239414811-nvmu94" },
@@ -2119,7 +2119,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Bags · Everyday UGC",
+      "subCategory": "Bags · UGC",
       "cards": [
         { "label": "Luxury Bag Mirror Selfie", "imageId": "1776239438796-99x31m" },
         { "label": "Cafe Errand Bag Look",     "imageId": "1776239420140-re6sqe" },
