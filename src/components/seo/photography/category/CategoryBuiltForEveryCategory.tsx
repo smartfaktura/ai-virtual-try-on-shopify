@@ -90,7 +90,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               : page.slug === 'swimwear'
                 ? 'Swimwear visuals without the photoshoot'
                 : page.slug === 'activewear'
-                  ? 'Create every activewear shot from one product photo'
+                  ? 'Activewear visuals without the fitness shoot'
                   : `Built for every ${page.groupName.toLowerCase()} shot.`}
           </h2>
           <p className="mt-4 text-sm sm:text-base text-muted-foreground">
