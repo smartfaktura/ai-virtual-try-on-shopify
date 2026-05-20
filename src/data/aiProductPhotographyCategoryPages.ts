@@ -1635,3 +1635,7 @@ export function getRelatedPages(slugs: string[]): CategoryPage[] {
     .map((s) => aiProductPhotographyCategoryPages.find((p) => p.slug === s))
     .filter((p): p is CategoryPage => Boolean(p));
 }
+
+export function getAllOtherCategoryPages(currentSlug: string): CategoryPage[] {
+  return aiProductPhotographyCategoryPages.filter((p) => p.slug !== currentSlug);
+}
