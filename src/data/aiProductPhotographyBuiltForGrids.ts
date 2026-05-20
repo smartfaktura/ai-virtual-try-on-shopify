@@ -95,7 +95,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Clothing & Apparel · Essential Shots",
+      "subCategory": "Clothing & Apparel · EDITORIAL",
       "cards": [
         {
           "label": "Ghost Mannequin Shot",
@@ -348,7 +348,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Sneakers · Essential Shots",
+      "subCategory": "Sneakers · EDITORIAL",
       "cards": [
         {
           "label": "Pair Display",
@@ -422,7 +422,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Shoes · Essential Shots",
+      "subCategory": "Shoes · EDITORIAL",
       "cards": [
         {
           "label": "Front View",
@@ -643,7 +643,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Beauty & Skincare · Essential Shots",
+      "subCategory": "Beauty & Skincare · EDITORIAL",
       "cards": [
         {
           "label": "Front View",
@@ -880,7 +880,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Fragrance · Essential Shots",
+      "subCategory": "Fragrance · EDITORIAL",
       "cards": [
         {
           "label": "Front View",
@@ -1069,7 +1069,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "bags-accessories": [
     {
-      "subCategory": "Bags · Campaign Statements",
+      "subCategory": "Bags · Studio Shots",
       "cards": [
         {
           "label": "Wind Shoulder Editorial",
@@ -1150,7 +1150,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
           "imageId": "1776239449949-ygljai"
         },
         {
-          "label": "Hardware & Craft Closeup",
+          "label": "EDITORIAL & Craft Closeup",
           "imageId": "1776749772492-j9qpsv"
         },
         {
@@ -1172,7 +1172,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Bags · Essential Shots",
+      "subCategory": "Bags · EDITORIAL",
       "cards": [
         {
           "label": "Front View",
@@ -1613,7 +1613,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Food · Essential Shots",
+      "subCategory": "Food · EDITORIAL",
       "cards": [
         {
           "label": "Front View",
@@ -1726,7 +1726,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "supplements-wellness": [
     {
-      "subCategory": "Supplements · Essential Shots",
+      "subCategory": "Supplements · EDITORIAL",
       "cards": [
         {
           "label": "Front View",
@@ -1914,7 +1914,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "electronics-gadgets": [
     {
-      "subCategory": "Tech · Essential Shots",
+      "subCategory": "Tech · EDITORIAL",
       "cards": [
         {
           "label": "Front View",
@@ -1962,7 +1962,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
           "imageId": "1776250240820-dbonqe"
         },
         {
-          "label": "Material and Hardware Detail",
+          "label": "Material and EDITORIAL Detail",
           "imageId": "1776250236111-okpnze"
         },
         {
@@ -2057,7 +2057,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
           "imageId": "1776250241939-w8pfn5"
         },
         {
-          "label": "Hardware Material Closeup",
+          "label": "EDITORIAL Material Closeup",
           "imageId": "1776250231180-yr4w8z"
         },
         {
@@ -2069,7 +2069,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "bags": [
     {
-      "subCategory": "Bags · Campaign Statements",
+      "subCategory": "Bags · Studio Shots",
       "cards": [
         { "label": "Wind Shoulder Editorial",      "imageId": "1776749559127-ra3hur" },
         { "label": "Alpine Carry Motion",          "imageId": "1776749505968-dxsavu" },
@@ -2085,7 +2085,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       "subCategory": "Bags · Editorial Studio",
       "cards": [
         { "label": "Sculptural Bag Studio Hero", "imageId": "1776239449949-ygljai" },
-        { "label": "Hardware & Craft Closeup",   "imageId": "1776749772492-j9qpsv" },
+        { "label": "EDITORIAL & Craft Closeup",   "imageId": "1776749772492-j9qpsv" },
         { "label": "Luxury Couch Bag Still",     "imageId": "1776239439946-komlla" },
         { "label": "Vintage Car Bag Still",      "imageId": "1776239461462-cykje2" },
         { "label": "Monochrome Colorbox Bag",    "imageId": "1776239442117-kllo1p" },
@@ -2106,7 +2106,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Bags · Essential Shots",
+      "subCategory": "Bags · EDITORIAL",
       "cards": [
         { "label": "Front View",            "imageId": "1776239427925-pwgn3u" },
         { "label": "Angle View",            "imageId": "1776239414811-nvmu94" },
@@ -2114,7 +2114,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "In-Hand Studio",        "imageId": "1776239434540-tt9f6t" },
         { "label": "Reclined Studio Editorial", "imageId": "1776749544620-sn4eh1" },
         { "label": "Mid Portrait Hold",     "imageId": "1776239441102-rgbtr9" },
-        { "label": "Hardware Close-Up",     "imageId": "1776239431078-3zb6n1" },
+        { "label": "EDITORIAL Close-Up",     "imageId": "1776239431078-3zb6n1" },
         { "label": "Sculptural Product Still", "imageId": "1776749548695-11dzfk" }
       ]
     },
@@ -2137,7 +2137,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       "subCategory": "Watches · Editorial Studio",
       "cards": [
         { "label": "Motion Blur Watch Hero",      "imageId": "1776596240525-wafgtx" },
-        { "label": "Dial & Hardware Closeup",     "imageId": "1776247090415-yfk1rr" },
+        { "label": "Dial & EDITORIAL Closeup",     "imageId": "1776247090415-yfk1rr" },
         { "label": "Sky Reflection Watch Hero",   "imageId": "1776596656361-sax8tc" },
         { "label": "Jewelry Watch Statement",     "imageId": "1776247116958-qmfsoq" },
         { "label": "Editorial Motion Slice",      "imageId": "1776596761580-awqwnw" },
@@ -2171,7 +2171,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Watches · Essential Shots",
+      "subCategory": "Watches · EDITORIAL",
       "cards": [
         { "label": "Front View",        "imageId": "1776247092505-0ugq0d" },
         { "label": "Angle View",        "imageId": "1776596689365-pf1c97" },
@@ -2186,7 +2186,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "hoodies": [
     {
-      "subCategory": "Hoodies · Essential Shots",
+      "subCategory": "Hoodies · EDITORIAL",
       "cards": [
         { "label": "Ghost Mannequin Shot",  "imageId": "1776847998023-tof7el" },
         { "label": "Front View Flat Lay",   "imageId": "1776242087075-iw1a72" },
@@ -2302,7 +2302,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Swimwear · Essential Shots",
+      "subCategory": "Swimwear · EDITORIAL",
       "cards": [
         { "label": "Ghost Mannequin Shot", "imageId": "1776523219756-c5vnc7" },
         { "label": "On-Model Front",       "imageId": "1776246318297-apxkit" },
@@ -2371,7 +2371,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Lingerie · Essential Shots",
+      "subCategory": "Lingerie · EDITORIAL",
       "cards": [
         { "label": "Front View Flat Lay", "imageId": "1776751562172-vlyt1y" },
         { "label": "On-Model Front",      "imageId": "1776751573366-7spsf6" },
@@ -2452,7 +2452,7 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       ]
     },
     {
-      "subCategory": "Eyewear · Essential Shots",
+      "subCategory": "Eyewear · EDITORIAL",
       "cards": [
         { "label": "Front View",        "imageId": "1776147803881-1qrc1v" },
         { "label": "Angle View",        "imageId": "1776147799693-pwsfbg" },
