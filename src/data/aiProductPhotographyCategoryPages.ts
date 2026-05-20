@@ -1458,7 +1458,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroNoun: 'sport piece',
     heroCollage: [
       { subCategory: 'Sport',     imageId: '1776231751417-v0kjpy', alt: 'AI activewear aesthetic sport hero.' },
-      { subCategory: 'Video',     imageId: '1776192312181-3v0u0t', alt: 'AI activewear editorial floor stretch.', videoSrc: activewearMotion4 },
+      { subCategory: 'Video',     imageId: '1776192312181-3v0u0t', alt: 'AI activewear editorial floor stretch.', videoSrc: activewearMotion5 },
       { subCategory: 'Pilates',   imageId: '1776838044202-kb4bib', alt: 'AI activewear pilates studio glow.' },
       { subCategory: 'Court',     imageId: '1776838051066-9iqjlv', alt: 'AI activewear tennis court editorial.' },
     ],
