@@ -17,13 +17,13 @@ export function CategoryVisualOutputs({ page }: { page: CategoryPage }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none scrollbar-hide -mx-6 px-6 sm:mx-0 sm:px-0">
           {page.visualOutputs.map(({ title, text, icon }) => {
             const Icon = iconMap[icon];
             return (
               <div
                 key={title}
-                className="bg-white rounded-3xl border border-[#f0efed] shadow-sm p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                className="shrink-0 sm:shrink min-w-[78%] sm:min-w-0 snap-start bg-white rounded-3xl border border-[#f0efed] shadow-sm p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
                 <div className="w-10 h-10 rounded-2xl bg-[#1a1a2e] text-white flex items-center justify-center mb-4 shadow-sm">
                   <Icon size={18} strokeWidth={1.75} />
