@@ -28,10 +28,14 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
   const overrides = useSeoVisualOverridesMap();
   const { scenes } = usePublicSceneLibrary();
-  const sceneTitleById = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const s of scenes) m.set(s.scene_id, s.title);
-    return m;
+  const { sceneTitleById, scenePreviewById } = useMemo(() => {
+    const titles = new Map<string, string>();
+    const previews = new Map<string, string>();
+    for (const s of scenes) {
+      titles.set(s.scene_id, s.title);
+      if (s.preview_image_url) previews.set(s.scene_id, s.preview_image_url);
+    }
+    return { sceneTitleById: titles, scenePreviewById: previews };
   }, [scenes]);
   const [activeIdx, setActiveIdx] = useState(0);
   const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -103,7 +107,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 lg:gap-4 animate-in fade-in duration-500" key={active.subCategory}>
           {active.cards.map((card, i) => {
             const slotKey = `builtFor_${slotSlugify(active.subCategory)}_${i + 1}`;
-            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId));
+            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId), scenePreviewById);
             const resolvedLabel = resolveSlotLabel(overrides, page.url, slotKey, card.label, sceneTitleById);
             return (
               <div
