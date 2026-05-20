@@ -28,14 +28,22 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
   const overrides = useSeoVisualOverridesMap();
   const { scenes } = usePublicSceneLibrary();
-  const { sceneTitleById, scenePreviewById } = useMemo(() => {
+  const { sceneTitleById, scenePreviewById, livePreviewByImageId } = useMemo(() => {
     const titles = new Map<string, string>();
     const previews = new Map<string, string>();
+    const previewsByImageId = new Map<string, string>();
     for (const s of scenes) {
       titles.set(s.scene_id, s.title);
-      if (s.preview_image_url) previews.set(s.scene_id, s.preview_image_url);
+      if (s.preview_image_url) {
+        previews.set(s.scene_id, s.preview_image_url);
+        // Extract `{imageId}` from a `…/scene-previews/{imageId}.{ext}` URL so
+        // hardcoded BUILT_FOR cards (keyed by imageId) can also pick up the
+        // scene's current live preview when no admin override exists.
+        const m = s.preview_image_url.match(/\/scene-previews\/([^/.?#]+)\.[a-z0-9]+(?:[?#].*)?$/i);
+        if (m && m[1]) previewsByImageId.set(m[1], s.preview_image_url);
+      }
     }
-    return { sceneTitleById: titles, scenePreviewById: previews };
+    return { sceneTitleById: titles, scenePreviewById: previews, livePreviewByImageId: previewsByImageId };
   }, [scenes]);
   const [activeIdx, setActiveIdx] = useState(0);
   const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -107,7 +115,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 lg:gap-4 animate-in fade-in duration-500" key={active.subCategory}>
           {active.cards.map((card, i) => {
             const slotKey = `builtFor_${slotSlugify(active.subCategory)}_${i + 1}`;
-            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId), scenePreviewById);
+            const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId), scenePreviewById, card.imageId, livePreviewByImageId);
             const resolvedLabel = resolveSlotLabel(overrides, page.url, slotKey, card.label, sceneTitleById);
             return (
               <div
