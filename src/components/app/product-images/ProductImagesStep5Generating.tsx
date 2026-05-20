@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Camera, Info, Sparkles } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Camera } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { UserProduct } from './types';
