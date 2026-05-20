@@ -81,7 +81,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               : page.slug === 'swimwear'
                 ? 'AI photoshoots for swimwear'
                 : page.slug === 'activewear'
-                  ? 'One sport set · Every shot'
+                  ? 'AI photoshoots for activewear'
                   : `One ${noun} · Every shot`}
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
@@ -90,7 +90,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               : page.slug === 'swimwear'
                 ? 'Swimwear visuals without the photoshoot'
                 : page.slug === 'activewear'
-                  ? 'Create every activewear shot from one product photo'
+                  ? 'Activewear visuals without the fitness shoot'
                   : `Built for every ${page.groupName.toLowerCase()} shot.`}
           </h2>
           <p className="mt-4 text-sm sm:text-base text-muted-foreground">
@@ -99,7 +99,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               : page.slug === 'swimwear'
                 ? 'Upload one product photo and create campaign-ready visuals in minutes'
                 : page.slug === 'activewear'
-                  ? 'Generate pilates, editorial, studio, on-model and UGC-style visuals in minutes — no fitness shoot needed'
+                  ? 'Upload one product photo and create ad-ready visuals in minutes'
                   : 'Every chip — real scenes from a single upload'}
           </p>
         </div>
