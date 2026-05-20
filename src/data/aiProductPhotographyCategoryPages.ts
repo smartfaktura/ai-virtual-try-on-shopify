@@ -11,7 +11,7 @@
 
 import bagsMotion3 from '@/assets/seo/bags-motion-3.mp4';
 import swimwearMotion4 from '@/assets/seo/swimwear-motion-4.mp4';
-import activewearMotion4 from '@/assets/seo/activewear-motion-4.mp4';
+import activewearMotion5 from '@/assets/seo/activewear-motion-5.mp4';
 
 
 
