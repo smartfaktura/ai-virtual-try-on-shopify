@@ -104,6 +104,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
           {active.cards.map((card, i) => {
             const slotKey = `builtFor_${slotSlugify(active.subCategory)}_${i + 1}`;
             const resolved = resolveSlotImageUrl(overrides, page.url, slotKey, PREVIEW(card.imageId));
+            const resolvedLabel = resolveSlotLabel(overrides, page.url, slotKey, card.label, sceneTitleById);
             return (
               <div
                 key={`${active.subCategory}-${card.imageId}-${i}`}
@@ -116,12 +117,12 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
                   src={getOptimizedUrl(resolved, { width: 480, height: 640, quality: 80, resize: 'cover' })}
                   srcSet={getResizedSrcSet(resolved, { widths: [320, 480, 640], aspect: [3, 4], quality: 80 })}
                   sizes="(max-width: 1024px) 40vw, 240px"
-                  alt={`${card.label} — ${page.groupName} AI product photography example`}
+                  alt={`${resolvedLabel} — ${page.groupName} AI product photography example`}
                   imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
                 />
                 <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-[11px] font-medium text-white/90 leading-tight line-clamp-2">
-                    {card.label}
+                    {resolvedLabel}
                   </span>
                 </div>
               </div>
