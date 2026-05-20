@@ -1,34 +1,36 @@
-## Fix blurry images in "Built for every…" grid on category pages
+## Goal
 
-### Why it looks bad
-The grid on `/ai-product-photography/activewear` (and the other 9 category pages — same component) renders each tile in a 4-column grid. On desktop (~1314 CSS px) each tile is ~280 CSS px wide, which is ~560 device px on retina.
+On `/app/video`, surface any in-progress (processing/queued) videos as the **very first section** so users immediately see the work currently running, instead of having to scroll past workflow cards and the showcase.
 
-The current code requests a **480px-wide, server-cropped** version as the base `src`:
-```
-getOptimizedUrl(resolved, { width: 480, height: 640, quality: 80, resize: 'cover' })
-```
-That's below the rendered device size, so browsers upscale → soft / blurry. It also re-crops on the server, which the project memory explicitly warns against ("Never use `width` param — causes server-side crop zoom").
+## Current order
 
-The `srcSet` caps at 640px, which is also too low for retina at 240–280 CSS px.
+1. PageHeader ("Create Videos")
+2. Workflow cards grid (Animate Image, Start & End, Short Film, etc.)
+3. Showcase grid
+4. **In Progress** (only when something is processing) ← buried
+5. Completed Videos
 
-### Plan
-Edit only `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`, lines 146–149:
+## New order
 
-1. Replace the base `src` to be quality-only (no `width`, no `resize`) so the original aspect-correct image is the fallback:
-   ```
-   getOptimizedUrl(resolved, { quality: 82 })
-   ```
-2. Bump the `srcSet` widths so retina tiles get a sharp source. Keep the 3:4 aspect (matches the `aspect-[3/4]` container) so no extra crop happens beyond what the original asset already is:
-   ```
-   getResizedSrcSet(resolved, { widths: [480, 720, 960, 1200], aspect: [3, 4], quality: 82 })
-   ```
-3. Update `sizes` to reflect actual layout (3 cols on mobile, 4 cols on ≥sm, max ~280px on lg):
-   ```
-   sizes="(min-width: 1024px) 280px, (min-width: 640px) 24vw, 32vw"
-   ```
+1. PageHeader
+2. **In Progress** strip — rendered immediately under the header, only when `processingVideos.length > 0`
+3. Workflow cards grid
+4. Showcase
+5. Completed Videos
 
-Nothing else changes — no layout, copy, or other components touched. This matches the "Image Optimization No-Crop" memory: quality-only for the displayed src, widths only via `srcSet` for retina selection.
+## Implementation (single file)
 
-### Out of scope
-- Hero collage tiles, motion grid, feed showcase — already addressed in prior turns.
-- Underlying asset quality (these are catalog images; nothing to do at source).
+`src/pages/VideoHub.tsx`
+
+- Lift the `completedTaskIds` / `processingVideos` / `completedVideos` computation out of the IIFE at line 367 to the top of the component body so it can be referenced in two places.
+- Render the existing **In Progress** block (lines 383–406, unchanged markup: amber pulse dot, "In Progress" h2, count badge, 2/4-col grid of `RecentVideoCard` with `nowTick`) directly after `<PageHeader>` (after line 297), gated on `processingVideos.length > 0`.
+- Remove the In Progress block from inside the bottom IIFE; that section keeps only **Completed Videos**.
+- Keep all existing behavior: live `nowTick` timer, dedup against completed `kling_task_id`s, recently-completed highlight, select mode, ZIP download, pagination.
+
+No styling, copy, or data-fetching changes. No other files touched.
+
+## Why this is safe
+
+- Pure reordering of already-rendered JSX.
+- The `hasProcessing` / `nowTick` effect (lines 208–214) already drives the timer regardless of where the block is mounted.
+- Completed-grid logic, select mode, and download flow stay inside the bottom section untouched.

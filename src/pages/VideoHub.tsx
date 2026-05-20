@@ -287,6 +287,18 @@ export default function VideoHub() {
     }
   }, [history, selectedIds]);
 
+  // Compute processing/completed splits once so we can show "In Progress" at the top
+  const completedTaskIds = new Set(
+    history
+      .filter(v => v.status === 'complete' && v.kling_task_id)
+      .map(v => v.kling_task_id as string),
+  );
+  const processingVideos = history.filter(v =>
+    (v.status === 'processing' || v.status === 'queued') &&
+    !(v.kling_task_id && completedTaskIds.has(v.kling_task_id))
+  );
+  const completedVideos = history.filter(v => v.status !== 'processing' && v.status !== 'queued');
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <PageHeader
@@ -295,6 +307,32 @@ export default function VideoHub() {
       >
         <div />
       </PageHeader>
+
+      {/* In Progress — surfaced first so users immediately see active work */}
+      {processingVideos.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
+            <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
+              {processingVideos.length}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {processingVideos.map((v) => (
+              <RecentVideoCard
+                key={v.id}
+                video={v}
+                onClick={() => setSelectedVideo(v)}
+                selectMode={false}
+                selected={false}
+                onToggleSelect={() => {}}
+                nowTick={nowTick}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Workflow Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
