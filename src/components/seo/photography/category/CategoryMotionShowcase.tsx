@@ -15,12 +15,19 @@ import sv3 from '@/assets/seo/swimwear-motion-3.mp4';
 import sv4 from '@/assets/seo/swimwear-motion-4.mp4';
 import sv5 from '@/assets/seo/swimwear-motion-5.mp4';
 import sv6 from '@/assets/seo/swimwear-motion-6.mp4';
+import av1 from '@/assets/seo/activewear-motion-1.mp4';
+import av2 from '@/assets/seo/activewear-motion-2.mp4';
+import av3 from '@/assets/seo/activewear-motion-3.mp4';
+import av4 from '@/assets/seo/activewear-motion-4.mp4';
+import av5 from '@/assets/seo/activewear-motion-5.mp4';
+import av6 from '@/assets/seo/activewear-motion-6.mp4';
 
-type MotionSlug = 'bags' | 'swimwear';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear';
 
 const CLIPS_BY_SLUG: Record<MotionSlug, string[]> = {
   bags: [bv1, bv2, bv3, bv4, bv5, bv6],
   swimwear: [sv1, sv2, sv3, sv4, sv5, sv6],
+  activewear: [av1, av2, av3, av4, av5, av6],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
@@ -35,6 +42,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     heading: 'Your swimwear, brought to life',
     sub: 'Turn one swim photo into scroll-stopping motion for ads, reels and resort campaigns',
     aria: 'AI-generated swimwear motion clip',
+  },
+  activewear: {
+    eyebrow: 'Motion · Sport in movement',
+    heading: 'Your activewear, brought to life',
+    sub: 'Turn one product photo into scroll-stopping motion for ads, reels and pilates campaigns',
+    aria: 'AI-generated activewear motion clip',
   },
 };
 

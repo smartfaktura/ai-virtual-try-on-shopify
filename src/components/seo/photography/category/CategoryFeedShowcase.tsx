@@ -4,8 +4,9 @@ import type { CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { getVisualLibraryHrefForCategory } from '@/lib/visualLibraryDeepLink';
 import bagsFeed from '@/assets/seo/bags-feed.jpg';
 import swimwearFeed from '@/assets/seo/swimwear-feed.jpg';
+import activewearFeed from '@/assets/seo/activewear-feed.jpg';
 
-type FeedSlug = 'bags' | 'swimwear';
+type FeedSlug = 'bags' | 'swimwear' | 'activewear';
 
 const FEED_BY_SLUG: Record<FeedSlug, {
   image: string;
@@ -27,6 +28,13 @@ const FEED_BY_SLUG: Record<FeedSlug, {
     heading: 'Your entire resort feed from a single upload',
     sub: 'One swim photo in — a season of posts, reels and PDP details out, on brand and on rhythm',
     alt: 'Curated Instagram-style feed of swimwear resort editorials, poolside lifestyle and beach moments — all generated from a single product upload',
+  },
+  activewear: {
+    image: activewearFeed,
+    eyebrow: 'One sport set · Whole feed',
+    heading: 'Your entire sport feed from a single upload',
+    sub: 'One activewear photo in — a month of editorials, reels and pilates studios out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of activewear pilates editorials, studio portraits and aesthetic UGC — all generated from a single product upload',
   },
 };
 
