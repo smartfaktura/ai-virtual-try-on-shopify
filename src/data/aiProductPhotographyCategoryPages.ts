@@ -1009,6 +1009,13 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { title: 'Studio watch heroes',     text: 'Editorial product stills with controlled light.',         icon: 'shopping-bag' },
       { title: 'On-wrist editorial',      text: 'Library, cuff, and shadow on-wrist portraits.',           icon: 'image' },
       { title: 'Macro dial details',      text: 'EDITORIAL, hands, and indices in tight close-up.',         icon: 'zoom-in' },
+      { title: 'EDITORIAL close-ups',     text: 'Macro detail of hands, dial, and crown.',                 icon: 'zoom-in' },
+      { title: 'Luxury watch campaigns',  text: 'Atmospheric and campaign-ready scenes.',                 icon: 'sparkles' },
+      { title: 'Creative concept shots',  text: 'Water, smoke, and abstract lighting concepts.',           icon: 'rocket' },
+      { title: 'Lifestyle wrist scenes',  text: 'Daily luxury moments and office-ready scenes.',           icon: 'camera' },
+      { title: 'Social ad creatives',     text: 'High-CTR variations for Meta and Pinterest.',             icon: 'instagram' },
+    ],
+    sceneExamples: [
       { label: 'Dial & EDITORIAL Closeup',      category: 'Macro Detail',                 imageId: '1776247090415-yfk1rr', collectionLabel: 'Watches', subCategory: 'Macro Detail',                 alt: 'AI watch product photography example: macro dial and EDITORIAL close-up.' },
       { label: 'Earthy Glow Stage',            category: 'Creative Shots',               imageId: '1776856607319-693vtg', collectionLabel: 'Watches', subCategory: 'Creative Shots',               alt: 'AI watch product photography example: earthy glow editorial stage.' },
       { label: 'Frozen Aura',                  category: 'Creative Shots',               imageId: '1776856609329-7k8ow1', collectionLabel: 'Watches', subCategory: 'Creative Shots',               alt: 'AI watch product photography example: frozen aura concept still.' },
