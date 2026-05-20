@@ -28,7 +28,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
 
   const overrides = useSeoVisualOverridesMap();
   const { scenes } = usePublicSceneLibrary();
-  const { sceneTitleById, scenePreviewById } = useMemo(() => {
+  const { sceneTitleById, scenePreviewById, livePreviewByImageId } = useMemo(() => {
     const titles = new Map<string, string>();
     const previews = new Map<string, string>();
     const previewsByImageId = new Map<string, string>();
