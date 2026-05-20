@@ -123,7 +123,7 @@ function HeroTile({
   overrides,
   priority = false,
 }: {
-  tile: { subCategory: string; imageId: string; alt: string };
+  tile: { subCategory: string; imageId: string; alt: string; videoSrc?: string };
   index: number;
   pageRoute: string;
   overrides: ReturnType<typeof useSeoVisualOverridesMap>;
@@ -132,15 +132,38 @@ function HeroTile({
   const slotKey = `heroCollage${index + 1}`;
   const src = resolveSlotImageUrl(overrides, pageRoute, slotKey, PREVIEW(tile.imageId));
   const alt = resolveSlotAlt(overrides, pageRoute, slotKey, tile.alt);
+  const posterSrc = getOptimizedUrl(src, { width: 640, height: 800, quality: 75, resize: 'cover' });
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
-      <SmartImage
-        src={getOptimizedUrl(src, { width: 640, height: 800, quality: 75, resize: 'cover' })}
-        srcSet={getResizedSrcSet(src, { widths: [360, 540, 720], aspect: [4, 5], quality: 75 })}
-        sizes="(max-width: 1024px) 45vw, 280px"
-        alt={alt}
-        priority={priority}
-      />
+      {tile.videoSrc ? (
+        <video
+          src={tile.videoSrc}
+          poster={posterSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          disableRemotePlayback
+          aria-label={alt}
+          className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+        />
+      ) : null}
+      {tile.videoSrc ? (
+        <img
+          src={posterSrc}
+          alt={alt}
+          className="absolute inset-0 h-full w-full object-cover hidden motion-reduce:block"
+        />
+      ) : (
+        <SmartImage
+          src={posterSrc}
+          srcSet={getResizedSrcSet(src, { widths: [360, 540, 720], aspect: [4, 5], quality: 75 })}
+          sizes="(max-width: 1024px) 45vw, 280px"
+          alt={alt}
+          priority={priority}
+        />
+      )}
       <span className="absolute left-3 bottom-3 inline-flex items-center px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-md text-[10px] uppercase tracking-[0.16em] text-foreground/80 font-semibold">
         {tile.subCategory}
       </span>
