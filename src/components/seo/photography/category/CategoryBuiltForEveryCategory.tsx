@@ -27,6 +27,12 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   };
 
   const overrides = useSeoVisualOverridesMap();
+  const { scenes } = usePublicSceneLibrary();
+  const sceneTitleById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of scenes) m.set(s.scene_id, s.title);
+    return m;
+  }, [scenes]);
   const [activeIdx, setActiveIdx] = useState(0);
   const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
