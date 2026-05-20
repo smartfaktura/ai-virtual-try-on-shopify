@@ -1636,6 +1636,3 @@ export function getRelatedPages(slugs: string[]): CategoryPage[] {
     .filter((p): p is CategoryPage => Boolean(p));
 }
 
-export function getAllOtherCategoryPages(currentSlug: string): CategoryPage[] {
-  return aiProductPhotographyCategoryPages.filter((p) => p.slug !== currentSlug);
-}

@@ -1,33 +1,19 @@
-## 1) Hide "Why this category is hard" + "Use cases" on swimwear
+## Show only 3 related categories per page
 
-`src/pages/seo/AIProductPhotographyCategory.tsx` — extend the existing gate that currently hides them on bags:
+Revert the "show all" change and go back to the curated 3-per-page list, but keep Related as the final section on every page (the section-order change stays).
 
-```ts
-const hidePainAndUseCases = page.slug === 'bags' || page.slug === 'swimwear';
-```
+### Changes
 
-Apply to both `<CategoryPainPoints>` and `<CategoryUseCases>`. Other categories keep both sections.
+`src/components/seo/photography/category/CategoryRelatedCategories.tsx`
+- Swap import back to `getRelatedPages` (drop `getAllOtherCategoryPages`).
+- `const related = getRelatedPages(page.relatedCategories);`
+- Restore grid to `grid-cols-1 md:grid-cols-3` (3 cards fit cleanly, no need for the 4-col xl layout).
+- Restore card padding to `p-5 lg:p-6`.
 
-## 2) "Related product photography categories" — show all, last section on every page
+`src/data/aiProductPhotographyCategoryPages.ts`
+- Keep `getAllOtherCategoryPages` helper in place (harmless, no other callers) OR remove it. Default: remove, since it's now unused.
 
-### Show all categories
-`src/components/seo/photography/category/CategoryRelatedCategories.tsx`:
-- Replace `getRelatedPages(page.relatedCategories)` with the full `aiProductPhotographyCategoryPages` array, filtered to exclude the current page (`p.slug !== page.slug`).
-- Export a tiny helper `getAllOtherCategoryPages(currentSlug)` from the data file (cleaner than importing the full array into the component).
-
-### Last section on every page
-`src/pages/seo/AIProductPhotographyCategory.tsx` — collapse the two conditional mounts into one final mount, after `<PhotographyFinalCTA />`:
-```
-<CategoryFAQ />
-<PhotographyFinalCTA />
-<CategoryRelatedCategories />   ← always last, all pages
-```
-Remove the `!isBags` and `isBags` branches around it.
-
-### Layout for ~18 cards
-Current grid is `md:grid-cols-3`. With 18 cards that becomes a tall stack. Bump to `md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4` and tighten card padding from `p-5 lg:p-6` to `p-4 lg:p-5` so the section stays scannable on desktop. Heading + "All AI product photography categories" link unchanged.
-
-`relatedCategories` field on each page entry stays in the data (still used by SEO/JSON-LD elsewhere if needed); the UI just stops reading from it.
-
-## Out of scope
-Hero, motion/feed sections, FAQ, copy changes on other pages. No data deletions. No admin override slot changes (existing `related_{slug}_1..3` slots still work since slug-based slot keys remain unique).
+### Untouched
+- Section order in `AIProductPhotographyCategory.tsx` — Related stays as last section after FAQ + FinalCTA on every page.
+- Swimwear pain/use cases hide stays.
+- Each page's existing `relatedCategories: string[]` data drives which 3 show. No data edits.
