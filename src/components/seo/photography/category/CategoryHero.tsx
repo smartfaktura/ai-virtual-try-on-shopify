@@ -9,6 +9,7 @@ import { SmartImage } from './SmartImage';
 import bagsMotion3 from '@/assets/seo/bags-motion-3.mp4';
 import swimwearMotion4 from '@/assets/seo/swimwear-motion-4.mp4';
 import activewearMotion5 from '@/assets/seo/activewear-motion-5.mp4';
+import eyewearMotion3 from '@/assets/seo/eyewear-motion-3.mp4';
 
 // Resolves the videoSrc string keys from aiProductPhotographyCategoryPages
 // to actual bundled asset URLs. Keeps mp4 imports out of the data module
@@ -17,6 +18,7 @@ const HERO_VIDEO_MAP: Record<string, string> = {
   'bags-motion-3': bagsMotion3,
   'swimwear-motion-4': swimwearMotion4,
   'activewear-motion-5': activewearMotion5,
+  'eyewear-motion-3': eyewearMotion3,
 };
 
 

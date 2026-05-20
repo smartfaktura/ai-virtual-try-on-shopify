@@ -39,8 +39,20 @@ import ap3 from '@/assets/seo/activewear-motion-3.jpg';
 import ap4 from '@/assets/seo/activewear-motion-4.jpg';
 import ap5 from '@/assets/seo/activewear-motion-5.jpg';
 import ap6 from '@/assets/seo/activewear-motion-6.jpg';
+import ev1 from '@/assets/seo/eyewear-motion-1.mp4';
+import ev2 from '@/assets/seo/eyewear-motion-2.mp4';
+import ev3 from '@/assets/seo/eyewear-motion-3.mp4';
+import ev4 from '@/assets/seo/eyewear-motion-4.mp4';
+import ev5 from '@/assets/seo/eyewear-motion-5.mp4';
+import ev6 from '@/assets/seo/eyewear-motion-6.mp4';
+import ep1 from '@/assets/seo/eyewear-motion-1.jpg';
+import ep2 from '@/assets/seo/eyewear-motion-2.jpg';
+import ep3 from '@/assets/seo/eyewear-motion-3.jpg';
+import ep4 from '@/assets/seo/eyewear-motion-4.jpg';
+import ep5 from '@/assets/seo/eyewear-motion-5.jpg';
+import ep6 from '@/assets/seo/eyewear-motion-6.jpg';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
@@ -68,6 +80,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: av5, poster: ap5 },
     { video: av6, poster: ap6 },
   ],
+  eyewear: [
+    { video: ev1, poster: ep1 },
+    { video: ev2, poster: ep2 },
+    { video: ev3, poster: ep3 },
+    { video: ev4, poster: ep4 },
+    { video: ev5, poster: ep5 },
+    { video: ev6, poster: ep6 },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
@@ -88,6 +108,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     heading: 'Your activewear, brought to life',
     sub: 'Turn one product photo into scroll-stopping motion for ads, reels and pilates campaigns',
     aria: 'AI-generated activewear motion clip',
+  },
+  eyewear: {
+    eyebrow: 'Motion · Frames in movement',
+    heading: 'Your eyewear, brought to life',
+    sub: 'Turn one frame photo into scroll-stopping motion for ads, reels and campaign film',
+    aria: 'AI-generated eyewear motion clip',
   },
 };
 
