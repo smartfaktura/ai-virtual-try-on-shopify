@@ -144,7 +144,7 @@ export function SceneCatalogModal({
 
   // Default grid: full Freestyle catalog (no filters, excluding EDITORIAL Shots).
   const useGrid = quickView !== 'recommended';
-  const grid = useSceneCatalog({ ...filters, excludeEDITORIAL: true }, open && useGrid && anyFilterActive);
+  const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid && anyFilterActive);
   const interleavedGrid = useInterleavedSceneCatalog(
     open && useGrid && !anyFilterActive,
     2,
