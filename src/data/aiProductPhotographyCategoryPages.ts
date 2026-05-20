@@ -9,7 +9,7 @@
  * on-topic for each page.
  */
 
-import bagsMotion4 from '@/assets/seo/bags-motion-4.mp4';
+import bagsMotion3 from '@/assets/seo/bags-motion-3.mp4';
 
 
 
@@ -970,7 +970,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroNoun: 'bag',
     heroCollage: [
       { subCategory: 'Studio',           imageId: '1776239449949-ygljai', alt: 'AI bag sculptural studio hero.' },
-      { subCategory: 'On-Body',          imageId: '1776239415973-p3m8bq', alt: 'AI bag architectural on-body editorial.', videoSrc: bagsMotion4 },
+      { subCategory: 'Video',            imageId: '1776239415973-p3m8bq', alt: 'AI bag architectural on-body editorial.', videoSrc: bagsMotion3 },
       { subCategory: 'Studio Editorial', imageId: '1776749559127-ra3hur', alt: 'AI bag wind shoulder studio editorial.' },
       { subCategory: 'Editorial',        imageId: '1776749772492-j9qpsv', alt: 'AI bag editorial detail.' },
     ],
