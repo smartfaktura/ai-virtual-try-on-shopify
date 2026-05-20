@@ -80,21 +80,27 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               ? 'One bag · Every shot'
               : page.slug === 'swimwear'
                 ? 'One swimsuit · Every shot'
-                : `One ${noun} · Every shot`}
+                : page.slug === 'activewear'
+                  ? 'One sport set · Every shot'
+                  : `One ${noun} · Every shot`}
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
             {page.slug === 'bags'
               ? 'Create every bag shot from one product photo'
               : page.slug === 'swimwear'
                 ? 'Create every swim shot from one product photo'
-                : `Built for every ${page.groupName.toLowerCase()} shot.`}
+                : page.slug === 'activewear'
+                  ? 'Create every activewear shot from one product photo'
+                  : `Built for every ${page.groupName.toLowerCase()} shot.`}
           </h2>
           <p className="mt-4 text-sm sm:text-base text-muted-foreground">
             {page.slug === 'bags'
               ? 'Generate campaign, editorial, studio, on-model, and UGC-style visuals in minutes — no photoshoot needed'
               : page.slug === 'swimwear'
                 ? 'Generate resort, editorial, lifestyle, on-model and UGC-style visuals in minutes — no destination shoot needed'
-                : 'Every chip — real scenes from a single upload'}
+                : page.slug === 'activewear'
+                  ? 'Generate pilates, editorial, studio, on-model and UGC-style visuals in minutes — no fitness shoot needed'
+                  : 'Every chip — real scenes from a single upload'}
           </p>
         </div>
 
