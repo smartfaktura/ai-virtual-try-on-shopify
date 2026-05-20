@@ -1,35 +1,13 @@
-## Goal
+## Changes
 
-Undo the earlier text rename across the codebase. Restore original chip/section names everywhere.
+1. **Shorten subtitle** in `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` (line 66):
+   - From: `Switch between {groupName} subcategories — every chip reveals real scenes generated from a single upload.`
+   - To: `Every chip — real scenes from a single upload`
 
-## Renames to revert (case-sensitive, whole-word)
+2. **Rename Bags chips** in `src/data/aiProductPhotographyBuiltForGrids.ts` (under the `"bags"` key, ~lines 2069–2122):
+   - `Bags · Campaign Statements` → `Bags · Campaigns`
+   - `Bags · Editorial Studio` → `Bags · Editorial Shots`
+   - `Bags · Essential Shots` → `Bags · Studio Shots`
+   - `Bags · Everyday UGC` → `Bags · UGC`
 
-- `EDITORIAL` → original term (two sources, see below)
-- `Studio Shots` → `Campaign Statements`
-
-The earlier edit mapped two different originals to the same new word `EDITORIAL`:
-- `Hardware` → `EDITORIAL`
-- `Essential Shots` → `EDITORIAL`
-
-To revert correctly, restore each occurrence to its original term based on context (Bags/Watches/Tech/Jewelry typically used `Hardware`; Apparel/Fragrance/Beauty/Food/Sneakers/Lingerie/Swimwear/etc. used `Essential Shots`).
-
-## Files to update
-
-- `src/data/aiProductPhotographyBuiltForGrids.ts` — primary source; ~25+ `EDITORIAL` occurrences and the `Studio Shots` ones in Bags subCategories and inner labels (e.g. `EDITORIAL & Craft Closeup`, `EDITORIAL Close-Up`, `EDITORIAL Material Closeup`, `Dial & EDITORIAL Closeup`, `Material and EDITORIAL Detail`).
-- `src/data/promptTokenReference.ts` — doc strings referencing `EDITORIAL`.
-- Any other files surfaced by a repo-wide `rg` for `EDITORIAL`, `Studio Shots`, and the renamed labels (admin scene files mentioned in the prior turn: `AdminProductImageScenes.tsx` etc.).
-
-## Approach
-
-1. Repo-wide `rg "EDITORIAL"` and `rg "Studio Shots"` to enumerate every hit introduced by the prior rename.
-2. For each hit, decide original term from context:
-   - Bags / Watches / Tech / Jewelry hardware-style chips → `Hardware`
-   - Generic product staple-shot chips (Apparel, Fragrance, Beauty, Food, Sneakers, Shoes, Lingerie, Swimwear, Eyewear, Hoodies, Supplements) → `Essential Shots`
-   - Bags `subCategory: "Bags · Studio Shots"` → `Bags · Campaign Statements`
-3. Apply targeted line edits; do not touch unrelated copy.
-4. Spot-check `/ai-product-photography/bags` chips render as: `Campaign Statements · Editorial Studio · On-Body Editorial · Hardware · Everyday UGC`.
-
-## Out of scope
-
-- No visual/design changes.
-- No data shape changes; labels only.
+Scope is limited to the bags page chips and that subtitle line. No other categories or data fields touched.
