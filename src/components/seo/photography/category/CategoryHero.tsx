@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
@@ -150,6 +150,28 @@ function HeroTile({
   const posterSrc = getOptimizedUrl(src, { width: 640, height: 800, quality: 75, resize: 'cover' });
   const [videoReady, setVideoReady] = useState(false);
   const resolvedVideoSrc = tile.videoSrc ? HERO_VIDEO_MAP[tile.videoSrc] : undefined;
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Mobile-safe autoplay: explicitly load + retry play through several
+  // readiness events. iOS Safari and some Android browsers ignore autoPlay
+  // for inline videos until play() is called after the element is mounted.
+  useEffect(() => {
+    if (!resolvedVideoSrc) return;
+    const v = videoRef.current;
+    if (!v) return;
+    let cancelled = false;
+    const tryPlay = () => {
+      if (cancelled || !v) return;
+      const p = v.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    };
+    try { v.load(); } catch {}
+    tryPlay();
+    return () => { cancelled = true; };
+  }, [resolvedVideoSrc]);
+
+  const markReady = () => setVideoReady(true);
+
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
       {resolvedVideoSrc ? (
@@ -163,16 +185,20 @@ function HeroTile({
             className="absolute inset-0 h-full w-full object-cover"
           />
           <video
+            ref={videoRef}
             src={resolvedVideoSrc}
             autoPlay
             muted
+            defaultMuted
             loop
             playsInline
             preload="auto"
             disableRemotePlayback
             aria-label={alt}
-            onLoadedData={() => setVideoReady(true)}
-            onCanPlay={(e) => { (e.currentTarget as HTMLVideoElement).play().catch(() => {}); }}
+            onLoadedMetadata={(e) => { (e.currentTarget as HTMLVideoElement).play().catch(() => {}); }}
+            onLoadedData={(e) => { markReady(); (e.currentTarget as HTMLVideoElement).play().catch(() => {}); }}
+            onCanPlay={(e) => { markReady(); (e.currentTarget as HTMLVideoElement).play().catch(() => {}); }}
+            onPlaying={markReady}
             className={`absolute inset-0 h-full w-full object-cover motion-reduce:hidden transition-opacity duration-500 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
           />
         </>
