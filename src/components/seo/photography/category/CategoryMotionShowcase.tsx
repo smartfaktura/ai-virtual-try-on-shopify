@@ -271,20 +271,26 @@ export function CategoryMotionShowcase({ page }: { page: CategoryPage }) {
               {/* Video — mounts when near viewport, fades in over the poster */}
               {!degraded && loadStates[i] && (
                 <video
-                  ref={(el) => { videoRefs.current[i] = el; }}
+                  ref={attachVideoRef(i)}
                   src={clip.video}
                   poster={clip.poster}
+                  autoPlay
                   muted
                   loop
                   playsInline
-                  preload="metadata"
+                  preload="auto"
                   disableRemotePlayback
                   aria-label={copy.aria}
-                  onLoadedData={() => onLoadedData(i)}
+                  {...({ defaultMuted: true } as any)}
+                  onLoadedMetadata={(e) => { (e.currentTarget as HTMLVideoElement).play().catch(() => {}); }}
+                  onLoadedData={() => onReady(i)}
+                  onCanPlay={() => onReady(i)}
+                  onPlaying={() => onReady(i)}
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 group-hover:scale-[1.03] ${
                     readyStates[i] ? 'opacity-100' : 'opacity-0'
                   }`}
                 />
+
               )}
               {i === 0 && (
                 <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-foreground/85 backdrop-blur-md px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-background ring-1 ring-foreground/10 shadow-sm">
