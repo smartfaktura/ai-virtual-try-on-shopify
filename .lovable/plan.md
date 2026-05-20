@@ -1,19 +1,14 @@
-## Fix /ai-product-photography/bags (separate slug from bags-accessories)
+## Remove "What we cover in {category}" section from all SEO category pages
 
-The URL `/ai-product-photography/bags` resolves to a **different** category page (slug `bags`) than the `bags-accessories` slug I edited last time. So neither prior change took effect on this URL.
+That section is rendered by `<CategorySubcategoryChips />` inside `src/pages/seo/AIProductPhotographyCategory.tsx`. It's currently excluded for a handful of slugs (home-furniture, swimwear, activewear, bags-accessories, bags) via an inline allow-list.
 
-### Changes
+### Change
 
-**1. Hide the "What we cover in bags" chip strip**
-- File: `src/pages/seo/AIProductPhotographyCategory.tsx` (line 128)
-- Add `'bags'` to the exclusion array:
-  ```diff
-  - {!['home-furniture', 'swimwear', 'activewear', 'bags-accessories'].includes(page.slug) && <CategorySubcategoryChips page={page} />}
-  + {!['home-furniture', 'swimwear', 'activewear', 'bags-accessories', 'bags'].includes(page.slug) && <CategorySubcategoryChips page={page} />}
-  ```
+In `src/pages/seo/AIProductPhotographyCategory.tsx`, remove the `<CategorySubcategoryChips page={page} />` render (and its conditional + the now-unused import).
 
-**2. Make "Campaign Statements" the first tab in "Built for every bags shot"**
-- File: `src/data/aiProductPhotographyBuiltForGrids.ts` (lines ~2070–2134, the `"bags"` array)
-- Reorder so `"Bags · Campaign Statements"` is the first group, followed by `Editorial Studio`, `On-Body Editorial`, `Essential Shots`, `Everyday UGC`.
+That single edit hides the chips section across every `/ai-product-photography/{slug}` page — fashion, footwear, beauty-skincare, fragrance, jewelry, food-beverage, home-furniture, electronics, bags, watches, hoodies, swimwear, lingerie, eyewear, activewear, dresses, caps-hats, and any future category — without touching the underlying data (subcategories arrays stay intact for SEO/JSON-LD).
 
-No other slugs or image IDs change.
+### Not changing
+
+- `CategorySubcategoryChips.tsx` component file stays in the repo (unused) in case you want to revive it later. Say the word if you'd like it deleted too.
+- `subcategories: [...]` arrays in `aiProductPhotographyCategoryPages.ts` stay — they're still useful for keyword targeting and aren't visually rendered anywhere else.
