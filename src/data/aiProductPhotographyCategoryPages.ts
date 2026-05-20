@@ -9,9 +9,13 @@
  * on-topic for each page.
  */
 
-import bagsMotion3 from '@/assets/seo/bags-motion-3.mp4';
-import swimwearMotion4 from '@/assets/seo/swimwear-motion-4.mp4';
-import activewearMotion5 from '@/assets/seo/activewear-motion-5.mp4';
+// Hero collage video keys — resolved to bundled assets in
+// src/components/seo/photography/category/CategoryHero.tsx. Kept as
+// string keys here so this module stays free of non-JS asset imports
+// and can be loaded by the sitemap build script under tsx/Node.
+const bagsMotion3 = 'bags-motion-3';
+const swimwearMotion4 = 'swimwear-motion-4';
+const activewearMotion5 = 'activewear-motion-5';
 
 
 
