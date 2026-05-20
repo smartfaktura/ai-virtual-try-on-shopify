@@ -31,11 +31,19 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
   const { sceneTitleById, scenePreviewById } = useMemo(() => {
     const titles = new Map<string, string>();
     const previews = new Map<string, string>();
+    const previewsByImageId = new Map<string, string>();
     for (const s of scenes) {
       titles.set(s.scene_id, s.title);
-      if (s.preview_image_url) previews.set(s.scene_id, s.preview_image_url);
+      if (s.preview_image_url) {
+        previews.set(s.scene_id, s.preview_image_url);
+        // Extract `{imageId}` from a `…/scene-previews/{imageId}.{ext}` URL so
+        // hardcoded BUILT_FOR cards (keyed by imageId) can also pick up the
+        // scene's current live preview when no admin override exists.
+        const m = s.preview_image_url.match(/\/scene-previews\/([^/.?#]+)\.[a-z0-9]+(?:[?#].*)?$/i);
+        if (m && m[1]) previewsByImageId.set(m[1], s.preview_image_url);
+      }
     }
-    return { sceneTitleById: titles, scenePreviewById: previews };
+    return { sceneTitleById: titles, scenePreviewById: previews, livePreviewByImageId: previewsByImageId };
   }, [scenes]);
   const [activeIdx, setActiveIdx] = useState(0);
   const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
