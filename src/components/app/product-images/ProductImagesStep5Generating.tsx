@@ -271,12 +271,14 @@ export function ProductImagesStep5Generating({
           </div>
         )}
 
-        {/* Bottom info */}
-        <div className="flex items-start gap-2 justify-center text-center">
-          <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-muted-foreground max-w-sm">
-            {bottomCopy}
-          </p>
+        {/* Bottom estimate */}
+        <div className="text-center space-y-1">
+          <p className="text-xs text-muted-foreground tracking-wide">{estimateCopy}</p>
+          {showSafeToLeave && (
+            <p className="text-[11px] text-muted-foreground/70">
+              Safe to leave — we'll save results to your library
+            </p>
+          )}
         </div>
       </div>
     </div>
