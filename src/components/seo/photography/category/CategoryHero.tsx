@@ -6,6 +6,18 @@ import { PREVIEW, type CategoryPage } from '@/data/aiProductPhotographyCategoryP
 import { useSeoVisualOverridesMap } from '@/hooks/useSeoVisualOverrides';
 import { resolveSlotImageUrl, resolveSlotAlt } from '@/lib/resolveSlotImage';
 import { SmartImage } from './SmartImage';
+import bagsMotion3 from '@/assets/seo/bags-motion-3.mp4';
+import swimwearMotion4 from '@/assets/seo/swimwear-motion-4.mp4';
+import activewearMotion5 from '@/assets/seo/activewear-motion-5.mp4';
+
+// Resolves the videoSrc string keys from aiProductPhotographyCategoryPages
+// to actual bundled asset URLs. Keeps mp4 imports out of the data module
+// so the sitemap build script (tsx) can load it.
+const HERO_VIDEO_MAP: Record<string, string> = {
+  'bags-motion-3': bagsMotion3,
+  'swimwear-motion-4': swimwearMotion4,
+  'activewear-motion-5': activewearMotion5,
+};
 
 
 /**
@@ -135,9 +147,10 @@ function HeroTile({
   const alt = resolveSlotAlt(overrides, pageRoute, slotKey, tile.alt);
   const posterSrc = getOptimizedUrl(src, { width: 640, height: 800, quality: 75, resize: 'cover' });
   const [videoReady, setVideoReady] = useState(false);
+  const resolvedVideoSrc = tile.videoSrc ? HERO_VIDEO_MAP[tile.videoSrc] : undefined;
   return (
     <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/40 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)]">
-      {tile.videoSrc ? (
+      {resolvedVideoSrc ? (
         <>
           {/* Always-on poster base — no flash when video swaps in */}
           <img
@@ -148,7 +161,7 @@ function HeroTile({
             className="absolute inset-0 h-full w-full object-cover"
           />
           <video
-            src={tile.videoSrc}
+            src={resolvedVideoSrc}
             autoPlay
             muted
             loop
