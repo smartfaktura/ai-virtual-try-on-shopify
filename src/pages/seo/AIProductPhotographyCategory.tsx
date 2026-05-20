@@ -73,7 +73,7 @@ export default function AIProductPhotographyCategory() {
   }
 
   const PAGE_URL = `${SITE_URL}${page.url}`;
-  const isBags = page.slug === 'bags';
+  const hidePainAndUseCases = page.slug === 'bags' || page.slug === 'swimwear';
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
