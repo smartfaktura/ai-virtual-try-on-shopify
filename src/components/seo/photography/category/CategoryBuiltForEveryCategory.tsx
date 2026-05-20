@@ -81,7 +81,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               : page.slug === 'swimwear'
                 ? 'AI photoshoots for swimwear'
                 : page.slug === 'activewear'
-                  ? 'One sport set · Every shot'
+                  ? 'AI photoshoots for activewear'
                   : `One ${noun} · Every shot`}
           </p>
           <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
