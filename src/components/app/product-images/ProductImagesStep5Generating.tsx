@@ -121,23 +121,20 @@ export function ProductImagesStep5Generating({
 
   const lowMin = Math.max(1, Math.ceil((effectiveTotal * 10) / 60));
   const highMin = Math.max(lowMin, Math.ceil((effectiveTotal * 15) / 60));
-  const bottomCopy = effectiveTotal <= 1
-    ? 'Usually under a minute. Safe to leave — results appear in your library'
+  const estimateCopy = effectiveTotal <= 1
+    ? 'Estimated under a minute'
     : lowMin === highMin
-      ? `About ${lowMin} minute${lowMin !== 1 ? 's' : ''} for your batch. Safe to leave — results appear in your library`
-      : `About ${lowMin}–${highMin} minutes for your batch. Safe to leave — results appear in your library`;
+      ? `Estimated ~${lowMin} min`
+      : `Estimated ~${lowMin}–${highMin} min`;
+  const showSafeToLeave = elapsed >= 20;
 
   return (
     <div className="flex items-center justify-center px-4 py-10 sm:py-16 lg:py-20">
       <div className="w-full max-w-md sm:max-w-lg rounded-2xl border border-border bg-background p-6 sm:p-10 lg:p-12 space-y-6 sm:space-y-8">
 
-        {/* Phase icon / scene thumbnails */}
+        {/* Scene thumbnails — shown across all phases */}
         <div className="flex justify-center">
-          {phase === 'finishing' ? (
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-            </div>
-          ) : scenes.length > 0 ? (
+          {scenes.length > 0 ? (
             <div className="flex items-center gap-2 animate-pulse">
               {scenes.slice(0, 3).map((scene) => (
                 <div
@@ -167,6 +164,7 @@ export function ProductImagesStep5Generating({
             </div>
           )}
         </div>
+
 
         {/* Phase headline */}
         <div className="text-center space-y-1.5">
