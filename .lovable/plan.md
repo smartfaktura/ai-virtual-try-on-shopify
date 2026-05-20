@@ -1,40 +1,48 @@
-## Why the "Studio Shots" tiles still show the old previews
+## Why the previews look old
 
-Two different image sources feed the chip grid:
+The Studio Shots chip on `/ai-product-photography/bags` renders 8 tiles from a hardcoded list in `src/data/aiProductPhotographyBuiltForGrids.ts` (the `Bags · Studio Shots` block, ~line 2110). Each tile's `imageId` points to a static file in storage.
 
-1. **Admin override** — when `/app/admin/seo-page-visuals` has a row for a slot, the page uses the override scene's live `preview_image_url`. (Just fixed in the previous turn.)
-2. **Hardcoded fallback** — when no override exists, the tile renders `PREVIEW(card.imageId)`, which is a frozen URL pointing at a single static file in storage: `…/scene-previews/{imageId}.jpg`.
-
-For `/ai-product-photography/bags` the override table only has rows for `builtFor_editorial-shots_*` and the orphaned `builtFor_editorial-studio_*`. The chips you see in the screenshot — **Campaigns**, **Studio Shots**, **UGC**, **On-Body Editorial** — have **no overrides set**, so every tile renders the hardcoded fallback URL keyed by `imageId`. Updating a scene in the scene library does not touch those static URLs, so the page keeps showing the original file at that exact path.
-
-## What to change
-
-Make hardcoded fallback tiles also resolve to the **live scene preview** when their `imageId` corresponds to a scene in the public library. That way, any scene you refresh in the library propagates to every chip that references it — no admin override needed.
-
-### How the matching works
-
-Each public scene's `preview_image_url` currently looks like:
+When the scenes were updated in the library, the new previews got new file names. Examples from the current `product_image_scenes` rows (`category_collection = bags`, `sub_category = Essential Shots`):
 
 ```
-https://…/scene-previews/{imageId}.{ext}
+front-view-bags             → 1779254030949-v68n45.jpg
+side-view-bags              → 1779254041863-k3zxv4.jpg
+in-hand-studio-bags         → 1779254031965-rv0m89.jpg
+reclined-studio-editorial   → 1779254040532-4kp20n.jpg
+mid-portrait-hold-bags      → 1779254035988-crjdso.jpg
+back-minimal-carry          → 1779254025567-r5307n.jpg
+closeup-detail-bags         → 1779254029922-zqx2b6.jpg
+interior-view-bags          → 1779254033291-hid7c1.jpg
 ```
 
-We can build a Map at runtime: `imageId → live preview_image_url`, by parsing the filename out of every scene's `preview_image_url`. Then when a tile has no admin override, instead of returning `PREVIEW(card.imageId)` we return the live URL for that `imageId` if one exists, falling back to `PREVIEW(card.imageId)` otherwise.
+The hardcoded data still references the previous generation of files (`1776239…`, `1776749…`). The imageId-based live-lookup I wired up last turn can never match these, so it correctly falls back to the static URL — which is the old image. Same story for any other category where scenes were re-shot under new filenames.
 
-### Files
+## Fix
 
-1. **`src/lib/resolveSlotImage.ts`** — add `livePreviewByImageId?: Map<string, string>` to `resolveSlotImageUrl`. When there's no override row, check the map for `imageId` (passed as a new arg) and use that if present; otherwise return `fallbackUrl`.
+Refresh the `Bags · Studio Shots` entry in `src/data/aiProductPhotographyBuiltForGrids.ts` to mirror the 8 current `Essential Shots` scenes for bags, using their **current** preview imageIds and titles:
 
-2. **`src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`** — extend the existing `useMemo` over `scenes` to also build `livePreviewByImageId` by extracting the `{imageId}` segment from each scene's `preview_image_url`. Pass it plus `card.imageId` into `resolveSlotImageUrl`.
+```
+{ label: 'Front View',                imageId: '1779254030949-v68n45' },
+{ label: 'Side View',                 imageId: '1779254041863-k3zxv4' },
+{ label: 'In-Hand Studio',            imageId: '1779254031965-rv0m89' },
+{ label: 'Reclined Studio Editorial', imageId: '1779254040532-4kp20n' },
+{ label: 'Mid Portrait Hold',         imageId: '1779254035988-crjdso' },
+{ label: 'Back Minimal Carry',        imageId: '1779254025567-r5307n' },
+{ label: 'Close-Up Detail',           imageId: '1779254029922-zqx2b6' },
+{ label: 'Interior View',             imageId: '1779254033291-hid7c1' },
+```
 
-3. **No DB changes**, no admin UI changes, no data file edits.
+This:
+- Restores 1:1 alignment between the chip grid and the live scenes on the bags page.
+- Lets the live-preview-by-imageId lookup keep working: any future small re-render of a scene whose filename is unchanged is reflected automatically, while big re-shoots with new filenames stay easy to point at by editing this one list.
+- No DB, admin UI, hooks, or resolver logic changes.
 
-## Caveats worth knowing
+## Scope
 
-- If a scene was **renamed in the library to a brand-new filename** that no longer matches `card.imageId`, the map won't have an entry for that old id and the tile will keep showing the old static file. In that case the fix is either to set an explicit admin override for that tile, or to update `imageId` in `aiProductPhotographyBuiltForGrids.ts`. I can do a follow-up sweep of which bag cards fall into this bucket if you want.
-- This only affects how fallback images are *resolved* at render time — nothing about the SEO `alt` text, hover labels (already live), or the static file URLs themselves changes.
+- Only `Bags · Studio Shots` in `src/data/aiProductPhotographyBuiltForGrids.ts`.
+- Other chips (Campaigns, Editorial Shots, On-Body Editorial, UGC) and other category pages are out of scope for this turn — if they look stale too, we can do the same refresh per chip.
 
-## Verification
+## Not changing
 
-- Reload `/ai-product-photography/bags`, click each chip — tiles whose underlying scenes you updated now show the new previews.
-- Other category pages keep working: any tile whose `imageId` matches a live scene picks up the live preview; tiles that don't match still render the existing static fallback.
+- `src/lib/resolveSlotImage.ts` and `CategoryBuiltForEveryCategory.tsx` stay as-is — the live-lookup wiring from last turn is correct, it just had nothing to match against here.
+- No admin overrides are touched.
