@@ -99,7 +99,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
               : page.slug === 'swimwear'
                 ? 'Upload one product photo and create campaign-ready visuals in minutes'
                 : page.slug === 'activewear'
-                  ? 'Generate pilates, editorial, studio, on-model and UGC-style visuals in minutes — no fitness shoot needed'
+                  ? 'Upload one product photo and create ad-ready visuals in minutes'
                   : 'Every chip — real scenes from a single upload'}
           </p>
         </div>
