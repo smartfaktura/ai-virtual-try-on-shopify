@@ -134,14 +134,13 @@ export default function AIProductPhotographyCategory() {
         <CategoryFeedShowcase page={page} />
         
         <CategoryVisualOutputs page={page} />
-        {!isBags && <CategoryPainPoints page={page} />}
+        {!hidePainAndUseCases && <CategoryPainPoints page={page} />}
         <CategorySceneExamples page={page} />
         <PhotographyHowItWorks />
-        {!isBags && <CategoryUseCases page={page} />}
-        {!isBags && <CategoryRelatedCategories page={page} />}
+        {!hidePainAndUseCases && <CategoryUseCases page={page} />}
         <CategoryFAQ page={page} />
         <PhotographyFinalCTA />
-        {isBags && <CategoryRelatedCategories page={page} />}
+        <CategoryRelatedCategories page={page} />
       </main>
       <LandingFooter />
     </div>
