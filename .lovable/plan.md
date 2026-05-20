@@ -1,28 +1,34 @@
-Two changes.
+## Fix blurry images in "Built for every…" grid on category pages
 
-## 1. Hero collage video tile (`CategoryHero.tsx`, ~lines 136–170)
+### Why it looks bad
+The grid on `/ai-product-photography/activewear` (and the other 9 category pages — same component) renders each tile in a 4-column grid. On desktop (~1314 CSS px) each tile is ~280 CSS px wide, which is ~560 device px on retina.
 
-The current tile uses the `poster` attribute and `preload="metadata"`, so the poster paints, then the video later swaps in — that's the "cut". Replace with a layered tile that always shows the poster as a base image and crossfades the video in once its first frame is decoded.
+The current code requests a **480px-wide, server-cropped** version as the base `src`:
+```
+getOptimizedUrl(resolved, { width: 480, height: 640, quality: 80, resize: 'cover' })
+```
+That's below the rendered device size, so browsers upscale → soft / blurry. It also re-crops on the server, which the project memory explicitly warns against ("Never use `width` param — causes server-side crop zoom").
 
-- Convert the tile to a small client component with `useRef`/`useState` for `ready`.
-- Always render the poster `<img>` (same `posterSrc`) absolutely positioned, full-bleed, decoding="async" — this is the base layer.
-- Render the `<video>` on top with `opacity-0` and `preload="auto"`, `autoPlay`, `muted`, `loop`, `playsInline`, `disableRemotePlayback`. Drop the `poster` attribute (the base image already covers that role).
-- On `onLoadedData`, set `ready=true` and transition video to `opacity-100` over 400ms. On `canplay`, call `play().catch(...)`.
-- Because the base image stays mounted behind the video forever, there is no flash and no perceived swap; the video simply fades in over a matching still frame.
-- Keep the `motion-reduce:hidden` path for the video; the poster `<img>` remains visible in reduce-motion mode (replaces the old separate `motion-reduce:block` img).
+The `srcSet` caps at 640px, which is also too low for retina at 240–280 CSS px.
 
-This applies to all three hero pages (activewear / bags / swimwear) because they share the same `HeroCollageTile`.
+### Plan
+Edit only `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx`, lines 146–149:
 
-## 2. Activewear "every shot" section copy (`CategoryBuiltForEveryCategory.tsx`)
+1. Replace the base `src` to be quality-only (no `width`, no `resize`) so the original aspect-correct image is the fallback:
+   ```
+   getOptimizedUrl(resolved, { quality: 82 })
+   ```
+2. Bump the `srcSet` widths so retina tiles get a sharp source. Keep the 3:4 aspect (matches the `aspect-[3/4]` container) so no extra crop happens beyond what the original asset already is:
+   ```
+   getResizedSrcSet(resolved, { widths: [480, 720, 960, 1200], aspect: [3, 4], quality: 82 })
+   ```
+3. Update `sizes` to reflect actual layout (3 cols on mobile, 4 cols on ≥sm, max ~280px on lg):
+   ```
+   sizes="(min-width: 1024px) 280px, (min-width: 640px) 24vw, 32vw"
+   ```
 
-Update the `activewear` branch only:
-- Eyebrow: `AI photoshoots for activewear`
-- Headline: `Activewear visuals without the fitness shoot`
-- Subheadline: `Upload one product photo and create ad-ready visuals in minutes`
+Nothing else changes — no layout, copy, or other components touched. This matches the "Image Optimization No-Crop" memory: quality-only for the displayed src, widths only via `srcSet` for retina selection.
 
-Bags and swimwear branches stay as they are. No terminal periods on single-sentence subtitles (per core memory).
-
-## Out of scope
-
-- No layout, sizing, or other copy changes.
-- Motion grid (`CategoryMotionShowcase`) already has its skeleton/throttle pipeline; not touched.
+### Out of scope
+- Hero collage tiles, motion grid, feed showcase — already addressed in prior turns.
+- Underlying asset quality (these are catalog images; nothing to do at source).

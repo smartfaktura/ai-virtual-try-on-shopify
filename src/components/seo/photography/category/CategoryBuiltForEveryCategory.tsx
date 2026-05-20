@@ -144,9 +144,9 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
                 )}
               >
                 <SmartImage
-                  src={getOptimizedUrl(resolved, { width: 480, height: 640, quality: 80, resize: 'cover' })}
-                  srcSet={getResizedSrcSet(resolved, { widths: [320, 480, 640], aspect: [3, 4], quality: 80 })}
-                  sizes="(max-width: 1024px) 40vw, 240px"
+                  src={getOptimizedUrl(resolved, { quality: 82 })}
+                  srcSet={getResizedSrcSet(resolved, { widths: [480, 720, 960, 1200], aspect: [3, 4], quality: 82 })}
+                  sizes="(min-width: 1024px) 280px, (min-width: 640px) 24vw, 32vw"
                   alt={`${resolvedLabel} — ${page.groupName} AI product photography example`}
                   imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
                 />
