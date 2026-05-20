@@ -189,7 +189,7 @@ function HeroTile({
             src={resolvedVideoSrc}
             autoPlay
             muted
-            defaultMuted
+            {...({ defaultMuted: true } as any)}
             loop
             playsInline
             preload="auto"
