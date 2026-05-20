@@ -31,7 +31,7 @@ function getRelatedThumbs(rel: CategoryPage): { id: string; alt: string }[] {
 }
 
 export function CategoryRelatedCategories({ page }: { page: CategoryPage }) {
-  const related = getRelatedPages(page.relatedCategories);
+  const related = getRelatedPages(page.relatedCategories).slice(0, 3);
   const overrides = useSeoVisualOverridesMap();
 
   return (

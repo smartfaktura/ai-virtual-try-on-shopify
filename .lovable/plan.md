@@ -1,17 +1,10 @@
-## Convert "What VOVV creates" cards to a swipeable carousel on mobile
+Some pages (fashion, bags, watches, hoodies, swimwear, lingerie, eyewear, activewear, dresses, caps-hats) have 4 entries in `relatedCategories`, so the component renders 4 cards — the 4th wraps to a new row.
 
-Applies to every category page (already shared component).
+### Fix
+`src/components/seo/photography/category/CategoryRelatedCategories.tsx` line 34:
 
-### File
-`src/components/seo/photography/category/CategoryVisualOutputs.tsx`
+```ts
+const related = getRelatedPages(page.relatedCategories).slice(0, 3);
+```
 
-### Change
-Replace the cards grid with a responsive layout:
-
-- **Mobile (`< sm`)**: horizontal scroll-snap carousel. One flex row, each card `min-w-[78%]`, `snap-start`, parent `overflow-x-auto snap-x snap-mandatory` with `scrollbar-hide` and `-mx-6 px-6` so cards bleed into the page edge for a "peek" of the next card. Reveals there's more without taking 4× the vertical space.
-- **`sm` and up**: keep the existing `sm:grid-cols-2 lg:grid-cols-4` grid exactly as-is.
-
-Implementation: single wrapper with `flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none scrollbar-hide -mx-6 px-6 sm:mx-0 sm:px-0`. Each card gets `min-w-[78%] sm:min-w-0 snap-start sm:snap-align-none shrink-0 sm:shrink`. Card styling unchanged.
-
-### Untouched
-Headline, eyebrow, subhead, card content, desktop grid, all other sections.
+One-line change. Hard caps the section at 3 cards across every page without touching data (preserves SEO/JSON-LD lists elsewhere if any consumer reads beyond 3).
