@@ -865,7 +865,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { label: 'In-Hand Tech Hero',        category: 'Desk / Hand / Daily Use UGC',     imageId: '1776590053673-96gw3b', collectionLabel: 'Tech / Devices', subCategory: 'Desk / Hand / Daily Use UGC',     alt: 'AI electronics product photography example: in-hand tech hero UGC.' },
       { label: 'Desk Surface Tech Still',  category: 'Surface / Setup / Product Still Life', imageId: '1776250220160-yzxngj', collectionLabel: 'Tech / Devices', subCategory: 'Surface / Setup / Product Still Life', alt: 'AI electronics product photography example: desk surface tech still life.' },
       { label: 'Front View',               category: 'EDITORIAL',                 imageId: '1776250227186-ipm40h', collectionLabel: 'Tech / Devices', subCategory: 'EDITORIAL',                 alt: 'AI electronics product photography example: clean essential PDP front view.' },
-      { label: 'Material & EDITORIAL', category: 'Editorial Tech Studio',         imageId: '1776250236111-okpnze', collectionLabel: 'Tech / Devices', subCategory: 'Editorial Tech Studio',           alt: 'AI electronics product photography example: editorial material and hardware detail.' },
+      { label: 'Material & EDITORIAL', category: 'Editorial Tech Studio',         imageId: '1776250236111-okpnze', collectionLabel: 'Tech / Devices', subCategory: 'Editorial Tech Studio',           alt: 'AI electronics product photography example: editorial material and EDITORIAL detail.' },
       { label: 'Café or Travel Use',       category: 'Desk / Hand / Daily Use UGC',     imageId: '1776590047050-ug526z', collectionLabel: 'Tech / Devices', subCategory: 'Desk / Hand / Daily Use UGC',     alt: 'AI electronics product photography example: café or travel use moment.' },
       { label: 'Paired Accessory Still',   category: 'Surface / Setup / Product Still Life', imageId: '1776250238944-o3fq2u', collectionLabel: 'Tech / Devices', subCategory: 'Surface / Setup / Product Still Life', alt: 'AI electronics product photography example: paired accessory composition.' },
     ],
@@ -954,7 +954,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     ],
     faqs: [
       { q: 'Can AI create handbag product photos?',                  a: 'Yes. Upload one handbag photo and VOVV.AI generates studio shots, on-body editorials, campaign visuals, and PDP-ready angles.' },
-      { q: 'Can VOVV.AI preserve leather grain and hardware?',       a: 'VOVV.AI is built to preserve leather grain, stitching, and hardware detail. Always review final visuals before publishing.' },
+      { q: 'Can VOVV.AI preserve leather grain and hardware?',       a: 'VOVV.AI is built to preserve leather grain, stitching, and EDITORIAL detail. Always review final visuals before publishing.' },
       { q: 'Can I create on-body bag visuals without a model shoot?', a: 'Yes — architectural, street, and editorial on-body scenes are core outputs.' },
       { q: 'Can I create luxury bag campaign visuals?',              a: 'Yes. Mood-rich, location-driven campaign statements are available from a single bag image.' },
       { q: 'Can I generate Shopify-ready bag photos?',               a: 'Yes. The output is sized and styled for Shopify PDPs, banners, and collection grids.' },
@@ -1033,7 +1033,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     ],
     faqs: [
       { q: 'Can AI create product photos for watch brands?',           a: 'Yes. Upload one watch photo and VOVV.AI generates wrist editorials, dial macros, studio heroes, and campaign visuals.' },
-      { q: 'Can VOVV.AI preserve dial detail and hardware accuracy?',  a: 'VOVV.AI is built to preserve dial geometry, hands, indices, and hardware detail. Always review final visuals before publishing.' },
+      { q: 'Can VOVV.AI preserve dial detail and EDITORIAL accuracy?',  a: 'VOVV.AI is built to preserve dial geometry, hands, indices, and EDITORIAL detail. Always review final visuals before publishing.' },
       { q: 'Can I create on-wrist watch visuals without a model?',     a: 'Yes — on-wrist editorial portraits, daily-luxury cuff scenes, and lifestyle wrist looks are core outputs.' },
       { q: 'Can I create luxury watch campaign visuals?',              a: 'Yes. Vintage cinematic, super editorial, and concept-driven campaign stills are available from a single image.' },
       { q: 'Can I generate watch photos for Shopify?',                 a: 'Yes. The output is sized and styled for Shopify PDPs, collection grids, banners, and ads.' },
