@@ -176,7 +176,7 @@ export const CATEGORY_COLLECTIONS: CategoryCollection[] = [
         sceneType: 'portrait',
       },
       {
-        id: 'bag_detail_macro', title: 'Hardware & Material Detail',
+        id: 'bag_detail_macro', title: 'EDITORIAL & Material Detail',
         description: 'Close-up of leather grain, stitching, clasp, zipper, or metal finish.',
         promptTemplate: 'Extreme close-up macro of {{productName}} bag construction. Tack-sharp focus on {{focusArea}} — visible micro-details: thread tension, pore structure of leather, brushed or polished metal finish, edge paint line, zipper teeth alignment. {{materialTexture}} at maximum resolution. Shallow depth of field. {{lightingDirective}} {{cropDirective}} {{consistencyDirective}} {{cameraDirective}}',
         sceneType: 'macro',
