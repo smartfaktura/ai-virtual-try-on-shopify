@@ -2,18 +2,44 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Grid3x3, Film, Layers } from 'lucide-react';
 import type { CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
 import { getVisualLibraryHrefForCategory } from '@/lib/visualLibraryDeepLink';
-import feedImage from '@/assets/seo/bags-feed.jpg';
+import bagsFeed from '@/assets/seo/bags-feed.jpg';
+import swimwearFeed from '@/assets/seo/swimwear-feed.jpg';
+
+type FeedSlug = 'bags' | 'swimwear';
+
+const FEED_BY_SLUG: Record<FeedSlug, {
+  image: string;
+  eyebrow: string;
+  heading: string;
+  sub: string;
+  alt: string;
+}> = {
+  bags: {
+    image: bagsFeed,
+    eyebrow: 'One bag · Whole feed',
+    heading: 'Your entire feed from a single upload',
+    sub: 'One product photo in — a month of posts, reels and PDP details out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of bag campaigns, on-body editorials, studio shots and detail closeups — all generated from a single product upload',
+  },
+  swimwear: {
+    image: swimwearFeed,
+    eyebrow: 'One swimsuit · Whole feed',
+    heading: 'Your entire resort feed from a single upload',
+    sub: 'One swim photo in — a season of posts, reels and PDP details out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of swimwear resort editorials, poolside lifestyle and beach moments — all generated from a single product upload',
+  },
+};
 
 /**
- * "One bag · A whole feed" — bag-page only.
+ * "One {noun} · Whole feed" — gated to slugs with curated feed screenshots.
  * Embeds a curated Instagram-style feed screenshot as the visual hero, paired
  * with a text rail that mirrors the typography, spacing, button styles, and
  * fade-in rhythm of CategoryBuiltForEveryCategory.
  */
 export function CategoryFeedShowcase({ page }: { page: CategoryPage }) {
-  // The screenshot is bag-specific; gate by slug so other category pages stay
-  // unaffected until we have their own feed images.
-  if (page.slug !== 'bags') return null;
+  const slug = page.slug as FeedSlug;
+  if (!(slug in FEED_BY_SLUG)) return null;
+  const copy = FEED_BY_SLUG[slug];
 
   return (
     <section
@@ -25,13 +51,13 @@ export function CategoryFeedShowcase({ page }: { page: CategoryPage }) {
           {/* Text rail */}
           <div className="text-center lg:text-left mx-auto lg:mx-0 max-w-xl animate-in fade-in slide-in-from-bottom-2 duration-700">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              One bag · Whole feed
+              {copy.eyebrow}
             </p>
             <h2 className="text-[#1a1a2e] text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
-              Your entire feed from a single upload
+              {copy.heading}
             </h2>
             <p className="mt-4 text-sm sm:text-base text-muted-foreground max-w-xl mx-auto lg:mx-0">
-              One product photo in — a month of posts, reels and PDP details out, on brand and on rhythm
+              {copy.sub}
             </p>
 
             {/* Stat row — icon + label, no boxes */}
