@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Grid3x3, Film, Layers } from 'lucide-react';
 import type { CategoryPage } from '@/data/aiProductPhotographyCategoryPages';
