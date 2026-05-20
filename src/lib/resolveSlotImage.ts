@@ -15,15 +15,24 @@ export function resolveSlotImageUrl(
   slotKey: string,
   fallbackUrl: string,
   scenePreviewById?: Map<string, string>,
+  fallbackImageId?: string,
+  livePreviewByImageId?: Map<string, string>,
 ): string {
-  if (!overrides) return fallbackUrl;
-  const row = overrides.get(getOverrideKey(pageRoute, slotKey));
-  if (!row) return fallbackUrl;
-  // Prefer the live scene's current preview so admin updates to scene
-  // previews propagate without re-picking in the SEO overrides admin.
-  const live = scenePreviewById?.get(row.scene_id);
-  if (live && live.trim()) return live;
-  if (row.preview_image_url) return row.preview_image_url;
+  const row = overrides?.get(getOverrideKey(pageRoute, slotKey));
+  if (row) {
+    // Prefer the live scene's current preview so admin updates to scene
+    // previews propagate without re-picking in the SEO overrides admin.
+    const live = scenePreviewById?.get(row.scene_id);
+    if (live && live.trim()) return live;
+    if (row.preview_image_url) return row.preview_image_url;
+  }
+  // No override (or override scene missing preview): try to resolve the
+  // hardcoded fallback's imageId to a live scene preview, so refreshing a
+  // scene in the library propagates to fallback tiles too.
+  if (fallbackImageId && livePreviewByImageId) {
+    const live = livePreviewByImageId.get(fallbackImageId);
+    if (live && live.trim()) return live;
+  }
   return fallbackUrl;
 }
 
