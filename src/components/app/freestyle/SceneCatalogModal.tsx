@@ -142,7 +142,7 @@ export function SceneCatalogModal({
     },
   });
 
-  // Default grid: full Freestyle catalog (no filters, excluding EDITORIAL Shots).
+  // Default grid: full Freestyle catalog (no filters, excluding Essential Shots).
   const useGrid = quickView !== 'recommended';
   const grid = useSceneCatalog({ ...filters, excludeEssentials: true }, open && useGrid && anyFilterActive);
   const interleavedGrid = useInterleavedSceneCatalog(
@@ -156,10 +156,10 @@ export function SceneCatalogModal({
   // Custom scenes kept only to resolve `cs-` selection IDs from prior sessions.
   const customScenesQuery = useCustomScenes();
 
-  // Recommended rail — strip any "EDITORIAL" rows defensively.
+  // Recommended rail — strip any "Essential Shots" rows defensively.
   const recommendedScenes = useMemo<CatalogScene[]>(() => {
     const data = (recommended.data ?? []) as CatalogScene[];
-    return data.filter(s => !s.sub_category?.toLowerCase().includes('EDITORIAL'));
+    return data.filter(s => !s.sub_category?.toLowerCase().includes('essential'));
   }, [recommended.data]);
 
   const newCount = useMemo(() => {
