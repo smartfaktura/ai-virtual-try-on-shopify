@@ -2186,19 +2186,6 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "hoodies": [
     {
-      "subCategory": "Hoodies · Essential Shots",
-      "cards": [
-        { "label": "Ghost Mannequin Shot",  "imageId": "1776847998023-tof7el" },
-        { "label": "Front View Flat Lay",   "imageId": "1776242087075-iw1a72" },
-        { "label": "On-Model Front",        "imageId": "1776671572076-fbjmnt" },
-        { "label": "On-Model Back",         "imageId": "1776671569905-zm7nt9" },
-        { "label": "On-Model Editorial",    "imageId": "1776671570762-oohd54" },
-        { "label": "Movement Shot",         "imageId": "1776242092934-rldhea" },
-        { "label": "Close-Up Detail",       "imageId": "1776242077758-vsh3kf" },
-        { "label": "Texture Detail",        "imageId": "1776242107654-bxjb62" }
-      ]
-    },
-    {
       "subCategory": "Hoodies · Everyday UGC",
       "cards": [
         { "label": "Luxury Door Statement",   "imageId": "1776673938938-1zmw4x" },
@@ -2209,6 +2196,19 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "Cafe Errand Outfit Moment", "imageId": "1776685103728-0qpfkm" },
         { "label": "Minimal Mirror Pose",     "imageId": "1776686519476-xkp9za" },
         { "label": "Elevated Mirror UGC Pose", "imageId": "1776673957321-uo25m1" }
+      ]
+    },
+    {
+      "subCategory": "Hoodies · Essential Shots",
+      "cards": [
+        { "label": "Ghost Mannequin Shot",  "imageId": "1776847998023-tof7el" },
+        { "label": "Front View Flat Lay",   "imageId": "1776242087075-iw1a72" },
+        { "label": "On-Model Front",        "imageId": "1776671572076-fbjmnt" },
+        { "label": "On-Model Back",         "imageId": "1776671569905-zm7nt9" },
+        { "label": "On-Model Editorial",    "imageId": "1776671570762-oohd54" },
+        { "label": "Movement Shot",         "imageId": "1776242092934-rldhea" },
+        { "label": "Close-Up Detail",       "imageId": "1776242077758-vsh3kf" },
+        { "label": "Texture Detail",        "imageId": "1776242107654-bxjb62" }
       ]
     },
     {
