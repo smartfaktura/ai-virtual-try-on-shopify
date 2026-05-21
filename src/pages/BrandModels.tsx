@@ -900,30 +900,126 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   // ── Sections layout (premium wizard) ──
   if (layout === 'sections') {
+    // Step 0 — mode chooser. Two side-by-side cards so the two paths are visibly
+    // distinct and we never mix reference photos with manual chip inputs.
+    if (creationMode === 'chooser') {
+      return (
+        <div className="space-y-6 pb-32">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <h2 className="text-xl font-semibold tracking-tight">How do you want to create this model?</h2>
+            <p className="text-sm text-muted-foreground">Pick a starting point — you can always switch.</p>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+            <button
+              type="button"
+              onClick={() => setCreationMode('reference')}
+              className="group text-left p-6 rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200"
+            >
+              <div className="rounded-lg bg-primary/10 p-2.5 w-fit mb-4 group-hover:bg-primary/15 transition-colors">
+                <Camera className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold text-base mb-1.5">From a reference photo</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                Upload a face. VOVV.AI re-photographs that exact person as a studio portrait.
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                Best for · founders, real people, models you already work with
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCreationMode('manual')}
+              className="group text-left p-6 rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200"
+            >
+              <div className="rounded-lg bg-primary/10 p-2.5 w-fit mb-4 group-hover:bg-primary/15 transition-colors">
+                <Wand2 className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold text-base mb-1.5">Configure manually</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                Pick gender, age, ethnicity, body type, hair, expression. VOVV.AI generates from scratch.
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                Best for · inventing a new on-brand model
+              </p>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Switch-mode link
+    const switchModeLink = (
+      <button
+        type="button"
+        onClick={() => {
+          setCreationMode('chooser');
+          setPreviewUrl(null);
+          setUploadedUrl(null);
+          setTermsAccepted(false);
+          setReferenceNotes('');
+        }}
+        className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
+      >
+        ← Switch mode
+      </button>
+    );
 
     return (
       <div className="space-y-5 pb-32">
-        <Section title="Essentials">{essentialsBlock}</Section>
+        <div className="flex items-center justify-between">
+          {switchModeLink}
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+            {isReferenceMode ? 'From reference photo' : 'Manual configuration'}
+          </span>
+        </div>
 
-        <Collapsible>
-          <Card className="p-4 sm:p-6 border-border/60">
-            <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
-              <div className="flex items-baseline gap-3">
-                <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">Appearance</h3>
-                <span className="text-[10px] text-muted-foreground/70">All optional</span>
+        {isReferenceMode ? (
+          <>
+            <Section title="Model name">
+              <div className="space-y-1.5">
+                <div className="flex items-baseline justify-between">
+                  <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Name this model</Label>
+                  <span className={cn(
+                    "text-[10px] tabular-nums",
+                    modelName.length >= 28 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50"
+                  )}>{modelName.length}/32</span>
+                </div>
+                <Input
+                  placeholder="e.g. Sarah, Alex, Brand Ambassador"
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  maxLength={32}
+                  className="h-9"
+                />
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="mt-5 pt-5 border-t border-border/50">
-                {appearanceBlock}
-              </div>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+            </Section>
+            <Section title="Reference">{referenceBlock}</Section>
+          </>
+        ) : (
+          <>
+            <Section title="Essentials">{essentialsBlock}</Section>
 
-        <Section title="Reference" hint="Optional">{referenceBlock}</Section>
+            <Collapsible>
+              <Card className="p-4 sm:p-6 border-border/60">
+                <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
+                  <div className="flex items-baseline gap-3">
+                    <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">Appearance</h3>
+                    <span className="text-[10px] text-muted-foreground/70">All optional</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="mt-5 pt-5 border-t border-border/50">
+                    {appearanceBlock}
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          </>
+        )}
+
 
         <Section title="Summary">
           <div>
