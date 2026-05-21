@@ -908,12 +908,15 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full pt-2">
             <button
               type="button"
-              onClick={() => setCreationMode('reference')}
+              onClick={() => setCreationMode('manual')}
               className="group text-left rounded-2xl border border-border/50 bg-card p-6 hover:border-foreground/40 transition-colors duration-200"
             >
-              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-3">01 / Reference</p>
-              <p className="text-[15px] font-medium text-foreground leading-snug mb-6">
-                Re-photograph a real person from a photo
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-3">01 / Generate</p>
+              <p className="text-[15px] font-medium text-foreground leading-snug mb-2">
+                Let VOVV.AI create a new model for you
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-6">
+                Pick gender, age, look — we generate from scratch
               </p>
               <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
                 Start →
@@ -922,18 +925,22 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
             <button
               type="button"
-              onClick={() => setCreationMode('manual')}
+              onClick={() => setCreationMode('reference')}
               className="group text-left rounded-2xl border border-border/50 bg-card p-6 hover:border-foreground/40 transition-colors duration-200"
             >
-              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-3">02 / Manual</p>
-              <p className="text-[15px] font-medium text-foreground leading-snug mb-6">
-                Generate a new model from attributes
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-3">02 / Reference photo</p>
+              <p className="text-[15px] font-medium text-foreground leading-snug mb-2">
+                Use your own person from a photo
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-6">
+                Upload a face — we re-photograph that exact person
               </p>
               <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
                 Start →
               </p>
             </button>
           </div>
+
         </div>
 
       );
