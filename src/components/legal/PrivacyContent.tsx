@@ -73,6 +73,9 @@ export function PrivacyContent() {
       <p>
         Face images uploaded to the Reference Photo feature are biometric / special-category personal data under GDPR Art. 9. We process them only on the basis of the explicit consent of the uploader and (where different) the data subject, solely to generate the AI model you requested. We do not use them to train models, do not share them with third parties for advertising, and delete them when you delete the related model or account (subject to the retention rules in §10). Full obligations of uploaders — including warranties, prohibited uses, and indemnification — are set out in Terms of Service §10.
       </p>
+      <p>
+        Scene and other reference images uploaded to Brand Scenes or similar features are processed only to generate the visual you requested, are not used to train AI models, are not shared with third parties for advertising, and follow the same retention rules. Full obligations of uploaders — including rights warranties and prohibited uses — are set out in Terms of Service §11.
+      </p>
 
       <h2>9. International Transfers</h2>
       <p>We use safeguards such as:</p>
