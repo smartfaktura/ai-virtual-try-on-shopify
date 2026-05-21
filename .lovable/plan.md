@@ -43,16 +43,30 @@ Recommended badge on "Describe it" since it's the most guided.
 
 ## Step 1 — Category (always first, you flagged this)
 
-One question, big tappable tiles with example thumbnail:
+One question, big tappable tiles with a real preview thumbnail per category (reuse the collage previews already used on `/product-visual-library`):
 
 > **Where should this scene live?**
 
-Tiles use the existing scene taxonomy so the scene lands in the right tab in Visual Studio:
-Lifestyle · Editorial · Studio · Flatlay · Streetwear · Surface · Macro · Outdoor · Interior · Plus the user's custom categories (from `useSceneCategories`).
+The 10 tiles mirror the Product Visual Library hub exactly, sourced from `src/data/aiProductPhotographyCategories.ts` so any future category edits stay in sync:
+
+1. Fashion
+2. Footwear
+3. Beauty & Skincare
+4. Fragrance
+5. Jewelry
+6. Bags & Accessories
+7. Home & Furniture
+8. Food & Beverage
+9. Supplements & Wellness
+10. Electronics & Gadgets
+
+Layout: responsive grid — 2 cols mobile, 3 cols tablet, 4–5 cols desktop. Each tile = square preview image + name overlay + subcategory count chip. Selected state = primary ring + check badge.
+
+After picking a category, a **second inline picker reveals the subcategories** for that category (chips, single-select, optional — the scene can live at the top level if none picked). Subcategories come from the same data file (e.g. Fashion → Clothing · Dresses · Hoodies · Jeans · Jackets · Activewear · Swimwear · Lingerie).
 
 Secondary (optional, collapsible "Refine fit"):
-- **Which products is this for?** multi-select chips: Apparel, Eyewear, Footwear, Bags, Fragrance, Beauty, Jewelry, Home, Electronics, Any. Default = Any.
 - **People in scene?** segmented: On-model · Product only · Either.
+- **Aesthetic tone hint** (optional): Editorial · Lifestyle · Studio · Flatlay — purely a sort tag inside the chosen category.
 
 Continue button disabled until a category is picked.
 
