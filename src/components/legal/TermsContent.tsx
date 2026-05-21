@@ -125,7 +125,7 @@ export function TermsContent() {
         If you cannot truthfully make every warranty above for a given upload, you must not upload that face. This rule is non-negotiable.
       </p>
 
-      <h2>10. Your Responsibility (Critical)</h2>
+      <h2>11. Your Responsibility (Critical)</h2>
       <p>You are fully responsible for:</p>
       <ul>
         <li>• All Inputs</li>
@@ -139,7 +139,7 @@ export function TermsContent() {
         <li>• Platform policy compliance</li>
       </ul>
 
-      <h2>11. AI Limitations</h2>
+      <h2>12. AI Limitations</h2>
       <p>AI outputs:</p>
       <ul>
         <li>• May contain errors</li>
@@ -148,31 +148,31 @@ export function TermsContent() {
       </ul>
       <p>You must independently review all outputs.</p>
 
-      <h2>12. AI Transparency (EU AI Act)</h2>
+      <h2>13. AI Transparency (EU AI Act)</h2>
       <p>You are responsible for:</p>
       <ul>
         <li>• Disclosing AI-generated content where required</li>
         <li>• Ensuring compliance with applicable laws</li>
       </ul>
 
-      <h2>13. Intellectual Property</h2>
+      <h2>14. Intellectual Property</h2>
       <ul>
         <li>• You retain ownership of Inputs</li>
         <li>• You own Generations (subject to law)</li>
         <li>• VOVV.AI owns all platform technology</li>
       </ul>
 
-      <h2>14. Confidentiality</h2>
+      <h2>15. Confidentiality</h2>
       <p>
         We treat your content as confidential and do not use it for AI training.
       </p>
 
-      <h2>15. Third-Party Services</h2>
+      <h2>16. Third-Party Services</h2>
       <p>
         We rely on third-party providers and are not responsible for their actions.
       </p>
 
-      <h2>16. Indemnification</h2>
+      <h2>17. Indemnification</h2>
       <p>You agree to indemnify VOVV.AI against claims arising from:</p>
       <ul>
         <li>• Your Inputs</li>
@@ -180,7 +180,7 @@ export function TermsContent() {
         <li>• Your use of the Service</li>
       </ul>
 
-      <h2>17. Limitation of Liability</h2>
+      <h2>18. Limitation of Liability</h2>
       <p>To the maximum extent permitted by law, we are not liable for:</p>
       <ul>
         <li>• Indirect or consequential damages</li>
@@ -188,38 +188,38 @@ export function TermsContent() {
       </ul>
       <p>Total liability is limited to what you paid in the past 12 months.</p>
 
-      <h2>18. Disclaimer</h2>
+      <h2>19. Disclaimer</h2>
       <p>
         The Service is provided "as is" with no guarantees.
       </p>
 
-      <h2>19. Copyright & Content Complaints</h2>
+      <h2>20. Copyright & Content Complaints</h2>
       <p>
         Report issues: <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>. We may remove content if required.
       </p>
 
-      <h2>20. DSA Compliance (EU)</h2>
+      <h2>21. DSA Compliance (EU)</h2>
       <p>
         Users may report illegal content. We may remove or restrict such content.
       </p>
 
-      <h2>21. Termination</h2>
+      <h2>22. Termination</h2>
       <p>
         We may suspend or terminate access at any time.
       </p>
 
-      <h2>22. Governing Law</h2>
+      <h2>23. Governing Law</h2>
       <ul>
         <li>• If you are a business: Delaware law applies</li>
         <li>• If you are an EU consumer: you retain rights under local law</li>
       </ul>
 
-      <h2>23. Changes</h2>
+      <h2>24. Changes</h2>
       <p>
         We may update these Terms with notice.
       </p>
 
-      <h2>24. Company Information</h2>
+      <h2>25. Company Information</h2>
       <p>VOVV.AI is operated by:</p>
       <ul>
         <li>• <strong>MB 123PRESETS</strong></li>
