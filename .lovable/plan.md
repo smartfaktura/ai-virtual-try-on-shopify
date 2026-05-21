@@ -1,5 +1,13 @@
 # Brand Models — fix identity match + always return 3 variations
 
+## Scope and safety
+
+All changes are isolated to one edge function: `supabase/functions/generate-user-model/index.ts`, plus a small UI tweak in `src/pages/BrandModels.tsx`. Nothing else in the app is touched — Product Images, Catalog Studio, Short Film, Video generation, billing, RLS, and DB schema are all unaffected.
+
+The identity fix only fires **when a reference image is uploaded** (reference mode, or combined mode with an image). Pure text-to-model generation (no upload) keeps today's exact behavior — same prompt, same model, same output.
+
+The reference image is — and stays — passed to Gemini 3 Pro Image as raw `inlineData` (base64 pixels), placed before the text in the request. Gemini sees the actual photo, not a paraphrase. The fix is just rewriting the text instruction so Gemini treats those pixels as "the subject to re-photograph" instead of "inspiration".
+
 Two bugs in `supabase/functions/generate-user-model/index.ts`:
 
 1. Reference image doesn't drive the face — the upload is used as loose inspiration only.
