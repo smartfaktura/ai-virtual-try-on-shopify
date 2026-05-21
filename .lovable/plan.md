@@ -1,217 +1,347 @@
-# Brand Scenes — Outfit Direction questionnaire
+# Brand Scenes — full question list (plain options)
 
-Triggered only when `people_mode != "product_only"` (Section A Q5 = "Product worn / used by a person", "Full model with face", or "Hands / partial body").
+Every question uses clear, everyday labels. No marketing words like "quiet luxury", "editorial", "avant-garde". A first-time user should understand each option without thinking.
 
-Outputs a structured `outfit_direction` object that the prompt builder injects into the OUTFIT block of the rendered scene prompt. Replayed verbatim on reuse so wardrobe stays consistent across regenerations.
-
-Rendered as a single collapsible "Outfit Direction" sub-step between Section B and the camera/aspect questions. Defaults are pre-filled from Section A Q1 (vibe) + Q3 (mood) so the user can accept everything in one click.
+Wizard order: Category → Scene basics → Category-specific → People & outfit (only if person) → Camera & format → Review.
 
 ---
 
-## G.1 — Universal outfit questions (12)
+## Step 1 — Pick category
 
-### O1. Wardrobe vibe *(single)*
-Defaults to scene vibe from A1.
-- Quiet luxury
-- Minimal modern
-- Editorial fashion
+**Q1.1 Family** *(single, required)*
+Fashion · Footwear · Bags & accessories · Jewelry · Eyewear · Beauty · Fragrance · Home · Food & drink · Pets · Tech & gadgets · Kids & baby · Sports & outdoor · Cars & moto · Other
+
+**Q1.2 Subcategory** *(single, required — list changes based on family)*
+Examples for Fashion: T-shirts · Shirts · Dresses · Jeans · Pants · Skirts · Sweaters · Jackets & coats · Swimwear · Underwear & loungewear · Activewear · Suits
+Examples for Footwear: Sneakers · Boots · Heels · Flats · Sandals · Slippers
+(35+ subcategories total — same list the app already uses.)
+
+---
+
+## Step 2 — Scene basics (asked for every scene)
+
+**Q2.1 Where is the scene? (background type)** *(single)*
+- Plain studio background
+- Indoor room (home / cafe / office)
+- Outdoor city street
+- Outdoor nature (beach, forest, mountain, garden)
+- Surface only (table, floor, fabric)
+- Solid color background
+
+**Q2.2 Time of day** *(single)*
+- Morning
+- Midday
+- Afternoon / golden hour
+- Evening / sunset
+- Night
+- Doesn't matter
+
+**Q2.3 Lighting** *(single)*
+- Soft natural daylight
+- Bright sunlight with shadows
+- Warm indoor lamp light
+- Studio softbox (clean and even)
+- Moody / low light
+- Hard shadow / high contrast
+
+**Q2.4 Mood** *(single)*
+- Calm and clean
+- Warm and cozy
+- Fresh and energetic
+- Luxurious and quiet
+- Playful and fun
+- Bold and dramatic
+
+**Q2.5 Background color tone** *(single)*
+- White
+- Off-white / cream
+- Beige / sand
+- Grey
+- Black
+- Warm tones (brown, terracotta)
+- Cool tones (blue, green)
+- Pastel
+- Matches the mood (auto)
+
+**Q2.6 Is there a person in the scene?** *(single — gates the Outfit step)*
+- No, product only
+- Yes, full person with face
+- Yes, but only hands / arms / partial body
+- Yes, but face hidden / from behind
+
+**Q2.7 Number of products visible** *(single)*
+- Just one
+- Two
+- A small group (3–5)
+- A flat lay arrangement
+
+**Q2.8 Props around the product** *(multi, optional)*
+- None — keep it clean
+- Natural items (plants, flowers, fruit, stones)
+- Fabric / paper textures
+- Everyday objects (cup, book, keys)
+- Matching product accessories
+- Let the system decide
+
+---
+
+## Step 3 — Category-specific questions
+
+Only the questions matching the chosen subcategory show up.
+
+### Fashion / Apparel
+- Pose: Standing · Sitting · Walking · Leaning · Close-up detail · Movement (jumping, twirling)
+- Show full outfit or just the product? Full outfit · Focus on this piece only
+- Garment angle: Front · Side · Back · 3/4 angle
+
+### Footwear
+- View: Side profile · Top down · Worn on a person · On a stand or surface · In motion
+- Pair shown as: Both shoes · One shoe · One on, one off
+- Surface: Studio floor · Wood · Concrete · Grass · Sand · Tile
+
+### Bags & accessories
+- Carry style: Held in hand · On shoulder · Crossbody · On a table · Hanging · Worn
+- Bag open or closed? Closed · Slightly open · Fully open showing inside
+- Show contents? Empty · A few items spilling out · Don't show
+
+### Jewelry
+- Worn or product-only? On a person · On a stand / surface · Both
+- Body part: Neck · Ears · Wrist · Finger · Multiple
+- Skin tone preference: Light · Medium · Deep · Mixed · No preference
+- Close-up tightness: Tight macro · Mid close-up · Full portrait
+
+### Eyewear
+- On a face or on a surface? On face · On surface · Floating / hero shot
+- Face angle: Front · 3/4 side · Pure profile
+- Hair away from temples? Yes (show frames clearly) · Natural
+
+### Beauty (makeup, skincare, haircare)
+- Show the product or show the result on a person? Product only · Person using it · Both side by side
+- Skin type look: Dewy · Matte · Natural · No preference
+- Close-up area: Face · Eyes · Lips · Hands · Hair · Full portrait
+
+### Fragrance
+- Style: Just the bottle · Bottle with mood / nature elements · Person holding / spraying
+- Setting feeling: Soft and dreamy · Sharp and clean · Warm and intimate · Fresh outdoors
+
+### Home (decor, kitchen, furniture)
+- Room: Living room · Bedroom · Kitchen · Bathroom · Office · Outdoor patio · No room, surface only
+- Style of the room: Modern · Classic · Rustic · Minimal · Cozy
+- Daylight or lamp light? Daylight · Lamp light · Mixed
+
+### Food & drink
+- Surface: Wood · Stone / marble · Linen · Plate · Dark surface
+- Steam / freshness cues? Yes · No
+- Drink in glass? Yes · No / not a drink
+- Hands in shot? None · Pouring · Holding · Cutting / preparing
+
+### Pets
+- Pet with product or product only? Product only · Pet in scene · Pet using product
+- Setting: Home · Outdoor · Studio
+
+### Tech & gadgets
+- View: Front · Side · Top down · In use by a person · Lifestyle on a desk
+- Screen on or off? On (show interface) · Off (clean look)
+- Setting: Studio · Desk · Hand-held · Lifestyle room
+
+### Kids & baby
+- Child in shot? Yes · No, product only
+- Age range (if yes): Baby · Toddler · Child
+- Setting: Home · Playground · Studio
+
+### Sports & outdoor
+- In use or static? Static product · Person using it · Action shot
+- Setting: Gym · Outdoor field · Mountain / trail · Water · Studio
+
+### Cars & moto
+- Whole vehicle or detail? Full vehicle · Detail / part close-up · Interior
+- Setting: Studio · Street · Showroom · Nature
+
+### Other
+- Free text: "Describe the scene you want" (300 chars)
+
+---
+
+## Step 4 — People & outfit (only if Q2.6 says yes)
+
+### Person basics
+**P1 Gender presentation** — Woman · Man · Non-binary look · Doesn't matter
+**P2 Age range** — Teen · 20s · 30s · 40s · 50s · 60+ · Mixed group
+**P3 Skin tone** — Light · Medium · Tan · Deep · Mixed · No preference
+**P4 Body type** — Slim · Athletic · Curvy · Plus size · Mixed · No preference
+**P5 How many people?** — 1 · 2 · Small group (3–5)
+
+### Outfit (skipped if Q2.6 = "only hands")
+**O1 Overall style** *(single)*
+- Casual everyday
+- Smart casual
+- Office / business
+- Sporty / activewear
+- Beachwear / vacation
+- Loungewear / cozy at home
+- Evening / dressed up
 - Streetwear
-- Athleisure / sportswear
-- Workwear / tailored
-- Bohemian
-- Romantic / feminine
-- Classic preppy
-- Avant-garde
-- Cozy loungewear
-- Resort / vacation
 
-### O2. Silhouette *(single)*
-- Tailored & structured
-- Relaxed & flowy
-- Oversized
-- Body-conscious / fitted
-- Layered
-- Mixed (top fitted / bottom relaxed or vice versa)
+**O2 Fit** *(single)*
+- Tight / fitted
+- Regular fit
+- Loose / oversized
+- Mixed (e.g. fitted top, loose pants)
 
-### O3. Top *(single — skipped if O4 = "Dress" or "Jumpsuit")*
+**O3 Top** *(single — hidden if O4 is dress or jumpsuit)*
 - T-shirt
-- Tank / camisole
-- Button-down shirt
+- Tank top
+- Shirt with buttons
 - Blouse
-- Knit sweater
+- Sweater
 - Hoodie / sweatshirt
 - Crop top
-- Blazer-only (no inner top)
+- Blazer only
 - Turtleneck
-- Bralette / bra top
-- Matches product *(footwear & bag categories use this as default)*
+- Sports bra
+- Matches the product (for shoes / bags)
 
-### O4. Bottom *(single — skipped if "Dress" or "Jumpsuit" picked)*
-- Jeans (straight / wide / skinny — sub-select)
-- Trousers / tailored pants
-- Chinos
+**O4 Bottom** *(single)*
+- Jeans
+- Trousers / pants
 - Shorts
-- Mini skirt
-- Midi skirt
-- Maxi skirt
-- Leggings / activewear
-- Dress *(collapses O3)*
-- Jumpsuit *(collapses O3)*
+- Skirt (short)
+- Skirt (long)
+- Leggings
+- Dress (no separate top)
+- Jumpsuit (no separate top)
 
-### O5. Footwear *(single)*
+**O5 Shoes** *(single — locked to "Matches the product" for footwear category)*
 - Sneakers
 - Heels
-- Loafers / flats
-- Boots (ankle / knee — sub-select)
+- Flats / loafers
+- Boots
 - Sandals
-- Mules
-- Athletic / running
 - Barefoot
-- Matches product *(locked for Footwear category)*
+- Athletic shoes
+- Matches the product
 
-### O6. Outerwear *(single, optional)*
-- None
-- Blazer
-- Trench coat
-- Wool coat
-- Leather jacket
-- Bomber / varsity
-- Cardigan
-- Puffer
-- Denim jacket
+**O6 Jacket or coat (optional)** — None · Blazer · Coat · Leather jacket · Denim jacket · Cardigan · Puffer · Trench
 
-### O7. Color palette *(multi-select, max 4)*
-Defaults pulled from scene mood (A3).
+**O7 Outfit colors** *(multi, max 3)*
 - Black
 - White / cream
-- Beige / camel
+- Beige / brown
 - Grey
-- Navy
-- Brown / chocolate
-- Olive / sage
-- Burgundy / wine
-- Terracotta / rust
-- Pastel (blush, sky, mint)
-- Bold accent (red, cobalt, emerald)
-- Metallic (gold, silver)
+- Navy / blue
+- Green
+- Red / burgundy
+- Pink / pastel
+- Bright accent (red, yellow, cobalt)
+- Metallic
 
-### O8. Fabric & texture *(multi-select, max 3)*
+**O8 Fabric look** *(multi, max 2)*
 - Cotton
 - Linen
-- Silk / satin
-- Wool / cashmere
+- Silk / shiny
+- Wool / knit
 - Denim
 - Leather
-- Knit / ribbed
-- Technical / nylon
+- Sporty / technical
 - Sheer / lace
-- Velvet
 
-### O9. Accessories *(multi-select, optional)*
+**O9 Accessories** *(multi, optional)*
 - None
 - Sunglasses
-- Hat (cap / wide-brim — sub-select)
+- Hat / cap
 - Belt
 - Watch
-- Jewelry (delicate / statement — sub-select)
+- Necklace / earrings
 - Scarf
-- Bag *(hidden for Bag category — that's the product)*
+- Bag *(hidden if product is a bag)*
 
-### O10. Hair *(single)*
-- Natural down
-- Pulled back / ponytail
+**O10 Hair** *(single)*
+- Loose and natural
+- Ponytail
 - Bun / updo
-- Wet / slicked
+- Wet / slicked back
 - Curly / textured
 - Short / cropped
-- Covered (hat / scarf)
+- Covered (hat or scarf)
 
-### O11. Makeup *(single)*
-- Bare / no-makeup
-- Soft natural
+**O11 Makeup** *(single)*
+- No makeup
+- Light natural
 - Polished daytime
-- Editorial bold
-- Smoky / evening
-- Matches product *(default for Beauty category)*
+- Bold / evening
+- Matches the product *(default for beauty)*
 
-### O12. Outfit notes *(text, 200 chars, optional)*
-Free-form override for nuance the picker can't capture (e.g. "untucked shirt, sleeves rolled to elbow, no socks visible").
-
----
-
-## G.2 — Category overrides
-
-Locked = field rendered read-only with the forced value visible.
-Collapsed = section folded behind a "Customize outfit" disclosure; the default value still ships to the prompt.
-Hidden = removed from the form and from the saved object.
-
-| Subcategory | O3 Top | O4 Bottom | O5 Footwear | O9 Accessories | O11 Makeup | Extra behaviour |
-|---|---|---|---|---|---|---|
-| Footwear → all | normal | normal | **locked: Matches product** | normal | normal | Adds: hem above ankle, footwear fully visible |
-| Fashion → Swimwear | merged into "Swim style" picker | merged | default Barefoot / Sandals | hidden (hat ok) | Bare/Soft | Hides outerwear unless beach cover-up chosen |
-| Fashion → Lingerie / Loungewear | merged into "Lingerie style" picker | merged | default Barefoot | minimal | Soft natural | Outerwear → robe / kimono options |
-| Fashion → Outerwear | required (visible under coat) | normal | normal | scarf default | normal | O6 locked to "Matches product" |
-| Fashion → Activewear | filtered to athletic tops | filtered to leggings/shorts | locked: Athletic | watch default | Bare/Soft | Adds sweat/glow note in prompt |
-| Bags & Accessories → all | normal | normal | normal | **bag hidden** (it's the product) | normal | Bag carry-style asked in Section B instead |
-| Jewelry → all | defaults: neckline-friendly (turtleneck off) | normal | normal | jewelry hidden (it's the product) | normal | Hair defaults to Pulled back / Bun |
-| Eyewear → all | normal | normal | normal | sunglasses hidden (it's the product) | normal | Hair defaults Pulled back; framing favours face crop |
-| Beauty → Makeup | normal | normal | normal | minimal | **locked: Matches product** | Camera framing favours face/portrait |
-| Beauty → Skincare | collapsed to "Soft neutral basics", expandable | collapsed | Barefoot default | none | Bare / no-makeup | Adds dewy-skin directive |
-| Beauty → Haircare | normal | normal | normal | none | Soft natural | Hair question becomes primary (styled, washed, etc.) |
-| Fragrance → all | "Soft neutral basics" default, expandable | collapsed | normal | minimal | Soft natural | Outfit framed as supporting, not hero |
-| Home / Food / Pets / Tech (with person) | "Soft neutral basics" default | collapsed | normal | none | Bare/Soft | Whole section collapsed; user opens only if they want control |
-| Kids & Baby | child-appropriate filter (no heels, no editorial bold) | filtered | filtered | minimal | locked: Bare | Replaces O11 with "Natural / playful" |
+**O12 Extra notes** *(text, 200 chars, optional)*
+e.g. "sleeves rolled up", "shirt untucked", "no jewelry"
 
 ---
 
-## G.3 — Saved structure
+## Step 5 — Camera & format
+
+**C1 Distance** *(single)*
+- Extreme close-up (detail / texture)
+- Close-up (product fills frame)
+- Medium (product + a bit of surrounding)
+- Wide (full scene visible)
+
+**C2 Angle** *(single)*
+- Eye level / straight on
+- Slightly above (15–30°)
+- Top down (90°)
+- Slightly below
+- 3/4 angle
+
+**C3 Aspect ratio** *(single)*
+- Square (1:1)
+- Portrait (4:5)
+- Tall portrait (9:16) — stories / reels
+- Landscape (16:9)
+- Wide landscape (3:2)
+
+**C4 Depth of field** *(single)*
+- Sharp everywhere
+- Soft background blur
+- Heavy blur (only product sharp)
+
+---
+
+## Step 6 — Review & save
+
+Shown as a single recap card with chips for every answer. User can edit any step before saving.
+
+**Final fields the user names:**
+- Scene name (required, 60 chars)
+- Optional cover image (auto-generated preview or user upload)
+
+---
+
+## Category overrides (what auto-locks or hides)
+
+- **Footwear category** → O5 Shoes locked to "Matches the product"; prompt adds "show full shoe, no foot crop".
+- **Bags category** → O9 Accessories "Bag" option hidden; carry style asked in Step 3 instead.
+- **Jewelry category** → O11 Makeup defaults to light; hair defaults to pulled back; the jewelry slot under Accessories is hidden.
+- **Eyewear category** → O9 sunglasses hidden; hair defaults to away from face.
+- **Beauty (makeup)** → O11 locked to "Matches the product".
+- **Skincare / Fragrance / Home / Food / Pets / Tech** → Outfit step collapsed to "simple neutral basics" by default; user can expand to control it.
+- **Swimwear / Lingerie / Loungewear subcategories** → O3 Top + O4 Bottom merged into one picker called "Swim / lingerie style".
+- **Activewear** → O5 Shoes locked to "Athletic shoes"; outfit auto-filtered to sport options.
+- **Kids & baby** → adult-only options hidden (no heels, no evening, no bold makeup).
+
+---
+
+## Saved data shape (for reference)
 
 ```jsonc
-"outfit_direction": {
-  "vibe": "Quiet luxury",
-  "silhouette": "Relaxed & flowy",
-  "top": "Knit sweater",
-  "bottom": "Trousers / tailored pants",
-  "footwear": "Loafers / flats",
-  "outerwear": "Wool coat",
-  "palette": ["Beige / camel", "Cream", "Brown / chocolate"],
-  "fabrics": ["Wool / cashmere", "Cotton"],
-  "accessories": ["Watch", "Delicate jewelry"],
-  "hair": "Natural down",
-  "makeup": "Soft natural",
-  "notes": "Sleeves pushed up, coat draped over shoulders",
-  "locked_fields": ["footwear"],
-  "collapsed_sections": []
+{
+  "category": { "family": "Fashion", "subcategory": "Dresses" },
+  "scene_basics": { /* Q2.1 – Q2.8 answers */ },
+  "category_specific": { /* Step 3 answers for that subcategory */ },
+  "people": { /* P1 – P5, null if product only */ },
+  "outfit": { /* O1 – O12, null if product only or hands only */ },
+  "camera": { /* C1 – C4 */ },
+  "name": "Sunlit linen dress on rooftop",
+  "cover_image_url": null
 }
 ```
 
----
-
-## G.4 — Prompt builder consumption
-
-`buildPrompt(answers, outfit_direction, taxonomyEntry)` injects a dedicated OUTFIT block after the SUBJECT block:
-
-```text
-OUTFIT — wardrobe must read as {vibe}, {silhouette} silhouette.
-Top: {top}. Bottom: {bottom}. Footwear: {footwear}. Outerwear: {outerwear or "none"}.
-Palette: {palette joined}. Fabric: {fabrics joined}.
-Accessories: {accessories joined or "none"}. Hair: {hair}. Makeup: {makeup}.
-{notes if present}
-SAUGIKLIS: do not add logos, do not add text on garments, do not change product colour, no fantasy garments.
-```
-
-Auto-applied saugikliai:
-- Footwear category → "shoes fully visible, hem above ankle, no foot crop"
-- Jewelry category → "neck, ears, and décolletage unobstructed"
-- Eyewear category → "no other eyewear on face, hair away from temples"
-- Beauty / Fragrance → "wardrobe is supporting; do not compete with product colour"
-- Kids → "age-appropriate styling, no adult fashion cues"
-
----
-
-## G.5 — Reuse rules
-
-- Saved `outfit_direction` is replayed exactly when the scene is reused in Visual Studio — no re-asking.
-- A small "Outfit" chip appears beside the scene summary card in Step 4 and on the tile in My Scenes, showing vibe + palette swatches.
-- Editing a saved scene re-opens the questionnaire pre-filled — users iterate, not start over.
-- If `people_mode` is later flipped to "product only", `outfit_direction` is preserved on the record but ignored by the prompt builder; flipping people back on restores it instantly.
+Every answer is plain text the user picked, so the prompt builder can rebuild the scene description from these values without needing to ask again.
