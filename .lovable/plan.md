@@ -1,44 +1,43 @@
 # Brand Models — clean mode chooser (VOVV style)
 
-Strip the busy two-card layout. Match the rest of the app: light surface, minimal copy, no "Best for · …" microcopy, no chunky tinted icon tiles, no big headings competing with the page title.
+Drop the lucide camera/wand icons entirely. They cheapen the page. Use typography and a single quiet visual cue per card instead — the rest of the VOVV app does the same (Workflows, Library, Visual Studio cards rely on type and whitespace, not icon tiles).
 
 ## What changes
 
-**File:** `src/pages/BrandModels.tsx` (chooser block only, lines ~905-950). Nothing else in the flow changes — reference path, manual path, consent, generation, edge function all stay as they are.
+**File:** `src/pages/BrandModels.tsx`, chooser block only (~lines 905-950). Reference panel, manual panel, consent, double-confirm dialog, edge function — all untouched.
 
-## New chooser
+## New chooser — typographic, no icons
 
-Remove the in-panel `<h2>How do you want to create this model?</h2>` and subtitle entirely. The page already has the title "New brand model" and the subtitle "Describe the person you want VOVV.AI to create" — a second heading is noise.
+Remove the in-panel `<h2>How do you want to create this model?</h2>` and its subtitle. The page header already says it.
 
-Render just two minimal options, centered, max-w-2xl:
+Two cards, equal weight, centered:
 
 ```text
-┌───────────────────────────┐  ┌───────────────────────────┐
-│  Camera                   │  │  Wand                     │
-│                           │  │                           │
-│  Reference photo          │  │  Manual                   │
-│  Re-photograph a person   │  │  Generate from scratch    │
-└───────────────────────────┘  └───────────────────────────┘
+┌─────────────────────────────┐  ┌─────────────────────────────┐
+│ 01 / Reference              │  │ 02 / Manual                 │
+│                             │  │                             │
+│ Re-photograph a real        │  │ Generate a new model        │
+│ person from a photo         │  │ from attributes             │
+│                             │  │                             │
+│                      Start →│  │                      Start →│
+└─────────────────────────────┘  └─────────────────────────────┘
 ```
 
 Per card:
-- `rounded-xl border border-border/50 bg-card p-5`
-- hover: `hover:border-foreground/30` (no shadow, no scale)
-- small 18px icon, `text-muted-foreground`, no tinted background tile
-- title: `text-sm font-medium` (not `font-semibold text-base`)
-- one-line description: `text-xs text-muted-foreground` — that's it
-- no "Best for · …" line, no uppercase tracking-widest microcopy
+- `rounded-2xl border border-border/50 bg-card p-8 min-h-[180px] flex flex-col justify-between`
+- hover: `hover:border-foreground/40 transition-colors duration-200` — no shadow, no lift, no scale
+- top-left eyebrow: `text-[10px] tracking-[0.2em] uppercase text-muted-foreground` — `01 / Reference`, `02 / Manual`
+- title beneath (next visual line): `text-[15px] font-medium text-foreground leading-snug` — one short sentence, no period
+- bottom-right: `text-xs text-muted-foreground group-hover:text-foreground` "Start →"
+- No icons. No tinted background tile. No "Best for · …" line.
 
-Grid: `grid grid-cols-2 gap-3 max-w-2xl mx-auto`. Tighter than before.
+Grid: `grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto`.
 
-## Copy (exact)
+## Copy (exact, no terminal periods per core memory)
 
-- Reference photo — "Re-photograph a real person from a photo."
-- Manual — "Generate a new model from attributes."
-
-No terminal periods if the rest of the app drops them (per core memory). Confirm against neighboring panels in this page and match.
+- Eyebrow `01 / Reference` — title `Re-photograph a real person from a photo`
+- Eyebrow `02 / Manual` — title `Generate a new model from attributes`
 
 ## Out of scope
 
-- Mode chooser only. Reference panel, manual panel, consent checkbox, double-confirm dialog, edge function, variation picker — all unchanged.
-- No new components, no new icons.
+Mode chooser only. Everything downstream (panels, consent, generation, variation picker) stays as-is.
