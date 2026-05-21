@@ -20,6 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from '@/components/ui/select';
 import { toast } from '@/lib/brandedToast';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -230,16 +231,24 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [distinctive, setDistinctive] = useState('');
 
   // Reference toggle
-  const [useReference, setUseReference] = useState(false);
+  
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [referenceNotes, setReferenceNotes] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
+
+  // Creation-mode chooser (only used by the sections layout)
+  const [creationMode, setCreationMode] = useState<'chooser' | 'reference' | 'manual'>(
+    layout === 'sections' ? 'chooser' : 'manual'
+  );
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
   const [variations, setVariations] = useState<string[]>([]);
+  const [failedCount, setFailedCount] = useState(0);
   const [pendingMeta, setPendingMeta] = useState<{ metadata: any; name: string; sourceImageUrl?: string } | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
   const [publishing, setPublishing] = useState(false);
@@ -247,6 +256,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const queryClient = useQueryClient();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const processFile = async (file: File) => {
     const reader = new FileReader();
@@ -264,7 +274,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   // Clipboard paste support for reference image
   useEffect(() => {
-    if (!useReference || previewUrl) return;
+    if (creationMode !== 'reference' || previewUrl) return;
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -279,49 +289,62 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [useReference, previewUrl]);
+  }, [creationMode, previewUrl]);
 
   const trimmedName = modelName.trim();
+  const isReferenceMode = creationMode === 'reference';
   const validationError: string | null =
     trimmedName.length < 2 ? 'Add a model name (min 2 characters)' :
+    isReferenceMode && !uploadedUrl ? 'Upload a reference photo to continue' :
     isUploading ? 'Waiting for upload to finish…' :
-    uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
+    isReferenceMode && uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
     !makePublic && balance < 20 ? 'Not enough credits — top up to continue' :
     null;
-  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!uploadedUrl || termsAccepted);
+  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted));
   const canGenerate = !generating && !validationError;
 
-  const handleGenerate = async () => {
-    if (!canGenerate) return;
+  const SKIP_KEY = 'vovv:brand-model-confirm-skip';
+
+  const buildGenerateBody = () => {
+    const finalName = modelName.trim() || `${gender} Model`;
+    if (isReferenceMode && uploadedUrl) {
+      return {
+        mode: 'reference',
+        name: finalName,
+        imageUrl: uploadedUrl,
+        notes: referenceNotes.trim() || undefined,
+        ...(makePublic ? { makePublic: true } : {}),
+      };
+    }
+    return {
+      mode: 'generator',
+      name: finalName,
+      description: {
+        gender, age: age[0], ethnicity, morphology,
+        eyeColor, hairStyle, hairColor, skinTone, faceShape,
+        expression, facialHair: gender === 'Male' ? facialHair : '',
+        distinctive,
+      },
+      ...(makePublic ? { makePublic: true } : {}),
+    };
+  };
+
+  const runGenerate = async () => {
     setGenerating(true);
     try {
-      const finalName = modelName.trim() || `${gender} Model`;
-      const body: any = {
-        mode: useReference && uploadedUrl ? 'combined' : 'generator',
-        name: finalName,
-        description: {
-          gender, age: age[0], ethnicity, morphology,
-          eyeColor, hairStyle, hairColor, skinTone, faceShape,
-          expression, facialHair: gender === 'Male' ? facialHair : '',
-          distinctive,
-        },
-      };
-      if (useReference && uploadedUrl) {
-        body.imageUrl = uploadedUrl;
-      }
-      if (makePublic) {
-        body.makePublic = true;
-      }
-
+      const body = buildGenerateBody();
       const { data, error } = await supabase.functions.invoke('generate-user-model', { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Show variation picker for all flows
       if (data?.variations) {
         setVariations(data.variations);
-        setPendingMeta({ metadata: data.metadata, name: data.name || finalName, sourceImageUrl: data.sourceImageUrl });
+        setFailedCount(typeof data.failed_count === 'number' ? data.failed_count : 0);
+        setPendingMeta({ metadata: data.metadata, name: data.name || (body as any).name, sourceImageUrl: data.sourceImageUrl });
         setSelectedVariation(0);
+        if (data.partial) {
+          toast.error(`Only ${data.variations.length} of 3 variations succeeded — you can regenerate the missing ones.`);
+        }
         return;
       }
 
@@ -331,12 +354,48 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
+      setReferenceNotes('');
       setMakePublic(false);
       onSuccess();
     } catch (err: any) {
       toast.error(err.message || 'Generation failed');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!canGenerate) return;
+    // Reference mode requires a second confirmation step (skippable per-session).
+    if (isReferenceMode && uploadedUrl) {
+      const skip = typeof window !== 'undefined' && sessionStorage.getItem(SKIP_KEY) === '1';
+      if (!skip) { setConfirmOpen(true); return; }
+    }
+    await runGenerate();
+  };
+
+  const handleRegenerateMissing = async () => {
+    if (regenerating) return;
+    setRegenerating(true);
+    try {
+      const body = buildGenerateBody();
+      const { data, error } = await supabase.functions.invoke('generate-user-model', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const newVars: string[] = data?.variations || [];
+      // Fill empty slots until we have 3
+      const merged = [...variations];
+      for (const v of newVars) {
+        if (merged.length >= 3) break;
+        merged.push(v);
+      }
+      setVariations(merged);
+      setFailedCount(Math.max(0, 3 - merged.length));
+      if (merged.length === 3) toast.success('All 3 variations ready.');
+    } catch (err: any) {
+      toast.error(err.message || 'Regeneration failed');
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -417,40 +476,66 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           <div className="text-center space-y-1.5">
             <h3 className="font-semibold text-lg">Choose the Best Variation</h3>
             <p className="text-xs text-muted-foreground">
-              {variations.length} variations generated · Select your favorite and publish
+              {failedCount > 0
+                ? `${variations.length} of 3 variations generated — regenerate to fill the missing slot${failedCount > 1 ? 's' : ''}.`
+                : `${variations.length} variations generated · Select your favorite and publish`}
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 sm:gap-5 mt-2">
-            {variations.map((url, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSelectedVariation(i)}
-                className={cn(
-                  "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-200",
-                  selectedVariation === i
-                    ? "border-primary shadow-lg ring-2 ring-primary/20 scale-[1.02]"
-                    : "border-border/60 hover:border-border opacity-80 hover:opacity-100"
-                )}
-              >
-                <img src={url} alt={`Variation ${i + 1}`} className="w-full h-full object-cover" />
-                {selectedVariation === i && (
-                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
-                    <Check className="h-3.5 w-3.5" />
+            {Array.from({ length: 3 }).map((_, i) => {
+              const url = variations[i];
+              if (!url) {
+                return (
+                  <div
+                    key={`empty-${i}`}
+                    className="relative aspect-[3/4] rounded-xl border-2 border-dashed border-border/60 bg-muted/30 flex flex-col items-center justify-center gap-2 text-muted-foreground"
+                  >
+                    <Wand2 className="h-5 w-5 opacity-60" />
+                    <span className="text-[10px] uppercase tracking-wider">Generation failed</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-1 h-7 text-[11px]"
+                      onClick={handleRegenerateMissing}
+                      disabled={regenerating}
+                    >
+                      {regenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Regenerate'}
+                    </Button>
                   </div>
-                )}
-                <div className="absolute bottom-2 left-2">
-                  <Badge className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm",
-                    selectedVariation === i ? "bg-primary/90 text-primary-foreground" : "bg-background/80 text-foreground"
-                  )}>
-                    #{i + 1}
-                  </Badge>
-                </div>
-              </button>
-            ))}
+                );
+              }
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSelectedVariation(i)}
+                  className={cn(
+                    "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-200",
+                    selectedVariation === i
+                      ? "border-primary shadow-lg ring-2 ring-primary/20 scale-[1.02]"
+                      : "border-border/60 hover:border-border opacity-80 hover:opacity-100"
+                  )}
+                >
+                  <img src={url} alt={`Variation ${i + 1}`} className="w-full h-full object-cover" />
+                  {selectedVariation === i && (
+                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-2 left-2">
+                    <Badge className={cn(
+                      "text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm",
+                      selectedVariation === i ? "bg-primary/90 text-primary-foreground" : "bg-background/80 text-foreground"
+                    )}>
+                      #{i + 1}
+                    </Badge>
+                  </div>
+                </button>
+              );
+            })}
           </div>
+
 
           <div className="flex gap-3 pt-4 border-t border-border/50">
             <Button
@@ -643,11 +728,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <ImagePlus className="h-4 w-4 text-muted-foreground" />
-        <Label className="text-xs font-medium">Reference image <span className="text-muted-foreground/60 font-normal">· optional</span></Label>
+        <Label className="text-xs font-medium">Reference photo</Label>
       </div>
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Upload a photo to guide the AI. The generated model will resemble the person in the image while using your settings above.
+        The face in this photo will be used as-is. VOVV.AI re-photographs the same person as a polished studio portrait — identity, age, and ethnicity are preserved from the image, not from form inputs.
       </p>
+
 
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
@@ -694,13 +780,27 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         </div>
       )}
 
+      {uploadedUrl && (
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Notes <span className="text-muted-foreground/50 normal-case font-normal">· optional</span></Label>
+          <textarea
+            value={referenceNotes}
+            onChange={(e) => setReferenceNotes(e.target.value.slice(0, 400))}
+            placeholder="e.g. tighter crop, warmer tone, more candid expression"
+            rows={2}
+            className="w-full text-sm rounded-md border border-input bg-background px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <p className="text-[10px] text-muted-foreground/60">Styling notes only — face stays exactly as in the photo.</p>
+        </div>
+      )}
+
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-destructive/90">
           <ShieldCheck className="h-3.5 w-3.5" />
           Content &amp; rights policy
         </div>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload.
+          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload and every image generated from it.
         </p>
       </div>
 
@@ -721,11 +821,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           className="mt-0.5"
         />
         <span className={cn("text-[11px] leading-relaxed", uploadedUrl ? "text-muted-foreground" : "text-muted-foreground/70")}>
-          I confirm I own or have explicit permission to use this image, and I accept full responsibility under the VOVV.AI Content Policy.
+          I confirm I have the right to use this reference photo, and I take full responsibility for this image and every model image and downstream generation created from it. I agree to VOVV.AI's <a href="/terms" target="_blank" rel="noopener" className="underline hover:text-foreground">Terms of Service</a>.
         </span>
       </div>
     </div>
   );
+
 
   const adminBlock = isAdmin ? (
     <div
@@ -799,30 +900,126 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   // ── Sections layout (premium wizard) ──
   if (layout === 'sections') {
+    // Step 0 — mode chooser. Two side-by-side cards so the two paths are visibly
+    // distinct and we never mix reference photos with manual chip inputs.
+    if (creationMode === 'chooser') {
+      return (
+        <div className="space-y-6 pb-32">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <h2 className="text-xl font-semibold tracking-tight">How do you want to create this model?</h2>
+            <p className="text-sm text-muted-foreground">Pick a starting point — you can always switch.</p>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+            <button
+              type="button"
+              onClick={() => setCreationMode('reference')}
+              className="group text-left p-6 rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200"
+            >
+              <div className="rounded-lg bg-primary/10 p-2.5 w-fit mb-4 group-hover:bg-primary/15 transition-colors">
+                <Camera className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold text-base mb-1.5">From a reference photo</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                Upload a face. VOVV.AI re-photographs that exact person as a studio portrait.
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                Best for · founders, real people, models you already work with
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCreationMode('manual')}
+              className="group text-left p-6 rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200"
+            >
+              <div className="rounded-lg bg-primary/10 p-2.5 w-fit mb-4 group-hover:bg-primary/15 transition-colors">
+                <Wand2 className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold text-base mb-1.5">Configure manually</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                Pick gender, age, ethnicity, body type, hair, expression. VOVV.AI generates from scratch.
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                Best for · inventing a new on-brand model
+              </p>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Switch-mode link
+    const switchModeLink = (
+      <button
+        type="button"
+        onClick={() => {
+          setCreationMode('chooser');
+          setPreviewUrl(null);
+          setUploadedUrl(null);
+          setTermsAccepted(false);
+          setReferenceNotes('');
+        }}
+        className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
+      >
+        ← Switch mode
+      </button>
+    );
 
     return (
       <div className="space-y-5 pb-32">
-        <Section title="Essentials">{essentialsBlock}</Section>
+        <div className="flex items-center justify-between">
+          {switchModeLink}
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+            {isReferenceMode ? 'From reference photo' : 'Manual configuration'}
+          </span>
+        </div>
 
-        <Collapsible>
-          <Card className="p-4 sm:p-6 border-border/60">
-            <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
-              <div className="flex items-baseline gap-3">
-                <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">Appearance</h3>
-                <span className="text-[10px] text-muted-foreground/70">All optional</span>
+        {isReferenceMode ? (
+          <>
+            <Section title="Model name">
+              <div className="space-y-1.5">
+                <div className="flex items-baseline justify-between">
+                  <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Name this model</Label>
+                  <span className={cn(
+                    "text-[10px] tabular-nums",
+                    modelName.length >= 28 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50"
+                  )}>{modelName.length}/32</span>
+                </div>
+                <Input
+                  placeholder="e.g. Sarah, Alex, Brand Ambassador"
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  maxLength={32}
+                  className="h-9"
+                />
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="mt-5 pt-5 border-t border-border/50">
-                {appearanceBlock}
-              </div>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+            </Section>
+            <Section title="Reference">{referenceBlock}</Section>
+          </>
+        ) : (
+          <>
+            <Section title="Essentials">{essentialsBlock}</Section>
 
-        <Section title="Reference" hint="Optional">{referenceBlock}</Section>
+            <Collapsible>
+              <Card className="p-4 sm:p-6 border-border/60">
+                <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
+                  <div className="flex items-baseline gap-3">
+                    <h3 className="text-[11px] font-semibold uppercase tracking-widest text-foreground">Appearance</h3>
+                    <span className="text-[10px] text-muted-foreground/70">All optional</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="mt-5 pt-5 border-t border-border/50">
+                    {appearanceBlock}
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          </>
+        )}
+
 
         <Section title="Summary">
           <div>
@@ -903,6 +1100,31 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           </div>
         </div>
         <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Generate from this reference photo?"
+          description={
+            <span className="text-sm leading-relaxed">
+              You confirm you have the right to use this photo, and you take full responsibility for every image generated from it — including misuse, impersonation, or rights claims. VOVV.AI stores the reference and the generated images under your account.
+              <br /><br />
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer mt-2">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5"
+                  onChange={(e) => {
+                    if (e.target.checked) sessionStorage.setItem(SKIP_KEY, '1');
+                    else sessionStorage.removeItem(SKIP_KEY);
+                  }}
+                />
+                Don't ask again this session
+              </label>
+            </span>
+          }
+          confirmLabel="Yes, generate"
+          cancelLabel="Cancel"
+          onConfirm={async () => { setConfirmOpen(false); await runGenerate(); }}
+        />
       </div>
     );
   }

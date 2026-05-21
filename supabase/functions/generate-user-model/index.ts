@@ -313,33 +313,39 @@ serve(async (req) => {
     let sourceImageUrl: string;
     let referenceInlineData: { mimeType: string; data: string } | undefined;
 
-    if (mode === "reference") {
+    // ── Identity-lock prompt used whenever a reference image is supplied.
+    //    The face comes entirely from the photo (inlineData) — we never
+    //    paraphrase the appearance into text. Optional user notes appended last. ──
+    const buildIdentityLockPrompt = (notes?: string) => {
+      const base = `Create a polished studio portrait of the EXACT person shown in the reference image. Preserve their identity completely — same face, bone structure, skin tone, hair, eye color, age, ethnicity, and body type. This is the same human being photographed again, not a similar-looking person, not a lookalike, not a stylized version.
+
+Studio setup: seamless light grey (#E8E8E8) paper backdrop, soft three-point Profoto lighting with a large key softbox camera-left, gentle fill, subtle rim light. Shot on Canon EOS R5 with 85mm lens at f/2.8, head-and-shoulders framing, eye-level, sharp focus on the eyes, shallow background separation. Wardrobe: clean neutral basics (white tee or simple knit top), nothing branded. Expression: relaxed, natural, looking directly at camera.
+
+Skin retains real texture with visible pores — no smoothing, no beautification, no age shift, no ethnicity shift, no AI glow, no stylization, no uncanny valley. Editorial fashion photography, color-accurate, neutral white balance, 8K resolution.`;
+      const trimmed = (notes || "").trim().slice(0, 400);
+      return trimmed ? `${base}\n\nAdditional notes from the user (apply only if compatible with preserving the person's identity): ${trimmed}` : base;
+    };
+
+    if (mode === "reference" || (mode === "combined" && body.imageUrl)) {
       const imageUrl = body.imageUrl;
       if (!imageUrl) throw new Error("imageUrl is required");
 
-      console.log("Analyzing reference image...");
-      metadata = await analyzeReferenceImage(imageUrl, LOVABLE_KEY);
+      // Run Flash once — used ONLY for saved-model metadata (name/gender/etc).
+      // The appearance_description it returns is intentionally NOT used in the image prompt.
+      console.log("Analyzing reference image for metadata...");
+      try {
+        metadata = await analyzeReferenceImage(imageUrl, LOVABLE_KEY);
+      } catch (e) {
+        console.warn("Metadata analysis failed, using fallbacks:", e);
+        metadata = { name: body.name || "Brand Model", gender: "female", body_type: "average", ethnicity: "", age_range: "adult" };
+      }
 
-      const genderWord = metadata.gender === "male" ? "male" : "female";
-      const refClothing = genderWord === 'male' ? 'simple white t-shirt' : 'simple white cami top';
-      generatePrompt = `Ultra-realistic professional fashion model studio portrait photograph, shot on Canon EOS R5 with 85mm f/1.4 lens. ${genderWord} model. Wearing a ${refClothing}. ${metadata.appearance_description}. Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance. Light grey (#E8E8E8) seamless paper studio background, soft diffused three-point Profoto lighting setup, subtle catch light in eyes, sharp focus on facial features at f/2.8, natural skin texture with visible pores, no retouching, no airbrushing, no AI artifacts, no uncanny valley. Editorial fashion photography, close-up head-and-shoulders framing, face fills most of frame, subject centered, looking at camera with a natural confident expression. Color-accurate, neutral white balance. 8K resolution.`;
+      generatePrompt = buildIdentityLockPrompt(body.notes);
       sourceImageUrl = imageUrl;
       referenceInlineData = await urlToInlineData(imageUrl);
 
-    } else if (mode === "combined") {
-      const d = body.description;
-      if (!d) throw new Error("description is required for combined mode");
-      metadata = extractMetadata(d);
-      generatePrompt = buildPromptFromDescription(d);
-      const imageUrl = body.imageUrl;
-      if (imageUrl) {
-        generatePrompt += " Generate a model that closely resembles the reference image provided. Match the facial structure, skin tone, and overall appearance while applying the described attributes.";
-        sourceImageUrl = imageUrl;
-        referenceInlineData = await urlToInlineData(imageUrl);
-      } else {
-        sourceImageUrl = "generator";
-      }
     } else {
+      // Pure generator mode — unchanged.
       const d = body.description;
       if (!d) throw new Error("description is required for generator mode");
       metadata = extractMetadata(d);
@@ -347,50 +353,58 @@ serve(async (req) => {
       sourceImageUrl = "generator";
     }
 
+    // ── Per-slot retry: each of the 3 slots gets up to 2 attempts. ──
+    const generateOneWithRetry = async (slot: number): Promise<string> => {
+      let lastErr: unknown = null;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const b64 = await generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY);
+          return await uploadBase64Image(supabaseAdmin, user.id, b64);
+        } catch (e) {
+          lastErr = e;
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error(`Slot ${slot} attempt ${attempt} failed:`, msg);
+          if (msg === "AI_CREDITS_EXHAUSTED") throw e; // no point retrying
+          if (attempt < 2) await new Promise((r) => setTimeout(r, 1500));
+        }
+      }
+      throw lastErr instanceof Error ? lastErr : new Error("Generation failed");
+    };
+
+
     // ─── Admin public: generate 3 variations ───
     if (makePublic) {
-      console.log("Generating 3 public model variations in parallel...");
-      const results = await Promise.allSettled(
-        Array.from({ length: 3 }, () =>
-          generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY)
-            .then((b64) => uploadBase64Image(supabaseAdmin, user.id, b64))
-        )
-      );
-
-      const variations = results
-        .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-        .map((r) => r.value);
-
+      console.log("Generating 3 public model variations in parallel (with retry)...");
+      const results = await Promise.allSettled([0, 1, 2].map((i) => generateOneWithRetry(i)));
+      const variations = results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value);
+      const failed_count = 3 - variations.length;
       if (variations.length === 0) throw new Error("All 3 generation attempts failed. Please try again.");
 
-      return new Response(JSON.stringify({ variations, metadata, name: body.name || metadata.name }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({
+        variations,
+        metadata,
+        name: body.name || metadata.name,
+        partial: failed_count > 0,
+        failed_count,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ─── Regular user: generate 3 variations (no credits deducted yet) ───
-    console.log("Generating 3 brand model variations in parallel...");
-    const results = await Promise.allSettled(
-      Array.from({ length: 3 }, () =>
-        generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY)
-          .then((b64) => uploadBase64Image(supabaseAdmin, user.id, b64))
-      )
-    );
-
-    const userVariations = results
-      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-      .map((r) => r.value);
-
+    console.log("Generating 3 brand model variations in parallel (with retry)...");
+    const results = await Promise.allSettled([0, 1, 2].map((i) => generateOneWithRetry(i)));
+    const userVariations = results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value);
+    const failed_count = 3 - userVariations.length;
     if (userVariations.length === 0) throw new Error("All generation attempts failed. Please try again.");
 
     return new Response(JSON.stringify({
       variations: userVariations,
       metadata,
       name: body.name || metadata.name,
-      sourceImageUrl: sourceImageUrl,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      sourceImageUrl,
+      partial: failed_count > 0,
+      failed_count,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     console.error("generate-user-model error:", e);
     const msg = e instanceof Error ? e.message : "Unknown error";
