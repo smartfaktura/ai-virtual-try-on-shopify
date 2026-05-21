@@ -1,53 +1,47 @@
-# Strengthen Terms for face/likeness uploads + add dedicated signup consent
+# Strengthen Terms of Service for face / likeness uploads
 
-The "Reference photo → Generate a model from a real person → Upload a face" flow is our highest legal-risk feature: GDPR biometric data, right-of-publicity, deepfake/IPED laws, NCII risk, minors. Current Terms cover this only with a one-liner ("Use real people without consent"). We need explicit, enforceable clauses **and** a separate, unmissable consent at signup so we have a clean paper trail.
+The "Reference photo → Generate a model from a real person → Upload a face" flow is our highest legal-risk feature: GDPR biometric data, right-of-publicity, deepfake / NCII laws, minors. Today the Terms cover this with a single bullet ("Use real people without consent"). We harden the **main Terms of Service** so users explicitly accept these rules at signup via the existing single checkbox — no extra checkbox added.
 
-## 1. Add a new dedicated section to `TermsContent.tsx`
+## 1. Tighten existing §9 "Acceptable Use"
 
-Insert a new **Section 10 — Face, Likeness & Biometric Uploads (Critical)** between current §9 (Acceptable Use) and current §10 (Your Responsibility). Renumber subsequent sections. Mirror the same section in `PrivacyContent.tsx` under a "Biometric & Likeness Data" heading so GDPR Art. 9 is covered.
+Replace the soft bullet "Use real people without consent" with a stronger, itemized list (still inside §9):
 
-Content covers, in plain English:
+- Upload, generate, or distribute imagery of any real person without that person's documented, explicit consent
+- Upload faces of minors (under 18) under any circumstance
+- Upload faces of public figures, celebrities, politicians, or any third party you do not have rights to
+- Create sexual, intimate, nude, or suggestive content depicting a real person (strictly prohibited — may be reported to authorities)
+- Create content intended to defame, harass, impersonate, blackmail, or deceive
+- Create political disinformation, election-influencing content, or fraudulent material
+- Use generations in any way that breaches right-of-publicity, personality rights, defamation, or data-protection laws in any jurisdiction
 
-- The "Reference photo" feature lets you upload a face to generate an AI model resembling that person.
-- **You warrant** that for every face you upload you either: (a) are that person, or (b) hold the person's explicit, informed, written consent to upload their face to an AI generation service, create AI imagery resembling them, and use those generations commercially.
-- **You will NOT** upload faces of: minors (under 18), public figures / celebrities / politicians without rights, deceased persons without estate consent, or any person who has asked you to stop.
-- **You will NOT** use generations to: impersonate, defame, harass, create sexual or intimate content of a real person (NCII / "deepfake porn" — strictly prohibited and reported to authorities), influence elections, commit fraud, or breach right of publicity / personality rights in any jurisdiction.
-- Uploaded face images are treated as **biometric / special-category data** under GDPR Art. 9. Lawful basis is your **explicit consent** (and the consent of the data subject if different). You can withdraw and request deletion at any time via hello@vovv.ai.
-- We may, at our sole discretion, **block, remove, refuse to generate, suspend the account, and report to law enforcement** any upload that appears to violate this section, with no refund.
-- You **indemnify** VOVV.AI in full for any claim, fine, regulatory action, or damages (including GDPR Art. 82, right-of-publicity, defamation, IP, NCII statutes such as US TAKE IT DOWN Act, UK Online Safety Act, EU AI Act Art. 50) arising from a face or likeness you uploaded.
-- Liability cap in §17 does **not** apply to your indemnity under this section (carve-out, standard practice).
+## 2. Add a new dedicated section: §10 — Face, Likeness & Biometric Uploads (Critical)
 
-Also tighten existing §9 "Acceptable Use" bullet from "Use real people without consent" → "Upload, generate, or distribute imagery of any real person without that person's documented, explicit consent — see §10".
+Inserted between current §9 and current §10 (existing sections renumber by +1). Plain-English content:
 
-## 2. Add a second mandatory checkbox at signup
+- The Reference Photo feature lets you upload a face so we can generate an AI model resembling that person. By using it you make the warranties below.
+- **You warrant** that for every face you upload either (a) you are that person, or (b) you hold that person's explicit, informed, written consent to upload their face to an AI generation service, create AI imagery resembling them, and use those generations commercially.
+- Uploaded face images are **biometric / special-category data** under GDPR Art. 9. The lawful basis is your explicit consent (and the data subject's, if different). The data subject may withdraw consent and request deletion at any time via hello@vovv.ai.
+- We may, at our sole discretion and without refund, **block, remove, refuse to generate, suspend, or terminate** any account and **report to law enforcement** any upload that appears to violate this section.
+- You **fully indemnify** VOVV.AI for any claim, fine, regulatory action, or damages — including under GDPR Art. 82, right-of-publicity / personality-rights laws, defamation, IP, the US TAKE IT DOWN Act, the UK Online Safety Act, and EU AI Act Art. 50 — arising from a face or likeness you uploaded or a generation you created.
+- The liability cap in §18 (renumbered) does **not** apply to amounts you owe under this indemnity (standard carve-out).
 
-In `src/pages/Auth.tsx` (signup branch only), add a **second required checkbox** below the existing Terms checkbox, separate from it so the consent is itemized and timestamped distinctly:
+## 3. Renumber and adjust references
 
-> I understand that if I upload a photo of a real person, I am solely responsible for having that person's explicit consent, that I will never upload faces of minors or non-consenting individuals, and that creating sexual, harassing, or deceptive content of real people is strictly prohibited.
+Current §10–§24 shift to §11–§25. Update the in-text reference inside §17 (Limitation of Liability — becomes §18) so any cross-reference still resolves correctly. Privacy Policy gets a short matching paragraph under a "Biometric & Likeness Data" heading pointing back to Terms §10.
 
-State: `likenessAccepted` / `setLikenessAccepted`, validated in the same `errs` block, error key `likeness`. Submit is blocked unless both checkboxes are ticked. Marketing opt-in stays optional and unchanged.
+## 4. No UI / flow changes
 
-Visually it sits between the Terms checkbox and the Marketing opt-in, same styling.
-
-## 3. Persist the consent (audit trail)
-
-When signup succeeds, write a row to a small new table `user_consents` capturing:
-
-- `user_id`, `terms_version` (e.g. `'2026-05-21'`), `likeness_version`, `marketing_opt_in`, `ip` (from request header), `user_agent`, `accepted_at` (now).
-
-Migration adds the table with RLS: users can `INSERT` their own row, `SELECT` their own rows; no `UPDATE` / `DELETE`. Service role bypasses. Bump a `TERMS_VERSION` constant in a new `src/lib/legal-versions.ts` so future re-acceptance is easy.
-
-Insert happens client-side right after `supabase.auth.signUp` returns a user, in the existing signup handler in `Auth.tsx`.
+- Signup keeps its single existing "I agree to the Terms of Service and Privacy Policy" checkbox — no second checkbox added.
+- BrandModels reference-photo flow itself is not changed in this pass.
+- No DB migration, no audit-log table, no version constant — purely a legal-copy update.
 
 ## Technical details
 
-- Files edited: `src/components/legal/TermsContent.tsx`, `src/components/legal/PrivacyContent.tsx`, `src/pages/Auth.tsx`.
-- Files added: `src/lib/legal-versions.ts`, one migration creating `public.user_consents` + RLS policies + index on `(user_id, accepted_at desc)`.
-- No changes to the BrandModels reference-photo flow itself in this pass — pure legal hardening + signup consent + audit row.
-- No changes to login flow (existing users won't be re-prompted now; we can add a re-acceptance modal in a follow-up if you want).
+- Files edited: `src/components/legal/TermsContent.tsx`, `src/components/legal/PrivacyContent.tsx`.
+- No other files touched. No schema, no Auth.tsx changes.
 
 ## Out of scope
 
-- Re-prompting existing users to re-accept new Terms (can do as a follow-up modal gated on `TERMS_VERSION`).
-- In-flow consent inside the reference-photo upload step itself (recommended next step, but separate task).
+- Re-prompting existing users to re-accept the updated Terms.
+- In-flow consent inside the reference-photo upload step (recommended as a follow-up).
 - Translations.
