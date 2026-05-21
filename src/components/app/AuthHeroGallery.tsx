@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const FALLBACK_GALLERY_IMAGES = [
-  getOptimizedUrl(getLandingAssetUrl('auth/auth-hero.jpg'), { quality: 60 }),
-  getOptimizedUrl(getLandingAssetUrl('showcase/fashion-camel-coat.png'), { quality: 60 }),
-  getOptimizedUrl(getLandingAssetUrl('showcase/skincare-serum-marble.png'), { quality: 60 }),
-  getOptimizedUrl(getLandingAssetUrl('showcase/home-candle-evening.png'), { quality: 60 }),
-  getOptimizedUrl(getLandingAssetUrl('showcase/food-cocktail-bar.png'), { quality: 60 }),
-];
+const CURATED_IMAGES = [
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776018020221-aehe8n.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776102176417-iih747.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776667380105-z2dtni.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1777996832895-0e40jt.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/0544388b-9cb9-4a2d-b101-c8c85640e67e.png',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776689317300-luvmhd.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776689319074-0908hd.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776753256682-343bsf.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776842392261-39paz7.jpg',
+  'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776192312181-3v0u0t.jpg',
+].map((url) => getOptimizedUrl(url, { quality: 60 }));
 
 function shuffleArray<T>(arr: T[]): T[] {
   const shuffled = [...arr];
@@ -21,32 +24,8 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 export function AuthHeroGallery() {
-  const [images, setImages] = useState<string[]>(FALLBACK_GALLERY_IMAGES);
+  const [images] = useState<string[]>(() => shuffleArray(CURATED_IMAGES));
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    async function loadImages() {
-      try {
-        const { data, error } = await supabase.storage
-          .from('landing-assets')
-          .list('auth', { limit: 100 });
-        if (error || !data || data.length === 0) return;
-
-        const urls = data
-          .filter((f) => !f.id?.endsWith('/') && /\.(jpg|jpeg|png|webp)$/i.test(f.name))
-          .map((f) =>
-            getOptimizedUrl(getLandingAssetUrl(`auth/${f.name}`), { quality: 60 })
-          );
-
-        if (urls.length > 0) {
-          setImages(shuffleArray(urls));
-        }
-      } catch {
-        // Fallback to default images if storage fetch fails
-      }
-    }
-    loadImages();
-  }, []);
 
   useEffect(() => {
     if (images.length <= 1) return;
