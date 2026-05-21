@@ -103,6 +103,7 @@ export function TermsContent() {
         <li>• Create content intended to defame, harass, impersonate, blackmail, stalk, or deceive any person</li>
         <li>• Create political disinformation, election-influencing material, or fraudulent content</li>
         <li>• Use Generations in any way that breaches right-of-publicity, personality rights, defamation, or data-protection laws in any jurisdiction</li>
+        <li>• Upload reference, mood-board, or scene images that you do not own or have a clear licence to use as an AI reference, or that mimic another brand's identity in a misleading way (see §11)</li>
         <li>• Abuse, reverse-engineer, scrape, or otherwise exploit the Service</li>
       </ul>
       <p>We may suspend or terminate accounts at any time, without refund, for any suspected violation.</p>
