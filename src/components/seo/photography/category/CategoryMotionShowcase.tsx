@@ -135,6 +135,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     sub: 'Turn one frame photo into scroll-stopping motion for ads, reels and campaign film',
     aria: 'AI-generated eyewear motion clip',
   },
+  hoodies: {
+    eyebrow: 'Motion · Hoodies in movement',
+    heading: 'Your hoodie, brought to life',
+    sub: 'Turn one product photo into scroll-stopping motion for ads, reels and lifestyle loops',
+    aria: 'AI-generated hoodie motion clip',
+  },
 };
 
 /**
