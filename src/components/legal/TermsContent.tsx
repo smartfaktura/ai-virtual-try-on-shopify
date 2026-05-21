@@ -27,6 +27,8 @@ export function TermsContent() {
 
   return (
     <div className="prose prose-sm max-w-none text-muted-foreground [&_h2]:text-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-foreground [&_h3]:font-medium [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:mb-4 [&_ul]:space-y-1 [&_li]:ml-4">
+      <p className="text-xs uppercase tracking-wider text-muted-foreground/70 !mb-6">Last updated: 21 May 2026</p>
+
 
       <h2>1. Definitions</h2>
       <ul>
