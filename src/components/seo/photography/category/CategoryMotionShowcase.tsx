@@ -100,6 +100,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: ev5, poster: ep5 },
     { video: ev6, poster: ep6 },
   ],
+  hoodies: [
+    { video: hv1, poster: hp1 },
+    { video: hv2, poster: hp2 },
+    { video: hv3, poster: hp3 },
+    { video: hv4, poster: hp4 },
+    { video: hv5, poster: hp5 },
+    { video: hv6, poster: hp6 },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
