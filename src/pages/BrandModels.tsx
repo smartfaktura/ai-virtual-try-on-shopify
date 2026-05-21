@@ -904,50 +904,44 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     // distinct and we never mix reference photos with manual chip inputs.
     if (creationMode === 'chooser') {
       return (
-        <div className="space-y-6 pb-32">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <h2 className="text-xl font-semibold tracking-tight">How do you want to create this model?</h2>
-            <p className="text-sm text-muted-foreground">Pick a starting point — you can always switch.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+        <div className="pb-32">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             <button
               type="button"
               onClick={() => setCreationMode('reference')}
-              className="group text-left p-6 rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200"
+              className="group text-left rounded-2xl border border-border/50 bg-card p-8 min-h-[180px] flex flex-col justify-between hover:border-foreground/40 transition-colors duration-200"
             >
-              <div className="rounded-lg bg-primary/10 p-2.5 w-fit mb-4 group-hover:bg-primary/15 transition-colors">
-                <Camera className="h-5 w-5 text-primary" />
+              <div className="space-y-3">
+                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">01 / Reference</p>
+                <p className="text-[15px] font-medium text-foreground leading-snug">
+                  Re-photograph a real person from a photo
+                </p>
               </div>
-              <h3 className="font-semibold text-base mb-1.5">From a reference photo</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                Upload a face. VOVV.AI re-photographs that exact person as a studio portrait.
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
-                Best for · founders, real people, models you already work with
+              <p className="text-xs text-muted-foreground group-hover:text-foreground self-end transition-colors">
+                Start →
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => setCreationMode('manual')}
-              className="group text-left p-6 rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200"
+              className="group text-left rounded-2xl border border-border/50 bg-card p-8 min-h-[180px] flex flex-col justify-between hover:border-foreground/40 transition-colors duration-200"
             >
-              <div className="rounded-lg bg-primary/10 p-2.5 w-fit mb-4 group-hover:bg-primary/15 transition-colors">
-                <Wand2 className="h-5 w-5 text-primary" />
+              <div className="space-y-3">
+                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">02 / Manual</p>
+                <p className="text-[15px] font-medium text-foreground leading-snug">
+                  Generate a new model from attributes
+                </p>
               </div>
-              <h3 className="font-semibold text-base mb-1.5">Configure manually</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                Pick gender, age, ethnicity, body type, hair, expression. VOVV.AI generates from scratch.
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
-                Best for · inventing a new on-brand model
+              <p className="text-xs text-muted-foreground group-hover:text-foreground self-end transition-colors">
+                Start →
               </p>
             </button>
           </div>
         </div>
       );
     }
+
 
     // Switch-mode link
     const switchModeLink = (
