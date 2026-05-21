@@ -2,51 +2,51 @@
 
 Two bugs in `supabase/functions/generate-user-model/index.ts`:
 
-1. Reference image doesn't drive the face — Gemini 3 Pro Image uses the upload as loose inspiration only.
+1. Reference image doesn't drive the face — the upload is used as loose inspiration only.
 2. Sometimes 2 of 3 variations come back; failures are silently dropped.
 
-## Fix 1 — Identity-preserving reference mode (Seedream Dual-Reference)
+## Fix 1 — Make Gemini actually preserve the reference face
 
-Adopt the same Dual-Reference approach already used in Catalog Studio.
+Stay on Gemini 3 Pro Image (nano banana family). The problem is not the model, it's how we call it.
 
-- New helper `generateSingleImageSeedream(prompt, referenceUrl, apiKey)` calling Seedream 4.5 with two image slots: slot A = user's reference (identity anchor), slot B = a plain studio backdrop reference, plus an identity-locking prompt:
-  > "Preserve the exact face, skin tone, hair, and bone structure of the person in image 1. Place them in a studio portrait matching the lighting and framing of image 2. Do not alter facial identity."
-- Routing in the standard flow:
-  - `mode === "reference"` → Seedream Dual-Reference (identity locked).
-  - `mode === "combined"` with `imageUrl` → Seedream Dual-Reference, append the description as styling cues (hair color, expression, clothing) but keep identity locked.
-  - `mode === "generator"` (no image) → keep current Gemini 3 Pro Image path.
-- Fallback chain on Seedream failure: Seedream → Gemini 3 Pro Image with reference inlineData (today's path) → Gemini Flash Image. Same 3-tier defense the rest of the app uses.
-- Drop the "analyze with Gemini 2.5 Flash to text" step for pure reference mode — it loses identity. Still run it to fill `metadata` (gender / body_type / ethnicity / age_range / name) for the saved model record, just don't use `appearance_description` to drive the image.
+Today's reference flow does this:
+1. Sends upload to Gemini 2.5 Flash → gets a short text description.
+2. Calls Gemini 3 Pro Image with `[image] + [long studio-portrait prompt]` + soft "closely resembles" line.
+
+The long studio prompt (camera, lens, lighting, framing, clothing, background) overrides the identity signal, and the text description re-describes the person in generic terms — so Gemini regenerates a new face that matches the description rather than the photo.
+
+Changes:
+
+- **Drop the Gemini Flash text-description step from the image prompt.** Still run it once to fill saved-model `metadata` (gender / body_type / ethnicity / age_range / name), but do not feed `appearance_description` into the image generator. That paraphrase is what dilutes identity.
+- **Rewrite the reference-mode prompt as an identity-lock instruction**, image-first, short and directive:
+  > "Use the person in the provided image as the exact subject. Preserve their face, bone structure, skin tone, hair, and eye color with photographic fidelity — this is the same person, not a lookalike. Re-photograph them as a studio portrait: light grey (#E8E8E8) seamless background, soft three-point lighting, 85mm f/2.8, head-and-shoulders, looking at camera, neutral expression, [white t-shirt / white cami top depending on gender]. Do not stylize, do not change age, do not change ethnicity, no AI smoothing."
+- **Combined mode** (description + image): same identity-lock prompt, then append only the *styling* fields from the description (hair style/color, expression, facial hair, clothing) — skip ethnicity/age/body type since the photo already encodes them. Order in the request: image part first, then text.
+- **Generator mode** (no image): unchanged.
+
+That's the whole identity fix — same model, better prompt and better ordering.
 
 ## Fix 2 — Always return 3 variations
 
-Currently:
-```
-Promise.allSettled(3 calls) → filter fulfilled → return survivors
-```
+Currently: `Promise.allSettled(3 calls)` → filter fulfilled → return survivors. Failures are swallowed.
 
-Change to:
-- Per-slot retry: each of the 3 slots gets up to 2 attempts (initial + 1 retry with 1.5s backoff). On rate-limit (429), wait the suggested time before retry.
-- If after retries a slot still failed, fall back to the next model in the chain for that slot only.
-- If 1 or 2 slots still fail at the end, surface a `partial: true` flag and a `failed_count` in the response so the UI can show a small "Re-roll missing variation" button instead of silently showing 2 cards.
-- Log every failure with the slot index and error so it shows in edge function logs (today they're swallowed).
+Changes:
 
-## UI touch-ups (`src/pages/BrandModels.tsx`)
-
-- If response has `partial: true`, render an empty 3rd slot with a "Generate one more" button that calls the function again for a single image.
-- Keep credit deduction logic unchanged — credits are only spent on save (already correct).
+- Per-slot retry: each of the 3 slots gets up to 2 attempts (initial + 1 retry with 1.5s backoff). On 429, wait the retry-after hint before retrying.
+- Log every failure with slot index and Gemini error body so it's visible in edge function logs.
+- If after retries a slot still failed, return `partial: true` and `failed_count: N` alongside the variations we do have.
+- `BrandModels.tsx`: when `partial` is true, render the missing slot as a placeholder with a "Generate one more" button that re-invokes the function for a single image. No extra credits — credits are still only spent on save.
 
 ## Out of scope
 
 - No DB schema changes.
-- No pricing changes.
-- No changes to `create-model-from-image` (separate, used for image-only metadata extraction).
+- No pricing/credit changes.
+- No changes to `create-model-from-image` (separate metadata-only path).
 
 ## Risk
 
-- Seedream Dual-Reference for portraits is new — current usage is product/catalog. Worst case: identity is closer but lighting differs slightly from spec; mitigated by the studio-backdrop anchor in slot B and the prompt lock.
-- Per-slot retries lengthen worst-case latency by ~10–15s; acceptable for a 20-credit save action.
+- Retries lengthen worst-case latency ~10–15s; acceptable for a 20-credit save action.
+- Tightening the prompt may produce slightly less "polished" portraits in exchange for real identity match. That's the trade the user is asking for.
 
 ## Effort
 
-Small-to-medium. ~150 lines in the edge function, ~30 in `BrandModels.tsx`. No migrations. Half a day end-to-end including QA on a real reference upload.
+Small. ~60 lines in the edge function, ~25 in `BrandModels.tsx`. No migrations. Couple hours including QA with a real reference upload.
