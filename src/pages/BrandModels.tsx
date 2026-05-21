@@ -728,11 +728,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <ImagePlus className="h-4 w-4 text-muted-foreground" />
-        <Label className="text-xs font-medium">Reference image <span className="text-muted-foreground/60 font-normal">· optional</span></Label>
+        <Label className="text-xs font-medium">Reference photo</Label>
       </div>
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Upload a photo to guide the AI. The generated model will resemble the person in the image while using your settings above.
+        The face in this photo will be used as-is. VOVV.AI re-photographs the same person as a polished studio portrait — identity, age, and ethnicity are preserved from the image, not from form inputs.
       </p>
+
 
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
