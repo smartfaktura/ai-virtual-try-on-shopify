@@ -909,18 +909,18 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
             <button
               type="button"
               onClick={() => setCreationMode('manual')}
-              className="group h-full flex flex-col text-left rounded-2xl border border-border/50 bg-card p-6 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200"
+              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200"
             >
               <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium mb-2">
                 01 / Generate
               </p>
-              <p className="text-[15px] font-semibold text-foreground leading-snug tracking-tight mb-1.5">
+              <p className="text-base font-semibold text-foreground leading-snug tracking-tight mb-2">
                 Let VOVV.AI create a new model for you
               </p>
               <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
                 Pick gender, age, look — we generate from scratch
               </p>
-              <p className="mt-auto pt-6 text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground transition-all">
+              <p className="mt-auto pt-10 text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground transition-all">
                 Start <span className="inline-block group-hover:translate-x-0.5 transition-transform">→</span>
               </p>
             </button>
@@ -928,18 +928,18 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
             <button
               type="button"
               onClick={() => setCreationMode('reference')}
-              className="group h-full flex flex-col text-left rounded-2xl border border-border/50 bg-card p-6 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200"
+              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200"
             >
               <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium mb-2">
                 02 / Reference photo
               </p>
-              <p className="text-[15px] font-semibold text-foreground leading-snug tracking-tight mb-1.5">
+              <p className="text-base font-semibold text-foreground leading-snug tracking-tight mb-2">
                 Generate a model from a real person
               </p>
               <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
                 Upload a face — VOVV.AI creates the model based on it
               </p>
-              <p className="mt-auto pt-6 text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground transition-all">
+              <p className="mt-auto pt-10 text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground transition-all">
                 Start <span className="inline-block group-hover:translate-x-0.5 transition-transform">→</span>
               </p>
             </button>
