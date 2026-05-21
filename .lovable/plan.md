@@ -1,173 +1,114 @@
-# Brand Scenes — guided creation UX
+# Brand Scenes — backend-first architecture
 
-Mirror the Brand Model wizard pattern: an entry chooser, then a small set of focused picker questions, then preview + save. Only UX/flow here — no backend, generation, or storage decisions in this plan.
+Goal: ship a system where users can spin up their own reusable scenes across **all 30+ product subcategories** we already support, answer a smart set of questions, and get a saved, replayable scene that drops into Visual Studio exactly like our built-in scenes. Backend, taxonomy and question schema first — UI is the thin layer on top.
 
-## Route shape
+## 1. Single source of truth for categories
 
-- `/app/brand-scenes` — grid of the user's saved scenes + big "+ New scene" card.
-- `/app/brand-scenes/new` — wizard (this plan).
-- After save → returns to grid with the new scene appearing under its chosen category.
+Reuse the taxonomy already in code so nothing forks:
 
-## Wizard flow
+- **10 families** from `src/data/aiProductPhotographyCategories.ts` (Fashion, Footwear, Beauty & Skincare, Fragrance, Jewelry, Bags & Accessories, Home & Furniture, Food & Beverage, Supplements & Wellness, Electronics & Gadgets).
+- **35+ subcategories** from `CATEGORY_FAMILY_MAP` in `src/lib/sceneTaxonomy.ts` (garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, streetwear, wedding-dress, shoes, sneakers, boots, high-heels, bags-accessories, backpacks, wallets, belts, scarves, caps, hats, beanies, watches, eyewear, jewellery-rings, …-necklaces, …-earrings, …-bracelets, beauty-skincare, makeup-lipsticks, fragrance, home-decor, furniture, tech-devices, food, beverages, snacks-food, supplements-wellness).
 
-```text
-[ Step 0: How do you want to start? ]   ← chooser, like Brand Model
-   ├─ Describe it (guided picks)          ← default, recommended
-   ├─ Upload a reference photo
-   └─ Generate from a prompt
-              │
-              ▼
-[ Step 1: Where does this scene belong? ]   ← always shown, always first after chooser
-              │
-              ▼
-[ Step 2: Tell us about the scene ]          ← guided question chips (mode-dependent)
-              │
-              ▼
-[ Step 3: Preview 3 variations ]             ← pick favorite
-              │
-              ▼
-[ Step 4: Name + save ]
+New shared module `src/lib/brandScenes/taxonomy.ts` re-exports the family list + subcategory slugs + display labels so the wizard, the prompt builder, the DB enums and the Visual Studio picker all read the same map. No second list.
+
+User picks **family first** (10 tiles, real preview thumbnails from the visual library hub), then **subcategory chip** (filtered to that family — every subcategory the platform supports is reachable). A scene can target one family + one subcategory, or family + "All".
+
+## 2. Question schema (data-driven, not hardcoded UI)
+
+Questions live in a typed config, not JSX, so we can extend without touching the wizard shell:
+
+```ts
+// src/lib/brandScenes/questionSchema.ts
+type Question =
+  | { id: string; kind: 'single'; label: string; options: Option[]; appliesTo?: Filter }
+  | { id: string; kind: 'multi'; label: string; options: Option[]; max?: number; appliesTo?: Filter }
+  | { id: string; kind: 'text'; label: string; max: number; appliesTo?: Filter };
+
+type Filter = {
+  families?: Family[];
+  subcategories?: string[];
+  requiresPeople?: boolean;
+};
 ```
 
-A persistent top progress strip ("Category · Details · Preview · Save") shows where the user is. Back button between steps, no data loss.
+Each question declares the categories it applies to via `appliesTo`. The wizard renders only relevant questions — a Fragrance scene never sees outfit questions, a Footwear scene auto-hides the "footwear" outfit slot, etc.
 
-## Step 0 — Chooser (entry card)
+### Question groups (all optional except Category)
 
-Three large equal-weight cards, same visual language as Brand Model's `chooser` mode:
+1. **Scope** — family (required), subcategory (optional), people-in-scene (On-model / Product only / Either).
+2. **Scene** — setting, time/light, color mood, surface, props, framing, aspect ratio, free-text notes.
+3. **Outfit direction** (only when people = On-model or Either): vibe, silhouette, top, bottom, footwear, outerwear, palette, fabrics, accessories, hair, notes. Category-aware overrides:
+   - Footwear locks footwear slot to "matches product"
+   - Swimwear / lingerie collapses top+bottom into "swim/lingerie style"
+   - Bags & Accessories defaults to supporting neutral wardrobe
+   - Beauty / Skincare / Fragrance defaults to "soft neutral basics", collapsed
+   - Jewelry defaults to bare neckline / minimal layers
+4. **Product fidelity hints** — only when subcategory implies product type quirks (e.g. fragrance bottle glass cues, sneaker hard-shadow, food plating). Pulled from same trigger-block library already used by `product_image_scenes.trigger_blocks`.
 
-- **Describe it** — "Answer a few quick questions, we'll build it for you." (Sparkles icon)
-- **Upload a photo** — "We'll analyze your reference and turn it into a reusable scene." (Camera icon)
-- **From a prompt** — "Write what you want, we'll generate the scene image." (Wand2 icon)
+The wizard reads this schema, the prompt builder reads this schema, and the saved scene stores the raw answers (not just the rendered prompt) so we can re-render prompts later when the engine improves.
 
-Recommended badge on "Describe it" since it's the most guided.
+## 3. Data model
 
-## Step 1 — Category (always first, you flagged this)
+New table `user_scenes` (user-scope; separate from admin `custom_scenes` and `product_image_scenes` so RLS stays simple):
 
-One question, big tappable tiles with a real preview thumbnail per category (reuse the collage previews already used on `/product-visual-library`):
+- `id`, `user_id`, `created_at`, `updated_at`, `is_active`
+- `name` (auto-derived, editable, 60 char)
+- `family` (text, enum-validated against taxonomy module)
+- `subcategory` (text, nullable)
+- `aspect_ratio` (text, default `4:5`)
+- `people_mode` (`on_model` | `product_only` | `either`)
+- `answers` (jsonb — raw question → answer map, source of truth)
+- `outfit_direction` (jsonb — structured outfit object, null when no people)
+- `prompt_template` (text — rendered from answers via prompt builder, stored for fast read)
+- `trigger_blocks` (text[] — auto-attached from subcategory)
+- `preview_image_url` (text — chosen variation from Step 3)
+- `preview_thumbs` (text[] — all 3 generated previews for re-pick)
+- `source` (`guided` | `upload` | `prompt`) — how it was created
+- `reference_image_url` (text, nullable — for upload mode)
 
-> **Where should this scene live?**
+RLS: owner-only CRUD. SECURITY DEFINER RPC `get_my_brand_scenes()` for listing; a future `get_org_brand_scenes()` slot is reserved for team sharing.
 
-The 10 tiles mirror the Product Visual Library hub exactly, sourced from `src/data/aiProductPhotographyCategories.ts` so any future category edits stay in sync:
+Visual Studio scene picker hits a unified RPC `list_scenes_for_family(family, subcategory)` that merges `product_image_scenes` (public) + `custom_scenes` (admin curated) + `user_scenes` (owner's). One pipeline, three sources, identical render contract.
 
-1. Fashion
-2. Footwear
-3. Beauty & Skincare
-4. Fragrance
-5. Jewelry
-6. Bags & Accessories
-7. Home & Furniture
-8. Food & Beverage
-9. Supplements & Wellness
-10. Electronics & Gadgets
+## 4. Prompt builder
 
-Layout: responsive grid — 2 cols mobile, 3 cols tablet, 4–5 cols desktop. Each tile = square preview image + name overlay + subcategory count chip. Selected state = primary ring + check badge.
+`src/lib/brandScenes/buildPrompt.ts` is a pure function: `(answers, taxonomyEntry) → { prompt, triggerBlocks, aspectRatio, negative }`. It mirrors the structure of the existing scene prompt system (Setting · Light · Mood · Surface · Props · Framing · Outfit · Saugikliai), so user scenes feed the same generation pipeline as admin scenes. No new generation path, no new edge function — we reuse `freestyle` / `process-queue` exactly.
 
-After picking a category, a **second inline picker reveals the subcategories** for that category (chips, single-select, optional — the scene can live at the top level if none picked). Subcategories come from the same data file (e.g. Fashion → Clothing · Dresses · Hoodies · Jeans · Jackets · Activewear · Swimwear · Lingerie).
+Outfit answers compile into the same `outfit_direction` block the engine already consumes (see existing Scene-Controlled Outfits memory), so user scenes can override outfits identically to admin scenes.
 
-Secondary (optional, collapsible "Refine fit"):
-- **People in scene?** segmented: On-model · Product only · Either.
-- **Aesthetic tone hint** (optional): Editorial · Lifestyle · Studio · Flatlay — purely a sort tag inside the chosen category.
+## 5. Generation & preview loop
 
-Continue button disabled until a category is picked.
+Step 3 of the wizard generates **3 variations** through the existing freestyle endpoint with the freshly built prompt. User picks 1 → that becomes `preview_image_url`. We keep all 3 in `preview_thumbs` so they can switch later from the edit screen without re-spending credits.
 
-## Step 2 — Details (depends on the chosen mode)
+Credits: charge standard freestyle rate × 3 for preview generation, separate from "use this scene" generations afterward. Show the exact cost before Step 3 runs.
 
-### Mode A — Describe it (guided picks)
+## 6. Upload-mode and prompt-only-mode
 
-Compact `Section` cards stacked vertically, each one question with chip pickers. Picks are single-select unless noted. Skippable (any field can stay empty).
+- **Upload**: reuse existing `create-scene-from-image` edge function. It already returns name, description, suggested category, prompt hint. Pre-fills the answers JSON; user can override every field before save.
+- **Prompt-only**: single textarea → routed through the same builder by stuffing the raw prompt into `answers.freeText` and skipping derived fields.
 
-1. **Setting** — Indoor studio · Living room · Bedroom · Kitchen · Bathroom · Cafe · Street · Beach · Garden · Forest · Desert · Rooftop · Custom (text)
-2. **Time & light** — Morning soft · Golden hour · Midday bright · Overcast diffuse · Studio strobe · Window light · Night/neon · Candle warm
-3. **Color mood** — Neutral warm · Neutral cool · Pastel · Earth tones · Monochrome · Bold accent · Muted editorial
-4. **Surface / floor** (only if relevant for category) — Linen · Marble · Concrete · Wood · Tile · Sand · Grass · Paper
-5. **Props** — multi-select: Glassware · Plants · Books · Fabric drape · Stones · Flowers · Mirror · None
-6. **Camera framing** — Wide environment · Medium · Tight detail · Overhead flatlay · Low angle
-7. **Aspect ratio** — 1:1 · 4:5 · 3:4 · 16:9 (default 4:5)
-8. **Optional free-text** — "Anything else? (mood, references, dos and don'ts)" — small textarea, 280 char cap.
+Both modes write to the same `user_scenes` table — one shape, three entry points.
 
-A live one-line "scene summary" sentence updates underneath as the user picks ("Soft morning light, linen surface, pastel mood, tight detail, 4:5") — gives them confidence without showing the raw prompt.
+## 7. Visual Studio integration
 
-### Mode A.1 — Outfit direction (only when People = On-model or Either)
+`/app/workflows` scene picker gains a "My scenes" tab and the user's scenes also surface inside their matching family tab (so a user's "Sunlit linen kitchen" appears under Home & Furniture next to the public scenes). Hidden behind the same `family` / `subcategory` filters everything else uses.
 
-Sub-step inserted between Props and Camera framing when the scene includes a person, regardless of category. Generates a structured **outfit direction** so any product later dropped into this scene renders against a coherent wardrobe. Defaults are derived from the category, setting, and color mood already picked — every chip is skippable.
+Brand Profile already stores `preferred_scenes` — extend the picker logic to surface a user's own scenes there first.
 
-Question chips (single-select unless noted):
+## 8. Implementation order
 
-1. **Wardrobe vibe** — Quiet luxury · Streetwear · Editorial high-fashion · Everyday casual · Workwear · Athleisure · Resort · Evening · Loungewear
-2. **Silhouette** — Tailored · Oversized · Fitted · Layered · Cropped · Flowing
-3. **Top** — T-shirt · Shirt · Knit · Hoodie · Blazer · Tank · Dress · None / bare shoulders
-4. **Bottom** — Jeans · Tailored trousers · Shorts · Skirt · Sweatpants · Swimwear · Skip (dress/full look)
-5. **Footwear** — Sneakers · Heels · Boots · Sandals · Loafers · Barefoot · Hidden
-6. **Outerwear** (optional) — Trench · Leather jacket · Denim · Wool coat · None
-7. **Color palette** — multi-select up to 3: Black · White · Cream · Beige · Camel · Grey · Navy · Olive · Burgundy · Pastel · Bold accent · Matches scene mood (default)
-8. **Fabric / texture** — multi-select: Cotton · Linen · Denim · Silk · Wool · Knit · Leather · Technical
-9. **Accessories** — multi-select: Sunglasses · Hat · Bag · Jewelry · Belt · Scarf · None
-10. **Hair** — Up · Down · Wet · Covered · Doesn't matter
-11. **Outfit notes** — small textarea, 200 char cap ("avoid logos", "match brand neutrals", etc.)
+1. Taxonomy module (`src/lib/brandScenes/taxonomy.ts`) — pure exports, no UI.
+2. Question schema (`src/lib/brandScenes/questionSchema.ts`) — typed config.
+3. Prompt builder (`src/lib/brandScenes/buildPrompt.ts`) — pure function + unit tests.
+4. `user_scenes` table + RLS + `get_my_brand_scenes` + `list_scenes_for_family` RPCs.
+5. `useBrandScenes()` hook for CRUD.
+6. Wizard pages (`/app/brand-scenes`, `/app/brand-scenes/new`) — thin shell over the schema.
+7. Visual Studio picker integration.
+8. Brand Profile preferred scenes surfacing.
 
-A live **outfit summary line** updates beneath the chips ("Quiet luxury, oversized linen shirt, tailored cream trousers, barefoot, warm neutrals") — same pattern as the scene summary so the user reads back what they composed.
+## Out of scope (explicit)
 
-Category-aware behavior:
-- **Footwear** — the Footwear question locks to "Matches product" (uploaded shoe wins) and hides.
-- **Fashion → Swimwear / Lingerie** — Top and Bottom collapse into a single "Swim / lingerie style" picker.
-- **Bags & Accessories** — outfit framed as **supporting wardrobe** with neutral defaults so the bag stays hero.
-- **Beauty · Skincare · Fragrance** — section collapsed by default to "soft neutral basics"; user can expand to override.
-- **Jewelry** — defaults to bare neckline / minimal layers so the piece reads cleanly.
-
-The selected outfit is saved on the scene as a structured `outfit_direction` object (vibe, silhouette, top, bottom, footwear, outerwear, palette, fabrics, accessories, hair, notes) so it replays verbatim every time the scene is reused. The outfit summary chip surfaces alongside the scene summary in Step 4.
-
-### Mode B — Upload reference
-
-- Big drop zone (drag/drop, paste, file picker) — same component pattern as Brand Model reference upload.
-- Once uploaded: AI auto-analyzes the image and pre-fills name + a short description + suggested category (user can override category from Step 1 — they'll see "Suggested: Editorial" and can switch).
-- Rights & content acknowledgement checkbox (same wording as Brand Model: "I have rights to this image and it follows our content policy").
-- Optional "Anything to emphasize?" short textarea.
-
-### Mode C — From a prompt
-
-- Single textarea with placeholder examples ("Warm sunlit Mediterranean kitchen, linen napkins, soft window light…").
-- Below the textarea: 6–8 "Quick add" chips that append style cues to the prompt (Cinematic · Soft window light · Editorial · Cozy · Minimal · Moody · Bright · Pastel).
-- Aspect ratio picker (same as Mode A).
-
-## Step 3 — Preview 3 variations
-
-- Same layout as Brand Model variation picker: 3 image tiles in a row, clickable to select, selected one shows a Check.
-- "Regenerate this one" hover action on each tile.
-- Branded loading state while generating (reuse pattern from `BrandedLoadingState`, copy adapted: "Composing your scene…", "Setting the light…", "Styling props…").
-
-## Step 4 — Name + save
-
-- Auto-filled name field (e.g. "Sunlit linen kitchen" derived from picks). Editable, 32 char cap with counter.
-- Read-only summary chips of what's saved: Category · Products · People · Aspect.
-- Primary CTA: "Save scene" → toast "Scene added to {Category}" → navigate back to grid.
-- Secondary: "Save and use now" → navigates straight to Visual Studio with this scene pre-selected.
-
-## Empty state on `/app/brand-scenes`
-
-Big centered card with three example thumbnails fanned out, headline "Design your own signature scenes", subline "Backgrounds, environments, and moods that match your brand. Use them on any product, anytime." Single CTA → "+ Create your first scene".
-
-## Grid item (after at least one scene exists)
-
-Square thumbnail · name overlay on hover · tiny category badge top-left · 3-dot menu: Edit · Rename · Duplicate · Delete. Same density as Brand Models grid.
-
-## Microcopy rules
-
-- Follow the project's no-terminal-period rule on headers and one-line subtitles.
-- Always say "scene" (singular) in CTAs, never "preset" or "template" or "workflow".
-
-## Things I'm deliberately handling that are easy to miss
-
-- **Category is step 1, not buried** — so the user always knows where the scene will end up before answering anything else.
-- **Mode chooser sits above category** so the user picks "how" before "what", matching Brand Model's mental model and avoiding wasted picks if they switch modes.
-- **Live summary sentence** during guided picks — keeps the wizard feeling smart without exposing the underlying prompt.
-- **AI pre-fill on upload** auto-suggests name + category, but never silently overrides a category the user already chose.
-- **People-in-scene toggle** at Step 1 so the scene picker in Visual Studio can correctly include/exclude it for on-model vs product-only workflows.
-- **"Save and use now"** secondary CTA closes the loop — user sees their scene working immediately, not just stored.
-- **Skippable details** — every Step 2 chip is optional; only Category is required. Lowers friction for power users.
-
-## Out of scope (for this UX pass)
-
-- Backend tables, RLS, edge functions, storage paths.
-- Admin promotion of brand scenes to public Discover.
-- Team sharing.
+- Team / org sharing (RPC slot reserved, no UI).
+- Admin promotion of user scenes to public Discover.
 - Editing the underlying reference image after save.
+- New generation engine — we reuse the existing freestyle pipeline as-is.
