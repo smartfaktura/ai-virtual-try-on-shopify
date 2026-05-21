@@ -21,6 +21,9 @@ export default function BrandModelNew() {
           Brand Models
         </Button>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">New brand model</h1>
+        <p className="text-base text-muted-foreground mt-1.5">
+          Choose how you want to create this model
+        </p>
       </div>
 
       <UnifiedGenerator
