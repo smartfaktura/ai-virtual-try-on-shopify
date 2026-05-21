@@ -87,6 +87,35 @@ Compact `Section` cards stacked vertically, each one question with chip pickers.
 
 A live one-line "scene summary" sentence updates underneath as the user picks ("Soft morning light, linen surface, pastel mood, tight detail, 4:5") — gives them confidence without showing the raw prompt.
 
+### Mode A.1 — Outfit direction (only when People = On-model or Either)
+
+Sub-step inserted between Props and Camera framing when the scene includes a person, regardless of category. Generates a structured **outfit direction** so any product later dropped into this scene renders against a coherent wardrobe. Defaults are derived from the category, setting, and color mood already picked — every chip is skippable.
+
+Question chips (single-select unless noted):
+
+1. **Wardrobe vibe** — Quiet luxury · Streetwear · Editorial high-fashion · Everyday casual · Workwear · Athleisure · Resort · Evening · Loungewear
+2. **Silhouette** — Tailored · Oversized · Fitted · Layered · Cropped · Flowing
+3. **Top** — T-shirt · Shirt · Knit · Hoodie · Blazer · Tank · Dress · None / bare shoulders
+4. **Bottom** — Jeans · Tailored trousers · Shorts · Skirt · Sweatpants · Swimwear · Skip (dress/full look)
+5. **Footwear** — Sneakers · Heels · Boots · Sandals · Loafers · Barefoot · Hidden
+6. **Outerwear** (optional) — Trench · Leather jacket · Denim · Wool coat · None
+7. **Color palette** — multi-select up to 3: Black · White · Cream · Beige · Camel · Grey · Navy · Olive · Burgundy · Pastel · Bold accent · Matches scene mood (default)
+8. **Fabric / texture** — multi-select: Cotton · Linen · Denim · Silk · Wool · Knit · Leather · Technical
+9. **Accessories** — multi-select: Sunglasses · Hat · Bag · Jewelry · Belt · Scarf · None
+10. **Hair** — Up · Down · Wet · Covered · Doesn't matter
+11. **Outfit notes** — small textarea, 200 char cap ("avoid logos", "match brand neutrals", etc.)
+
+A live **outfit summary line** updates beneath the chips ("Quiet luxury, oversized linen shirt, tailored cream trousers, barefoot, warm neutrals") — same pattern as the scene summary so the user reads back what they composed.
+
+Category-aware behavior:
+- **Footwear** — the Footwear question locks to "Matches product" (uploaded shoe wins) and hides.
+- **Fashion → Swimwear / Lingerie** — Top and Bottom collapse into a single "Swim / lingerie style" picker.
+- **Bags & Accessories** — outfit framed as **supporting wardrobe** with neutral defaults so the bag stays hero.
+- **Beauty · Skincare · Fragrance** — section collapsed by default to "soft neutral basics"; user can expand to override.
+- **Jewelry** — defaults to bare neckline / minimal layers so the piece reads cleanly.
+
+The selected outfit is saved on the scene as a structured `outfit_direction` object (vibe, silhouette, top, bottom, footwear, outerwear, palette, fabrics, accessories, hair, notes) so it replays verbatim every time the scene is reused. The outfit summary chip surfaces alongside the scene summary in Step 4.
+
 ### Mode B — Upload reference
 
 - Big drop zone (drag/drop, paste, file picker) — same component pattern as Brand Model reference upload.
