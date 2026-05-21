@@ -374,48 +374,37 @@ Skin retains real texture with visible pores — no smoothing, no beautification
 
     // ─── Admin public: generate 3 variations ───
     if (makePublic) {
-      console.log("Generating 3 public model variations in parallel...");
-      const results = await Promise.allSettled(
-        Array.from({ length: 3 }, () =>
-          generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY)
-            .then((b64) => uploadBase64Image(supabaseAdmin, user.id, b64))
-        )
-      );
-
-      const variations = results
-        .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-        .map((r) => r.value);
-
+      console.log("Generating 3 public model variations in parallel (with retry)...");
+      const results = await Promise.allSettled([0, 1, 2].map((i) => generateOneWithRetry(i)));
+      const variations = results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value);
+      const failed_count = 3 - variations.length;
       if (variations.length === 0) throw new Error("All 3 generation attempts failed. Please try again.");
 
-      return new Response(JSON.stringify({ variations, metadata, name: body.name || metadata.name }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({
+        variations,
+        metadata,
+        name: body.name || metadata.name,
+        partial: failed_count > 0,
+        failed_count,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ─── Regular user: generate 3 variations (no credits deducted yet) ───
-    console.log("Generating 3 brand model variations in parallel...");
-    const results = await Promise.allSettled(
-      Array.from({ length: 3 }, () =>
-        generateSingleImage(generatePrompt, referenceInlineData, GEMINI_KEY)
-          .then((b64) => uploadBase64Image(supabaseAdmin, user.id, b64))
-      )
-    );
-
-    const userVariations = results
-      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-      .map((r) => r.value);
-
+    console.log("Generating 3 brand model variations in parallel (with retry)...");
+    const results = await Promise.allSettled([0, 1, 2].map((i) => generateOneWithRetry(i)));
+    const userVariations = results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value);
+    const failed_count = 3 - userVariations.length;
     if (userVariations.length === 0) throw new Error("All generation attempts failed. Please try again.");
 
     return new Response(JSON.stringify({
       variations: userVariations,
       metadata,
       name: body.name || metadata.name,
-      sourceImageUrl: sourceImageUrl,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      sourceImageUrl,
+      partial: failed_count > 0,
+      failed_count,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     console.error("generate-user-model error:", e);
     const msg = e instanceof Error ? e.message : "Unknown error";
