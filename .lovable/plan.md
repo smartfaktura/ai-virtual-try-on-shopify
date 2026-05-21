@@ -38,13 +38,43 @@ Still rich and beautiful — just framed around the person in the photo, with ze
 >
 > Studio setup: seamless light grey backdrop (#E8E8E8), soft three-point lighting with a large key softbox camera-left, gentle fill, subtle rim. Shot on an 85mm lens at f/2.8, head-and-shoulders framing, eye-level, sharp focus on the eyes, shallow background separation. Wardrobe: clean neutral basics (white tee or simple knit), nothing branded. Expression: relaxed, natural, looking at the camera. Skin retains real texture — no smoothing, no beautification, no age shift, no ethnicity shift, no stylization."
 
-### UI follow-through
+### UI flow — mode chooser first, then the right panel
 
-In `GenerateModelModal.tsx` and `BrandModels.tsx`, when a reference image is uploaded, hide or visually disable the gender / body / ethnicity / age / hair chips with a short note: "Using your reference photo — these are detected automatically." Prevents conflicting inputs and makes the behavior obvious.
+Today the New Brand Model page drops users straight into the big panel with chips and an optional upload, which is what creates the contradictory-input problem in the first place. New flow:
 
-### Generator mode (no image)
+**Step 0 — Mode chooser** (`/app/models/new` and `GenerateModelModal`, shown before any panel)
 
-Completely unchanged. Same chips, same prompt builder, same output as today.
+Two large side-by-side cards:
+
+1. **"From a reference photo"** — icon + one-liner: "Upload a face. We re-photograph that exact person as a studio portrait." Best for: a real person, founder, or model the brand already works with.
+2. **"Configure manually"** — icon + one-liner: "Pick gender, age, ethnicity, body type, hair, wardrobe. We generate from scratch." Best for: inventing a new model from chips.
+
+Clicking a card reveals the matching panel. A small "Switch mode" link at the top of either panel returns to the chooser and clears state.
+
+**Reference-mode panel**
+- Large required upload slot.
+- No chips for gender / body / ethnicity / age / hair / facial hair / clothing — the photo is the brief. An optional free-text "Notes" field stays (e.g. "tighter crop", "warmer tone") and is appended *after* the identity-lock block.
+- Consent block (see below) — Generate button disabled until checked.
+
+**Manual-mode panel**
+- Today's existing chips and prompt builder, unchanged.
+- No upload slot at all in this mode.
+
+This makes the two paths visibly different, kills the "image + chips fighting each other" failure mode at the source, and removes the need to conditionally disable chips.
+
+### Reference upload — double consent
+
+Before Generate is enabled in reference mode, the user must tick a single checkbox:
+
+> ☐ I confirm I have the right to use this reference photo, and I take full responsibility for the image I uploaded and every model image and downstream generation created from it. I will not use it to impersonate, deceive, or harm anyone, and I agree to VOVV.AI's [Terms of Service](/terms) and [Acceptable Use](/terms#acceptable-use).
+
+On clicking Generate, a confirmation dialog ("Generate from this photo?") appears with a short recap of the same agreement and two buttons: "Cancel" / "Yes, generate". This is the second confirmation step. Acceptance is recorded with the generation (one nullable column `reference_consent_at timestamptz` on the user models table, or inside the existing `metadata` JSON if we want to avoid a migration entirely).
+
+A "Don't ask again this session" option inside the dialog suppresses the second step for the rest of the session only (`sessionStorage`). The checkbox above the Generate button is always required — that is the non-negotiable consent record.
+
+### Generator mode (no image, manual configure)
+
+Completely unchanged. Same chips, same prompt builder, same output as today. No consent checkbox — only the reference-photo path requires it.
 
 
 ## Fix 2 — Always return 3 variations
