@@ -292,46 +292,59 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   }, [useReference, previewUrl]);
 
   const trimmedName = modelName.trim();
+  const isReferenceMode = creationMode === 'reference';
   const validationError: string | null =
     trimmedName.length < 2 ? 'Add a model name (min 2 characters)' :
+    isReferenceMode && !uploadedUrl ? 'Upload a reference photo to continue' :
     isUploading ? 'Waiting for upload to finish…' :
-    uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
+    isReferenceMode && uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
     !makePublic && balance < 20 ? 'Not enough credits — top up to continue' :
     null;
-  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!uploadedUrl || termsAccepted);
+  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted));
   const canGenerate = !generating && !validationError;
 
-  const handleGenerate = async () => {
-    if (!canGenerate) return;
+  const SKIP_KEY = 'vovv:brand-model-confirm-skip';
+
+  const buildGenerateBody = () => {
+    const finalName = modelName.trim() || `${gender} Model`;
+    if (isReferenceMode && uploadedUrl) {
+      return {
+        mode: 'reference',
+        name: finalName,
+        imageUrl: uploadedUrl,
+        notes: referenceNotes.trim() || undefined,
+        ...(makePublic ? { makePublic: true } : {}),
+      };
+    }
+    return {
+      mode: 'generator',
+      name: finalName,
+      description: {
+        gender, age: age[0], ethnicity, morphology,
+        eyeColor, hairStyle, hairColor, skinTone, faceShape,
+        expression, facialHair: gender === 'Male' ? facialHair : '',
+        distinctive,
+      },
+      ...(makePublic ? { makePublic: true } : {}),
+    };
+  };
+
+  const runGenerate = async () => {
     setGenerating(true);
     try {
-      const finalName = modelName.trim() || `${gender} Model`;
-      const body: any = {
-        mode: useReference && uploadedUrl ? 'combined' : 'generator',
-        name: finalName,
-        description: {
-          gender, age: age[0], ethnicity, morphology,
-          eyeColor, hairStyle, hairColor, skinTone, faceShape,
-          expression, facialHair: gender === 'Male' ? facialHair : '',
-          distinctive,
-        },
-      };
-      if (useReference && uploadedUrl) {
-        body.imageUrl = uploadedUrl;
-      }
-      if (makePublic) {
-        body.makePublic = true;
-      }
-
+      const body = buildGenerateBody();
       const { data, error } = await supabase.functions.invoke('generate-user-model', { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Show variation picker for all flows
       if (data?.variations) {
         setVariations(data.variations);
-        setPendingMeta({ metadata: data.metadata, name: data.name || finalName, sourceImageUrl: data.sourceImageUrl });
+        setFailedCount(typeof data.failed_count === 'number' ? data.failed_count : 0);
+        setPendingMeta({ metadata: data.metadata, name: data.name || (body as any).name, sourceImageUrl: data.sourceImageUrl });
         setSelectedVariation(0);
+        if (data.partial) {
+          toast.error(`Only ${data.variations.length} of 3 variations succeeded — you can regenerate the missing ones.`);
+        }
         return;
       }
 
@@ -341,12 +354,48 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
+      setReferenceNotes('');
       setMakePublic(false);
       onSuccess();
     } catch (err: any) {
       toast.error(err.message || 'Generation failed');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!canGenerate) return;
+    // Reference mode requires a second confirmation step (skippable per-session).
+    if (isReferenceMode && uploadedUrl) {
+      const skip = typeof window !== 'undefined' && sessionStorage.getItem(SKIP_KEY) === '1';
+      if (!skip) { setConfirmOpen(true); return; }
+    }
+    await runGenerate();
+  };
+
+  const handleRegenerateMissing = async () => {
+    if (regenerating) return;
+    setRegenerating(true);
+    try {
+      const body = buildGenerateBody();
+      const { data, error } = await supabase.functions.invoke('generate-user-model', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const newVars: string[] = data?.variations || [];
+      // Fill empty slots until we have 3
+      const merged = [...variations];
+      for (const v of newVars) {
+        if (merged.length >= 3) break;
+        merged.push(v);
+      }
+      setVariations(merged);
+      setFailedCount(Math.max(0, 3 - merged.length));
+      if (merged.length === 3) toast.success('All 3 variations ready.');
+    } catch (err: any) {
+      toast.error(err.message || 'Regeneration failed');
+    } finally {
+      setRegenerating(false);
     }
   };
 
