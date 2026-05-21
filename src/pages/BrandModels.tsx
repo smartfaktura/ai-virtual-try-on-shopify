@@ -476,40 +476,66 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           <div className="text-center space-y-1.5">
             <h3 className="font-semibold text-lg">Choose the Best Variation</h3>
             <p className="text-xs text-muted-foreground">
-              {variations.length} variations generated · Select your favorite and publish
+              {failedCount > 0
+                ? `${variations.length} of 3 variations generated — regenerate to fill the missing slot${failedCount > 1 ? 's' : ''}.`
+                : `${variations.length} variations generated · Select your favorite and publish`}
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 sm:gap-5 mt-2">
-            {variations.map((url, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSelectedVariation(i)}
-                className={cn(
-                  "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-200",
-                  selectedVariation === i
-                    ? "border-primary shadow-lg ring-2 ring-primary/20 scale-[1.02]"
-                    : "border-border/60 hover:border-border opacity-80 hover:opacity-100"
-                )}
-              >
-                <img src={url} alt={`Variation ${i + 1}`} className="w-full h-full object-cover" />
-                {selectedVariation === i && (
-                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
-                    <Check className="h-3.5 w-3.5" />
+            {Array.from({ length: 3 }).map((_, i) => {
+              const url = variations[i];
+              if (!url) {
+                return (
+                  <div
+                    key={`empty-${i}`}
+                    className="relative aspect-[3/4] rounded-xl border-2 border-dashed border-border/60 bg-muted/30 flex flex-col items-center justify-center gap-2 text-muted-foreground"
+                  >
+                    <Wand2 className="h-5 w-5 opacity-60" />
+                    <span className="text-[10px] uppercase tracking-wider">Generation failed</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-1 h-7 text-[11px]"
+                      onClick={handleRegenerateMissing}
+                      disabled={regenerating}
+                    >
+                      {regenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Regenerate'}
+                    </Button>
                   </div>
-                )}
-                <div className="absolute bottom-2 left-2">
-                  <Badge className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm",
-                    selectedVariation === i ? "bg-primary/90 text-primary-foreground" : "bg-background/80 text-foreground"
-                  )}>
-                    #{i + 1}
-                  </Badge>
-                </div>
-              </button>
-            ))}
+                );
+              }
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSelectedVariation(i)}
+                  className={cn(
+                    "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all duration-200",
+                    selectedVariation === i
+                      ? "border-primary shadow-lg ring-2 ring-primary/20 scale-[1.02]"
+                      : "border-border/60 hover:border-border opacity-80 hover:opacity-100"
+                  )}
+                >
+                  <img src={url} alt={`Variation ${i + 1}`} className="w-full h-full object-cover" />
+                  {selectedVariation === i && (
+                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-2 left-2">
+                    <Badge className={cn(
+                      "text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm",
+                      selectedVariation === i ? "bg-primary/90 text-primary-foreground" : "bg-background/80 text-foreground"
+                    )}>
+                      #{i + 1}
+                    </Badge>
+                  </div>
+                </button>
+              );
+            })}
           </div>
+
 
           <div className="flex gap-3 pt-4 border-t border-border/50">
             <Button
