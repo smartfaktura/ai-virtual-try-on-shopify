@@ -1,51 +1,39 @@
-# Remove the 6 broken furniture-lifestyle scenes from Discover
+# Fix: Swimwear presets not appearing on Discover
 
-## What's happening
+## What I found
 
-Six scenes show up as broken cards on the public Discover view:
+You added "Sun Chaser Girl" and "Island Flash Hour" to Discover. Both are saved correctly in the database:
 
-- Penthouse Panorama Lounge
-- Ivory Bouclé Salon
-- Nordic Fjord Living
-- Grand Atelier Salon
-- Walnut & Travertine Den
-- Smoke & Stone Loft
+| Title | category | subcategory | image_url |
+|---|---|---|---|
+| Sun Chaser Girl | fashion | swimwear | loads (200) |
+| Island Flash Hour | fashion | swimwear | loads (200) |
+| Beach Day Bliss (old) | fashion | swimwear | loads (200) |
 
-They live in `product_image_scenes` as `furniture-lifestyle-*` rows. Their `preview_image_url` files exist in storage (HTTP 200), but the rendered cards in your screenshot are clearly broken / empty. Rather than chase a rendering edge case for scenes you don't want to surface anyway, the cleanest fix is to take them out of all public surfaces.
+I verified `/app/discover` → Fashion → Swimwear in the browser. ~13 swimwear scene cards show, but **none of the 3 swimwear presets** appear (including the March one). So this is a pre-existing bug affecting every preset tagged `subcategory = swimwear`, not just the new ones.
 
-## Fix
+The filter logic in `itemMatchesDiscoverFilter` looks correct on paper (cat=fashion + sub=swimwear should pass). So the items are being dropped somewhere between `useDiscoverPresets` returning them and the grid rendering them.
 
-A single, reversible migration that marks the six rows `is_active = false` in `product_image_scenes`:
+## Plan
 
-```sql
-UPDATE public.product_image_scenes
-SET is_active = false
-WHERE scene_id IN (
-  'furniture-lifestyle-penthouse-panorama',
-  'furniture-lifestyle-ivory-boucle-salon',
-  'furniture-lifestyle-nordic-fjord',
-  'furniture-lifestyle-grand-atelier-salon',
-  'furniture-lifestyle-walnut-travertine-den',
-  'furniture-lifestyle-smoke-stone-loft'
-);
-```
-
-This removes them from:
-
-- The public Discover RPC (`get_public_recommended_scenes` already filters `is_active = true`)
-- The authenticated `/app/discover` recommended list
-- The Product Images scene picker
-- Any SEO category grid that pulls live scene previews
-
-If you ever want them back, flip `is_active` back to `true` — nothing is deleted.
+1. **Reproduce in code**, not just the UI — add a temporary debug log in `src/pages/Discover.tsx` for the 3 preset titles to see at which step they disappear:
+   - after `useDiscoverPresets` (raw fetch)
+   - after the `allItems` merge / recommended-titles dedupe
+   - after `filtered` (taxonomy filter)
+   - after `sorted` / `visibleCount` slice
+2. **Apply the fix** for the step that drops them. Most likely candidates based on the code:
+   - dedupe against `recommendedPoses` titles (line 319) accidentally matching
+   - sort/bucket logic pushing presets past `visibleCount=24` when the user has onboarding family prefs
+   - subcategory string mismatch (case / whitespace)
+3. **Remove the debug log** and verify the 3 cards appear under Fashion → Swimwear and on the "All" tab.
+4. Repeat the spot-check on another subcategory (e.g. dresses) to make sure the fix is general, not swimwear-only.
 
 ## Scope
 
-- One DB migration. No code changes, no UI changes, no asset deletion.
-- The underlying preview JPGs stay in storage in case you want to revive these later or reuse the images.
+- Frontend only. `src/pages/Discover.tsx` and possibly `src/pages/PublicDiscover.tsx` (same merge pattern). No DB changes, no preset edits.
+- No new fields, no new UI.
 
 ## Out of scope
 
-- Investigating why Lovable Preview rendered them as broken (probably masonry/optimizer edge case with these specific JPGs). Not worth fixing for scenes you're removing anyway.
-- Touching `recommended_scenes` (they aren't recommended, so nothing to clean there).
-- Touching `discover_presets` (they aren't presets either).
+- Redesigning the Discover filter UI.
+- Touching `useDiscoverPresets` query or RLS.
