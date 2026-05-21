@@ -1,51 +1,23 @@
-# Brand Models — chooser polish v2 (no icons)
+# Brand Models — chooser cards full-width + spacious
 
-Two issues to fix. No icons — pure typographic refinement.
+Two tweaks on top of v2.
 
-## 1. Bring back the page subtitle
+## 1. Full container width
 
-When I removed the subtitle last turn it left the header feeling unfinished. Restore it with copy that matches the chooser step.
+Drop the `max-w-2xl mx-auto` constraint. The cards should span the same width as the page header ("New brand model" / subtitle) — edge to edge of the page container.
 
-**Fix in `src/pages/BrandModelNew.tsx`:** put a `<p>` back under the H1:
+## 2. More spacious, square-ish cards
 
-> Choose how you want to create this model
+Right now the cards are short and wide. Make them feel like generous tap zones:
 
-No terminal period (core rule).
+- Bump padding from `p-6` → `p-10` (more breathing room on all sides).
+- Add a minimum height so each card reads as a confident square-ish block: `min-h-[260px]`.
+- Increase grid gap back to `gap-4`.
+- Title size up to `text-base` so it has presence inside the larger card.
+- Bottom spacing for "START →" via `mt-auto pt-10` so it sits comfortably at the floor.
 
-## 2. Rebuild the two cards (typography + spacing, no icons)
-
-Current cards have inconsistent heights (one title wraps to two lines, the other stays one line), the type hierarchy is flat, and the rhythm feels loose.
-
-**Fix in `src/pages/BrandModels.tsx` chooser block (~lines 907-944):**
-
-- **Equal heights:** add `h-full` on the buttons + `items-stretch` on the grid so both cards always match regardless of text wrap.
-- **Vertical composition:** `flex flex-col` on each button so "Start →" can hug the bottom via `mt-auto`.
-- **Refined type hierarchy:**
-  - Eyebrow: `text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium` — slightly dimmer, tighter tracking
-  - Title: `text-[15px] font-semibold text-foreground leading-snug tracking-tight` — semibold reads more decisive than medium
-  - Subtitle: `text-[13px] text-muted-foreground/90 leading-relaxed`
-  - "Start →": `text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground`, with the arrow nudge
-- **Rhythm:** eyebrow `mb-2`, title `mb-1.5`, subtitle natural flow, then `mt-auto pt-6` to push Start to the bottom.
-- **Padding:** `p-6` stays, but add a clear top accent space so the eyebrow doesn't crowd the top edge.
-- **Frame:** keep `max-w-2xl mx-auto`, bump grid gap from `gap-4` to `gap-3` for a tighter pair.
-- **Hover:** unchanged (bg-muted/40, border-foreground/50, shadow-sm, arrow nudge).
-
-### Sketch
-
-```text
-┌─────────────────────────┐  ┌─────────────────────────┐
-│                         │  │                         │
-│  01 / GENERATE          │  │  02 / REFERENCE PHOTO   │
-│  Let VOVV.AI create     │  │  Generate a model from  │
-│  a new model for you    │  │  a real person          │
-│  Pick gender, age, look │  │  Upload a face — VOVV   │
-│  — we generate from     │  │  .AI creates the model  │
-│  scratch                │  │  based on it            │
-│                         │  │                         │
-│  START  →               │  │  START  →               │
-└─────────────────────────┘  └─────────────────────────┘
-```
+Net effect: two big square-ish panels filling the full content width, each clearly a decisive button.
 
 ## Out of scope
 
-Reference / Manual panels, generation flow, navigation — untouched.
+Everything else stays — copy, hover behavior, subtitle, eyebrow style.
