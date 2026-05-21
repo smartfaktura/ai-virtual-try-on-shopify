@@ -46,6 +46,13 @@ const FEED_BY_SLUG: Record<FeedSlug, {
     sub: 'One frame photo in — a season of editorials, reels and PDP details out, on brand and on rhythm',
     alt: 'Curated Instagram-style feed of eyewear editorial portraits, vintage film campaigns and product still life — all generated from a single frame upload',
   },
+  hoodies: {
+    image: hoodiesFeed,
+    eyebrow: 'One hoodie · Whole feed',
+    heading: 'Your entire hoodie feed from a single upload',
+    sub: 'One hoodie photo in — a month of editorials, reels and lifestyle stories out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of hoodie editorials, cozy lifestyle moments and off-duty streetwear scenes — all generated from a single product upload',
+  },
 };
 
 /**
