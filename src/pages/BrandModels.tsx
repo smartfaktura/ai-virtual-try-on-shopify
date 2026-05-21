@@ -999,7 +999,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           <>
             <Section title="Essentials">{essentialsBlock}</Section>
 
-            <Collapsible>
+            <Collapsible defaultOpen>
               <Card className="p-4 sm:p-6 border-border/60">
                 <CollapsibleTrigger className="group w-full flex items-baseline justify-between mb-0 pb-0 text-left">
                   <div className="flex items-baseline gap-3">
