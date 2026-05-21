@@ -51,8 +51,20 @@ import ep3 from '@/assets/seo/eyewear-motion-3.jpg';
 import ep4 from '@/assets/seo/eyewear-motion-4.jpg';
 import ep5 from '@/assets/seo/eyewear-motion-5.jpg';
 import ep6 from '@/assets/seo/eyewear-motion-6.jpg';
+import hv1 from '@/assets/seo/hoodies-motion-1.mp4';
+import hv2 from '@/assets/seo/hoodies-motion-2.mp4';
+import hv3 from '@/assets/seo/hoodies-motion-3.mp4';
+import hv4 from '@/assets/seo/hoodies-motion-4.mp4';
+import hv5 from '@/assets/seo/hoodies-motion-5.mp4';
+import hv6 from '@/assets/seo/hoodies-motion-6.mp4';
+import hp1 from '@/assets/seo/hoodies-motion-1.jpg';
+import hp2 from '@/assets/seo/hoodies-motion-2.jpg';
+import hp3 from '@/assets/seo/hoodies-motion-3.jpg';
+import hp4 from '@/assets/seo/hoodies-motion-4.jpg';
+import hp5 from '@/assets/seo/hoodies-motion-5.jpg';
+import hp6 from '@/assets/seo/hoodies-motion-6.jpg';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
