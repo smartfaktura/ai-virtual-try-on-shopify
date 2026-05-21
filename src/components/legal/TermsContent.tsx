@@ -91,6 +91,14 @@ export function TermsContent() {
         <li>• and waive this right at checkout</li>
       </ul>
 
+      <h3>Subscription term & auto-renewal</h3>
+      <ul>
+        <li>• Subscriptions renew automatically at the end of each billing period (monthly plans renew monthly, annual plans renew annually) at the then-current price using the payment method on file, until cancelled.</li>
+        <li>• You can cancel at any time from account settings. Cancellation takes effect at the end of the current paid period; you keep access until then.</li>
+        <li>• Price changes apply to the next renewal after we have given you reasonable advance notice (at least 30 days for material increases). Continued use after the new price takes effect is acceptance of the new price.</li>
+        <li>• Credits and add-ons remain non-refundable except where required by law.</li>
+      </ul>
+
       <h2>9. Acceptable Use</h2>
       <p>You must NOT:</p>
       <ul>
@@ -180,14 +188,45 @@ export function TermsContent() {
         <li>• VOVV.AI owns all platform technology</li>
       </ul>
 
+      <h3>Limited operational licence</h3>
+      <p>
+        You grant VOVV.AI a worldwide, non-exclusive, royalty-free licence to host, store, transmit, process, modify, copy, display, and create derivative works of your Inputs and Generations solely to operate, secure, support, and improve the Service for you, and — where you choose to share — to enable sharing with collaborators, team members, or destinations you select. The licence terminates when you delete the content or close your account, subject to the backup-retention rule below.
+      </p>
+
+      <h3>Service data</h3>
+      <p>
+        All aggregated, anonymised, or de-identified usage data, logs, performance metrics, and model-quality insights derived from operation of the Service are owned by VOVV.AI and may be used to operate, secure, and improve the Service. We do not disclose your Inputs, Generations, or personal data to third parties in non-anonymised form except as described in the Privacy Policy.
+      </p>
+
+      <h3>Feedback</h3>
+      <p>
+        Ideas, suggestions, or feedback you send us are non-confidential. You assign all rights in such feedback to VOVV.AI, and we may use it without restriction, compensation, or attribution.
+      </p>
+
+      <h3>Backup retention after deletion</h3>
+      <p>
+        When you delete content or your account, we may retain copies for a reasonable period (typically up to 30 days, longer where required by law) for backup, audit, fraud-prevention, and legal-compliance purposes, after which they are permanently deleted. See Privacy Policy §10 for full retention rules.
+      </p>
+
       <h2>16. Confidentiality</h2>
       <p>
-        We treat your content as confidential and do not use it for AI training.
+        Each party will treat the other party's non-public information disclosed under or in connection with these Terms as confidential, use it only to perform under these Terms, and not disclose it to third parties without consent except (a) as required by law or regulator, or (b) to employees, contractors, or subprocessors bound by equivalent confidentiality obligations.
+      </p>
+      <p>
+        Confidentiality obligations survive termination for two (2) years; trade secrets are protected for as long as they qualify as such under applicable law.
+      </p>
+      <p>
+        We treat your Inputs and Generations as confidential and do not use them to train AI models.
       </p>
 
       <h2>17. Third-Party Services</h2>
       <p>
         We rely on third-party providers and are not responsible for their actions.
+      </p>
+
+      <h3>Force majeure</h3>
+      <p>
+        We are not liable for any failure, delay, or defect in performance caused by events outside our reasonable control, including outages or failures of third-party infrastructure or AI providers, internet or network failures, acts of government, war, terrorism, civil unrest, strikes, pandemics, or natural disasters. We will notify you as soon as practicable and take reasonable steps to minimise impact. If a force-majeure event materially prevents performance for more than 30 consecutive days, either party may terminate the affected subscription and we will refund any prepaid, unused fees on a pro-rata basis.
       </p>
 
       <h2>18. Indemnification</h2>
@@ -226,18 +265,34 @@ export function TermsContent() {
         We may suspend or terminate access at any time.
       </p>
 
-      <h2>24. Governing Law</h2>
+      <h3>Survival</h3>
+      <p>
+        Provisions that by their nature should survive termination — including §10 (Face, Likeness & Biometric Uploads), §11 (Scene & Reference Image Uploads), §15 (Intellectual Property), §16 (Confidentiality), §18 (Indemnification), §19 (Limitation of Liability), §20 (Disclaimer), and §26 (Governing Law) — survive termination of your account or these Terms.
+      </p>
+
+      <h2>24. Data Portability & Deletion (EU Data Act)</h2>
+      <p>
+        If you are established in the EU/EEA or otherwise subject to Regulation (EU) 2023/2854 (the <strong>Data Act</strong>), you may at any time, on at least two months' written notice to <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>, request (a) the transfer of your data to another provider in a structured, commonly used, and machine-readable format, or (b) the deletion of your data.
+      </p>
+      <p>
+        We will provide reasonable assistance to support transfer or deletion. We may charge reasonable direct costs to the extent permitted by the Data Act and will provide an itemised invoice.
+      </p>
+      <p>
+        This right is in addition to your data-subject rights under the GDPR (see Privacy Policy §13) and does not affect any other contractual or statutory rights.
+      </p>
+
+      <h2>25. Governing Law</h2>
       <ul>
         <li>• If you are a business: Delaware law applies</li>
         <li>• If you are an EU consumer: you retain rights under local law</li>
       </ul>
 
-      <h2>25. Changes</h2>
+      <h2>26. Changes</h2>
       <p>
         We may update these Terms with notice.
       </p>
 
-      <h2>26. Company Information</h2>
+      <h2>27. Company Information</h2>
       <p>VOVV.AI is operated by:</p>
       <ul>
         <li>• <strong>MB 123PRESETS</strong></li>
