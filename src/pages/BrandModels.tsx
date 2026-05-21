@@ -235,12 +235,20 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [referenceNotes, setReferenceNotes] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
+
+  // Creation-mode chooser (only used by the sections layout)
+  const [creationMode, setCreationMode] = useState<'chooser' | 'reference' | 'manual'>(
+    layout === 'sections' ? 'chooser' : 'manual'
+  );
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
   const [variations, setVariations] = useState<string[]>([]);
+  const [failedCount, setFailedCount] = useState(0);
   const [pendingMeta, setPendingMeta] = useState<{ metadata: any; name: string; sourceImageUrl?: string } | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<number>(0);
   const [publishing, setPublishing] = useState(false);
@@ -248,6 +256,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const queryClient = useQueryClient();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const processFile = async (file: File) => {
     const reader = new FileReader();
