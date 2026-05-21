@@ -231,7 +231,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [distinctive, setDistinctive] = useState('');
 
   // Reference toggle
-  const [, setUseReference] = useState(false); // legacy — retained for layout='card' compatibility
+  
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
