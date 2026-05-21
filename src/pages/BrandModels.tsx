@@ -274,7 +274,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   // Clipboard paste support for reference image
   useEffect(() => {
-    if (!useReference || previewUrl) return;
+    if (creationMode !== 'reference' || previewUrl) return;
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -289,7 +289,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [useReference, previewUrl]);
+  }, [creationMode, previewUrl]);
 
   const trimmedName = modelName.trim();
   const isReferenceMode = creationMode === 'reference';
