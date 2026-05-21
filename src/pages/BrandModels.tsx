@@ -905,7 +905,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     if (creationMode === 'chooser') {
       return (
         <div className="pb-32">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto pt-2 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full pt-2 items-stretch">
             <button
               type="button"
               onClick={() => setCreationMode('manual')}
