@@ -1,66 +1,130 @@
-# Brand Scenes
+# Brand Scenes — guided creation UX
 
-Turn the `/app/brand-scenes` placeholder into a real feature mirroring Brand Models: users create, save, and reuse their own scenes that show up inside Visual Studio's scene picker for the right category.
+Mirror the Brand Model wizard pattern: an entry chooser, then a small set of focused picker questions, then preview + save. Only UX/flow here — no backend, generation, or storage decisions in this plan.
 
-## User flow
+## Route shape
 
-1. **List page** `/app/brand-scenes` — grid of the user's saved scenes (thumbnail, name, category badge), with "+ New scene" CTA. Empty state explains the concept.
-2. **New scene** `/app/brand-scenes/new` — three creation modes (tabs):
-   - **Upload** a reference image (jpg/png).
-   - **Generate from prompt** (text → image via Lovable AI, same provider chain as freestyle).
-   - **Pick from my Library** (reuse a previous generation as a scene reference).
-3. **Configure step** (always shown after image is ready):
-   - **Category** (required, picked first as user requested) — drives where the scene appears in Visual Studio. Uses the existing scene taxonomy (`useSceneCategories` → lifestyle / editorial / studio / flatlay / macro / streetwear / surface / etc.) plus the user's own custom categories.
-   - **Sub-category / product type fit** (optional multi-select: apparel, eyewear, footwear, fragrance, bags…) so the scene only surfaces for relevant products.
-   - **Name** + short description (auto-filled by AI vision via existing `create-scene-from-image` edge function).
-   - **Prompt hint** — the directive that gets injected when this scene is used. Pre-filled from AI analysis, editable.
-   - **Prompt-only toggle** — if on, the image is just a thumbnail and the generator uses the prompt only (no scene reference image sent to the model). If off, the image is used as a visual scene reference.
-   - **Aspect ratio hint** (1:1 / 4:5 / 3:4 / 16:9) — default the scene renders at.
-   - **Allow people in scene** toggle — lets the picker know if this scene is on-model compatible.
-4. **Save** → returns to list. Scene is immediately usable in:
-   - Product Images / Visual Studio scene picker (filtered under "My scenes" + its category tab).
-   - Freestyle scene chip.
-   - Creative Drops scene pool.
-5. **Manage**: edit name/category/prompt hint, toggle active, delete. Soft-delete (`is_active=false`) so existing generations keep working.
+- `/app/brand-scenes` — grid of the user's saved scenes + big "+ New scene" card.
+- `/app/brand-scenes/new` — wizard (this plan).
+- After save → returns to grid with the new scene appearing under its chosen category.
 
-## What I'm deliberately covering that's easy to miss
+## Wizard flow
 
-- **Per-user ownership & RLS**: today `custom_scenes` is admin-only. Brand Scenes need a `user_id`-scoped owner path so a user only sees their own scenes (plus admin-published public ones).
-- **Category-first ordering** in the wizard (you flagged this) — category is step 1, not buried at the bottom.
-- **Auto-thumbnail optimization** — reuse `buildOptimizedUrl` so the grid is fast.
-- **AI vision pre-fill** — `create-scene-from-image` already analyzes uploads and suggests name/description/category, so users barely have to type.
-- **Storage path** — uploads go to `product-uploads/{user_id}/brand-scenes/…` to match existing RLS prefix rules.
-- **Quota / safety** — soft cap (e.g. 50 brand scenes per user, configurable) so a user can't flood the picker.
-- **Where it shows up in Visual Studio** — the existing scene picker hooks (`useCustomScenes`, `usePublicSceneLibrary`) need to merge owned scenes into the category tab the user chose. Without that, the scene "exists" but never surfaces.
-- **Product-category fit filter** — if the user tags a scene as "footwear only", it's hidden when generating for a fragrance product (prevents mismatched outputs).
-- **Edit vs re-create** — editing prompt/category is allowed; the reference image is immutable (changing it would silently change every future generation).
-- **Tracks the same `prompt_only` flag** the admin custom scenes use, so the generation pipeline already handles it — no new branching logic.
-- **No Discover exposure** by default — brand scenes are private; admins can later promote a scene to Discover (out of scope here).
+```text
+[ Step 0: How do you want to start? ]   ← chooser, like Brand Model
+   ├─ Describe it (guided picks)          ← default, recommended
+   ├─ Upload a reference photo
+   └─ Generate from a prompt
+              │
+              ▼
+[ Step 1: Where does this scene belong? ]   ← always shown, always first after chooser
+              │
+              ▼
+[ Step 2: Tell us about the scene ]          ← guided question chips (mode-dependent)
+              │
+              ▼
+[ Step 3: Preview 3 variations ]             ← pick favorite
+              │
+              ▼
+[ Step 4: Name + save ]
+```
 
-## Technical details
+A persistent top progress strip ("Category · Details · Preview · Save") shows where the user is. Back button between steps, no data loss.
 
-- **DB migration**
-  - Extend `custom_scenes` with `owner_scope text default 'admin'` (values: `admin` | `user`), an optional `product_categories text[]`, `aspect_ratio text`, `allow_people boolean`.
-  - Add RLS:
-    - `SELECT`: `auth.uid() = created_by AND owner_scope = 'user'` (own scenes), plus existing admin/public paths kept intact.
-    - `INSERT`: authenticated users when `owner_scope = 'user' AND created_by = auth.uid()`.
-    - `UPDATE` / `DELETE`: owner-only for their own user-scope rows; admin policy unchanged.
-  - Update `get_public_custom_scenes` to keep returning admin scenes only; add new RPC `get_my_brand_scenes()` for the owner.
-- **Hooks**
-  - New `useBrandScenes()` — list/insert/update/delete for `owner_scope='user'` rows.
-  - Extend `useCustomScenes` consumer hooks in the scene picker to merge in `useBrandScenes()` results behind a "My scenes" group.
-- **Pages / components**
-  - Replace `src/pages/BrandScenes.tsx` placeholder with the list view.
-  - New `src/pages/BrandSceneNew.tsx` (mirrors `BrandModelNew.tsx`) hosting a new `BrandSceneWizard` component with the three modes.
-  - New `src/components/app/BrandSceneCard.tsx` for the grid item with edit/delete menu.
-  - Route: add `/app/brand-scenes/new` and `/app/brand-scenes/:id/edit` to `App.tsx`.
-- **Edge functions**
-  - Reuse `create-scene-from-image` (vision analysis, already exists).
-  - For "Generate from prompt", reuse the existing freestyle generation endpoint and store the result as the scene's reference image.
-- **Sidebar** — already links to `/app/brand-scenes`; no nav changes.
+## Step 0 — Chooser (entry card)
 
-## Out of scope
+Three large equal-weight cards, same visual language as Brand Model's `chooser` mode:
 
+- **Describe it** — "Answer a few quick questions, we'll build it for you." (Sparkles icon)
+- **Upload a photo** — "We'll analyze your reference and turn it into a reusable scene." (Camera icon)
+- **From a prompt** — "Write what you want, we'll generate the scene image." (Wand2 icon)
+
+Recommended badge on "Describe it" since it's the most guided.
+
+## Step 1 — Category (always first, you flagged this)
+
+One question, big tappable tiles with example thumbnail:
+
+> **Where should this scene live?**
+
+Tiles use the existing scene taxonomy so the scene lands in the right tab in Visual Studio:
+Lifestyle · Editorial · Studio · Flatlay · Streetwear · Surface · Macro · Outdoor · Interior · Plus the user's custom categories (from `useSceneCategories`).
+
+Secondary (optional, collapsible "Refine fit"):
+- **Which products is this for?** multi-select chips: Apparel, Eyewear, Footwear, Bags, Fragrance, Beauty, Jewelry, Home, Electronics, Any. Default = Any.
+- **People in scene?** segmented: On-model · Product only · Either.
+
+Continue button disabled until a category is picked.
+
+## Step 2 — Details (depends on the chosen mode)
+
+### Mode A — Describe it (guided picks)
+
+Compact `Section` cards stacked vertically, each one question with chip pickers. Picks are single-select unless noted. Skippable (any field can stay empty).
+
+1. **Setting** — Indoor studio · Living room · Bedroom · Kitchen · Bathroom · Cafe · Street · Beach · Garden · Forest · Desert · Rooftop · Custom (text)
+2. **Time & light** — Morning soft · Golden hour · Midday bright · Overcast diffuse · Studio strobe · Window light · Night/neon · Candle warm
+3. **Color mood** — Neutral warm · Neutral cool · Pastel · Earth tones · Monochrome · Bold accent · Muted editorial
+4. **Surface / floor** (only if relevant for category) — Linen · Marble · Concrete · Wood · Tile · Sand · Grass · Paper
+5. **Props** — multi-select: Glassware · Plants · Books · Fabric drape · Stones · Flowers · Mirror · None
+6. **Camera framing** — Wide environment · Medium · Tight detail · Overhead flatlay · Low angle
+7. **Aspect ratio** — 1:1 · 4:5 · 3:4 · 16:9 (default 4:5)
+8. **Optional free-text** — "Anything else? (mood, references, dos and don'ts)" — small textarea, 280 char cap.
+
+A live one-line "scene summary" sentence updates underneath as the user picks ("Soft morning light, linen surface, pastel mood, tight detail, 4:5") — gives them confidence without showing the raw prompt.
+
+### Mode B — Upload reference
+
+- Big drop zone (drag/drop, paste, file picker) — same component pattern as Brand Model reference upload.
+- Once uploaded: AI auto-analyzes the image and pre-fills name + a short description + suggested category (user can override category from Step 1 — they'll see "Suggested: Editorial" and can switch).
+- Rights & content acknowledgement checkbox (same wording as Brand Model: "I have rights to this image and it follows our content policy").
+- Optional "Anything to emphasize?" short textarea.
+
+### Mode C — From a prompt
+
+- Single textarea with placeholder examples ("Warm sunlit Mediterranean kitchen, linen napkins, soft window light…").
+- Below the textarea: 6–8 "Quick add" chips that append style cues to the prompt (Cinematic · Soft window light · Editorial · Cozy · Minimal · Moody · Bright · Pastel).
+- Aspect ratio picker (same as Mode A).
+
+## Step 3 — Preview 3 variations
+
+- Same layout as Brand Model variation picker: 3 image tiles in a row, clickable to select, selected one shows a Check.
+- "Regenerate this one" hover action on each tile.
+- Branded loading state while generating (reuse pattern from `BrandedLoadingState`, copy adapted: "Composing your scene…", "Setting the light…", "Styling props…").
+
+## Step 4 — Name + save
+
+- Auto-filled name field (e.g. "Sunlit linen kitchen" derived from picks). Editable, 32 char cap with counter.
+- Read-only summary chips of what's saved: Category · Products · People · Aspect.
+- Primary CTA: "Save scene" → toast "Scene added to {Category}" → navigate back to grid.
+- Secondary: "Save and use now" → navigates straight to Visual Studio with this scene pre-selected.
+
+## Empty state on `/app/brand-scenes`
+
+Big centered card with three example thumbnails fanned out, headline "Design your own signature scenes", subline "Backgrounds, environments, and moods that match your brand. Use them on any product, anytime." Single CTA → "+ Create your first scene".
+
+## Grid item (after at least one scene exists)
+
+Square thumbnail · name overlay on hover · tiny category badge top-left · 3-dot menu: Edit · Rename · Duplicate · Delete. Same density as Brand Models grid.
+
+## Microcopy rules
+
+- Follow the project's no-terminal-period rule on headers and one-line subtitles.
+- Always say "scene" (singular) in CTAs, never "preset" or "template" or "workflow".
+
+## Things I'm deliberately handling that are easy to miss
+
+- **Category is step 1, not buried** — so the user always knows where the scene will end up before answering anything else.
+- **Mode chooser sits above category** so the user picks "how" before "what", matching Brand Model's mental model and avoiding wasted picks if they switch modes.
+- **Live summary sentence** during guided picks — keeps the wizard feeling smart without exposing the underlying prompt.
+- **AI pre-fill on upload** auto-suggests name + category, but never silently overrides a category the user already chose.
+- **People-in-scene toggle** at Step 1 so the scene picker in Visual Studio can correctly include/exclude it for on-model vs product-only workflows.
+- **"Save and use now"** secondary CTA closes the loop — user sees their scene working immediately, not just stored.
+- **Skippable details** — every Step 2 chip is optional; only Category is required. Lowers friction for power users.
+
+## Out of scope (for this UX pass)
+
+- Backend tables, RLS, edge functions, storage paths.
 - Admin promotion of brand scenes to public Discover.
-- Team sharing of brand scenes (single-user only for v1).
-- Bulk import of multiple scenes at once.
+- Team sharing.
+- Editing the underlying reference image after save.
