@@ -328,15 +328,9 @@ export default function Discover() {
     ]
       .filter((s) => !presetTitles.has(s.name))
       .map((s) => ({ type: 'scene', data: s }));
-    const merged = [...presetItems, ...sceneItems];
-    // TEMP DEBUG: trace swimwear presets through the pipeline
-    const targets = ['Sun Chaser Girl', 'Island Flash Hour', 'Beach Day Bliss'];
-    const inPresets = presets.filter(p => targets.includes(p.title)).map(p => ({ t: p.title, cat: p.category, sub: p.subcategory }));
-    const inMerged = merged.filter(i => i.type === 'preset' && targets.includes((i.data as any).title)).map(i => (i.data as any).title);
-    console.log('[discover-debug] presets raw count', presets.length, 'targets found:', inPresets);
-    console.log('[discover-debug] in allItems:', inMerged, 'recTitlesHasTarget:', targets.filter(t => recTitles.has(t)));
-    return merged;
+    return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses, recommendedPoses, filterVisible]);
+
 
 
   // Read ?similar= param from Dashboard's "Similar" button
