@@ -50,31 +50,42 @@ export function TermsContent() {
       <h2>4. Account Responsibility</h2>
       <p>You are responsible for:</p>
       <ul>
-        <li>• Your account security</li>
-        <li>• All activity under your account</li>
-        <li>• Providing accurate information</li>
+        <li>• Your account security, including credentials and any access tokens</li>
+        <li>• All activity under your account, including activity by your team members or authorised users</li>
+        <li>• Providing accurate, current, and complete information, and keeping it up to date</li>
+        <li>• Notifying us promptly at <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a> of any unauthorised access or security incident</li>
       </ul>
 
       <h2>5. Service Description</h2>
       <p>
-        VOVV.AI provides AI-powered visual generation tools. We act solely as a technology provider. We do not:
+        VOVV.AI provides AI-powered visual generation tools. We act solely as a technology provider and tool: Generations are produced at your direction, based on your Inputs and prompts. We do not:
       </p>
       <ul>
-        <li>• Control Inputs</li>
-        <li>• Review content</li>
-        <li>• Act as publisher</li>
+        <li>• Pre-screen, curate, or editorially control Inputs or Generations</li>
+        <li>• Act as the publisher, broadcaster, or distributor of any content you create or share</li>
+        <li>• Endorse any Generation or guarantee it is fit for any particular use</li>
       </ul>
+      <p>
+        You are the producer, controller, and publisher of every Generation you download, share, or distribute.
+      </p>
 
-      <h2>6. Experimental Features</h2>
-      <p>Some features may be beta:</p>
+      <h2>6. Experimental Features (Beta)</h2>
+      <p>
+        Some features are clearly labelled as beta, preview, experimental, or early-access. Beta features:
+      </p>
       <ul>
-        <li>• May change or break</li>
-        <li>• Provided without guarantees</li>
+        <li>• Are provided "as is" without any service-level commitment</li>
+        <li>• May change, regress, or be withdrawn at any time without notice</li>
+        <li>• May produce unexpected or lower-quality results</li>
+        <li>• Are excluded from any uptime, support, or refund commitment</li>
       </ul>
+      <p>
+        To the maximum extent permitted by law, we have no liability for defects or losses arising solely from beta features.
+      </p>
 
       <h2>7. Availability</h2>
       <p>
-        We do not guarantee uninterrupted or error-free operation.
+        We provide the Service on a commercially reasonable, best-effort basis and do not guarantee uninterrupted or error-free operation. We may perform planned or emergency maintenance, deploy updates, throttle abusive usage, or modify features at any time. Unless we have separately agreed a written SLA with you, no specific uptime is guaranteed.
       </p>
 
       <h2>8. Credits and Payments</h2>
@@ -91,7 +102,7 @@ export function TermsContent() {
         <li>• and waive this right at checkout</li>
       </ul>
 
-      <h3>Subscription term & auto-renewal</h3>
+      <h3>Subscription term &amp; auto-renewal</h3>
       <ul>
         <li>• Subscriptions renew automatically at the end of each billing period (monthly plans renew monthly, annual plans renew annually) at the then-current price using the payment method on file, until cancelled.</li>
         <li>• You can cancel at any time from account settings. Cancellation takes effect at the end of the current paid period; you keep access until then.</li>
@@ -104,19 +115,19 @@ export function TermsContent() {
       <ul>
         <li>• Violate any applicable law or regulation</li>
         <li>• Upload content you do not own or have rights to</li>
-        <li>• Upload, generate, or distribute imagery of any real person without that person's documented, explicit consent (see §10)</li>
+        <li>• Upload, generate, or distribute imagery of any real person without that person's documented, explicit consent (see Section 10)</li>
         <li>• Upload faces of minors (under 18) under any circumstance</li>
         <li>• Upload faces of public figures, celebrities, politicians, or any third party you do not have rights to</li>
         <li>• Create sexual, intimate, nude, suggestive, or non-consensual intimate imagery (NCII) depicting a real person — strictly prohibited and may be reported to law enforcement</li>
         <li>• Create content intended to defame, harass, impersonate, blackmail, stalk, or deceive any person</li>
         <li>• Create political disinformation, election-influencing material, or fraudulent content</li>
         <li>• Use Generations in any way that breaches right-of-publicity, personality rights, defamation, or data-protection laws in any jurisdiction</li>
-        <li>• Upload reference, mood-board, or scene images that you do not own or have a clear licence to use as an AI reference, or that mimic another brand's identity in a misleading way (see §11)</li>
+        <li>• Upload reference, mood-board, or scene images that you do not own or have a clear licence to use as an AI reference, or that mimic another brand's identity in a misleading way (see Section 11)</li>
         <li>• Abuse, reverse-engineer, scrape, or otherwise exploit the Service</li>
       </ul>
       <p>We may suspend or terminate accounts at any time, without refund, for any suspected violation.</p>
 
-      <h2>10. Face, Likeness & Biometric Uploads (Critical)</h2>
+      <h2>10. Face, Likeness &amp; Biometric Uploads (Critical)</h2>
       <p>
         The Reference Photo feature lets you upload a face so the Service can generate an AI model resembling that person. This is our highest-risk feature and carries the strictest rules. By using it you make the warranties below and accept the responsibilities that follow.
       </p>
@@ -128,24 +139,24 @@ export function TermsContent() {
         <li>• <strong>Special-category data (GDPR Art. 9).</strong> Uploaded face images are biometric / special-category personal data. The lawful basis is the explicit consent of you and (where different) the data subject. The data subject may withdraw consent and request deletion at any time via <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>.</li>
         <li>• <strong>Enforcement.</strong> We may, at our sole discretion and without refund, block, remove, refuse to generate, suspend, or terminate any account, and report to law enforcement or regulators, any upload or Generation that appears to violate this section.</li>
         <li>• <strong>Indemnity.</strong> You fully indemnify, defend, and hold harmless VOVV.AI, MB 123PRESETS, and its operators against any claim, fine, regulatory action, investigation, or damages — including under GDPR (Art. 82), right-of-publicity / personality-rights laws, defamation, intellectual-property law, the US TAKE IT DOWN Act, the UK Online Safety Act, and EU AI Act Art. 50 — arising from any face or likeness you uploaded or any Generation you created or distributed.</li>
-        <li>• <strong>Carve-out from liability cap.</strong> The liability cap in §19 (Limitation of Liability) does not apply to amounts you owe under this indemnity.</li>
+        <li>• <strong>Carve-out from liability cap.</strong> The liability cap in Section 19 (Limitation of Liability) does not apply to amounts you owe under this indemnity.</li>
       </ul>
       <p>
         If you cannot truthfully make every warranty above for a given upload, you must not upload that face. This rule is non-negotiable.
       </p>
 
-      <h2>11. Scene & Reference Image Uploads (Critical)</h2>
+      <h2>11. Scene &amp; Reference Image Uploads (Critical)</h2>
       <p>
         Brand Scenes and similar features let you upload any image as a style, composition, or scene reference that the Service will use to influence Generations. By uploading you make the warranties below.
       </p>
       <ul>
         <li>• <strong>Rights warranty.</strong> For every reference image you upload you warrant that either (a) you own it, (b) you hold a written licence covering AI ingestion and the creation of derivative works, or (c) the image is in the public domain or under a licence (e.g. CC0) that clearly permits this use. Stock-photo previews, Pinterest pins, Google Images results, screenshots of other brands' campaigns, magazine scans, film stills, and watermarked previews are <strong>not</strong> acceptable references.</li>
         <li>• <strong>No third-party brand mimicry.</strong> You will not upload references with the intent to clone another brand's identity, trade dress, packaging, logo, mascot, or recognisable campaign in a way that would mislead consumers or breach trademark, passing-off, or unfair-competition law.</li>
-        <li>• <strong>Persons and private property in scenes.</strong> Reference images depicting identifiable people, private interiors, or restricted locations must respect the same consent and rights rules as §10 — no minors, no public figures or third parties without rights, no NCII, no surveillance / paparazzi material.</li>
-        <li>• <strong>No prohibited content.</strong> You will not upload references that are illegal, sexual, violent, hateful, or otherwise prohibited under §9.</li>
+        <li>• <strong>Persons and private property in scenes.</strong> Reference images depicting identifiable people, private interiors, or restricted locations must respect the same consent and rights rules as Section 10 — no minors, no public figures or third parties without rights, no NCII, no surveillance / paparazzi material.</li>
+        <li>• <strong>No prohibited content.</strong> You will not upload references that are illegal, sexual, violent, hateful, or otherwise prohibited under Section 9.</li>
         <li>• <strong>Enforcement.</strong> We may, at our sole discretion and without refund, block, remove, refuse to generate from, suspend, or terminate any account, and report to rights-holders or authorities, any reference upload or resulting Generation that appears to violate this section. We will comply with valid DMCA / EU DSA takedown notices targeting reference uploads or their Generations.</li>
         <li>• <strong>Indemnity.</strong> You fully indemnify, defend, and hold harmless VOVV.AI, MB 123PRESETS, and its operators against any claim, fine, regulatory action, or damages — including copyright infringement (US DMCA, EU Copyright Directive, UK CDPA), trademark / trade-dress, passing-off, unfair competition, right-of-publicity, defamation, and EU AI Act Art. 50 — arising from any reference image you uploaded or any Generation derived from it.</li>
-        <li>• <strong>Carve-out from liability cap.</strong> The liability cap in §19 (Limitation of Liability) does not apply to amounts you owe under this indemnity.</li>
+        <li>• <strong>Carve-out from liability cap.</strong> The liability cap in Section 19 (Limitation of Liability) does not apply to amounts you owe under this indemnity.</li>
       </ul>
       <p>
         If you cannot truthfully make every warranty above for a given upload, you must not upload that image as a reference. This rule is non-negotiable.
@@ -154,31 +165,42 @@ export function TermsContent() {
       <h2>12. Your Responsibility (Critical)</h2>
       <p>You are fully responsible for:</p>
       <ul>
-        <li>• All Inputs</li>
-        <li>• All Generations</li>
-        <li>• How content is used or published</li>
+        <li>• All Inputs you upload or submit</li>
+        <li>• All Generations you create, save, download, share, or publish</li>
+        <li>• How any Generation is used, modified, or distributed downstream</li>
       </ul>
-      <p>You act as the publisher and controller of content. You must ensure:</p>
+      <p>
+        You act as the publisher of every Generation you take outside the Service, and you are the data controller for any personal data contained in your Inputs (with VOVV.AI acting as processor for those operations). You must ensure:
+      </p>
       <ul>
-        <li>• Legal compliance</li>
-        <li>• Advertising compliance</li>
-        <li>• Platform policy compliance</li>
+        <li>• Compliance with all applicable laws (consumer-protection, advertising, IP, data-protection, AI-disclosure)</li>
+        <li>• Compliance with the rules of any platform where you publish (Meta, TikTok, Amazon, Shopify, ad networks, app stores)</li>
+        <li>• That you have obtained and can produce, on request, all consents, licences, and rights covering the people, brands, and assets shown in any Generation you publish</li>
       </ul>
 
       <h2>13. AI Limitations</h2>
-      <p>AI outputs:</p>
+      <p>
+        AI outputs are probabilistic. They may:
+      </p>
       <ul>
-        <li>• May contain errors</li>
-        <li>• May resemble existing content</li>
-        <li>• Are not guaranteed to be unique or lawful</li>
+        <li>• Contain factual errors, hallucinations, distortions, or anatomical inaccuracies</li>
+        <li>• Inadvertently resemble existing works, people, brands, or trademarks</li>
+        <li>• Misinterpret prompts or produce results that are not fit for a particular purpose</li>
+        <li>• Vary between generations even with the same Inputs and prompt</li>
       </ul>
-      <p>You must independently review all outputs.</p>
+      <p>
+        You must independently review, validate, and (where applicable) edit every output before publication or commercial use. We make no guarantee of accuracy, originality, non-infringement, or fitness for any particular purpose.
+      </p>
 
       <h2>14. AI Transparency (EU AI Act)</h2>
-      <p>You are responsible for:</p>
+      <p>
+        Generations produced by the Service are AI-generated synthetic content. Where you publish, distribute, or share Generations, you are responsible for:
+      </p>
       <ul>
-        <li>• Disclosing AI-generated content where required</li>
-        <li>• Ensuring compliance with applicable laws</li>
+        <li>• Disclosing the AI-generated nature of the content where required by law, including under Article 50 of Regulation (EU) 2024/1689 (the <strong>EU AI Act</strong>) for synthetic image, audio, video, and text content</li>
+        <li>• Clearly labelling deep-fake or look-alike content that depicts real persons, places, or events as artificially generated or manipulated</li>
+        <li>• Not using Generations for deceptive practices, election interference, or any conduct prohibited under the EU AI Act or equivalent laws in your jurisdiction</li>
+        <li>• Preserving any watermark, metadata, or provenance signal we apply to Generations</li>
       </ul>
 
       <h2>15. Intellectual Property</h2>
@@ -205,7 +227,7 @@ export function TermsContent() {
 
       <h3>Backup retention after deletion</h3>
       <p>
-        When you delete content or your account, we may retain copies for a reasonable period (typically up to 30 days, longer where required by law) for backup, audit, fraud-prevention, and legal-compliance purposes, after which they are permanently deleted. See Privacy Policy §10 for full retention rules.
+        When you delete content or your account, we may retain copies for a reasonable period (typically up to 30 days, longer where required by law) for backup, audit, fraud-prevention, and legal-compliance purposes, after which they are permanently deleted. See Privacy Policy for full retention rules.
       </p>
 
       <h2>16. Confidentiality</h2>
@@ -221,7 +243,7 @@ export function TermsContent() {
 
       <h2>17. Third-Party Services</h2>
       <p>
-        We rely on third-party providers and are not responsible for their actions.
+        The Service relies on third-party providers to function, including cloud and storage infrastructure, payment processors, AI model providers, email delivery, and analytics. Your use of features that depend on a third-party provider may also be subject to that provider's terms. We are not responsible for the acts, omissions, outages, security incidents, pricing, or policy changes of third-party providers, and we may change providers at any time.
       </p>
 
       <h3>Force majeure</h3>
@@ -230,47 +252,79 @@ export function TermsContent() {
       </p>
 
       <h2>18. Indemnification</h2>
-      <p>You agree to indemnify VOVV.AI against claims arising from:</p>
+      <p>
+        You will defend, indemnify, and hold harmless VOVV.AI, MB 123PRESETS, and their officers, employees, contractors, and affiliates from and against any third-party claim, action, investigation, fine, or proceeding, and any resulting damages, liabilities, settlements, and reasonable legal fees, arising out of or relating to:
+      </p>
       <ul>
-        <li>• Your Inputs</li>
-        <li>• Your Generations</li>
-        <li>• Your use of the Service</li>
+        <li>• Your Inputs (including any face, likeness, or reference image you upload)</li>
+        <li>• Your Generations and any use, modification, or distribution of them</li>
+        <li>• Your use of the Service in breach of these Terms or any applicable law</li>
+        <li>• Your breach of any third-party right (IP, publicity, privacy, data-protection)</li>
       </ul>
+      <p>
+        We will promptly notify you of any covered claim, and you will assume sole control of the defence and settlement, provided you do not enter any settlement that imposes an obligation or admission on us without our prior written consent. We may participate in the defence at our own expense with counsel of our choice.
+      </p>
 
       <h2>19. Limitation of Liability</h2>
-      <p>To the maximum extent permitted by law, we are not liable for:</p>
+      <p>To the maximum extent permitted by law:</p>
       <ul>
-        <li>• Indirect or consequential damages</li>
-        <li>• Loss of profits, data, or business</li>
+        <li>• We are not liable for any indirect, incidental, special, consequential, exemplary, or punitive damages</li>
+        <li>• We are not liable for loss of profits, revenue, goodwill, data, content, business opportunity, or anticipated savings, whether foreseeable or not</li>
+        <li>• Our total aggregate liability for all claims relating to the Service in any 12-month period is capped at the amount you actually paid VOVV.AI for the Service in that 12-month period</li>
       </ul>
-      <p>Total liability is limited to what you paid in the past 12 months.</p>
+      <p>
+        Nothing in these Terms excludes or limits liability that cannot lawfully be excluded or limited, including liability for death or personal injury caused by negligence, fraud or fraudulent misrepresentation, gross negligence, wilful misconduct, or any statutory consumer rights that apply to you and cannot be waived. The carve-outs in Sections 10 and 11 (uncapped indemnities) also continue to apply.
+      </p>
 
       <h2>20. Disclaimer</h2>
       <p>
-        The Service is provided "as is" with no guarantees.
+        The Service and all Generations are provided <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> without warranties of any kind, express, implied, or statutory. To the maximum extent permitted by law, we disclaim all implied warranties, including merchantability, fitness for a particular purpose, non-infringement, accuracy, reliability, availability, and any warranty arising from course of dealing or trade usage. No advice or information obtained from the Service creates any warranty not expressly stated in these Terms.
       </p>
 
-      <h2>21. Copyright & Content Complaints</h2>
+      <h2>21. Copyright &amp; Content Complaints</h2>
       <p>
-        Report issues: <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>. We may remove content if required.
+        If you believe content on the Service infringes your copyright or other rights, send a notice to <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a> including:
+      </p>
+      <ul>
+        <li>• Identification of the copyrighted work or right claimed to be infringed</li>
+        <li>• A precise URL or description of the allegedly infringing material so we can locate it</li>
+        <li>• Your contact details (name, address, email, phone)</li>
+        <li>• A statement made in good faith that the use is not authorised by the rights-holder, its agent, or the law</li>
+        <li>• A statement, under penalty of perjury, that the information is accurate and that you are the rights-holder or authorised to act on the rights-holder's behalf</li>
+        <li>• Your physical or electronic signature</li>
+      </ul>
+      <p>
+        We will review valid notices promptly and may remove or disable access to the material, notify the affected user, and (where appropriate) provide a counter-notice procedure. We terminate accounts of repeat infringers. Knowingly false notices may result in liability under applicable law.
       </p>
 
       <h2>22. DSA Compliance (EU)</h2>
       <p>
-        Users may report illegal content. We may remove or restrict such content.
+        For users in the EU, we comply with Regulation (EU) 2022/2065 (the <strong>Digital Services Act</strong>) to the extent applicable to the Service. You may report illegal content or violations of these Terms to our single point of contact at <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>. We will:
       </p>
+      <ul>
+        <li>• Acknowledge and review valid notices in a timely, diligent, and non-arbitrary manner</li>
+        <li>• Provide affected users with a statement of reasons when we remove, restrict, or demote content</li>
+        <li>• Operate an internal complaints-handling process for content decisions; you may also seek out-of-court dispute settlement where available</li>
+        <li>• Give appropriate priority to notices submitted by certified trusted flaggers</li>
+      </ul>
 
       <h2>23. Termination</h2>
       <p>
-        We may suspend or terminate access at any time.
+        You may stop using the Service or close your account at any time from account settings.
+      </p>
+      <p>
+        We may suspend, restrict, or terminate your access immediately and without refund if (a) you breach these Terms or any law, (b) your account is materially overdue on payment, (c) we believe your use creates legal, security, reputational, or operational risk to us or to other users, or (d) we are required to do so by law, regulator, or court order. Where the breach is curable and the risk is not immediate, we will use reasonable efforts to notify you and give you a chance to cure.
+      </p>
+      <p>
+        On termination, your right to access the Service ends and we may delete your Inputs and Generations subject to the backup-retention rule in Section 15. You remain liable for amounts owed up to the date of termination.
       </p>
 
       <h3>Survival</h3>
       <p>
-        Provisions that by their nature should survive termination — including §10 (Face, Likeness & Biometric Uploads), §11 (Scene & Reference Image Uploads), §15 (Intellectual Property), §16 (Confidentiality), §18 (Indemnification), §19 (Limitation of Liability), §20 (Disclaimer), and §26 (Governing Law) — survive termination of your account or these Terms.
+        Provisions that by their nature should survive termination — including Section 10 (Face, Likeness &amp; Biometric Uploads), Section 11 (Scene &amp; Reference Image Uploads), Section 15 (Intellectual Property), Section 16 (Confidentiality), Section 18 (Indemnification), Section 19 (Limitation of Liability), Section 20 (Disclaimer), Section 25 (Governing Law), and Section 27 (General) — survive termination of your account or these Terms.
       </p>
 
-      <h2>24. Data Portability & Deletion (EU Data Act)</h2>
+      <h2>24. Data Portability &amp; Deletion (EU Data Act)</h2>
       <p>
         If you are established in the EU/EEA or otherwise subject to Regulation (EU) 2023/2854 (the <strong>Data Act</strong>), you may at any time, on at least two months' written notice to <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>, request (a) the transfer of your data to another provider in a structured, commonly used, and machine-readable format, or (b) the deletion of your data.
       </p>
@@ -278,21 +332,33 @@ export function TermsContent() {
         We will provide reasonable assistance to support transfer or deletion. We may charge reasonable direct costs to the extent permitted by the Data Act and will provide an itemised invoice.
       </p>
       <p>
-        This right is in addition to your data-subject rights under the GDPR (see Privacy Policy §13) and does not affect any other contractual or statutory rights.
+        This right is in addition to your data-subject rights under the GDPR (see Privacy Policy) and does not affect any other contractual or statutory rights.
       </p>
 
       <h2>25. Governing Law</h2>
       <ul>
-        <li>• If you are a business: Delaware law applies</li>
-        <li>• If you are an EU consumer: you retain rights under local law</li>
+        <li>• <strong>Business users:</strong> these Terms are governed by the laws of the Republic of Lithuania, and the courts of Vilnius, Lithuania have exclusive jurisdiction over any dispute, subject to any mandatory rules that apply to you.</li>
+        <li>• <strong>EU consumers:</strong> you keep the protection of the mandatory laws of the country where you live, and you may bring proceedings in the courts of that country.</li>
+        <li>• <strong>Other consumers:</strong> nothing in these Terms removes any mandatory statutory right you have in your country of residence.</li>
       </ul>
 
       <h2>26. Changes</h2>
       <p>
-        We may update these Terms with notice.
+        We may update these Terms from time to time. For material changes we will give you reasonable advance notice (at least 30 days) by email or via the Service. Non-material changes (clarifications, formatting, contact details) take effect on posting. Continued use of the Service after changes take effect is your acceptance of the updated Terms; if you do not agree, you should stop using the Service and may close your account.
       </p>
 
-      <h2>27. Company Information</h2>
+      <h2>27. General</h2>
+      <ul>
+        <li>• <strong>Entire agreement.</strong> These Terms and the Privacy Policy are the entire agreement between you and VOVV.AI regarding the Service and supersede any prior agreements on the same subject.</li>
+        <li>• <strong>Severability.</strong> If any provision is held unenforceable, the remaining provisions stay in full force, and the unenforceable provision will be modified to the minimum extent necessary to make it enforceable.</li>
+        <li>• <strong>No waiver.</strong> Failure to enforce any right is not a waiver of that right.</li>
+        <li>• <strong>Assignment.</strong> You may not assign or transfer these Terms without our prior written consent. We may assign these Terms to an affiliate or successor in connection with a merger, acquisition, or sale of assets.</li>
+        <li>• <strong>Notices.</strong> We may send notices to the email associated with your account; you should send notices to <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>.</li>
+        <li>• <strong>Language.</strong> The English version of these Terms is the binding version; any translation is provided for convenience only.</li>
+        <li>• <strong>No third-party beneficiaries.</strong> These Terms do not create rights for any third party.</li>
+      </ul>
+
+      <h2>28. Company Information</h2>
       <p>VOVV.AI is operated by:</p>
       <ul>
         <li>• <strong>MB 123PRESETS</strong></li>
