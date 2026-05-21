@@ -1,27 +1,51 @@
-# Force the new Terms to show (kill the cached "Delaware" bundle)
+# Remove the 6 broken furniture-lifestyle scenes from Discover
 
-## What's actually happening
+## What's happening
 
-The Terms file on disk is already correct. `src/components/legal/TermsContent.tsx` §25 reads:
+Six scenes show up as broken cards on the public Discover view:
 
-> Business users: these Terms are governed by the laws of the Republic of Lithuania, and the courts of Vilnius, Lithuania have exclusive jurisdiction…
+- Penthouse Panorama Lounge
+- Ivory Bouclé Salon
+- Nordic Fjord Living
+- Grand Atelier Salon
+- Walnut & Travertine Den
+- Smoke & Stone Loft
 
-A full-text search for "Delaware" across the project returns zero matches. So there is nothing to rewrite in the legal copy.
-
-What you are still seeing is the **previously cached JS bundle** in your browser. The signup modal and `/terms` route both render the same component, so once the new bundle loads, both update.
+They live in `product_image_scenes` as `furniture-lifestyle-*` rows. Their `preview_image_url` files exist in storage (HTTP 200), but the rendered cards in your screenshot are clearly broken / empty. Rather than chase a rendering edge case for scenes you don't want to surface anyway, the cleanest fix is to take them out of all public surfaces.
 
 ## Fix
 
-Two small, safe changes to force every visitor (and you) onto the new bundle:
+A single, reversible migration that marks the six rows `is_active = false` in `product_image_scenes`:
 
-1. **Bump `public/version.json`** to a fresh timestamp. The app's deploy-state guard reads this file and triggers a soft reload for users on non-wizard routes when the version changes.
-2. **Add a tiny "Last updated" line** at the very top of `TermsContent.tsx` with today's date. This is good legal hygiene anyway (users can see the Terms changed) and gives you a visible signal in the UI that the new copy is live — if you don't see today's date, you're still on the cached bundle and need to hard-refresh (Cmd/Ctrl+Shift+R).
+```sql
+UPDATE public.product_image_scenes
+SET is_active = false
+WHERE scene_id IN (
+  'furniture-lifestyle-penthouse-panorama',
+  'furniture-lifestyle-ivory-boucle-salon',
+  'furniture-lifestyle-nordic-fjord',
+  'furniture-lifestyle-grand-atelier-salon',
+  'furniture-lifestyle-walnut-travertine-den',
+  'furniture-lifestyle-smoke-stone-loft'
+);
+```
 
-That's it. No legal wording changes, no renumbering, no Privacy edits.
+This removes them from:
+
+- The public Discover RPC (`get_public_recommended_scenes` already filters `is_active = true`)
+- The authenticated `/app/discover` recommended list
+- The Product Images scene picker
+- Any SEO category grid that pulls live scene previews
+
+If you ever want them back, flip `is_active` back to `true` — nothing is deleted.
 
 ## Scope
 
-- `public/version.json` — bump the `v` value
-- `src/components/legal/TermsContent.tsx` — add one "Last updated: 21 May 2026" line under the opening div
+- One DB migration. No code changes, no UI changes, no asset deletion.
+- The underlying preview JPGs stay in storage in case you want to revive these later or reuse the images.
 
-No DB, auth, routes, components, or translations affected.
+## Out of scope
+
+- Investigating why Lovable Preview rendered them as broken (probably masonry/optimizer edge case with these specific JPGs). Not worth fixing for scenes you're removing anyway.
+- Touching `recommended_scenes` (they aren't recommended, so nothing to clean there).
+- Touching `discover_presets` (they aren't presets either).
