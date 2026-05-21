@@ -331,6 +331,8 @@ export default function Discover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses, recommendedPoses, filterVisible]);
 
+
+
   // Read ?similar= param from Dashboard's "Similar" button
   const location = useLocation();
   useEffect(() => {
