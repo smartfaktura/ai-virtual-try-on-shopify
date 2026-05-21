@@ -1,50 +1,48 @@
-# Brand Models — chooser polish v2
+# Brand Models — chooser polish v2 (no icons)
 
-Two issues to fix.
+Two issues to fix. No icons — pure typographic refinement.
 
 ## 1. Bring back the page subtitle
 
-When I removed the subtitle last turn it left the header feeling unfinished. Put a subtitle back — but make it match the chooser step, not the form step.
+When I removed the subtitle last turn it left the header feeling unfinished. Restore it with copy that matches the chooser step.
 
-**Fix in `src/pages/BrandModelNew.tsx`:** restore the `<p>` under the H1 with new copy:
+**Fix in `src/pages/BrandModelNew.tsx`:** put a `<p>` back under the H1:
 
 > Choose how you want to create this model
 
 No terminal period (core rule).
 
-## 2. Rebuild the two cards
+## 2. Rebuild the two cards (typography + spacing, no icons)
 
-Current cards have inconsistent heights (one title wraps to two lines, the other stays one line), the type hierarchy is flat, and they feel like text blocks rather than tappable choices.
+Current cards have inconsistent heights (one title wraps to two lines, the other stays one line), the type hierarchy is flat, and the rhythm feels loose.
 
 **Fix in `src/pages/BrandModels.tsx` chooser block (~lines 907-944):**
 
-- **Add an icon at the top** of each card — a 40×40 rounded-xl tile with a subtle bg (`bg-muted/60`) holding a Lucide icon. This anchors the card and instantly signals "button". Icons: `Sparkles` for Generate, `Camera` for Reference photo.
-- **Equal heights** via `h-full` on the buttons + grid `items-stretch` so both cards always match regardless of text wrap.
-- **Tighter, cleaner type hierarchy:**
-  - Eyebrow: `text-[10px] tracking-[0.18em] uppercase text-muted-foreground/80` (slightly dimmer)
-  - Title: `text-sm font-semibold text-foreground leading-snug` (was 15px medium — semibold reads more button-like)
-  - Subtitle: `text-[13px] text-muted-foreground leading-relaxed`
-  - "Start →" lives at the bottom, smaller and right-aligned at `text-[11px]` with the arrow nudge animation
-- **Better internal spacing:** `p-5` (was `p-6` which felt empty), `gap-3` between icon → eyebrow → title → subtitle, then `mt-auto pt-5` pushing "Start →" to the bottom.
-- **Card container:** use `flex flex-col` so the icon sits top, body grows, "Start →" hugs bottom.
-- Keep narrower frame: `max-w-2xl mx-auto` and `gap-3` between cards.
-- Hover stays as it is now (bg-muted/40, border-foreground/50, shadow-sm, arrow nudge).
+- **Equal heights:** add `h-full` on the buttons + `items-stretch` on the grid so both cards always match regardless of text wrap.
+- **Vertical composition:** `flex flex-col` on each button so "Start →" can hug the bottom via `mt-auto`.
+- **Refined type hierarchy:**
+  - Eyebrow: `text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium` — slightly dimmer, tighter tracking
+  - Title: `text-[15px] font-semibold text-foreground leading-snug tracking-tight` — semibold reads more decisive than medium
+  - Subtitle: `text-[13px] text-muted-foreground/90 leading-relaxed`
+  - "Start →": `text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground`, with the arrow nudge
+- **Rhythm:** eyebrow `mb-2`, title `mb-1.5`, subtitle natural flow, then `mt-auto pt-6` to push Start to the bottom.
+- **Padding:** `p-6` stays, but add a clear top accent space so the eyebrow doesn't crowd the top edge.
+- **Frame:** keep `max-w-2xl mx-auto`, bump grid gap from `gap-4` to `gap-3` for a tighter pair.
+- **Hover:** unchanged (bg-muted/40, border-foreground/50, shadow-sm, arrow nudge).
 
 ### Sketch
 
 ```text
 ┌─────────────────────────┐  ┌─────────────────────────┐
-│  [✨ icon tile]         │  │  [📷 icon tile]         │
 │                         │  │                         │
 │  01 / GENERATE          │  │  02 / REFERENCE PHOTO   │
 │  Let VOVV.AI create     │  │  Generate a model from  │
 │  a new model for you    │  │  a real person          │
-│                         │  │                         │
 │  Pick gender, age, look │  │  Upload a face — VOVV   │
 │  — we generate from     │  │  .AI creates the model  │
 │  scratch                │  │  based on it            │
 │                         │  │                         │
-│              Start  →   │  │              Start  →   │
+│  START  →               │  │  START  →               │
 └─────────────────────────┘  └─────────────────────────┘
 ```
 
