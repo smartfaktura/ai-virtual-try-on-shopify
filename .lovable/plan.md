@@ -1,114 +1,217 @@
-# Brand Scenes — backend-first architecture
+# Brand Scenes — Outfit Direction questionnaire
 
-Goal: ship a system where users can spin up their own reusable scenes across **all 30+ product subcategories** we already support, answer a smart set of questions, and get a saved, replayable scene that drops into Visual Studio exactly like our built-in scenes. Backend, taxonomy and question schema first — UI is the thin layer on top.
+Triggered only when `people_mode != "product_only"` (Section A Q5 = "Product worn / used by a person", "Full model with face", or "Hands / partial body").
 
-## 1. Single source of truth for categories
+Outputs a structured `outfit_direction` object that the prompt builder injects into the OUTFIT block of the rendered scene prompt. Replayed verbatim on reuse so wardrobe stays consistent across regenerations.
 
-Reuse the taxonomy already in code so nothing forks:
+Rendered as a single collapsible "Outfit Direction" sub-step between Section B and the camera/aspect questions. Defaults are pre-filled from Section A Q1 (vibe) + Q3 (mood) so the user can accept everything in one click.
 
-- **10 families** from `src/data/aiProductPhotographyCategories.ts` (Fashion, Footwear, Beauty & Skincare, Fragrance, Jewelry, Bags & Accessories, Home & Furniture, Food & Beverage, Supplements & Wellness, Electronics & Gadgets).
-- **35+ subcategories** from `CATEGORY_FAMILY_MAP` in `src/lib/sceneTaxonomy.ts` (garments, dresses, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, streetwear, wedding-dress, shoes, sneakers, boots, high-heels, bags-accessories, backpacks, wallets, belts, scarves, caps, hats, beanies, watches, eyewear, jewellery-rings, …-necklaces, …-earrings, …-bracelets, beauty-skincare, makeup-lipsticks, fragrance, home-decor, furniture, tech-devices, food, beverages, snacks-food, supplements-wellness).
+---
 
-New shared module `src/lib/brandScenes/taxonomy.ts` re-exports the family list + subcategory slugs + display labels so the wizard, the prompt builder, the DB enums and the Visual Studio picker all read the same map. No second list.
+## G.1 — Universal outfit questions (12)
 
-User picks **family first** (10 tiles, real preview thumbnails from the visual library hub), then **subcategory chip** (filtered to that family — every subcategory the platform supports is reachable). A scene can target one family + one subcategory, or family + "All".
+### O1. Wardrobe vibe *(single)*
+Defaults to scene vibe from A1.
+- Quiet luxury
+- Minimal modern
+- Editorial fashion
+- Streetwear
+- Athleisure / sportswear
+- Workwear / tailored
+- Bohemian
+- Romantic / feminine
+- Classic preppy
+- Avant-garde
+- Cozy loungewear
+- Resort / vacation
 
-## 2. Question schema (data-driven, not hardcoded UI)
+### O2. Silhouette *(single)*
+- Tailored & structured
+- Relaxed & flowy
+- Oversized
+- Body-conscious / fitted
+- Layered
+- Mixed (top fitted / bottom relaxed or vice versa)
 
-Questions live in a typed config, not JSX, so we can extend without touching the wizard shell:
+### O3. Top *(single — skipped if O4 = "Dress" or "Jumpsuit")*
+- T-shirt
+- Tank / camisole
+- Button-down shirt
+- Blouse
+- Knit sweater
+- Hoodie / sweatshirt
+- Crop top
+- Blazer-only (no inner top)
+- Turtleneck
+- Bralette / bra top
+- Matches product *(footwear & bag categories use this as default)*
 
-```ts
-// src/lib/brandScenes/questionSchema.ts
-type Question =
-  | { id: string; kind: 'single'; label: string; options: Option[]; appliesTo?: Filter }
-  | { id: string; kind: 'multi'; label: string; options: Option[]; max?: number; appliesTo?: Filter }
-  | { id: string; kind: 'text'; label: string; max: number; appliesTo?: Filter };
+### O4. Bottom *(single — skipped if "Dress" or "Jumpsuit" picked)*
+- Jeans (straight / wide / skinny — sub-select)
+- Trousers / tailored pants
+- Chinos
+- Shorts
+- Mini skirt
+- Midi skirt
+- Maxi skirt
+- Leggings / activewear
+- Dress *(collapses O3)*
+- Jumpsuit *(collapses O3)*
 
-type Filter = {
-  families?: Family[];
-  subcategories?: string[];
-  requiresPeople?: boolean;
-};
+### O5. Footwear *(single)*
+- Sneakers
+- Heels
+- Loafers / flats
+- Boots (ankle / knee — sub-select)
+- Sandals
+- Mules
+- Athletic / running
+- Barefoot
+- Matches product *(locked for Footwear category)*
+
+### O6. Outerwear *(single, optional)*
+- None
+- Blazer
+- Trench coat
+- Wool coat
+- Leather jacket
+- Bomber / varsity
+- Cardigan
+- Puffer
+- Denim jacket
+
+### O7. Color palette *(multi-select, max 4)*
+Defaults pulled from scene mood (A3).
+- Black
+- White / cream
+- Beige / camel
+- Grey
+- Navy
+- Brown / chocolate
+- Olive / sage
+- Burgundy / wine
+- Terracotta / rust
+- Pastel (blush, sky, mint)
+- Bold accent (red, cobalt, emerald)
+- Metallic (gold, silver)
+
+### O8. Fabric & texture *(multi-select, max 3)*
+- Cotton
+- Linen
+- Silk / satin
+- Wool / cashmere
+- Denim
+- Leather
+- Knit / ribbed
+- Technical / nylon
+- Sheer / lace
+- Velvet
+
+### O9. Accessories *(multi-select, optional)*
+- None
+- Sunglasses
+- Hat (cap / wide-brim — sub-select)
+- Belt
+- Watch
+- Jewelry (delicate / statement — sub-select)
+- Scarf
+- Bag *(hidden for Bag category — that's the product)*
+
+### O10. Hair *(single)*
+- Natural down
+- Pulled back / ponytail
+- Bun / updo
+- Wet / slicked
+- Curly / textured
+- Short / cropped
+- Covered (hat / scarf)
+
+### O11. Makeup *(single)*
+- Bare / no-makeup
+- Soft natural
+- Polished daytime
+- Editorial bold
+- Smoky / evening
+- Matches product *(default for Beauty category)*
+
+### O12. Outfit notes *(text, 200 chars, optional)*
+Free-form override for nuance the picker can't capture (e.g. "untucked shirt, sleeves rolled to elbow, no socks visible").
+
+---
+
+## G.2 — Category overrides
+
+Locked = field rendered read-only with the forced value visible.
+Collapsed = section folded behind a "Customize outfit" disclosure; the default value still ships to the prompt.
+Hidden = removed from the form and from the saved object.
+
+| Subcategory | O3 Top | O4 Bottom | O5 Footwear | O9 Accessories | O11 Makeup | Extra behaviour |
+|---|---|---|---|---|---|---|
+| Footwear → all | normal | normal | **locked: Matches product** | normal | normal | Adds: hem above ankle, footwear fully visible |
+| Fashion → Swimwear | merged into "Swim style" picker | merged | default Barefoot / Sandals | hidden (hat ok) | Bare/Soft | Hides outerwear unless beach cover-up chosen |
+| Fashion → Lingerie / Loungewear | merged into "Lingerie style" picker | merged | default Barefoot | minimal | Soft natural | Outerwear → robe / kimono options |
+| Fashion → Outerwear | required (visible under coat) | normal | normal | scarf default | normal | O6 locked to "Matches product" |
+| Fashion → Activewear | filtered to athletic tops | filtered to leggings/shorts | locked: Athletic | watch default | Bare/Soft | Adds sweat/glow note in prompt |
+| Bags & Accessories → all | normal | normal | normal | **bag hidden** (it's the product) | normal | Bag carry-style asked in Section B instead |
+| Jewelry → all | defaults: neckline-friendly (turtleneck off) | normal | normal | jewelry hidden (it's the product) | normal | Hair defaults to Pulled back / Bun |
+| Eyewear → all | normal | normal | normal | sunglasses hidden (it's the product) | normal | Hair defaults Pulled back; framing favours face crop |
+| Beauty → Makeup | normal | normal | normal | minimal | **locked: Matches product** | Camera framing favours face/portrait |
+| Beauty → Skincare | collapsed to "Soft neutral basics", expandable | collapsed | Barefoot default | none | Bare / no-makeup | Adds dewy-skin directive |
+| Beauty → Haircare | normal | normal | normal | none | Soft natural | Hair question becomes primary (styled, washed, etc.) |
+| Fragrance → all | "Soft neutral basics" default, expandable | collapsed | normal | minimal | Soft natural | Outfit framed as supporting, not hero |
+| Home / Food / Pets / Tech (with person) | "Soft neutral basics" default | collapsed | normal | none | Bare/Soft | Whole section collapsed; user opens only if they want control |
+| Kids & Baby | child-appropriate filter (no heels, no editorial bold) | filtered | filtered | minimal | locked: Bare | Replaces O11 with "Natural / playful" |
+
+---
+
+## G.3 — Saved structure
+
+```jsonc
+"outfit_direction": {
+  "vibe": "Quiet luxury",
+  "silhouette": "Relaxed & flowy",
+  "top": "Knit sweater",
+  "bottom": "Trousers / tailored pants",
+  "footwear": "Loafers / flats",
+  "outerwear": "Wool coat",
+  "palette": ["Beige / camel", "Cream", "Brown / chocolate"],
+  "fabrics": ["Wool / cashmere", "Cotton"],
+  "accessories": ["Watch", "Delicate jewelry"],
+  "hair": "Natural down",
+  "makeup": "Soft natural",
+  "notes": "Sleeves pushed up, coat draped over shoulders",
+  "locked_fields": ["footwear"],
+  "collapsed_sections": []
+}
 ```
 
-Each question declares the categories it applies to via `appliesTo`. The wizard renders only relevant questions — a Fragrance scene never sees outfit questions, a Footwear scene auto-hides the "footwear" outfit slot, etc.
+---
 
-### Question groups (all optional except Category)
+## G.4 — Prompt builder consumption
 
-1. **Scope** — family (required), subcategory (optional), people-in-scene (On-model / Product only / Either).
-2. **Scene** — setting, time/light, color mood, surface, props, framing, aspect ratio, free-text notes.
-3. **Outfit direction** (only when people = On-model or Either): vibe, silhouette, top, bottom, footwear, outerwear, palette, fabrics, accessories, hair, notes. Category-aware overrides:
-   - Footwear locks footwear slot to "matches product"
-   - Swimwear / lingerie collapses top+bottom into "swim/lingerie style"
-   - Bags & Accessories defaults to supporting neutral wardrobe
-   - Beauty / Skincare / Fragrance defaults to "soft neutral basics", collapsed
-   - Jewelry defaults to bare neckline / minimal layers
-4. **Product fidelity hints** — only when subcategory implies product type quirks (e.g. fragrance bottle glass cues, sneaker hard-shadow, food plating). Pulled from same trigger-block library already used by `product_image_scenes.trigger_blocks`.
+`buildPrompt(answers, outfit_direction, taxonomyEntry)` injects a dedicated OUTFIT block after the SUBJECT block:
 
-The wizard reads this schema, the prompt builder reads this schema, and the saved scene stores the raw answers (not just the rendered prompt) so we can re-render prompts later when the engine improves.
+```text
+OUTFIT — wardrobe must read as {vibe}, {silhouette} silhouette.
+Top: {top}. Bottom: {bottom}. Footwear: {footwear}. Outerwear: {outerwear or "none"}.
+Palette: {palette joined}. Fabric: {fabrics joined}.
+Accessories: {accessories joined or "none"}. Hair: {hair}. Makeup: {makeup}.
+{notes if present}
+SAUGIKLIS: do not add logos, do not add text on garments, do not change product colour, no fantasy garments.
+```
 
-## 3. Data model
+Auto-applied saugikliai:
+- Footwear category → "shoes fully visible, hem above ankle, no foot crop"
+- Jewelry category → "neck, ears, and décolletage unobstructed"
+- Eyewear category → "no other eyewear on face, hair away from temples"
+- Beauty / Fragrance → "wardrobe is supporting; do not compete with product colour"
+- Kids → "age-appropriate styling, no adult fashion cues"
 
-New table `user_scenes` (user-scope; separate from admin `custom_scenes` and `product_image_scenes` so RLS stays simple):
+---
 
-- `id`, `user_id`, `created_at`, `updated_at`, `is_active`
-- `name` (auto-derived, editable, 60 char)
-- `family` (text, enum-validated against taxonomy module)
-- `subcategory` (text, nullable)
-- `aspect_ratio` (text, default `4:5`)
-- `people_mode` (`on_model` | `product_only` | `either`)
-- `answers` (jsonb — raw question → answer map, source of truth)
-- `outfit_direction` (jsonb — structured outfit object, null when no people)
-- `prompt_template` (text — rendered from answers via prompt builder, stored for fast read)
-- `trigger_blocks` (text[] — auto-attached from subcategory)
-- `preview_image_url` (text — chosen variation from Step 3)
-- `preview_thumbs` (text[] — all 3 generated previews for re-pick)
-- `source` (`guided` | `upload` | `prompt`) — how it was created
-- `reference_image_url` (text, nullable — for upload mode)
+## G.5 — Reuse rules
 
-RLS: owner-only CRUD. SECURITY DEFINER RPC `get_my_brand_scenes()` for listing; a future `get_org_brand_scenes()` slot is reserved for team sharing.
-
-Visual Studio scene picker hits a unified RPC `list_scenes_for_family(family, subcategory)` that merges `product_image_scenes` (public) + `custom_scenes` (admin curated) + `user_scenes` (owner's). One pipeline, three sources, identical render contract.
-
-## 4. Prompt builder
-
-`src/lib/brandScenes/buildPrompt.ts` is a pure function: `(answers, taxonomyEntry) → { prompt, triggerBlocks, aspectRatio, negative }`. It mirrors the structure of the existing scene prompt system (Setting · Light · Mood · Surface · Props · Framing · Outfit · Saugikliai), so user scenes feed the same generation pipeline as admin scenes. No new generation path, no new edge function — we reuse `freestyle` / `process-queue` exactly.
-
-Outfit answers compile into the same `outfit_direction` block the engine already consumes (see existing Scene-Controlled Outfits memory), so user scenes can override outfits identically to admin scenes.
-
-## 5. Generation & preview loop
-
-Step 3 of the wizard generates **3 variations** through the existing freestyle endpoint with the freshly built prompt. User picks 1 → that becomes `preview_image_url`. We keep all 3 in `preview_thumbs` so they can switch later from the edit screen without re-spending credits.
-
-Credits: charge standard freestyle rate × 3 for preview generation, separate from "use this scene" generations afterward. Show the exact cost before Step 3 runs.
-
-## 6. Upload-mode and prompt-only-mode
-
-- **Upload**: reuse existing `create-scene-from-image` edge function. It already returns name, description, suggested category, prompt hint. Pre-fills the answers JSON; user can override every field before save.
-- **Prompt-only**: single textarea → routed through the same builder by stuffing the raw prompt into `answers.freeText` and skipping derived fields.
-
-Both modes write to the same `user_scenes` table — one shape, three entry points.
-
-## 7. Visual Studio integration
-
-`/app/workflows` scene picker gains a "My scenes" tab and the user's scenes also surface inside their matching family tab (so a user's "Sunlit linen kitchen" appears under Home & Furniture next to the public scenes). Hidden behind the same `family` / `subcategory` filters everything else uses.
-
-Brand Profile already stores `preferred_scenes` — extend the picker logic to surface a user's own scenes there first.
-
-## 8. Implementation order
-
-1. Taxonomy module (`src/lib/brandScenes/taxonomy.ts`) — pure exports, no UI.
-2. Question schema (`src/lib/brandScenes/questionSchema.ts`) — typed config.
-3. Prompt builder (`src/lib/brandScenes/buildPrompt.ts`) — pure function + unit tests.
-4. `user_scenes` table + RLS + `get_my_brand_scenes` + `list_scenes_for_family` RPCs.
-5. `useBrandScenes()` hook for CRUD.
-6. Wizard pages (`/app/brand-scenes`, `/app/brand-scenes/new`) — thin shell over the schema.
-7. Visual Studio picker integration.
-8. Brand Profile preferred scenes surfacing.
-
-## Out of scope (explicit)
-
-- Team / org sharing (RPC slot reserved, no UI).
-- Admin promotion of user scenes to public Discover.
-- Editing the underlying reference image after save.
-- New generation engine — we reuse the existing freestyle pipeline as-is.
+- Saved `outfit_direction` is replayed exactly when the scene is reused in Visual Studio — no re-asking.
+- A small "Outfit" chip appears beside the scene summary card in Step 4 and on the tile in My Scenes, showing vibe + palette swatches.
+- Editing a saved scene re-opens the questionnaire pre-filled — users iterate, not start over.
+- If `people_mode` is later flipped to "product only", `outfit_direction` is preserved on the record but ignored by the prompt builder; flipping people back on restores it instantly.
