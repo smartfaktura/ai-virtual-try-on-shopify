@@ -922,12 +922,13 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
               <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
                 Pick gender, age, look — we'll generate it for you
               </p>
-              <div className="mt-auto pt-10">
-                <Button size="sm" className="rounded-full pointer-events-none">
+              <div className="mt-auto pt-10 flex justify-end">
+                <Button size="pill" className="text-sm font-semibold pointer-events-none">
                   Start
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
+
             </div>
 
             <div
@@ -946,12 +947,13 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
               <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
                 Upload a face — we'll build the model from it
               </p>
-              <div className="mt-auto pt-10">
-                <Button size="sm" className="rounded-full pointer-events-none">
+              <div className="mt-auto pt-10 flex justify-end">
+                <Button size="pill" className="text-sm font-semibold pointer-events-none">
                   Start
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
+
             </div>
           </div>
 
