@@ -120,10 +120,27 @@ export function TermsContent() {
         <li>• <strong>Special-category data (GDPR Art. 9).</strong> Uploaded face images are biometric / special-category personal data. The lawful basis is the explicit consent of you and (where different) the data subject. The data subject may withdraw consent and request deletion at any time via <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">hello@vovv.ai</a>.</li>
         <li>• <strong>Enforcement.</strong> We may, at our sole discretion and without refund, block, remove, refuse to generate, suspend, or terminate any account, and report to law enforcement or regulators, any upload or Generation that appears to violate this section.</li>
         <li>• <strong>Indemnity.</strong> You fully indemnify, defend, and hold harmless VOVV.AI, MB 123PRESETS, and its operators against any claim, fine, regulatory action, investigation, or damages — including under GDPR (Art. 82), right-of-publicity / personality-rights laws, defamation, intellectual-property law, the US TAKE IT DOWN Act, the UK Online Safety Act, and EU AI Act Art. 50 — arising from any face or likeness you uploaded or any Generation you created or distributed.</li>
-        <li>• <strong>Carve-out from liability cap.</strong> The liability cap in §18 does not apply to amounts you owe under this indemnity.</li>
+        <li>• <strong>Carve-out from liability cap.</strong> The liability cap in §19 (Limitation of Liability) does not apply to amounts you owe under this indemnity.</li>
       </ul>
       <p>
         If you cannot truthfully make every warranty above for a given upload, you must not upload that face. This rule is non-negotiable.
+      </p>
+
+      <h2>11. Scene & Reference Image Uploads (Critical)</h2>
+      <p>
+        Brand Scenes and similar features let you upload any image as a style, composition, or scene reference that the Service will use to influence Generations. By uploading you make the warranties below.
+      </p>
+      <ul>
+        <li>• <strong>Rights warranty.</strong> For every reference image you upload you warrant that either (a) you own it, (b) you hold a written licence covering AI ingestion and the creation of derivative works, or (c) the image is in the public domain or under a licence (e.g. CC0) that clearly permits this use. Stock-photo previews, Pinterest pins, Google Images results, screenshots of other brands' campaigns, magazine scans, film stills, and watermarked previews are <strong>not</strong> acceptable references.</li>
+        <li>• <strong>No third-party brand mimicry.</strong> You will not upload references with the intent to clone another brand's identity, trade dress, packaging, logo, mascot, or recognisable campaign in a way that would mislead consumers or breach trademark, passing-off, or unfair-competition law.</li>
+        <li>• <strong>Persons and private property in scenes.</strong> Reference images depicting identifiable people, private interiors, or restricted locations must respect the same consent and rights rules as §10 — no minors, no public figures or third parties without rights, no NCII, no surveillance / paparazzi material.</li>
+        <li>• <strong>No prohibited content.</strong> You will not upload references that are illegal, sexual, violent, hateful, or otherwise prohibited under §9.</li>
+        <li>• <strong>Enforcement.</strong> We may, at our sole discretion and without refund, block, remove, refuse to generate from, suspend, or terminate any account, and report to rights-holders or authorities, any reference upload or resulting Generation that appears to violate this section. We will comply with valid DMCA / EU DSA takedown notices targeting reference uploads or their Generations.</li>
+        <li>• <strong>Indemnity.</strong> You fully indemnify, defend, and hold harmless VOVV.AI, MB 123PRESETS, and its operators against any claim, fine, regulatory action, or damages — including copyright infringement (US DMCA, EU Copyright Directive, UK CDPA), trademark / trade-dress, passing-off, unfair competition, right-of-publicity, defamation, and EU AI Act Art. 50 — arising from any reference image you uploaded or any Generation derived from it.</li>
+        <li>• <strong>Carve-out from liability cap.</strong> The liability cap in §19 (Limitation of Liability) does not apply to amounts you owe under this indemnity.</li>
+      </ul>
+      <p>
+        If you cannot truthfully make every warranty above for a given upload, you must not upload that image as a reference. This rule is non-negotiable.
       </p>
 
       <h2>11. Your Responsibility (Critical)</h2>
