@@ -1100,6 +1100,31 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           </div>
         </div>
         <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Generate from this reference photo?"
+          description={
+            <span className="text-sm leading-relaxed">
+              You confirm you have the right to use this photo, and you take full responsibility for every image generated from it — including misuse, impersonation, or rights claims. VOVV.AI stores the reference and the generated images under your account.
+              <br /><br />
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer mt-2">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5"
+                  onChange={(e) => {
+                    if (e.target.checked) sessionStorage.setItem(SKIP_KEY, '1');
+                    else sessionStorage.removeItem(SKIP_KEY);
+                  }}
+                />
+                Don't ask again this session
+              </label>
+            </span>
+          }
+          confirmLabel="Yes, generate"
+          cancelLabel="Cancel"
+          onConfirm={async () => { setConfirmOpen(false); await runGenerate(); }}
+        />
       </div>
     );
   }
