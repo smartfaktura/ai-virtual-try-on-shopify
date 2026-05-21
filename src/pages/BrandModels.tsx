@@ -905,19 +905,17 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     if (creationMode === 'chooser') {
       return (
         <div className="pb-32">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full pt-2">
             <button
               type="button"
               onClick={() => setCreationMode('reference')}
-              className="group text-left rounded-2xl border border-border/50 bg-card p-8 min-h-[180px] flex flex-col justify-between hover:border-foreground/40 transition-colors duration-200"
+              className="group text-left rounded-2xl border border-border/50 bg-card p-6 hover:border-foreground/40 transition-colors duration-200"
             >
-              <div className="space-y-3">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">01 / Reference</p>
-                <p className="text-[15px] font-medium text-foreground leading-snug">
-                  Re-photograph a real person from a photo
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground group-hover:text-foreground self-end transition-colors">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-3">01 / Reference</p>
+              <p className="text-[15px] font-medium text-foreground leading-snug mb-6">
+                Re-photograph a real person from a photo
+              </p>
+              <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
                 Start →
               </p>
             </button>
@@ -925,20 +923,19 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
             <button
               type="button"
               onClick={() => setCreationMode('manual')}
-              className="group text-left rounded-2xl border border-border/50 bg-card p-8 min-h-[180px] flex flex-col justify-between hover:border-foreground/40 transition-colors duration-200"
+              className="group text-left rounded-2xl border border-border/50 bg-card p-6 hover:border-foreground/40 transition-colors duration-200"
             >
-              <div className="space-y-3">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">02 / Manual</p>
-                <p className="text-[15px] font-medium text-foreground leading-snug">
-                  Generate a new model from attributes
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground group-hover:text-foreground self-end transition-colors">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-3">02 / Manual</p>
+              <p className="text-[15px] font-medium text-foreground leading-snug mb-6">
+                Generate a new model from attributes
+              </p>
+              <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
                 Start →
               </p>
             </button>
           </div>
         </div>
+
       );
     }
 
