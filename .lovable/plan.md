@@ -1,84 +1,47 @@
-# Terms of Service — close commercial / IP / EU gaps (items 2–10)
+# Terms of Service: typography fix + polish pass
 
-Adds the standard commercial, IP, and EU-compliance clauses we were missing versus Kive. Safety clauses (face, scenes, AI Act, DSA, NCII) stay as-is — they are already stronger than the competition. No UI, no DB, no auth changes.
+## The "strange §" problem
 
-## Section-by-section changes in `src/components/legal/TermsContent.tsx`
+The Terms currently use the silcrow character "§" inline (e.g. "see §10", "§19 (Limitation of Liability)"). In the signup modal at typical body sizes it renders as a glyph many users don't recognise and visually clashes with our minimal Inter typography. Two things to fix:
 
-### §8 Credits and Payments — add Subscription Term & Auto-Renewal subsection
+1. Replace every inline "§N" cross-reference with the word **"Section N"** (e.g. "see Section 10"). Clearer, more professional, reads cleanly at any size.
+2. Fix a stale cross-reference: the Survival clause points to "§26 (Governing Law)" but Governing Law is now Section 25 after the last renumber.
 
-Append below the existing bullets:
+No section headings change — they already read "10. Face, Likeness…", not "§10".
 
-- Subscriptions renew automatically at the end of each billing period (monthly plans renew monthly, annual plans renew annually) at the then-current price using the payment method on file, until cancelled.
-- You can cancel at any time from account settings. Cancellation takes effect at the end of the current paid period; you keep access until then.
-- Price changes apply to the next renewal after we have given you reasonable advance notice (at least 30 days for material increases). Continued use after the new price takes effect is acceptance of the new price.
-- Credits and add-ons remain non-refundable except where required by law.
+## Polish pass to make Terms "super good"
 
-### §15 Intellectual Property — replace with expanded section
+Several early sections are currently one-liners that feel thin next to the heavyweight clauses (10, 11, 15, 16). Expand them to proper, defensible language without bloating the document. Targets:
 
-Keep the three existing bullets ("You retain ownership of Inputs", "You own Generations", "VOVV.AI owns all platform technology") and add four named subsections beneath them:
+- **5. Service Description** — clarify VOVV is a tool/processor, not a publisher; outputs are user-directed.
+- **6. Experimental Features (Beta)** — add "no SLA, may be withdrawn, no liability for beta-only defects".
+- **7. Availability** — add planned maintenance, no SLA unless separately agreed, best-effort uptime.
+- **12. Your Responsibility** — tighten publisher/controller language and add "you are the controller for any personal data in your Inputs".
+- **13. AI Limitations** — add hallucination/inaccuracy disclaimer, no fitness for a particular purpose, mandatory human review before publication.
+- **14. AI Transparency (EU AI Act)** — name Art. 50 obligations, watermarking/labelling duty for deepfakes, deceptive-content ban.
+- **17. Third-Party Services** — list categories (cloud, payment, AI model providers, email, analytics), note their terms may apply.
+- **18. Indemnification** — full defend/hold-harmless language, cooperation clause, sole control of defence.
+- **19. Limitation of Liability** — keep 12-month cap, add standard exclusions (gross negligence, wilful misconduct, death/personal injury, fraud, statutory consumer rights) so the cap holds up in the EU/UK.
+- **20. Disclaimer** — full "AS IS / AS AVAILABLE", no implied warranties of merchantability, fitness, non-infringement, accuracy.
+- **21. Copyright & Content Complaints** — proper DMCA-style notice contents (identification, good-faith statement, signature, contact), counter-notice, repeat-infringer policy.
+- **22. DSA Compliance (EU)** — add Single Point of Contact email, trusted-flagger language, statement of reasons, internal complaints handling.
+- **23. Termination** — add grounds (breach, non-payment, legal risk), effect of termination (access ends, data per Section 15 backup rule), no refund for cause.
+- **25. Governing Law** — add venue (Lithuanian courts for business users), keep EU consumer carve-out, add severability + entire-agreement micro-clauses or move them to a new Section 26 "General".
+- **26. Changes** — add notice mechanism (email or in-app), 30-day notice for material changes, continued use = acceptance.
+- Add a small **Section 27 "General"** (assignment, no waiver, severability, entire agreement, notices, language) before Company Information, then renumber Company Information to **28**.
 
-- **Limited operational licence.** You grant VOVV.AI a worldwide, non-exclusive, royalty-free licence to host, store, transmit, process, modify, copy, display, and create derivative works of your Inputs and Generations solely to operate, secure, support, and improve the Service for you, and — where you choose to share — to enable sharing with collaborators, team members, or public destinations you select. The licence terminates when you delete the content or close your account, subject to the backup-retention clause below.
-- **Service data.** All aggregated, anonymised, or de-identified usage data, logs, performance metrics, and model-quality insights derived from operation of the Service are owned by VOVV.AI and may be used to operate, secure, and improve the Service. We do not disclose your Inputs, Generations, or personal data to third parties in non-anonymised form except as described in the Privacy Policy.
-- **Feedback.** Ideas, suggestions, or feedback you send us are non-confidential. You assign all rights in such feedback to VOVV.AI, and we may use it without restriction, compensation, or attribution.
-- **Backup retention after deletion.** When you delete content or your account, we may retain copies for a reasonable period (typically up to 30 days, longer where required by law) for backup, audit, fraud-prevention, and legal-compliance purposes, after which they are permanently deleted. See Privacy Policy §10 for full retention rules.
+## Cross-references after renumber
 
-### §16 Confidentiality — replace with mutual clause
+After adding "General" as Section 27 and pushing Company Information to 28, audit every "Section N" reference and the Survival list so they still point to the right targets. Update Privacy Policy cross-references only if a Privacy section number actually moved (it doesn't here).
 
-Replace the current one-sentence section with:
+## Scope
 
-- Each party will treat the other party's non-public information disclosed under or in connection with these Terms as confidential, use it only to perform under these Terms, and not disclose it to third parties without consent except (a) as required by law or regulator, or (b) to employees, contractors, or subprocessors bound by equivalent confidentiality obligations.
-- Confidentiality obligations survive termination for two (2) years; trade secrets are protected for as long as they qualify as such under applicable law.
-- We treat your Inputs and Generations as confidential and do not use them to train AI models.
-
-### §17 Third-Party Services — add Force Majeure subsection
-
-Keep the existing one-sentence content and add:
-
-- **Force majeure.** We are not liable for any failure, delay, or defect in performance caused by events outside our reasonable control, including outages or failures of third-party infrastructure or AI providers, internet or network failures, acts of government, war, terrorism, civil unrest, strikes, pandemics, or natural disasters. We will notify you as soon as practicable and take reasonable steps to minimise impact. If a force-majeure event materially prevents performance for more than 30 consecutive days, either party may terminate the affected subscription and we will refund any prepaid, unused fees on a pro-rata basis.
-
-### New §24 — Data Portability & Deletion (EU Data Act)
-
-Insert a new section between current §23 (Governing Law, will become §25) and the renumbered downstream sections. Renumber the four current sections §23–§26 to §25–§28.
-
-- If you are established in the EU/EEA or otherwise subject to Regulation (EU) 2023/2854 (the **Data Act**), you may at any time, on at least two months' written notice to <a href="mailto:hello@vovv.ai">hello@vovv.ai</a>, request (a) the transfer of your data to another provider in a structured, commonly used, and machine-readable format, or (b) the deletion of your data.
-- We will provide reasonable assistance to support transfer or deletion. We may charge reasonable direct costs to the extent permitted by the Data Act and will provide an itemised invoice.
-- This right is in addition to your data-subject rights under the GDPR (see Privacy Policy §13) and does not affect any other contractual or statutory rights.
-
-### §23 Termination (renumbered to §25 after the Data Act insertion) — add Survival subsection
-
-Keep the existing sentence and add:
-
-- **Survival.** Provisions that by their nature should survive termination — including §10 (Face, Likeness & Biometric Uploads), §11 (Scene & Reference Image Uploads), §15 (Intellectual Property), §16 (Confidentiality), §18 (Indemnification), §19 (Limitation of Liability), §20 (Disclaimer), and §26 (Governing Law) — survive termination of your account or these Terms.
-
-### Renumbering summary
-
-Current → new after inserting Data Act between current §23 and §24:
-
-| Current | New | Title |
-|---|---|---|
-| §1–§22 | §1–§22 | unchanged |
-| §23 | §23 | Termination (+ Survival subsection) |
-| — | §24 | Data Portability & Deletion (EU Data Act) — **new** |
-| §24 | §25 | Governing Law |
-| §25 | §26 | Changes |
-| §26 | §27 | Company Information |
-
-All internal cross-references (currently to §18 Indemnification and §19 Limitation of Liability inside §10 and §11) stay correct because nothing before §24 changes number. The new Survival list uses the renumbered §26 for Governing Law.
-
-## Privacy Policy
-
-No changes needed. The existing §10 (Data Retention) already states the 30-day-after-deletion rule and is cross-referenced from the new Terms §15 "Backup retention" subsection.
-
-## Technical details
-
-- Single file edited: `src/components/legal/TermsContent.tsx`.
-- Content-only changes; existing prose styles (`.prose`) handle formatting.
-- Use `<h2>` for new section headers, `<h3>` for named subsections inside §8, §15, §16, §17, and §23, matching the file's existing style hooks.
-- Keep British/US spelling consistent with the surrounding file ("licence" in IP context, otherwise current spellings).
+- Single file edit: `src/components/legal/TermsContent.tsx`.
+- Pure presentational copy changes. No UI components, routes, DB, auth, translations, or business logic.
+- Bump `public/version.json` patch so cached clients pick up the new copy.
 
 ## Out of scope
 
-- Re-prompting existing users to re-accept.
-- Translations.
-- Changing governing law, arbitration venue, or the consolidated single-document structure.
-- Signup UI changes — the existing single Terms checkbox keeps covering all of this.
+- Privacy Policy rewrite (already strong; only touch if a referenced number moves).
+- New legal frameworks beyond what's already covered (GDPR, AI Act Art. 50, DSA, DMCA, Data Act, TAKE IT DOWN, Online Safety Act).
+- Any change to the single signup-time Terms checkbox or acceptance flow.
