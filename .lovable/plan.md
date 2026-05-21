@@ -21,16 +21,31 @@ The current flow mixes signals:
 
 The chips and the paraphrase fight the actual pixels. If you upload a 45-year-old Asian man and "young-adult / female / slim" is still on the form, Gemini averages it out and you get a stranger.
 
-New behavior when `referenceImageUrl` is present:
+### The face comes from the image, never from text
 
-- **Ignore all chip/description inputs for the image prompt.** Gender, body type, ethnicity, age range, hair, expression, facial hair, clothing description — none of them get appended. The photo already answers all of those questions.
-- **Still run the Gemini 2.5 Flash analysis once** to auto-fill the *saved model metadata* (name, gender, body_type, ethnicity, age_range) so the model card and downstream filters work. That metadata never enters the image prompt.
-- **Keep the prompt rich, not stripped.** It should still describe a beautiful studio portrait — lighting, lens, mood, wardrobe, background — just framed around the person in the photo. Example direction (not a literal template, the function composes it):
-  > "Create a polished studio portrait of the exact person shown in the reference image. Preserve their identity completely — same face, bone structure, skin tone, hair, eye color, age, ethnicity, and body type. This is the same human being, photographed again — not a similar-looking person.
-  >
-  > Studio setup: seamless light grey backdrop (#E8E8E8), soft three-point lighting with a large key softbox camera-left, gentle fill, subtle rim. Shot on an 85mm lens at f/2.8, head-and-shoulders framing, eye-level, sharp focus on the eyes, shallow background separation. Wardrobe: clean neutral basics (white tee or simple knit), nothing branded. Expression: relaxed, natural, looking at the camera. Skin retains real texture — no smoothing, no beautification, no age shift, no ethnicity shift, no stylization."
-- **UI follow-through (`GenerateModelModal.tsx` and `BrandModels.tsx`):** when a reference image is uploaded, hide or visually disable the gender / body / ethnicity / age / hair chips with a small note: "Using your reference photo — these are detected automatically." This prevents users from setting conflicting inputs and makes the behavior obvious.
-- **Generator mode** (no image, only chips): completely unchanged. Same prompt, same chips, same output as today.
+This is the core rule. When a reference image is uploaded:
+
+- The uploaded photo is sent to Gemini 3 Pro Image **as the actual image** (raw base64 pixels via `inlineData`), placed before the text part of the request. Gemini looks at the real face.
+- We **do not** describe the face in words anywhere in the image prompt. No "30 year old woman with brown hair and green eyes." That kind of paraphrase is what's currently destroying identity — Gemini follows the description and ignores the photo.
+- The old code's Gemini 2.5 Flash "appearance_description" step is **removed from the image prompt path**. We still call Flash once to auto-fill the *saved model card metadata* (name, gender, body_type, ethnicity, age_range) so filters and labels work, but that text never enters the image generation request.
+- Chip inputs (gender, body type, ethnicity, age, hair, expression, facial hair, clothing description) are **ignored for the image prompt** when a reference is uploaded. The photo already answers all of those questions, and including them creates conflicts ("young-adult / female / slim" + a photo of a 45-year-old man = a stranger).
+
+### What the prompt actually contains
+
+Still rich and beautiful — just framed around the person in the photo, with zero face description. Direction (function composes the final string):
+
+> "Create a polished studio portrait of the exact person shown in the reference image. Preserve their identity completely — same face, bone structure, skin tone, hair, eye color, age, ethnicity, and body type. This is the same human being photographed again, not a similar-looking person.
+>
+> Studio setup: seamless light grey backdrop (#E8E8E8), soft three-point lighting with a large key softbox camera-left, gentle fill, subtle rim. Shot on an 85mm lens at f/2.8, head-and-shoulders framing, eye-level, sharp focus on the eyes, shallow background separation. Wardrobe: clean neutral basics (white tee or simple knit), nothing branded. Expression: relaxed, natural, looking at the camera. Skin retains real texture — no smoothing, no beautification, no age shift, no ethnicity shift, no stylization."
+
+### UI follow-through
+
+In `GenerateModelModal.tsx` and `BrandModels.tsx`, when a reference image is uploaded, hide or visually disable the gender / body / ethnicity / age / hair chips with a short note: "Using your reference photo — these are detected automatically." Prevents conflicting inputs and makes the behavior obvious.
+
+### Generator mode (no image)
+
+Completely unchanged. Same chips, same prompt builder, same output as today.
+
 
 ## Fix 2 — Always return 3 variations
 
