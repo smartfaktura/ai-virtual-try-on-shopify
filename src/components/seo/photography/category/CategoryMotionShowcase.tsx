@@ -51,8 +51,20 @@ import ep3 from '@/assets/seo/eyewear-motion-3.jpg';
 import ep4 from '@/assets/seo/eyewear-motion-4.jpg';
 import ep5 from '@/assets/seo/eyewear-motion-5.jpg';
 import ep6 from '@/assets/seo/eyewear-motion-6.jpg';
+import hv1 from '@/assets/seo/hoodies-motion-1.mp4';
+import hv2 from '@/assets/seo/hoodies-motion-2.mp4';
+import hv3 from '@/assets/seo/hoodies-motion-3.mp4';
+import hv4 from '@/assets/seo/hoodies-motion-4.mp4';
+import hv5 from '@/assets/seo/hoodies-motion-5.mp4';
+import hv6 from '@/assets/seo/hoodies-motion-6.mp4';
+import hp1 from '@/assets/seo/hoodies-motion-1.jpg';
+import hp2 from '@/assets/seo/hoodies-motion-2.jpg';
+import hp3 from '@/assets/seo/hoodies-motion-3.jpg';
+import hp4 from '@/assets/seo/hoodies-motion-4.jpg';
+import hp5 from '@/assets/seo/hoodies-motion-5.jpg';
+import hp6 from '@/assets/seo/hoodies-motion-6.jpg';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
@@ -88,6 +100,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: ev5, poster: ep5 },
     { video: ev6, poster: ep6 },
   ],
+  hoodies: [
+    { video: hv1, poster: hp1 },
+    { video: hv2, poster: hp2 },
+    { video: hv3, poster: hp3 },
+    { video: hv4, poster: hp4 },
+    { video: hv5, poster: hp5 },
+    { video: hv6, poster: hp6 },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
@@ -114,6 +134,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     heading: 'Your eyewear, brought to life',
     sub: 'Turn one frame photo into scroll-stopping motion for ads, reels and campaign film',
     aria: 'AI-generated eyewear motion clip',
+  },
+  hoodies: {
+    eyebrow: 'Motion · Hoodies in movement',
+    heading: 'Your hoodie, brought to life',
+    sub: 'Turn one product photo into scroll-stopping motion for ads, reels and lifestyle loops',
+    aria: 'AI-generated hoodie motion clip',
   },
 };
 
