@@ -780,13 +780,27 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         </div>
       )}
 
+      {uploadedUrl && (
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Notes <span className="text-muted-foreground/50 normal-case font-normal">· optional</span></Label>
+          <textarea
+            value={referenceNotes}
+            onChange={(e) => setReferenceNotes(e.target.value.slice(0, 400))}
+            placeholder="e.g. tighter crop, warmer tone, more candid expression"
+            rows={2}
+            className="w-full text-sm rounded-md border border-input bg-background px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <p className="text-[10px] text-muted-foreground/60">Styling notes only — face stays exactly as in the photo.</p>
+        </div>
+      )}
+
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-destructive/90">
           <ShieldCheck className="h-3.5 w-3.5" />
           Content &amp; rights policy
         </div>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload.
+          Only upload photos of yourself, people who have given you explicit written permission, or images you fully own. Do not upload photos of celebrities, minors without guardian consent, or anyone whose likeness you don't have the right to use. VOVV.AI is not liable for misuse — you accept full responsibility for any reference you upload and every image generated from it.
         </p>
       </div>
 
@@ -807,11 +821,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           className="mt-0.5"
         />
         <span className={cn("text-[11px] leading-relaxed", uploadedUrl ? "text-muted-foreground" : "text-muted-foreground/70")}>
-          I confirm I own or have explicit permission to use this image, and I accept full responsibility under the VOVV.AI Content Policy.
+          I confirm I have the right to use this reference photo, and I take full responsibility for this image and every model image and downstream generation created from it. I agree to VOVV.AI's <a href="/terms" target="_blank" rel="noopener" className="underline hover:text-foreground">Terms of Service</a>.
         </span>
       </div>
     </div>
   );
+
 
   const adminBlock = isAdmin ? (
     <div
