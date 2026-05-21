@@ -906,29 +906,36 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       return (
         <div className="pb-32">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full pt-2 items-stretch">
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => setCreationMode('manual')}
-              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCreationMode('manual'); } }}
+              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium mb-2">
                 01 / Generate
               </p>
               <p className="text-base font-semibold text-foreground leading-snug tracking-tight mb-2">
-                Let VOVV.AI create a new model for you
+                Create a new model from scratch
               </p>
               <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
-                Pick gender, age, look — we generate from scratch
+                Pick gender, age, look — we'll generate it for you
               </p>
-              <p className="mt-auto pt-10 text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground transition-all">
-                Start <span className="inline-block group-hover:translate-x-0.5 transition-transform">→</span>
-              </p>
-            </button>
+              <div className="mt-auto pt-10">
+                <Button size="sm" className="rounded-full pointer-events-none">
+                  Start
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
 
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => setCreationMode('reference')}
-              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCreationMode('reference'); } }}
+              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium mb-2">
                 02 / Reference photo
@@ -937,12 +944,15 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
                 Generate a model from a real person
               </p>
               <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
-                Upload a face — VOVV.AI creates the model based on it
+                Upload a face — we'll build the model from it
               </p>
-              <p className="mt-auto pt-10 text-[11px] tracking-wide uppercase text-muted-foreground group-hover:text-foreground transition-all">
-                Start <span className="inline-block group-hover:translate-x-0.5 transition-transform">→</span>
-              </p>
-            </button>
+              <div className="mt-auto pt-10">
+                <Button size="sm" className="rounded-full pointer-events-none">
+                  Start
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
           </div>
 
         </div>
