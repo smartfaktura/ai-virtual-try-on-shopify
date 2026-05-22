@@ -600,6 +600,7 @@ export function applicableFields(
     if (f.category && (!module || !f.category.includes(module))) return false;
     if (f.excludes && module && f.excludes.includes(module)) return false;
     if (f.castOnly && (!castPreset || !f.castOnly.includes(castPreset))) return false;
+    if (f.hideWhenNoCast && castPreset === "none") return false;
     return true;
   });
 }
