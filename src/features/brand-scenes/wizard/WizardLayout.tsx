@@ -1,5 +1,5 @@
 import { ReactNode, useRef } from "react";
-import { ArrowRight, Lock, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WizardStep } from "./useWizardState";
@@ -85,6 +85,18 @@ export function WizardLayout({
       {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
       {ctaLabel}
       {!showGenIcon && !isLastStep && <ArrowRight className="w-3.5 h-3.5" />}
+    </Button>
+  );
+
+  const JumpButton = (
+    <Button
+      size="pill"
+      variant="outline"
+      onClick={handleNextClick}
+      className="gap-1.5"
+    >
+      <ArrowDown className="w-3.5 h-3.5" />
+      Jump to fix
     </Button>
   );
 
@@ -191,7 +203,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  <span className="flex-1">{NextButton}</span>
+                  <span className="flex-1">{JumpButton}</span>
                 </DisabledTooltip>
               ) : (
                 <span className="flex-1">{NextButton}</span>
@@ -213,7 +225,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  {NextButton}
+                  {JumpButton}
                 </DisabledTooltip>
               ) : (
                 NextButton

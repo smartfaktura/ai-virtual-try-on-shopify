@@ -1,22 +1,16 @@
-## Two small fixes on `/app/brand-scenes/new`
+## Replace error chip with a "Jump to missing" button
 
-### 1. Step 0 — "Build from the wizard" appears pre-selected
+### Current behavior
+When `nextDisabled` and a `nextDisabledReason` exist, `WizardLayout` renders a lock-icon chip with the reason text (e.g. "Pick how the cast holds, wears, or stands next to the product") inside the sticky bar. The Next button already silently scrolls to `[data-missing="1"]` when clicked while disabled, but the affordance is hidden.
 
-**Cause:** `useWizardState` initializes `source: "wizard"` with `sourcePicked: false`. `Step0ChooseSource` only checks `value === "wizard"` for the active state, so the first card renders as selected on entry even though the user has not chosen yet.
+### Change
+**File:** `src/features/brand-scenes/wizard/WizardLayout.tsx`
 
-**Fix:** `src/features/brand-scenes/wizard/steps/Step0ChooseSource.tsx`
-- Gate both `WizardCard` `active` props on `picked`:
-  - Wizard card: `active={picked && value === "wizard"}`
-  - Reference card: `active={picked && value === "reference" && referenceUnlocked}` (already partly gated; add `picked`)
-- No state or data-flow changes; `picked` is already passed in.
-
-### 2. Sticky bottom bar has odd shadow at bottom corners
-
-**Cause:** `WizardLayout.tsx` line 165 wraps the floating card in a sticky container with `overflow-hidden`. The inner card has `shadow-lg`, and the wrapper clips the shadow at the bottom (and sides), producing the visible "cut" look.
-
-**Fix:** `src/features/brand-scenes/wizard/WizardLayout.tsx`
-- Remove `overflow-hidden` from the outer sticky wrapper (keep it on the inner `rounded-2xl` card only, which already has `overflow-hidden` to clip its own contents).
-- Add a small vertical padding so the shadow has room to render without being clipped by the parent scroll area, e.g. wrapper becomes `sticky bottom-4 z-20 max-w-full min-w-0 pb-[env(safe-area-inset-bottom)]`.
+1. **Remove** the reason chip block (lines 167–177) — no more inline error text in the sticky bar.
+2. **Replace** the disabled `Next` button (when `nextDisabled && nextDisabledReason && !isLastStep`) with a secondary action: a `Button size="pill" variant="outline"` labeled `Jump to fix` (with `ArrowDown` icon from `lucide-react`) that calls the existing `handleNextClick` (which already scrolls to `[data-missing="1"]`). Keep the tooltip wrapper so hovering still surfaces the reason for users who want it.
+3. When `!nextDisabled`, keep the current primary `Next` button unchanged.
+4. Apply to both mobile and desktop branches.
 
 ### Out of scope
-No copy, layout, or business logic changes beyond the two fixes above.
+- No changes to `BrandSceneWizard` reason strings, `Section` `data-missing` logic, or any step files.
+- No copy changes beyond the new button label.
