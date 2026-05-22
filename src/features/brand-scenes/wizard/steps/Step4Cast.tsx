@@ -611,9 +611,11 @@ export function Step4Cast({
         </div>
       )}
 
+      {!isReplicate && <GroupHeader title="Notes" />}
       {/* Cast note */}
       {!isReplicate && (
         <Section label="Note">
+
           <Textarea
             value={cast?.note ?? ""}
             maxLength={CAST_NOTE_MAX}
