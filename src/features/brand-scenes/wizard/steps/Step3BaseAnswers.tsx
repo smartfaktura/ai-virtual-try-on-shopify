@@ -139,22 +139,16 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
   return (
     <div className="space-y-7">
-      {tuned && (
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Category-tuned · {tuned}
-        </div>
-      )}
-
-      <Section label="Stage A · Scene type" hint="Pick the world. Everything below tunes to it.">
+      <Section label="Scene type" hint="Pick the world. Everything below tunes to it.">
         <SceneTypePicker value={sceneType} onChange={handleSceneType} />
       </Section>
 
       <Section
-        label="Stage B · Setting / environment"
+        label="Setting / environment"
         hint={
           sceneType
-            ? "Tailored to your category — or add your own."
-            : "Pick a scene type above to see tailored settings (you can still type your own)."
+            ? "Tailored to your category — or add your own"
+            : "Pick a scene type above to see tailored settings (you can still type your own)"
         }
       >
         <div className="scroll-mt-24">
@@ -165,6 +159,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
           />
         </div>
       </Section>
+
 
       {warnings.length > 0 && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] px-3 py-2 text-[12px] text-amber-700 dark:text-amber-300 space-y-1">
