@@ -598,7 +598,8 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Footwear angle",
     presets: CAMERA_ANGLES_FOOTWEAR,
     category: ["footwear"],
-    hideWhenNoCast: true,
+    // Phase 7p — list contains many product-only angles (Sole-up, Top-down pair,
+    // Lace detail…). Do not hide when cast="none".
   },
   {
     key: "camera_angle_eyewear",
@@ -607,7 +608,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Eyewear angle",
     presets: CAMERA_ANGLES_EYEWEAR,
     category: ["eyewear"],
-    hideWhenNoCast: true,
+    // Phase 7p — list includes Top-down folded / Lens detail macro / In-hand.
   },
   {
     key: "camera_angle_jewelry",
@@ -616,8 +617,9 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Jewelry angle",
     presets: CAMERA_ANGLES_JEWELRY,
     category: ["jewelry", "watches"],
-    hideWhenNoCast: true,
+    // Phase 7p — list includes Macro stone / Paired on tray / Falling-floating.
   },
+
   // Phase 7i — generic camera angles already include the useful tabletop ones
   // (Top-down 90°, Pour, Splash, Steam, Floating). The dedicated tabletop
   // field is removed because the Tabletop scene type was removed too.
