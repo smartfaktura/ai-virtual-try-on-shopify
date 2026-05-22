@@ -48,7 +48,7 @@ export function Section({
     >
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             {label}
           </Label>
           {tooltip && (
@@ -70,7 +70,7 @@ export function Section({
             </TooltipProvider>
           )}
           {required && (
-            <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
               Required
             </span>
           )}
