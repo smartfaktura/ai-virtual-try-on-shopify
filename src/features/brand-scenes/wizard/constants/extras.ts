@@ -435,6 +435,8 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Backdrop type",
     prefix: "Backdrop",
     presets: BACKDROP_TYPES,
+    // Backdrops are studio / tabletop / architectural only.
+    appliesWhen: (c) => isIndoor(c.scene_type),
   },
   {
     key: "backdrop_color",
@@ -442,6 +444,32 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Backdrop color / gradient anchor",
     prefix: "Backdrop color",
     presets: BACKDROP_COLORS,
+    appliesWhen: (c) =>
+      isIndoor(c.scene_type) &&
+      // Hide once a hard split is chosen — color A/B take over.
+      c.values.backdrop_type !== "Two-tone hard split",
+  },
+  {
+    key: "backdrop_color_a",
+    scope: "scene",
+    label: "Backdrop color A (split / gradient)",
+    prefix: "Backdrop color A",
+    presets: BACKDROP_COLORS,
+    dependent: true,
+    appliesWhen: (c) =>
+      c.values.backdrop_type === "Two-tone hard split" ||
+      c.values.backdrop_type === "Soft gradient wall",
+  },
+  {
+    key: "backdrop_color_b",
+    scope: "scene",
+    label: "Backdrop color B (split / gradient)",
+    prefix: "Backdrop color B",
+    presets: BACKDROP_COLORS,
+    dependent: true,
+    appliesWhen: (c) =>
+      c.values.backdrop_type === "Two-tone hard split" ||
+      c.values.backdrop_type === "Soft gradient wall",
   },
   {
     key: "backdrop_gradient",
@@ -449,6 +477,16 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Backdrop gradient style",
     prefix: "Gradient",
     presets: BACKDROP_GRADIENT_STYLES,
+    appliesWhen: (c) => isIndoor(c.scene_type),
+  },
+  {
+    key: "gradient_direction",
+    scope: "scene",
+    label: "Gradient direction",
+    prefix: "Gradient direction",
+    presets: GRADIENT_DIRECTIONS,
+    dependent: true,
+    appliesWhen: (c) => c.values.backdrop_type === "Soft gradient wall",
   },
   {
     key: "floor",
@@ -456,6 +494,19 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Floor surface",
     prefix: "Floor",
     presets: FLOOR_TYPES,
+  },
+  {
+    key: "studio_fx",
+    scope: "scene",
+    label: "Studio FX",
+    prefix: "Studio FX",
+    presets: STUDIO_FX,
+    dependent: true,
+    hint: "Practical effects rigged inside the studio",
+    appliesWhen: (c) =>
+      c.scene_type === "studio" &&
+      // Rain/snow/smoke weather inside a studio = unlock practical FX.
+      ["rain", "snow", "smoke", "fog"].includes(c.values._weather ?? ""),
   },
   {
     key: "time_of_day_detail",
