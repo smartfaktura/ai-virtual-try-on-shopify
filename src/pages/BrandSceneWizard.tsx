@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -5,6 +6,14 @@ import { BrandSceneWizard as Wizard } from "@/features/brand-scenes/wizard/Brand
 
 export default function BrandSceneWizardPage() {
   const { isRealAdmin, isLoading } = useIsAdmin();
+
+  // Hide the global StudioChat support bubble inside the wizard.
+  useEffect(() => {
+    document.body.setAttribute("data-hide-studio-chat", "1");
+    return () => {
+      document.body.removeAttribute("data-hide-studio-chat");
+    };
+  }, []);
 
   if (isLoading) {
     return (
