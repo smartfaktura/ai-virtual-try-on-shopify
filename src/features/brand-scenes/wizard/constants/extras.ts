@@ -1,0 +1,599 @@
+/**
+ * Phase 7d — flexible extras dictionary.
+ *
+ * Every entry powers a single "ExtrasField" pill block:
+ *  - `label`     : section title in the UI
+ *  - `prefix`    : friendly prefix used in the assembled prompt ("Backdrop: …")
+ *  - `presets`   : suggested pill values (user can also type their own)
+ *  - `category`? : if present, only show for these families
+ *  - `excludes`? : never show for these families
+ *  - `requires`? : show only when other extras keys are set (e.g. light_quality)
+ *  - `castOnly`? : show only when cast preset is one of the listed ones
+ *
+ * The value stored on `base.extras[key]` (or `cast.extras[key]`) is a free
+ * string — either a preset or the user's custom entry. The assembler renders
+ * everything verbatim so nothing is lost.
+ */
+
+import type { BrandSceneModule } from "../../constants";
+import type { CastPreset } from "./cast";
+
+export interface ExtrasField {
+  key: string;
+  label: string;
+  prefix: string;
+  presets: string[];
+  scope: "scene" | "cast";
+  category?: BrandSceneModule[];
+  excludes?: BrandSceneModule[];
+  castOnly?: CastPreset[];
+  hint?: string;
+}
+
+// ============================================================================
+// SCENE extras (Step 3)
+// ============================================================================
+
+export const BACKDROP_TYPES: string[] = [
+  "Solid color wall",
+  "Soft gradient wall",
+  "Seamless paper",
+  "Studio cyclorama",
+  "Raw concrete wall",
+  "Plaster / lime-wash wall",
+  "Brick wall",
+  "Tile wall",
+  "Wood paneling",
+  "Marble slab",
+  "Travertine slab",
+  "Stone slab",
+  "Linen drape",
+  "Velvet drape",
+  "Silk drape",
+  "Mesh / scrim",
+  "Glass partition",
+  "Acrylic panel",
+  "Mirror wall",
+  "Industrial corrugated metal",
+  "Painted texture",
+  "Curtain backdrop",
+  "Open sky",
+  "Horizon line",
+  "Foliage wall",
+  "Sand dune backdrop",
+  "Water surface",
+  "Asphalt wall",
+  "Graffiti wall",
+  "Architectural niche",
+];
+
+export const FLOOR_TYPES: string[] = [
+  "Polished concrete",
+  "Raw concrete",
+  "Polished stone",
+  "Marble floor",
+  "Terrazzo",
+  "Raw wood plank",
+  "Parquet",
+  "Tile floor",
+  "Rug",
+  "Glass floor",
+  "Reflective acrylic floor",
+  "Painted studio floor",
+  "Sand",
+  "Pebble",
+  "Grass",
+  "Moss",
+  "Water shallow",
+  "Asphalt",
+  "Cobblestone",
+  "Gravel",
+  "None — floating product",
+];
+
+export const BACKDROP_COLORS: string[] = [
+  "Warm white",
+  "Cool white",
+  "Ivory",
+  "Putty",
+  "Bone",
+  "Sand",
+  "Taupe",
+  "Sage",
+  "Olive",
+  "Terracotta",
+  "Clay",
+  "Rust",
+  "Cobalt",
+  "Navy",
+  "Slate",
+  "Charcoal",
+  "Black",
+  "Oxblood",
+  "Plum",
+  "Soft blush",
+  "Butter yellow",
+  "Mint",
+  "Custom hex…",
+];
+
+export const BACKDROP_GRADIENT_STYLES: string[] = [
+  "Linear top → bottom",
+  "Linear bottom → top",
+  "Linear left → right",
+  "Diagonal",
+  "Radial center",
+  "Radial off-center",
+  "Vignette",
+  "Two-tone hard split",
+];
+
+export const TIMES_OF_DAY_EXT: string[] = [
+  "Pre-dawn blue",
+  "Sunrise",
+  "Golden hour morning",
+  "Mid-morning",
+  "Midday",
+  "Overcast noon",
+  "Late afternoon",
+  "Golden hour evening",
+  "Sunset",
+  "Twilight",
+  "Blue hour",
+  "Night",
+  "Moonlit",
+  "Studio (timeless)",
+];
+
+export const LIGHT_DIRECTIONS: string[] = [
+  "Front-lit",
+  "¾ key light",
+  "Side rim",
+  "Back-lit silhouette",
+  "Top-down",
+  "Bottom up-light",
+  "Ring light",
+  "Cross-light",
+  "Wraparound",
+];
+
+export const LIGHT_QUALITIES: string[] = [
+  "Softbox diffuse",
+  "Hard direct sun",
+  "Dappled through leaves",
+  "Practical neon",
+  "Candle / fire",
+  "Mixed practical",
+  "Bounced fill",
+  "Window light",
+  "Skylight",
+  "Spot pool",
+  "Cinematic chiaroscuro",
+];
+
+export const MOTION_ENERGY: string[] = [
+  "Perfectly still",
+  "Subtle breeze",
+  "Fabric in motion",
+  "Hair in motion",
+  "Mid-stride freeze",
+  "Jump freeze",
+  "Long-exposure trail",
+  "Splash freeze",
+  "Pour mid-air",
+  "Steam rising",
+];
+
+export const COMPOSITION_ENERGY: string[] = [
+  "Quiet & restrained",
+  "Bold & graphic",
+  "Layered storytelling",
+  "Single-subject focus",
+  "Asymmetric",
+  "Symmetric",
+  "Off-balance tension",
+];
+
+export const CROP_SAFETY: string[] = [
+  "Title-safe top",
+  "Title-safe bottom",
+  "Title-safe left",
+  "Title-safe right",
+  "Center-safe (1:1 sibling)",
+  "No copy zone needed",
+];
+
+export const STORYTELLING_MOMENT: string[] = [
+  "Arriving",
+  "Departing",
+  "Mid-action",
+  "Resting",
+  "Ritual — applying",
+  "Ritual — pouring",
+  "Ritual — lacing",
+  "Ritual — fastening",
+  "Caught off-guard",
+  "Quiet pause",
+];
+
+// ============================================================================
+// CAST extras (Step 4)
+// ============================================================================
+
+export const SKIN_FINISHES: string[] = [
+  "Natural",
+  "Dewy",
+  "Matte editorial",
+  "Glossy editorial",
+  "Sun-kissed",
+  "Bare / no-makeup",
+];
+
+export const HAIR_STYLES: string[] = [
+  "Natural loose",
+  "Wet-look",
+  "Slicked back",
+  "Tousled",
+  "Braided",
+  "Updo",
+  "Ponytail",
+  "Bun",
+  "Covered (hat / scarf)",
+  "Short crop",
+  "Curly defined",
+];
+
+export const MAKEUP_LOOKS: string[] = [
+  "Bare",
+  "No-makeup makeup",
+  "Editorial neutral",
+  "Graphic liner",
+  "Glossy lip",
+  "Bold lip",
+  "Smoked eye",
+  "Monochrome flush",
+];
+
+export const POSE_ENERGY: string[] = [
+  "Relaxed",
+  "Powerful",
+  "Candid",
+  "Dynamic",
+  "Contemplative",
+  "Playful",
+  "Confident stance",
+  "Seated grounded",
+  "Leaning",
+  "Walking past camera",
+];
+
+export const AGE_BANDS: string[] = [
+  "18 – 25",
+  "25 – 35",
+  "35 – 50",
+  "50+",
+  "Mixed",
+];
+
+export const BUILDS: string[] = [
+  "Slim",
+  "Athletic",
+  "Curvy",
+  "Plus",
+  "Mixed",
+];
+
+export const ETHNICITY_HINT: string[] = [
+  "As-cast",
+  "Pan-European",
+  "East Asian",
+  "South Asian",
+  "Black",
+  "Latine",
+  "Middle Eastern",
+  "Mixed-heritage",
+  "Globally diverse",
+];
+
+// ============================================================================
+// CAMERA ANGLES — grouped by category context
+// ============================================================================
+
+export const CAMERA_ANGLES_GENERAL: string[] = [
+  "Straight on, eye level",
+  "¾ left, eye level",
+  "¾ right, eye level",
+  "Profile left",
+  "Profile right",
+  "Back ¾",
+  "Worm's eye low",
+  "Low ¾",
+  "Top-down flat-lay",
+  "High 45°",
+  "High ¾",
+  "Dutch tilt 5°",
+  "Dutch tilt 15°",
+];
+
+export const CAMERA_ANGLES_APPAREL: string[] = [
+  "Full-length front",
+  "Full-length back",
+  "Full-length ¾",
+  "Half-body",
+  "Bust crop",
+  "Hip crop",
+  "Knee crop",
+  "Ankle crop",
+  "Walking toward",
+  "Walking away",
+  "Mid-stride side",
+  "Seated full-length",
+  "Leaning candid",
+  "Detail — collar",
+  "Detail — cuff",
+  "Detail — hem",
+  "Detail — pocket",
+  "Detail — zip / button",
+  "Detail — seam / label",
+  "Detail — lining",
+];
+
+export const CAMERA_ANGLES_FOOTWEAR: string[] = [
+  "Top-down pair",
+  "Single shoe ¾",
+  "Sole-up",
+  "Heel-back detail",
+  "Tongue close-up",
+  "Lace detail",
+  "Side profile pair",
+  "Stacked pair",
+  "On-foot walking",
+  "On-foot seated",
+  "On-foot on stairs",
+  "Kicked-off arrangement",
+  "In hand offering",
+];
+
+export const CAMERA_ANGLES_EYEWEAR: string[] = [
+  "Front on-face",
+  "¾ on-face",
+  "Profile on-face",
+  "Top-down folded",
+  "Top-down open",
+  "Lens detail macro",
+  "Temple detail macro",
+  "Bridge detail macro",
+  "On-hair pushed up",
+  "In-hand offering",
+];
+
+export const CAMERA_ANGLES_JEWELRY: string[] = [
+  "Macro stone",
+  "Macro clasp",
+  "Macro engraving",
+  "On-finger ¾",
+  "On-finger top-down",
+  "On-wrist",
+  "On-neck",
+  "On-ear ¾",
+  "On-ear profile",
+  "Paired on tray",
+  "In-hand offering",
+  "Falling / floating",
+];
+
+export const CAMERA_ANGLES_TABLETOP: string[] = [
+  "Top-down 90°",
+  "45° hero",
+  "Eye level macro",
+  "Knolling flat-lay",
+  "Floating product",
+  "Pour shot",
+  "Splash shot",
+  "Steam shot",
+];
+
+// ============================================================================
+// FIELD DEFINITIONS — one entry per extras key.
+// ============================================================================
+
+export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
+  {
+    key: "backdrop_type",
+    scope: "scene",
+    label: "Backdrop type",
+    prefix: "Backdrop",
+    presets: BACKDROP_TYPES,
+  },
+  {
+    key: "backdrop_color",
+    scope: "scene",
+    label: "Backdrop color / gradient anchor",
+    prefix: "Backdrop color",
+    presets: BACKDROP_COLORS,
+  },
+  {
+    key: "backdrop_gradient",
+    scope: "scene",
+    label: "Backdrop gradient style",
+    prefix: "Gradient",
+    presets: BACKDROP_GRADIENT_STYLES,
+  },
+  {
+    key: "floor",
+    scope: "scene",
+    label: "Floor surface",
+    prefix: "Floor",
+    presets: FLOOR_TYPES,
+  },
+  {
+    key: "time_of_day_detail",
+    scope: "scene",
+    label: "Time of day (detail)",
+    prefix: "Time",
+    presets: TIMES_OF_DAY_EXT,
+  },
+  {
+    key: "light_direction",
+    scope: "scene",
+    label: "Light direction",
+    prefix: "Light direction",
+    presets: LIGHT_DIRECTIONS,
+  },
+  {
+    key: "light_quality",
+    scope: "scene",
+    label: "Light quality",
+    prefix: "Light quality",
+    presets: LIGHT_QUALITIES,
+  },
+  {
+    key: "motion",
+    scope: "scene",
+    label: "Motion / energy",
+    prefix: "Motion",
+    presets: MOTION_ENERGY,
+  },
+  {
+    key: "composition_energy",
+    scope: "scene",
+    label: "Composition energy",
+    prefix: "Composition energy",
+    presets: COMPOSITION_ENERGY,
+  },
+  {
+    key: "crop_safety",
+    scope: "scene",
+    label: "Crop-safe zones (for copy)",
+    prefix: "Crop safety",
+    presets: CROP_SAFETY,
+  },
+  {
+    key: "camera_angle",
+    scope: "scene",
+    label: "Camera angle",
+    prefix: "Camera angle",
+    presets: CAMERA_ANGLES_GENERAL,
+  },
+  {
+    key: "camera_angle_apparel",
+    scope: "scene",
+    label: "Apparel-specific angle",
+    prefix: "Apparel angle",
+    presets: CAMERA_ANGLES_APPAREL,
+    category: ["fashion"],
+  },
+  {
+    key: "camera_angle_footwear",
+    scope: "scene",
+    label: "Footwear-specific angle",
+    prefix: "Footwear angle",
+    presets: CAMERA_ANGLES_FOOTWEAR,
+    category: ["footwear"],
+  },
+  {
+    key: "camera_angle_eyewear",
+    scope: "scene",
+    label: "Eyewear-specific angle",
+    prefix: "Eyewear angle",
+    presets: CAMERA_ANGLES_EYEWEAR,
+    category: ["eyewear"],
+  },
+  {
+    key: "camera_angle_jewelry",
+    scope: "scene",
+    label: "Jewelry-specific angle",
+    prefix: "Jewelry angle",
+    presets: CAMERA_ANGLES_JEWELRY,
+    category: ["jewelry", "watches"],
+  },
+  {
+    key: "camera_angle_tabletop",
+    scope: "scene",
+    label: "Tabletop / product angle",
+    prefix: "Tabletop angle",
+    presets: CAMERA_ANGLES_TABLETOP,
+    category: ["beauty-fragrance", "tech", "food-drink", "wellness", "home"],
+  },
+];
+
+export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
+  {
+    key: "age_band",
+    scope: "cast",
+    label: "Age band",
+    prefix: "Age",
+    presets: AGE_BANDS,
+    castOnly: ["solo", "two", "group"],
+  },
+  {
+    key: "build",
+    scope: "cast",
+    label: "Build",
+    prefix: "Build",
+    presets: BUILDS,
+    castOnly: ["solo", "two", "group"],
+  },
+  {
+    key: "ethnicity",
+    scope: "cast",
+    label: "Ethnicity hint",
+    prefix: "Ethnicity",
+    presets: ETHNICITY_HINT,
+    castOnly: ["solo", "two", "group"],
+  },
+  {
+    key: "pose_energy",
+    scope: "cast",
+    label: "Pose energy",
+    prefix: "Pose",
+    presets: POSE_ENERGY,
+    castOnly: ["solo", "two", "group", "hands"],
+  },
+  {
+    key: "skin_finish",
+    scope: "cast",
+    label: "Skin finish",
+    prefix: "Skin",
+    presets: SKIN_FINISHES,
+    castOnly: ["solo", "two", "group"],
+  },
+  {
+    key: "hair",
+    scope: "cast",
+    label: "Hair styling",
+    prefix: "Hair",
+    presets: HAIR_STYLES,
+    castOnly: ["solo", "two", "group"],
+  },
+  {
+    key: "makeup",
+    scope: "cast",
+    label: "Makeup",
+    prefix: "Makeup",
+    presets: MAKEUP_LOOKS,
+    castOnly: ["solo", "two", "group"],
+  },
+  {
+    key: "storytelling_moment",
+    scope: "cast",
+    label: "Storytelling moment",
+    prefix: "Moment",
+    presets: STORYTELLING_MOMENT,
+    castOnly: ["solo", "two", "group", "hands"],
+  },
+];
+
+/** Filter helper: returns fields applicable to the current category + cast. */
+export function applicableFields(
+  fields: ExtrasField[],
+  module: BrandSceneModule | undefined,
+  castPreset: CastPreset | undefined,
+): ExtrasField[] {
+  return fields.filter((f) => {
+    if (f.category && (!module || !f.category.includes(module))) return false;
+    if (f.excludes && module && f.excludes.includes(module)) return false;
+    if (f.castOnly && (!castPreset || !f.castOnly.includes(castPreset))) return false;
+    return true;
+  });
+}

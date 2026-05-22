@@ -24,6 +24,10 @@ import {
   PROP_DENSITY_LABELS,
   metaX,
 } from "../wizard/constants/sceneExtras";
+import {
+  SCENE_EXTRAS_FIELDS,
+  CAST_EXTRAS_FIELDS,
+} from "../wizard/constants/extras";
 
 /**
  * Canonical-order assembler. Skips empty sections; returns a single
@@ -132,6 +136,33 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
 
   const useCase = metaX(OUTPUT_USE_CASES, base.output_use_case);
   if (useCase) lines.push(`Output: ${useCase.directive}.`);
+
+  // Phase 7d — scene extras (backdrop, floor, camera-angle, light, motion…)
+  const sceneExtras = base.extras ?? {};
+  for (const f of SCENE_EXTRAS_FIELDS) {
+    const v = sceneExtras[f.key];
+    if (v && v.trim()) lines.push(`${f.prefix}: ${v.trim()}.`);
+  }
+  // Unknown extras (forward-compat) — render as Style lines.
+  const knownSceneKeys = new Set(SCENE_EXTRAS_FIELDS.map((f) => f.key));
+  for (const [k, v] of Object.entries(sceneExtras)) {
+    if (!knownSceneKeys.has(k) && v?.trim()) {
+      lines.push(`Style (${k}): ${v.trim()}.`);
+    }
+  }
+
+  // Cast extras (skin, hair, makeup, pose energy, storytelling…)
+  const castExtras = answers.cast?.extras ?? {};
+  for (const f of CAST_EXTRAS_FIELDS) {
+    const v = castExtras[f.key];
+    if (v && v.trim()) lines.push(`${f.prefix}: ${v.trim()}.`);
+  }
+  const knownCastKeys = new Set(CAST_EXTRAS_FIELDS.map((f) => f.key));
+  for (const [k, v] of Object.entries(castExtras)) {
+    if (!knownCastKeys.has(k) && v?.trim()) {
+      lines.push(`Cast style (${k}): ${v.trim()}.`);
+    }
+  }
 
   if (base.notes?.trim()) lines.push(`Notes: ${base.notes.trim()}.`);
 
