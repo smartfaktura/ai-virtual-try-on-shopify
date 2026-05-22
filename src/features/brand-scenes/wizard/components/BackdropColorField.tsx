@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Chip } from "./Chip";
+import { AddChip } from "./Chip";
 
 /** Curated 24-swatch palette — broad, neutral-leaning, brand-safe. */
 const SWATCHES: { label: string; hex: string }[] = [
