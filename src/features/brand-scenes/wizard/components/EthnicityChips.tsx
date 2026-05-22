@@ -14,7 +14,7 @@ interface EthnicityOption {
 }
 
 const ETHNICITY_OPTIONS: EthnicityOption[] = [
-  { value: "As-cast", label: "Match my model", desc: "Use the brand model's natural look" },
+  { value: "Match the attached brand model", label: "Match my model", desc: "Use the brand model's natural look" },
   { value: "Globally diverse", label: "Globally diverse", desc: "Mixed casting across regions" },
   { value: "Mixed-heritage", label: "Mixed heritage", desc: "Multi-ethnic features" },
   { value: "Pan-European", label: "Pan-European", desc: "Northern + Mediterranean European" },
@@ -51,7 +51,7 @@ export function EthnicityChips({ value, onChange }: Props) {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {ETHNICITY_OPTIONS.map((o) => {
           const active = value === o.value;
           return (
@@ -61,7 +61,6 @@ export function EthnicityChips({ value, onChange }: Props) {
               onClick={() => onChange(active ? undefined : o.value)}
               className={[
                 "text-left rounded-2xl border px-3 py-2 transition-colors",
-                "min-w-[140px]",
                 active
                   ? "border-foreground bg-foreground text-background"
                   : "border-border bg-background text-foreground hover:border-foreground/40",

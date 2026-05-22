@@ -241,20 +241,15 @@ export const CROP_SAFETY: string[] = [
   "Title-safe bottom",
   "Title-safe left",
   "Title-safe right",
-  "Center-safe (1:1 sibling)",
+  "Center-safe (works for square crop)",
   "No copy zone needed",
 ];
 
+/** Phase 7k — minimal generic fallback. Per-subfamily lists live in storytellingBySubfamily.ts. */
 export const STORYTELLING_MOMENT: string[] = [
   "Arriving",
-  "Departing",
   "Mid-action",
   "Resting",
-  "Ritual — applying",
-  "Ritual — pouring",
-  "Ritual — lacing",
-  "Ritual — fastening",
-  "Caught off-guard",
   "Quiet pause",
 ];
 
@@ -324,6 +319,12 @@ export const BUILDS: string[] = [
   "Plus",
   "Mixed",
 ];
+
+/** Phase 7k — "Mixed" only meaningful for two/group casts. */
+export function buildsForCast(cast: CastPreset | undefined): string[] {
+  if (cast === "two" || cast === "group") return BUILDS;
+  return BUILDS.filter((b) => b !== "Mixed");
+}
 
 export const ETHNICITY_HINT: string[] = [
   "As-cast",
@@ -441,16 +442,8 @@ export const CAMERA_ANGLES_JEWELRY: string[] = [
   "Falling / floating",
 ];
 
-export const CAMERA_ANGLES_TABLETOP: string[] = [
-  "Top-down 90°",
-  "45° hero",
-  "Eye level macro",
-  "Knolling flat-lay",
-  "Floating product",
-  "Pour shot",
-  "Splash shot",
-  "Steam shot",
-];
+// Phase 7k — CAMERA_ANGLES_TABLETOP removed (tabletop scene type dropped).
+// Useful product-only angles live in CAMERA_ANGLES_PRODUCT.
 
 // ============================================================================
 // FIELD DEFINITIONS — one entry per extras key.

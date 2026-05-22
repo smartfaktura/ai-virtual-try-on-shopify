@@ -37,7 +37,7 @@ import {
   type GroupDynamic,
   type HandsOnProduct,
 } from "../constants/sceneExtras";
-import { CAST_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
+import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
 import {
@@ -305,8 +305,8 @@ export function Step4Cast({
           </Section>
         )}
 
-      {/* Body part focus */}
-      {!isReplicate && preset !== "none" && visibleBodyPart.length > 0 && (
+      {/* Body part focus — hidden for `hands` (the cast IS a body part). */}
+      {!isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
         <Section label="Body-part focus">
           <div className="flex flex-wrap gap-2">
             {visibleBodyPart.map((b) => (
@@ -401,9 +401,9 @@ export function Step4Cast({
         </Section>
       )}
 
-      {/* Wardrobe color anchor — hidden for swimwear/lingerie where it's not relevant. */}
+      {/* Wardrobe color anchor — irrelevant for swimwear/lingerie. */}
       {hasPeople && !isReplicate && wardrobes.length > 0 &&
-        subFamily !== "swimwear" && subFamily !== "lingerie" && (
+        !["swimwear", "lingerie"].includes(subFamily ?? "") && (
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
             {wardrobes.map((w) => (
@@ -479,12 +479,13 @@ export function Step4Cast({
         </div>
       )}
 
-      {/* Phase 7j — flexible cast styling dials with per-subfamily storytelling. */}
+      {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {!isReplicate && (
-        <div className="space-y-7 pt-2 border-t border-border/60">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+        <div className="space-y-3 pt-2 border-t border-border/60">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
             More cast & styling dials
           </div>
+          <div className="space-y-7">
           {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily).map((f) => {
             // Inject sub-family-specific moments at render time.
             let resolved = f;
@@ -496,6 +497,9 @@ export function Step4Cast({
                 return null;
               }
               resolved = { ...f, presets: moments };
+            }
+            if (f.key === "build") {
+              resolved = { ...f, presets: buildsForCast(preset) };
             }
             return (
               <ExtrasPillField
@@ -511,6 +515,7 @@ export function Step4Cast({
               />
             );
           })}
+          </div>
         </div>
       )}
 
