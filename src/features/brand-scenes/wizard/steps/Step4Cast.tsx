@@ -482,10 +482,8 @@ export function Step4Cast({
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {!isReplicate && (
         <div className="space-y-3 pt-2 border-t border-border/60">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-            More cast & styling dials
-          </div>
           <div className="space-y-7">
+
           {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily).map((f) => {
             // Inject sub-family-specific moments at render time.
             let resolved = f;
