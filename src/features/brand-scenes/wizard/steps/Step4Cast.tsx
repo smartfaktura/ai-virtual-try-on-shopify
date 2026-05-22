@@ -471,7 +471,7 @@ export function Step4Cast({
       )}
 
       {/* Wardrobe color anchor — irrelevant for swimwear/lingerie. */}
-      {hasPeople && !isReplicate && wardrobes.length > 0 &&
+      {!isQuick && hasPeople && !isReplicate && wardrobes.length > 0 &&
         !["swimwear", "lingerie"].includes(subFamily ?? "") && (
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
