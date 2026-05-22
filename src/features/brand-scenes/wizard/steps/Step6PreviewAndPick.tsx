@@ -72,7 +72,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
       {/* Admin debug — single instance */}
       {isAdmin && (
         <div className="space-y-3 pt-4 border-t border-border/60">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Admin debug
           </div>
 
