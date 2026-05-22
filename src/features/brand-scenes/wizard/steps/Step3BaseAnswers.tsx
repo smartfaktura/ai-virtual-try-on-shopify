@@ -84,8 +84,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
   const tuned = tuningLabel(module, subFamily);
 
   // Filter helpers — expanded=true returns the full global list.
-  const settings = (expanded: boolean) =>
-    expanded ? Array.from(SCENE_SETTINGS) : resolved.settings;
   const lenses = (expanded: boolean) =>
     expanded ? SCENE_LENSES : SCENE_LENSES.filter((l) => resolved.lens.includes(l.value));
   const dofs = (expanded: boolean) =>
@@ -99,6 +97,49 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
   const propDensityMax = resolved.propDensityMax;
 
+  const sceneType = value.scene_type as SceneTypeId | undefined;
+  const settingPool = useMemo(
+    () => getSettingPool(module, subFamily, sceneType),
+    [module, subFamily, sceneType],
+  );
+
+  const ctxBase: Omit<SceneCtx, "values" | "auto" | "recommendations"> = {
+    module,
+    sub_family: subFamily,
+    scene_type: sceneType,
+    setting: value.setting,
+    cast: castPreset,
+  };
+
+  const warnings = softWarnings({
+    ...ctxBase,
+    values: { ...(value.extras ?? {}), _weather: value.weather },
+    auto: value.auto ?? {},
+    recommendations: value.recommendations ?? {},
+  });
+
+  const handleSceneType = (next: SceneTypeId | undefined) => {
+    onChange({ scene_type: next });
+  };
+
+  const handleSetting = (next: string | undefined) => {
+    const res = applySettingCascade(next, {
+      ...ctxBase,
+      setting: next,
+      values: value.extras ?? {},
+      auto: value.auto ?? {},
+      recommendations: value.recommendations ?? {},
+    });
+    const cleaned: Record<string, string> = {};
+    for (const [k, v] of Object.entries(res.values)) if (v !== undefined) cleaned[k] = v;
+    onChange({
+      setting: next,
+      extras: cleaned,
+      auto: res.auto,
+      recommendations: res.recommendations,
+    });
+  };
+
   return (
     <div className="space-y-7">
       {tuned && (
@@ -107,24 +148,34 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         </div>
       )}
 
-      <PillField
-        label="Scene type"
-        presets={LEGACY_SCENE_TYPES as unknown as readonly string[]}
-        current={value.aesthetic ?? ""}
-        placeholder="Describe your own scene type"
-        onChange={(next) => onChange({ aesthetic: next })}
-      />
-
-      <Section label="Setting / environment" expandable>
-        {(expanded) => (
-          <PillFieldInner
-            presets={settings(expanded)}
-            current={value.setting ?? ""}
-            placeholder="Describe the setting"
-            onChange={(next) => onChange({ setting: next })}
-          />
-        )}
+      <Section label="Stage A · Scene type" hint="Pick the world. Everything below tunes to it.">
+        <SceneTypePicker value={sceneType} onChange={handleSceneType} />
       </Section>
+
+      <Section
+        label="Stage B · Setting / environment"
+        hint={
+          sceneType
+            ? "Tailored to your category — or add your own."
+            : "Pick a scene type above to see tailored settings (you can still type your own)."
+        }
+      >
+        <SettingPicker
+          options={settingPool}
+          value={value.setting}
+          onChange={handleSetting}
+        />
+      </Section>
+
+      {warnings.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] px-3 py-2 text-[12px] text-amber-700 dark:text-amber-300 space-y-1">
+          {warnings.map((w) => (
+            <div key={w}>· {w}</div>
+          ))}
+        </div>
+      )}
+
+
 
 
       <Section label="Weather / atmosphere">
