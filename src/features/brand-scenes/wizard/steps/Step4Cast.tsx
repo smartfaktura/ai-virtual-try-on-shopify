@@ -242,25 +242,16 @@ export function Step4Cast({
             </div>
           </Section>
 
-          <Section label="Diversity">
-            <div className="flex flex-wrap gap-2">
-              {DIVERSITY_OPTIONS.map((d) => (
-                <Chip
-                  key={d.value}
-                  active={cast?.diversity === d.value}
-                  onClick={() =>
-                    onCastChange({
-                      diversity:
-                        cast?.diversity === d.value
-                          ? undefined
-                          : (d.value as Diversity),
-                    })
-                  }
-                >
-                  {d.label}
-                </Chip>
-              ))}
-            </div>
+          <Section label="Ethnicity / casting hint">
+            <EthnicityChips
+              value={cast?.extras?.ethnicity}
+              onChange={(next) => {
+                const nextExtras = { ...(cast?.extras ?? {}) };
+                if (next === undefined) delete nextExtras.ethnicity;
+                else nextExtras.ethnicity = next;
+                onCastChange({ extras: nextExtras });
+              }}
+            />
           </Section>
         </>
       )}
