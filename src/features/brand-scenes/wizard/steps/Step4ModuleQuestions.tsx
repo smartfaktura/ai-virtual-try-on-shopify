@@ -9,6 +9,11 @@ import { FootwearQuestions } from "../../modules/footwear/FootwearQuestions";
 import type { FootwearModuleAnswers } from "../../modules/footwear/schema";
 import { EyewearQuestions } from "../../modules/eyewear/EyewearQuestions";
 import type { EyewearModuleAnswers } from "../../modules/eyewear/schema";
+import {
+  QuickDetailedToggle,
+  CustomizeLink,
+  useWizardMode,
+} from "../components/QuickDetailedToggle";
 
 interface Props {
   module: BrandSceneModule;
@@ -17,44 +22,63 @@ interface Props {
 }
 
 export function Step4ModuleQuestions({ module, answers, onChange }: Props) {
-  if (module === "fashion") {
-    return (
-      <FashionQuestions
-        value={answers as Partial<FashionModuleAnswers>}
-        onChange={(patch) => onChange(patch as Record<string, unknown>)}
-      />
-    );
-  }
+  const { mode } = useWizardMode();
 
-  if (module === "footwear") {
-    return (
-      <FootwearQuestions
-        value={answers as Partial<FootwearModuleAnswers>}
-        onChange={(patch) => onChange(patch as Record<string, unknown>)}
-      />
-    );
-  }
+  const body = (() => {
+    if (module === "fashion") {
+      return (
+        <FashionQuestions
+          mode={mode}
+          value={answers as Partial<FashionModuleAnswers>}
+          onChange={(patch) => onChange(patch as Record<string, unknown>)}
+        />
+      );
+    }
 
-  if (module === "eyewear") {
+    if (module === "footwear") {
+      return (
+        <FootwearQuestions
+          mode={mode}
+          value={answers as Partial<FootwearModuleAnswers>}
+          onChange={(patch) => onChange(patch as Record<string, unknown>)}
+        />
+      );
+    }
+
+    if (module === "eyewear") {
+      return (
+        <EyewearQuestions
+          mode={mode}
+          value={answers as Partial<EyewearModuleAnswers>}
+          onChange={(patch) => onChange(patch as Record<string, unknown>)}
+        />
+      );
+    }
+
     return (
-      <EyewearQuestions
-        value={answers as Partial<EyewearModuleAnswers>}
-        onChange={(patch) => onChange(patch as Record<string, unknown>)}
-      />
+      <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Sparkles className="w-4 h-4 text-primary" />
+        </div>
+        <h3 className="text-base font-semibold text-foreground tracking-tight">
+          {BRAND_SCENE_MODULE_LABELS[module]} questions ship in a later phase
+        </h3>
+        <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+          We'll add tailored prompts here — scene props, camera, references — one family at a time.
+        </p>
+      </div>
     );
-  }
+  })();
 
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
-      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-        <Sparkles className="w-4 h-4 text-primary" />
-      </div>
-      <h3 className="text-base font-semibold text-foreground tracking-tight">
-        {BRAND_SCENE_MODULE_LABELS[module]} questions ship in a later phase
-      </h3>
-      <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-        We'll add tailored prompts here — scene props, camera, references — one family at a time.
-      </p>
+    <div className="space-y-6">
+      <QuickDetailedToggle />
+      {body}
+      {mode === "quick" && (
+        <div className="pt-2">
+          <CustomizeLink label="+ Customize details" />
+        </div>
+      )}
     </div>
   );
 }

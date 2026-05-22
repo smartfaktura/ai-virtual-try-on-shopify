@@ -5,7 +5,6 @@ import {
   EYEWEAR_CAMERA_FEELS,
   EYEWEAR_MAX_CAMERA_FEELS,
   EYEWEAR_PRESENTATIONS,
-  EYEWEAR_PRESENTATIONS_WITH_PERSON,
   EYEWEAR_TEXT_MAX,
   EYEWEAR_TYPES,
   type EyewearArchetype,
@@ -13,15 +12,17 @@ import {
   type EyewearType,
 } from "./questions";
 import type { EyewearModuleAnswers } from "./schema";
+import type { WizardMode } from "../../wizard/components/QuickDetailedToggle";
 
 type Answers = Partial<EyewearModuleAnswers>;
 
 interface Props {
   value: Answers;
   onChange: (patch: Answers) => void;
+  mode?: WizardMode;
 }
 
-export function EyewearQuestions({ value, onChange }: Props) {
+export function EyewearQuestions({ value, onChange, mode = "detailed" }: Props) {
   const v: Answers = {
     archetype: value.archetype,
     eyewear_type: value.eyewear_type,
@@ -29,12 +30,6 @@ export function EyewearQuestions({ value, onChange }: Props) {
     scene: value.scene ?? {},
     finishing: value.finishing ?? {},
   };
-
-  const hasPerson =
-    v.presentation &&
-    EYEWEAR_PRESENTATIONS_WITH_PERSON.includes(
-      v.presentation as EyewearPresentation,
-    );
 
   const toggleCamera = (c: string) => {
     const cur = v.finishing?.camera_feel ?? [];
@@ -105,80 +100,41 @@ export function EyewearQuestions({ value, onChange }: Props) {
         </div>
       </Block>
 
-      {/* Scene */}
-      <Block label="Scene setting">
-        <div className="space-y-3">
-          <SmallField label="Surface / pedestal">
-            <Input
-              maxLength={EYEWEAR_TEXT_MAX}
-              value={v.scene?.surface ?? ""}
-              onChange={(e) =>
-                onChange({ scene: { ...v.scene, surface: e.target.value } })
-              }
-              placeholder="e.g. warm concrete slab, sand"
-            />
-          </SmallField>
-          <SmallField label="Location specifics">
-            <Input
-              maxLength={EYEWEAR_TEXT_MAX}
-              value={v.scene?.location ?? ""}
-              onChange={(e) =>
-                onChange({ scene: { ...v.scene, location: e.target.value } })
-              }
-              placeholder="e.g. sunlit terrace, harsh shadows"
-            />
-          </SmallField>
-          {hasPerson && (
-            <SmallField label="Expression / pose">
+      {/* Finishing — detailed mode only */}
+      {mode === "detailed" && (
+        <Block label="Finishing">
+          <div className="space-y-3">
+            <SmallField label="Color anchor">
               <Input
                 maxLength={EYEWEAR_TEXT_MAX}
-                value={v.scene?.expression ?? ""}
+                value={v.finishing?.color_anchor ?? ""}
                 onChange={(e) =>
                   onChange({
-                    scene: { ...v.scene, expression: e.target.value },
+                    finishing: { ...v.finishing, color_anchor: e.target.value },
                   })
                 }
-                placeholder="e.g. chin tilted up, eyes closed"
+                placeholder="e.g. amber tortoise, matte black"
               />
             </SmallField>
-          )}
-        </div>
-      </Block>
-
-      {/* Finishing */}
-      <Block label="Finishing">
-        <div className="space-y-3">
-          <SmallField label="Color anchor">
-            <Input
-              maxLength={EYEWEAR_TEXT_MAX}
-              value={v.finishing?.color_anchor ?? ""}
-              onChange={(e) =>
-                onChange({
-                  finishing: { ...v.finishing, color_anchor: e.target.value },
-                })
-              }
-              placeholder="e.g. amber tortoise, matte black"
-            />
-          </SmallField>
-          <SmallField
-            label="Camera feel"
-            hint={`${(v.finishing?.camera_feel ?? []).length}/${EYEWEAR_MAX_CAMERA_FEELS}`}
-          >
-            <div className="flex flex-wrap gap-2">
-              {EYEWEAR_CAMERA_FEELS.map((c) => (
-                <Chip
-                  key={c}
-                  active={(v.finishing?.camera_feel ?? []).includes(c as never)}
-                  onClick={() => toggleCamera(c)}
-
-                >
-                  {c}
-                </Chip>
-              ))}
-            </div>
-          </SmallField>
-        </div>
-      </Block>
+            <SmallField
+              label="Camera feel"
+              hint={`${(v.finishing?.camera_feel ?? []).length}/${EYEWEAR_MAX_CAMERA_FEELS}`}
+            >
+              <div className="flex flex-wrap gap-2">
+                {EYEWEAR_CAMERA_FEELS.map((c) => (
+                  <Chip
+                    key={c}
+                    active={(v.finishing?.camera_feel ?? []).includes(c as never)}
+                    onClick={() => toggleCamera(c)}
+                  >
+                    {c}
+                  </Chip>
+                ))}
+              </div>
+            </SmallField>
+          </div>
+        </Block>
+      )}
     </div>
   );
 }

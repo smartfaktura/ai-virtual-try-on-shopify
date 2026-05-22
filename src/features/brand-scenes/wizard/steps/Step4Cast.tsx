@@ -41,6 +41,11 @@ import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constant
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
 import {
+  QuickDetailedToggle,
+  CustomizeLink,
+  useWizardMode,
+} from "../components/QuickDetailedToggle";
+import {
   getStorytellingMoments,
   hasExplicitMoments,
 } from "../registry/storytellingBySubfamily";
@@ -138,9 +143,13 @@ export function Step4Cast({
   const [showExact, setShowExact] = useState(!!scale?.dimensions);
 
   const warnings = sceneWarnings(answers);
+  const { mode } = useWizardMode();
+  const isQuick = mode === "quick";
 
   return (
     <div className="space-y-8">
+      <QuickDetailedToggle />
+
       {/* Cast preset */}
       <Section label="Cast" required missing={!preset}>
         {(expanded) => (
@@ -197,8 +206,8 @@ export function Step4Cast({
         </p>
       )}
 
-      {/* People details */}
-      {hasPeople && !isReplicate && (
+      {/* People details — detailed mode only */}
+      {!isQuick && hasPeople && !isReplicate && (
         <>
           {(() => {
             const isSingle = preset === "solo" || preset === "hands";
@@ -338,7 +347,8 @@ export function Step4Cast({
       )}
 
       {/* Hands-on-product gesture */}
-      {!isReplicate &&
+      {!isQuick &&
+        !isReplicate &&
         visibleHandsOnProduct.length > 0 &&
         (preset === "hands" || preset === "solo" || preset === "two" || preset === "group") &&
         (scalePreset === "pocket" || scalePreset === "handheld") && (
@@ -365,7 +375,7 @@ export function Step4Cast({
         )}
 
       {/* Body part focus — hidden for `hands` (the cast IS a body part). */}
-      {!isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
+      {!isQuick && !isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
         <Section label="Body-part focus">
           <div className="flex flex-wrap gap-2">
             {visibleBodyPart.map((b) => (
@@ -389,7 +399,7 @@ export function Step4Cast({
       )}
 
       {/* Gaze */}
-      {hasPeople && !isReplicate && (
+      {!isQuick && hasPeople && !isReplicate && (
         <Section label="Gaze direction">
           <div className="flex flex-wrap gap-2">
             {GAZE_DIRECTIONS.map((g) => (
@@ -413,7 +423,7 @@ export function Step4Cast({
       )}
 
       {/* Group dynamic */}
-      {!isReplicate && (preset === "two" || preset === "group") && (
+      {!isQuick && !isReplicate && (preset === "two" || preset === "group") && (
         <Section label="Group dynamic">
           <div className="flex flex-wrap gap-2">
             {GROUP_DYNAMICS.map((g) => (
@@ -437,7 +447,7 @@ export function Step4Cast({
       )}
 
       {/* Action */}
-      {hasPeople && !isReplicate && (
+      {!isQuick && hasPeople && !isReplicate && (
         <Section label="Action / energy">
           <div className="flex flex-wrap gap-2">
             {CAST_ACTIONS.map((a) => (
@@ -461,7 +471,7 @@ export function Step4Cast({
       )}
 
       {/* Wardrobe color anchor — irrelevant for swimwear/lingerie. */}
-      {hasPeople && !isReplicate && wardrobes.length > 0 &&
+      {!isQuick && hasPeople && !isReplicate && wardrobes.length > 0 &&
         !["swimwear", "lingerie"].includes(subFamily ?? "") && (
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
@@ -520,6 +530,12 @@ export function Step4Cast({
         )}
       </Section>
 
+      {isQuick && !isReplicate && (
+        <div className="pt-2">
+          <CustomizeLink label="+ Customize cast & styling" />
+        </div>
+      )}
+
       {/* Warnings */}
       {warnings.length > 0 && (
         <div className="space-y-2">
@@ -540,7 +556,7 @@ export function Step4Cast({
 
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
-      {!isReplicate && (
+      {!isQuick && !isReplicate && (
         <div className="space-y-3 pt-2 border-t border-border/60">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
             Optional styling
@@ -586,7 +602,7 @@ export function Step4Cast({
       )}
 
       {/* Cast note */}
-      {!isReplicate && (
+      {!isQuick && !isReplicate && (
         <Section label="Note">
           <Textarea
             value={cast?.note ?? ""}

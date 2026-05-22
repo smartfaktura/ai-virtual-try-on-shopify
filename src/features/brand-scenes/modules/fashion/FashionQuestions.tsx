@@ -1,42 +1,33 @@
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Chip, AddChip } from "../../wizard/components/Chip";
+import { Chip } from "../../wizard/components/Chip";
 import {
   FASHION_CAMERA_FEELS,
   FASHION_MAX_CAMERA_FEELS,
   FASHION_MAX_VIBES,
-  FASHION_SETTINGS,
   FASHION_TEXT_MAX,
   FASHION_VIBES,
-  FASHION_WEARERS,
-  WEARERS_WITH_PERSON,
-  type FashionWearer,
 } from "./questions";
 import {
   isFashionStepValid as isFashionStepValidImpl,
   type FashionModuleAnswers,
 } from "./schema";
+import type { WizardMode } from "../../wizard/components/QuickDetailedToggle";
 
 type Answers = Partial<FashionModuleAnswers>;
 
 interface Props {
   value: Answers;
   onChange: (patch: Answers) => void;
+  mode?: WizardMode;
 }
 
-export function FashionQuestions({ value, onChange }: Props) {
+export function FashionQuestions({ value, onChange, mode = "detailed" }: Props) {
   const v: Answers = {
     wearer: value.wearer,
     scene: value.scene ?? {},
     finishing: value.finishing ?? {},
   };
-
-  const settingValue = v.scene?.location ?? "";
-  const isCustomSetting =
-    settingValue.length > 0 &&
-    !(FASHION_SETTINGS as readonly string[]).includes(settingValue);
-  const [showCustomSetting, setShowCustomSetting] = useState(isCustomSetting);
 
   const vibeList = (v.scene?.props ?? "")
     .split("·")
@@ -62,56 +53,17 @@ export function FashionQuestions({ value, onChange }: Props) {
     onChange({ finishing: { ...v.finishing, camera_feel: next as never } });
   };
 
+  if (mode === "quick") {
+    return (
+      <p className="text-[12px] text-muted-foreground leading-relaxed">
+        Fashion has no required extras — we'll use editorial defaults. Switch
+        to Detailed for vibe, camera feel and color anchor.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Who appears in the scene and how the product is worn is asked on the
-        previous step. These options fine-tune the fashion-specific styling.
-      </p>
-
-
-      <Block label="Setting">
-        <div className="flex flex-wrap gap-2">
-          {FASHION_SETTINGS.map((s) => {
-            const active = settingValue === s;
-            return (
-              <Chip
-                key={s}
-                active={active}
-                onClick={() => {
-                  setShowCustomSetting(false);
-                  onChange({ scene: { ...v.scene, location: s } });
-                }}
-              >
-                {s}
-              </Chip>
-            );
-          })}
-          {!showCustomSetting && (
-            <AddChip
-              onClick={() => {
-                setShowCustomSetting(true);
-                if (!isCustomSetting) {
-                  onChange({ scene: { ...v.scene, location: "" } });
-                }
-              }}
-            />
-          )}
-        </div>
-        {showCustomSetting && (
-          <Input
-            value={isCustomSetting ? settingValue : ""}
-            maxLength={FASHION_TEXT_MAX}
-            onChange={(e) =>
-              onChange({ scene: { ...v.scene, location: e.target.value } })
-            }
-            placeholder="Describe your own setting"
-            className="rounded-xl"
-            autoFocus
-          />
-        )}
-      </Block>
-
       <Block
         label="Vibe & props"
         hint={`${vibeList.length}/${FASHION_MAX_VIBES}`}
@@ -158,15 +110,9 @@ export function FashionQuestions({ value, onChange }: Props) {
           className="rounded-xl"
         />
       </Block>
-
     </div>
   );
 }
-
-
-
-
-
 
 function Block({
   label,
