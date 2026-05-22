@@ -32,9 +32,6 @@ export function FashionQuestions({ value, onChange }: Props) {
     finishing: value.finishing ?? {},
   };
 
-  const hasPerson =
-    v.wearer && WEARERS_WITH_PERSON.includes(v.wearer as FashionWearer);
-
   const settingValue = v.scene?.location ?? "";
   const isCustomSetting =
     settingValue.length > 0 &&
@@ -67,25 +64,11 @@ export function FashionQuestions({ value, onChange }: Props) {
 
   return (
     <div className="space-y-8">
-      <Block label="Who's wearing it" required>
-        <div className="flex flex-wrap gap-2">
-          {FASHION_WEARERS.map((w) => (
-            <Chip
-              key={w.value}
-              active={v.wearer === w.value}
-              onClick={() => {
-                const next: Answers = { wearer: w.value as FashionWearer };
-                if (!w.hasPerson && v.scene?.pose) {
-                  next.scene = { ...v.scene, pose: undefined };
-                }
-                onChange(next);
-              }}
-            >
-              {w.label}
-            </Chip>
-          ))}
-        </div>
-      </Block>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Who appears in the scene and how the product is worn is asked on the
+        previous step. These options fine-tune the fashion-specific styling.
+      </p>
+
 
       <Block label="Setting">
         <div className="flex flex-wrap gap-2">
