@@ -33,20 +33,20 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "Pick the cast and how they relate to the product",
   },
   4: {
-    title: "Scene & mood",
-    subtitle: "Pick the world — everything below tunes to it",
+    title: "Environment",
+    subtitle: "Where the shot lives — pick the world it sits in",
   },
   5: {
-    title: "Category specifics",
-    subtitle: "A few extras unique to the family you picked",
+    title: "Photography & edit",
+    subtitle: "How the shot is taken and graded",
   },
   6: {
     title: "Preview & pick",
-    subtitle: "Generate three variants, then save the one that fits",
+    subtitle: "Review the scene, then generate 3 variations",
   },
   7: {
     title: "Review",
-    subtitle: "Confirm the payload before saving",
+    subtitle: "Confirm before saving",
   },
 };
 
