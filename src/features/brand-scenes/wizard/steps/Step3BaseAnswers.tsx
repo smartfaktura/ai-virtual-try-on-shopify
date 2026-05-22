@@ -55,7 +55,7 @@ import {
   softWarnings,
   type SceneCtx,
 } from "../rules/sceneRules";
-import { resolveAll, tuningLabel } from "../registry/resolvePresets";
+import { resolveAll } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
 
 interface Props {
@@ -78,7 +78,8 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
     () => resolveAll(module, subFamily),
     [module, subFamily],
   );
-  const tuned = tuningLabel(module, subFamily);
+
+
 
   // Filter helpers — expanded=true returns the full global list.
   const lenses = (expanded: boolean) =>
@@ -139,22 +140,16 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
   return (
     <div className="space-y-7">
-      {tuned && (
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Category-tuned · {tuned}
-        </div>
-      )}
-
-      <Section label="Stage A · Scene type" hint="Pick the world. Everything below tunes to it.">
+      <Section label="Scene type" hint="Pick the world. Everything below tunes to it.">
         <SceneTypePicker value={sceneType} onChange={handleSceneType} />
       </Section>
 
       <Section
-        label="Stage B · Setting / environment"
+        label="Setting / environment"
         hint={
           sceneType
-            ? "Tailored to your category — or add your own."
-            : "Pick a scene type above to see tailored settings (you can still type your own)."
+            ? "Tailored to your category — or add your own"
+            : "Pick a scene type above to see tailored settings (you can still type your own)"
         }
       >
         <div className="scroll-mt-24">
@@ -165,6 +160,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
           />
         </div>
       </Section>
+
 
       {warnings.length > 0 && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] px-3 py-2 text-[12px] text-amber-700 dark:text-amber-300 space-y-1">
@@ -347,7 +343,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
       {/* Phase 7j — Stage C grouped collapsibles. */}
       <div className="space-y-3 pt-2 border-t border-border/60">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-          Stage C · More creative dials
+          More creative dials
         </div>
         {(() => {
           const ctx: SceneCtx = {
@@ -414,6 +410,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
               <ExtrasPillField
                 key={f.key}
                 field={resolved}
+                showAllInitially
                 value={value.extras?.[f.key]}
                 autoFilled={!!value.auto?.[f.key]}
                 recommended={value.recommendations?.[f.key]}
@@ -457,18 +454,27 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
               {GROUPS.map((g) => {
                 const groupFields = fields.filter((f) => g.keys.includes(f.key));
                 if (groupFields.length === 0) return null;
+                const filledCount = groupFields.filter(
+                  (f) => !!value.extras?.[f.key],
+                ).length;
                 return (
                   <StageCGroup
                     key={g.label}
                     label={g.label}
                     defaultOpen={g.defaultOpen}
+                    count={filledCount}
                   >
                     {groupFields.map(renderField)}
                   </StageCGroup>
                 );
               })}
               {ungrouped.length > 0 && (
-                <StageCGroup label="More">{ungrouped.map(renderField)}</StageCGroup>
+                <StageCGroup
+                  label="More"
+                  count={ungrouped.filter((f) => !!value.extras?.[f.key]).length}
+                >
+                  {ungrouped.map(renderField)}
+                </StageCGroup>
               )}
             </>
           );
@@ -567,7 +573,6 @@ function PaletteBlock({
           onChange={(e) => onCustom(e.target.value)}
           placeholder="Describe your own palette (e.g. dusty rose + cocoa)"
           className="rounded-xl mt-2"
-          autoFocus
         />
       )}
     </div>
@@ -645,7 +650,6 @@ function PillFieldInner({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className="rounded-xl mt-2"
-          autoFocus
         />
       )}
     </>

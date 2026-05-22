@@ -1,48 +1,64 @@
-# Phase 7p — Subfamily wizard bug sweep
+# Phase 7q — Brand Scenes wizard UI/UX polish
 
-After Phase 7o, a closer audit surfaced 5 real bugs (3 high, 2 medium) that affect the live wizard for the currently unlocked modules (`fashion`, `footwear`, `eyewear`) and the about-to-unlock ones (`jewelry`, `watches`, `bags-accessories`, `hats-caps-beanies`).
+Bug sweep based on the user's four specific complaints: redundant copy, off-size pills, strange collapsed-section behavior, and the jarring "jump to bottom" after pressing Next.
 
-## Bug list
+## Bugs found
 
-### HIGH-1 — Product-only camera angles disappear when cast = none
-`SCENE_EXTRAS_FIELDS` in `wizard/constants/extras.ts` flags `camera_angle_footwear`, `camera_angle_eyewear`, and `camera_angle_jewelry` with `hideWhenNoCast: true`. But these lists are FULL of product-only angles:
-- footwear: `Top-down pair`, `Sole-up`, `Heel-back detail`, `Tongue close-up`, `Lace detail`, `Side profile pair`, `Stacked pair`, `Kicked-off arrangement`, `In hand offering`
-- eyewear: `Top-down folded`, `Top-down open`, `Lens detail macro`, `Temple/Bridge detail macro`, `In-hand offering`
-- jewelry: `Macro stone/clasp/engraving`, `Paired on tray`, `In-hand offering`, `Falling / floating`
+### BUG-1 — Scroll-to-top is silently broken
+`BrandSceneWizard.tsx` runs `window.scrollTo(0)` on every step change, then walks ancestors of `[data-wizard-root]` resetting their scrollTop. But:
+- No element in the tree sets `data-wizard-root`, so the walker does nothing.
+- The wizard renders inside AppShell's `<main id="app-main-scroll" class="overflow-y-auto">`. `window.scrollTo` does not move that container.
 
-When the user picks the very common product-hero cast (`none`), these angles vanish — exactly the moment they're most needed. Only `camera_angle_apparel` is correctly cast-only (every entry needs a person).
+Result: after Next, the new step renders at whatever scroll offset the user was at — perceived as "hopping to bottom".
 
-**Fix:** drop `hideWhenNoCast` from footwear/eyewear/jewelry camera-angle fields. Keep it on `camera_angle_apparel` only.
+**Fix:** reset `document.getElementById("app-main-scroll")?.scrollTo({ top: 0 })` plus `window.scrollTo(0)` as fallback. Drop the dead walker.
 
-### HIGH-2 — `footwear/shoes` strips `full_body` body-part-focus
-`PRESETS.footwear.sub.shoes` (added in 7o) sets `body_part_focus: ["feet", "detail"]`. Loafers/oxfords with a styled cast (suited man, walking corridor) absolutely want `full_body`. The parent footwear bundle correctly includes it; the sub override removes it.
+### BUG-2 — `autoFocus` on already-open custom inputs steals scroll on step entry
+`PaletteBlock` (Step3BaseAnswers L570) and `PillFieldInner` (L648) initialize `showCustom = !!current.length` and then render `<Input autoFocus>`. When the user re-enters Step 4 (aesthetic) with a previously-typed custom palette, the input mounts already open → browser scrolls it into view → page jumps. Same pattern in `Step3BaseAnswers` PaletteBlock.
 
-**Fix:** restore `body_part_focus: ["feet", "full_body", "detail"]` on the `shoes` sub.
+**Fix:** remove `autoFocus` from these two inputs. Keep it on `ExtrasPillField` (only opens via explicit user click during the current step) and `SettingPicker` search (mounted via user toggle).
 
-### HIGH-3 — Eyewear has no `hands` cast preset
-`PRESETS.eyewear` declares `cast_presets: ["solo", "none"]`. But the eyewear-specific camera angles include `In-hand offering` and `On-hair pushed up` — the latter needs a person, the former needs hands. With cast=`hands` disallowed, users can never set up an "In-hand offering" eyewear shot with a hand-only crop.
+### BUG-3 — Subtitle text breaks brand voice rule
+`META_WIZARD` / `META_REFERENCE` subtitles end with periods ("Pick a starting point — wizard inputs or a reference image."). Project memory: *no terminal periods in single-sentence subtitles / empty-state descriptions*.
 
-**Fix:** `cast_presets: ["solo", "hands", "none"]`, keep `default_cast: "solo"`.
+**Fix:** strip trailing periods from all 8 subtitles.
 
-### MED-1 — `hats-caps-beanies` and `bags-accessories` missing forbidden-interaction rules
-`combinationGuards.forbiddenInteractionsByFamily` covers beauty, food, jewelry, watches, eyewear, home, tech, wellness — but not `hats-caps-beanies` (where "using" makes no sense) nor `bags-accessories` (where "using" only fits a few subs like wallets).
+### BUG-4 — Redundant "Category-tuned · fashion · activewear" chip
+The step title already appends `· {subFamilyLabel}` (e.g. "Scene aesthetic · Activewear"). The chip at the top of Step3BaseAnswers repeats the same info one row below.
 
-**Fix:** add `case "hats-caps-beanies": return new Set(["using"]);`. Leave bags as-is (some subs do "use" e.g. opening a wallet) — instead document in the case statement.
+**Fix:** delete the chip block (L142–146 of `Step3BaseAnswers.tsx`).
 
-### MED-2 — `PRESETS[...].settings` is dead data drifting from the real picker
-`resolveAll().settings` is computed but never consumed by Step3 (the picker uses `getSettingPool` from `settingsBySubfamily.ts`). The Phase 7o edits to `PRESETS.footwear.sub.shoes.settings`, `hats-caps-beanies.sub.*.settings`, etc. therefore have zero UI effect — they only show up in tests. This is misleading for future maintainers and the 7o tests give a false sense of coverage.
+### BUG-5 — "Stage A / Stage B / Stage C" engineering jargon leaks into UI
+Section headers read `Stage A · Scene type`, `Stage B · Setting / environment`, `Stage C · More creative dials`. Users don't know what stages are.
 
-**Fix (no behavior change):**
-- Add a header comment in `categoryPresets.ts` clarifying that `settings` is descriptive only and the real picker uses `settingsBySubfamily.ts`.
-- Update `wizard-polish-7o.test.ts` to assert against `getSettingPool(module, sub, sceneType)` instead of `resolveBundle().settings` for the shoes/caps/hats/beanies cases, so tests track what the UI actually shows.
+**Fix:** drop "Stage A ·" and "Stage B ·" prefixes (sections stand alone). Rename the Stage C header to `More creative dials`. Drop the analogous `More cast & styling dials` wrapper in Step4Cast — keep the divider, drop the label.
+
+### BUG-6 — Double-collapse inside Stage C groups feels strange
+A `StageCGroup` (chevron-collapsible) contains `ExtrasPillField` items, and each one wraps its chips in a `Section` with its own `+ Show all` toggle. So when you open a group, every field inside *is itself collapsed* to 8 chips with another mini-toggle. Two collapse mechanisms layered.
+
+**Fix:** pass `showAllInitially` to every `ExtrasPillField` rendered inside a `StageCGroup`. The outer chevron handles bulk collapse; inside, all presets render flat. Removes the inner "+ Show all" toggle and the half-truncated chip rows.
+
+### BUG-7 — Collapsed `StageCGroup` shows no summary
+Each chevron-collapsed group shows only its label. Users can't tell which dials inside are already filled.
+
+**Fix:** add a `count` prop. Header renders `{label}` plus a small `· N set` suffix when count > 0. Step3BaseAnswers computes count per group from `value.extras`.
+
+### BUG-8 — Chips too large on mobile (440px viewport)
+`Chip` is fixed at `px-4 py-2 text-sm whitespace-nowrap`. Long labels like *"Walking past camera"*, *"Dappled through leaves"*, *"Pan-European"* combined with that padding push only 2 chips per row at 440 CSS px, making 20-option sections extremely tall and exaggerating the scroll problem.
+
+**Fix:** tighten to `px-3 py-1.5 text-[13px]` on mobile, restore `sm:px-4 sm:py-2 sm:text-sm` on ≥ sm. Apply identically to `AddChip` so they line up. No change to colors or shape.
 
 ## Out of scope
-- Adding more subfamilies (tech sub block, wellness sub block, eyewear sunglasses/optical split) — taxonomy decision, separate phase.
-- Per-subfamily narrowing of `CAMERA_ANGLES_APPAREL` (hiding "Detail — collar" for swimwear etc.) — minor cosmetic.
-- Removing stale `"Tabletop surface"` strings from `SCENE_SETTINGS` and PRESETS — `SCENE_SETTINGS` is unused at runtime now too.
+- Reworking the actual section order or merging "Brand voice / Aesthetic era / Realism level" into one card (structural, separate phase).
+- Touching backend, prompt assembler, or saved-scene shape.
+- Visual redesign of the wizard chrome — keep current layout and tokens.
 
 ## Files
-**Edit:** `src/features/brand-scenes/wizard/constants/extras.ts`, `src/features/brand-scenes/wizard/registry/categoryPresets.ts`, `src/features/brand-scenes/wizard/rules/combinationGuards.ts`, `src/features/brand-scenes/__tests__/wizard-polish-7o.test.ts`.
-**New:** `src/features/brand-scenes/__tests__/wizard-polish-7p.test.ts` — 5 tests, one per bug, all asserting against the consumer (`applicableFieldsCtx`, `resolveAll`, `forbiddenInteractionsByFamily`, `getSettingPool`).
+- **Edit** `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` — scroll fix + subtitle cleanup.
+- **Edit** `src/features/brand-scenes/wizard/components/Chip.tsx` — responsive sizing.
+- **Edit** `src/features/brand-scenes/wizard/components/StageCGroup.tsx` — accept `count`, render summary.
+- **Edit** `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` — remove tuning chip, drop Stage prefixes, pass `showAllInitially`, supply per-group count, remove `autoFocus` from PaletteBlock + PillFieldInner.
+- **Edit** `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — drop wrapper label.
+- **New** `src/features/brand-scenes/__tests__/wizard-polish-7q.test.tsx` — assertions: subtitles have no trailing period; `Chip` has responsive class; `StageCGroup` renders count when provided; scroll handler resolves the main element id.
 
-No DB / schema / type changes. No effect on saved scenes — only UI gating and prompt shape for new selections.
+No DB / schema / type changes. No effect on saved scenes.
