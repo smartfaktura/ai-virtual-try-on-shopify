@@ -116,7 +116,10 @@ export function warnings(answers: BrandSceneAnswers): SceneWarning[] {
   const base = answers.base ?? {};
   const cast = answers.cast;
 
-  if (base.time_of_day === "night" && base.weather === "clear") {
+  const todDetail = (base.extras?.time_of_day_detail ?? "").toLowerCase();
+  const isNight =
+    todDetail.startsWith("night") || todDetail.startsWith("after dark");
+  if (isNight && base.weather === "clear") {
     out.push({
       field: "weather",
       message: "Clear night usually reads as moonlit / artificial light — that's fine, just confirming.",
