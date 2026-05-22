@@ -543,16 +543,14 @@ export function Step4Cast({
             </div>
             <div className="mt-3">
               {showExact ? (
-                <button
-                  type="button"
+                <Chip
                   onClick={() => {
                     setShowExact(false);
                     onScaleChange({ dimensions: undefined });
                   }}
-                  className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] sm:px-4 sm:py-2 sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Hide exact size
-                </button>
+                </Chip>
               ) : (
                 <AddChip onClick={() => setShowExact(true)} label="Exact size" />
               )}
