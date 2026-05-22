@@ -7,6 +7,9 @@ import { z } from "zod";
 import {
   BRAND_SCENE_KEY_PREFIX,
   BRAND_SCENE_MODULES,
+  BRAND_SCENE_NAME_MAX,
+  BRAND_SCENE_NOTE_MAX,
+  BRAND_SCENE_PLACEMENT_MAX,
   BRAND_SCENE_SCHEMA_VERSION,
   BRAND_SCENE_SOURCES,
   BRAND_SCENE_REFERENCE_MAX_IMAGES,
@@ -55,6 +58,10 @@ export const brandSceneAnswersSchema = z
       .array(z.string().trim().min(1).max(512))
       .max(BRAND_SCENE_REFERENCE_MAX_IMAGES)
       .optional(),
+    reference_preview_url: z.string().trim().url().max(2048).optional(),
+    placement_hint: z.string().trim().max(BRAND_SCENE_PLACEMENT_MAX).optional(),
+    name: z.string().trim().min(1).max(BRAND_SCENE_NAME_MAX).optional(),
+    note: z.string().trim().max(BRAND_SCENE_NOTE_MAX).optional(),
   })
   .strict()
   .refine(
@@ -72,6 +79,17 @@ export const brandSceneAnswersSchema = z
     {
       message: "reference_image_paths only allowed when source is 'reference'",
       path: ["reference_image_paths"],
+    },
+  )
+  .refine(
+    (v) =>
+      v.source === "wizard"
+        ? !v.placement_hint && !v.reference_preview_url
+        : true,
+    {
+      message:
+        "placement_hint and reference_preview_url only allowed when source is 'reference'",
+      path: ["placement_hint"],
     },
   );
 
