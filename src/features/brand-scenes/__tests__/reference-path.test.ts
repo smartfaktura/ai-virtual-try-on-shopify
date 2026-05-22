@@ -5,8 +5,8 @@ describe("brandSceneAnswersSchema — reference path round-trip", () => {
   it("accepts a complete reference-path payload", () => {
     const v = {
       source: "reference" as const,
-      module: "beauty-fragrance" as const,
-      sub_family: "skincare",
+      module: "fashion" as const,
+      sub_family: "hoodies",
       base: {},
       module_answers: {},
       reference_image_paths: ["uid/abc.jpg"],
