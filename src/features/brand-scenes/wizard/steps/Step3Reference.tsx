@@ -54,11 +54,11 @@ export function Step3Reference({
   imagePath,
   previewUrl,
   name = "",
-  placementHint = "",
+  intent,
   note = "",
   onImageChange,
   onNameChange,
-  onPlacementChange,
+  onIntentChange,
   onNoteChange,
 }: Props) {
   const { user } = useAuth();
@@ -248,29 +248,36 @@ export function Step3Reference({
         </p>
       </div>
 
-      {/* Placement */}
+      {/* Reference intent */}
       <div>
-        <Label
-          htmlFor="bs-placement"
-          className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
-        >
-          Product placement <span className="opacity-60">(optional)</span>
+        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          Use this image as <span className="text-foreground/60 ml-1">·</span>
         </Label>
-        <Input
-          id="bs-placement"
-          value={placementHint}
-          onChange={(e) =>
-            onPlacementChange(e.target.value.slice(0, BRAND_SCENE_PLACEMENT_MAX))
-          }
-          placeholder="e.g. held in the model's hand, label facing camera"
-          maxLength={BRAND_SCENE_PLACEMENT_MAX}
-          className="mt-2 rounded-xl"
-        />
-        <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
-          Where the product should sit in the scene. Leave blank to let the AI
-          choose based on the reference composition.
-        </p>
+        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {REFERENCE_INTENTS.map((opt) => {
+            const active = intent === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onIntentChange(opt.value)}
+                className={[
+                  "text-left rounded-2xl border p-3.5 transition-colors",
+                  active
+                    ? "border-foreground bg-foreground/[0.04]"
+                    : "border-border bg-card hover:border-foreground/40",
+                ].join(" ")}
+              >
+                <div className="text-sm font-medium">{opt.label}</div>
+                <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                  {opt.hint}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
+
 
       {/* Extra direction */}
       <div>
