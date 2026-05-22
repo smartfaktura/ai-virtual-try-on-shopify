@@ -7,21 +7,22 @@ import {
   FOOTWEAR_PRESENTATIONS,
   FOOTWEAR_TEXT_MAX,
   FOOTWEAR_TYPES,
-  PRESENTATIONS_WITH_PERSON,
   type FootwearArchetype,
   type FootwearPresentation,
   type FootwearType,
 } from "./questions";
 import type { FootwearModuleAnswers } from "./schema";
+import type { WizardMode } from "../../wizard/components/QuickDetailedToggle";
 
 type Answers = Partial<FootwearModuleAnswers>;
 
 interface Props {
   value: Answers;
   onChange: (patch: Answers) => void;
+  mode?: WizardMode;
 }
 
-export function FootwearQuestions({ value, onChange }: Props) {
+export function FootwearQuestions({ value, onChange, mode = "detailed" }: Props) {
   const v: Answers = {
     archetype: value.archetype,
     footwear_type: value.footwear_type,
@@ -29,10 +30,6 @@ export function FootwearQuestions({ value, onChange }: Props) {
     scene: value.scene ?? {},
     finishing: value.finishing ?? {},
   };
-
-  const hasPerson =
-    v.presentation &&
-    PRESENTATIONS_WITH_PERSON.includes(v.presentation as FootwearPresentation);
 
   const toggleCamera = (c: string) => {
     const cur = v.finishing?.camera_feel ?? [];
