@@ -198,7 +198,7 @@ export function Step4Cast({
       )}
 
       {/* People details — detailed mode only */}
-      {!isQuick && hasPeople && !isReplicate && (
+      {hasPeople && !isReplicate && (
         <>
           {(() => {
             const isSingle = preset === "solo" || preset === "hands";
@@ -366,7 +366,7 @@ export function Step4Cast({
         )}
 
       {/* Body part focus — hidden for `hands` (the cast IS a body part). */}
-      {!isQuick && !isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
+      {!isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
         <Section label="Body-part focus">
           <div className="flex flex-wrap gap-2">
             {visibleBodyPart.map((b) => (
@@ -390,7 +390,7 @@ export function Step4Cast({
       )}
 
       {/* Gaze */}
-      {!isQuick && hasPeople && !isReplicate && (
+      {hasPeople && !isReplicate && (
         <Section label="Gaze direction">
           <div className="flex flex-wrap gap-2">
             {GAZE_DIRECTIONS.map((g) => (
@@ -414,7 +414,7 @@ export function Step4Cast({
       )}
 
       {/* Group dynamic */}
-      {!isQuick && !isReplicate && (preset === "two" || preset === "group") && (
+      {!isReplicate && (preset === "two" || preset === "group") && (
         <Section label="Group dynamic">
           <div className="flex flex-wrap gap-2">
             {GROUP_DYNAMICS.map((g) => (
@@ -438,7 +438,7 @@ export function Step4Cast({
       )}
 
       {/* Action */}
-      {!isQuick && hasPeople && !isReplicate && (
+      {hasPeople && !isReplicate && (
         <Section label="Action / energy">
           <div className="flex flex-wrap gap-2">
             {CAST_ACTIONS.map((a) => (
@@ -462,7 +462,7 @@ export function Step4Cast({
       )}
 
       {/* Wardrobe color anchor — irrelevant for swimwear/lingerie. */}
-      {!isQuick && hasPeople && !isReplicate && wardrobes.length > 0 &&
+      {hasPeople && !isReplicate && wardrobes.length > 0 &&
         !["swimwear", "lingerie"].includes(subFamily ?? "") && (
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
@@ -491,7 +491,7 @@ export function Step4Cast({
         {(expanded) => (
           <>
             <div className="flex flex-wrap gap-2">
-              {showAllScales(expanded).map((s) => (
+              {visibleScales.map((s) => (
                 <Chip
                   key={s.value}
                   active={scalePreset === s.value}
@@ -547,7 +547,7 @@ export function Step4Cast({
 
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
-      {!isQuick && !isReplicate && (
+      {!isReplicate && (
         <div className="space-y-3 pt-2 border-t border-border/60">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
             Optional styling
@@ -593,7 +593,7 @@ export function Step4Cast({
       )}
 
       {/* Cast note */}
-      {!isQuick && !isReplicate && (
+      {!isReplicate && (
         <Section label="Note">
           <Textarea
             value={cast?.note ?? ""}
