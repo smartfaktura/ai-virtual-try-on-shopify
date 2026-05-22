@@ -43,8 +43,11 @@ import {
   type BrandVoice,
   type SubjectFocus,
 } from "../constants/sceneExtras";
-import { SCENE_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
+import { SCENE_EXTRAS_FIELDS, applicableFieldsCtx } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
+import { SmartSettingCard } from "../components/SmartSettingCard";
+import { SCENE_TYPES, getSettingPool, type SceneTypeId } from "../registry/settingsBySubfamily";
+import { applyCascade, applySettingCascade, type SceneCtx } from "../rules/sceneRules";
 import { resolveAll, tuningLabel } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
 
