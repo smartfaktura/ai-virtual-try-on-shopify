@@ -1,77 +1,101 @@
-# Reference-source brand scenes — final flow
+## Phase 7a polish — wizard UX, reference truthfulness, responsibility check
 
-## The mental model
+Scope is **frontend only**. No schema, RLS, or generation-pipeline changes.
 
-A **reference scene** is a regular brand scene whose preview image **is** the brief. At generation time we send that preview as the visual composition guide (same mechanism as the existing "Use preview as generation reference" toggle on admin scenes). The AI replicates framing, lighting, environment, outfit (if any), and props — and swaps in the product.
+### 1. Responsibility check — honest copy + simpler gate
 
-So we do **not** quiz the user about aesthetic, mood, palette, lighting, location, framing, outfit, or any module-specific question. The image owns all of that. Asking again would create contradictions between the form answers and the image.
+`src/features/brand-scenes/wizard/components/ResponsibilityModal.tsx`
 
-The only ambiguity the image **can't** resolve on its own is *where the product goes* — especially for non-apparel items (skincare, fragrance, food, accessories). So we add one tiny optional field for that, and one optional free-text note for anything else.
+- Rewrite the framing. Today it claims "we only extract mood, color, composition — never reproduce them." That is **false** for the reference path — the image is actually sent to the model as a composition guide and the AI replicates framing/lighting/environment. New copy:
+  - Title: **"Reference image — quick check"**
+  - Description: "Your reference is sent to the AI as a visual guide. It replicates framing, lighting and environment while swapping in your product. Confirm the three statements below before uploading."
+  - Checkbox 1: "I own this image or have explicit permission to use it"
+  - Checkbox 2: "It does not contain copyrighted logos, trademarks, or recognizable people without consent"
+  - Checkbox 3: "I understand VOVV.AI will use it as a composition guide to generate a new scene with my product"
+- Drop the 3 checkboxes-**and**-typed-phrase double gate. Keep it strong but light: **3 checkboxes + type `AGREE`** (not `I AGREE`). Update `REQUIRED_PHRASE = "AGREE"` and the helper label.
+- Keep destructive shield icon, keep the disabled-until-valid CTA.
 
-## What we ask (reference path)
+### 2. Source picker copy alignment
 
-1. **Source** — pick "Use reference image" (existing Step 0, unchanged).
-2. **Family + sub-family** — needed only so the scene files under the correct catalog tab (e.g. Fashion → Dresses, Skincare → Serums). Same picker as the wizard path. Auto-skip sub-family when the family has 1 sub.
-3. **Upload reference** — exactly **1 image** (JPG/PNG/WEBP, ≤8MB). Becomes `preview_image_url`.
-4. **Scene name** — required, max 80 chars. Used in the brand scenes list.
-5. **Product placement** — optional, max 120 chars. Free text describing where the product should sit in the scene. Examples shown as placeholders: *"held in the model's hand, label facing camera"*, *"resting on the marble counter, lower-right third"*, *"floating hero center, slight tilt"*. If blank, AI defaults to natural placement inferred from the reference composition.
-6. **Extra direction** — optional, max 240 chars. Anything else the user wants to nudge, e.g. *"keep mood quieter than reference"* or *"product label fully visible"*.
+`steps/Step0ChooseSource.tsx`
 
-Then Review → Save.
+- Update reference card body to match new truth: "Upload one inspiration image. We use it as a composition guide and swap in your product." (no more "mood, color, and composition only").
+- Keep both cards visually identical — see section 5 below.
 
-## What we skip (reference path)
+### 3. Reference upload — drag/drop, paste, mobile-friendly
 
-- Step 3 base answers (aesthetic, palette, mood, lighting, location, framing, notes)
-- Step 4 module questions (Fashion / Footwear / Eyewear specifics, including outfit pickers)
-- AI mood-extraction edge function — dropped; image is the truth.
+`steps/Step3Reference.tsx`
 
-### Why no outfit picker on this path
+- Wrap the empty-state dropzone with handlers:
+  - `onDragOver` / `onDragLeave` toggling a `isDragging` border state (`border-foreground` + `bg-foreground/[0.02]`).
+  - `onDrop` → `handleFiles(e.dataTransfer.files)`.
+  - Document-level `paste` listener (added in `useEffect`, removed on unmount or when `imagePath` set) → reads `e.clipboardData.files`, calls `handleFiles`.
+- Inside the dropzone show **two explicit actions stacked** so mobile users always see a tappable button:
+  - Primary button: **"Choose image"** (triggers file input) — full-width on `<sm`, auto on `sm+`.
+  - Secondary muted text: "or drag & drop · paste from clipboard".
+  - Helper: "JPG, PNG or WEBP · up to {MAX_MB}MB".
+- The whole card stays clickable as a fallback (keep current behavior) but the inner button gets `e.stopPropagation()` so it doesn't double-fire.
+- Visual: bump min height on mobile (`min-h-[200px]`) so the target is comfortable.
 
-The reference already shows the wardrobe (or absence of a person). Letting the user pick a different outfit forces the AI to choose between the image and the form, and the result is mush. Outfit, props, lighting, and environment are all "inherited from reference, untouched."
+### 4. Sub-family selection — clearer hierarchy
 
-## What we ask (wizard path)
+`steps/Step2ChooseSubFamily.tsx` + `WizardLayout.tsx` step header
 
-Unchanged from current implementation — full Step 3 base answers + Step 4 module questions + the existing outfit logic.
+- Replace pill-row with the same card grid used elsewhere (2-col on mobile, 3-col on `sm+`, rounded-2xl border cards). Each card shows the sub-family label + a tiny uppercase tag ("Sub-family"). Active state mirrors source/module cards (filled foreground).
+- In `Step1ChooseModule.tsx` add a short subtitle under each family name (e.g. derived from a small label map) so users see *what* the family covers. If no map exists, just show the label cleanly — but make the section header in `WizardLayout` say **"Product family — what are you photographing?"** and on Step 2 **"Sub-family — pick the closest match"**.
+- The auto-selected single-sub case keeps its current "Auto-selected" card.
 
-## Saved row shape
+### 5. Visual parity: source cards + module cards + sub-family cards
 
-Both paths save into `product_image_scenes` with `is_brand_scene = true`. Reference scenes differ only in:
+Extract a single shared `WizardCard` primitive in `wizard/components/WizardCard.tsx`:
 
-- `preview_image_url` = public URL of the uploaded reference
-- `brand_scene_answers.source = 'reference'`
-- `brand_scene_answers.reference_image_paths = [storagePath]` (single entry)
-- `brand_scene_answers.base = {}` and `module_answers = {}` (empty by design)
-- `brand_scene_answers.placement_hint` = the optional placement string
-- `prompt_hint` = the optional "Extra direction" note
-- `use_preview_as_reference = true` (or equivalent flag — confirmed against the existing admin field in Phase 7b prompt builder) so generation auto-ticks the "use preview as reference" behavior
+```text
+[ icon-chip ]
+Title (semibold, tracking-tight)
+Body (muted, leading-relaxed)
+[ optional tag ]
+```
 
-## UI changes vs. what's already built
+- Used by `Step0ChooseSource`, `Step1ChooseModule`, and the new card-style `Step2ChooseSubFamily`.
+- Identical: `rounded-2xl border p-5`, active = `border-foreground bg-foreground text-background`, hover = `border-foreground/40`, icon chip `w-10 h-10 rounded-xl`, tag `text-[10px] uppercase tracking-[0.16em]`.
+- Replace each step's bespoke `Card` / `button` markup with this primitive — fixes "build from wizard / build from reference look strange next to the rest."
 
-- `Step0ChooseSource` — keep, no change.
-- `Step1ChooseModule` — keep; remove the inline `ReferenceImagePicker` from this step.
-- `Step2ChooseSubFamily` — keep, runs for both paths.
-- **New `Step3Reference`** — shown only when `source === 'reference'`. Single-image dropzone (real Supabase upload) + Name field + Product placement field + Extra direction field. Replaces Steps 3+4 for this path.
-- `Step3BaseAnswers` + `Step4ModuleQuestions` — still shown, but **only when `source === 'wizard'`**.
-- `Step5Review` — branch the summary by source. Reference: show thumbnail + name + placement + extra direction. Wizard: existing payload.
-- `useWizardState` — add `name`, `placement_hint`, `note` to answers; add corresponding setters and a `setReferenceImage(path)` action (single string, not array). Route step transitions based on source so the reference path is 4 visible steps.
-- `BrandSceneWizard` — re-route steps:
-  - Reference path: Source → Family → Sub-family → Reference upload (image + name + placement + extra) → Review
-  - Wizard path: unchanged 6 steps.
+### 6. Brand aesthetic — preset chips + custom escape hatch
 
-## Storage + RLS
+`steps/Step3BaseAnswers.tsx`
 
-New private bucket `brand-scene-references`. Per-user folder RLS via `auth.uid()::text`. Admin override SELECT. One file per scene under `{auth.uid()}/{sceneId}.{ext}`. On scene delete, best-effort remove the storage object.
+- Introduce a curated preset list for the **Aesthetic** field (only — other fields stay free text for now):
+  ```ts
+  const AESTHETIC_PRESETS = [
+    "Quiet luxury",
+    "Raw editorial",
+    "Minimal Scandinavian",
+    "Warm artisanal",
+    "Clean studio",
+    "Sun-bleached coastal",
+    "Architectural mono",
+    "Soft natural",
+    "Bold graphic",
+    "Vintage film",
+  ];
+  ```
+- Render as a chip grid (same `rounded-full border px-4 py-2` style as today's sub-family, now upgraded to cards elsewhere — chips remain appropriate here because the count is large and visual weight is low).
+- Below the chips: a small **"+ Custom aesthetic"** ghost button. When clicked, reveals the existing `<Input>` (placeholder: "Describe your own aesthetic in a few words"). Selecting any preset clears the custom field; typing in custom deselects all chips. Internally still saves to `value.aesthetic`.
+- Field label tightens to "Brand aesthetic" with helper "Pick one — or define your own."
 
-## Acceptance for this phase
+### Out of scope
 
-- Reference path completes in ≤60s: source → family → upload + name + (optional) placement → save.
-- Saved row has `preview_image_url` populated and shows up on `/app/brand-scenes` immediately.
-- No base/module fields are written when source is `reference`.
-- `placement_hint` round-trips into `brand_scene_answers`.
-- Wizard path is unchanged.
-- `bunx vitest run src/features/brand-scenes` stays green; add one new test covering the reference save shape (including `placement_hint`).
+- Generation pipeline consumption of `placement_hint` / `use_preview_as_reference` (Phase 7b).
+- Same preset treatment for Mood / Lighting / Location / Framing (can do later if user confirms it works for Aesthetic first).
+- Multi-image reference uploads (still 1 per spec).
 
-## Explicitly out of scope here
+### Files touched
 
-- Generation wiring that actually consumes `use_preview_as_reference` + `placement_hint` (Phase 7b/7d).
-- The 3-variation generation flow + 20-credit charge for **generating** brand scenes from prompts. That's the wizard-path payment flow and a separate workstream — this plan covers the reference path only.
+- edit `src/features/brand-scenes/wizard/components/ResponsibilityModal.tsx`
+- create `src/features/brand-scenes/wizard/components/WizardCard.tsx`
+- edit `src/features/brand-scenes/wizard/steps/Step0ChooseSource.tsx`
+- edit `src/features/brand-scenes/wizard/steps/Step1ChooseModule.tsx`
+- edit `src/features/brand-scenes/wizard/steps/Step2ChooseSubFamily.tsx`
+- edit `src/features/brand-scenes/wizard/steps/Step3Reference.tsx`
+- edit `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx`
+- minor copy tweak in `WizardLayout.tsx` step labels if needed
