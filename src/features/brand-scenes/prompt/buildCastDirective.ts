@@ -6,6 +6,7 @@ import type {
   CastPreset,
   CastVibe,
 } from "../wizard/constants/cast";
+import { WARDROBE_COLORS, type WardrobeColor } from "../wizard/constants/scene";
 
 export interface CastInput {
   preset: CastPreset;
@@ -15,6 +16,8 @@ export interface CastInput {
   interaction?: CastInteraction;
   action?: CastAction;
   note?: string;
+  wardrobe_color?: WardrobeColor;
+  wardrobe_custom?: string;
 }
 
 const PRESET_PEOPLE: Record<CastPreset, string> = {
@@ -81,6 +84,12 @@ export function buildCastDirective(cast: CastInput): string {
   }
 
   if (cast.action) parts.push(`Energy: ${ACTION[cast.action]}.`);
+
+  const wardrobe =
+    cast.wardrobe_custom ??
+    WARDROBE_COLORS.find((w) => w.value === cast.wardrobe_color)?.directive;
+  if (wardrobe) parts.push(`Wardrobe: ${wardrobe}.`);
+
   if (cast.note?.trim()) parts.push(`Note: ${cast.note.trim()}.`);
 
   return parts.join(" ");
