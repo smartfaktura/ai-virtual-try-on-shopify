@@ -309,6 +309,36 @@ export const brandSceneAnswersSchema = z
         "reference fields only allowed when source is 'reference'",
       path: ["reference_intent"],
     },
+  )
+  // Hard combo guard — architectural scale forbids holding/wearing.
+  .refine(
+    (v) => {
+      if (v.scale?.preset !== "architectural") return true;
+      const i = v.cast?.interaction;
+      return i !== "holding" && i !== "wearing";
+    },
+    {
+      message: "Architectural-scale products cannot be held or worn",
+      path: ["cast", "interaction"],
+    },
+  )
+  // Hard combo guard — furniture scale forbids wearing.
+  .refine(
+    (v) =>
+      v.scale?.preset !== "furniture" || v.cast?.interaction !== "wearing",
+    {
+      message: "Furniture-scale products cannot be worn",
+      path: ["cast", "interaction"],
+    },
+  )
+  // Hard combo guard — architectural scale forbids hands cast.
+  .refine(
+    (v) =>
+      v.scale?.preset !== "architectural" || v.cast?.preset !== "hands",
+    {
+      message: "Architectural-scale products require a body or no-people cast",
+      path: ["cast", "preset"],
+    },
   );
 
 export const brandSceneDraftSchema = z
