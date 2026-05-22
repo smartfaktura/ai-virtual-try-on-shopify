@@ -79,8 +79,8 @@ export function buildCastDirective(cast: CastInput): string {
     if (cast.age?.length) descriptors.push(cast.age.join("/"));
     if (cast.gender?.length) descriptors.push(cast.gender.join("/"));
     if (cast.vibe) descriptors.push(`${cast.vibe} vibe`);
-    const diversity = metaX(DIVERSITY_OPTIONS, cast.diversity);
-    if (diversity?.directive) descriptors.push(diversity.directive);
+    // Phase 7n — `cast.diversity` retired. Ethnicity now flows via
+    // `cast.extras.ethnicity` and is emitted by assembleSceneDirective.
     const head =
       descriptors.length > 0
         ? `${PRESET_PEOPLE[cast.preset]} (${descriptors.join(", ")})`
