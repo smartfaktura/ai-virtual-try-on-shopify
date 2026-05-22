@@ -237,3 +237,75 @@ RLS: `auth.uid() = user_id` on select/insert/update/delete. No public read.
 - No edit-after-save flow (saves are immutable for now).
 - No admin tools, no sharing, no presets library.
 - Only the 4 most important families ship with FULL question sets at launch — Fashion, Footwear, Fragrance, Beauty. The other 11 families ship with the Subject Mode step plus a minimal universal question set (environment, lighting, colors, photo look, camera) so the compiler still produces a strong prompt. We expand them in the next iteration.
+
+---
+
+## Compiler v2 — dynamic tokens + photographer-grade prose
+
+The compiler must produce output in the same shape as the activewear example: multi-paragraph, weaves in reference-image tokens, an explicit hex color palette, and rich photographic language — not a single short paragraph.
+
+### Tokens the compiler injects
+
+- `[PRODUCT IMAGE]` — always inserted when a product is attached. Carries a fidelity block (cut, color, fabric, seams, stitching, proportions). Wording is family-specific (activewear talks about compression fit and waistband; fragrance talks about glass, cap, label; footwear talks about sole, upper, laces; jewelry talks about stones, settings, metal finish).
+- `[MODEL IMAGE]` — inserted only when subject mode includes a person AND a model reference exists. Carries the identity-preservation block (facial structure, body proportions, skin tone, posture, natural presence) tuned to the family vibe (athletic, elegant, candid, etc.).
+- `{{productName}}` — replaced with the chosen product's name.
+- `{{brandLogoText}}` — same as existing system, only injected when scene calls for visible packaging.
+- `{{subcategoryNoun}}` — e.g. "activewear", "perfume bottle", "sneakers" — auto-derived from family + subcategory.
+- `{{poseSentence}}`, `{{environmentSentence}}`, `{{stylingSentence}}` — pre-baked rich sentences from each option's `prosePromptFragment` (see below).
+
+### Option schema, upgraded
+
+Every option now carries TWO fragment fields:
+
+```ts
+interface Option {
+  label: string;
+  value: string;
+  promptFragment: string;          // short one-liner (kept for chips / fallback)
+  prosePromptFragment?: string;    // 2-4 sentence photographer-grade version used by compiler v2
+  paletteHints?: { name: string; hex: string }[]; // contributes to the color block
+  appliesTo?: Family[];
+  conflictsWith?: string[];
+  questionsToShow?: string[];
+  questionsToHide?: string[];
+}
+```
+
+Example for the "Yoga flow beside villa pool" pose option in Activewear:
+- `prosePromptFragment`: "The model performs a dynamic three-legged downward dog variation, both hands grounded on the stone terrace, one foot firmly planted, the other leg lifted high with a soft bend at the knee. The pose feels powerful, controlled, feminine, and athletic, with realistic yoga mechanics and believable balance."
+- `paletteHints`: `[{name:"pale stone terrace", hex:"#D8D2C5"},{name:"deep garden green", hex:"#1F331F"},{name:"pool shadow blue-green", hex:"#2F5B5A"}]`
+
+### Output structure (multi-paragraph)
+
+`compile()` now emits paragraphs in this fixed order, blank line between each:
+
+1. **Reference fidelity block** — `[MODEL IMAGE]` paragraph (if person), then `[PRODUCT IMAGE]` paragraph with `{{productName}}` and family-specific fidelity list.
+2. **Hero command + subject action** — "Create a realistic … image of {{subcategoryNoun}} …" + the pose / placement `prosePromptFragment`.
+3. **Composition & framing** — assembled from aspect ratio (as prose hint, e.g. "Frame the image vertically from a medium distance"), framing, angle, depth of field.
+4. **Environment** — `prosePromptFragment` from environment + setting questions; rich sensory description.
+5. **Color palette** — opening sentence "Use a natural [vibe] palette:" followed by a bulleted list rendered with hex codes, including the product color line tied to `[PRODUCT IMAGE]` (e.g. "black activewear preserved from [PRODUCT IMAGE]: #111111"). Palette is the union of: product color + module defaults + every selected option's `paletteHints`, deduped.
+6. **Lighting** — `prosePromptFragment` from lighting option, tuned with time-of-day modifier.
+7. **Photo look / finish** — grain, contrast, editorial finish sentence(s) from photo-look option.
+8. **Styling & negative styling guards** — what the model wears/holds, and what to exclude (no sneakers, no sunglasses, etc.) — driven by the family's `stylingGuards` block + selected accessory answers.
+9. **Product fidelity reminder** — short reminder paragraph re-anchoring `[PRODUCT IMAGE]` for the specific subcategory (garment vs bottle vs shoe vs ring), listing the parts that must stay clearly visible.
+10. **Mood + realism close** — closing paragraph: campaign mood + realism directives (skin texture, anatomy, fabric tension, true shadows, subtle grain) + the "Avoid:" sentence merged from module + selected-option negative rules.
+
+The compiler reuses existing project safeguards (saugikliai) from `src/lib/brandPromptBuilder.ts` so wording stays consistent with the rest of the app.
+
+### Aspect ratio
+
+Still travels two ways:
+- **API config**: stored on the row, sent to the generator as `aspectRatio`.
+- **Prose hint**: a short sentence in the Composition paragraph (e.g. 4:5 → "Frame the image vertically…", 16:9 → "Frame the image horizontally for a wide cinematic crop"). The hex/ratio itself is not written into the prose.
+
+### Validator additions
+
+- Verify every `[PRODUCT IMAGE]` / `[MODEL IMAGE]` token has a matching attached reference; if not, swap the fidelity paragraph for a generic equivalent ("the provided product / model") so the prompt never ships with unresolved tokens.
+- Deduplicate palette entries by hex; keep the first label seen.
+- Strip the negative styling line for any item the user explicitly opted into (e.g. don't say "no sunglasses" if the user chose sunglasses as an accessory).
+
+### Acceptance, upgraded
+
+- Generating a scene with Activewear → Yoga pose → Villa pool + a product named "Onyx Compression Set" produces output structurally identical to the user's reference example: opens with `[MODEL IMAGE]` and `[PRODUCT IMAGE]` paragraphs, includes a hex palette bullet list, closes with realism + avoid paragraph.
+- Removing the model reference makes the `[MODEL IMAGE]` paragraph disappear and shifts the prompt to a product-only narrative without leftover person language.
+- Changing aspect ratio from 4:5 to 16:9 changes only the composition sentence + the stored `aspect_ratio` column; no other paragraph changes.
