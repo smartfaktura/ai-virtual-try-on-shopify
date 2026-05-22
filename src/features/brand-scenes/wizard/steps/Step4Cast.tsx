@@ -139,8 +139,6 @@ export function Step4Cast({
 
   return (
     <div className="space-y-8">
-      <QuickDetailedToggle />
-
       {/* Cast preset */}
       <Section label="Cast" required missing={!preset}>
         {(expanded) => (
@@ -486,9 +484,9 @@ export function Step4Cast({
         </Section>
       )}
 
-      {/* Scale */}
-      <Section label="Product scale" required missing={!scale?.preset}>
-        {(expanded) => (
+      {/* Scale — only show when there's more than one relevant option for this family */}
+      {showScaleSection && (
+        <Section label="Product scale" required missing={!scale?.preset}>
           <>
             <div className="flex flex-wrap gap-2">
               {visibleScales.map((s) => (
@@ -518,14 +516,10 @@ export function Step4Cast({
               />
             )}
           </>
-        )}
-      </Section>
-
-      {isQuick && !isReplicate && (
-        <div className="pt-2">
-          <CustomizeLink label="+ Customize cast & styling" />
-        </div>
+        </Section>
       )}
+
+
 
       {/* Warnings */}
       {warnings.length > 0 && (
