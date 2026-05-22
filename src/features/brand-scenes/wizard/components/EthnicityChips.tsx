@@ -56,14 +56,14 @@ export function EthnicityChips({ value, onChange }: Props) {
         {ETHNICITY_OPTIONS.map((o) => {
           const active = value === o.value;
           return (
-            <Chip
-              key={o.value}
-              active={active}
-              onClick={() => onChange(active ? undefined : o.value)}
-              title={o.desc}
-            >
-              {o.label}
-            </Chip>
+            <span key={o.value} title={o.desc}>
+              <Chip
+                active={active}
+                onClick={() => onChange(active ? undefined : o.value)}
+              >
+                {o.label}
+              </Chip>
+            </span>
           );
         })}
       </div>
