@@ -318,7 +318,7 @@ export function Step4Cast({
 
       {/* Interaction */}
       {!isReplicate && (
-        <Section label="Product interaction" required expandable>
+        <Section label="Product interaction" required missing={!cast?.interaction}>
           {(expanded) => (
             <div className="flex flex-wrap gap-2">
               {visibleInteractions(expanded).map((i) => (
@@ -486,7 +486,7 @@ export function Step4Cast({
       )}
 
       {/* Scale */}
-      <Section label="Product scale" required expandable>
+      <Section label="Product scale" required missing={!scale?.preset}>
         {(expanded) => (
           <>
             <div className="flex flex-wrap gap-2">
