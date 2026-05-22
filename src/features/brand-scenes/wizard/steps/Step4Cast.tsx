@@ -483,9 +483,11 @@ export function Step4Cast({
         </Section>
       )}
 
+      {showStylingGroup && <GroupHeader title="Styling & wardrobe" />}
       {/* Wardrobe color anchor — irrelevant for swimwear/lingerie. */}
       {hasPeople && !isReplicate && wardrobes.length > 0 &&
         !["swimwear", "lingerie"].includes(subFamily ?? "") && (
+
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
             {wardrobes.map((w) => (
