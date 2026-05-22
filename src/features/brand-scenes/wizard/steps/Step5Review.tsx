@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   BRAND_SCENE_GENERATION_COST,
   BRAND_SCENE_VARIATIONS_PER_GENERATION,
@@ -9,12 +7,17 @@ import type { BrandSceneAnswers } from "../../types";
 
 interface Props {
   answers: BrandSceneAnswers;
-  onNegativeNoteChange: (note: string) => void;
+  // Kept for prop compatibility; Step 3 owns the "Avoid" field now.
+  onNegativeNoteChange?: (note: string) => void;
 }
 
-export function Step5Review({ answers, onNegativeNoteChange }: Props) {
+export function Step5Review({ answers }: Props) {
   const isReference = answers.source === "reference";
   const [showPayload, setShowPayload] = useState(false);
+
+  // Mirror the Step 3 "Avoid in this scene" value into negative_note so the
+  // existing save pipeline keeps working. Step 3 is the single source of truth.
+  const avoidValue = answers.base?.avoid ?? answers.negative_note ?? "";
 
   return (
     <div className="space-y-5">
@@ -22,19 +25,16 @@ export function Step5Review({ answers, onNegativeNoteChange }: Props) {
 
       <SummaryCard answers={answers} />
 
-      <div>
-        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Avoid in every scene <span className="opacity-60">(optional)</span>
-        </Label>
-        <Textarea
-          value={answers.negative_note ?? ""}
-          maxLength={240}
-          rows={2}
-          onChange={(e) => onNegativeNoteChange(e.target.value)}
-          placeholder="e.g. no visible logos, no children, no text overlays"
-          className="mt-2 rounded-xl resize-none"
-        />
-      </div>
+      {avoidValue && (
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            Avoid
+          </div>
+          <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
+            {avoidValue}
+          </p>
+        </div>
+      )}
 
       <button
         type="button"
@@ -72,16 +72,27 @@ function CostNotice() {
 }
 
 function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
+  const palette =
+    answers.base?.palette_custom ?? answers.base?.palette_preset;
   const rows: { label: string; value?: string }[] = [
     { label: "Family", value: answers.module },
     { label: "Sub-family", value: answers.sub_family },
     { label: "Scene type", value: answers.base?.aesthetic },
+    { label: "Setting", value: answers.base?.setting },
+    { label: "Weather", value: answers.base?.weather },
+    { label: "Season", value: answers.base?.season },
+    { label: "Time of day", value: answers.base?.time_of_day },
     { label: "Mood", value: answers.base?.mood },
     { label: "Lighting", value: answers.base?.lighting },
-    { label: "Time of day", value: answers.base?.time_of_day },
-    { label: "Aspect ratio", value: answers.base?.aspect_ratio ?? "4:5" },
+    { label: "Lens", value: answers.base?.lens },
+    { label: "Depth of field", value: answers.base?.depth_of_field },
+    { label: "Framing", value: answers.base?.framing },
+    { label: "Palette", value: palette },
+    { label: "Finish", value: answers.base?.finish },
+    { label: "Aspect ratio", value: "4:5 (locked)" },
     { label: "Cast", value: answers.cast?.preset },
     { label: "Interaction", value: answers.cast?.interaction },
+    { label: "Wardrobe", value: answers.cast?.wardrobe_color },
     { label: "Scale", value: answers.scale?.preset },
     {
       label: "Reference intent",
