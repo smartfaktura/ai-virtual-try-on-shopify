@@ -319,13 +319,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         </div>
       </Section>
 
-      <Section label="Output use case">
-        <ChipRow
-          options={OUTPUT_USE_CASES}
-          current={value.output_use_case}
-          onPick={(v) => onChange({ output_use_case: v as OutputUseCase | undefined })}
-        />
-      </Section>
 
       {/* Phase 7d — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
       <div className="space-y-7 pt-2 border-t border-border/60">
