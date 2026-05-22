@@ -336,8 +336,7 @@ export function Step4Cast({
       )}
 
       {/* Hands-on-product gesture */}
-      {!isQuick &&
-        !isReplicate &&
+      {!isReplicate &&
         visibleHandsOnProduct.length > 0 &&
         (preset === "hands" || preset === "solo" || preset === "two" || preset === "group") &&
         (scalePreset === "pocket" || scalePreset === "handheld") && (
