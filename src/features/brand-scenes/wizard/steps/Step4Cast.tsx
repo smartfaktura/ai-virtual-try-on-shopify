@@ -41,11 +41,6 @@ import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constant
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
 import {
-  QuickDetailedToggle,
-  CustomizeLink,
-  useWizardMode,
-} from "../components/QuickDetailedToggle";
-import {
   getStorytellingMoments,
   hasExplicitMoments,
 } from "../registry/storytellingBySubfamily";
@@ -107,12 +102,10 @@ export function Step4Cast({
   const forbiddenCast = forbiddenCastPresets(scalePreset, module);
 
   // Resolved + filtered.
-  const showAllScales = (expanded: boolean): typeof SCALE_PRESETS =>
-    expanded
-      ? SCALE_PRESETS
-      : (SCALE_PRESETS.filter((s) =>
-          resolved.scale.values.includes(s.value),
-        ) as unknown as typeof SCALE_PRESETS);
+  const visibleScales = SCALE_PRESETS.filter((s) =>
+    resolved.scale.values.includes(s.value),
+  );
+  const showScaleSection = visibleScales.length > 1;
 
   const visibleCastPresets = (expanded: boolean) => {
     const base = expanded
@@ -143,13 +136,9 @@ export function Step4Cast({
   const [showExact, setShowExact] = useState(!!scale?.dimensions);
 
   const warnings = sceneWarnings(answers);
-  const { mode } = useWizardMode();
-  const isQuick = mode === "quick";
 
   return (
     <div className="space-y-8">
-      <QuickDetailedToggle />
-
       {/* Cast preset */}
       <Section label="Cast" required missing={!preset}>
         {(expanded) => (
@@ -207,7 +196,7 @@ export function Step4Cast({
       )}
 
       {/* People details — detailed mode only */}
-      {!isQuick && hasPeople && !isReplicate && (
+      {hasPeople && !isReplicate && (
         <>
           {(() => {
             const isSingle = preset === "solo" || preset === "hands";
@@ -347,8 +336,7 @@ export function Step4Cast({
       )}
 
       {/* Hands-on-product gesture */}
-      {!isQuick &&
-        !isReplicate &&
+      {!isReplicate &&
         visibleHandsOnProduct.length > 0 &&
         (preset === "hands" || preset === "solo" || preset === "two" || preset === "group") &&
         (scalePreset === "pocket" || scalePreset === "handheld") && (
@@ -375,7 +363,7 @@ export function Step4Cast({
         )}
 
       {/* Body part focus — hidden for `hands` (the cast IS a body part). */}
-      {!isQuick && !isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
+      {!isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
         <Section label="Body-part focus">
           <div className="flex flex-wrap gap-2">
             {visibleBodyPart.map((b) => (
@@ -399,7 +387,7 @@ export function Step4Cast({
       )}
 
       {/* Gaze */}
-      {!isQuick && hasPeople && !isReplicate && (
+      {hasPeople && !isReplicate && (
         <Section label="Gaze direction">
           <div className="flex flex-wrap gap-2">
             {GAZE_DIRECTIONS.map((g) => (
@@ -423,7 +411,7 @@ export function Step4Cast({
       )}
 
       {/* Group dynamic */}
-      {!isQuick && !isReplicate && (preset === "two" || preset === "group") && (
+      {!isReplicate && (preset === "two" || preset === "group") && (
         <Section label="Group dynamic">
           <div className="flex flex-wrap gap-2">
             {GROUP_DYNAMICS.map((g) => (
@@ -447,7 +435,7 @@ export function Step4Cast({
       )}
 
       {/* Action */}
-      {!isQuick && hasPeople && !isReplicate && (
+      {hasPeople && !isReplicate && (
         <Section label="Action / energy">
           <div className="flex flex-wrap gap-2">
             {CAST_ACTIONS.map((a) => (
@@ -471,7 +459,7 @@ export function Step4Cast({
       )}
 
       {/* Wardrobe color anchor — irrelevant for swimwear/lingerie. */}
-      {!isQuick && hasPeople && !isReplicate && wardrobes.length > 0 &&
+      {hasPeople && !isReplicate && wardrobes.length > 0 &&
         !["swimwear", "lingerie"].includes(subFamily ?? "") && (
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
@@ -495,12 +483,12 @@ export function Step4Cast({
         </Section>
       )}
 
-      {/* Scale */}
-      <Section label="Product scale" required missing={!scale?.preset}>
-        {(expanded) => (
+      {/* Scale — only show when there's more than one relevant option for this family */}
+      {showScaleSection && (
+        <Section label="Product scale" required missing={!scale?.preset}>
           <>
             <div className="flex flex-wrap gap-2">
-              {showAllScales(expanded).map((s) => (
+              {visibleScales.map((s) => (
                 <Chip
                   key={s.value}
                   active={scalePreset === s.value}
@@ -527,14 +515,10 @@ export function Step4Cast({
               />
             )}
           </>
-        )}
-      </Section>
-
-      {isQuick && !isReplicate && (
-        <div className="pt-2">
-          <CustomizeLink label="+ Customize cast & styling" />
-        </div>
+        </Section>
       )}
+
+
 
       {/* Warnings */}
       {warnings.length > 0 && (
@@ -556,7 +540,7 @@ export function Step4Cast({
 
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
-      {!isQuick && !isReplicate && (
+      {!isReplicate && (
         <div className="space-y-3 pt-2 border-t border-border/60">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
             Optional styling
@@ -602,7 +586,7 @@ export function Step4Cast({
       )}
 
       {/* Cast note */}
-      {!isQuick && !isReplicate && (
+      {!isReplicate && (
         <Section label="Note">
           <Textarea
             value={cast?.note ?? ""}

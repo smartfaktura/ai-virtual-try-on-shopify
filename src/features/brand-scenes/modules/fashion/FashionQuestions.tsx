@@ -12,17 +12,15 @@ import {
   isFashionStepValid as isFashionStepValidImpl,
   type FashionModuleAnswers,
 } from "./schema";
-import type { WizardMode } from "../../wizard/components/QuickDetailedToggle";
 
 type Answers = Partial<FashionModuleAnswers>;
 
 interface Props {
   value: Answers;
   onChange: (patch: Answers) => void;
-  mode?: WizardMode;
 }
 
-export function FashionQuestions({ value, onChange, mode = "detailed" }: Props) {
+export function FashionQuestions({ value, onChange }: Props) {
   const v: Answers = {
     wearer: value.wearer,
     scene: value.scene ?? {},
@@ -53,14 +51,6 @@ export function FashionQuestions({ value, onChange, mode = "detailed" }: Props) 
     onChange({ finishing: { ...v.finishing, camera_feel: next as never } });
   };
 
-  if (mode === "quick") {
-    return (
-      <p className="text-[12px] text-muted-foreground leading-relaxed">
-        Fashion has no required extras — we'll use editorial defaults. Switch
-        to Detailed for vibe, camera feel and color anchor.
-      </p>
-    );
-  }
 
   return (
     <div className="space-y-8">

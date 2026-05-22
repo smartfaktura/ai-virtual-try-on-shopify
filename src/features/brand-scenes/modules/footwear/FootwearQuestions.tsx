@@ -12,17 +12,15 @@ import {
   type FootwearType,
 } from "./questions";
 import type { FootwearModuleAnswers } from "./schema";
-import type { WizardMode } from "../../wizard/components/QuickDetailedToggle";
 
 type Answers = Partial<FootwearModuleAnswers>;
 
 interface Props {
   value: Answers;
   onChange: (patch: Answers) => void;
-  mode?: WizardMode;
 }
 
-export function FootwearQuestions({ value, onChange, mode = "detailed" }: Props) {
+export function FootwearQuestions({ value, onChange }: Props) {
   const v: Answers = {
     archetype: value.archetype,
     footwear_type: value.footwear_type,
@@ -100,41 +98,38 @@ export function FootwearQuestions({ value, onChange, mode = "detailed" }: Props)
         </div>
       </Block>
 
-      {/* Finishing — detailed mode only */}
-      {mode === "detailed" && (
-        <Block label="Finishing">
-          <div className="space-y-3">
-            <SmallField label="Color anchor">
-              <Input
-                maxLength={FOOTWEAR_TEXT_MAX}
-                value={v.finishing?.color_anchor ?? ""}
-                onChange={(e) =>
-                  onChange({
-                    finishing: { ...v.finishing, color_anchor: e.target.value },
-                  })
-                }
-                placeholder="e.g. chalk white, smoked olive"
-              />
-            </SmallField>
-            <SmallField
-              label="Camera feel"
-              hint={`${(v.finishing?.camera_feel ?? []).length}/${FOOTWEAR_MAX_CAMERA_FEELS}`}
-            >
-              <div className="flex flex-wrap gap-2">
-                {FOOTWEAR_CAMERA_FEELS.map((c) => (
-                  <Chip
-                    key={c}
-                    active={(v.finishing?.camera_feel ?? []).includes(c as never)}
-                    onClick={() => toggleCamera(c)}
-                  >
-                    {c}
-                  </Chip>
-                ))}
-              </div>
-            </SmallField>
-          </div>
-        </Block>
-      )}
+      <Block label="Finishing">
+        <div className="space-y-3">
+          <SmallField label="Color anchor">
+            <Input
+              maxLength={FOOTWEAR_TEXT_MAX}
+              value={v.finishing?.color_anchor ?? ""}
+              onChange={(e) =>
+                onChange({
+                  finishing: { ...v.finishing, color_anchor: e.target.value },
+                })
+              }
+              placeholder="e.g. chalk white, smoked olive"
+            />
+          </SmallField>
+          <SmallField
+            label="Camera feel"
+            hint={`${(v.finishing?.camera_feel ?? []).length}/${FOOTWEAR_MAX_CAMERA_FEELS}`}
+          >
+            <div className="flex flex-wrap gap-2">
+              {FOOTWEAR_CAMERA_FEELS.map((c) => (
+                <Chip
+                  key={c}
+                  active={(v.finishing?.camera_feel ?? []).includes(c as never)}
+                  onClick={() => toggleCamera(c)}
+                >
+                  {c}
+                </Chip>
+              ))}
+            </div>
+          </SmallField>
+        </div>
+      </Block>
     </div>
   );
 }

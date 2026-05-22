@@ -1,96 +1,36 @@
-# Phase 7s — Quick/Detailed quiz mode + Step 5 dedup
+## Fixes for Step 4 (Cast & product interaction)
 
-Two follow-ups to last turn's 7r work. Frontend/presentation only. No DB, no schema, no prompt-builder changes.
+Three small, scoped UI fixes. No schema, prompt, or business-logic changes.
 
-## 1. Quick vs Detailed toggle (Step 4 + Step 5)
+### 1. Remove Quick / Detailed toggle (for real this time)
 
-**New component:** `src/features/brand-scenes/wizard/components/QuickDetailedToggle.tsx`
-- Two segmented chips: **Quick** (default) and **Detailed**.
-- Tiny helper underneath: "Quick shows only the essentials — Detailed unlocks every dial".
-- Persists choice in `sessionStorage` under `brand-scene-wizard:mode` so it survives step navigation but not new wizard runs.
-- Exports `useWizardMode()` hook returning `{ mode, setMode }`.
+The previous "revert" left the toggle wired up. It still renders at the top of Step 4 and gates half the UI with `isQuick`.
 
-**Step4Cast.tsx** (`/app/brand-scenes` Step 4)
-- Render the toggle directly under the step header, above the cast presets.
-- When `mode === 'quick'`, hide:
-  - the entire "Optional styling" block (Vibe, Build, Age feel, Gender, Ethnicity, plus all `ExtrasPillField` extras)
-  - storytelling moments accordion
-  - wardrobe color, gaze, group dynamic, body part focus, hands-on-product
-  - free-text cast note
-- Always show: cast preset, interaction (when preset≠replicate), scale preset. These are the only required fields, matching `castStepValid` in `BrandSceneWizard.tsx`.
-- Below the visible required fields render a subtle `+ Customize cast & styling` button that flips mode to `detailed` in place.
+- Delete `src/features/brand-scenes/wizard/components/QuickDetailedToggle.tsx`
+- Delete `src/features/brand-scenes/__tests__/wizard-polish-7s.test.ts`
+- In `Step4Cast.tsx`: remove the `QuickDetailedToggle` import + render, the `useWizardMode` / `isQuick` derivation, the `+ Customize cast & styling` link block, and drop every `!isQuick &&` guard so the previously-detailed sections always render.
+- In `Step4ModuleQuestions.tsx`: remove the toggle + `+ Customize details` link and the `mode` prop pass-through.
+- In `FashionQuestions.tsx`, `FootwearQuestions.tsx`, `EyewearQuestions.tsx`: drop the optional `mode` prop and any `mode === "quick" | "detailed"` gates; render all fields unconditionally (Step 5 dedup from Phase 7r stays).
+- Remove the `brand-scene-wizard:mode` sessionStorage key reference.
 
-**Step4ModuleQuestions.tsx** (Step 5)
-- Same toggle at top.
-- Pass `mode` down to `FashionQuestions` / `FootwearQuestions` / `EyewearQuestions` via a new optional `mode` prop.
-- In each module component, when `mode === 'quick'`:
-  - Fashion: hide Vibe & props, Camera feel, Color anchor — keep only Setting.
-  - Footwear: hide Scene setting (surface/location/pose) and Finishing — keep Archetype, Footwear type, Presentation (the three `required` Blocks).
-  - Eyewear: same principle — keep only fields marked required in the existing component, hide the rest. (Mirror the pattern after reading file in build mode.)
-- Show `+ Customize details` button to expand.
+### 2. Soften the "required & empty" styling
 
-**BrandSceneWizard.tsx**
-- No gating changes needed — `moduleStepValid` already uses `isFashionStepValid` etc., which only check required fields. Quick mode leaves all required answers intact (defaults stay valid for fashion which has no required fields; footwear/eyewear already required answers stay visible).
+`Section.tsx` currently wraps required-but-empty sections in `ring-1 ring-destructive/60 ring-offset-4 animate-pulse` — that's the red box on "Product interaction" the user dislikes.
 
-## 2. Prune redundant Step 5 module questions
+- Drop the ring + pulse entirely. Keep the red asterisk on the label and the existing inline "Pick how the cast interacts with the product" reason at the bottom of the wizard (already rendered by `WizardLayout` via `nextDisabledReason`).
+- Keep `data-missing` attribute for any tests / scroll-into-view logic.
 
-Step 4 (Cast) and Step 3 (Base) already capture cast, interaction, scale, scene_type, setting, camera angle / elevation, hands-on-product, body-part focus. Step 5 should ONLY ask things the family adds on top.
+### 3. Show only relevant Product Scale options
 
-**`src/features/brand-scenes/modules/fashion/FashionQuestions.tsx`**
-- Remove the **Setting** block (duplicates Step 3 setting picker). Schema field `scene.location` stays for back-compat; it falls back to Step 3's value in the prompt builder, no code change needed there.
-- Keep Vibe & props, Camera feel, Color anchor (fashion-specific finishing dials, not duplicated elsewhere).
-- Drop the intro paragraph "Who appears … previous step" — now self-evident.
+For Clothing, the registry already restricts `resolved.scale.values` to `["on_body"]`, but Step 4 renders all six chips (Pocket, Handheld, Carry, Furniture, Architectural, Wearable on body). Furniture/Architectural make no sense for a t-shirt.
 
-**`src/features/brand-scenes/modules/footwear/FootwearQuestions.tsx`**
-- Remove the **Scene setting** Block entirely (`surface`, `location`, `pose` — all covered by Step 3 scene_type/setting and Step 4 cast/interaction).
-- Keep Archetype, Footwear type, Presentation, Finishing (color anchor + camera feel).
+- In `Step4Cast.tsx`, replace `showAllScales(expanded)` with the filtered list `SCALE_PRESETS.filter(s => resolved.scale.values.includes(s.value))`. Remove the unused `showAllScales` helper and the legacy `expanded` render-prop in the Scale `<Section>`.
+- When the filtered list has exactly one option, hide the entire Product Scale `<Section>` (the default is already auto-seeded in the existing `useEffect`, so gating still passes). The `+ Add exact size` escape hatch goes with it; users who need a custom size can switch sub-family.
 
-**`src/features/brand-scenes/modules/eyewear/EyewearQuestions.tsx`**
-- Audit in build mode; remove any scene/location/pose blocks that duplicate Step 3/4. Keep eyewear-specific fields (frame style, lens treatment, presentation).
+### Out of scope
+- All other Phase 7r/7s polish (gender fix, ethnicity dedup, build placement, Step 5 Setting/Scene dedup, inline disabled-reason) stays as is.
+- No prompt builder / saved-scene format changes.
 
-**Auto-skip empty Step 5**: in `BrandSceneWizard.tsx`, if a module renders zero visible questions after pruning we still keep the step (footwear & eyewear keep required fields). No skip logic needed.
-
-## 3. Wording
-
-- Step 5 subtitle currently "A few extras unique to the family you picked" — keep.
-- After pruning, footer hint on Fashion Step 5 reads "Optional finishing — skip and we'll use editorial defaults".
-
-## 4. Tests
-
-New file `src/features/brand-scenes/__tests__/wizard-polish-7s.test.tsx`:
-- Renders Step4Cast in quick mode → asserts vibe/build/ethnicity blocks are absent, cast preset + interaction + scale visible.
-- Clicking "+ Customize" toggles to detailed, sessionStorage updated.
-- Renders FashionQuestions with `mode="quick"` → only Setting-less view shows nothing optional; only required fields render. (After Setting removal, fashion quick view is essentially empty placeholder — assert helper text.)
-- Renders FootwearQuestions with `mode="quick"` → asserts only Archetype/FootwearType/Presentation visible; Scene setting hidden.
-
-## Files
-
-**New**
-- `src/features/brand-scenes/wizard/components/QuickDetailedToggle.tsx`
-- `src/features/brand-scenes/__tests__/wizard-polish-7s.test.tsx`
-
-**Modified**
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
-- `src/features/brand-scenes/wizard/steps/Step4ModuleQuestions.tsx`
-- `src/features/brand-scenes/modules/fashion/FashionQuestions.tsx`
-- `src/features/brand-scenes/modules/footwear/FootwearQuestions.tsx`
-- `src/features/brand-scenes/modules/eyewear/EyewearQuestions.tsx`
-- `.lovable/plan.md`
-
-## Out of scope
-
-- No prompt-builder edits — removed UI fields keep their schema slots so any older saved scenes still parse.
-- No changes to Step 3 base answers, validation gates, or `BrandSceneWizard` flow logic.
-- No DB/RLS/edge function work.
-
-
-## Phase 7s — STATUS: shipped
-
-- QuickDetailedToggle component (sessionStorage-backed `useWizardMode` hook)
-- Step4Cast: toggle at top, optional dials hidden in quick mode, `+ Customize cast & styling` escape hatch
-- Step4ModuleQuestions: toggle wraps body, passes mode prop, `+ Customize details` link
-- FashionQuestions: removed Setting block (was duplicating Step 3), quick mode shows helper copy only
-- FootwearQuestions: removed Scene setting block (surface/location/pose), Finishing gated to detailed
-- EyewearQuestions: removed Scene setting block, Finishing gated to detailed
-- New test: wizard-polish-7s.test.ts (6 tests, all passing)
-- Full suite: 190 tests passing
+### Files touched
+- Edit: `Step4Cast.tsx`, `Step4ModuleQuestions.tsx`, `FashionQuestions.tsx`, `FootwearQuestions.tsx`, `EyewearQuestions.tsx`, `Section.tsx`, `.lovable/plan.md`
+- Delete: `QuickDetailedToggle.tsx`, `wizard-polish-7s.test.ts`
