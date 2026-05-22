@@ -582,7 +582,12 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     scope: "scene",
     label: "Camera angle",
     prefix: "Camera angle",
-    presets: CAMERA_ANGLES_GENERAL,
+    presets: CAMERA_ANGLES_HUMAN,
+    // Phase 7j — swap the preset list based on whether people are in frame.
+    presetsResolver: (c) =>
+      c.cast === "none" || c.cast === "hands"
+        ? CAMERA_ANGLES_PRODUCT
+        : CAMERA_ANGLES_HUMAN,
   },
   {
     key: "camera_angle_apparel",
@@ -626,18 +631,9 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
 ];
 
 export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
-  // Phase 7i — age_band & ethnicity removed from here.
-  //   • Age is already captured by the hardcoded "Age feel" section (cast.age).
-  //   • Ethnicity is rendered by the bespoke EthnicityChips component.
-  {
-    key: "ethnicity",
-    scope: "cast",
-    label: "Ethnicity / casting hint",
-    prefix: "Ethnicity",
-    presets: ETHNICITY_HINT,
-    castOnly: ["solo", "two", "group"],
-    customRender: "ethnicity",
-  },
+  // Phase 7j — ethnicity, age_band removed from here.
+  //   • Age is captured by the hardcoded "Age feel" section (cast.age).
+  //   • Ethnicity is rendered by the bespoke EthnicityChips component in Step4Cast.
   {
     key: "build",
     scope: "cast",
@@ -679,7 +675,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     presets: MAKEUP_LOOKS,
     castOnly: ["solo", "two", "group"],
   },
-  // Phase 7i — swimwear-specific styling, replaces generic clothing pills.
+  // Swimwear-specific styling, replaces generic clothing pills.
   {
     key: "swim_styling",
     scope: "cast",
@@ -695,10 +691,9 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Wetness",
     prefix: "Wetness",
     presets: ["Dry", "Damp / misted", "Freshly out of water", "Glistening / sun-dried"],
-    castOnly: ["solo", "two", "group", "hands"],
+    castOnly: ["solo", "two", "group"],
     subFamilyOnly: ["swimwear"],
   },
-  // Phase 7i — lingerie layering replaces generic clothing pills.
   {
     key: "lingerie_layer",
     scope: "cast",
@@ -708,6 +703,16 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     castOnly: ["solo", "two", "group"],
     subFamilyOnly: ["lingerie"],
   },
+  {
+    key: "storytelling_moment",
+    scope: "cast",
+    label: "Storytelling moment",
+    prefix: "Moment",
+    // Step4Cast overrides via getStorytellingMoments(module, subFamily).
+    presets: STORYTELLING_MOMENT,
+    castOnly: ["solo", "two", "group", "hands"],
+  },
+];
   {
     key: "storytelling_moment",
     scope: "cast",
