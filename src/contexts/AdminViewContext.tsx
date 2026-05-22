@@ -5,7 +5,7 @@ interface AdminViewContextType {
   toggleAdminView: () => void;
 }
 
-const AdminViewContext = createContext<AdminViewContextType>({ isAdminView: true, toggleAdminView: () => {} });
+export const AdminViewContext = createContext<AdminViewContextType>({ isAdminView: true, toggleAdminView: () => {} });
 
 export function AdminViewProvider({ children }: { children: ReactNode }) {
   const [isAdminView, setIsAdminView] = useState(() => {
