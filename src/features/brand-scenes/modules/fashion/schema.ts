@@ -33,7 +33,8 @@ export const fashionModuleAnswersSchema = z
       .max(FASHION_MAX_GARMENTS)
       .optional(),
 
-    wearer: wearerSchema,
+    /** Now optional — Cast on Step 4 supersedes it. Kept for prompt-builder back-compat. */
+    wearer: wearerSchema.optional(),
     scene: z
       .object({
         location: text.optional(),
@@ -57,6 +58,7 @@ export const fashionModuleAnswersSchema = z
   .refine(
     (v) =>
       !v.scene?.pose ||
+      !v.wearer ||
       WEARERS_WITH_PERSON.includes(v.wearer as (typeof WEARERS_WITH_PERSON)[number]),
     {
       message: "Pose can only be set when an on-model wearer is selected",
@@ -66,7 +68,7 @@ export const fashionModuleAnswersSchema = z
 
 export type FashionModuleAnswers = z.infer<typeof fashionModuleAnswersSchema>;
 
-/** Validator used by the wizard. Only Wearer is required now. */
-export function isFashionStepValid(a: Partial<FashionModuleAnswers>): boolean {
-  return !!a.wearer;
+/** Validator used by the wizard. Cast on Step 4 is the real subject gate. */
+export function isFashionStepValid(_a: Partial<FashionModuleAnswers>): boolean {
+  return true;
 }
