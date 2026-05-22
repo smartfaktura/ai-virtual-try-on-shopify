@@ -32,17 +32,18 @@ import {
   GAZE_DIRECTIONS,
   GROUP_DYNAMICS,
   HANDS_ON_PRODUCT,
-  DIVERSITY_OPTIONS,
   type BodyPartFocus,
   type GazeDirection,
   type GroupDynamic,
   type HandsOnProduct,
-  type Diversity,
 } from "../constants/sceneExtras";
 import { CAST_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
-import { getStorytellingMoments } from "../registry/storytellingBySubfamily";
+import {
+  getStorytellingMoments,
+  hasExplicitMoments,
+} from "../registry/storytellingBySubfamily";
 import { resolveAll } from "../registry/resolvePresets";
 import {
   forbiddenInteractions,
@@ -478,25 +479,38 @@ export function Step4Cast({
         </div>
       )}
 
-      {/* Phase 7d — flexible cast styling dials */}
+      {/* Phase 7j — flexible cast styling dials with per-subfamily storytelling. */}
       {!isReplicate && (
         <div className="space-y-7 pt-2 border-t border-border/60">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
             More cast & styling dials
           </div>
-          {applicableFields(CAST_EXTRAS_FIELDS, module, preset).map((f) => (
-            <ExtrasPillField
-              key={f.key}
-              field={f}
-              value={cast?.extras?.[f.key]}
-              onChange={(next) => {
-                const nextExtras = { ...(cast?.extras ?? {}) };
-                if (next === undefined) delete nextExtras[f.key];
-                else nextExtras[f.key] = next;
-                onCastChange({ extras: nextExtras });
-              }}
-            />
-          ))}
+          {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily).map((f) => {
+            // Inject sub-family-specific moments at render time.
+            let resolved = f;
+            if (f.key === "storytelling_moment") {
+              const moments = getStorytellingMoments(module, subFamily);
+              // Hide entirely for `hands` cast when there's no explicit list — the
+              // generic moments don't apply to a disembodied close-up.
+              if (preset === "hands" && !hasExplicitMoments(module, subFamily)) {
+                return null;
+              }
+              resolved = { ...f, presets: moments };
+            }
+            return (
+              <ExtrasPillField
+                key={f.key}
+                field={resolved}
+                value={cast?.extras?.[f.key]}
+                onChange={(next) => {
+                  const nextExtras = { ...(cast?.extras ?? {}) };
+                  if (next === undefined) delete nextExtras[f.key];
+                  else nextExtras[f.key] = next;
+                  onCastChange({ extras: nextExtras });
+                }}
+              />
+            );
+          })}
         </div>
       )}
 

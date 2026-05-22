@@ -41,11 +41,11 @@ export interface ExtrasField {
   /** Phase 7i — hide when sub_family matches one of these slugs. */
   subFamilyExcept?: string[];
   /**
-   * Phase 7i — field renders via a bespoke component in the step file
-   * (e.g. EthnicityChips). The value is still assembled into the prompt
-   * via this field's `prefix`, so the assembler ignores `customRender`.
+   * Phase 7j — resolve presets at render time based on context (e.g. swap
+   * camera-angle list depending on whether people are in frame). Falls back
+   * to `presets` when not provided.
    */
-  customRender?: string;
+  presetsResolver?: (ctx: SceneCtx) => string[];
 }
 
 
@@ -341,7 +341,7 @@ export const ETHNICITY_HINT: string[] = [
 // CAMERA ANGLES — grouped by category context
 // ============================================================================
 
-export const CAMERA_ANGLES_GENERAL: string[] = [
+export const CAMERA_ANGLES_HUMAN: string[] = [
   "Straight on, eye level",
   "¾ left, eye level",
   "¾ right, eye level",
@@ -350,17 +350,28 @@ export const CAMERA_ANGLES_GENERAL: string[] = [
   "Back ¾",
   "Worm's eye low",
   "Low ¾",
-  "Top-down 90°",
   "High 45°",
   "High ¾",
+  "Dutch tilt 5°",
+  "Dutch tilt 15°",
+];
+
+export const CAMERA_ANGLES_PRODUCT: string[] = [
+  "Straight on, eye level",
+  "¾ left, eye level",
+  "¾ right, eye level",
+  "Top-down 90°",
+  "High 45°",
   "Eye level macro",
   "Pour shot",
   "Splash shot",
   "Steam shot",
   "Floating product",
   "Dutch tilt 5°",
-  "Dutch tilt 15°",
 ];
+
+/** @deprecated kept for back-compat. Use CAMERA_ANGLES_HUMAN / _PRODUCT. */
+export const CAMERA_ANGLES_GENERAL: string[] = CAMERA_ANGLES_HUMAN;
 
 
 export const CAMERA_ANGLES_APPAREL: string[] = [
@@ -511,6 +522,8 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Floor surface",
     prefix: "Floor",
     presets: FLOOR_TYPES,
+    // Phase 7j — only meaningful indoors. Outdoors implies the floor (sand, rock…).
+    appliesWhen: (c) => isIndoor(c.scene_type),
   },
   {
     key: "studio_fx",
@@ -569,7 +582,12 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     scope: "scene",
     label: "Camera angle",
     prefix: "Camera angle",
-    presets: CAMERA_ANGLES_GENERAL,
+    presets: CAMERA_ANGLES_HUMAN,
+    // Phase 7j — swap the preset list based on whether people are in frame.
+    presetsResolver: (c) =>
+      c.cast === "none" || c.cast === "hands"
+        ? CAMERA_ANGLES_PRODUCT
+        : CAMERA_ANGLES_HUMAN,
   },
   {
     key: "camera_angle_apparel",
@@ -613,18 +631,9 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
 ];
 
 export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
-  // Phase 7i — age_band & ethnicity removed from here.
-  //   • Age is already captured by the hardcoded "Age feel" section (cast.age).
-  //   • Ethnicity is rendered by the bespoke EthnicityChips component.
-  {
-    key: "ethnicity",
-    scope: "cast",
-    label: "Ethnicity / casting hint",
-    prefix: "Ethnicity",
-    presets: ETHNICITY_HINT,
-    castOnly: ["solo", "two", "group"],
-    customRender: "ethnicity",
-  },
+  // Phase 7j — ethnicity, age_band removed from here.
+  //   • Age is captured by the hardcoded "Age feel" section (cast.age).
+  //   • Ethnicity is rendered by the bespoke EthnicityChips component in Step4Cast.
   {
     key: "build",
     scope: "cast",
@@ -666,7 +675,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     presets: MAKEUP_LOOKS,
     castOnly: ["solo", "two", "group"],
   },
-  // Phase 7i — swimwear-specific styling, replaces generic clothing pills.
+  // Swimwear-specific styling, replaces generic clothing pills.
   {
     key: "swim_styling",
     scope: "cast",
@@ -682,10 +691,9 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Wetness",
     prefix: "Wetness",
     presets: ["Dry", "Damp / misted", "Freshly out of water", "Glistening / sun-dried"],
-    castOnly: ["solo", "two", "group", "hands"],
+    castOnly: ["solo", "two", "group"],
     subFamilyOnly: ["swimwear"],
   },
-  // Phase 7i — lingerie layering replaces generic clothing pills.
   {
     key: "lingerie_layer",
     scope: "cast",
@@ -700,7 +708,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     scope: "cast",
     label: "Storytelling moment",
     prefix: "Moment",
-    // Default presets — Step4Cast overrides via getStorytellingMoments(subFamily).
+    // Step4Cast overrides via getStorytellingMoments(module, subFamily).
     presets: STORYTELLING_MOMENT,
     castOnly: ["solo", "two", "group", "hands"],
   },

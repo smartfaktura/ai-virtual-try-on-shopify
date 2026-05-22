@@ -1,68 +1,64 @@
-## Phase 7i — Wizard polish: subcategory-aware cast, cleaner pills, scroll fix, remove flat-lay
+## Phase 7j — Wizard polish pass
 
-Targeted fixes for the 6 issues you flagged. No new big features — just tighten what's there.
+Audit of the wizard after the recent Phase 7i changes surfaces a handful of regressions and rough edges. None of them changes assembled prompt semantics — all are UI-clarity, dedupe, and scoping fixes.
 
-### 1. Swimwear cast styling — no extra clothing options
-- In `extras.ts`, scope `OUTFIT` / clothing-related cast pills (anything that suggests layering, jackets, etc.) so they **do not render when `sub_family === 'swimwear'`** (also `lingerie`).
-- Replace with a small swimwear-relevant block: `swim_styling` (one-piece / bikini / surf shorts / cover-up over) and `wetness` (dry / damp / freshly out of water). Same pattern for lingerie (`lingerie_layer`: bare / robe open / sheet draped).
-- Anything not relevant to the chosen sub-family is hidden, not just greyed.
+### Issues found
 
-### 2. Age band shown twice
-- Audit: `AGE_BANDS` is currently rendered both in `Step3BaseAnswers` (cast extras spillover) and in `Step4Cast`. Keep it **only in Step 4 (Cast)** and remove from Step 3.
-- Same audit pass for `build`, `ethnicity`, `pose_energy`, `skin_finish`, `hair`, `makeup` — these are cast fields, must appear once.
+1. **Ethnicity renders twice (again).** Step4Cast renders `<EthnicityChips>` inside a dedicated Section AND the field is still in `CAST_EXTRAS_FIELDS` (key `ethnicity`, `customRender: "ethnicity"`). The `applicableFields(...).map` loop below has no filter for `customRender`, so it renders a second generic chip row with the raw `ETHNICITY_HINT` presets. Exactly the bug the last phase was supposed to kill.
 
-### 3. Ethnicity pills unclear
-- Replace the current label-only chips with a clearer two-line chip: bold label + one-line example (e.g. "Pan-European — Northern + Mediterranean", "Globally diverse — mixed casting"). 
-- Rename "As-cast" → "Match my model" (clearer when a brand model is attached).
-- Add a tiny "Why?" tooltip explaining this is a styling hint, not a hard cast.
-- Reorder so the most-used options ("Match my model", "Globally diverse", "Mixed-heritage") sit first.
+2. **Storytelling moments aren't actually per-subfamily.** `getStorytellingMoments(subFamily)` was added in `registry/storytellingBySubfamily.ts`, but Step4Cast still feeds the field through `ExtrasPillField` using the field's default `presets: STORYTELLING_MOMENT` (the generic list). The user-facing fix is unreached.
 
-### 4. Storytelling moments not related to subcategories
-- Today `STORYTELLING_MOMENT` is one global list. Replace with a per-sub-family map in a new `storytellingBySubfamily.ts`:
-  - Swimwear: "Stepping out of water", "Lounging poolside", "Toweling off", "Walking the shoreline".
-  - Jackets: "Zipping up", "Collar pop", "Walking into cold", "Hands in pockets".
-  - Dresses: "Twirl", "Adjusting strap", "Mid-step entrance", "Sitting elegantly".
-  - Activewear: "Warm-up", "Mid-rep", "Cooldown stretch", "Post-sweat".
-  - Footwear: "Lacing up", "Mid-stride", "Kicked off", "Stepping onto curb".
-  - Bags: "Pulling from shoulder", "Setting down", "Reaching inside", "Carrying through street".
-  - Eyewear: "Putting on", "Pushing up into hair", "Lowering for glance".
-  - Watches/Jewelry: "Clasping", "Checking time", "Adjusting on wrist".
-  - Fragrance/Beauty: "Spraying", "Applying", "Smelling wrist", "Tipping bottle".
-  - Food/Beverages: "Pouring", "First sip", "Plating", "Sharing".
-  - Fallback to a short generic list only when no map entry exists.
+3. **Swim/lingerie fields appear for `hands` cast.** `swim_styling` and `wetness` set `castOnly: ["solo","two","group","hands"]`. Disembodied hands shouldn't get swimwear styling pills. Restrict to `solo/two/group`.
 
-### 5. "Next step" scrolls down
-- Fix in `BrandSceneWizard.tsx` / `WizardLayout.tsx`: on step change, `window.scrollTo({ top: 0 })` AND reset the wizard scroll container to `scrollTop = 0`. Use a ref on the scroll container and a `useEffect([step])`.
-- Also remove any `autoFocus` on first input that is below the fold (autofocus is what drags the page down).
+4. **Generic camera angles list is bloated with product-only shots.** `CAMERA_ANGLES_GENERAL` contains "Pour shot / Splash shot / Steam shot / Floating product / Top-down 90°" mixed with regular human angles. These should only appear when no person is in frame (cast `none` / `hands`) or when scene context calls for them — otherwise they confuse on-body picks.
 
-### 6. Remove tabletop / flat-lay scene type entirely
-- Drop `tabletop` from `SCENE_TYPES` in `settingsBySubfamily.ts`.
-- Remove `tabletop` pools across all sub-families; redistribute meaningful settings into `studio` or `indoor_lifestyle` where they still make sense.
-- Remove `camera_angle_tabletop` field from `extras.ts` and its preset list; absorb the still-useful angles (Top-down 90°, 45° hero, Pour, Splash) into `CAMERA_ANGLES_GENERAL`.
-- Remove the tabletop soft-warning rule.
-- Update tests: `setting-pools-coverage.test.ts` no longer expects tabletop entries.
+5. **Stage C "More creative dials" is a 20+ field dump.** Hard to scan, no grouping. Group into 4 collapsible blocks (Backdrop & floor, Light & time, Camera, Composition & crop). Default first block open.
 
-### Files
+6. **Step title doesn't carry the sub-family.** META titles say "Scene aesthetic" / "Cast & product interaction" generically. Append the chosen sub-family label (e.g. "Cast & product interaction · Hoodies") so the user sees the wizard is tuned.
 
-**Edited**
-- `src/features/brand-scenes/wizard/constants/extras.ts` — sub-family scoping for cast/clothing fields; remove tabletop angle field; remove Age/Build/Ethnicity/etc. from scene scope.
-- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` — drop duplicated cast fields; render new sub-family styling block; pull storytelling from new map.
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — owns Age band / Ethnicity / etc. only; new clearer ethnicity chip component.
-- `src/features/brand-scenes/wizard/registry/settingsBySubfamily.ts` — remove `tabletop` scene type and pools.
-- `src/features/brand-scenes/wizard/rules/sceneRules.ts` — remove tabletop warning.
-- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` + `WizardLayout.tsx` — scroll-to-top on step change.
-- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — render new swim/lingerie styling + per-subfamily storytelling fields.
+7. **Unused imports.** `Step4Cast.tsx` imports `DIVERSITY_OPTIONS, type Diversity` from `sceneExtras` — never referenced.
 
-**New**
-- `src/features/brand-scenes/wizard/registry/storytellingBySubfamily.ts` — sub-family → moments list + fallback.
-- `src/features/brand-scenes/wizard/components/EthnicityChip.tsx` — two-line chip with tooltip.
-- Tests: `subfamily-styling-scope.test.ts` (swimwear doesn't show coats), `cast-fields-single-source.test.ts` (Age band only in Step 4), `storytelling-by-subfamily.test.ts`.
+8. **`Floor` field shows for outdoor scenes** where it is implied (beach → sand, mountain → rock). Scope `floor` to indoor scene types like the backdrop fields already do.
+
+9. **Stage A/B scene-type and setting buttons jump-scroll on tap.** When `SceneTypePicker` re-renders the Stage B pool, the page can shift the user's view down because Stage B grows in place. Add `scroll-margin-top` on Stage B's `<Section>` and don't autoFocus anything inside it.
+
+10. **Wardrobe color rule restated**: confirm `subFamily !== "swimwear" && subFamily !== "lingerie"` guard is still correct after rename — yes, keep.
+
+### Implementation
+
+**`src/features/brand-scenes/wizard/constants/extras.ts`**
+- Remove the `ethnicity` entry from `CAST_EXTRAS_FIELDS` entirely (Step4Cast renders the bespoke `EthnicityChips` directly). Drop the `customRender` field from the type as no other field uses it.
+- `swim_styling` / `wetness` / `lingerie_layer`: `castOnly: ["solo","two","group"]`.
+- Split `CAMERA_ANGLES_GENERAL` into `CAMERA_ANGLES_HUMAN` (eye-level / ¾ / profile / back / low / high / Dutch) and keep product-only shots in a new `CAMERA_ANGLES_PRODUCT`. The single `camera_angle` field uses `CAMERA_ANGLES_HUMAN` when cast has people, `CAMERA_ANGLES_PRODUCT` when cast is `none` / `hands`. Implement via `presets` resolved at render time inside `ExtrasPillField` (pass a `presetsResolver?: (ctx) => string[]` on `ExtrasField`, fallback to `presets`).
+- Scope `floor` with `appliesWhen: (c) => isIndoor(c.scene_type)`.
+
+**`src/features/brand-scenes/wizard/registry/storytellingBySubfamily.ts`** — no change; already shipped.
+
+**`src/features/brand-scenes/wizard/steps/Step4Cast.tsx`**
+- Drop unused `DIVERSITY_OPTIONS`, `Diversity` imports.
+- After computing the applicable cast fields, override the `storytelling_moment` field's `presets` with `getStorytellingMoments(module, subFamily)` before passing to `ExtrasPillField`. Use `hasExplicitMoments` to hide the field entirely when there are no relevant moments AND cast is `hands` (avoid generic-only noise).
+- No need for the `customRender` branch — the field is gone.
+
+**`src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx`**
+- Wrap Stage C children in 4 `StageCGroup` collapsibles. New component `components/StageCGroup.tsx` — pure presentational, props `{label, defaultOpen, children}`. Field-to-group routing lives in a small map keyed by `field.key`.
+- Add `scroll-mt-24` to Stage B Section (prevent auto-jump under sticky header).
+
+**`src/features/brand-scenes/wizard/components/ExtrasPillField.tsx`**
+- Support optional `field.presetsResolver` for runtime preset selection. Falls back to `field.presets`.
+
+**`src/features/brand-scenes/wizard/BrandSceneWizard.tsx`**
+- Compute sub-family label from `SUB_TYPES_BY_FAMILY` and append `· {label}` to the title for steps 3, 4, 5.
+
+**`src/features/brand-scenes/wizard/components/StageCGroup.tsx`** (new)
+- Collapsible block: dark uppercase label row + chevron, body uses `Section` children verbatim.
+
+### Tests
+
+- Update `setting-pools-coverage.test.ts` only if camera angle split breaks any imports — it shouldn't.
+- New `__tests__/storytelling-per-subfamily.test.ts`: assert Step4Cast passes the right preset list for `fashion/hoodies` and falls back to generic for unmapped subfamily.
+- New `__tests__/cast-extras-no-duplicate-ethnicity.test.ts`: `applicableFields(CAST_EXTRAS_FIELDS, ...)` never contains `key === 'ethnicity'`.
 
 ### Out of scope
-- No taxonomy changes; no new categories.
-- No backend, billing, or prompt-engine rewrites.
-- Keep freedom-first: nothing hard-blocked, all sub-family scoping just hides irrelevant fields.
 
-### Test plan
-- All 131 existing tests stay green (tabletop assertions updated).
-- New tests verify: no duplicate cast fields, swimwear hides coat/jacket layering, every onboarding sub-family resolves to ≥3 storytelling moments, scroll resets on step change (jsdom scrollTo spy).
+- Quick-starter scenes, "Apply all 3 recommendations" button, per-field "Why?" tooltips, reset-per-stage — keep for a later phase.
+- No prompt assembler changes; storytelling/ethnicity strings already flow through verbatim.
