@@ -1,5 +1,5 @@
 import { ReactNode, useRef } from "react";
-import { ArrowRight, Lock, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WizardStep } from "./useWizardState";
@@ -88,6 +88,18 @@ export function WizardLayout({
     </Button>
   );
 
+  const JumpButton = (
+    <Button
+      size="pill"
+      variant="outline"
+      onClick={handleNextClick}
+      className="gap-1.5"
+    >
+      <ArrowDown className="w-3.5 h-3.5" />
+      Jump to fix
+    </Button>
+  );
+
   return (
     <div ref={rootRef} className="max-w-3xl mx-auto space-y-8 pb-2">
 
@@ -164,17 +176,6 @@ export function WizardLayout({
       {/* Sticky bottom floating card — mirrors ProductImagesStickyBar */}
       <div className="sticky bottom-4 z-20 max-w-full min-w-0 pb-[env(safe-area-inset-bottom)]">
         <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
-          {nextDisabled && nextDisabledReason && !isLastStep && (
-            <div className="px-3 sm:px-4 pt-3 pb-0 flex">
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-[11px] text-muted-foreground"
-                data-testid="next-disabled-reason"
-              >
-                <Lock className="w-3 h-3" />
-                {nextDisabledReason}
-              </span>
-            </div>
-          )}
 
           {/* Mobile: stacked */}
           <div className="flex flex-col gap-2 p-3 sm:hidden">
@@ -191,7 +192,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  <span className="flex-1">{NextButton}</span>
+                  <span className="flex-1">{JumpButton}</span>
                 </DisabledTooltip>
               ) : (
                 <span className="flex-1">{NextButton}</span>
@@ -213,7 +214,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  {NextButton}
+                  {JumpButton}
                 </DisabledTooltip>
               ) : (
                 NextButton
