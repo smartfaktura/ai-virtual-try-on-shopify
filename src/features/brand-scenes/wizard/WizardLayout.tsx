@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -13,6 +13,8 @@ interface Props {
   onBack: () => void;
   onNext: () => void;
   nextDisabled?: boolean;
+  /** Human-readable reason shown in a tooltip when Next is disabled. */
+  nextDisabledReason?: string | null;
   isLastStep?: boolean;
   children: ReactNode;
 }
@@ -21,8 +23,8 @@ const STEPS_WIZARD = [
   { n: 0, label: "Source" },
   { n: 1, label: "Family" },
   { n: 2, label: "Sub-family" },
-  { n: 3, label: "Aesthetic" },
-  { n: 4, label: "Cast" },
+  { n: 3, label: "Cast" },
+  { n: 4, label: "Aesthetic" },
   { n: 5, label: "Details" },
   { n: 6, label: "Preview" },
   { n: 7, label: "Review" },
@@ -47,6 +49,7 @@ export function WizardLayout({
   onBack,
   onNext,
   nextDisabled,
+  nextDisabledReason,
   isLastStep,
   children,
 }: Props) {
@@ -54,9 +57,40 @@ export function WizardLayout({
   const total = steps.length;
   const currentIdx = steps.findIndex((s) => s.n === step);
   const displayIdx = currentIdx >= 0 ? currentIdx : 0;
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // When Next is "soft-disabled", clicking still scrolls to the first
+  // missing required Section + flashes it instead of doing nothing.
+  const handleNextClick = () => {
+    if (!nextDisabled) {
+      onNext();
+      return;
+    }
+    const target = rootRef.current?.querySelector<HTMLElement>(
+      '[data-missing="1"]',
+    );
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const NextButton = (
+    <Button
+      onClick={handleNextClick}
+      // Keep visual disabled state, but allow the click to surface guidance.
+      aria-disabled={nextDisabled || undefined}
+      className={[
+        "rounded-full font-semibold gap-2",
+        nextDisabled ? "opacity-50 hover:opacity-50" : "",
+      ].join(" ")}
+    >
+      Next
+      <ArrowRight className="w-4 h-4" />
+    </Button>
+  );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div ref={rootRef} className="max-w-3xl mx-auto space-y-8">
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         <Lock className="w-3 h-3" />
         Admin preview — Brand Scenes wizard
@@ -117,15 +151,15 @@ export function WizardLayout({
               <TooltipContent>Available in a later phase</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        ) : nextDisabled && nextDisabledReason ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>{NextButton}</TooltipTrigger>
+              <TooltipContent>{nextDisabledReason}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ) : (
-          <Button
-            onClick={onNext}
-            disabled={nextDisabled}
-            className="rounded-full font-semibold gap-2"
-          >
-            Next
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          NextButton
         )}
       </div>
     </div>
