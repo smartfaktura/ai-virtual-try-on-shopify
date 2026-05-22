@@ -176,17 +176,6 @@ export function WizardLayout({
       {/* Sticky bottom floating card — mirrors ProductImagesStickyBar */}
       <div className="sticky bottom-4 z-20 max-w-full min-w-0 pb-[env(safe-area-inset-bottom)]">
         <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
-          {nextDisabled && nextDisabledReason && !isLastStep && (
-            <div className="px-3 sm:px-4 pt-3 pb-0 flex">
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-[11px] text-muted-foreground"
-                data-testid="next-disabled-reason"
-              >
-                <Lock className="w-3 h-3" />
-                {nextDisabledReason}
-              </span>
-            </div>
-          )}
 
           {/* Mobile: stacked */}
           <div className="flex flex-col gap-2 p-3 sm:hidden">
