@@ -447,7 +447,7 @@ export function Step4Cast({
       )}
 
       {/* Action */}
-      {hasPeople && !isReplicate && (
+      {!isQuick && hasPeople && !isReplicate && (
         <Section label="Action / energy">
           <div className="flex flex-wrap gap-2">
             {CAST_ACTIONS.map((a) => (
