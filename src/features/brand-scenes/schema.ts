@@ -131,6 +131,9 @@ export const brandSceneBaseAnswersSchema = z
       ])
       .optional(),
     auto: z.record(z.string(), z.literal(true)).optional(),
+    recommendations: z
+      .record(z.string().trim().min(1).max(60), z.string().trim().min(1).max(160))
+      .optional(),
   })
   .strict();
 

@@ -92,6 +92,8 @@ export interface BrandSceneBaseAnswers {
   scene_type?: "studio" | "indoor_lifestyle" | "outdoor_location" | "outdoor_nature" | "architectural" | "tabletop";
   /** Marks which extras keys were auto-cascaded (vs user-picked). */
   auto?: Record<string, true>;
+  /** Recommendations surfaced after the user clears an auto-filled value. */
+  recommendations?: Record<string, string>;
 }
 
 export interface BrandSceneCast {
