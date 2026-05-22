@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import {
   BRAND_SCENE_MODULE_LABELS,
   type BrandSceneModule,
