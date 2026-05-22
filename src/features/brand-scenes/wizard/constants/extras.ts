@@ -27,6 +27,8 @@ export interface ExtrasField {
   category?: BrandSceneModule[];
   excludes?: BrandSceneModule[];
   castOnly?: CastPreset[];
+  /** Hide this field when no people are in the scene (cast = 'none'). */
+  hideWhenNoCast?: boolean;
   hint?: string;
 }
 
