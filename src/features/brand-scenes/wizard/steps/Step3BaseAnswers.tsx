@@ -55,7 +55,7 @@ import {
   softWarnings,
   type SceneCtx,
 } from "../rules/sceneRules";
-import { resolveAll, tuningLabel } from "../registry/resolvePresets";
+import { resolveAll } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
 
 interface Props {
