@@ -150,16 +150,16 @@ export function BrandSceneWizard() {
       else if (!answers.reference_intent)
         nextDisabledReason = "Choose how strictly to follow the reference";
     } else if (step === wizardCastStep) {
-      if (!answers.cast?.preset) nextDisabledReason = "Pick a cast option";
+      if (!answers.cast?.preset) nextDisabledReason = "Choose who's in the shot";
       else if (
         answers.cast.preset !== "replicate" &&
         !answers.cast.interaction
       )
-        nextDisabledReason = "Pick how the cast interacts with the product";
+        nextDisabledReason = "Pick how the cast holds, wears, or stands next to the product";
       else if (!answers.scale?.preset)
         nextDisabledReason = "Pick a product scale";
     } else if (step === 5) {
-      nextDisabledReason = "Answer the required category questions";
+      nextDisabledReason = "Fill in the remaining required details";
     }
   }
   void wizardAestheticStep;
