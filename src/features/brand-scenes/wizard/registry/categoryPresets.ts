@@ -6,7 +6,13 @@
  *   1. PRESETS[family].sub[sub_family]
  *   2. PRESETS[family]
  *   3. Global defaults from constants/scene.ts & constants/cast.ts
+ *
+ * NOTE (Phase 7p): the `settings` field here is *descriptive only* — Step3's
+ * setting picker reads from `getSettingPool()` in `settingsBySubfamily.ts`,
+ * which is scene-type-aware. Edit `settingsBySubfamily.ts` to change which
+ * setting strings users actually see.
  */
+
 
 import type { BrandSceneModule } from "../../constants";
 import type { ScalePreset } from "../constants/scale";
@@ -112,13 +118,15 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     lens: ["portrait", "standard", "tele"],
     depth_of_field: ["shallow", "balanced"],
     interactions: ["wearing", "holding", "beside", "hero"],
-    cast_presets: ["solo", "none"],
+    // Phase 7p — include "hands" so In-hand offering / detail macro shots are valid.
+    cast_presets: ["solo", "hands", "none"],
     default_cast: "solo",
     settings: ["Studio cyclorama", "Outdoor location", "Urban street", "Architectural interior"],
     surfaces: ["polished_stone", "linen", "paper"],
     prop_density_max: 3,
     body_part_focus: ["face", "detail"],
   },
+
 
   fashion: {
     scale: ["on_body"],
@@ -196,12 +204,14 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
         settings: ["Nature", "Urban street", "Studio cyclorama"],
       },
       // Phase 7o — dress shoes (loafers, oxfords) lean indoor / architectural.
+      // Phase 7p — restored full_body so styled cast (suit + loafer) is valid.
       shoes: {
         settings: ["Architectural interior", "Studio cyclorama", "Tabletop surface", "Domestic"],
         lens: ["portrait", "tele", "macro"],
         moods: ["Editorial", "Quiet", "Clean"],
-        body_part_focus: ["feet", "detail"],
+        body_part_focus: ["feet", "full_body", "detail"],
       },
+
     },
   },
 

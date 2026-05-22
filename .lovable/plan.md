@@ -1,102 +1,48 @@
-## Phase 7o — Subfamily-coverage audit & gap closure
+# Phase 7p — Subfamily wizard bug sweep
 
-Audited every subfamily across the 4 places the wizard is supposed to be category-aware. Listing findings by severity, then proposing a focused fix.
+After Phase 7o, a closer audit surfaced 5 real bugs (3 high, 2 medium) that affect the live wizard for the currently unlocked modules (`fashion`, `footwear`, `eyewear`) and the about-to-unlock ones (`jewelry`, `watches`, `bags-accessories`, `hats-caps-beanies`).
 
-### How the wizard is supposed to know about subfamilies
+## Bug list
 
-| Registry | Purpose | What I checked |
-|---|---|---|
-| `registry/settingsBySubfamily.ts` (`POOLS`) | Per-scene-type setting suggestions | One entry per `module/sub_family` |
-| `registry/storytellingBySubfamily.ts` (`MOMENTS`) | Storytelling moments pill list | Same key shape |
-| `registry/categoryPresets.ts` (`PRESETS.sub`) | Bundles: lens, depth, mood, interaction, cast, body_part_focus | Per-subfamily override map |
-| `constants/extras.ts` `subFamilyOnly` / `subFamilyExcept` | Hide/show specific extras pill blocks | Field-level gating |
+### HIGH-1 — Product-only camera angles disappear when cast = none
+`SCENE_EXTRAS_FIELDS` in `wizard/constants/extras.ts` flags `camera_angle_footwear`, `camera_angle_eyewear`, and `camera_angle_jewelry` with `hideWhenNoCast: true`. But these lists are FULL of product-only angles:
+- footwear: `Top-down pair`, `Sole-up`, `Heel-back detail`, `Tongue close-up`, `Lace detail`, `Side profile pair`, `Stacked pair`, `Kicked-off arrangement`, `In hand offering`
+- eyewear: `Top-down folded`, `Top-down open`, `Lens detail macro`, `Temple/Bridge detail macro`, `In-hand offering`
+- jewelry: `Macro stone/clasp/engraving`, `Paired on tray`, `In-hand offering`, `Falling / floating`
 
-**Subfamily inventory** — 37 slugs across 12 families:
-```
-fashion (9):    garments, hoodies, dresses, jeans, jackets, activewear, swimwear, lingerie, streetwear
-footwear (4):   shoes, sneakers, boots, high-heels
-bags-acc (5):   bags-accessories, backpacks, wallets-cardholders, belts, scarves
-hats (3):       caps, hats, beanies
-watches (1):    watches
-eyewear (1):    eyewear
-jewelry (4):    rings, necklaces, earrings, bracelets
-beauty (3):     beauty-skincare, makeup-lipsticks, fragrance
-home (2):       home-decor, furniture
-tech (1):       tech-devices
-food-drink (3): food, beverages, snacks-food
-wellness (1):   supplements-wellness
-```
+When the user picks the very common product-hero cast (`none`), these angles vanish — exactly the moment they're most needed. Only `camera_angle_apparel` is correctly cast-only (every entry needs a person).
 
-### Findings — severity ranked
+**Fix:** drop `hideWhenNoCast` from footwear/eyewear/jewelry camera-angle fields. Keep it on `camera_angle_apparel` only.
 
-**HIGH-1 · `hats-caps-beanies` has zero subfamily overrides.**
-`PRESETS["hats-caps-beanies"]` exists but has **no `sub` block** and no `settings` array on the parent either. Caps (sport/skate), hats (editorial/formal), beanies (cold-weather) all render with identical pickers. Settings pool registry is fine, but Step3 mood/lens/interaction presets are family-wide only.
+### HIGH-2 — `footwear/shoes` strips `full_body` body-part-focus
+`PRESETS.footwear.sub.shoes` (added in 7o) sets `body_part_focus: ["feet", "detail"]`. Loafers/oxfords with a styled cast (suited man, walking corridor) absolutely want `full_body`. The parent footwear bundle correctly includes it; the sub override removes it.
 
-**HIGH-2 · Footwear is the most diverse family — only 3 of 4 subs have overrides.**
-`PRESETS.footwear.sub` covers high-heels, sneakers, boots — but **`shoes`** (loafers, oxfords, dress shoes) falls through to the family default which leans casual (`["Urban street","Studio cyclorama","Tabletop surface","Nature","Architectural interior"]`). Dress shoes want indoor lifestyle / architectural emphasis, narrower lens (`["portrait","tele"]`), no Nature.
+**Fix:** restore `body_part_focus: ["feet", "full_body", "detail"]` on the `shoes` sub.
 
-**HIGH-3 · Fashion has 9 subs, only 4 have overrides.**
-Missing `sub` entries for **streetwear, jackets, hoodies, jeans, garments**. Streetwear in particular needs the same `moods: ["Energetic","Confident","Cinematic"]` treatment activewear gets — currently inherits generic fashion mood. Jackets/jeans are mostly fine via settings pool, but streetwear is a real gap.
+### HIGH-3 — Eyewear has no `hands` cast preset
+`PRESETS.eyewear` declares `cast_presets: ["solo", "none"]`. But the eyewear-specific camera angles include `In-hand offering` and `On-hair pushed up` — the latter needs a person, the former needs hands. With cast=`hands` disallowed, users can never set up an "In-hand offering" eyewear shot with a hand-only crop.
 
-**MED-1 · No subfamily-specific extras fields outside swimwear / lingerie.**
-Today `swim_styling`, `wetness`, `lingerie_layer` are the only `subFamilyOnly` extras. Several subfamilies have product-defining attributes the user can't currently express:
+**Fix:** `cast_presets: ["solo", "hands", "none"]`, keep `default_cast: "solo"`.
 
-| Subfamily | Missing extras pill |
-|---|---|
-| watches | Strap material (leather / metal mesh / rubber / NATO), Dial time (10:10 convention vs. live) |
-| eyewear | Lens tint (clear / smoke / mirror / gradient / colored), Frame material (acetate / metal / titanium) |
-| jewelry (all 4) | Metal tone (yellow gold / white gold / rose gold / silver / platinum), Stone presence (no stone / single / pavé) |
-| footwear (sneakers, boots) | Lacing state (laced / unlaced / kicked-off), Sole emphasis (sole visible / hidden) |
-| activewear | Sweat finish (dry / pre-workout / mid-workout glow / post-shower) |
-| beauty-skincare | Texture state (closed jar / open jar / dollop on hand / on-skin) |
-| beverages | Liquid state (still / pour mid-air / fizz rising / condensation beads) |
-| supplements-wellness | Packaging state (label-front / cap-off / pills-out / tray pour) |
+### MED-1 — `hats-caps-beanies` and `bags-accessories` missing forbidden-interaction rules
+`combinationGuards.forbiddenInteractionsByFamily` covers beauty, food, jewelry, watches, eyewear, home, tech, wellness — but not `hats-caps-beanies` (where "using" makes no sense) nor `bags-accessories` (where "using" only fits a few subs like wallets).
 
-Some overlap exists in `STUDIO_FX` and `MOTION_ENERGY` (pour, splash, steam) but they're scene-level and not subfamily-gated.
+**Fix:** add `case "hats-caps-beanies": return new Set(["using"]);`. Leave bags as-is (some subs do "use" e.g. opening a wallet) — instead document in the case statement.
 
-**MED-2 · Several `MOMENTS` lists are thin (3 entries).**
-Earrings, bracelets, belts have only 3 moments while peers have 4–5. Storytelling pickers feel anemic on those subs.
+### MED-2 — `PRESETS[...].settings` is dead data drifting from the real picker
+`resolveAll().settings` is computed but never consumed by Step3 (the picker uses `getSettingPool` from `settingsBySubfamily.ts`). The Phase 7o edits to `PRESETS.footwear.sub.shoes.settings`, `hats-caps-beanies.sub.*.settings`, etc. therefore have zero UI effect — they only show up in tests. This is misleading for future maintainers and the 7o tests give a false sense of coverage.
 
-**LOW-1 · `bags-accessories/bags-accessories` parent slug has no `sub` entry.**
-Falls through to family default, which is reasonable but leaves the umbrella "bags" picker undifferentiated from belts/scarves at the bundle layer.
+**Fix (no behavior change):**
+- Add a header comment in `categoryPresets.ts` clarifying that `settings` is descriptive only and the real picker uses `settingsBySubfamily.ts`.
+- Update `wizard-polish-7o.test.ts` to assert against `getSettingPool(module, sub, sceneType)` instead of `resolveBundle().settings` for the shoes/caps/hats/beanies cases, so tests track what the UI actually shows.
 
-**LOW-2 · Tech/wellness/food single-sub families have no fine-grained gates.**
-Acceptable — these can be addressed via MED-1 extras instead of new bundles.
+## Out of scope
+- Adding more subfamilies (tech sub block, wellness sub block, eyewear sunglasses/optical split) — taxonomy decision, separate phase.
+- Per-subfamily narrowing of `CAMERA_ANGLES_APPAREL` (hiding "Detail — collar" for swimwear etc.) — minor cosmetic.
+- Removing stale `"Tabletop surface"` strings from `SCENE_SETTINGS` and PRESETS — `SCENE_SETTINGS` is unused at runtime now too.
 
-### Proposed fix — three commits, all additive
+## Files
+**Edit:** `src/features/brand-scenes/wizard/constants/extras.ts`, `src/features/brand-scenes/wizard/registry/categoryPresets.ts`, `src/features/brand-scenes/wizard/rules/combinationGuards.ts`, `src/features/brand-scenes/__tests__/wizard-polish-7o.test.ts`.
+**New:** `src/features/brand-scenes/__tests__/wizard-polish-7p.test.ts` — 5 tests, one per bug, all asserting against the consumer (`applicableFieldsCtx`, `resolveAll`, `forbiddenInteractionsByFamily`, `getSettingPool`).
 
-**7o-A · Bundle gaps** (`registry/categoryPresets.ts` only):
-- Add `hats-caps-beanies.sub = { caps, hats, beanies }` with distinct settings + interactions + body_part_focus + moods.
-- Add `hats-caps-beanies.settings` family default.
-- Add `fashion.sub.streetwear` (mood: Confident/Cinematic/Bold, interactions: wearing/hero, default cast: solo).
-- Add `fashion.sub.jackets`, `.hoodies`, `.jeans`, `.garments` minimal overrides — lens/moods only; settings already perfect via POOLS.
-- Add `footwear.sub.shoes` (settings: indoor lifestyle + architectural + studio; lens: portrait/tele; no "feet" body-part-focus emphasis).
-- Add `bags-accessories.sub["bags-accessories"]` umbrella defaults.
-
-**7o-B · Subfamily-gated extras** (`constants/extras.ts`):
-Add 8 new fields with `subFamilyOnly` gates from the MED-1 table above. Each follows the existing `ExtrasField` shape (label / prefix / presets / scope / castOnly where appropriate). Wired into `applicableFields` automatically — no Step3/Step4 changes needed.
-
-**7o-C · Storytelling top-up** (`registry/storytellingBySubfamily.ts`):
-Pad earrings (3→5), bracelets (3→5), belts (3→5), and any other ≤3-entry list to 5 moments. Pure data add.
-
-### Tests
-
-New `wizard-polish-7o.test.ts` verifies:
-- `resolvePresets("hats-caps-beanies","caps")` returns a different settings + interactions array than `("hats-caps-beanies","beanies")`.
-- `resolvePresets("footwear","shoes")` excludes "Nature" and "Tabletop surface".
-- `applicableFields` returns `strap_material` for `watches/watches` and **not** for `eyewear/eyewear`.
-- `applicableFields` returns `metal_tone` for all 4 jewelry subs.
-- `assembleSceneDirective` emits `Strap material: leather.` when the watch extra is set.
-- `getStorytellingMoments("jewelry","jewellery-earrings")` returns ≥ 5 entries.
-
-### Files
-- **Edited**: `registry/categoryPresets.ts`, `constants/extras.ts`, `registry/storytellingBySubfamily.ts`.
-- **New**: `__tests__/wizard-polish-7o.test.ts`.
-
-No DB / schema / type-contract changes. Everything resolves via existing cascade — old saved scenes keep loading because all new fields are optional and the resolver already falls through to family defaults.
-
-### Out of scope (worth flagging, not doing now)
-
-- Per-subfamily prompt-architecture nudges (e.g. "boots: emphasize ground texture") — better handled in `assembleSceneDirective` aesthetic block in a later phase.
-- New subfamilies (e.g. splitting "jackets" into puffer/leather/blazer) — taxonomy decision outside the wizard.
-- Localised label translations for new pills — current wizard is English-only.
+No DB / schema / type changes. No effect on saved scenes — only UI gating and prompt shape for new selections.
