@@ -650,7 +650,6 @@ function PillFieldInner({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className="rounded-xl mt-2"
-          autoFocus
         />
       )}
     </>
