@@ -323,16 +323,35 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
           More creative dials
         </div>
-        {applicableFields(SCENE_EXTRAS_FIELDS, module, castPreset).map((f) => (
+        {applicableFieldsCtx(SCENE_EXTRAS_FIELDS, {
+          module,
+          sub_family: subFamily,
+          scene_type: value.scene_type,
+          setting: value.setting,
+          cast: castPreset,
+          values: { ...(value.extras ?? {}), _weather: value.weather },
+          auto: value.auto ?? {},
+        }).map((f) => (
           <ExtrasPillField
             key={f.key}
             field={f}
             value={value.extras?.[f.key]}
+            autoFilled={!!value.auto?.[f.key]}
             onChange={(next) => {
-              const nextExtras = { ...(value.extras ?? {}) };
-              if (next === undefined) delete nextExtras[f.key];
-              else nextExtras[f.key] = next;
-              onChange({ extras: nextExtras });
+              const ctx: SceneCtx = {
+                module,
+                sub_family: subFamily,
+                scene_type: value.scene_type,
+                setting: value.setting,
+                cast: castPreset,
+                values: value.extras ?? {},
+                auto: value.auto ?? {},
+              };
+              const { values, auto } = applyCascade(f.key, next, ctx);
+              // Strip undefined entries.
+              const cleaned: Record<string, string> = {};
+              for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
+              onChange({ extras: cleaned, auto });
             }}
           />
         ))}
