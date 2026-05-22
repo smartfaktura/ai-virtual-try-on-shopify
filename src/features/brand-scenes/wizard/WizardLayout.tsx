@@ -16,11 +16,15 @@ interface Props {
 }
 
 const STEPS = [
-  { n: 1, label: "Category" },
-  { n: 2, label: "Aesthetic" },
-  { n: 3, label: "Details" },
-  { n: 4, label: "Review" },
+  { n: 0, label: "Source" },
+  { n: 1, label: "Family" },
+  { n: 2, label: "Sub-family" },
+  { n: 3, label: "Aesthetic" },
+  { n: 4, label: "Details" },
+  { n: 5, label: "Review" },
 ] as const;
+
+const TOTAL_STEPS = STEPS.length;
 
 export function WizardLayout({
   step,
@@ -50,7 +54,7 @@ export function WizardLayout({
             />
             {i === STEPS.length - 1 && (
               <span className="text-xs text-muted-foreground tabular-nums">
-                {step}/4
+                {step + 1}/{TOTAL_STEPS}
               </span>
             )}
           </div>
@@ -74,7 +78,7 @@ export function WizardLayout({
         <Button
           variant="ghost"
           onClick={onBack}
-          disabled={step === 1}
+          disabled={step === 0}
           className="rounded-full gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
