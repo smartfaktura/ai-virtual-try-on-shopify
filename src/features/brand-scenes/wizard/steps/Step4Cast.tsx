@@ -409,8 +409,10 @@ export function Step4Cast({
         </Section>
       )}
 
+      {showBehaviorGroup && <GroupHeader title="Behavior & energy" />}
       {/* Gaze */}
       {hasPeople && !isReplicate && (
+
         <Section label="Gaze direction">
           <div className="flex flex-wrap gap-2">
             {GAZE_DIRECTIONS.map((g) => (
