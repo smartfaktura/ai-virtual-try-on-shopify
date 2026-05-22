@@ -1,0 +1,110 @@
+import { ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import type { WizardStep } from "./useWizardState";
+
+interface Props {
+  step: WizardStep;
+  title: string;
+  subtitle?: string;
+  onBack: () => void;
+  onNext: () => void;
+  nextDisabled?: boolean;
+  isLastStep?: boolean;
+  children: ReactNode;
+}
+
+const STEPS = [
+  { n: 1, label: "Category" },
+  { n: 2, label: "Aesthetic" },
+  { n: 3, label: "Details" },
+  { n: 4, label: "Review" },
+] as const;
+
+export function WizardLayout({
+  step,
+  title,
+  subtitle,
+  onBack,
+  onNext,
+  nextDisabled,
+  isLastStep,
+  children,
+}: Props) {
+  return (
+    <div className="max-w-3xl mx-auto space-y-8">
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <Lock className="w-3 h-3" />
+        Admin preview — Brand Scenes wizard
+      </div>
+
+      <div className="flex items-center gap-2">
+        {STEPS.map((s, i) => (
+          <div key={s.n} className="flex items-center gap-2 flex-1">
+            <div
+              className={[
+                "h-1 flex-1 rounded-full transition-colors",
+                s.n <= step ? "bg-foreground" : "bg-border",
+              ].join(" ")}
+            />
+            {i === STEPS.length - 1 && (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {step}/4
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
+            {subtitle}
+          </p>
+        )}
+      </div>
+
+      <div className="min-h-[280px]">{children}</div>
+
+      <div className="flex items-center justify-between pt-6 border-t border-border">
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          disabled={step === 1}
+          className="rounded-full gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+
+        {isLastStep ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button disabled className="rounded-full font-semibold gap-2">
+                    Save scene
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Available in a later phase</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <Button
+            onClick={onNext}
+            disabled={nextDisabled}
+            className="rounded-full font-semibold gap-2"
+          >
+            Next
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
