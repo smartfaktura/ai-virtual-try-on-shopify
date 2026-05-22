@@ -7,6 +7,7 @@ import type { BrandSceneModule, BrandSceneSource } from "./constants";
 
 /** Shared base shape every category wizard collects. */
 export interface BrandSceneBaseAnswers {
+  /** Scene type — indoor/outdoor/studio etc. (was previously "aesthetic"). */
   aesthetic?: string;
   palette?: string[];
   mood?: string;
@@ -19,27 +20,23 @@ export interface BrandSceneBaseAnswers {
 /**
  * Discriminated union keyed by `module`. Each category wizard fills its
  * own slot in its dedicated phase.
+ *
+ * NOTE: `module` is optional in the wizard-state shape because the
+ * Step 1 picker no longer pre-selects a family. It becomes required
+ * before reaching Review (enforced by `brandSceneAnswersSchema` on save).
  */
 export interface BrandSceneAnswers {
-  /** Origin of the scene inputs. */
   source: BrandSceneSource;
-  module: BrandSceneModule;
-  /** Sub-family slug — becomes category_collection on the saved row. */
+  module?: BrandSceneModule;
   sub_family: string;
   base: BrandSceneBaseAnswers;
-  /** Per-module question payload. Filled in by category wizards. */
   module_answers: Record<string, unknown>;
 
-  /** Reference path only: storage path(s) of uploaded reference image(s). */
   reference_image_paths?: string[];
-  /** Reference path only: public URL of the uploaded image, used as preview. */
   reference_preview_url?: string;
-  /** Reference path only: soft directive for where the product should sit. */
   placement_hint?: string;
 
-  /** Scene name (required for both paths once we reach Review). */
   name?: string;
-  /** Free-form extra direction; maps to `prompt_hint` on save. */
   note?: string;
 }
 

@@ -1,3 +1,5 @@
+// Legacy archetype/garment values are kept as schema enums so historic
+// rows still parse — they are no longer surfaced in the UI.
 export const FASHION_ARCHETYPES = [
   { value: "editorial_studio", label: "Editorial Studio" },
   { value: "elevated_location", label: "Elevated Location" },
@@ -32,8 +34,31 @@ export const FASHION_CAMERA_FEELS = [
   "Flash-lit",
 ] as const;
 
+/** New: scene-first preset chips (UI only — written into scene.location). */
+export const FASHION_SETTINGS = [
+  "Indoor studio",
+  "Indoor lifestyle",
+  "Outdoor street",
+  "Outdoor nature",
+  "Architectural",
+  "Domestic interior",
+] as const;
+
+/** New: prop / vibe presets (UI only — joined and written into scene.props). */
+export const FASHION_VIBES = [
+  "Minimal",
+  "Vintage props",
+  "Floral",
+  "Industrial",
+  "Soft drapery",
+  "Plants",
+  "Tabletop",
+  "Empty space",
+] as const;
+
 export const FASHION_MAX_GARMENTS = 3;
 export const FASHION_MAX_CAMERA_FEELS = 2;
+export const FASHION_MAX_VIBES = 3;
 export const FASHION_TEXT_MAX = 160;
 
 export type FashionArchetype = (typeof FASHION_ARCHETYPES)[number]["value"];
