@@ -321,6 +321,9 @@ export function Step4Environment({
           className="rounded-xl resize-none"
         />
       </Section>
+        </>
+      )}
     </div>
   );
 }
+
