@@ -1,5 +1,7 @@
 import { Sparkles } from "lucide-react";
 import type { BrandSceneModule } from "../../constants";
+import { ApparelQuestions } from "../../modules/apparel/ApparelQuestions";
+import type { ApparelModuleAnswers } from "../../modules/apparel/schema";
 
 const LABELS: Record<BrandSceneModule, string> = {
   apparel: "Apparel",
@@ -13,7 +15,22 @@ const LABELS: Record<BrandSceneModule, string> = {
   home: "Home",
 };
 
-export function Step3ModuleQuestions({ module }: { module: BrandSceneModule }) {
+interface Props {
+  module: BrandSceneModule;
+  answers: Record<string, unknown>;
+  onChange: (patch: Record<string, unknown>) => void;
+}
+
+export function Step3ModuleQuestions({ module, answers, onChange }: Props) {
+  if (module === "apparel") {
+    return (
+      <ApparelQuestions
+        value={answers as Partial<ApparelModuleAnswers>}
+        onChange={(patch) => onChange(patch as Record<string, unknown>)}
+      />
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
