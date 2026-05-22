@@ -128,12 +128,11 @@ export function Step4Environment({
       </Section>
 
       {!hasSceneType && (
-        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-5 py-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Pick a scene type above to unlock setting, weather, mood, and fine-tuning.
-          </p>
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 text-center text-[11px] text-muted-foreground leading-relaxed">
+          Pick a scene type above to unlock setting, weather, mood, and fine-tuning
         </div>
       )}
+
 
       {hasSceneType && (
         <>

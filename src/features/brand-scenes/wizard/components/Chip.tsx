@@ -19,7 +19,7 @@ export function Chip({ active = false, disabled = false, onClick, children }: Ch
       disabled={disabled}
       onClick={onClick}
       className={[
-        "rounded-full border px-3 py-1.5 text-[13px] sm:px-4 sm:py-2 sm:text-sm transition-colors whitespace-nowrap",
+        "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors whitespace-nowrap",
         disabled
           ? "border-border bg-muted/30 text-muted-foreground cursor-not-allowed"
           : active
@@ -43,7 +43,7 @@ export function AddChip({ onClick, label = "Custom" }: AddChipProps) {
     <button
       type="button"
       onClick={onClick}
-      className="rounded-full border border-dashed border-border bg-transparent px-3 py-1.5 text-[13px] sm:px-4 sm:py-2 sm:text-sm text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+      className="rounded-full border border-dashed border-border bg-transparent px-3.5 py-1.5 text-[13px] text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors inline-flex items-center gap-1.5"
     >
       <Plus className="w-3.5 h-3.5" />
       {label}

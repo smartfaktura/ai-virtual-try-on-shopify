@@ -90,10 +90,7 @@ export function WizardLayout({
 
   return (
     <div ref={rootRef} className="max-w-3xl mx-auto space-y-8 pb-2">
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        <Lock className="w-3 h-3" />
-        Admin preview — Brand Scenes wizard
-      </div>
+
 
       {/* Clickable step bars + labels */}
       <div className="space-y-2">
@@ -166,7 +163,7 @@ export function WizardLayout({
 
       {/* Sticky bottom floating card — mirrors ProductImagesStickyBar */}
       <div className="sticky bottom-4 z-20 max-w-full min-w-0 overflow-hidden pb-[env(safe-area-inset-bottom)]">
-        <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
           {nextDisabled && nextDisabledReason && !isLastStep && (
             <div className="px-3 sm:px-4 pt-3 pb-0 flex">
               <span

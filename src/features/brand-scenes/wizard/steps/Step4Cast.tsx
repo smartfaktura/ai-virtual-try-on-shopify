@@ -543,16 +543,14 @@ export function Step4Cast({
             </div>
             <div className="mt-3">
               {showExact ? (
-                <button
-                  type="button"
+                <Chip
                   onClick={() => {
                     setShowExact(false);
                     onScaleChange({ dimensions: undefined });
                   }}
-                  className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] sm:px-4 sm:py-2 sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Hide exact size
-                </button>
+                </Chip>
               ) : (
                 <AddChip onClick={() => setShowExact(true)} label="Exact size" />
               )}
@@ -686,7 +684,7 @@ function ExactDimensions({
         onChange={(n) => set({ d: n || undefined })}
       />
       <div>
-        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Units
         </Label>
         <div className="flex gap-1 mt-1.5">
@@ -712,7 +710,7 @@ function NumberField({
 }) {
   return (
     <div>
-      <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         {label}
       </Label>
       <Input
@@ -729,16 +727,16 @@ function NumberField({
 function GroupHeader({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="pt-2 first:pt-0">
-      <div className="text-[11px] font-semibold tracking-tight text-foreground/90">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         {title}
       </div>
       {hint && (
-        <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-relaxed">
+        <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
           {hint}
         </p>
       )}
-      <div className="mt-3 h-px bg-border/70" />
     </div>
   );
 }
+
 

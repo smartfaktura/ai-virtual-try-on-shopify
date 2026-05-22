@@ -20,7 +20,7 @@ export function StageCGroup({ label, defaultOpen = false, count = 0, children }:
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
       >
         <span className="flex items-center gap-2">
           <span>{label}</span>

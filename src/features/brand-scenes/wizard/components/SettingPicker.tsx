@@ -23,11 +23,12 @@ export function SettingPicker({ options, value, onChange, emptyHint }: Props) {
 
   if (!options.length && !value) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 text-center text-[11px] text-muted-foreground leading-relaxed">
         {emptyHint ?? "Pick a scene type first to see tailored settings"}
       </div>
     );
   }
+
 
   return (
     <div className="space-y-3">

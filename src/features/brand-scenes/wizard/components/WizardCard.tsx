@@ -65,7 +65,7 @@ export function WizardCard({
         <p
           className={[
             "mt-1.5 leading-relaxed",
-            compact ? "text-[12px]" : "text-sm",
+            compact ? "text-[11px]" : "text-sm",
             active ? "text-background/70" : "text-muted-foreground",
           ].join(" ")}
         >

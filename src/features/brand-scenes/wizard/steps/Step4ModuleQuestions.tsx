@@ -44,14 +44,14 @@ export function Step4ModuleQuestions({ module, answers, onChange }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 text-center">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         Coming soon
       </div>
-      <h3 className="text-base font-semibold text-foreground tracking-tight mt-1.5">
+      <div className="text-base font-semibold text-foreground tracking-tight mt-1.5">
         {BRAND_SCENE_MODULE_LABELS[module]} questions ship in a later phase
-      </h3>
-      <p className="text-xs text-muted-foreground mt-2 max-w-md mx-auto">
+      </div>
+      <p className="text-[11px] text-muted-foreground mt-2 max-w-md mx-auto leading-relaxed">
         We'll add tailored prompts here — scene props, camera, references — one family at a time
       </p>
     </div>
