@@ -1,11 +1,9 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
 import { Chip } from "./Chip";
 
 /**
  * Phase 7v — flattened to pill chips so it matches the rest of the wizard.
- * Value is stored as a free string on `cast.extras.ethnicity` so the
- * prompt assembler renders it verbatim.
+ * Phase 7ab — header/tooltip moved out; this component renders only the chip
+ * row and the parent `Section` owns the label.
  */
 
 interface EthnicityOption {
@@ -33,40 +31,20 @@ interface Props {
 
 export function EthnicityChips({ value, onChange }: Props) {
   return (
-    <div className="space-y-2.5">
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Ethnicity / casting hint
-        </span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button type="button" aria-label="What is this?">
-                <Info className="w-3 h-3 text-muted-foreground/70" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-[11px] leading-relaxed">
-              A styling hint, not a hard cast. The AI uses it to guide
-              features when no brand model is attached.
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {ETHNICITY_OPTIONS.map((o) => {
-          const active = value === o.value;
-          return (
-            <span key={o.value} title={o.desc}>
-              <Chip
-                active={active}
-                onClick={() => onChange(active ? undefined : o.value)}
-              >
-                {o.label}
-              </Chip>
-            </span>
-          );
-        })}
-      </div>
+    <div className="flex flex-wrap gap-2">
+      {ETHNICITY_OPTIONS.map((o) => {
+        const active = value === o.value;
+        return (
+          <span key={o.value} title={o.desc}>
+            <Chip
+              active={active}
+              onClick={() => onChange(active ? undefined : o.value)}
+            >
+              {o.label}
+            </Chip>
+          </span>
+        );
+      })}
     </div>
   );
 }
