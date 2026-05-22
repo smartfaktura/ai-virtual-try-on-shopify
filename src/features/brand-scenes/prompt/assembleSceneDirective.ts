@@ -44,7 +44,8 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
       : "";
   if (refLine) lines.push(refLine);
 
-  if (base.aesthetic) lines.push(`Scene type: ${base.aesthetic}.`);
+  if (base.scene_type) lines.push(`Scene type: ${base.scene_type.replace(/_/g, " ")}.`);
+  else if (base.aesthetic) lines.push(`Scene type: ${base.aesthetic}.`);
 
   // Setting + surface
   if (base.setting) {
