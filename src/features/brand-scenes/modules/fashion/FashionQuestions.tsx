@@ -159,22 +159,12 @@ export function FashionQuestions({ value, onChange }: Props) {
         />
       </Block>
 
-      {hasPerson && (
-        <Block label="Pose / energy">
-          <Input
-            maxLength={FASHION_TEXT_MAX}
-            value={v.scene?.pose ?? ""}
-            onChange={(e) =>
-              onChange({ scene: { ...v.scene, pose: e.target.value } })
-            }
-            placeholder="e.g. leaning relaxed, hand in pocket (optional)"
-            className="rounded-xl"
-          />
-        </Block>
-      )}
     </div>
   );
 }
+
+// drop trailing close
+
 
 function Block({
   label,
