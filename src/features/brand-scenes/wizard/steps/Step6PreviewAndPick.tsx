@@ -113,7 +113,7 @@ function AdminPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-muted/30">
+    <div className="rounded-xl border border-border bg-muted/30">
       <button
         type="button"
         onClick={onToggle}
