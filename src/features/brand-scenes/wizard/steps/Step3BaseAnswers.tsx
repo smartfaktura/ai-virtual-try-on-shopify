@@ -137,15 +137,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         )}
       </Section>
 
-      <Section label="Surface under product" expandable>
-        {(expanded) => (
-          <ChipRow
-            options={surfaces(expanded)}
-            current={value.surface}
-            onPick={(v) => onChange({ surface: v as Surface | undefined })}
-          />
-        )}
-      </Section>
 
       <Section label="Weather / atmosphere">
         <ChipRow
