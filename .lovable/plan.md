@@ -1,41 +1,40 @@
-## Phase 7l — Review screen & legacy-field cleanup
+## Phase 7m — Wizard chrome & residual legacy cleanup
 
-Polish round focused on the **Review** step (Step 7) and a few residual legacy fields that survived 7i/7j/7k. The Review summary is currently stale — it reads field names the wizard no longer writes, so users see a near-empty card on every scene.
+Another sweep after 7l. Focused on small but real bugs around the wizard's step header (reference flow), the Review summary, and one dead validation rule that hasn't fired since Phase 7k.
 
 ### Issues found
 
-1. **Step5Review summary is broken.** It reads legacy keys that are never set:
-   - `base.aesthetic` (replaced by `base.scene_type`)
-   - `base.mood`, `base.lighting`, `base.framing` (replaced by `brand_voice` + extras `light_direction` / `light_quality` + extras `composition_energy`)
-   - `base.time_of_day` (legacy 4-bucket; replaced in 7k by `extras.time_of_day_detail`)
-   - Doesn't surface any of the Stage C extras (backdrop, floor, motion, camera angle, storytelling moment, ethnicity, build, hair, makeup, skin, pose, gaze, group dynamic, hands-on-product, body-part focus, action, gender, age, vibe).
-2. **`BrandSceneBaseAnswers.scene_type` union still includes `"tabletop"`** even though Phase 7i removed that scene type from the picker. Lingering ghost option in the type contract.
-3. **assembleSceneDirective duplicates time-of-day.** It still emits `Time of day: ${base.time_of_day}.` AND the extras loop emits `Time: ${extras.time_of_day_detail}.`. With 7k the UI only writes the latter, but any stale data hits both paths and the prompt gets two conflicting time lines.
+1. **Reference flow shows the wrong title on step 4.**
+   `META_REFERENCE` only overrides step 3 (Reference & intent). On step 4 the user sees the **Cast** UI, but the header still reads `"Scene aesthetic — Pick the kind of scene you want — we'll match the rest"` (inherited from `META_WIZARD`). Should read `"Cast & product interaction"`.
+
+2. **Sub-family chip is appended to reference step 3.**
+   `stepShowsSubFamily = step === 3 || 4 || 5` adds `· Sub-family` to the title. On reference flow step 3 the screen is "Reference & intent" — the sub-family chip there is noise.
+
+3. **Step5Review hides the user's free-text notes.**
+   Both `base.notes` (Scene-level notes) and `cast.note` (Cast note) are written by the wizard but never surfaced in the Summary card. Avoid is shown; Notes is not. Users lose visibility of what they typed.
+
+4. **Dead validation rule in `combinationGuards.ts`.**
+   The "night + clear" warning still keys off `base.time_of_day === "night"`, but that field was retired in Phase 7k — the wizard now writes `extras.time_of_day_detail`. The warning has been silently dead since 7k. Either re-wire it to read the detail string, or drop it.
 
 ### Fixes
 
-**`src/features/brand-scenes/wizard/steps/Step5Review.tsx`** — rewrite `SummaryCard`:
-- Group rows into 4 buckets shown as small sub-headers: **Scene**, **Look & light**, **Cast**, **Output**.
-- Pull from the canonical sources only:
-  - Scene → family, sub-family, scene_type (humanized), setting, weather, season, prop_density label.
-  - Look & light → brand_voice, aesthetic_era, realism, palette (custom or preset label), finish, color_contrast, saturation, backdrop_type, backdrop_color, floor, time_of_day_detail, light_direction, light_quality, motion, composition_energy, camera_angle, crop_safety.
-  - Cast → preset label, gender (joined), age (joined), vibe, interaction, action, group_dynamic, gaze, body_part_focus, hands_on_product, wardrobe_color, plus extras: ethnicity, build, pose_energy, skin_finish, hair, makeup, swim_styling, wetness, lingerie_layer, storytelling_moment.
-  - Output → scale preset, exact dimensions (if any), aspect ratio (4:5 locked), reference intent (if reference flow).
-- Each bucket renders only the rows that have a value. Empty buckets are hidden entirely.
-- Truncate long values at 80 chars with `…` to keep the 2-col grid tidy.
+**`wizard/BrandSceneWizard.tsx`**
+- Add `4: { title: "Cast & product interaction", subtitle: "Who's in the scene and how they relate to the product" }` to `META_REFERENCE`.
+- Tighten the sub-family chip: `const stepShowsSubFamily = (step === 3 && !isReference) || step === 4 || step === 5;` so reference step 3 stays clean.
 
-**`src/features/brand-scenes/types.ts`** — drop `"tabletop"` from the `scene_type` union.
+**`wizard/steps/Step5Review.tsx`** — extend the Scene bucket with a `Notes` row (from `base.notes`, truncated) and the Cast bucket with a `Cast note` row (from `cast.note`, truncated). Both already pass through `Bucket`'s value-filter so empty values stay hidden.
 
-**`src/features/brand-scenes/prompt/assembleSceneDirective.ts`** — remove the legacy `Time of day: ${base.time_of_day}.` line; `extras.time_of_day_detail` is the single source of truth.
+**`wizard/rules/combinationGuards.ts`** — replace the dead night/clear check with a read against `base.extras?.time_of_day_detail` (case-insensitive `startsWith("night")` or `startsWith("after dark")`), so the existing soft warning fires again. Keep the same `severity: "warn"` + message.
 
-**Tests** — new `review-summary-7l.test.ts` covering:
-- Summary renders the new scene_type label (not legacy aesthetic).
-- `extras.time_of_day_detail` flows into the Look & light bucket.
-- Empty buckets (e.g. no cast on a product-hero scene) are omitted.
-- Assembler no longer emits two time-of-day lines when `time_of_day_detail` is set.
+### Tests
+
+New `wizard-polish-7m.test.tsx`:
+- `META_REFERENCE` resolves step 4 title to "Cast & product interaction".
+- Step5Review renders `Notes` row when `base.notes` is set, and `Cast note` row when `cast.note` is set; both omitted when empty.
+- `combinationGuards.warnings(...)` returns the night-clear warning when `extras.time_of_day_detail` starts with "Night" and `weather === "clear"`, and silence otherwise.
 
 ### Files
-- **Edited**: `wizard/steps/Step5Review.tsx`, `types.ts`, `prompt/assembleSceneDirective.ts`.
-- **New**: `__tests__/review-summary-7l.test.ts`.
+- **Edited**: `wizard/BrandSceneWizard.tsx`, `wizard/steps/Step5Review.tsx`, `wizard/rules/combinationGuards.ts`.
+- **New**: `__tests__/wizard-polish-7m.test.tsx`.
 
-No DB / schema / generation behavior changes. Existing scenes keep loading; stale `base.time_of_day` values are just ignored in the prompt now.
+No DB / schema / generation behavior changes. The `placement_hint`, `base.aesthetic`, `base.mood`, `base.lighting`, `base.framing`, `cast.diversity` legacy fields stay in place for back-compat read paths and aren't touched here.
