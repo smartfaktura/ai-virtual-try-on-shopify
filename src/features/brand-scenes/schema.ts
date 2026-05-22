@@ -49,6 +49,41 @@ const wardrobeColorSchema = z.enum([
   "neutral_light", "neutral_dark", "earth_tones", "denim", "monochrome_product", "contrast",
 ]);
 
+// Phase 7c — versatility dials.
+const surfaceSchema = z.enum([
+  "concrete", "linen", "polished_stone", "raw_wood", "glass",
+  "sand", "water", "paper", "velvet",
+]);
+const colorContrastSchema = z.enum(["tonal", "soft", "bold", "complementary"]);
+const saturationSchema = z.enum(["desaturated", "natural", "vivid"]);
+const shadowSchema = z.enum(["hard", "soft", "none", "mirror", "wet"]);
+const compositionSchema = z.enum([
+  "thirds", "centered", "symmetry", "neg_left", "neg_right", "neg_top",
+]);
+const negSpaceIntentSchema = z.enum(["headline", "logo", "none"]);
+const aestheticEraSchema = z.enum([
+  "contemporary", "90s", "y2k", "70s_film", "brutalist", "quiet_luxury", "max2020s",
+]);
+const realismSchema = z.enum([
+  "photoreal", "high_fashion", "documentary", "stylised", "surreal",
+]);
+const brandVoiceSchema = z.enum([
+  "premium_quiet", "energetic", "playful", "technical", "romantic", "bold_rebel",
+]);
+const outputUseCaseSchema = z.enum([
+  "web_hero", "social_square", "lookbook", "paid_ad", "editorial_print",
+]);
+const subjectFocusSchema = z.enum(["product", "person", "equal", "environment"]);
+const bodyPartFocusSchema = z.enum([
+  "face", "hands", "wrist", "neck", "feet", "full_body", "detail",
+]);
+const gazeSchema = z.enum(["to_camera", "away", "down_at_product", "closed_eyes"]);
+const groupDynamicSchema = z.enum(["independent", "interacting", "mirrored", "lined_up"]);
+const handsOnProductSchema = z.enum([
+  "cradle", "pinch", "cap", "pour", "wrist_show", "tap",
+]);
+const diversitySchema = z.enum(["as_cast", "diverse"]);
+
 export const brandSceneBaseAnswersSchema = z
   .object({
     aesthetic: z.string().trim().min(1).max(120).optional(),
@@ -69,6 +104,18 @@ export const brandSceneBaseAnswersSchema = z
     palette_custom: z.string().trim().min(1).max(120).optional(),
     finish: sceneFinishSchema.optional(),
     avoid: z.string().trim().max(240).optional(),
+    subject_focus: subjectFocusSchema.optional(),
+    surface: surfaceSchema.optional(),
+    prop_density: z.number().int().min(0).max(4).optional(),
+    color_contrast: colorContrastSchema.optional(),
+    saturation: saturationSchema.optional(),
+    shadows: shadowSchema.optional(),
+    composition: compositionSchema.optional(),
+    negative_space_intent: negSpaceIntentSchema.optional(),
+    aesthetic_era: aestheticEraSchema.optional(),
+    realism: realismSchema.optional(),
+    brand_voice: brandVoiceSchema.optional(),
+    output_use_case: outputUseCaseSchema.optional(),
   })
   .strict();
 
@@ -115,6 +162,11 @@ export const brandSceneCastSchema = z
     note: z.string().trim().max(160).optional(),
     wardrobe_color: wardrobeColorSchema.optional(),
     wardrobe_custom: z.string().trim().min(1).max(120).optional(),
+    body_part_focus: bodyPartFocusSchema.optional(),
+    gaze: gazeSchema.optional(),
+    group_dynamic: groupDynamicSchema.optional(),
+    hands_on_product: handsOnProductSchema.optional(),
+    diversity: diversitySchema.optional(),
   })
   .strict()
   .refine(
@@ -122,6 +174,43 @@ export const brandSceneCastSchema = z
     {
       message: "interaction is required unless preset is 'replicate'",
       path: ["interaction"],
+    },
+  )
+  // Hard combo guard — cast=none must use the hero interaction.
+  .refine(
+    (c) => c.preset !== "none" || !c.interaction || c.interaction === "hero",
+    {
+      message: "Cast 'none' is only compatible with interaction 'hero'",
+      path: ["interaction"],
+    },
+  )
+  // Hard combo guard — hands cannot wear.
+  .refine(
+    (c) => c.preset !== "hands" || c.interaction !== "wearing",
+    {
+      message: "Cast 'hands only' cannot use interaction 'wearing'",
+      path: ["interaction"],
+    },
+  )
+  // Hard combo guard — a person cast cannot use 'hero' (product-only).
+  .refine(
+    (c) =>
+      !c.interaction ||
+      c.interaction !== "hero" ||
+      c.preset === "none" ||
+      c.preset === "replicate",
+    {
+      message: "Interaction 'hero' is reserved for cast 'none'",
+      path: ["interaction"],
+    },
+  )
+  // Group dynamic only valid for two/group.
+  .refine(
+    (c) =>
+      !c.group_dynamic || c.preset === "two" || c.preset === "group",
+    {
+      message: "Group dynamic only applies when cast is 'two' or 'group'",
+      path: ["group_dynamic"],
     },
   );
 
@@ -219,6 +308,36 @@ export const brandSceneAnswersSchema = z
       message:
         "reference fields only allowed when source is 'reference'",
       path: ["reference_intent"],
+    },
+  )
+  // Hard combo guard — architectural scale forbids holding/wearing.
+  .refine(
+    (v) => {
+      if (v.scale?.preset !== "architectural") return true;
+      const i = v.cast?.interaction;
+      return i !== "holding" && i !== "wearing";
+    },
+    {
+      message: "Architectural-scale products cannot be held or worn",
+      path: ["cast", "interaction"],
+    },
+  )
+  // Hard combo guard — furniture scale forbids wearing.
+  .refine(
+    (v) =>
+      v.scale?.preset !== "furniture" || v.cast?.interaction !== "wearing",
+    {
+      message: "Furniture-scale products cannot be worn",
+      path: ["cast", "interaction"],
+    },
+  )
+  // Hard combo guard — architectural scale forbids hands cast.
+  .refine(
+    (v) =>
+      v.scale?.preset !== "architectural" || v.cast?.preset !== "hands",
+    {
+      message: "Architectural-scale products require a body or no-people cast",
+      path: ["cast", "preset"],
     },
   );
 

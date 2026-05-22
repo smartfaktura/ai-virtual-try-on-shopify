@@ -7,6 +7,19 @@ import type {
   CastVibe,
 } from "../wizard/constants/cast";
 import { WARDROBE_COLORS, type WardrobeColor } from "../wizard/constants/scene";
+import {
+  BODY_PART_FOCUS,
+  GAZE_DIRECTIONS,
+  GROUP_DYNAMICS,
+  HANDS_ON_PRODUCT,
+  DIVERSITY_OPTIONS,
+  metaX,
+  type BodyPartFocus,
+  type GazeDirection,
+  type GroupDynamic,
+  type HandsOnProduct,
+  type Diversity,
+} from "../wizard/constants/sceneExtras";
 
 export interface CastInput {
   preset: CastPreset;
@@ -18,6 +31,11 @@ export interface CastInput {
   note?: string;
   wardrobe_color?: WardrobeColor;
   wardrobe_custom?: string;
+  body_part_focus?: BodyPartFocus;
+  gaze?: GazeDirection;
+  group_dynamic?: GroupDynamic;
+  hands_on_product?: HandsOnProduct;
+  diversity?: Diversity;
 }
 
 const PRESET_PEOPLE: Record<CastPreset, string> = {
@@ -45,11 +63,6 @@ const ACTION: Record<CastAction, string> = {
   candid: "a candid in-between moment",
 };
 
-/**
- * Emits a single directive line describing the scene's subjects and how they
- * relate to the product. Used by both wizard and reference flows; the
- * reference prefix is added separately by `buildReferenceDirective`.
- */
 export function buildCastDirective(cast: CastInput): string {
   if (cast.preset === "replicate") {
     return "Cast: do not alter subjects, pose, or framing from the reference.";
@@ -63,11 +76,12 @@ export function buildCastDirective(cast: CastInput): string {
   } else if (cast.preset === "hands") {
     subjectBits.push(PRESET_PEOPLE.hands);
   } else {
-    // person presets
     const descriptors: string[] = [];
     if (cast.age?.length) descriptors.push(cast.age.join("/"));
     if (cast.gender?.length) descriptors.push(cast.gender.join("/"));
     if (cast.vibe) descriptors.push(`${cast.vibe} vibe`);
+    const diversity = metaX(DIVERSITY_OPTIONS, cast.diversity);
+    if (diversity?.directive) descriptors.push(diversity.directive);
     const head =
       descriptors.length > 0
         ? `${PRESET_PEOPLE[cast.preset]} (${descriptors.join(", ")})`
@@ -83,7 +97,21 @@ export function buildCastDirective(cast: CastInput): string {
     parts.push(`Interaction: ${INTERACTION.hero}.`);
   }
 
+  const hands = metaX(HANDS_ON_PRODUCT, cast.hands_on_product);
+  if (hands) parts.push(`Hands: ${hands.directive}.`);
+
   if (cast.action) parts.push(`Energy: ${ACTION[cast.action]}.`);
+
+  const bodyPart = metaX(BODY_PART_FOCUS, cast.body_part_focus);
+  if (bodyPart) parts.push(`Body-part focus: ${bodyPart.label.toLowerCase()}.`);
+
+  const gaze = metaX(GAZE_DIRECTIONS, cast.gaze);
+  if (gaze) parts.push(`Gaze: ${gaze.label.toLowerCase()}.`);
+
+  if (cast.group_dynamic && (cast.preset === "two" || cast.preset === "group")) {
+    const gd = metaX(GROUP_DYNAMICS, cast.group_dynamic)!;
+    parts.push(`Group dynamic: ${gd.label.toLowerCase()}.`);
+  }
 
   const wardrobe =
     cast.wardrobe_custom ??

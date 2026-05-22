@@ -22,6 +22,25 @@ import type {
   SceneFinish,
   WardrobeColor,
 } from "./wizard/constants/scene";
+import type {
+  Surface,
+  PropDensity,
+  ColorContrast,
+  Saturation,
+  Shadow,
+  Composition,
+  NegSpaceIntent,
+  AestheticEra,
+  RealismLevel,
+  BrandVoice,
+  OutputUseCase,
+  SubjectFocus,
+  BodyPartFocus,
+  GazeDirection,
+  GroupDynamic,
+  HandsOnProduct,
+  Diversity,
+} from "./wizard/constants/sceneExtras";
 
 export type SceneAspectRatio = "4:5" | "1:1" | "3:4" | "16:9";
 export type SceneTimeOfDay = "morning" | "midday" | "evening" | "night";
@@ -50,6 +69,20 @@ export interface BrandSceneBaseAnswers {
   palette_custom?: string;
   finish?: SceneFinish;
   avoid?: string;
+
+  // Phase 7c additions — versatility dials.
+  subject_focus?: SubjectFocus;
+  surface?: Surface;
+  prop_density?: PropDensity;
+  color_contrast?: ColorContrast;
+  saturation?: Saturation;
+  shadows?: Shadow;
+  composition?: Composition;
+  negative_space_intent?: NegSpaceIntent;
+  aesthetic_era?: AestheticEra;
+  realism?: RealismLevel;
+  brand_voice?: BrandVoice;
+  output_use_case?: OutputUseCase;
 }
 
 export interface BrandSceneCast {
@@ -62,6 +95,13 @@ export interface BrandSceneCast {
   note?: string;
   wardrobe_color?: WardrobeColor;
   wardrobe_custom?: string;
+
+  // Phase 7c additions — cast extras.
+  body_part_focus?: BodyPartFocus;
+  gaze?: GazeDirection;
+  group_dynamic?: GroupDynamic;
+  hands_on_product?: HandsOnProduct;
+  diversity?: Diversity;
 }
 
 export interface BrandSceneScale {

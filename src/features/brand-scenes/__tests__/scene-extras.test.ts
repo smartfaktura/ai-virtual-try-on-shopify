@@ -29,7 +29,7 @@ describe("scene extras in assembled directive", () => {
     expect(out).toMatch(/Season: autumn/);
     expect(out).toMatch(/Camera: 50mm portrait/);
     expect(out).toMatch(/Depth of field: shallow/);
-    expect(out).toMatch(/Color palette: earthy/i);
+    expect(out).toMatch(/Color: earthy/i);
     expect(out).toMatch(/Finish: subtle film grain/);
   });
 
