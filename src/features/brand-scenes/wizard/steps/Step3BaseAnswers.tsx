@@ -7,7 +7,6 @@ import { Section } from "../components/Section";
 import type { BrandSceneBaseAnswers } from "../../types";
 import type { BrandSceneModule } from "../../constants";
 import {
-  SCENE_SETTINGS,
   SCENE_WEATHER,
   SCENE_SEASONS,
   SCENE_LENSES,
@@ -45,9 +44,16 @@ import {
 } from "../constants/sceneExtras";
 import { SCENE_EXTRAS_FIELDS, applicableFieldsCtx } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
-import { SmartSettingCard } from "../components/SmartSettingCard";
-import { SCENE_TYPES, getSettingPool, type SceneTypeId } from "../registry/settingsBySubfamily";
-import { applyCascade, applySettingCascade, type SceneCtx } from "../rules/sceneRules";
+import { SceneTypePicker } from "../components/SceneTypePicker";
+import { SettingPicker } from "../components/SettingPicker";
+import { BackdropColorField } from "../components/BackdropColorField";
+import { getSettingPool, type SceneTypeId } from "../registry/settingsBySubfamily";
+import {
+  applyCascade,
+  applySettingCascade,
+  softWarnings,
+  type SceneCtx,
+} from "../rules/sceneRules";
 import { resolveAll, tuningLabel } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
 
@@ -60,22 +66,7 @@ interface Props {
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
 
-const LEGACY_SCENE_TYPES = [
-  "Indoor studio",
-  "Indoor lifestyle",
-  "Outdoor location",
-  "Outdoor nature",
-  "Lifestyle moment",
-  "Architectural",
-  "Tabletop / Flat lay",
-] as const;
-void SCENE_TYPES;
-void SmartSettingCard;
-void getSettingPool;
-void applyCascade;
-void applySettingCascade;
-type _SceneTypeId = SceneTypeId;
-type _SceneCtx = SceneCtx;
+
 
 
 const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
