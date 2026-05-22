@@ -41,6 +41,11 @@ import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constant
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
 import {
+  QuickDetailedToggle,
+  CustomizeLink,
+  useWizardMode,
+} from "../components/QuickDetailedToggle";
+import {
   getStorytellingMoments,
   hasExplicitMoments,
 } from "../registry/storytellingBySubfamily";
