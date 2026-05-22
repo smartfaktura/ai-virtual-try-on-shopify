@@ -60,7 +60,7 @@ interface Props {
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
 
-const SCENE_TYPES = [
+const LEGACY_SCENE_TYPES = [
   "Indoor studio",
   "Indoor lifestyle",
   "Outdoor location",
@@ -69,6 +69,13 @@ const SCENE_TYPES = [
   "Architectural",
   "Tabletop / Flat lay",
 ] as const;
+void SCENE_TYPES;
+void SmartSettingCard;
+void getSettingPool;
+void applyCascade;
+void applySettingCascade;
+type _SceneTypeId = SceneTypeId;
+type _SceneCtx = SceneCtx;
 
 
 const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
