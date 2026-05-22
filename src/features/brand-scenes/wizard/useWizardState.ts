@@ -16,10 +16,9 @@ import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy
  *  3 Who's in the scene (cast)
  *  4 Environment (wizard) | Cast (reference)
  *  5 Photography & edit (wizard only — reference skips to 6)
- *  6 Preview & pick
- *  7 Review
+ *  6 Review & generate (merged preview + review)
  */
-export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface WizardState {
   step: WizardStep;
@@ -72,7 +71,7 @@ const initial: WizardState = {
   },
 };
 
-const MAX_STEP: WizardStep = 7;
+const MAX_STEP: WizardStep = 6;
 
 
 function clampStep(n: number): WizardStep {

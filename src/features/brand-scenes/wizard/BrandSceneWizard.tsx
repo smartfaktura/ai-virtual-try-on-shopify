@@ -21,6 +21,7 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle?: string }> = {
   },
   1: {
     title: "Pick a product family",
+    subtitle: "Your saved scene will appear under this category in your library",
   },
   2: {
     title: "Pick a sub-family",
@@ -38,12 +39,8 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle?: string }> = {
     subtitle: "Camera, light, color, finish — plain-language",
   },
   6: {
-    title: "Preview",
-    subtitle: "Review and generate variations",
-  },
-  7: {
-    title: "Review",
-    subtitle: "Confirm before saving",
+    title: "Review & generate",
+    subtitle: "Final check before generating variations",
   },
 };
 
@@ -193,7 +190,7 @@ export function BrandSceneWizard() {
         onGoToStep={(s) => dispatch({ type: "setStep", step: s })}
         nextDisabled={nextDisabled}
         nextDisabledReason={nextDisabledReason}
-        isLastStep={step === 7}
+        isLastStep={step === 6}
       >
         {step === 0 && (
           <Step0ChooseSource
@@ -288,10 +285,8 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 6 && <Step6PreviewAndPick answers={answers} />}
-
-        {step === 7 && (
-          <Step5Review
+        {step === 6 && (
+          <Step6PreviewAndPick
             answers={answers}
             onNegativeNoteChange={(note) =>
               dispatch({ type: "setNegativeNote", note })

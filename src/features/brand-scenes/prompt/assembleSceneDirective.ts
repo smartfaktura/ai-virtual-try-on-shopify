@@ -30,13 +30,13 @@ import {
 } from "../wizard/constants/extras";
 
 /**
- * Canonical scene-directive assembler. Produces a structured, Gemini-style
- * prompt grouped under section headers (ROLE / SUBJECT / SCENE / CAMERA /
- * COLOR & FINISH / STYLING DETAILS / CAST DETAILS / OUTPUT / NEGATIVE /
- * NOTES / REFERENCE / NAME). Sections with no data are omitted.
+ * Canonical scene-directive assembler. Produces a structured, Gemini/Nano
+ * Banana-friendly prompt: explicit ROLE, prose-style SUBJECT/SCENE/CAMERA/
+ * COLOR sections, bulleted STYLING + CAST detail lists, and an always-on
+ * negative tail clause. Sections with no data are omitted.
  *
- * Individual lines preserve their canonical "Key: value." form so downstream
- * grep-style tests and matchers continue to work.
+ * Individual canonical fragments (e.g. "Setting: ...", "Camera: 50mm portrait")
+ * are preserved so downstream grep-style tests and matchers continue to work.
  *
  * Aspect ratio is HARD-CODED to 4:5.
  */
@@ -108,7 +108,7 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   if (shadow) lightingParts.push(shadow.directive);
   if (lightingParts.length) scene.push(`Lighting: ${lightingParts.join(" — ")}.`);
 
-  // ----- CAMERA -----
+  // ----- CAMERA & FRAMING -----
   const lensMeta = meta(SCENE_LENSES, base.lens);
   const dofMeta = meta(SCENE_DEPTH_OF_FIELD, base.depth_of_field);
   if (lensMeta || dofMeta) {
@@ -148,23 +148,23 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   const sceneExtras = base.extras ?? {};
   for (const f of SCENE_EXTRAS_FIELDS) {
     const v = sceneExtras[f.key];
-    if (v && v.trim()) styling.push(`${f.prefix}: ${v.trim()}.`);
+    if (v && v.trim()) styling.push(`- ${f.prefix}: ${v.trim()}.`);
   }
   const knownSceneKeys = new Set(SCENE_EXTRAS_FIELDS.map((f) => f.key));
   for (const [k, v] of Object.entries(sceneExtras)) {
     if (!knownSceneKeys.has(k) && v?.trim()) {
-      styling.push(`Style (${k}): ${v.trim()}.`);
+      styling.push(`- Style (${k}): ${v.trim()}.`);
     }
   }
 
   // ----- CAST DETAILS -----
   const castExtras = answers.cast?.extras ?? {};
   if (castExtras.ethnicity?.trim()) {
-    castDetails.push(`Ethnicity: ${castExtras.ethnicity.trim()}.`);
+    castDetails.push(`- Ethnicity: ${castExtras.ethnicity.trim()}.`);
   }
   for (const f of CAST_EXTRAS_FIELDS) {
     const v = castExtras[f.key];
-    if (v && v.trim()) castDetails.push(`${f.prefix}: ${v.trim()}.`);
+    if (v && v.trim()) castDetails.push(`- ${f.prefix}: ${v.trim()}.`);
   }
   const knownCastKeys = new Set<string>([
     ...CAST_EXTRAS_FIELDS.map((f) => f.key),
@@ -172,7 +172,7 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   ]);
   for (const [k, v] of Object.entries(castExtras)) {
     if (!knownCastKeys.has(k) && v?.trim()) {
-      castDetails.push(`Cast style (${k}): ${v.trim()}.`);
+      castDetails.push(`- Cast style (${k}): ${v.trim()}.`);
     }
   }
 
@@ -189,6 +189,10 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   // ----- NEGATIVE -----
   const avoid = base.avoid?.trim() || answers.negative_note?.trim();
   if (avoid) negative.push(`Avoid: ${avoid}.`);
+  // Always append the standard hard-negative clause when the section emits.
+  negative.push(
+    "Do not render text, captions, logos, watermarks, UI chrome, or extra products.",
+  );
 
   // ----- NOTES -----
   if (base.notes?.trim()) notes.push(`Notes: ${base.notes.trim()}.`);
@@ -206,16 +210,16 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
     out.push(""); // blank spacer between sections
   };
 
-  // Role header always present.
+  // Role header — stronger directive for Gemini / Nano Banana image models.
   out.push("ROLE");
   out.push(
-    "You are a commercial product-photography art director. Produce one hero image for an e-commerce brand scene.",
+    "You are a commercial product-photography art director. Generate ONE photoreal hero image for an e-commerce brand scene. Editorial quality, natural materials and lighting, true-to-life proportions. Aspect ratio 4:5 portrait — REQUIRED. No text, captions, logos, watermarks, or UI chrome.",
   );
   out.push("");
 
   push("SUBJECT", subject);
   push("SCENE", scene);
-  push("CAMERA", camera);
+  push("CAMERA & FRAMING", camera);
   push("COLOR & FINISH", color);
   push("STYLING DETAILS", styling);
   push("CAST DETAILS", castDetails);
