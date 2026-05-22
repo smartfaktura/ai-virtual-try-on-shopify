@@ -283,7 +283,14 @@ Example for the "Yoga flow beside villa pool" pose option in Activewear:
 
 `compile()` now emits paragraphs in this fixed order, blank line between each:
 
-1. **Reference fidelity block** — `[MODEL IMAGE]` paragraph (if person), then `[PRODUCT IMAGE]` paragraph with `{{productName}}` and family-specific fidelity list.
+1. **Reference fidelity block** — the literal strings `[PRODUCT IMAGE]` and `[MODEL IMAGE]` are woven into the prose of the prompt itself, exactly like the activewear example. The compiler emits two opening paragraphs (model first if subject mode has a person, then product) using these templates:
+
+   - Model paragraph (only if person mode): `"Use [MODEL IMAGE] to preserve the model's realistic identity, facial structure, body proportions, skin tone, posture, and natural presence. The model must feel {{vibeAdjectives}} — not stiff, over-posed, or AI-looking."`
+   - Product paragraph (always): `"Use [PRODUCT IMAGE] {{productName}} as the exact source of truth for the {{subcategoryNoun}}, preserving the exact {{familyFidelityList}}. The {{subcategoryNoun}} must remain fully accurate and physically believable{{onBodyClause}}. Do not redesign, simplify, recolor, or invent new {{subcategoryNoun}} details."`
+
+   Where `{{vibeAdjectives}}`, `{{familyFidelityList}}`, and `{{onBodyClause}}` come from the family module (e.g. activewear → "athletic, focused, elegant, and real" / "cut, color, fabric texture, seams, waistband, straps, stitching, compression fit, proportions, and material behavior" / "on the body during movement"). The brackets `[PRODUCT IMAGE]` / `[MODEL IMAGE]` are kept verbatim — they're how downstream generation binds the references.
+
+   The product fidelity reminder paragraph in step 9 also re-uses `[PRODUCT IMAGE]` literally (e.g. "Preserve exact product color, fit, material, construction, and proportions from [PRODUCT IMAGE]."), and the color palette in step 5 uses it inline (e.g. "black activewear preserved from [PRODUCT IMAGE]: #111111"). So the tokens appear multiple times across the prompt, not just once.
 2. **Hero command + subject action** — "Create a realistic … image of {{subcategoryNoun}} …" + the pose / placement `prosePromptFragment`.
 3. **Composition & framing** — assembled from aspect ratio (as prose hint, e.g. "Frame the image vertically from a medium distance"), framing, angle, depth of field.
 4. **Environment** — `prosePromptFragment` from environment + setting questions; rich sensory description.
