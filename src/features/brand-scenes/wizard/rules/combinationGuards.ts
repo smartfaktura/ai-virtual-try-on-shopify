@@ -56,10 +56,16 @@ export function forbiddenInteractionsByFamily(
     case "tech":
     case "wellness":
       return new Set<CastInteraction>(["wearing"]);
+    case "hats-caps-beanies":
+      // Phase 7p — "using" makes no sense for hats / caps / beanies.
+      return new Set<CastInteraction>(["using"]);
+    // bags-accessories intentionally not gated: wallets can be "used" (opened),
+    // belts/scarves can't, but the sub-family guards are not granular enough yet.
     default:
       return new Set();
   }
 }
+
 
 /** Hard rule: which interactions are impossible at this scale. */
 export function forbiddenInteractionsByScale(
