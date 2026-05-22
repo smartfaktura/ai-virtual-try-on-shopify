@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Chip, AddChip } from "../components/Chip";
+import { Section } from "../components/Section";
 import type { BrandSceneBaseAnswers } from "../../types";
+import type { BrandSceneModule } from "../../constants";
 import {
   SCENE_SETTINGS,
   SCENE_WEATHER,
@@ -19,8 +21,37 @@ import {
   type ScenePalette,
   type SceneFinish,
 } from "../constants/scene";
+import {
+  SURFACES,
+  PROP_DENSITY_LABELS,
+  COLOR_CONTRASTS,
+  SATURATIONS,
+  SHADOWS,
+  COMPOSITIONS,
+  NEG_SPACE_INTENTS,
+  AESTHETIC_ERAS,
+  REALISM_LEVELS,
+  BRAND_VOICES,
+  OUTPUT_USE_CASES,
+  SUBJECT_FOCUSES,
+  type Surface,
+  type PropDensity,
+  type ColorContrast,
+  type Saturation,
+  type Shadow,
+  type Composition,
+  type NegSpaceIntent,
+  type AestheticEra,
+  type RealismLevel,
+  type BrandVoice,
+  type OutputUseCase,
+  type SubjectFocus,
+} from "../constants/sceneExtras";
+import { resolveAll, tuningLabel } from "../registry/resolvePresets";
 
 interface Props {
+  module?: BrandSceneModule;
+  subFamily?: string;
   value: BrandSceneBaseAnswers;
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
@@ -36,32 +67,16 @@ const SCENE_TYPES = [
 ] as const;
 
 const MOODS = [
-  "Calm",
-  "Energetic",
-  "Quiet",
-  "Playful",
-  "Confident",
-  "Intimate",
-  "Cinematic",
+  "Calm", "Energetic", "Quiet", "Playful", "Confident", "Intimate", "Cinematic",
 ] as const;
 
 const LIGHTINGS = [
-  "Soft window",
-  "Golden hour",
-  "Hard noon sun",
-  "Studio softbox",
-  "Overcast",
-  "Candlelit",
-  "Neon / mixed",
+  "Soft window", "Golden hour", "Hard noon sun", "Studio softbox",
+  "Overcast", "Candlelit", "Neon / mixed",
 ] as const;
 
 const FRAMINGS = [
-  "Wide 3/4",
-  "Tight crop",
-  "Top-down",
-  "Eye-level",
-  "Low angle",
-  "Over-shoulder",
+  "Wide 3/4", "Tight crop", "Top-down", "Eye-level", "Low angle", "Over-shoulder",
 ] as const;
 
 const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
@@ -71,9 +86,39 @@ const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: 
   { value: "night", label: "Night" },
 ];
 
-export function Step3BaseAnswers({ value, onChange }: Props) {
+export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) {
+  const resolved = useMemo(
+    () => resolveAll(module, subFamily),
+    [module, subFamily],
+  );
+  const tuned = tuningLabel(module, subFamily);
+
+  // Filter helpers — expanded=true returns the full global list.
+  const settings = (expanded: boolean) =>
+    expanded ? Array.from(SCENE_SETTINGS) : resolved.settings;
+  const lenses = (expanded: boolean) =>
+    expanded ? SCENE_LENSES : SCENE_LENSES.filter((l) => resolved.lens.includes(l.value));
+  const dofs = (expanded: boolean) =>
+    expanded
+      ? SCENE_DEPTH_OF_FIELD
+      : SCENE_DEPTH_OF_FIELD.filter((d) => resolved.depthOfField.includes(d.value));
+  const palettes = (expanded: boolean) =>
+    expanded ? SCENE_PALETTES : SCENE_PALETTES.filter((p) => resolved.palettes.includes(p.value));
+  const finishes = (expanded: boolean) =>
+    expanded ? SCENE_FINISHES : SCENE_FINISHES.filter((f) => resolved.finishes.includes(f.value));
+  const surfaces = (expanded: boolean) =>
+    expanded ? SURFACES : SURFACES.filter((s) => resolved.surfaces.includes(s.value));
+
+  const propDensityMax = resolved.propDensityMax;
+
   return (
     <div className="space-y-7">
+      {tuned && (
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          Category-tuned · {tuned}
+        </div>
+      )}
+
       <PillField
         label="Scene type"
         required
@@ -83,29 +128,44 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
         onChange={(next) => onChange({ aesthetic: next })}
       />
 
-      <PillField
-        label="Setting / environment"
-        presets={SCENE_SETTINGS as unknown as readonly string[]}
-        current={value.setting ?? ""}
-        placeholder="Describe the setting"
-        onChange={(next) => onChange({ setting: next })}
-      />
+      <Section label="Setting / environment" expandable>
+        {(expanded) => (
+          <PillFieldInner
+            presets={settings(expanded)}
+            current={value.setting ?? ""}
+            placeholder="Describe the setting"
+            onChange={(next) => onChange({ setting: next })}
+          />
+        )}
+      </Section>
 
-      <SinglePillBlock
-        label="Weather / atmosphere"
-        options={SCENE_WEATHER}
-        current={value.weather}
-        onChange={(v) => onChange({ weather: v as SceneWeather | undefined })}
-      />
+      <Section label="Surface under product" expandable>
+        {(expanded) => (
+          <ChipRow
+            options={surfaces(expanded)}
+            current={value.surface}
+            onPick={(v) => onChange({ surface: v as Surface | undefined })}
+          />
+        )}
+      </Section>
 
-      <SinglePillBlock
-        label="Season"
-        options={SCENE_SEASONS}
-        current={value.season}
-        onChange={(v) => onChange({ season: v as SceneSeason | undefined })}
-      />
+      <Section label="Weather / atmosphere">
+        <ChipRow
+          options={SCENE_WEATHER}
+          current={value.weather}
+          onPick={(v) => onChange({ weather: v as SceneWeather | undefined })}
+        />
+      </Section>
 
-      <Block label="Time of day">
+      <Section label="Season">
+        <ChipRow
+          options={SCENE_SEASONS}
+          current={value.season}
+          onPick={(v) => onChange({ season: v as SceneSeason | undefined })}
+        />
+      </Section>
+
+      <Section label="Time of day">
         <div className="flex flex-wrap gap-2">
           {TIMES_OF_DAY.map((t) => (
             <Chip
@@ -113,8 +173,7 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
               active={value.time_of_day === t.value}
               onClick={() =>
                 onChange({
-                  time_of_day:
-                    value.time_of_day === t.value ? undefined : t.value,
+                  time_of_day: value.time_of_day === t.value ? undefined : t.value,
                 })
               }
             >
@@ -122,7 +181,7 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
             </Chip>
           ))}
         </div>
-      </Block>
+      </Section>
 
       <PillField
         label="Mood"
@@ -132,6 +191,30 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
         onChange={(next) => onChange({ mood: next })}
       />
 
+      <Section label="Brand voice">
+        <ChipRow
+          options={BRAND_VOICES}
+          current={value.brand_voice}
+          onPick={(v) => onChange({ brand_voice: v as BrandVoice | undefined })}
+        />
+      </Section>
+
+      <Section label="Aesthetic era">
+        <ChipRow
+          options={AESTHETIC_ERAS}
+          current={value.aesthetic_era}
+          onPick={(v) => onChange({ aesthetic_era: v as AestheticEra | undefined })}
+        />
+      </Section>
+
+      <Section label="Realism level">
+        <ChipRow
+          options={REALISM_LEVELS}
+          current={value.realism}
+          onPick={(v) => onChange({ realism: v as RealismLevel | undefined })}
+        />
+      </Section>
+
       <PillField
         label="Lighting"
         presets={LIGHTINGS as unknown as readonly string[]}
@@ -140,21 +223,35 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
         onChange={(next) => onChange({ lighting: next })}
       />
 
-      <SinglePillBlock
-        label="Camera & lens"
-        options={SCENE_LENSES}
-        current={value.lens}
-        onChange={(v) => onChange({ lens: v as SceneLens | undefined })}
-      />
+      <Section label="Shadows / reflections">
+        <ChipRow
+          options={SHADOWS}
+          current={value.shadows}
+          onPick={(v) => onChange({ shadows: v as Shadow | undefined })}
+        />
+      </Section>
 
-      <SinglePillBlock
-        label="Depth of field"
-        options={SCENE_DEPTH_OF_FIELD}
-        current={value.depth_of_field}
-        onChange={(v) =>
-          onChange({ depth_of_field: v as SceneDepthOfField | undefined })
-        }
-      />
+      <Section label="Camera & lens" expandable>
+        {(expanded) => (
+          <ChipRow
+            options={lenses(expanded)}
+            current={value.lens}
+            onPick={(v) => onChange({ lens: v as SceneLens | undefined })}
+          />
+        )}
+      </Section>
+
+      <Section label="Depth of field" expandable>
+        {(expanded) => (
+          <ChipRow
+            options={dofs(expanded)}
+            current={value.depth_of_field}
+            onPick={(v) =>
+              onChange({ depth_of_field: v as SceneDepthOfField | undefined })
+            }
+          />
+        )}
+      </Section>
 
       <PillField
         label="Framing"
@@ -164,25 +261,105 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
         onChange={(next) => onChange({ framing: next })}
       />
 
-      <PaletteBlock
-        preset={value.palette_preset}
-        custom={value.palette_custom}
-        onPreset={(p) =>
-          onChange({ palette_preset: p, palette_custom: undefined })
-        }
-        onCustom={(c) =>
-          onChange({ palette_custom: c, palette_preset: undefined })
-        }
-      />
+      <Section label="Composition geometry">
+        <ChipRow
+          options={COMPOSITIONS}
+          current={value.composition}
+          onPick={(v) => onChange({ composition: v as Composition | undefined })}
+        />
+      </Section>
 
-      <SinglePillBlock
-        label="Finish / film look"
-        options={SCENE_FINISHES}
-        current={value.finish}
-        onChange={(v) => onChange({ finish: v as SceneFinish | undefined })}
-      />
+      <Section label="Negative-space intent">
+        <ChipRow
+          options={NEG_SPACE_INTENTS}
+          current={value.negative_space_intent}
+          onPick={(v) =>
+            onChange({ negative_space_intent: v as NegSpaceIntent | undefined })
+          }
+        />
+      </Section>
 
-      <Block label="Avoid in this scene">
+      <Section label="Subject focus">
+        <ChipRow
+          options={SUBJECT_FOCUSES}
+          current={value.subject_focus}
+          onPick={(v) => onChange({ subject_focus: v as SubjectFocus | undefined })}
+        />
+      </Section>
+
+      <Section label="Color palette anchor" expandable>
+        {(expanded) => (
+          <PaletteBlock
+            presets={palettes(expanded)}
+            preset={value.palette_preset}
+            custom={value.palette_custom}
+            onPreset={(p) =>
+              onChange({ palette_preset: p, palette_custom: undefined })
+            }
+            onCustom={(c) =>
+              onChange({ palette_custom: c, palette_preset: undefined })
+            }
+          />
+        )}
+      </Section>
+
+      <Section label="Color contrast">
+        <ChipRow
+          options={COLOR_CONTRASTS}
+          current={value.color_contrast}
+          onPick={(v) => onChange({ color_contrast: v as ColorContrast | undefined })}
+        />
+      </Section>
+
+      <Section label="Saturation">
+        <ChipRow
+          options={SATURATIONS}
+          current={value.saturation}
+          onPick={(v) => onChange({ saturation: v as Saturation | undefined })}
+        />
+      </Section>
+
+      <Section label="Finish / film look" expandable>
+        {(expanded) => (
+          <ChipRow
+            options={finishes(expanded)}
+            current={value.finish}
+            onPick={(v) => onChange({ finish: v as SceneFinish | undefined })}
+          />
+        )}
+      </Section>
+
+      <Section
+        label="Prop density"
+        hint={`Capped at "${PROP_DENSITY_LABELS[propDensityMax]}" for this category`}
+      >
+        <div className="flex flex-wrap gap-2">
+          {PROP_DENSITY_LABELS.slice(0, propDensityMax + 1).map((label, idx) => (
+            <Chip
+              key={label}
+              active={value.prop_density === idx}
+              onClick={() =>
+                onChange({
+                  prop_density:
+                    value.prop_density === idx ? undefined : (idx as PropDensity),
+                })
+              }
+            >
+              {label}
+            </Chip>
+          ))}
+        </div>
+      </Section>
+
+      <Section label="Output use case">
+        <ChipRow
+          options={OUTPUT_USE_CASES}
+          current={value.output_use_case}
+          onPick={(v) => onChange({ output_use_case: v as OutputUseCase | undefined })}
+        />
+      </Section>
+
+      <Section label="Avoid in this scene">
         <Textarea
           value={value.avoid ?? ""}
           maxLength={240}
@@ -191,9 +368,9 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
           placeholder="e.g. no visible logos, no children, no text overlays"
           className="rounded-xl resize-none"
         />
-      </Block>
+      </Section>
 
-      <Block label="Notes">
+      <Section label="Notes">
         <Textarea
           value={value.notes ?? ""}
           maxLength={600}
@@ -202,7 +379,7 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
           placeholder="Anything else worth anchoring across every scene."
           className="rounded-xl resize-none"
         />
-      </Block>
+      </Section>
 
       <p className="text-[11px] text-muted-foreground/80">
         Aspect ratio is locked to 4:5 (portrait) — the standard preview format.
@@ -211,60 +388,38 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
   );
 }
 
-function Block({
-  label,
-  required,
-  children,
+function ChipRow<T extends string>({
+  options,
+  current,
+  onPick,
 }: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
+  options: readonly { value: T; label: string }[];
+  current: T | undefined;
+  onPick: (v: T | undefined) => void;
 }) {
   return (
-    <div className="space-y-2.5">
-      <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-        {required && <span className="text-foreground/60 ml-1">·</span>}
-      </Label>
-      {children}
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => (
+        <Chip
+          key={o.value}
+          active={current === o.value}
+          onClick={() => onPick(current === o.value ? undefined : o.value)}
+        >
+          {o.label}
+        </Chip>
+      ))}
     </div>
   );
 }
 
-function SinglePillBlock<T extends string>({
-  label,
-  options,
-  current,
-  onChange,
-}: {
-  label: string;
-  options: readonly { value: T; label: string }[];
-  current: T | undefined;
-  onChange: (v: T | undefined) => void;
-}) {
-  return (
-    <Block label={label}>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => (
-          <Chip
-            key={o.value}
-            active={current === o.value}
-            onClick={() => onChange(current === o.value ? undefined : o.value)}
-          >
-            {o.label}
-          </Chip>
-        ))}
-      </div>
-    </Block>
-  );
-}
-
 function PaletteBlock({
+  presets,
   preset,
   custom,
   onPreset,
   onCustom,
 }: {
+  presets: readonly { value: ScenePalette; label: string }[];
   preset?: ScenePalette;
   custom?: string;
   onPreset: (p: ScenePalette | undefined) => void;
@@ -272,9 +427,9 @@ function PaletteBlock({
 }) {
   const [showCustom, setShowCustom] = useState(!!custom);
   return (
-    <Block label="Color palette anchor">
+    <div>
       <div className="flex flex-wrap gap-2">
-        {SCENE_PALETTES.map((p) => (
+        {presets.map((p) => (
           <Chip
             key={p.value}
             active={preset === p.value && !custom}
@@ -298,7 +453,7 @@ function PaletteBlock({
           autoFocus
         />
       )}
-    </Block>
+    </div>
   );
 }
 
@@ -317,6 +472,33 @@ function PillField({
   placeholder: string;
   onChange: (next: string) => void;
 }) {
+  return (
+    <div className="space-y-2.5">
+      <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+        {required && <span className="text-foreground/60 ml-1">·</span>}
+      </Label>
+      <PillFieldInner
+        presets={presets}
+        current={current}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
+    </div>
+  );
+}
+
+function PillFieldInner({
+  presets,
+  current,
+  placeholder,
+  onChange,
+}: {
+  presets: readonly string[];
+  current: string;
+  placeholder: string;
+  onChange: (next: string) => void;
+}) {
   const isPreset = presets.includes(current);
   const [showCustom, setShowCustom] = useState(current.length > 0 && !isPreset);
 
@@ -324,25 +506,16 @@ function PillField({
     setShowCustom(false);
     onChange(preset);
   };
-
   const openCustom = () => {
     setShowCustom(true);
     if (isPreset) onChange("");
   };
 
   return (
-    <div className="space-y-2.5">
-      <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-        {required && <span className="text-foreground/60 ml-1">·</span>}
-      </Label>
+    <>
       <div className="flex flex-wrap gap-2">
         {presets.map((preset) => (
-          <Chip
-            key={preset}
-            active={current === preset}
-            onClick={() => select(preset)}
-          >
+          <Chip key={preset} active={current === preset} onClick={() => select(preset)}>
             {preset}
           </Chip>
         ))}
@@ -354,10 +527,10 @@ function PillField({
           maxLength={160}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="rounded-xl"
+          className="rounded-xl mt-2"
           autoFocus
         />
       )}
-    </div>
+    </>
   );
 }
