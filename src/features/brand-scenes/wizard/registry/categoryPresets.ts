@@ -215,6 +215,12 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_cast: "solo",
     settings: ["Urban street", "Architectural interior", "Studio cyclorama", "Tabletop surface"],
     sub: {
+      // Phase 7o — umbrella "bags" picker leans handheld editorial.
+      "bags-accessories": {
+        scale: ["carry", "handheld"],
+        default_scale: "carry",
+        moods: ["Editorial", "Clean", "Cinematic"],
+      },
       backpacks: {
         scale: ["carry"],
         default_scale: "carry",
