@@ -36,12 +36,12 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "This becomes the catalog group your scene lives under",
   },
   3: {
-    title: "Cast & product interaction",
-    subtitle: "Who's in the scene and how they relate to the product",
+    title: "Who's in the scene",
+    subtitle: "Pick the cast and how they relate to the product",
   },
   4: {
-    title: "Scene aesthetic",
-    subtitle: "Pick the kind of scene you want — we'll match the rest",
+    title: "Scene & mood",
+    subtitle: "Pick the world — everything below tunes to it",
   },
   5: {
     title: "Category specifics",
