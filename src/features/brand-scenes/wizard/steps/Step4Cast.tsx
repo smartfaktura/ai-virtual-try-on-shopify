@@ -214,7 +214,7 @@ export function Step4Cast({
               ? CAST_AGES.filter((a) => a.value !== "mixed")
               : CAST_AGES;
             const genderLabel = isSingle ? "Gender" : "Gender mix";
-            const ageLabel = isSingle ? "Age feel" : "Age mix";
+            const ageLabel = isSingle ? "Age range" : "Age range (mix)";
             const handleGender = (v: string) => {
               if (isSingle) {
                 // Single subject — radio behavior.
