@@ -40,7 +40,7 @@ export function Step5Review({ answers }: Props) {
 
       {avoidValue && (
         <div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Avoid
           </div>
           <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
@@ -178,7 +178,7 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         Summary
       </div>
       <Bucket title="Scene" rows={sceneRows} />
@@ -194,7 +194,7 @@ function Bucket({ title, rows }: { title: string; rows: Row[] }) {
   if (!filtered.length) return null;
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70 mb-2">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-2">
         {title}
       </div>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
@@ -225,7 +225,7 @@ function ReferenceSummary({ answers }: { answers: BrandSceneAnswers }) {
       )}
       <div className="p-5 space-y-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Scene name
           </div>
           <div className="mt-1 text-base font-semibold tracking-tight">
@@ -236,7 +236,7 @@ function ReferenceSummary({ answers }: { answers: BrandSceneAnswers }) {
         </div>
         {answers.note && (
           <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Extra direction
             </div>
             <p className="mt-1 text-sm text-foreground/80 leading-relaxed">

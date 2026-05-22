@@ -684,7 +684,7 @@ function ExactDimensions({
         onChange={(n) => set({ d: n || undefined })}
       />
       <div>
-        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Units
         </Label>
         <div className="flex gap-1 mt-1.5">
@@ -710,7 +710,7 @@ function NumberField({
 }) {
   return (
     <div>
-      <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         {label}
       </Label>
       <Input

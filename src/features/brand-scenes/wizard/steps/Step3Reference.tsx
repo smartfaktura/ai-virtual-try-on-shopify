@@ -143,7 +143,7 @@ export function Step3Reference({
     <div className="space-y-6">
       {/* Upload */}
       <div>
-        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Reference image
         </Label>
         {previewUrl ? (
@@ -231,7 +231,7 @@ export function Step3Reference({
       <div>
         <Label
           htmlFor="bs-name"
-          className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+          className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
         >
           Scene name
         </Label>
@@ -250,7 +250,7 @@ export function Step3Reference({
 
       {/* Reference intent */}
       <div>
-        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Use this image as
         </Label>
         <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -272,7 +272,7 @@ export function Step3Reference({
       <div>
         <Label
           htmlFor="bs-note"
-          className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+          className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
         >
           Extra direction <span className="opacity-60">(optional)</span>
         </Label>
