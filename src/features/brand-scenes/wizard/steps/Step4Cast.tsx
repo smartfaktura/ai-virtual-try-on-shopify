@@ -332,21 +332,25 @@ export function Step4Cast({
             );
           })()}
 
-          {/* EthnicityChips renders its own header + tooltip — no wrapping Section to avoid duplicate label. */}
-          <EthnicityChips
-            value={cast?.extras?.ethnicity}
-            onChange={(next) => {
-              const nextExtras = { ...(cast?.extras ?? {}) };
-              if (next === undefined) delete nextExtras.ethnicity;
-              else nextExtras.ethnicity = next;
-              onCastChange({ extras: nextExtras });
-            }}
-          />
+          <Section
+            label="Ethnicity / casting hint"
+            tooltip="A styling hint, not a hard cast. The AI uses it to guide features when no brand model is attached."
+          >
+            <EthnicityChips
+              value={cast?.extras?.ethnicity}
+              onChange={(next) => {
+                const nextExtras = { ...(cast?.extras ?? {}) };
+                if (next === undefined) delete nextExtras.ethnicity;
+                else nextExtras.ethnicity = next;
+                onCastChange({ extras: nextExtras });
+              }}
+            />
+          </Section>
         </>
       )}
 
       {/* Product interaction group */}
-      {!isReplicate && <GroupHeader title="Product interaction" />}
+      {showInteractionGroup && <GroupHeader title="Product interaction" />}
       {!isReplicate && (
         <Section label="Product interaction" required missing={!cast?.interaction}>
 
