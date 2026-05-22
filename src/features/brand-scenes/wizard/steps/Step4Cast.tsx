@@ -400,8 +400,9 @@ export function Step4Cast({
         </Section>
       )}
 
-      {/* Wardrobe color anchor */}
-      {hasPeople && !isReplicate && wardrobes.length > 0 && (
+      {/* Wardrobe color anchor — hidden for swimwear/lingerie where it's not relevant. */}
+      {hasPeople && !isReplicate && wardrobes.length > 0 &&
+        subFamily !== "swimwear" && subFamily !== "lingerie" && (
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
             {wardrobes.map((w) => (
