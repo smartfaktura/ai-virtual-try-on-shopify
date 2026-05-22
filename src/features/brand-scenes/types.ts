@@ -89,7 +89,7 @@ export interface BrandSceneBaseAnswers {
   extras?: Record<string, string>;
 
   // Phase 7f — scene type (Stage A) for progressive flow + rule context.
-  scene_type?: "studio" | "indoor_lifestyle" | "outdoor_location" | "outdoor_nature" | "architectural" | "tabletop";
+  scene_type?: "studio" | "indoor_lifestyle" | "outdoor_location" | "outdoor_nature" | "architectural";
   /** Marks which extras keys were auto-cascaded (vs user-picked). */
   auto?: Record<string, true>;
   /** Recommendations surfaced after the user clears an auto-filled value. */
