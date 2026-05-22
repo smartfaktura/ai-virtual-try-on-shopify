@@ -8,11 +8,13 @@ interface WizardCardProps {
   title: string;
   body?: string;
   tag?: string;
+  /** Tighter padding + no icon-slot reservation. Use for title-only / dense grids. */
+  compact?: boolean;
 }
 
 /**
  * Shared selectable card used across the Brand Scenes wizard
- * (source picker, family picker, sub-family picker).
+ * (source picker, family picker, sub-family picker, scene type, reference intent).
  * Keeps visual language identical between steps.
  */
 export function WizardCard({
@@ -23,6 +25,7 @@ export function WizardCard({
   title,
   body,
   tag,
+  compact = false,
 }: WizardCardProps) {
   return (
     <button
@@ -30,7 +33,8 @@ export function WizardCard({
       disabled={disabled}
       onClick={onClick}
       className={[
-        "rounded-2xl border p-5 text-left transition-all w-full h-full flex flex-col",
+        "rounded-2xl border text-left transition-all w-full h-full flex flex-col",
+        compact ? "p-4" : "p-5",
         disabled
           ? "border-border bg-muted/30 text-muted-foreground cursor-not-allowed"
           : active
@@ -48,11 +52,20 @@ export function WizardCard({
           {icon}
         </div>
       )}
-      <div className="text-base font-semibold tracking-tight">{title}</div>
+      <div
+        className={
+          compact
+            ? "text-sm font-semibold tracking-tight"
+            : "text-base font-semibold tracking-tight"
+        }
+      >
+        {title}
+      </div>
       {body && (
         <p
           className={[
-            "text-sm mt-1.5 leading-relaxed",
+            "mt-1.5 leading-relaxed",
+            compact ? "text-[12px]" : "text-sm",
             active ? "text-background/70" : "text-muted-foreground",
           ].join(" ")}
         >

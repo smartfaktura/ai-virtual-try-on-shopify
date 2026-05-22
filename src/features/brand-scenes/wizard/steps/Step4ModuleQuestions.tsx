@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import {
   BRAND_SCENE_MODULE_LABELS,
   type BrandSceneModule,
@@ -45,15 +44,15 @@ export function Step4ModuleQuestions({ module, answers, onChange }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
-      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-        <Sparkles className="w-4 h-4 text-primary" />
+    <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        Coming soon
       </div>
-      <h3 className="text-base font-semibold text-foreground tracking-tight">
+      <h3 className="text-base font-semibold text-foreground tracking-tight mt-1.5">
         {BRAND_SCENE_MODULE_LABELS[module]} questions ship in a later phase
       </h3>
-      <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-        We'll add tailored prompts here — scene props, camera, references — one family at a time.
+      <p className="text-xs text-muted-foreground mt-2 max-w-md mx-auto">
+        We'll add tailored prompts here — scene props, camera, references — one family at a time
       </p>
     </div>
   );

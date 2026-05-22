@@ -182,25 +182,6 @@ export function WizardLayout({
           {/* Mobile: stacked */}
           <div className="flex flex-col gap-2 p-3 sm:hidden">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                {steps.map((s, i) => (
-                  <div
-                    key={s.n}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      i === displayIdx
-                        ? "bg-primary scale-125"
-                        : i < displayIdx
-                          ? "bg-primary/40"
-                          : "bg-border"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-[10px] font-medium text-muted-foreground">
-                {currentLabel}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
               {step > 0 && (
                 <Button
                   variant="outline"
@@ -211,13 +192,7 @@ export function WizardLayout({
                   Back
                 </Button>
               )}
-              {isLastStep ? (
-                <SaveTooltip>
-                  <Button size="pill" disabled className="gap-1.5 flex-1">
-                    Save scene
-                  </Button>
-                </SaveTooltip>
-              ) : nextDisabled && nextDisabledReason ? (
+              {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
                   <span className="flex-1">{NextButton}</span>
                 </DisabledTooltip>
@@ -229,25 +204,9 @@ export function WizardLayout({
 
           {/* Desktop: single row */}
           <div className="hidden sm:flex items-center justify-between gap-3 p-3 sm:p-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center gap-1">
-                {steps.map((s, i) => (
-                  <div
-                    key={s.n}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      i === displayIdx
-                        ? "bg-primary scale-125"
-                        : i < displayIdx
-                          ? "bg-primary/40"
-                          : "bg-border"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-[10px] font-medium text-muted-foreground">
-                {currentLabel}
-              </span>
-            </div>
+            <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              {currentLabel}
+            </span>
 
             <div className="flex items-center gap-2 flex-shrink-0">
               {step > 0 && (
@@ -255,15 +214,7 @@ export function WizardLayout({
                   Back
                 </Button>
               )}
-              {isLastStep ? (
-                <SaveTooltip>
-                  <span tabIndex={0}>
-                    <Button size="pill" disabled className="gap-1.5">
-                      Save scene
-                    </Button>
-                  </span>
-                </SaveTooltip>
-              ) : nextDisabled && nextDisabledReason ? (
+              {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
                   {NextButton}
                 </DisabledTooltip>
@@ -278,16 +229,6 @@ export function WizardLayout({
   );
 }
 
-function SaveTooltip({ children }: { children: ReactNode }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent>Available in a later phase</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 function DisabledTooltip({ children, reason }: { children: ReactNode; reason: string }) {
   return (

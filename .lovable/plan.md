@@ -1,64 +1,94 @@
-# Phase 7aa — environment & photo step polish
+# Brand Scenes Wizard — design consistency pass
 
-Frontend-only refinement of the Environment and Photo & edit steps. No logic, no schema, no prompt changes.
+Frontend-only sweep to remove illogical/inconsistent design decisions across `/app/brand-scenes/new`. No logic, schema, or prompt-assembler changes.
 
-## 1. Scene type cards — match wizard card style
+## Issues found
 
-**`src/features/brand-scenes/wizard/components/SceneTypePicker.tsx`** — replace the custom inline `<button>` (which uses `text-sm font-medium` + `text-[11px]` vibe line) with the shared `WizardCard` component so spacing, font weight, and active treatment match the Source and Family cards exactly.
+**Selection cards — three different active styles**
+1. `WizardCard` active = `bg-foreground text-background` (brutal inversion).
+2. `SmartSettingCard` (Setting picker) active = `bg-foreground/[0.03] shadow-sm` (faint tint).
+3. `Step3Reference` intent buttons active = `bg-foreground/[0.04]` bespoke.
+   → Same job, three different visuals.
 
-- Grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3`
-- Each option renders `<WizardCard title={t.label} body={t.vibe} active={...} onClick={...} />`
-- Clicking the active card still clears selection (toggle behavior).
+**Card sizing/grid drift**
+4. `Step0ChooseSource` uses `gap-4`; every other picker uses `gap-3`.
+5. `Step0` only lights the active card after `picked` flips true — Step 1 reflects state immediately. Inconsistent feedback.
+6. `Step1ChooseModule` title-only cards inherit `WizardCard` `p-5` — feels oversized/empty without icon or body.
+7. `Step2` single-sub-family fallback and `Step4ModuleQuestions` empty state use two different "info card" styles.
 
-Result: card titles become `text-base font-semibold`, bodies become `text-sm`, padding `p-5`, active state is the solid foreground card — visually consistent with Step 0/1.
+**"Add custom" affordance — three variants**
+8. `ExtrasPillField` → `AddChip` (dashed pill + Plus icon).
+9. `SettingPicker` → dashed card button "Add your own" + Plus.
+10. `BackdropColorField` → text `Chip` with literal `+ Custom hex` / `− Custom`.
+11. `Step4Cast` "Add exact size" → raw uppercase text button with `+`/`−` literals.
 
-## 2. Environment — flatten "Optional fine-tuning"
+**Sticky bar redundancy**
+12. Top of the page already has step bars + labels; sticky bottom card repeats dot-progress + step label on both mobile and desktop.
+13. On the Review step the sticky `Save scene` disabled button and Step 6's disabled `Generate 3 variations` show simultaneously, both with the same "Available in a later phase" tooltip.
 
-**`src/features/brand-scenes/wizard/steps/Step4Environment.tsx`** — remove the nested-collapsible "inception":
+**Step 4 Cast — leftover scaffolding (Phase 7aa flattened Env/Photo but missed Cast)**
+14. Trailing dials still wrapped in `Optional styling — skip and we'll pick smart defaults` header + top border (same "inception" pattern the user already rejected).
+15. `GroupHeader` rendered above single-section groups: "Notes" (one textarea), "Product interaction" (one section).
+16. Two overlapping labels in same step: `Energy / vibe` and `Action / energy`.
+17. `EthnicityChips` renders its own `[10px] uppercase` header + Info tooltip instead of using the shared `Section` (which now supports `tooltip`).
 
-- Delete the `<div ... border-t border-border/60>` wrapper and the "OPTIONAL FINE-TUNING — skip and we'll pick smart defaults" header (lines 208–216).
-- Stop using `StageCGroup` for the `ENV_GROUPS` ("Backdrop & floor", "Light & time"). Replace each group with a flat `<Section label={g.label}>` rendered open, fields inside.
-- Inside each group, render each fine-tuning field as a `<Section label={field.label}>` with the pills directly visible — no nested "Backdrop type" sub-collapsible. (The `ExtrasPillField` already shows its own label; we drop the outer collapsible chrome only, so the existing field labels become the section labels.)
+**Step 3 Reference micro-fixes**
+18. "Use this image as" label has a trailing `·` separator that looks like a placeholder.
+19. `Chip` import is dead.
 
-Net effect: one flat list — `Setting`, `Weather`, `Season`, `Brand voice`, `Aesthetic era`, `Prop density`, then Backdrop & floor section (flat, with its field labels like "Backdrop type", "Backdrop color", "Floor", "Studio FX" rendered as normal Sections inline), then Light & time section the same way. No double-nested chevrons.
+**Step 6 polish**
+20. Variant placeholders hardcode `[0,1,2]` while the hero card uses `BRAND_SCENE_VARIATIONS_PER_GENERATION`. Will drift if the constant changes.
+21. `AdminPanel` uses `rounded-2xl` while other inline disclosure surfaces in the wizard use `rounded-xl`.
 
-Keep `StageCGroup` file untouched (still used elsewhere? confirm with grep — if only here, leave file in place but unused for now).
+## Fix plan (presentation-only)
 
-## 3. Photo & edit — quieter copy, less text
+### A. Unify selection cards
+- `WizardCard`: add `compact?: boolean` (renders `p-4`, no icon-slot reservation).
+- `Step1ChooseModule`: pass `compact`.
+- `Step0ChooseSource`: switch to `gap-3`; drop the `picked &&` guard so active state shows on click.
+- `SmartSettingCard`: align active style to `WizardCard` (`border-foreground bg-foreground text-background`, drop `shadow-sm`).
+- `Step3Reference` intent options: replace bespoke buttons with `WizardCard` (compact, title=label, body=hint), same `sm:grid-cols-2 gap-3` grid.
+- `Step2ChooseSubFamily` single-card fallback + `Step4ModuleQuestions` empty: standardize on one look — `rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center` with quiet typography (no primary-tinted disc).
 
-**`src/features/brand-scenes/wizard/steps/Step5Photography.tsx`** — the page reads as a wall of helpers. Simplify:
+### B. One "add custom" affordance
+- Standardize on `AddChip` (dashed pill, Plus icon).
+- `BackdropColorField`: replace text Chip with `AddChip`, close via a small "Hide" ghost.
+- `Step4Cast` exact-size: replace text toggle with `AddChip label="Exact size"`; collapse with a `Hide` ghost button when open.
+- `SettingPicker`: keep the card-grid variant (it lives in a card grid, not a chip row) but change copy to plain "Custom setting" with Plus, matching `AddChip` wording.
 
-- Drop the `helper` prop from every `<Section>` in this step. Helpers are duplicating the label intent (e.g. "Where the product sits inside the frame." under "How the shot is composed").
-- Replace section labels with plain-language, shorter equivalents:
-  - "Lens look" stays
-  - "How blurry the background is" → **"Background blur"**
-  - "How the shot is composed" → **"Composition"**
-  - "Empty space around the product" → **"Negative space"**
-  - "What the eye lands on first" → **"Focus"**
-  - "Shadows" stays
-  - "How realistic" → **"Realism"**
-  - "Color palette" stays
-  - "Contrast" stays
-  - "Color intensity" → **"Saturation"**
-  - "Film / finish look" → **"Finish"**
-- Add a single page-level intro line under the step title (already present: "Camera, light, color, finish — plain-language") — keep as-is.
-- For the three sections that benefit from a one-line hint (Lens, Background blur, Finish), add a small inline `info` tooltip (use `lucide-react` `HelpCircle` next to the label inside the Section, opened on hover) rather than rendering full sentences. Implementation: extend `Section` to accept optional `tooltip?: string` prop that renders a `HelpCircle` icon with shadcn `Tooltip` next to the label. Drop the existing `helper` rendering use here.
+### C. Sticky bar
+- Remove duplicate dot-progress + step label from the sticky bottom card (mobile + desktop). Top bars+labels remain the single source of truth.
+- On the last step, hide the sticky `Save scene` disabled CTA — Step 6's in-card CTA is enough. Keep `Back` only.
 
-Also flatten the Photo & edit "Optional fine-tuning" block (lines 244–316) the same way as Environment — remove the wrapper + "Optional fine-tuning" header + `StageCGroup`; render PHOTO_GROUPS as flat `<Section>` blocks ("Camera angle", "Motion & crop").
+### D. Step 4 Cast cleanup
+- Remove the "Optional styling — skip and we'll pick smart defaults" wrapper + border around the trailing `ExtrasPillField` list, mirroring Phase 7aa flattening in Env/Photo.
+- Apply rule: render `GroupHeader` only when ≥2 sections will follow it. Drop the lone "Notes" and "Product interaction" group headers.
+- Rename `Action / energy` → `Action` (the vibe field already owns "energy").
+- Wrap `EthnicityChips` in a real `Section label="Ethnicity / casting hint" tooltip="A styling hint, not a hard cast…"` and strip its internal header.
+
+### E. Step 3 Reference micro-fixes
+- Drop the trailing ` · ` from the "Use this image as" label.
+- Remove the unused `Chip` import.
+
+### F. Step 6 polish
+- Derive variant placeholder count from `BRAND_SCENE_VARIATIONS_PER_GENERATION` (`Array.from({ length: N })`).
+- `AdminPanel`: change outer wrapper to `rounded-xl`.
 
 ## Out of scope
-
-- No changes to scene-type IDs, registries, cascade rules, or stored field keys.
-- No changes to the prompt assembler, generation flow, or backend.
-- No copy edits beyond the section labels listed above.
+- No prompt-assembler, registry, rules, cascade, or schema changes.
+- No new copy beyond renames listed.
+- No new components beyond a `compact` prop on `WizardCard` and reuse of the existing `AddChip`.
 
 ## Files touched
-
-- `src/features/brand-scenes/wizard/components/SceneTypePicker.tsx`
-- `src/features/brand-scenes/wizard/components/Section.tsx` (add optional `tooltip` prop)
-- `src/features/brand-scenes/wizard/steps/Step4Environment.tsx`
-- `src/features/brand-scenes/wizard/steps/Step5Photography.tsx`
-
-## Test impact
-
-Existing 175 tests should pass — no schema, prompt, routing, or field-key changes. Spot-check tests asserting Section label text since 6 labels are renamed in Step 5.
+- `wizard/WizardLayout.tsx`
+- `wizard/components/WizardCard.tsx`
+- `wizard/components/SmartSettingCard.tsx`
+- `wizard/components/BackdropColorField.tsx`
+- `wizard/components/SettingPicker.tsx`
+- `wizard/steps/Step0ChooseSource.tsx`
+- `wizard/steps/Step1ChooseModule.tsx`
+- `wizard/steps/Step2ChooseSubFamily.tsx`
+- `wizard/steps/Step3Reference.tsx`
+- `wizard/steps/Step4Cast.tsx`
+- `wizard/steps/Step4ModuleQuestions.tsx`
+- `wizard/steps/Step6PreviewAndPick.tsx`

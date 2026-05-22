@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Chip } from "../components/Chip";
+import { Chip, AddChip } from "../components/Chip";
 import { Section } from "../components/Section";
 import {
   CAST_ACTIONS,
@@ -142,6 +142,16 @@ export function Step4Cast({
   const [showExact, setShowExact] = useState(!!scale?.dimensions);
 
   const warnings = sceneWarnings(answers);
+
+  const showHandsOn =
+    !isReplicate &&
+    visibleHandsOnProduct.length > 0 &&
+    (preset === "hands" || preset === "solo" || preset === "two" || preset === "group") &&
+    (scalePreset === "pocket" || scalePreset === "handheld");
+  const showBodyPart =
+    !isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0;
+  // Group header only when ≥2 sections sit under it.
+  const showInteractionGroup = !isReplicate && (showHandsOn || showBodyPart);
 
   const showBehaviorGroup =
     !isReplicate &&
@@ -322,21 +332,25 @@ export function Step4Cast({
             );
           })()}
 
-          {/* EthnicityChips renders its own header + tooltip — no wrapping Section to avoid duplicate label. */}
-          <EthnicityChips
-            value={cast?.extras?.ethnicity}
-            onChange={(next) => {
-              const nextExtras = { ...(cast?.extras ?? {}) };
-              if (next === undefined) delete nextExtras.ethnicity;
-              else nextExtras.ethnicity = next;
-              onCastChange({ extras: nextExtras });
-            }}
-          />
+          <Section
+            label="Ethnicity / casting hint"
+            tooltip="A styling hint, not a hard cast. The AI uses it to guide features when no brand model is attached."
+          >
+            <EthnicityChips
+              value={cast?.extras?.ethnicity}
+              onChange={(next) => {
+                const nextExtras = { ...(cast?.extras ?? {}) };
+                if (next === undefined) delete nextExtras.ethnicity;
+                else nextExtras.ethnicity = next;
+                onCastChange({ extras: nextExtras });
+              }}
+            />
+          </Section>
         </>
       )}
 
       {/* Product interaction group */}
-      {!isReplicate && <GroupHeader title="Product interaction" />}
+      {showInteractionGroup && <GroupHeader title="Product interaction" />}
       {!isReplicate && (
         <Section label="Product interaction" required missing={!cast?.interaction}>
 
@@ -461,7 +475,7 @@ export function Step4Cast({
 
       {/* Action */}
       {hasPeople && !isReplicate && (
-        <Section label="Action / energy">
+        <Section label="Action">
           <div className="flex flex-wrap gap-2">
             {CAST_ACTIONS.map((a) => (
               <Chip
@@ -527,16 +541,22 @@ export function Step4Cast({
                 </Chip>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setShowExact((v) => !v);
-                if (showExact) onScaleChange({ dimensions: undefined });
-              }}
-              className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground mt-3"
-            >
-              {showExact ? "− Hide exact size" : "+ Add exact size"}
-            </button>
+            <div className="mt-3">
+              {showExact ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowExact(false);
+                    onScaleChange({ dimensions: undefined });
+                  }}
+                  className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] sm:px-4 sm:py-2 sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Hide exact size
+                </button>
+              ) : (
+                <AddChip onClick={() => setShowExact(true)} label="Exact size" />
+              )}
+            </div>
             {showExact && (
               <ExactDimensions
                 value={scale?.dimensions}
@@ -569,22 +589,14 @@ export function Step4Cast({
 
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
-      {!isReplicate && (
-        <div className="space-y-4 pt-2 border-t border-border/60">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-            Optional styling <span className="normal-case tracking-normal text-muted-foreground/60">— skip and we'll pick smart defaults</span>
-          </div>
-          <div className="space-y-7">
-
-          {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
-            .filter((f) => f.key !== "build")
-            .map((f) => {
-            // Inject sub-family-specific moments at render time.
+      {/* Phase 7ab — flattened: no "Optional styling" wrapper, fields render inline. */}
+      {!isReplicate &&
+        applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
+          .filter((f) => f.key !== "build")
+          .map((f) => {
             let resolved = f;
             if (f.key === "storytelling_moment") {
               const moments = getStorytellingMoments(module, subFamily);
-              // Hide entirely for `hands` cast when there's no explicit list — the
-              // generic moments don't apply to a disembodied close-up.
               if (preset === "hands" && !hasExplicitMoments(module, subFamily)) {
                 return null;
               }
@@ -607,11 +619,7 @@ export function Step4Cast({
               />
             );
           })}
-          </div>
-        </div>
-      )}
 
-      {!isReplicate && <GroupHeader title="Notes" />}
       {/* Cast note */}
       {!isReplicate && (
         <Section label="Note">

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Chip } from "../components/Chip";
+import { WizardCard } from "../components/WizardCard";
 import {
   BRAND_SCENE_NAME_MAX,
   BRAND_SCENE_NOTE_MAX,
@@ -251,30 +251,19 @@ export function Step3Reference({
       {/* Reference intent */}
       <div>
         <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Use this image as <span className="text-foreground/60 ml-1">·</span>
+          Use this image as
         </Label>
-        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {REFERENCE_INTENTS.map((opt) => {
-            const active = intent === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => onIntentChange(opt.value)}
-                className={[
-                  "text-left rounded-2xl border p-3.5 transition-colors",
-                  active
-                    ? "border-foreground bg-foreground/[0.04]"
-                    : "border-border bg-card hover:border-foreground/40",
-                ].join(" ")}
-              >
-                <div className="text-sm font-medium">{opt.label}</div>
-                <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                  {opt.hint}
-                </div>
-              </button>
-            );
-          })}
+        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {REFERENCE_INTENTS.map((opt) => (
+            <WizardCard
+              key={opt.value}
+              compact
+              active={intent === opt.value}
+              onClick={() => onIntentChange(opt.value)}
+              title={opt.label}
+              body={opt.hint}
+            />
+          ))}
         </div>
       </div>
 

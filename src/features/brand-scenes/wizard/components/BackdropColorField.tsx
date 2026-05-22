@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Chip } from "./Chip";
+import { AddChip } from "./Chip";
 
 /** Curated 24-swatch palette — broad, neutral-leaning, brand-safe. */
 const SWATCHES: { label: string; hex: string }[] = [
@@ -71,9 +71,17 @@ export function BackdropColorField({ value, onChange, brandColors = [] }: Props)
             />
           );
         })}
-        <Chip active={customOpen} onClick={() => setCustomOpen((v) => !v)}>
-          {customOpen ? "− Custom" : "+ Custom hex"}
-        </Chip>
+        {customOpen ? (
+          <button
+            type="button"
+            onClick={() => setCustomOpen(false)}
+            className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] sm:px-4 sm:py-2 sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Hide custom
+          </button>
+        ) : (
+          <AddChip onClick={() => setCustomOpen(true)} label="Custom hex" />
+        )}
       </div>
       {customOpen && (
         <div className="flex items-center gap-2">

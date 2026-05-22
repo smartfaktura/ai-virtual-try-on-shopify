@@ -22,6 +22,7 @@ export function Step1ChooseModule({ value, onChange }: Props) {
         {BRAND_SCENE_MODULES.map((m) => (
           <WizardCard
             key={m}
+            compact
             active={m === selected}
             onClick={() => onChange(m)}
             title={BRAND_SCENE_MODULE_LABELS[m]}

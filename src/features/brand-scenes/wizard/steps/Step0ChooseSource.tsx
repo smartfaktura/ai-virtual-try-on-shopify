@@ -18,16 +18,16 @@ export function Step0ChooseSource({
   referenceUnlocked,
 }: Props) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <WizardCard
-        active={picked && value === "wizard"}
+        active={value === "wizard"}
         onClick={() => onChange("wizard")}
         icon={<Wand2 className="w-5 h-5" />}
         title="Build from the wizard"
         body="Answer a short series of brand questions. We turn them into a tailored scene."
       />
       <WizardCard
-        active={picked && value === "reference"}
+        active={value === "reference" && referenceUnlocked}
         onClick={() => {
           if (referenceUnlocked) onChange("reference");
           else onPickReference();
