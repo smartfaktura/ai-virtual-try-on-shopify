@@ -198,12 +198,14 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
         settings: ["Nature", "Urban street", "Studio cyclorama"],
       },
       // Phase 7o — dress shoes (loafers, oxfords) lean indoor / architectural.
+      // Phase 7p — restored full_body so styled cast (suit + loafer) is valid.
       shoes: {
         settings: ["Architectural interior", "Studio cyclorama", "Tabletop surface", "Domestic"],
         lens: ["portrait", "tele", "macro"],
         moods: ["Editorial", "Quiet", "Clean"],
-        body_part_focus: ["feet", "detail"],
+        body_part_focus: ["feet", "full_body", "detail"],
       },
+
     },
   },
 
