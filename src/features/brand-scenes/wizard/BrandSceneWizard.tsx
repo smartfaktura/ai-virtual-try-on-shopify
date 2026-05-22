@@ -102,34 +102,14 @@ export function BrandSceneWizard() {
     (answers.cast.preset === "replicate" || !!answers.cast.interaction) &&
     !!answers.scale?.preset;
 
-  const moduleHasCustomQuestions =
-    answers.module &&
-    BRAND_SCENE_UNLOCKED_MODULES.includes(answers.module);
-
-  const moduleStepValid = !moduleHasCustomQuestions
-    ? true
-    : answers.module === "fashion"
-      ? isFashionStepValid(answers.module_answers as Partial<FashionModuleAnswers>)
-      : answers.module === "footwear"
-        ? isFootwearStepValid(
-            answers.module_answers as Partial<FootwearModuleAnswers>,
-          )
-        : answers.module === "eyewear"
-          ? isEyewearStepValid(
-              answers.module_answers as Partial<EyewearModuleAnswers>,
-            )
-          : true;
-
   // ---- Gating (post-reorder: Cast = step 3 in wizard flow, step 4 in reference flow) ----
   const wizardCastStep = isReference ? 4 : 3;
-  const wizardAestheticStep = isReference ? null : 4;
 
   const nextDisabled =
     (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
-    (step === wizardCastStep && !castStepValid) ||
-    (step === 5 && !isReference && !moduleStepValid);
+    (step === wizardCastStep && !castStepValid);
 
   let nextDisabledReason: string | null = null;
   if (nextDisabled) {
@@ -151,11 +131,8 @@ export function BrandSceneWizard() {
         nextDisabledReason = "Pick how the cast holds, wears, or stands next to the product";
       else if (!answers.scale?.preset)
         nextDisabledReason = "Pick a product scale";
-    } else if (step === 5) {
-      nextDisabledReason = "Fill in the remaining required details";
     }
   }
-  void wizardAestheticStep;
 
   // Reset scroll to top of the wizard whenever the step changes.
   // The wizard renders inside AppShell's <main id="app-main-scroll"> which is
