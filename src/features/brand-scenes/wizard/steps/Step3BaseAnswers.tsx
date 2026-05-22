@@ -410,6 +410,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
               <ExtrasPillField
                 key={f.key}
                 field={resolved}
+                showAllInitially
                 value={value.extras?.[f.key]}
                 autoFilled={!!value.auto?.[f.key]}
                 recommended={value.recommendations?.[f.key]}
