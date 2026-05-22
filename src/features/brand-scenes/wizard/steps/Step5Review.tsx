@@ -26,7 +26,7 @@ import {
   metaX,
 } from "../constants/sceneExtras";
 import { SCENE_TYPES } from "../registry/settingsBySubfamily";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIsAdminSafe } from "../hooks/useIsAdminSafe";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 
 interface Props {
@@ -36,7 +36,7 @@ interface Props {
 
 export function Step5Review({ answers }: Props) {
   const isReference = answers.source === "reference";
-  const { isAdmin } = useIsAdmin();
+  const { isAdmin } = useIsAdminSafe();
   const avoidValue = answers.base?.avoid ?? answers.negative_note ?? "";
 
   return (

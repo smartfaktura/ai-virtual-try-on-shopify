@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIsAdminSafe } from "../hooks/useIsAdminSafe";
 import type { BrandSceneAnswers } from "../../types";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 import {
@@ -41,7 +41,7 @@ function pickSummary(answers: BrandSceneAnswers) {
 
 export function Step6PreviewAndPick({ answers }: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
-  const { isAdmin } = useIsAdmin();
+  const { isAdmin } = useIsAdminSafe();
   const [showPrompt, setShowPrompt] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
 
