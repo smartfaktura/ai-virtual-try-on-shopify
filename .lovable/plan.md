@@ -82,3 +82,15 @@ New file `src/features/brand-scenes/__tests__/wizard-polish-7s.test.tsx`:
 - No prompt-builder edits — removed UI fields keep their schema slots so any older saved scenes still parse.
 - No changes to Step 3 base answers, validation gates, or `BrandSceneWizard` flow logic.
 - No DB/RLS/edge function work.
+
+
+## Phase 7s — STATUS: shipped
+
+- QuickDetailedToggle component (sessionStorage-backed `useWizardMode` hook)
+- Step4Cast: toggle at top, optional dials hidden in quick mode, `+ Customize cast & styling` escape hatch
+- Step4ModuleQuestions: toggle wraps body, passes mode prop, `+ Customize details` link
+- FashionQuestions: removed Setting block (was duplicating Step 3), quick mode shows helper copy only
+- FootwearQuestions: removed Scene setting block (surface/location/pose), Finishing gated to detailed
+- EyewearQuestions: removed Scene setting block, Finishing gated to detailed
+- New test: wizard-polish-7s.test.ts (6 tests, all passing)
+- Full suite: 190 tests passing
