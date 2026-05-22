@@ -88,17 +88,6 @@ export function WizardLayout({
     </Button>
   );
 
-  const JumpButton = (
-    <Button
-      size="pill"
-      variant="outline"
-      onClick={handleNextClick}
-      className="gap-1.5"
-    >
-      <ArrowDown className="w-3.5 h-3.5" />
-      Jump to fix
-    </Button>
-  );
 
   return (
     <div ref={rootRef} className="max-w-3xl mx-auto space-y-8 pb-2">
