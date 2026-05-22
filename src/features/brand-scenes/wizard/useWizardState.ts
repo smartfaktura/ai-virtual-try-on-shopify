@@ -13,8 +13,8 @@ import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy
  *  0 Source
  *  1 Family
  *  2 Sub-family
- *  3 Scene aesthetic (wizard) | Reference & intent (reference)
- *  4 Cast & product interaction (BOTH flows)
+ *  3 Cast & product interaction (wizard) | Reference & intent (reference)
+ *  4 Scene aesthetic (wizard) | Cast & product interaction (reference)
  *  5 Category details (wizard only)
  *  6 Preview & pick
  *  7 Review / saved
