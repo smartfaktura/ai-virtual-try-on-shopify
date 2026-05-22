@@ -5,15 +5,17 @@ import {
 } from "../index";
 
 const validDraft = () => ({
-  scene_key: "brand-apparel-cozy-loft-001",
-  category_collection: "apparel",
+  scene_key: "brand-fashion-cozy-loft-001",
+  category_collection: "hoodies",
   is_active: true,
   is_brand_scene: true as const,
   owner_user_id: "11111111-1111-1111-1111-111111111111",
-  brand_scene_module: "apparel" as const,
+  brand_scene_module: "fashion" as const,
   brand_scene_schema_version: BRAND_SCENE_SCHEMA_VERSION,
   brand_scene_answers: {
-    module: "apparel" as const,
+    source: "wizard" as const,
+    module: "fashion" as const,
+    sub_family: "hoodies",
     base: { aesthetic: "minimal", mood: "calm" },
     module_answers: {},
   },
@@ -27,7 +29,7 @@ describe("brandSceneDraftSchema", () => {
 
   it("rejects scene_key without brand- prefix", () => {
     const d = validDraft();
-    d.scene_key = "apparel-cozy-loft-001";
+    d.scene_key = "fashion-cozy-loft-001";
     expect(brandSceneDraftSchema.safeParse(d).success).toBe(false);
   });
 
@@ -59,6 +61,12 @@ describe("brandSceneDraftSchema", () => {
   it("rejects negative sort_order", () => {
     const d = validDraft();
     d.sort_order = -1;
+    expect(brandSceneDraftSchema.safeParse(d).success).toBe(false);
+  });
+
+  it("rejects category_collection mismatch with sub_family", () => {
+    const d = validDraft();
+    d.category_collection = "dresses";
     expect(brandSceneDraftSchema.safeParse(d).success).toBe(false);
   });
 });

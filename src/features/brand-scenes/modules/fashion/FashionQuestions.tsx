@@ -1,27 +1,27 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  APPAREL_ARCHETYPES,
-  APPAREL_CAMERA_FEELS,
-  APPAREL_GARMENTS,
-  APPAREL_MAX_CAMERA_FEELS,
-  APPAREL_MAX_GARMENTS,
-  APPAREL_TEXT_MAX,
-  APPAREL_WEARERS,
+  FASHION_ARCHETYPES,
+  FASHION_CAMERA_FEELS,
+  FASHION_GARMENTS,
+  FASHION_MAX_CAMERA_FEELS,
+  FASHION_MAX_GARMENTS,
+  FASHION_TEXT_MAX,
+  FASHION_WEARERS,
   WEARERS_WITH_PERSON,
-  type ApparelArchetype,
-  type ApparelWearer,
+  type FashionArchetype,
+  type FashionWearer,
 } from "./questions";
-import type { ApparelModuleAnswers } from "./schema";
+import type { FashionModuleAnswers } from "./schema";
 
-type Answers = Partial<ApparelModuleAnswers>;
+type Answers = Partial<FashionModuleAnswers>;
 
 interface Props {
   value: Answers;
   onChange: (patch: Answers) => void;
 }
 
-export function ApparelQuestions({ value, onChange }: Props) {
+export function FashionQuestions({ value, onChange }: Props) {
   const v: Answers = {
     archetype: value.archetype,
     garment_focus: value.garment_focus ?? [],
@@ -31,13 +31,13 @@ export function ApparelQuestions({ value, onChange }: Props) {
   };
 
   const hasPerson =
-    v.wearer && WEARERS_WITH_PERSON.includes(v.wearer as ApparelWearer);
+    v.wearer && WEARERS_WITH_PERSON.includes(v.wearer as FashionWearer);
 
   const toggleGarment = (g: string) => {
     const cur = v.garment_focus ?? [];
     if (cur.includes(g as never)) {
       onChange({ garment_focus: cur.filter((x) => x !== g) as never });
-    } else if (cur.length < APPAREL_MAX_GARMENTS) {
+    } else if (cur.length < FASHION_MAX_GARMENTS) {
       onChange({ garment_focus: [...cur, g] as never });
     }
   };
@@ -46,7 +46,7 @@ export function ApparelQuestions({ value, onChange }: Props) {
     const cur = v.finishing?.camera_feel ?? [];
     const next = cur.includes(c as never)
       ? cur.filter((x) => x !== c)
-      : cur.length < APPAREL_MAX_CAMERA_FEELS
+      : cur.length < FASHION_MAX_CAMERA_FEELS
         ? [...cur, c]
         : cur;
     onChange({ finishing: { ...v.finishing, camera_feel: next as never } });
@@ -54,34 +54,29 @@ export function ApparelQuestions({ value, onChange }: Props) {
 
   return (
     <div className="space-y-8">
-      {/* Archetype */}
       <Block label="Archetype" required>
         <div className="grid grid-cols-2 gap-2">
-          {APPAREL_ARCHETYPES.map((a) => {
-            const active = v.archetype === a.value;
-            return (
-              <Chip
-                key={a.value}
-                active={active}
-                onClick={() =>
-                  onChange({ archetype: a.value as ApparelArchetype })
-                }
-              >
-                {a.label}
-              </Chip>
-            );
-          })}
+          {FASHION_ARCHETYPES.map((a) => (
+            <Chip
+              key={a.value}
+              active={v.archetype === a.value}
+              onClick={() =>
+                onChange({ archetype: a.value as FashionArchetype })
+              }
+            >
+              {a.label}
+            </Chip>
+          ))}
         </div>
       </Block>
 
-      {/* Garment focus */}
       <Block
         label="Garment focus"
         required
-        hint={`${(v.garment_focus ?? []).length}/${APPAREL_MAX_GARMENTS}`}
+        hint={`${(v.garment_focus ?? []).length}/${FASHION_MAX_GARMENTS}`}
       >
         <div className="flex flex-wrap gap-2">
-          {APPAREL_GARMENTS.map((g) => {
+          {FASHION_GARMENTS.map((g) => {
             const active = (v.garment_focus ?? []).includes(g as never);
             return (
               <Chip key={g} active={active} onClick={() => toggleGarment(g)}>
@@ -92,36 +87,31 @@ export function ApparelQuestions({ value, onChange }: Props) {
         </div>
       </Block>
 
-      {/* Wearer */}
       <Block label="Wearer" required>
         <div className="grid grid-cols-2 gap-2">
-          {APPAREL_WEARERS.map((w) => {
-            const active = v.wearer === w.value;
-            return (
-              <Chip
-                key={w.value}
-                active={active}
-                onClick={() => {
-                  const next: Answers = { wearer: w.value as ApparelWearer };
-                  if (!w.hasPerson && v.scene?.pose) {
-                    next.scene = { ...v.scene, pose: undefined };
-                  }
-                  onChange(next);
-                }}
-              >
-                {w.label}
-              </Chip>
-            );
-          })}
+          {FASHION_WEARERS.map((w) => (
+            <Chip
+              key={w.value}
+              active={v.wearer === w.value}
+              onClick={() => {
+                const next: Answers = { wearer: w.value as FashionWearer };
+                if (!w.hasPerson && v.scene?.pose) {
+                  next.scene = { ...v.scene, pose: undefined };
+                }
+                onChange(next);
+              }}
+            >
+              {w.label}
+            </Chip>
+          ))}
         </div>
       </Block>
 
-      {/* Scene */}
       <Block label="Scene setting">
         <div className="space-y-3">
           <SmallField label="Location specifics">
             <Input
-              maxLength={APPAREL_TEXT_MAX}
+              maxLength={FASHION_TEXT_MAX}
               value={v.scene?.location ?? ""}
               onChange={(e) =>
                 onChange({ scene: { ...v.scene, location: e.target.value } })
@@ -131,7 +121,7 @@ export function ApparelQuestions({ value, onChange }: Props) {
           </SmallField>
           <SmallField label="Props & styling">
             <Input
-              maxLength={APPAREL_TEXT_MAX}
+              maxLength={FASHION_TEXT_MAX}
               value={v.scene?.props ?? ""}
               onChange={(e) =>
                 onChange({ scene: { ...v.scene, props: e.target.value } })
@@ -142,7 +132,7 @@ export function ApparelQuestions({ value, onChange }: Props) {
           {hasPerson && (
             <SmallField label="Pose / energy">
               <Input
-                maxLength={APPAREL_TEXT_MAX}
+                maxLength={FASHION_TEXT_MAX}
                 value={v.scene?.pose ?? ""}
                 onChange={(e) =>
                   onChange({ scene: { ...v.scene, pose: e.target.value } })
@@ -154,12 +144,11 @@ export function ApparelQuestions({ value, onChange }: Props) {
         </div>
       </Block>
 
-      {/* Finishing */}
       <Block label="Finishing">
         <div className="space-y-3">
           <SmallField label="Color anchor">
             <Input
-              maxLength={APPAREL_TEXT_MAX}
+              maxLength={FASHION_TEXT_MAX}
               value={v.finishing?.color_anchor ?? ""}
               onChange={(e) =>
                 onChange({
@@ -171,10 +160,10 @@ export function ApparelQuestions({ value, onChange }: Props) {
           </SmallField>
           <SmallField
             label="Camera feel"
-            hint={`${(v.finishing?.camera_feel ?? []).length}/${APPAREL_MAX_CAMERA_FEELS}`}
+            hint={`${(v.finishing?.camera_feel ?? []).length}/${FASHION_MAX_CAMERA_FEELS}`}
           >
             <div className="flex flex-wrap gap-2">
-              {APPAREL_CAMERA_FEELS.map((c) => {
+              {FASHION_CAMERA_FEELS.map((c) => {
                 const active = (v.finishing?.camera_feel ?? []).includes(
                   c as never,
                 );
@@ -279,12 +268,12 @@ function Chip({
 }
 
 /** Quick predicate used by the wizard to enable/disable the Next button. */
-export function isApparelStepValid(a: Answers): boolean {
+export function isFashionStepValid(a: Answers): boolean {
   return (
     !!a.archetype &&
     !!a.wearer &&
     Array.isArray(a.garment_focus) &&
     a.garment_focus.length >= 1 &&
-    a.garment_focus.length <= APPAREL_MAX_GARMENTS
+    a.garment_focus.length <= FASHION_MAX_GARMENTS
   );
 }

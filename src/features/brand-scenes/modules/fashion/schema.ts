@@ -1,32 +1,32 @@
 import { z } from "zod";
 import {
-  APPAREL_ARCHETYPES,
-  APPAREL_CAMERA_FEELS,
-  APPAREL_GARMENTS,
-  APPAREL_MAX_CAMERA_FEELS,
-  APPAREL_MAX_GARMENTS,
-  APPAREL_TEXT_MAX,
-  APPAREL_WEARERS,
+  FASHION_ARCHETYPES,
+  FASHION_CAMERA_FEELS,
+  FASHION_GARMENTS,
+  FASHION_MAX_CAMERA_FEELS,
+  FASHION_MAX_GARMENTS,
+  FASHION_TEXT_MAX,
+  FASHION_WEARERS,
   WEARERS_WITH_PERSON,
 } from "./questions";
 
 const archetypeSchema = z.enum(
-  APPAREL_ARCHETYPES.map((a) => a.value) as unknown as [string, ...string[]],
+  FASHION_ARCHETYPES.map((a) => a.value) as unknown as [string, ...string[]],
 );
 const wearerSchema = z.enum(
-  APPAREL_WEARERS.map((w) => w.value) as unknown as [string, ...string[]],
+  FASHION_WEARERS.map((w) => w.value) as unknown as [string, ...string[]],
 );
-const garmentSchema = z.enum(APPAREL_GARMENTS as unknown as [string, ...string[]]);
+const garmentSchema = z.enum(FASHION_GARMENTS as unknown as [string, ...string[]]);
 const cameraFeelSchema = z.enum(
-  APPAREL_CAMERA_FEELS as unknown as [string, ...string[]],
+  FASHION_CAMERA_FEELS as unknown as [string, ...string[]],
 );
 
-const text = z.string().trim().max(APPAREL_TEXT_MAX);
+const text = z.string().trim().max(FASHION_TEXT_MAX);
 
-export const apparelModuleAnswersSchema = z
+export const fashionModuleAnswersSchema = z
   .object({
     archetype: archetypeSchema,
-    garment_focus: z.array(garmentSchema).min(1).max(APPAREL_MAX_GARMENTS),
+    garment_focus: z.array(garmentSchema).min(1).max(FASHION_MAX_GARMENTS),
     wearer: wearerSchema,
     scene: z
       .object({
@@ -41,7 +41,7 @@ export const apparelModuleAnswersSchema = z
         color_anchor: text.optional(),
         camera_feel: z
           .array(cameraFeelSchema)
-          .max(APPAREL_MAX_CAMERA_FEELS)
+          .max(FASHION_MAX_CAMERA_FEELS)
           .optional(),
       })
       .strict()
@@ -58,4 +58,4 @@ export const apparelModuleAnswersSchema = z
     },
   );
 
-export type ApparelModuleAnswers = z.infer<typeof apparelModuleAnswersSchema>;
+export type FashionModuleAnswers = z.infer<typeof fashionModuleAnswersSchema>;
