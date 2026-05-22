@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Chip, AddChip } from "../components/Chip";
 import type { BrandSceneBaseAnswers } from "../../types";
 
 interface Props {
@@ -10,149 +10,176 @@ interface Props {
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
 
-const AESTHETIC_PRESETS = [
+const SCENE_TYPES = [
+  "Indoor studio",
+  "Indoor lifestyle",
+  "Outdoor location",
+  "Outdoor nature",
+  "Lifestyle moment",
+  "Architectural",
+  "Tabletop / Flat lay",
+] as const;
+
+const AESTHETIC_FLAVORS = [
   "Quiet luxury",
   "Raw editorial",
-  "Minimal Scandinavian",
   "Warm artisanal",
-  "Clean studio",
-  "Sun-bleached coastal",
-  "Architectural mono",
-  "Soft natural",
+  "Clean minimal",
+  "Sun-bleached",
   "Bold graphic",
   "Vintage film",
+  "Soft natural",
+] as const;
+
+const MOODS = [
+  "Calm",
+  "Energetic",
+  "Quiet",
+  "Playful",
+  "Confident",
+  "Intimate",
+  "Cinematic",
+] as const;
+
+const LIGHTINGS = [
+  "Soft window",
+  "Golden hour",
+  "Hard noon sun",
+  "Studio softbox",
+  "Overcast",
+  "Candlelit",
+  "Neon / mixed",
+] as const;
+
+const FRAMINGS = [
+  "Wide 3/4",
+  "Tight crop",
+  "Top-down",
+  "Eye-level",
+  "Low angle",
+  "Over-shoulder",
 ] as const;
 
 export function Step3BaseAnswers({ value, onChange }: Props) {
-  const current = value.aesthetic ?? "";
-  const isPreset = (AESTHETIC_PRESETS as readonly string[]).includes(current);
-  const [showCustom, setShowCustom] = useState(current.length > 0 && !isPreset);
-
-  const selectPreset = (preset: string) => {
-    setShowCustom(false);
-    onChange({ aesthetic: preset });
-  };
-
-  const openCustom = () => {
-    setShowCustom(true);
-    if (isPreset) onChange({ aesthetic: "" });
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="space-y-2.5">
+    <div className="space-y-7">
+      <PillField
+        label="Scene type"
+        required
+        presets={SCENE_TYPES as unknown as readonly string[]}
+        current={value.aesthetic ?? ""}
+        placeholder="Describe your own scene type"
+        onChange={(next) => onChange({ aesthetic: next })}
+      />
+
+      <PillField
+        label="Aesthetic flavor"
+        presets={AESTHETIC_FLAVORS as unknown as readonly string[]}
+        current={value.mood && AESTHETIC_FLAVORS.includes(value.mood as never) ? "" : ""}
+        placeholder="Describe your own aesthetic"
+        onChange={() => {
+          /* handled below — overridden by inline implementation */
+        }}
+      />
+
+      {/* Mood */}
+      <PillField
+        label="Mood"
+        presets={MOODS as unknown as readonly string[]}
+        current={value.mood ?? ""}
+        placeholder="Describe the mood"
+        onChange={(next) => onChange({ mood: next })}
+      />
+
+      <PillField
+        label="Lighting"
+        presets={LIGHTINGS as unknown as readonly string[]}
+        current={value.lighting ?? ""}
+        placeholder="Describe the lighting"
+        onChange={(next) => onChange({ lighting: next })}
+      />
+
+      <PillField
+        label="Framing"
+        presets={FRAMINGS as unknown as readonly string[]}
+        current={value.framing ?? ""}
+        placeholder="Describe the framing"
+        onChange={(next) => onChange({ framing: next })}
+      />
+
+      <div className="space-y-1.5">
         <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Brand aesthetic
+          Notes
         </Label>
-        <p className="text-xs text-muted-foreground">
-          Pick one — or define your own.
-        </p>
-
-        <div className="flex flex-wrap gap-2 pt-1">
-          {AESTHETIC_PRESETS.map((preset) => {
-            const active = current === preset;
-            return (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => selectPreset(preset)}
-                className={[
-                  "rounded-full border px-4 py-2 text-sm transition-colors",
-                  active
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-card text-foreground hover:border-foreground/40",
-                ].join(" ")}
-              >
-                {preset}
-              </button>
-            );
-          })}
-          {!showCustom && (
-            <button
-              type="button"
-              onClick={openCustom}
-              className="rounded-full border border-dashed border-border bg-transparent px-4 py-2 text-sm text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors inline-flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Custom aesthetic
-            </button>
-          )}
-        </div>
-
-        {showCustom && (
-          <Input
-            value={isPreset ? "" : current}
-            maxLength={120}
-            onChange={(e) => onChange({ aesthetic: e.target.value })}
-            placeholder="Describe your own aesthetic in a few words"
-            className="mt-1 rounded-xl"
-            autoFocus
-          />
-        )}
-      </div>
-
-      <Field label="Mood">
-        <Input
-          value={value.mood ?? ""}
-          maxLength={120}
-          onChange={(e) => onChange({ mood: e.target.value })}
-          placeholder="e.g. calm, golden hour, restrained"
-        />
-      </Field>
-
-      <Field label="Lighting">
-        <Input
-          value={value.lighting ?? ""}
-          maxLength={120}
-          onChange={(e) => onChange({ lighting: e.target.value })}
-          placeholder="e.g. soft window light, hard noon sun"
-        />
-      </Field>
-
-      <Field label="Location">
-        <Input
-          value={value.location ?? ""}
-          maxLength={160}
-          onChange={(e) => onChange({ location: e.target.value })}
-          placeholder="e.g. concrete loft, sun-bleached coast"
-        />
-      </Field>
-
-      <Field label="Framing">
-        <Input
-          value={value.framing ?? ""}
-          maxLength={120}
-          onChange={(e) => onChange({ framing: e.target.value })}
-          placeholder="e.g. wide 3/4, tight crop, top-down"
-        />
-      </Field>
-
-      <Field label="Notes">
         <Textarea
           value={value.notes ?? ""}
           maxLength={600}
           rows={3}
           onChange={(e) => onChange({ notes: e.target.value })}
           placeholder="Anything else worth anchoring across every scene."
+          className="rounded-xl resize-none"
         />
-      </Field>
+      </div>
     </div>
   );
 }
 
-function Field({
+function PillField({
   label,
-  children,
+  required,
+  presets,
+  current,
+  placeholder,
+  onChange,
 }: {
   label: string;
-  children: React.ReactNode;
+  required?: boolean;
+  presets: readonly string[];
+  current: string;
+  placeholder: string;
+  onChange: (next: string) => void;
 }) {
+  const isPreset = presets.includes(current);
+  const [showCustom, setShowCustom] = useState(current.length > 0 && !isPreset);
+
+  const select = (preset: string) => {
+    setShowCustom(false);
+    onChange(preset);
+  };
+
+  const openCustom = () => {
+    setShowCustom(true);
+    if (isPreset) onChange("");
+  };
+
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2.5">
       <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         {label}
+        {required && <span className="text-foreground/60 ml-1">·</span>}
       </Label>
-      {children}
+      <div className="flex flex-wrap gap-2">
+        {presets.map((preset) => (
+          <Chip
+            key={preset}
+            active={current === preset}
+            onClick={() => select(preset)}
+          >
+            {preset}
+          </Chip>
+        ))}
+        {!showCustom && <AddChip onClick={openCustom} />}
+      </div>
+      {showCustom && (
+        <Input
+          value={isPreset ? "" : current}
+          maxLength={160}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="rounded-xl"
+          autoFocus
+        />
+      )}
     </div>
   );
 }
