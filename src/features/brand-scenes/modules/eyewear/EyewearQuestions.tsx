@@ -5,7 +5,6 @@ import {
   EYEWEAR_CAMERA_FEELS,
   EYEWEAR_MAX_CAMERA_FEELS,
   EYEWEAR_PRESENTATIONS,
-  EYEWEAR_PRESENTATIONS_WITH_PERSON,
   EYEWEAR_TEXT_MAX,
   EYEWEAR_TYPES,
   type EyewearArchetype,
@@ -13,15 +12,17 @@ import {
   type EyewearType,
 } from "./questions";
 import type { EyewearModuleAnswers } from "./schema";
+import type { WizardMode } from "../../wizard/components/QuickDetailedToggle";
 
 type Answers = Partial<EyewearModuleAnswers>;
 
 interface Props {
   value: Answers;
   onChange: (patch: Answers) => void;
+  mode?: WizardMode;
 }
 
-export function EyewearQuestions({ value, onChange }: Props) {
+export function EyewearQuestions({ value, onChange, mode = "detailed" }: Props) {
   const v: Answers = {
     archetype: value.archetype,
     eyewear_type: value.eyewear_type,
@@ -29,12 +30,6 @@ export function EyewearQuestions({ value, onChange }: Props) {
     scene: value.scene ?? {},
     finishing: value.finishing ?? {},
   };
-
-  const hasPerson =
-    v.presentation &&
-    EYEWEAR_PRESENTATIONS_WITH_PERSON.includes(
-      v.presentation as EyewearPresentation,
-    );
 
   const toggleCamera = (c: string) => {
     const cur = v.finishing?.camera_feel ?? [];
