@@ -7,23 +7,43 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Chip } from "../components/Chip";
 import {
   BRAND_SCENE_NAME_MAX,
   BRAND_SCENE_NOTE_MAX,
-  BRAND_SCENE_PLACEMENT_MAX,
   BRAND_SCENE_REFERENCE_BUCKET,
   BRAND_SCENE_REFERENCE_MAX_BYTES,
 } from "../../constants";
+import type { ReferenceIntent } from "../../prompt/buildReferenceDirective";
+
+const REFERENCE_INTENTS: { value: ReferenceIntent; label: string; hint: string }[] = [
+  {
+    value: "replicate",
+    label: "Replicate exactly",
+    hint: "Keep subject, pose, framing and lighting locked",
+  },
+  {
+    value: "location",
+    label: "Location only",
+    hint: "Keep the place, replace people and product",
+  },
+  {
+    value: "composition",
+    label: "Composition",
+    hint: "Keep framing and lighting, swap subject",
+  },
+  { value: "vibe", label: "Vibe / mood board", hint: "Loose inspiration only" },
+];
 
 interface Props {
   imagePath?: string;
   previewUrl?: string;
   name?: string;
-  placementHint?: string;
+  intent?: ReferenceIntent;
   note?: string;
   onImageChange: (path: string | null, previewUrl: string | null) => void;
   onNameChange: (name: string) => void;
-  onPlacementChange: (hint: string) => void;
+  onIntentChange: (intent: ReferenceIntent) => void;
   onNoteChange: (note: string) => void;
 }
 
