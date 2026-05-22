@@ -87,7 +87,7 @@ const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: 
   { value: "night", label: "Night" },
 ];
 
-export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) {
+export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChange }: Props) {
   const resolved = useMemo(
     () => resolveAll(module, subFamily),
     [module, subFamily],
@@ -107,8 +107,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
     expanded ? SCENE_PALETTES : SCENE_PALETTES.filter((p) => resolved.palettes.includes(p.value));
   const finishes = (expanded: boolean) =>
     expanded ? SCENE_FINISHES : SCENE_FINISHES.filter((f) => resolved.finishes.includes(f.value));
-  const surfaces = (expanded: boolean) =>
-    expanded ? SURFACES : SURFACES.filter((s) => resolved.surfaces.includes(s.value));
 
   const propDensityMax = resolved.propDensityMax;
 
