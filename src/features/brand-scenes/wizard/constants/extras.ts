@@ -684,3 +684,18 @@ export function applicableFields(
     return true;
   });
 }
+
+/** Phase 7f — context-aware filter (scene_type + dependent fields). */
+export function applicableFieldsCtx(
+  fields: ExtrasField[],
+  ctx: SceneCtx,
+): ExtrasField[] {
+  return applicableFields(fields, ctx.module, ctx.cast).filter((f) => {
+    if (f.appliesWhen && !f.appliesWhen(ctx)) return false;
+    return true;
+  });
+}
+
+void isOutdoor;
+void isIndoor;
+export type { SceneTypeId };
