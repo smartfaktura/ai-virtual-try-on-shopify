@@ -171,6 +171,7 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
       label: f.label,
       value: sceneExtras[f.key],
     })),
+    { label: "Notes", value: base.notes },
   ];
 
   const castRows: Row[] = cast
@@ -190,6 +191,7 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
           label: f.label,
           value: castExtras[f.key],
         })),
+        { label: "Cast note", value: cast.note },
       ]
     : [];
 
