@@ -325,7 +325,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
           More creative dials
         </div>
-        {applicableFields(SCENE_EXTRAS_FIELDS, module, undefined).map((f) => (
+        {applicableFields(SCENE_EXTRAS_FIELDS, module, castPreset).map((f) => (
           <ExtrasPillField
             key={f.key}
             field={f}
