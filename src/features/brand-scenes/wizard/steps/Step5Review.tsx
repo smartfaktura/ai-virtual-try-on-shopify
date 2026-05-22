@@ -1,7 +1,3 @@
-import {
-  BRAND_SCENE_GENERATION_COST,
-  BRAND_SCENE_VARIATIONS_PER_GENERATION,
-} from "../../constants";
 import type { BrandSceneAnswers } from "../../types";
 import {
   SCENE_EXTRAS_FIELDS,
@@ -26,8 +22,6 @@ import {
   metaX,
 } from "../constants/sceneExtras";
 import { SCENE_TYPES } from "../registry/settingsBySubfamily";
-import { useIsAdminSafe } from "../hooks/useIsAdminSafe";
-import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 
 interface Props {
   answers: BrandSceneAnswers;
@@ -36,12 +30,11 @@ interface Props {
 
 export function Step5Review({ answers }: Props) {
   const isReference = answers.source === "reference";
-  const { isAdmin } = useIsAdminSafe();
   const avoidValue = answers.base?.avoid ?? answers.negative_note ?? "";
 
   return (
     <div className="space-y-5">
-      {isReference ? <ReferenceSummary answers={answers} /> : <CostNotice />}
+      {isReference && <ReferenceSummary answers={answers} />}
 
       <SummaryCard answers={answers} />
 
@@ -55,59 +48,10 @@ export function Step5Review({ answers }: Props) {
           </p>
         </div>
       )}
-
-      {isAdmin && <AdminDebug answers={answers} />}
     </div>
   );
 }
 
-function AdminDebug({ answers }: { answers: BrandSceneAnswers }) {
-  const directive = assembleSceneDirective(answers);
-  return (
-    <div className="space-y-3 pt-4 border-t border-border/60">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        Admin debug
-      </div>
-
-      <div className="rounded-2xl border border-border bg-muted/30 p-4">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
-          Compiled final prompt
-        </div>
-        <pre className="text-xs leading-relaxed text-foreground/85 whitespace-pre-wrap font-mono">
-{directive || "(empty)"}
-        </pre>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-muted/30 p-4">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
-          Full payload
-        </div>
-        <pre className="text-xs leading-relaxed text-foreground/85 whitespace-pre-wrap font-mono overflow-auto max-h-[400px]">
-{JSON.stringify(answers, null, 2)}
-        </pre>
-      </div>
-    </div>
-  );
-}
-
-function CostNotice() {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        Generation cost
-      </div>
-      <div className="mt-1 text-base font-semibold tracking-tight">
-        {BRAND_SCENE_GENERATION_COST} credits →{" "}
-        {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations to choose from
-      </div>
-      <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-        Generating this scene deducts {BRAND_SCENE_GENERATION_COST} credits and
-        returns {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations. Saving is
-        free; only generation deducts credits.
-      </p>
-    </div>
-  );
-}
 
 type Row = { label: string; value?: string | null };
 
