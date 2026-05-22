@@ -186,11 +186,15 @@ const MOMENTS: Record<string, string[]> = {
     "Hooking through ear",
     "Tucking hair behind ear",
     "Profile reveal",
+    "Removing the earring",
+    "Hand framing the ear",
   ],
   "jewelry/jewellery-bracelets": [
     "Clasping on wrist",
     "Stacking",
     "Wrist turn to camera",
+    "Resting on flat surface",
+    "Sliding up the forearm",
   ],
 
   // Beauty & Fragrance
