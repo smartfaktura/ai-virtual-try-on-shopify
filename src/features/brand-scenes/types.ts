@@ -13,6 +13,15 @@ import type {
 } from "./wizard/constants/cast";
 import type { ScalePreset, ScaleUnit } from "./wizard/constants/scale";
 import type { ReferenceIntent } from "./prompt/buildReferenceDirective";
+import type {
+  SceneWeather,
+  SceneSeason,
+  SceneLens,
+  SceneDepthOfField,
+  ScenePalette,
+  SceneFinish,
+  WardrobeColor,
+} from "./wizard/constants/scene";
 
 export type SceneAspectRatio = "4:5" | "1:1" | "3:4" | "16:9";
 export type SceneTimeOfDay = "morning" | "midday" | "evening" | "night";
@@ -27,8 +36,20 @@ export interface BrandSceneBaseAnswers {
   location?: string;
   framing?: string;
   notes?: string;
+  /** Always "4:5" — locked. Kept on type for forward-compat. */
   aspect_ratio?: SceneAspectRatio;
   time_of_day?: SceneTimeOfDay;
+
+  // Phase 7b additions — all optional.
+  setting?: string;
+  weather?: SceneWeather;
+  season?: SceneSeason;
+  lens?: SceneLens;
+  depth_of_field?: SceneDepthOfField;
+  palette_preset?: ScenePalette;
+  palette_custom?: string;
+  finish?: SceneFinish;
+  avoid?: string;
 }
 
 export interface BrandSceneCast {
@@ -39,6 +60,8 @@ export interface BrandSceneCast {
   interaction?: CastInteraction;
   action?: CastAction;
   note?: string;
+  wardrobe_color?: WardrobeColor;
+  wardrobe_custom?: string;
 }
 
 export interface BrandSceneScale {

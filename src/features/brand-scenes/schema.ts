@@ -31,6 +31,24 @@ export const brandSceneSourceSchema = z.enum(
 const sceneAspectRatioSchema = z.enum(["4:5", "1:1", "3:4", "16:9"]);
 const sceneTimeOfDaySchema = z.enum(["morning", "midday", "evening", "night"]);
 
+const sceneWeatherSchema = z.enum([
+  "clear", "overcast", "rain", "fog", "snow", "dusty", "smoke",
+]);
+const sceneSeasonSchema = z.enum([
+  "spring", "summer", "autumn", "winter", "seasonless",
+]);
+const sceneLensSchema = z.enum(["wide", "standard", "portrait", "tele", "macro"]);
+const sceneDofSchema = z.enum(["deep", "balanced", "shallow", "extreme"]);
+const scenePaletteSchema = z.enum([
+  "warm_neutral", "cool_neutral", "terracotta", "sage_cream", "monochrome", "bold_accent",
+]);
+const sceneFinishSchema = z.enum([
+  "clean_digital", "film_grain", "editorial_matte", "glossy", "sun_bleached",
+]);
+const wardrobeColorSchema = z.enum([
+  "neutral_light", "neutral_dark", "earth_tones", "denim", "monochrome_product", "contrast",
+]);
+
 export const brandSceneBaseAnswersSchema = z
   .object({
     aesthetic: z.string().trim().min(1).max(120).optional(),
@@ -42,6 +60,15 @@ export const brandSceneBaseAnswersSchema = z
     notes: z.string().trim().max(600).optional(),
     aspect_ratio: sceneAspectRatioSchema.optional(),
     time_of_day: sceneTimeOfDaySchema.optional(),
+    setting: z.string().trim().min(1).max(120).optional(),
+    weather: sceneWeatherSchema.optional(),
+    season: sceneSeasonSchema.optional(),
+    lens: sceneLensSchema.optional(),
+    depth_of_field: sceneDofSchema.optional(),
+    palette_preset: scenePaletteSchema.optional(),
+    palette_custom: z.string().trim().min(1).max(120).optional(),
+    finish: sceneFinishSchema.optional(),
+    avoid: z.string().trim().max(240).optional(),
   })
   .strict();
 
@@ -86,6 +113,8 @@ export const brandSceneCastSchema = z
     interaction: castInteractionSchema.optional(),
     action: castActionSchema.optional(),
     note: z.string().trim().max(160).optional(),
+    wardrobe_color: wardrobeColorSchema.optional(),
+    wardrobe_custom: z.string().trim().min(1).max(120).optional(),
   })
   .strict()
   .refine(
