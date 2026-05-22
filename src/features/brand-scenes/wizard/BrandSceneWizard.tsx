@@ -36,12 +36,12 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "This becomes the catalog group your scene lives under",
   },
   3: {
-    title: "Cast & product interaction",
-    subtitle: "Who's in the scene and how they relate to the product",
+    title: "Who's in the scene",
+    subtitle: "Pick the cast and how they relate to the product",
   },
   4: {
-    title: "Scene aesthetic",
-    subtitle: "Pick the kind of scene you want — we'll match the rest",
+    title: "Scene & mood",
+    subtitle: "Pick the world — everything below tunes to it",
   },
   5: {
     title: "Category specifics",
@@ -64,8 +64,8 @@ const META_REFERENCE: Record<WizardStep, { title: string; subtitle: string }> = 
     subtitle: "Your image plus how strictly the AI should follow it",
   },
   4: {
-    title: "Cast & product interaction",
-    subtitle: "Who's in the scene and how they relate to the product",
+    title: "Who's in the scene",
+    subtitle: "Pick the cast and how they relate to the product",
   },
 };
 
@@ -81,7 +81,7 @@ export function BrandSceneWizard() {
     const subs = SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? [];
     return subs.find((s) => s.slug === answers.sub_family)?.label ?? null;
   })();
-  const stepShowsSubFamily = (step === 3 && !isReference) || step === 4 || step === 5;
+  const stepShowsSubFamily = (step === 3 && !isReference) || (step === 4 && isReference) || step === 5;
   const baseTitle = META[step].title;
   const title =
     stepShowsSubFamily && subFamilyLabel
@@ -150,16 +150,16 @@ export function BrandSceneWizard() {
       else if (!answers.reference_intent)
         nextDisabledReason = "Choose how strictly to follow the reference";
     } else if (step === wizardCastStep) {
-      if (!answers.cast?.preset) nextDisabledReason = "Pick a cast option";
+      if (!answers.cast?.preset) nextDisabledReason = "Choose who's in the shot";
       else if (
         answers.cast.preset !== "replicate" &&
         !answers.cast.interaction
       )
-        nextDisabledReason = "Pick how the cast interacts with the product";
+        nextDisabledReason = "Pick how the cast holds, wears, or stands next to the product";
       else if (!answers.scale?.preset)
         nextDisabledReason = "Pick a product scale";
     } else if (step === 5) {
-      nextDisabledReason = "Answer the required category questions";
+      nextDisabledReason = "Fill in the remaining required details";
     }
   }
   void wizardAestheticStep;

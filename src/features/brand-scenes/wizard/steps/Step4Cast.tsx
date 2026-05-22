@@ -122,7 +122,13 @@ export function Step4Cast({
     const base = expanded
       ? CAST_INTERACTIONS
       : CAST_INTERACTIONS.filter((i) => resolved.interactions.includes(i.value));
-    return base.filter((i) => !forbiddenInter.has(i.value));
+    const filtered = base.filter((i) => !forbiddenInter.has(i.value));
+    // Family-recommended options first; rest keep their natural order.
+    const rank = (v: string) => {
+      const idx = resolved.interactions.indexOf(v as CastInteraction);
+      return idx === -1 ? 999 : idx;
+    };
+    return [...filtered].sort((a, b) => rank(a.value) - rank(b.value));
   };
 
   const visibleHandsOnProduct =
@@ -140,7 +146,7 @@ export function Step4Cast({
   return (
     <div className="space-y-8">
       {/* Cast preset */}
-      <Section label="Cast" required missing={!preset}>
+      <Section label="Who's in the shot" required missing={!preset}>
         {(expanded) => (
           <div className="flex flex-wrap gap-2">
             {visibleCastPresets(expanded).map((p) => (
@@ -208,7 +214,7 @@ export function Step4Cast({
               ? CAST_AGES.filter((a) => a.value !== "mixed")
               : CAST_AGES;
             const genderLabel = isSingle ? "Gender" : "Gender mix";
-            const ageLabel = isSingle ? "Age feel" : "Age mix";
+            const ageLabel = isSingle ? "Age range" : "Age range (mix)";
             const handleGender = (v: string) => {
               if (isSingle) {
                 // Single subject — radio behavior.
@@ -255,7 +261,7 @@ export function Step4Cast({
             );
           })()}
 
-          <Section label="Vibe">
+          <Section label="Energy / vibe">
             <div className="flex flex-wrap gap-2">
               {CAST_VIBES.map((v) => (
                 <Chip
@@ -541,13 +547,10 @@ export function Step4Cast({
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
       {!isReplicate && (
-        <div className="space-y-3 pt-2 border-t border-border/60">
+        <div className="space-y-4 pt-2 border-t border-border/60">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-            Optional styling
+            Optional styling <span className="normal-case tracking-normal text-muted-foreground/60">— skip and we'll pick smart defaults</span>
           </div>
-          <p className="text-[11px] text-muted-foreground/80 -mt-1">
-            Skip these — we'll pick smart defaults
-          </p>
           <div className="space-y-7">
 
           {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
