@@ -233,12 +233,17 @@ export function BrandSceneWizard() {
           />
         )}
 
+        {/* Step 3 — wizard flow: CAST. Reference flow: REFERENCE & INTENT. */}
         {step === 3 && !isReference && (
-          <Step3BaseAnswers
+          <Step4Cast
             module={answers.module}
             subFamily={answers.sub_family}
-            value={answers.base}
-            onChange={(patch) => dispatch({ type: "setBase", patch })}
+            source={answers.source}
+            answers={answers}
+            cast={answers.cast}
+            scale={answers.scale}
+            onCastChange={(patch) => dispatch({ type: "setCast", patch })}
+            onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
           />
         )}
 
@@ -260,7 +265,18 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 4 && (
+        {/* Step 4 — wizard flow: SCENE AESTHETIC. Reference flow: CAST. */}
+        {step === 4 && !isReference && (
+          <Step3BaseAnswers
+            module={answers.module}
+            subFamily={answers.sub_family}
+            castPreset={answers.cast?.preset}
+            value={answers.base}
+            onChange={(patch) => dispatch({ type: "setBase", patch })}
+          />
+        )}
+
+        {step === 4 && isReference && (
           <Step4Cast
             module={answers.module}
             subFamily={answers.sub_family}
