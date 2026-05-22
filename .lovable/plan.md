@@ -1,94 +1,93 @@
-# Phase 4 — Apparel Module Questions (Admin-Only)
+# Phase 5 — Footwear Module Questions (Admin-Only)
 
-Goal: ship the **first real category** in the wizard. Replace Step 3's placeholder with a focused, opinionated questionnaire for **Apparel** that produces a structured payload ready for Phase 7's prompt engineer. Still admin-only, still no DB writes, still no generation.
-
----
-
-## Why apparel first
-
-It's the highest-traffic category and the one with the richest existing aesthetic memory (`editorial-apparel-aesthetics`: Studio / Elevated Location / Everyday UGC / Campaign). The four archetypes give us a clean primary axis to build around.
+Goal: add the **second category** to the wizard — Footwear — following the exact pattern set by Apparel in Phase 4. Same shape, same saugikliai, same admin-only scope. Still no DB writes, still no prompt generation.
 
 ---
 
-## Question architecture (apparel)
+## Why footwear next
 
-A tight 5-block form. Each block is purposeful — no decorative questions. Order matches how a stylist thinks: archetype → garment → person → scene → finishing.
+Strong existing aesthetic memory (`editorial-shoes-aesthetics`, `editorial-sneaker-aesthetics`, `editorial-boots-aesthetics`) gives a clear, opinionated set of archetypes and shot styles. It's the closest sibling to apparel in stylist mental model.
+
+> If you'd rather do a different category next (eyewear / bags / fragrance / activewear / accessories / beauty / home), say so and I'll re-plan in one step. Otherwise I proceed with footwear.
+
+---
+
+## Question architecture (footwear)
+
+Five blocks, same flow as apparel: archetype → product → presentation → scene → finishing.
 
 ### Block 1 — Archetype (single-select, required)
-The visual world. Drives composition + lighting defaults later.
-- Editorial Studio
-- Elevated Location
-- Everyday UGC
-- Campaign Statement
+Drives composition + lighting defaults later.
+- Architectural Still-Life
+- Dynamic On-Body
+- Quiet Luxury Editorial
+- Street / Documentary
 
-### Block 2 — Garment focus (multi-select, required, max 3)
-- Outerwear · Knitwear · Tailoring · Denim · Dresses · Tops · Bottoms · Loungewear
+### Block 2 — Footwear type (single-select, required)
+- Sneakers · Boots · Heels · Loafers · Sandals · Flats · Athletic / Performance
 
-### Block 3 — Wearer (single-select, required)
-- On-model (full body)
-- On-model (cropped / half)
-- Flat lay / Ghost mannequin
-- Detail / Texture only (no person)
+### Block 3 — Presentation (single-select, required)
+- On-foot (full leg)
+- On-foot (close crop)
+- Pedestal / sculptural still-life
+- Pair laid flat
+- Macro / detail (texture, stitching)
 
-> When this is "Flat lay" or "Detail only", Blocks 4's pose field is hidden — saugiklis to prevent contradictory prompts.
+> When presentation is "Pedestal", "Pair laid flat" or "Macro / detail" → Block 4's `pose` field is hidden (saugiklis against contradictory prompts, mirrors apparel).
 
-### Block 4 — Scene setting (3 sub-fields, all optional but recommended)
-- **Location specifics** — short text (e.g. "concrete loft with arched windows")
-- **Props & styling** — short text (e.g. "vintage chair, draped fabric")
-- **Pose / energy** — short text (e.g. "leaning relaxed, hand in pocket") *(hidden when no-person wearer)*
+### Block 4 — Scene setting (optional)
+- **Surface / pedestal** — short text (e.g. "raw plaster slab", "polished marble")
+- **Location specifics** — short text (e.g. "sunlit corridor, long shadows")
+- **Pose / movement** — short text *(hidden for still-life presentations)*
 
-### Block 5 — Finishing (2 fields, optional)
-- **Color anchor** — single text input (e.g. "warm sand", "smoked olive"). Free text, not the brand palette — this is the dominant scene color.
+### Block 5 — Finishing (optional)
+- **Color anchor** — single text input (e.g. "chalk white", "smoked olive")
 - **Camera feel** — chip group, multi-select, max 2:
-  - Wide editorial · Tight crop · 35mm film · Soft DOF · Documentary · Flash-lit
+  - Macro detail · Wide editorial · Top-down · Low angle · 35mm film · Flash-lit
 
 ---
 
-## Where the answers land
-
-All collected values write into `answers.module_answers` (existing JSONB slot from Phase 2):
+## Answer shape (`module_answers` when `module === 'footwear'`)
 
 ```ts
 {
-  archetype: 'editorial_studio' | 'elevated_location' | 'everyday_ugc' | 'campaign_statement',
-  garment_focus: string[],          // max 3
-  wearer: 'on_model_full' | 'on_model_crop' | 'flat_lay' | 'detail_only',
+  archetype: 'architectural_still_life' | 'dynamic_on_body' | 'quiet_luxury' | 'street_documentary',
+  footwear_type: 'sneakers' | 'boots' | 'heels' | 'loafers' | 'sandals' | 'flats' | 'athletic',
+  presentation: 'on_foot_full' | 'on_foot_close' | 'pedestal' | 'pair_flat' | 'macro_detail',
   scene: {
+    surface?: string,
     location?: string,
-    props?: string,
-    pose?: string,                  // omitted when wearer has no person
+    pose?: string,     // omitted for still-life presentations
   },
   finishing: {
     color_anchor?: string,
-    camera_feel?: string[],         // max 2
+    camera_feel?: string[],   // max 2
   },
 }
 ```
 
-This shape is added to the Phase 2 Zod schema as a **discriminated branch** keyed by `module: 'apparel'`. Other modules keep their permissive `module_answers: Record<string, unknown>` slot until their phase lands. Schema version stays at `1` (additive, optional fields).
+Schema version stays at `1`. Other modules keep their permissive slot.
 
 ---
 
-## File plan
+## File plan (mirrors apparel)
 
 ```text
-src/features/brand-scenes/
-  modules/
-    apparel/
-      questions.ts          // options, labels, constants for this module
-      schema.ts             // apparelModuleAnswersSchema (Zod)
-      ApparelQuestions.tsx  // the actual Step 3 form for apparel
-      types.ts              // ApparelModuleAnswers TS type
-  wizard/
-    steps/
-      Step3ModuleQuestions.tsx  // becomes a router: apparel → <ApparelQuestions/>, else placeholder
-    useWizardState.ts            // unchanged — already supports setModuleAnswers
-  schema.ts                      // extends brandSceneAnswersSchema with apparel branch
-  __tests__/
-    apparel-schema.test.ts       // accept/reject cases
+src/features/brand-scenes/modules/footwear/
+  questions.ts          // options, labels, constants
+  schema.ts             // footwearModuleAnswersSchema (Zod) + isFootwearStepValid
+  types.ts              // FootwearModuleAnswers type
+  FootwearQuestions.tsx // Step 3 form (chips + text inputs, identical UX to apparel)
+
+src/features/brand-scenes/wizard/steps/
+  Step3ModuleQuestions.tsx   // add: module === 'footwear' → <FootwearQuestions/>
+src/features/brand-scenes/wizard/
+  BrandSceneWizard.tsx       // add footwear branch to nextDisabled gate
+src/features/brand-scenes/__tests__/
+  footwear-schema.test.ts    // accept/reject cases
 ```
 
-Touched outside the feature folder: **none**. Wizard, route, gate all unchanged.
+Outside the feature folder: **nothing touched**. Wizard, route, gate all unchanged.
 
 ---
 
@@ -96,34 +95,35 @@ Touched outside the feature folder: **none**. Wizard, route, gate all unchanged.
 
 | Rule | Where |
 |------|-------|
-| `garment_focus` length 1..3 | Zod + UI counter |
+| All three required fields present (archetype, footwear_type, presentation) | Zod + UI counter |
 | `camera_feel` length ≤ 2 | Zod + UI |
-| `pose` allowed only when `wearer ∈ {on_model_full, on_model_crop}` | Zod refine + conditional UI render |
+| `pose` allowed only when presentation ∈ {on_foot_full, on_foot_close} | Zod refine + conditional render |
 | All text fields trimmed, max 160 chars | Zod |
-| Unknown archetype / wearer rejected | Zod enum |
-| Step 3 "Next" disabled until Block 1, 2, 3 valid | UI + safeParse |
+| Unknown enum values rejected | Zod |
+| Step 3 Next disabled until all three required selects are filled | UI gate |
 
 ---
 
-## What stays out of scope
+## Out of scope
 
-- No DB writes — Save still disabled in Step 4 (lands in Phase 6).
-- No prompt generation — Phase 7 reads the structured payload.
-- No image references / file uploads — separate later phase.
-- No other category gets real questions yet — they keep the "ships in a later phase" placeholder.
-- No sidebar exposure changes.
+- No DB writes — Save still disabled in Step 4 (Phase 6).
+- No prompt generation — Phase 7.
+- No image references / file uploads.
+- Other 7 modules keep the placeholder.
+- No sidebar or marketing changes.
 
 ---
 
 ## Acceptance checklist
 
-- [ ] Admin walks Step 1 → picks **Apparel** → Step 3 shows the new form (no placeholder).
-- [ ] Admin picks any other module → Step 3 still shows the existing placeholder.
-- [ ] Selecting Flat lay / Detail only hides the Pose field.
-- [ ] Trying to select 4+ garments or 3+ camera-feel chips is blocked in UI.
-- [ ] Step 3 Next is disabled until required blocks are filled.
-- [ ] Step 4 review JSON shows `module: "apparel"` + populated `module_answers` matching the schema.
-- [ ] `bunx vitest run src/features/brand-scenes` — Phase 2 tests + new apparel tests all green.
-- [ ] No diff in DB, edge functions, or other category code paths.
+- [ ] Admin: Step 1 → Footwear → Step 3 shows the new form.
+- [ ] Admin: Step 1 → any non-apparel-non-footwear module → still sees the placeholder.
+- [ ] Admin: Step 1 → Apparel → still sees the Phase 4 form unchanged.
+- [ ] Selecting a still-life presentation hides the Pose field.
+- [ ] More than 2 camera-feel chips cannot be selected.
+- [ ] Step 3 Next is disabled until all 3 required selects are filled.
+- [ ] Step 4 review shows `module: "footwear"` + populated `module_answers`.
+- [ ] `bunx vitest run src/features/brand-scenes` — all phases (Phase 2 + apparel + footwear) green.
+- [ ] No diff outside `src/features/brand-scenes/`.
 
-After this phase I stop and wait for **"let's move to next phase"** before starting Phase 5 (next category — your pick: footwear, eyewear, bags, etc.).
+After this phase I stop and wait for **"let's move to next phase"** (eyewear is the natural next; you pick).
