@@ -4,20 +4,13 @@ import { WizardLayout } from "./WizardLayout";
 import { Step0ChooseSource } from "./steps/Step0ChooseSource";
 import { Step1ChooseModule } from "./steps/Step1ChooseModule";
 import { Step2ChooseSubFamily } from "./steps/Step2ChooseSubFamily";
-import { Step3BaseAnswers } from "./steps/Step3BaseAnswers";
+import { Step4Environment } from "./steps/Step4Environment";
+import { Step5Photography } from "./steps/Step5Photography";
 import { Step3Reference } from "./steps/Step3Reference";
 import { Step4Cast } from "./steps/Step4Cast";
-import { Step4ModuleQuestions } from "./steps/Step4ModuleQuestions";
 import { Step5Review } from "./steps/Step5Review";
 import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
 import { ResponsibilityModal } from "./components/ResponsibilityModal";
-import { isFashionStepValid } from "../modules/fashion/schema";
-import type { FashionModuleAnswers } from "../modules/fashion/schema";
-import { isFootwearStepValid } from "../modules/footwear/schema";
-import type { FootwearModuleAnswers } from "../modules/footwear/schema";
-import { isEyewearStepValid } from "../modules/eyewear/schema";
-import type { EyewearModuleAnswers } from "../modules/eyewear/schema";
-import { BRAND_SCENE_UNLOCKED_MODULES } from "../constants";
 import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy";
 
 const RESPONSIBILITY_KEY = "brand-scenes:responsibility-accepted";
@@ -40,20 +33,20 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "Pick the cast and how they relate to the product",
   },
   4: {
-    title: "Scene & mood",
-    subtitle: "Pick the world — everything below tunes to it",
+    title: "Environment",
+    subtitle: "Where the shot lives — pick the world it sits in",
   },
   5: {
-    title: "Category specifics",
-    subtitle: "A few extras unique to the family you picked",
+    title: "Photography & edit",
+    subtitle: "How the shot is taken and graded",
   },
   6: {
     title: "Preview & pick",
-    subtitle: "Generate three variants, then save the one that fits",
+    subtitle: "Review the scene, then generate 3 variations",
   },
   7: {
     title: "Review",
-    subtitle: "Confirm the payload before saving",
+    subtitle: "Confirm before saving",
   },
 };
 
@@ -81,7 +74,7 @@ export function BrandSceneWizard() {
     const subs = SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? [];
     return subs.find((s) => s.slug === answers.sub_family)?.label ?? null;
   })();
-  const stepShowsSubFamily = (step === 3 && !isReference) || (step === 4 && isReference) || step === 5;
+  const stepShowsSubFamily = (step === 3 && !isReference) || (step === 4 && isReference);
   const baseTitle = META[step].title;
   const title =
     stepShowsSubFamily && subFamilyLabel
@@ -109,34 +102,14 @@ export function BrandSceneWizard() {
     (answers.cast.preset === "replicate" || !!answers.cast.interaction) &&
     !!answers.scale?.preset;
 
-  const moduleHasCustomQuestions =
-    answers.module &&
-    BRAND_SCENE_UNLOCKED_MODULES.includes(answers.module);
-
-  const moduleStepValid = !moduleHasCustomQuestions
-    ? true
-    : answers.module === "fashion"
-      ? isFashionStepValid(answers.module_answers as Partial<FashionModuleAnswers>)
-      : answers.module === "footwear"
-        ? isFootwearStepValid(
-            answers.module_answers as Partial<FootwearModuleAnswers>,
-          )
-        : answers.module === "eyewear"
-          ? isEyewearStepValid(
-              answers.module_answers as Partial<EyewearModuleAnswers>,
-            )
-          : true;
-
   // ---- Gating (post-reorder: Cast = step 3 in wizard flow, step 4 in reference flow) ----
   const wizardCastStep = isReference ? 4 : 3;
-  const wizardAestheticStep = isReference ? null : 4;
 
   const nextDisabled =
     (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
-    (step === wizardCastStep && !castStepValid) ||
-    (step === 5 && !isReference && !moduleStepValid);
+    (step === wizardCastStep && !castStepValid);
 
   let nextDisabledReason: string | null = null;
   if (nextDisabled) {
@@ -158,11 +131,8 @@ export function BrandSceneWizard() {
         nextDisabledReason = "Pick how the cast holds, wears, or stands next to the product";
       else if (!answers.scale?.preset)
         nextDisabledReason = "Pick a product scale";
-    } else if (step === 5) {
-      nextDisabledReason = "Fill in the remaining required details";
     }
   }
-  void wizardAestheticStep;
 
   // Reset scroll to top of the wizard whenever the step changes.
   // The wizard renders inside AppShell's <main id="app-main-scroll"> which is
@@ -278,9 +248,9 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {/* Step 4 — wizard flow: SCENE AESTHETIC. Reference flow: CAST. */}
+        {/* Step 4 — wizard flow: ENVIRONMENT. Reference flow: CAST. */}
         {step === 4 && !isReference && (
-          <Step3BaseAnswers
+          <Step4Environment
             module={answers.module}
             subFamily={answers.sub_family}
             castPreset={answers.cast?.preset}
@@ -302,11 +272,14 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 5 && !isReference && answers.module && (
-          <Step4ModuleQuestions
+        {/* Step 5 — wizard flow: PHOTOGRAPHY & EDIT. (Reference flow skips to step 6.) */}
+        {step === 5 && !isReference && (
+          <Step5Photography
             module={answers.module}
-            answers={answers.module_answers}
-            onChange={(patch) => dispatch({ type: "setModuleAnswers", patch })}
+            subFamily={answers.sub_family}
+            castPreset={answers.cast?.preset}
+            value={answers.base}
+            onChange={(patch) => dispatch({ type: "setBase", patch })}
           />
         )}
 
