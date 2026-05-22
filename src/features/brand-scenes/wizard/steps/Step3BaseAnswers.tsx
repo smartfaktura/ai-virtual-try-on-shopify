@@ -161,11 +161,13 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
             : "Pick a scene type above to see tailored settings (you can still type your own)."
         }
       >
-        <SettingPicker
-          options={settingPool}
-          value={value.setting}
-          onChange={handleSetting}
-        />
+        <div className="scroll-mt-24">
+          <SettingPicker
+            options={settingPool}
+            value={value.setting}
+            onChange={handleSetting}
+          />
+        </div>
       </Section>
 
       {warnings.length > 0 && (
