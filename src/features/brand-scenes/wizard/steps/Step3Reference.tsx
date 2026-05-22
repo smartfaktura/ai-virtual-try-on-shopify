@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Chip } from "../components/Chip";
+import { WizardCard } from "../components/WizardCard";
 import {
   BRAND_SCENE_NAME_MAX,
   BRAND_SCENE_NOTE_MAX,
