@@ -360,44 +360,75 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
       </Section>
 
 
-      {/* Phase 7d — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
+      {/* Phase 7g — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
       <div className="space-y-7 pt-2 border-t border-border/60">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
-          More creative dials
+          Stage C · More creative dials
         </div>
         {applicableFieldsCtx(SCENE_EXTRAS_FIELDS, {
           module,
           sub_family: subFamily,
-          scene_type: value.scene_type,
+          scene_type: sceneType,
           setting: value.setting,
           cast: castPreset,
           values: { ...(value.extras ?? {}), _weather: value.weather },
           auto: value.auto ?? {},
-        }).map((f) => (
-          <ExtrasPillField
-            key={f.key}
-            field={f}
-            value={value.extras?.[f.key]}
-            autoFilled={!!value.auto?.[f.key]}
-            onChange={(next) => {
-              const ctx: SceneCtx = {
-                module,
-                sub_family: subFamily,
-                scene_type: value.scene_type,
-                setting: value.setting,
-                cast: castPreset,
-                values: value.extras ?? {},
-                auto: value.auto ?? {},
-              };
-              const { values, auto } = applyCascade(f.key, next, ctx);
-              // Strip undefined entries.
-              const cleaned: Record<string, string> = {};
-              for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
-              onChange({ extras: cleaned, auto });
-            }}
-          />
-        ))}
+          recommendations: value.recommendations ?? {},
+        }).map((f) => {
+          const isColorField =
+            f.key === "backdrop_color" ||
+            f.key === "backdrop_color_a" ||
+            f.key === "backdrop_color_b";
+          return (
+            <ExtrasPillField
+              key={f.key}
+              field={f}
+              value={value.extras?.[f.key]}
+              autoFilled={!!value.auto?.[f.key]}
+              recommended={value.recommendations?.[f.key]}
+              onChange={(next) => {
+                const ctx: SceneCtx = {
+                  module,
+                  sub_family: subFamily,
+                  scene_type: sceneType,
+                  setting: value.setting,
+                  cast: castPreset,
+                  values: value.extras ?? {},
+                  auto: value.auto ?? {},
+                  recommendations: value.recommendations ?? {},
+                };
+                const { values, auto, recommendations } = applyCascade(f.key, next, ctx);
+                const cleaned: Record<string, string> = {};
+                for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
+                onChange({ extras: cleaned, auto, recommendations });
+              }}
+            >
+              {isColorField && (
+                <BackdropColorField
+                  value={value.extras?.[f.key]}
+                  onChange={(next) => {
+                    const ctx: SceneCtx = {
+                      module,
+                      sub_family: subFamily,
+                      scene_type: sceneType,
+                      setting: value.setting,
+                      cast: castPreset,
+                      values: value.extras ?? {},
+                      auto: value.auto ?? {},
+                      recommendations: value.recommendations ?? {},
+                    };
+                    const { values, auto, recommendations } = applyCascade(f.key, next, ctx);
+                    const cleaned: Record<string, string> = {};
+                    for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
+                    onChange({ extras: cleaned, auto, recommendations });
+                  }}
+                />
+              )}
+            </ExtrasPillField>
+          );
+        })}
       </div>
+
 
 
       <Section label="Avoid in this scene">
