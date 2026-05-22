@@ -1,5 +1,5 @@
 import { ReactNode, useRef } from "react";
-import { ArrowDown, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WizardStep } from "./useWizardState";
@@ -88,17 +88,6 @@ export function WizardLayout({
     </Button>
   );
 
-  const JumpButton = (
-    <Button
-      size="pill"
-      variant="outline"
-      onClick={handleNextClick}
-      className="gap-1.5"
-    >
-      <ArrowDown className="w-3.5 h-3.5" />
-      Jump to fix
-    </Button>
-  );
 
   return (
     <div ref={rootRef} className="max-w-3xl mx-auto space-y-8 pb-2">
@@ -192,7 +181,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  <span className="flex-1">{JumpButton}</span>
+                  <span className="flex-1">{NextButton}</span>
                 </DisabledTooltip>
               ) : (
                 <span className="flex-1">{NextButton}</span>
@@ -214,7 +203,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  {JumpButton}
+                  {NextButton}
                 </DisabledTooltip>
               ) : (
                 NextButton
