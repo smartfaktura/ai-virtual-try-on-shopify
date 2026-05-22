@@ -1,172 +1,84 @@
+# Brand Scene Wizard — close the remaining gaps
 
-# Plan — Cast step + Product scale + Reference replicate mode
+All saved scenes are previewed in the library at **4:5**, so the wizard should stop asking and just lock it. While we're in there, fill the holes that still cause weak generations.
 
-## Why
+## 1. Lock aspect ratio to 4:5
 
-Today's wizard captures aesthetic (scene type, mood, lighting, framing) but is silent on the three things that decide whether a scene works:
+- Remove the **Aspect ratio** pill block from `Step3BaseAnswers.tsx`.
+- `base.aspect_ratio` always written as `"4:5"` in `useWizardState` initial state and on every save.
+- `buildBaseDirective` / `assembleSceneDirective` always emit `ASPECT RATIO: 4:5 (portrait, vertical)`.
+- Schema keeps the field (for forward-compat) but it's no longer user-editable.
+- Step 6 generation calls hard-code 4:5.
 
-1. **Who is in it and what they do with the product** — no subject step.
-2. **How big the product is in the frame** — AI has no scale anchor.
-3. **What the reference image actually means** — currently ambiguous; uploads often regenerate to "empty location" or override user direction.
+## 2. Step 3 — Scene aesthetic, add what's missing
 
-This plan adds one new step (**Cast & product interaction**) plus a **Product scale** block, tightens the reference flow with a clear intent + a new **"Replicate exactly"** mode, and introduces a 3-preview generation loop before the user commits a scene to their private library.
+Keep existing blocks (Scene type, Mood, Lighting, Framing, Time of day, Notes) and add:
 
-## Naming
+- **Setting / environment** (single-select pills, optional): `Urban street`, `Architectural interior`, `Nature`, `Beach / water`, `Studio cyclorama`, `Tabletop surface`, `Vehicle / transit`, `Domestic`. Custom allowed.
+- **Weather / atmosphere** (optional, single): `Clear`, `Overcast`, `Rain / wet`, `Fog / haze`, `Snow`, `Dusty / desert`, `Smoke / steam`.
+- **Season** (optional, single): `Spring`, `Summer`, `Autumn`, `Winter`, `Season-less`.
+- **Camera & lens** (optional, single pills, plain language — no mm jargon as primary label):  
+  `Wide perspective (24mm)`, `Standard (35mm)`, `Portrait (50mm)`, `Tele compression (85mm)`, `Macro detail`.
+- **Depth of field** (optional, single): `Deep — everything sharp`, `Balanced`, `Shallow — subject pop`, `Extreme bokeh`.
+- **Color palette anchor** (optional): 6 curated swatches matching brand-memory palettes (Warm neutral, Cool neutral, Earthy terracotta, Sage & cream, Monochrome, Bold accent) **plus** a free-text "Custom palette" chip. Stored as `base.palette` (preset key + optional free text).
+- **Finish / film look** (optional, single): `Clean digital`, `Soft film grain`, `Editorial matte`, `High-contrast glossy`, `Sun-bleached`.
 
-- New step: **"Cast & product interaction"** (key `cast`)
-- New sub-block: **"Product scale"** (key `scale`)
-- Reference upload gains an explicit **intent** selector + a **Replicate** mode
+All use the existing `<Chip>` + `AddChip` pattern — same visual language as Mood/Lighting today.
 
-## Wizard shape
+## 3. Step 4 — Cast & interaction, plug small holes
+
+- **Wardrobe / styling color anchor** (optional, only when `hasPeople`): pill group with neutral-anchor + accent options, plus free-text. Stored as `cast.wardrobe_color`. Used so model outfits don't fight the product palette.
+- **Cast scale relationship** (auto, no UI): when `cast.preset !== "none"` and product `scale.preset` is set, prompt assembler emits a sentence comparing cast height to product size (e.g. "product is handheld, ~20cm — sits in palm").
+- Keep current Cast preset / People details / Interaction / Action / Scale / Note blocks unchanged.
+
+## 4. Negative / avoid block — promote to its own step section
+
+Currently `negative_note` lives only on the Review step. Add a compact **"Avoid in this scene"** textarea to **Step 3** (above Notes) so users set it when they're thinking about the look, not at the end. Keep the Review copy as read-only summary.
+
+## 5. Prompt assembler updates
+
+`assembleSceneDirective.ts` extended to render, in this order:
 
 ```text
-0  Source              (wizard | reference)
-1  Family
-2  Sub-family
-3  Scene aesthetic     (existing — + aspect ratio + time of day)
-4  Cast & interaction  ← NEW — runs in BOTH flows
-5  Category details    (wizard only)
-6  Preview & pick      ← NEW — generate 3, pick 1, save
-7  Review / saved
+SCENE TYPE: ...
+SETTING: ...
+WEATHER: ...
+SEASON: ...
+TIME OF DAY: ...
+MOOD: ...
+LIGHTING: ...
+CAMERA: ... (lens) — DEPTH OF FIELD: ...
+FRAMING: ...
+ASPECT RATIO: 4:5 (portrait, vertical) — REQUIRED
+COLOR PALETTE: ...
+FINISH: ...
+CAST: ... (+ wardrobe color, action, interaction)
+PRODUCT SCALE: ... (+ cast-vs-product sentence)
+REFERENCE INTENT: ... (only if reference flow)
+NOTES: ...
+AVOID: ...
 ```
 
-## Step 4 — Cast & product interaction
+Tests in `__tests__/` updated: aspect ratio always 4:5; new fields appear when set; assembler stable when fields are omitted.
 
-Pill blocks using existing `Chip` / `AddChip` primitives.
+## 6. Out of scope
 
-1. **Cast** (single-select, required)
-   - `Solo person`, `Two people`, `Group (3+)`, `Hands only`, `No people — product hero`
-   - **Reference-only extra option:** `Replicate reference exactly` — see "Replicate mode" below.
-2. **People details** (only when cast ≠ "No people" and not "Replicate")
-   - Gender mix · Age feel · Vibe (`Athlete`, `Creative`, `Professional`, `Casual`, `Editorial model`)
-3. **Product interaction** (single-select, required unless Replicate)
-   - `Wearing`, `Holding`, `Using`, `Placed beside`, `Hero — product only`
-   - Family-filtered.
-4. **Action / energy** (optional)
-   - `Still`, `Walking`, `Mid-motion`, `Seated`, `Candid`
-5. **Product scale** (single-select, required) — see below
-6. **Free note** (160 chars)
-
-## Product scale block
-
-**Tier A — preset** (always shown):
-- `Pocket` (≤15 cm) · `Handheld` (15–35) · `Carry` (35–80) · `Furniture` (80–200) · `Architectural` (>200) · `Wearable on body` (scaled to model)
-- Auto-suggested from sub-family, always overridable.
-
-**Tier B — exact dimensions** (collapsible "Add exact size"):
-- W × H × D, units cm/in. Wins over preset in the directive when provided.
-
-## Reference flow — three explicit modes
-
-Today reference uploads collapse three different intents into one. Split them with a small radio at the top of Step 3 (reference):
-
-**"Use this image as…"**
-- `Replicate exactly` — **NEW.** Keep subject, product, framing, lighting all locked. Wizard's people/interaction blocks hide; Cast block shows only "Replicate reference exactly" auto-selected. Scale still asked because the inserted product may not be the same physical size as what's in the photo.
-- `Location only` — keep the place, replace everything else. Cast + interaction fully editable.
-- `Composition` — keep framing/lighting/layout, swap subject. Cast + interaction fully editable.
-- `Vibe / mood board` — loose inspiration only.
-
-This single choice deterministically prefixes the prompt builder:
-- Replicate → "Do not alter subject, pose, framing, or environment. Insert the product as a faithful in-place addition matching the scene's lighting."
-- Location → "Keep reference as location. Replace cast with: …"
-- Composition → "Keep reference framing/lighting/layout. Replace subject with: …"
-- Vibe → "Loose inspiration from reference. Generate fresh."
-
-The old free-text "Product placement" field is removed — Cast + Scale + Intent supersede it.
-
-## Step 6 — Preview & pick (new)
-
-This is the part that lets the user "fit 1 to save". After Step 5:
-
-- **Generate 3 variants** of the scene in parallel using the assembled directive.
-- Each card shows the image + a small "Refine" button.
-- **Refine inline:** the user can tweak Cast / Scale / Notes (a compact drawer) and **regenerate** without leaving this step. New variants replace old ones; rejected ones are discarded.
-- **Pick one** → fades the other two and unlocks "Save to Brand Scenes Library".
-- Saved scene stores: chosen image URL + full final answers payload (cast, scale, base, reference + intent if any) so the prompt can be re-run later.
-
-Refine→regenerate works for both flows, including Reference + Replicate (re-runs with same lock but the user can adjust scale or add a note).
-
-This loop is what the user described: explore 3, iterate cast details, commit only when satisfied.
-
-## Other gaps folded in
-
-- **Aspect ratio** — chip row on Step 3: `4:5` (default), `1:1`, `3:4`, `16:9`. Generation already supports per-scene ratios (see [Advanced Scene Controls](mem://features/product-images/advanced-scene-controls)).
-- **Time of day** — split out of Lighting: `Morning`, `Midday`, `Evening`, `Night` (optional).
-- **Fashion `wearer`** — replaced by Cast. Keep in schema as derived value (`solo+wearing → on_model_full`, `hands_only → detail_only`, `no_people+hero → flat_lay`) so existing prompt-builders keep working.
-- **"Avoid" field** — optional textarea on Review ("no logos visible, no children, no…"). Maps to negative-prompt slot.
-
-## Schema additions (frontend-only, no migration)
-
-`brand_scene_answers` (JSONB, no SQL migration; `protect_brand_scene_writes` already accepts arbitrary JSON):
-
-```ts
-cast: {
-  preset: "solo" | "two" | "group" | "hands" | "none" | "replicate";
-  gender?: ("woman" | "man" | "mixed" | "any")[];
-  age?: ("young" | "adult" | "mature" | "mixed")[];
-  vibe?: "athlete" | "creative" | "professional" | "casual" | "editorial";
-  interaction?: "wearing" | "holding" | "using" | "beside" | "hero";  // optional when replicate
-  action?: "still" | "walking" | "motion" | "seated" | "candid";
-  note?: string;
-}
-
-scale: {
-  preset: "pocket" | "handheld" | "carry" | "furniture" | "architectural" | "on_body";
-  dimensions?: { w: number; h: number; d?: number; units: "cm" | "in" };
-}
-
-base.aspect_ratio?: "4:5" | "1:1" | "3:4" | "16:9";
-base.time_of_day?: "morning" | "midday" | "evening" | "night";
-
-reference_intent?: "replicate" | "location" | "composition" | "vibe";
-negative_note?: string;
-
-preview_variants?: { image_url: string; generation_id: string; chosen?: boolean }[];
-```
-
-All new fields optional in Zod so existing drafts parse. UI gates new fields per-step.
-
-## Prompt builders (shipped, not yet wired)
-
-- `buildCastDirective(cast, source, intent)` — handles "replicate" passthrough.
-- `buildScaleDirective(scale, family)`
-- `buildReferenceDirective(intent)` — emits the lock/replace/inspire prefix.
-- `assembleSceneDirective(answers)` — combines everything in canonical order. Used by Step 6's regenerate action and by future pipeline wiring.
-
-Wiring into the live product-images / catalog pipelines is **out of scope** for this PR; Step 6 uses the directive function directly against the existing image generation edge function so the preview loop works end-to-end.
-
-## Validation & gating
-
-- Step 3 (reference): image + name + `reference_intent` required.
-- Step 4: `cast.preset` + `scale.preset` required; `cast.interaction` required unless `cast.preset === "replicate"`.
-- Step 6: cannot save until one variant is picked.
-
-## Tests
-
-- `cast-step.test.tsx` — replicate option only shown for reference; people details hidden under replicate.
-- `scale-step.test.tsx` — auto-suggestion per family.
-- `reference-intent.test.ts` — directive prefix per intent.
-- `cast-directive.test.ts`, `scale-directive.test.ts`.
-- `preview-step.test.tsx` — refine→regenerate replaces variants; save disabled until pick.
-- Update `fashion-schema.test.ts` — Cast replaces `wearer`.
+- Wiring directive bundle into live `product-images` / `catalog` generation pipelines (separate PR).
+- Library card layout changes — already 4:5.
+- New persona/ethnicity fields on Cast (intentionally skipped; sensitive + brand-memory says no).
 
 ## Files
 
-New:
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
-- `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`
-- `src/features/brand-scenes/wizard/constants/{cast,scale}.ts`
-- `src/features/brand-scenes/prompt/{buildCastDirective,buildScaleDirective,buildReferenceDirective,assembleSceneDirective}.ts`
-- Tests above.
+**Edited**
+- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` — remove aspect ratio, add Setting / Weather / Season / Camera / DoF / Palette / Finish / Avoid blocks.
+- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — wardrobe color block.
+- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` — show new fields read-only.
+- `src/features/brand-scenes/wizard/useWizardState.ts` — default `aspect_ratio: "4:5"`, new setters.
+- `src/features/brand-scenes/types.ts` & `schema.ts` — optional fields for setting, weather, season, lens, dof, palette, finish, wardrobe_color.
+- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — render new fields, hard-code 4:5.
+- `src/features/brand-scenes/prompt/buildCastDirective.ts` — emit wardrobe color + cast-vs-product sentence.
 
-Edited:
-- `src/features/brand-scenes/types.ts` — new fields.
-- `src/features/brand-scenes/schema.ts` — Zod (all optional).
-- `src/features/brand-scenes/wizard/useWizardState.ts` — new actions, step renumbering, variant state.
-- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` — insert steps 4 + 6, gating, META.
-- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` — aspect ratio + time of day rows.
-- `src/features/brand-scenes/wizard/steps/Step3Reference.tsx` — intent radio incl. Replicate; drop free-text placement.
-- `src/features/brand-scenes/modules/fashion/FashionQuestions.tsx` — drop "Who's wearing it" + pose.
-- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` — Cast + Scale + Avoid summary; renumber to feed Preview step.
-
-Out of scope (separate PR): wiring the directive bundle into live product-images / catalog generation pipelines beyond the Preview step's own calls.
+**New**
+- `src/features/brand-scenes/wizard/constants/scene.ts` — settings, weather, season, lens, dof, palette, finish presets.
+- `src/features/brand-scenes/__tests__/scene-extras.test.ts`
+- `src/features/brand-scenes/__tests__/aspect-ratio-lock.test.ts`
