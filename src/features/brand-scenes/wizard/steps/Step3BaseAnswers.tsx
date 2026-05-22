@@ -361,6 +361,27 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
         />
       </Section>
 
+      {/* Phase 7d — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
+      <div className="space-y-7 pt-2 border-t border-border/60">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+          More creative dials
+        </div>
+        {applicableFields(SCENE_EXTRAS_FIELDS, module, undefined).map((f) => (
+          <ExtrasPillField
+            key={f.key}
+            field={f}
+            value={value.extras?.[f.key]}
+            onChange={(next) => {
+              const nextExtras = { ...(value.extras ?? {}) };
+              if (next === undefined) delete nextExtras[f.key];
+              else nextExtras[f.key] = next;
+              onChange({ extras: nextExtras });
+            }}
+          />
+        ))}
+      </div>
+
+
       <Section label="Avoid in this scene">
         <Textarea
           value={value.avoid ?? ""}
