@@ -454,18 +454,27 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
               {GROUPS.map((g) => {
                 const groupFields = fields.filter((f) => g.keys.includes(f.key));
                 if (groupFields.length === 0) return null;
+                const filledCount = groupFields.filter(
+                  (f) => !!value.extras?.[f.key],
+                ).length;
                 return (
                   <StageCGroup
                     key={g.label}
                     label={g.label}
                     defaultOpen={g.defaultOpen}
+                    count={filledCount}
                   >
                     {groupFields.map(renderField)}
                   </StageCGroup>
                 );
               })}
               {ungrouped.length > 0 && (
-                <StageCGroup label="More">{ungrouped.map(renderField)}</StageCGroup>
+                <StageCGroup
+                  label="More"
+                  count={ungrouped.filter((f) => !!value.extras?.[f.key]).length}
+                >
+                  {ungrouped.map(renderField)}
+                </StageCGroup>
               )}
             </>
           );
