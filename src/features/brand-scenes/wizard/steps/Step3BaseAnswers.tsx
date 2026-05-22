@@ -7,7 +7,6 @@ import { Section } from "../components/Section";
 import type { BrandSceneBaseAnswers } from "../../types";
 import type { BrandSceneModule } from "../../constants";
 import {
-  SCENE_SETTINGS,
   SCENE_WEATHER,
   SCENE_SEASONS,
   SCENE_LENSES,
@@ -45,9 +44,16 @@ import {
 } from "../constants/sceneExtras";
 import { SCENE_EXTRAS_FIELDS, applicableFieldsCtx } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
-import { SmartSettingCard } from "../components/SmartSettingCard";
-import { SCENE_TYPES, getSettingPool, type SceneTypeId } from "../registry/settingsBySubfamily";
-import { applyCascade, applySettingCascade, type SceneCtx } from "../rules/sceneRules";
+import { SceneTypePicker } from "../components/SceneTypePicker";
+import { SettingPicker } from "../components/SettingPicker";
+import { BackdropColorField } from "../components/BackdropColorField";
+import { getSettingPool, type SceneTypeId } from "../registry/settingsBySubfamily";
+import {
+  applyCascade,
+  applySettingCascade,
+  softWarnings,
+  type SceneCtx,
+} from "../rules/sceneRules";
 import { resolveAll, tuningLabel } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
 
@@ -60,22 +66,7 @@ interface Props {
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
 
-const LEGACY_SCENE_TYPES = [
-  "Indoor studio",
-  "Indoor lifestyle",
-  "Outdoor location",
-  "Outdoor nature",
-  "Lifestyle moment",
-  "Architectural",
-  "Tabletop / Flat lay",
-] as const;
-void SCENE_TYPES;
-void SmartSettingCard;
-void getSettingPool;
-void applyCascade;
-void applySettingCascade;
-type _SceneTypeId = SceneTypeId;
-type _SceneCtx = SceneCtx;
+
 
 
 const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
@@ -93,8 +84,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
   const tuned = tuningLabel(module, subFamily);
 
   // Filter helpers — expanded=true returns the full global list.
-  const settings = (expanded: boolean) =>
-    expanded ? Array.from(SCENE_SETTINGS) : resolved.settings;
   const lenses = (expanded: boolean) =>
     expanded ? SCENE_LENSES : SCENE_LENSES.filter((l) => resolved.lens.includes(l.value));
   const dofs = (expanded: boolean) =>
@@ -108,6 +97,49 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
   const propDensityMax = resolved.propDensityMax;
 
+  const sceneType = value.scene_type as SceneTypeId | undefined;
+  const settingPool = useMemo(
+    () => getSettingPool(module, subFamily, sceneType),
+    [module, subFamily, sceneType],
+  );
+
+  const ctxBase: Omit<SceneCtx, "values" | "auto" | "recommendations"> = {
+    module,
+    sub_family: subFamily,
+    scene_type: sceneType,
+    setting: value.setting,
+    cast: castPreset,
+  };
+
+  const warnings = softWarnings({
+    ...ctxBase,
+    values: { ...(value.extras ?? {}), _weather: value.weather },
+    auto: value.auto ?? {},
+    recommendations: value.recommendations ?? {},
+  });
+
+  const handleSceneType = (next: SceneTypeId | undefined) => {
+    onChange({ scene_type: next });
+  };
+
+  const handleSetting = (next: string | undefined) => {
+    const res = applySettingCascade(next, {
+      ...ctxBase,
+      setting: next,
+      values: value.extras ?? {},
+      auto: value.auto ?? {},
+      recommendations: value.recommendations ?? {},
+    });
+    const cleaned: Record<string, string> = {};
+    for (const [k, v] of Object.entries(res.values)) if (v !== undefined) cleaned[k] = v;
+    onChange({
+      setting: next,
+      extras: cleaned,
+      auto: res.auto,
+      recommendations: res.recommendations,
+    });
+  };
+
   return (
     <div className="space-y-7">
       {tuned && (
@@ -116,24 +148,34 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         </div>
       )}
 
-      <PillField
-        label="Scene type"
-        presets={LEGACY_SCENE_TYPES as unknown as readonly string[]}
-        current={value.aesthetic ?? ""}
-        placeholder="Describe your own scene type"
-        onChange={(next) => onChange({ aesthetic: next })}
-      />
-
-      <Section label="Setting / environment" expandable>
-        {(expanded) => (
-          <PillFieldInner
-            presets={settings(expanded)}
-            current={value.setting ?? ""}
-            placeholder="Describe the setting"
-            onChange={(next) => onChange({ setting: next })}
-          />
-        )}
+      <Section label="Stage A · Scene type" hint="Pick the world. Everything below tunes to it.">
+        <SceneTypePicker value={sceneType} onChange={handleSceneType} />
       </Section>
+
+      <Section
+        label="Stage B · Setting / environment"
+        hint={
+          sceneType
+            ? "Tailored to your category — or add your own."
+            : "Pick a scene type above to see tailored settings (you can still type your own)."
+        }
+      >
+        <SettingPicker
+          options={settingPool}
+          value={value.setting}
+          onChange={handleSetting}
+        />
+      </Section>
+
+      {warnings.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] px-3 py-2 text-[12px] text-amber-700 dark:text-amber-300 space-y-1">
+          {warnings.map((w) => (
+            <div key={w}>· {w}</div>
+          ))}
+        </div>
+      )}
+
+
 
 
       <Section label="Weather / atmosphere">
@@ -318,44 +360,75 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
       </Section>
 
 
-      {/* Phase 7d — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
+      {/* Phase 7g — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
       <div className="space-y-7 pt-2 border-t border-border/60">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
-          More creative dials
+          Stage C · More creative dials
         </div>
         {applicableFieldsCtx(SCENE_EXTRAS_FIELDS, {
           module,
           sub_family: subFamily,
-          scene_type: value.scene_type,
+          scene_type: sceneType,
           setting: value.setting,
           cast: castPreset,
           values: { ...(value.extras ?? {}), _weather: value.weather },
           auto: value.auto ?? {},
-        }).map((f) => (
-          <ExtrasPillField
-            key={f.key}
-            field={f}
-            value={value.extras?.[f.key]}
-            autoFilled={!!value.auto?.[f.key]}
-            onChange={(next) => {
-              const ctx: SceneCtx = {
-                module,
-                sub_family: subFamily,
-                scene_type: value.scene_type,
-                setting: value.setting,
-                cast: castPreset,
-                values: value.extras ?? {},
-                auto: value.auto ?? {},
-              };
-              const { values, auto } = applyCascade(f.key, next, ctx);
-              // Strip undefined entries.
-              const cleaned: Record<string, string> = {};
-              for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
-              onChange({ extras: cleaned, auto });
-            }}
-          />
-        ))}
+          recommendations: value.recommendations ?? {},
+        }).map((f) => {
+          const isColorField =
+            f.key === "backdrop_color" ||
+            f.key === "backdrop_color_a" ||
+            f.key === "backdrop_color_b";
+          return (
+            <ExtrasPillField
+              key={f.key}
+              field={f}
+              value={value.extras?.[f.key]}
+              autoFilled={!!value.auto?.[f.key]}
+              recommended={value.recommendations?.[f.key]}
+              onChange={(next) => {
+                const ctx: SceneCtx = {
+                  module,
+                  sub_family: subFamily,
+                  scene_type: sceneType,
+                  setting: value.setting,
+                  cast: castPreset,
+                  values: value.extras ?? {},
+                  auto: value.auto ?? {},
+                  recommendations: value.recommendations ?? {},
+                };
+                const { values, auto, recommendations } = applyCascade(f.key, next, ctx);
+                const cleaned: Record<string, string> = {};
+                for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
+                onChange({ extras: cleaned, auto, recommendations });
+              }}
+            >
+              {isColorField && (
+                <BackdropColorField
+                  value={value.extras?.[f.key]}
+                  onChange={(next) => {
+                    const ctx: SceneCtx = {
+                      module,
+                      sub_family: subFamily,
+                      scene_type: sceneType,
+                      setting: value.setting,
+                      cast: castPreset,
+                      values: value.extras ?? {},
+                      auto: value.auto ?? {},
+                      recommendations: value.recommendations ?? {},
+                    };
+                    const { values, auto, recommendations } = applyCascade(f.key, next, ctx);
+                    const cleaned: Record<string, string> = {};
+                    for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
+                    onChange({ extras: cleaned, auto, recommendations });
+                  }}
+                />
+              )}
+            </ExtrasPillField>
+          );
+        })}
       </div>
+
 
 
       <Section label="Avoid in this scene">

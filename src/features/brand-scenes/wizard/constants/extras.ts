@@ -502,11 +502,8 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Studio FX",
     presets: STUDIO_FX,
     dependent: true,
-    hint: "Practical effects rigged inside the studio",
-    appliesWhen: (c) =>
-      c.scene_type === "studio" &&
-      // Rain/snow/smoke weather inside a studio = unlock practical FX.
-      ["rain", "snow", "smoke", "fog"].includes(c.values._weather ?? ""),
+    hint: "Practical effects rigged inside the studio — rain rig, haze, wet floor",
+    appliesWhen: (c) => c.scene_type === "studio",
   },
   {
     key: "time_of_day_detail",

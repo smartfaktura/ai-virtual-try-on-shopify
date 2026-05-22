@@ -1,154 +1,115 @@
-# Phase 7f — Smart, Conditional Wizard
+# Phase 7g — Wizard Logic Polish (Freedom-First)
 
-Goal: stop dumping 100+ pills at the user. Pick **Cast → Scene Type → Setting** first, then reveal only the dials that matter, with **dependent fields** that auto-prefill sensible values (e.g. "Two-tone hard split" backdrop → instantly show two color pickers prefilled from the palette anchor). Setting pools become **category × sub-family aware** (swimwear → beach/pool/villa/jungle; jackets → city/forest/snow, not beach). Allow exotic combos like "rain in studio".
+Your answers set the tone: **no hard blocks, no forced couplings, custom inputs everywhere, auto-fills are recommendations not locks.** This phase fills the remaining logic gaps under those rules.
 
----
+## 1. Blind spots found in current wizard
 
-## 1. New flow inside the Aesthetic step
+After auditing `extras.ts`, `sceneRules.ts`, `settingsBySubfamily.ts`, and per-module schemas:
 
-Current: one long scrolling step with every dial.
-New: a **3-stage progressive form** inside Step 4 (Aesthetic):
+**Sub-families with no dedicated pool (fall through to generic GLOBAL):**
+- Jewelry: rings / necklaces / earrings / bracelets
+- Hats, caps & beanies — no on-head vs flat-lay split
+- Tech devices — no desk / hand / lifestyle split
+- Home furniture (only `home-decor` covered)
+- Food: snacks-food, food — only `beverages` covered
+- Watches — only tabletop; missing on-wrist lifestyle
+- Bags: wallets, belts, scarves
+- Fashion: jeans, hoodies, garments
+- Beauty: makeup-lipsticks variants
+
+**Logic inconsistencies:**
+- `scene_type` is in schema but Step 3 never renders it as Stage A (SmartSettingCard exists but isn't wired)
+- `setting` field exists but no Stage B UI surfaces it
+- Cascades fire but cleared values lose the recommendation — no way to re-apply
+- Backdrop two-tone / gradient colors are raw free strings — no swatch picker
+- `studio_fx` rule requires `weather` first, but `weather` is hidden in studio → dead-end
+- Custom "+ Add your own" only exists on pill fields, not on settings or colors
+- `nextDisabledReason` doesn't mention Stage A / B requirements
+
+## 2. What gets built
+
+### A. Wire the 3-stage flow into Step 3
+- `Step3BaseAnswers.tsx` renders **Stage A — Scene Type** (6 cards), then **Stage B — Setting** (chips from `getSettingPool` + "Add your own" input), then **Stage C — Dials**.
+- Soft empty-states (no hard gate, matching your "allow freely" preference) — Stages B and C render explanatory placeholders until the prereq is chosen.
+- Custom setting input writes free text to `base.setting` and shows a subtle "custom" badge.
+
+### B. Recommendation system (replaces locks)
+- New `RecommendationHint.tsx` — when a cascade auto-fills a field, the user can clear it and a "✦ Re-apply recommendation: golden hour" chip stays available for one-click restore.
+- `applyCascade` keeps the recommendation in a separate `recommendations` map so cleared fields still know what was suggested.
+
+### C. Backdrop color picker
+- New `BackdropColorField.tsx` — 24-swatch curated palette + user's saved brand colors (`useUserSavedColors`) + custom hex input.
+- Auto-renders inside `ExtrasPillField` (via the `children` slot) when `backdrop_type` is `Two-tone hard split` or `Soft gradient wall`.
+- Replaces raw text storage for `backdrop_color_a`, `backdrop_color_b`, `gradient_from`, `gradient_to`.
+
+### D. Per-sub-family pool expansion
+Add entries to `settingsBySubfamily.ts` for every gap above. Examples:
 
 ```text
-Stage A — Scene type        (1 choice, 6 cards: Studio / Indoor lifestyle /
-                             Outdoor location / Outdoor nature / Architectural /
-                             Tabletop & flat-lay)
-   ↓ reveals
-Stage B — Setting / sub-environment
-   pool filtered by  module × sub_family × scene_type
-   e.g. swimwear + Outdoor location  → Beach, Hotel pool deck, Yacht,
-                                       Modern villa, Jungle pool, Rooftop pool
-        jackets + Outdoor location   → City street, Forest trail, Snowy alley,
-                                       Mountain pass, Industrial loft exterior
-   ↓ reveals
-Stage C — Contextual dials only (lighting, props, weather, backdrop, ...).
-   Each dial declares `appliesWhen({ scene_type, setting, module, sub_family, cast })`
-   and is hidden otherwise.
+jewelry/rings        tabletop → marble slab, velvet tray, stone shelf, water surface, sand
+                     studio   → plinth macro, sand bed, gradient sweep
+watches/watches +    outdoor_location → marina, mountain lodge, car interior, café counter
+                     indoor_lifestyle → atelier, library, hotel desk
+tech/tech-devices    tabletop → wood desk, marble slab, lit surface
+                     indoor_lifestyle → minimalist desk, café, studio bench
+hats-caps/caps       outdoor_location → skate plaza, rooftop
+                     tabletop → flat-lay knolling
+                     studio → cyclorama, plinth
+food-drink/food      tabletop → linen table, wood board, marble slab
+                     indoor_lifestyle → sunlit kitchen, café table
+bags-acc/wallets     tabletop heavy + studio plinth
+fashion/jeans|hoodies|garments  → tuned from jackets/streetwear bases
 ```
 
-Each completed stage collapses into a compact summary chip the user can click to edit. No stage shows more than ~12 chips at once; an inline "Show more" reveals the global pool as today.
+Target: every sub-family from `onboardingTaxonomy.SUB_TYPES_BY_FAMILY` has ≥1 explicit pool entry across ≥2 scene types. ~6–8 settings each.
 
----
+### E. Custom inputs everywhere (your answer #3)
+- Stage B settings — "+ Add your own setting" inline input
+- Backdrop colors — custom hex input
+- Audit every `ExtrasPillField` for `allowCustom` (already supported by the component)
+- Free-text fields for surface, jewelry tray material, food garnish where missing
 
-## 2. Rule engine for dependent fields
+### F. Soft warnings, never blocks (your answer #1)
+- New `softWarnings(ctx): string[]` in `sceneRules.ts` returns informational notes for unusual combos (e.g. "Jackets on tropical beach — unusual but go for it").
+- Renders as a dismissible note chip below Stage B. Never blocks Next.
 
-New module `wizard/rules/sceneRules.ts` exporting a declarative table:
+### G. Studio-FX dead-end fix
+- `studio_fx` becomes available in `studio` scene type WITHOUT needing `weather` first.
+- Self-contained options: rain rig, haze machine, wet floor, smoke, wind machine.
 
-```ts
-type RuleCtx = {
-  module?: BrandSceneModule;
-  sub_family?: string;
-  scene_type?: SceneType;
-  setting?: string;
-  cast?: CastPreset;
-  values: Record<string, string | undefined>;   // current extras
-};
+### H. Cast stays independent (your answer #2)
+- No coupling rules added. Existing `hideWhenNoCast` on camera-angle fields stays (UX, not coupling — angles literally need a person).
+- Audit removes any other implicit cast assumptions.
 
-type FieldRule = {
-  key: string;                       // extras key the field writes
-  appliesWhen?: (c: RuleCtx) => boolean;
-  /** When this field gets a value, seed/clear other fields. */
-  cascade?: (value: string, c: RuleCtx) => Partial<Record<string, string|undefined>>;
-  /** Reveal extra child fields once a specific value is picked. */
-  childrenWhen?: (value: string) => string[];
-};
-```
+## 3. Files
 
-Examples:
-- `backdrop_type = "Two-tone hard split"` → cascades `backdrop_color_a`, `backdrop_color_b` to two complementary swatches drawn from the chosen `palette_preset` (or default dusty-rose + cocoa). Reveals two color-picker fields.
-- `backdrop_type = "Soft gradient wall"` → reveals `gradient_direction` (chips: top→bottom, left→right, radial) + `gradient_stops` (auto from palette).
-- `scene_type = "Indoor studio"` + `weather = "Rain"` → unlocks `studio_fx` field with presets `Practical rain rig`, `Water mist`, `Wet-look spray`, `Reflective wet floor`, plus auto-sets `shadows = "wet"`.
-- `setting = "Beach"` → cascades `light_direction = "Backlit golden hour"`, `motion = "Wind in hair"`, hides `backdrop_type` (outdoor).
-- `cast = none` → hides `pose_energy`, `gaze`, `hair`, `makeup`, body-part angles (already partly in place; rules engine unifies it).
-- `aesthetic_era = "Brutalist"` → cascades `realism = "documentary"`, `saturation = "desaturated"` unless user has overridden.
+**New**
+- `wizard/components/SceneTypePicker.tsx` (Stage A)
+- `wizard/components/SettingPicker.tsx` (Stage B with custom input)
+- `wizard/components/BackdropColorField.tsx`
+- `wizard/components/RecommendationHint.tsx`
+- `__tests__/setting-pools-coverage.test.ts`
+- `__tests__/recommendation-reapply.test.ts`
+- `__tests__/backdrop-color-field.test.ts`
 
-Cascades only fire when the target field is empty or marked `auto`, never overwriting user picks. Every auto-filled field shows a tiny "✦ auto" badge and a one-click "clear" affordance.
+**Edited**
+- `wizard/registry/settingsBySubfamily.ts` — add missing sub-family pools
+- `wizard/rules/sceneRules.ts` — keep recommendations after clear, add `softWarnings(ctx)`
+- `wizard/constants/extras.ts` — expand `appliesWhen`, allow `studio_fx` without `weather`, ensure `allowCustom` is set where useful
+- `wizard/steps/Step3BaseAnswers.tsx` — wire Stage A → B → C, mount BackdropColorField
+- `wizard/WizardLayout.tsx` — `nextDisabledReason` mentions Stage A/B when relevant
+- `prompt/assembleSceneDirective.ts` — emit `setting` + color fields in canonical order
+- `schema.ts` / `types.ts` — `setting: string` (already free), add `recommendations: Record<string, string>` to state
 
----
+## 4. Out of scope
+- No backend changes, no taxonomy renames, no credit/billing logic
+- Steps 1, 2, 4 (Cast), 5 untouched except for tooltip wording
 
-## 3. Category × sub-family setting pools
+## 5. Tests
+All current 89 tests stay green. New checks:
+- Every onboarding sub-family resolves to a non-empty pool for ≥2 scene types
+- Cleared auto-fill still exposes a re-apply hint
+- `BackdropColorField` only mounts for two-tone / gradient backdrop types
+- `softWarnings` returns strings, never throws or blocks
 
-Replace the single `SCENE_SETTINGS` list with `wizard/registry/settingsBySubfamily.ts`:
-
-```ts
-SETTINGS_BY_SUBFAMILY: Record<string /* `${module}/${sub_family}` */, {
-  [scene_type: string]: string[];      // ordered pool
-}>
-```
-
-Seed entries (excerpt):
-- `fashion/swimwear` → outdoor_location: Beach, Hotel pool deck, Yacht, Modern villa pool, Jungle pool, Rooftop pool, Salt flats, Cliff edge; outdoor_nature: Ocean shoreline, Tropical lagoon, Desert oasis.
-- `fashion/jackets` → outdoor_location: City street, Old town alley, Industrial loft exterior, Mountain pass; outdoor_nature: Forest trail, Snowy alley, Foggy moor; indoor_lifestyle: Loft, Atelier, Diner.
-- `fashion/dresses` → architectural lobby, Gallery, Rooftop terrace, Ballroom, Garden.
-- `footwear/sneakers` → Skate plaza, Subway platform, Court, Rooftop, Warehouse.
-- `eyewear/sunglasses` → Beach boardwalk, Marina, Convertible interior, Rooftop pool.
-- `beauty/fragrance` → Marble vanity, Sunlit windowsill, Velvet drape, Wet glass, Garden bench.
-- `home/tabletop` → Linen-set table, Kitchen counter, Outdoor terrace, Studio plinth.
-
-Fallback chain: `module/sub_family` → `module/*` → global pool. Anything missing degrades gracefully so we don't block new sub-families.
-
-Same registry-driven approach is extended to `BACKDROP_TYPES`, `FLOOR_TYPES`, `MOTION`, `CAMERA_ANGLES`, `LIGHT_DIRECTIONS`. Each pool can be tagged `{ indoor?: bool, outdoor?: bool, needsCast?: bool, family?: string[] }` so the rule engine filters them on the fly.
-
----
-
-## 4. Dependent UI primitives
-
-New components under `wizard/components/`:
-- `ConditionalField.tsx` — wraps a Section, hides itself when `appliesWhen` returns false, plays a 120 ms fade-in when it appears.
-- `AutoFillBadge.tsx` — tiny ✦ pill rendered next to auto-cascaded values, with a "use my own" click target.
-- `DualColorPicker.tsx` — used by two-tone backdrops and gradient stops; seeded from `palette_preset`.
-- `SmartSettingCard.tsx` — large image-less cards used in Stage B with the contextual setting names (Beach, Villa, Jungle, …) and a one-line vibe note.
-
-`ExtrasPillField` is updated to accept an optional `children` slot rendered after the chip row, so a backdrop type can immediately reveal its color-pickers in-place.
-
----
-
-## 5. State, schema, assembler
-
-- `useWizardState.ts`: add `scene_type` and `setting_subtype` to `base`, and add a `auto: Record<string, true>` flag map so we know which values were cascaded vs. user-chosen.
-- `schema.ts`: extend `brandSceneBaseAnswersSchema` with `scene_type` (enum) and keep `extras` open. Add validation: certain combos are blocked (`scene_type = Tabletop` + `cast = solo` → error "Tabletop scenes have no people; switch cast first").
-- `assembleSceneDirective.ts`: render the new keys in canonical order (Scene type → Setting → Backdrop {colors A/B if present} → Light → Motion → FX → Composition). Unknown keys continue to render as `Style (key): value.`
-
----
-
-## 6. Authoring & extensibility
-
-- All pools and rules live in plain TS tables (`registry/` + `rules/`) — no JSX changes needed to add new sub-family scenes.
-- A new dev-only `/dev/wizard-rules` page (admin) lists every rule and lets us test `RuleCtx` snapshots, so adding "swimwear → jungle pool" is one PR.
-
----
-
-## 7. Tests (Vitest, additive)
-
-- `scene-rules.test.ts` — Two-tone hard split seeds color A/B from palette; clearing backdrop clears children; rain + indoor studio unlocks `studio_fx` and sets `shadows = wet`.
-- `setting-pools.test.ts` — swimwear outdoor pool excludes "snowy alley"; jackets outdoor pool excludes "beach"; missing sub-family falls back to module pool.
-- `progressive-flow.test.ts` — Stage B is hidden until `scene_type` chosen; Stage C is hidden until `setting` chosen; cast-none hides person-only dials.
-- `assembler-rules.test.ts` — Cascaded values render with their friendly prefixes; auto-fill clearing removes them from the prompt.
-
-Existing 90 tests stay green.
-
----
-
-## 8. Files touched / created
-
-Created:
-- `src/features/brand-scenes/wizard/rules/sceneRules.ts`
-- `src/features/brand-scenes/wizard/registry/settingsBySubfamily.ts`
-- `src/features/brand-scenes/wizard/components/ConditionalField.tsx`
-- `src/features/brand-scenes/wizard/components/AutoFillBadge.tsx`
-- `src/features/brand-scenes/wizard/components/DualColorPicker.tsx`
-- `src/features/brand-scenes/wizard/components/SmartSettingCard.tsx`
-- `src/features/brand-scenes/__tests__/scene-rules.test.ts`
-- `src/features/brand-scenes/__tests__/setting-pools.test.ts`
-- `src/features/brand-scenes/__tests__/progressive-flow.test.ts`
-- `src/features/brand-scenes/__tests__/assembler-rules.test.ts`
-
-Edited:
-- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` (3-stage progressive layout)
-- `src/features/brand-scenes/wizard/components/ExtrasPillField.tsx` (children slot, auto badge)
-- `src/features/brand-scenes/wizard/constants/extras.ts` (rule hooks, tagged pools)
-- `src/features/brand-scenes/wizard/useWizardState.ts` (scene_type, auto map)
-- `src/features/brand-scenes/schema.ts` & `types.ts` (scene_type enum, combo validation)
-- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` (new keys + canonical order)
-
-No backend or DB changes. Aspect ratio lock and step order (Cast → Aesthetic → Category → Preview → Review) from Phase 7e are preserved.
+I'll run the full suite after implementation and confirm green.

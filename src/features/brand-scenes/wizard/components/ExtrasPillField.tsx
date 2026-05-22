@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Chip, AddChip } from "./Chip";
 import { Section } from "./Section";
 import { AutoFillBadge } from "./AutoFillBadge";
+import { RecommendationHint } from "./RecommendationHint";
 import type { ExtrasField } from "../constants/extras";
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
   showAllInitially?: boolean;
   /** This value was set by a cascade rule. */
   autoFilled?: boolean;
+  /** Recommended value (shown as ✦ chip when the field is empty). */
+  recommended?: string;
   /** Optional dependent UI rendered beneath the chip row (e.g. color pickers). */
   children?: ReactNode;
 }
@@ -27,11 +30,13 @@ export function ExtrasPillField({
   onChange,
   showAllInitially,
   autoFilled,
+  recommended,
   children,
 }: Props) {
   const isCustom = !!value && !field.presets.includes(value);
   const [customOpen, setCustomOpen] = useState(isCustom);
   const [customDraft, setCustomDraft] = useState(isCustom ? value! : "");
+  const showRecommendation = !value && !!recommended;
 
   return (
     <Section
@@ -112,6 +117,13 @@ export function ExtrasPillField({
               </div>
             )}
             {children && <div className="mt-3">{children}</div>}
+            {showRecommendation && (
+              <RecommendationHint
+                fieldLabel={field.label}
+                recommended={recommended!}
+                onApply={() => onChange(recommended!)}
+              />
+            )}
           </div>
         );
       }}
