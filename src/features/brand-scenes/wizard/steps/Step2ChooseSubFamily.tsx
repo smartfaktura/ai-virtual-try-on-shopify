@@ -45,9 +45,9 @@ export function Step2ChooseSubFamily({ module, value, onChange }: Props) {
           active={s.slug === value}
           onClick={() => onChange(s.slug)}
           title={s.label}
-          tag="Sub-family"
         />
       ))}
     </div>
   );
 }
+
