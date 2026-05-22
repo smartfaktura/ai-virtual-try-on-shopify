@@ -589,22 +589,14 @@ export function Step4Cast({
 
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
-      {!isReplicate && (
-        <div className="space-y-4 pt-2 border-t border-border/60">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-            Optional styling <span className="normal-case tracking-normal text-muted-foreground/60">— skip and we'll pick smart defaults</span>
-          </div>
-          <div className="space-y-7">
-
-          {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
-            .filter((f) => f.key !== "build")
-            .map((f) => {
-            // Inject sub-family-specific moments at render time.
+      {/* Phase 7ab — flattened: no "Optional styling" wrapper, fields render inline. */}
+      {!isReplicate &&
+        applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
+          .filter((f) => f.key !== "build")
+          .map((f) => {
             let resolved = f;
             if (f.key === "storytelling_moment") {
               const moments = getStorytellingMoments(module, subFamily);
-              // Hide entirely for `hands` cast when there's no explicit list — the
-              // generic moments don't apply to a disembodied close-up.
               if (preset === "hands" && !hasExplicitMoments(module, subFamily)) {
                 return null;
               }
@@ -627,11 +619,7 @@ export function Step4Cast({
               />
             );
           })}
-          </div>
-        </div>
-      )}
 
-      {!isReplicate && <GroupHeader title="Notes" />}
       {/* Cast note */}
       {!isReplicate && (
         <Section label="Note">
