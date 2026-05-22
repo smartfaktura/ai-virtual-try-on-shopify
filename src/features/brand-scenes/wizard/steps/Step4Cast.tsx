@@ -734,4 +734,3 @@ function GroupHeader({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-}
