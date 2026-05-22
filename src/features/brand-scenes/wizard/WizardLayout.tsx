@@ -229,16 +229,6 @@ export function WizardLayout({
   );
 }
 
-function SaveTooltip({ children }: { children: ReactNode }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent>Available in a later phase</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 function DisabledTooltip({ children, reason }: { children: ReactNode; reason: string }) {
   return (
