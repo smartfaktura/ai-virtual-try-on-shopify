@@ -1335,6 +1335,9 @@ export type Database = {
       }
       product_image_scenes: {
         Row: {
+          brand_scene_answers: Json
+          brand_scene_module: string | null
+          brand_scene_schema_version: number
           category_collection: string | null
           category_sort_order: number | null
           created_at: string
@@ -1342,8 +1345,10 @@ export type Database = {
           filter_tags: string[] | null
           id: string
           is_active: boolean
+          is_brand_scene: boolean
           mood: string | null
           outfit_hint: string | null
+          owner_user_id: string | null
           preview_image_url: string | null
           previous_sort_order: number | null
           prompt_template: string
@@ -1353,6 +1358,7 @@ export type Database = {
           setting: string | null
           shot_style: string | null
           sort_order: number
+          source_generation_id: string | null
           sub_category: string | null
           sub_category_sort_order: number
           subject: string | null
@@ -1363,6 +1369,9 @@ export type Database = {
           use_scene_reference: boolean
         }
         Insert: {
+          brand_scene_answers?: Json
+          brand_scene_module?: string | null
+          brand_scene_schema_version?: number
           category_collection?: string | null
           category_sort_order?: number | null
           created_at?: string
@@ -1370,8 +1379,10 @@ export type Database = {
           filter_tags?: string[] | null
           id?: string
           is_active?: boolean
+          is_brand_scene?: boolean
           mood?: string | null
           outfit_hint?: string | null
+          owner_user_id?: string | null
           preview_image_url?: string | null
           previous_sort_order?: number | null
           prompt_template?: string
@@ -1381,6 +1392,7 @@ export type Database = {
           setting?: string | null
           shot_style?: string | null
           sort_order?: number
+          source_generation_id?: string | null
           sub_category?: string | null
           sub_category_sort_order?: number
           subject?: string | null
@@ -1391,6 +1403,9 @@ export type Database = {
           use_scene_reference?: boolean
         }
         Update: {
+          brand_scene_answers?: Json
+          brand_scene_module?: string | null
+          brand_scene_schema_version?: number
           category_collection?: string | null
           category_sort_order?: number | null
           created_at?: string
@@ -1398,8 +1413,10 @@ export type Database = {
           filter_tags?: string[] | null
           id?: string
           is_active?: boolean
+          is_brand_scene?: boolean
           mood?: string | null
           outfit_hint?: string | null
+          owner_user_id?: string | null
           preview_image_url?: string | null
           previous_sort_order?: number | null
           prompt_template?: string
@@ -1409,6 +1426,7 @@ export type Database = {
           setting?: string | null
           shot_style?: string | null
           sort_order?: number
+          source_generation_id?: string | null
           sub_category?: string | null
           sub_category_sort_order?: number
           subject?: string | null
