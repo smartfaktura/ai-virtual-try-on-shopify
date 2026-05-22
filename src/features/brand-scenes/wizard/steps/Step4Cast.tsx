@@ -143,9 +143,13 @@ export function Step4Cast({
   const [showExact, setShowExact] = useState(!!scale?.dimensions);
 
   const warnings = sceneWarnings(answers);
+  const { mode } = useWizardMode();
+  const isQuick = mode === "quick";
 
   return (
     <div className="space-y-8">
+      <QuickDetailedToggle />
+
       {/* Cast preset */}
       <Section label="Cast" required missing={!preset}>
         {(expanded) => (
