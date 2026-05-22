@@ -123,6 +123,8 @@ const MOMENTS: Record<string, string[]> = {
     "Threading buckle",
     "Cinching at waist",
     "Coiled on surface",
+    "Looping through trousers",
+    "Adjusting at hip",
   ],
   "bags-accessories/scarves": [
     "Tying around neck",
