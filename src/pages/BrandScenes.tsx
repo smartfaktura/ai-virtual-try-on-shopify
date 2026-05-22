@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Mountain, Sparkles, Users, Layers } from 'lucide-react';
+import { ArrowRight, Mountain, Sparkles, Users, Layers, Lock } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 export default function BrandScenes() {
   const navigate = useNavigate();
+  const { isRealAdmin } = useIsAdmin();
 
   return (
     <div className="space-y-8 sm:space-y-10">
@@ -60,6 +62,20 @@ export default function BrandScenes() {
             In the meantime, explore 1600+ ready-made scenes
           </p>
         </div>
+
+        {isRealAdmin && (
+          <div className="mt-4 flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/app/brand-scenes/new')}
+              className="rounded-full gap-2"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Open wizard (admin)
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
