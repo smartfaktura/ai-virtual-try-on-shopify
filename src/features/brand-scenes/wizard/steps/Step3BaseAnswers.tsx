@@ -228,13 +228,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         )}
       </Section>
 
-      <PillField
-        label="Framing"
-        presets={FRAMINGS as unknown as readonly string[]}
-        current={value.framing ?? ""}
-        placeholder="Describe the framing"
-        onChange={(next) => onChange({ framing: next })}
-      />
 
       <Section label="Composition geometry">
         <ChipRow
