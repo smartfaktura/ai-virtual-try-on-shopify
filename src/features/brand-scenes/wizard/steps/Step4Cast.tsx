@@ -375,7 +375,7 @@ export function Step4Cast({
         )}
 
       {/* Body part focus — hidden for `hands` (the cast IS a body part). */}
-      {!isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
+      {!isQuick && !isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
         <Section label="Body-part focus">
           <div className="flex flex-wrap gap-2">
             {visibleBodyPart.map((b) => (
