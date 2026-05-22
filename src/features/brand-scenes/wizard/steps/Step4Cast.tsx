@@ -206,8 +206,8 @@ export function Step4Cast({
         </p>
       )}
 
-      {/* People details */}
-      {hasPeople && !isReplicate && (
+      {/* People details — detailed mode only */}
+      {!isQuick && hasPeople && !isReplicate && (
         <>
           {(() => {
             const isSingle = preset === "solo" || preset === "hands";
