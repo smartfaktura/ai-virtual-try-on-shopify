@@ -1,4 +1,5 @@
 import { SCENE_TYPES, type SceneTypeId } from "../registry/settingsBySubfamily";
+import { WizardCard } from "./WizardCard";
 
 interface Props {
   value: SceneTypeId | undefined;
@@ -7,27 +8,21 @@ interface Props {
 
 /**
  * Stage A — 5 scene-type cards. Clicking the active one clears it.
+ * Uses the shared WizardCard so spacing/typography matches Source + Family steps.
  */
 export function SceneTypePicker({ value, onChange }: Props) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {SCENE_TYPES.map((t) => {
         const active = value === t.value;
         return (
-          <button
+          <WizardCard
             key={t.value}
-            type="button"
+            active={active}
             onClick={() => onChange(active ? undefined : t.value)}
-            className={[
-              "text-left rounded-2xl border px-4 py-3 transition-all",
-              active
-                ? "border-foreground bg-foreground/[0.04] shadow-sm"
-                : "border-border bg-card hover:border-foreground/40",
-            ].join(" ")}
-          >
-            <div className="text-sm font-medium">{t.label}</div>
-            <div className="mt-1 text-[11px] text-muted-foreground line-clamp-2">{t.vibe}</div>
-          </button>
+            title={t.label}
+            body={t.vibe}
+          />
         );
       })}
     </div>
