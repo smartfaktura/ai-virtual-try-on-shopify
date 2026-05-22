@@ -541,16 +541,22 @@ export function Step4Cast({
                 </Chip>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setShowExact((v) => !v);
-                if (showExact) onScaleChange({ dimensions: undefined });
-              }}
-              className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground mt-3"
-            >
-              {showExact ? "− Hide exact size" : "+ Add exact size"}
-            </button>
+            <div className="mt-3">
+              {showExact ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowExact(false);
+                    onScaleChange({ dimensions: undefined });
+                  }}
+                  className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] sm:px-4 sm:py-2 sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Hide exact size
+                </button>
+              ) : (
+                <AddChip onClick={() => setShowExact(true)} label="Exact size" />
+              )}
+            </div>
             {showExact && (
               <ExactDimensions
                 value={scale?.dimensions}
