@@ -41,11 +41,11 @@ export interface ExtrasField {
   /** Phase 7i — hide when sub_family matches one of these slugs. */
   subFamilyExcept?: string[];
   /**
-   * Phase 7i — field renders via a bespoke component in the step file
-   * (e.g. EthnicityChips). The value is still assembled into the prompt
-   * via this field's `prefix`, so the assembler ignores `customRender`.
+   * Phase 7j — resolve presets at render time based on context (e.g. swap
+   * camera-angle list depending on whether people are in frame). Falls back
+   * to `presets` when not provided.
    */
-  customRender?: string;
+  presetsResolver?: (ctx: SceneCtx) => string[];
 }
 
 
