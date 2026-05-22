@@ -64,8 +64,8 @@ const META_REFERENCE: Record<WizardStep, { title: string; subtitle: string }> = 
     subtitle: "Your image plus how strictly the AI should follow it",
   },
   4: {
-    title: "Cast & product interaction",
-    subtitle: "Who's in the scene and how they relate to the product",
+    title: "Who's in the scene",
+    subtitle: "Pick the cast and how they relate to the product",
   },
 };
 
