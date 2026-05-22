@@ -140,7 +140,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
   return (
     <div className="space-y-7">
-      <Section label="Scene type" hint="Pick the world. Everything below tunes to it.">
+      <Section label="Scene type" hint="Pick the world — everything below tunes to it">
         <SceneTypePicker value={sceneType} onChange={handleSceneType} />
       </Section>
 

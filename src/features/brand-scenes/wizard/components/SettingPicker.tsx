@@ -24,7 +24,7 @@ export function SettingPicker({ options, value, onChange, emptyHint }: Props) {
   if (!options.length && !value) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
-        {emptyHint ?? "Pick a scene type first to see tailored settings."}
+        {emptyHint ?? "Pick a scene type first to see tailored settings"}
       </div>
     );
   }
