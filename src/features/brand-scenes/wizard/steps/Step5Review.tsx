@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   BRAND_SCENE_GENERATION_COST,
   BRAND_SCENE_VARIATIONS_PER_GENERATION,
@@ -9,10 +7,11 @@ import type { BrandSceneAnswers } from "../../types";
 
 interface Props {
   answers: BrandSceneAnswers;
-  onNegativeNoteChange: (note: string) => void;
+  // Kept for prop compatibility; Step 3 owns the "Avoid" field now.
+  onNegativeNoteChange?: (note: string) => void;
 }
 
-export function Step5Review({ answers, onNegativeNoteChange }: Props) {
+export function Step5Review({ answers }: Props) {
   const isReference = answers.source === "reference";
   const [showPayload, setShowPayload] = useState(false);
 
