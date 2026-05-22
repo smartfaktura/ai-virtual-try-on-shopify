@@ -29,8 +29,18 @@ export interface BrandSceneAnswers {
   base: BrandSceneBaseAnswers;
   /** Per-module question payload. Filled in by category wizards. */
   module_answers: Record<string, unknown>;
-  /** Storage paths of uploaded reference images (only when source === 'reference'). */
+
+  /** Reference path only: storage path(s) of uploaded reference image(s). */
   reference_image_paths?: string[];
+  /** Reference path only: public URL of the uploaded image, used as preview. */
+  reference_preview_url?: string;
+  /** Reference path only: soft directive for where the product should sit. */
+  placement_hint?: string;
+
+  /** Scene name (required for both paths once we reach Review). */
+  name?: string;
+  /** Free-form extra direction; maps to `prompt_hint` on save. */
+  note?: string;
 }
 
 /** Full row shape (post-insert). */
