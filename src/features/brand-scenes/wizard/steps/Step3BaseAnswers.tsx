@@ -172,13 +172,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         </div>
       </Section>
 
-      <PillField
-        label="Mood"
-        presets={MOODS as unknown as readonly string[]}
-        current={value.mood ?? ""}
-        placeholder="Describe the mood"
-        onChange={(next) => onChange({ mood: next })}
-      />
 
       <Section label="Brand voice">
         <ChipRow
