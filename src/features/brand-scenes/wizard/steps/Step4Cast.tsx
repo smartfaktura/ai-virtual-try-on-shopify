@@ -167,13 +167,13 @@ export function Step4Cast({
     );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <GroupHeader title="People" />
       {/* Cast preset */}
       <Section label="Who's in the shot" required missing={!preset}>
 
         {(expanded) => (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {visibleCastPresets(expanded).map((p) => (
               <Chip
                 key={p.value}
@@ -287,7 +287,7 @@ export function Step4Cast({
           })()}
 
           <Section label="Energy / vibe">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
               {CAST_VIBES.map((v) => (
                 <Chip
                   key={v.value}
@@ -312,7 +312,7 @@ export function Step4Cast({
             const current = cast?.extras?.build;
             return (
               <Section label="Build">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-x-2 gap-y-2.5">
                   {builds.map((b) => (
                     <Chip
                       key={b}
@@ -355,7 +355,7 @@ export function Step4Cast({
         <Section label="Product interaction" required missing={!cast?.interaction}>
 
           {(expanded) => (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
               {visibleInteractions(expanded).map((i) => (
                 <Chip
                   key={i.value}
@@ -378,7 +378,7 @@ export function Step4Cast({
         (preset === "hands" || preset === "solo" || preset === "two" || preset === "group") &&
         (scalePreset === "pocket" || scalePreset === "handheld") && (
           <Section label="Hands on product">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
               {visibleHandsOnProduct.map((h) => (
                 <Chip
                   key={h.value}
@@ -402,7 +402,7 @@ export function Step4Cast({
       {/* Body part focus — hidden for `hands` (the cast IS a body part). */}
       {!isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0 && (
         <Section label="Body-part focus">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {visibleBodyPart.map((b) => (
               <Chip
                 key={b.value}
@@ -428,7 +428,7 @@ export function Step4Cast({
       {hasPeople && !isReplicate && (
 
         <Section label="Gaze direction">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {GAZE_DIRECTIONS.map((g) => (
               <Chip
                 key={g.value}
@@ -452,7 +452,7 @@ export function Step4Cast({
       {/* Group dynamic */}
       {!isReplicate && (preset === "two" || preset === "group") && (
         <Section label="Group dynamic">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {GROUP_DYNAMICS.map((g) => (
               <Chip
                 key={g.value}
@@ -476,7 +476,7 @@ export function Step4Cast({
       {/* Action */}
       {hasPeople && !isReplicate && (
         <Section label="Action">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {CAST_ACTIONS.map((a) => (
               <Chip
                 key={a.value}
@@ -503,7 +503,7 @@ export function Step4Cast({
         !["swimwear", "lingerie"].includes(subFamily ?? "") && (
 
         <Section label="Wardrobe color anchor">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {wardrobes.map((w) => (
               <Chip
                 key={w.value}
@@ -530,7 +530,7 @@ export function Step4Cast({
 
         <Section label="Product scale" required missing={!scale?.preset}>
           <>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
               {visibleScales.map((s) => (
                 <Chip
                   key={s.value}
@@ -650,7 +650,7 @@ function MultiSelect({
   onToggle: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-x-2 gap-y-2.5">
       {options.map((o) => (
         <Chip
           key={o.value}
@@ -726,7 +726,7 @@ function NumberField({
 
 function GroupHeader({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="pt-2 first:pt-0">
+    <div className="pt-6 border-t border-border/40 first:pt-0 first:border-t-0">
       <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         {title}
       </div>

@@ -41,12 +41,12 @@ export function Section({
 
   return (
     <div
-      className="space-y-2.5 rounded-2xl"
+      className="space-y-3.5 rounded-2xl"
       data-section-label={typeof label === "string" ? label : undefined}
       data-required={required ? "1" : undefined}
       data-missing={missing ? "1" : undefined}
     >
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <div className="flex items-center gap-2">
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             {label}
