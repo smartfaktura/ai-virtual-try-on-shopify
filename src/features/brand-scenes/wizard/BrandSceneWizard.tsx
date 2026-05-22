@@ -4,6 +4,8 @@ import { Step1ChooseModule } from "./steps/Step1ChooseModule";
 import { Step2BaseAnswers } from "./steps/Step2BaseAnswers";
 import { Step3ModuleQuestions } from "./steps/Step3ModuleQuestions";
 import { Step4Review } from "./steps/Step4Review";
+import { isApparelStepValid } from "../modules/apparel/ApparelQuestions";
+import type { ApparelModuleAnswers } from "../modules/apparel/schema";
 
 const META: Record<
   1 | 2 | 3 | 4,
@@ -20,6 +22,11 @@ export function BrandSceneWizard() {
   const { step, answers } = state;
   const { title, subtitle } = META[step];
 
+  const nextDisabled =
+    step === 3 &&
+    answers.module === "apparel" &&
+    !isApparelStepValid(answers.module_answers as Partial<ApparelModuleAnswers>);
+
   return (
     <WizardLayout
       step={step}
@@ -27,6 +34,7 @@ export function BrandSceneWizard() {
       subtitle={subtitle}
       onBack={() => dispatch({ type: "back" })}
       onNext={() => dispatch({ type: "next" })}
+      nextDisabled={nextDisabled}
       isLastStep={step === 4}
     >
       {step === 1 && (
@@ -41,7 +49,13 @@ export function BrandSceneWizard() {
           onChange={(patch) => dispatch({ type: "setBase", patch })}
         />
       )}
-      {step === 3 && <Step3ModuleQuestions module={answers.module} />}
+      {step === 3 && (
+        <Step3ModuleQuestions
+          module={answers.module}
+          answers={answers.module_answers}
+          onChange={(patch) => dispatch({ type: "setModuleAnswers", patch })}
+        />
+      )}
       {step === 4 && <Step4Review answers={answers} />}
     </WizardLayout>
   );
