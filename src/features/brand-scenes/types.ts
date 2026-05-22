@@ -83,6 +83,10 @@ export interface BrandSceneBaseAnswers {
   realism?: RealismLevel;
   brand_voice?: BrandVoice;
   output_use_case?: OutputUseCase;
+
+  // Phase 7d — flexible dial map. Keys come from `wizard/constants/extras`.
+  // Values are free strings (preset label OR user custom entry).
+  extras?: Record<string, string>;
 }
 
 export interface BrandSceneCast {
