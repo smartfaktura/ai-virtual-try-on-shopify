@@ -197,13 +197,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         />
       </Section>
 
-      <PillField
-        label="Lighting"
-        presets={LIGHTINGS as unknown as readonly string[]}
-        current={value.lighting ?? ""}
-        placeholder="Describe the lighting"
-        onChange={(next) => onChange({ lighting: next })}
-      />
 
       <Section label="Shadows / reflections">
         <ChipRow
