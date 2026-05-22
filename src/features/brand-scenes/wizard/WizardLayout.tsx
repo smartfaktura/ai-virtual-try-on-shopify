@@ -1,5 +1,5 @@
 import { ReactNode, useRef } from "react";
-import { ArrowDown, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WizardStep } from "./useWizardState";

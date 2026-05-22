@@ -1,16 +1,23 @@
-## Replace error chip with a "Jump to missing" button
+## Remove "Jump to fix" from the sticky bar; surface missing-section feedback inline
 
-### Current behavior
-When `nextDisabled` and a `nextDisabledReason` exist, `WizardLayout` renders a lock-icon chip with the reason text (e.g. "Pick how the cast holds, wears, or stands next to the product") inside the sticky bar. The Next button already silently scrolls to `[data-missing="1"]` when clicked while disabled, but the affordance is hidden.
+### What the user wants
+- Sticky bar should NOT contain a "Jump to fix" affordance — it looks out of place.
+- The validation feedback (which section needs attention) should live inline near the actual missing section, not as a chip in the sticky bar.
 
-### Change
-**File:** `src/features/brand-scenes/wizard/WizardLayout.tsx`
+### Changes
 
-1. **Remove** the reason chip block (lines 167–177) — no more inline error text in the sticky bar.
-2. **Replace** the disabled `Next` button (when `nextDisabled && nextDisabledReason && !isLastStep`) with a secondary action: a `Button size="pill" variant="outline"` labeled `Jump to fix` (with `ArrowDown` icon from `lucide-react`) that calls the existing `handleNextClick` (which already scrolls to `[data-missing="1"]`). Keep the tooltip wrapper so hovering still surfaces the reason for users who want it.
-3. When `!nextDisabled`, keep the current primary `Next` button unchanged.
-4. Apply to both mobile and desktop branches.
+**1. `src/features/brand-scenes/wizard/WizardLayout.tsx`**
+- Remove the `JumpButton` constant and the `ArrowDown` import.
+- Restore the disabled `Next` button in the sticky bar when `nextDisabled`: render `NextButton` as the only primary action (wrapped in `DisabledTooltip` so hover still explains why). Clicking it keeps the existing `handleNextClick` behavior — scrolls to `[data-missing="1"]` — but the bar visually just shows `Back` + (disabled) `Next`.
+- No reason chip, no jump button — the sticky bar stays clean.
+
+**2. `src/features/brand-scenes/wizard/components/Section.tsx`**
+- When `missing` is true, render a small inline notice under the section body:
+  - `text-[11px] text-destructive/80 leading-relaxed` paragraph reading "This section is required to continue".
+  - Strengthen the existing `missing` container: change `ring-1 ring-border` → `ring-1 ring-destructive/30` so the missing state is visible at a glance.
+- Keep `data-missing="1"` intact so the sticky `Next` still scrolls here.
 
 ### Out of scope
-- No changes to `BrandSceneWizard` reason strings, `Section` `data-missing` logic, or any step files.
-- No copy changes beyond the new button label.
+- No changes to `BrandSceneWizard` reason strings or which fields are required.
+- No copy beyond the single inline "required to continue" notice.
+- No animation, color-token, or sticky-bar restructuring beyond the removal above.
