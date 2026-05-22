@@ -195,6 +195,13 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       boots: {
         settings: ["Nature", "Urban street", "Studio cyclorama"],
       },
+      // Phase 7o — dress shoes (loafers, oxfords) lean indoor / architectural.
+      shoes: {
+        settings: ["Architectural interior", "Studio cyclorama", "Tabletop surface", "Domestic"],
+        lens: ["portrait", "tele", "macro"],
+        moods: ["Editorial", "Quiet", "Clean"],
+        body_part_focus: ["feet", "detail"],
+      },
     },
   },
 
