@@ -37,12 +37,10 @@ export function ExtrasPillField({
     <Section
       label={
         autoFilled ? (
-          (
-            <span className="inline-flex items-center gap-2">
-              {field.label}
-              <AutoFillBadge onClear={() => onChange(undefined)} />
-            </span>
-          ) as unknown as string
+          <span className="inline-flex items-center gap-2">
+            {field.label}
+            <AutoFillBadge onClear={() => onChange(undefined)} />
+          </span>
         ) : (
           field.label
         )
