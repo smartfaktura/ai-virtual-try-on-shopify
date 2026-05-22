@@ -3,6 +3,7 @@ import { Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsAdminSafe } from "../hooks/useIsAdminSafe";
+import { Step5Review } from "./Step5Review";
 import type { BrandSceneAnswers } from "../../types";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 import {
@@ -12,43 +13,18 @@ import {
 
 interface Props {
   answers: BrandSceneAnswers;
+  onNegativeNoteChange?: (note: string) => void;
 }
 
-function humanize(s: string): string {
-  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function pickSummary(answers: BrandSceneAnswers) {
-  const base = answers.base ?? {};
-  const cast = answers.cast;
-  const who =
-    cast?.preset === "none" || !cast
-      ? "No people — product only"
-      : cast.preset
-        ? humanize(cast.preset)
-        : undefined;
-  const where = base.setting || (base.scene_type && humanize(base.scene_type));
-  const how = [
-    base.lens && humanize(base.lens),
-    base.depth_of_field && humanize(base.depth_of_field),
-    base.finish && humanize(base.finish),
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const avoid = base.avoid ?? answers.negative_note;
-  return { who, where, how, avoid };
-}
-
-export function Step6PreviewAndPick({ answers }: Props) {
+export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
   const { isAdmin } = useIsAdminSafe();
   const [showPrompt, setShowPrompt] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
 
-  const { who, where, how, avoid } = pickSummary(answers);
-
   return (
     <div className="space-y-6">
+      {/* Hero — ready to generate */}
       <div className="rounded-2xl border border-border bg-card p-6">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           Ready to generate
@@ -57,33 +33,9 @@ export function Step6PreviewAndPick({ answers }: Props) {
           {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · 4:5 ·{" "}
           {BRAND_SCENE_GENERATION_COST} credits
         </div>
-
-        <dl className="mt-4 grid grid-cols-[88px_1fr] gap-x-4 gap-y-1.5 text-sm">
-          {who && (
-            <>
-              <dt className="text-muted-foreground">Who</dt>
-              <dd className="text-foreground/90">{who}</dd>
-            </>
-          )}
-          {where && (
-            <>
-              <dt className="text-muted-foreground">Where</dt>
-              <dd className="text-foreground/90">{where}</dd>
-            </>
-          )}
-          {how && (
-            <>
-              <dt className="text-muted-foreground">How shot</dt>
-              <dd className="text-foreground/90">{how}</dd>
-            </>
-          )}
-          {avoid && (
-            <>
-              <dt className="text-muted-foreground">Avoid</dt>
-              <dd className="text-foreground/90">{avoid}</dd>
-            </>
-          )}
-        </dl>
+        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+          Saving the scene is free. Only generating variations deducts credits.
+        </p>
 
         <div className="mt-5">
           <TooltipProvider>
@@ -102,6 +54,7 @@ export function Step6PreviewAndPick({ answers }: Props) {
         </div>
       </div>
 
+      {/* Variant placeholders */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[0, 1, 2].map((i) => (
           <div
@@ -113,6 +66,10 @@ export function Step6PreviewAndPick({ answers }: Props) {
         ))}
       </div>
 
+      {/* Full structured summary (ported from Step5Review) */}
+      <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
+
+      {/* Admin debug — single instance */}
       {isAdmin && (
         <div className="space-y-3 pt-4 border-t border-border/60">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
