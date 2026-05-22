@@ -60,6 +60,12 @@ export type BrandSceneSource = (typeof BRAND_SCENE_SOURCES)[number];
 export const BRAND_SCENE_GENERATION_COST = 20 as const;
 export const BRAND_SCENE_VARIATIONS_PER_GENERATION = 3 as const;
 
-/** Reference-image upload limits (Path B). */
-export const BRAND_SCENE_REFERENCE_MAX_IMAGES = 3 as const;
+/** Reference-image upload limits (Path B — exactly one canonical reference). */
+export const BRAND_SCENE_REFERENCE_MAX_IMAGES = 1 as const;
 export const BRAND_SCENE_REFERENCE_MAX_BYTES = 8 * 1024 * 1024;
+export const BRAND_SCENE_REFERENCE_BUCKET = "brand-scene-references" as const;
+
+/** Reference path field length limits. */
+export const BRAND_SCENE_NAME_MAX = 80;
+export const BRAND_SCENE_PLACEMENT_MAX = 120;
+export const BRAND_SCENE_NOTE_MAX = 240;
