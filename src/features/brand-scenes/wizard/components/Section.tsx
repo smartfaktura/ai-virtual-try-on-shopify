@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 
 interface SectionProps {
-  label: string;
+  label: ReactNode;
   required?: boolean;
   /** True when the section is required AND currently empty — surfaces a subtle red ring + scroll target. */
   missing?: boolean;
