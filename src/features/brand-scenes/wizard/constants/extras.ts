@@ -522,6 +522,8 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Floor surface",
     prefix: "Floor",
     presets: FLOOR_TYPES,
+    // Phase 7j — only meaningful indoors. Outdoors implies the floor (sand, rock…).
+    appliesWhen: (c) => isIndoor(c.scene_type),
   },
   {
     key: "studio_fx",
