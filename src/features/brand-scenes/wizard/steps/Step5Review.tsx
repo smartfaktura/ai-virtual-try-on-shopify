@@ -191,6 +191,7 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
           label: f.label,
           value: castExtras[f.key],
         })),
+        { label: "Cast note", value: cast.note },
       ]
     : [];
 
