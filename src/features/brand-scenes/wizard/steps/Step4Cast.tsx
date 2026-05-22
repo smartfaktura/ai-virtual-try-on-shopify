@@ -399,7 +399,7 @@ export function Step4Cast({
       )}
 
       {/* Gaze */}
-      {hasPeople && !isReplicate && (
+      {!isQuick && hasPeople && !isReplicate && (
         <Section label="Gaze direction">
           <div className="flex flex-wrap gap-2">
             {GAZE_DIRECTIONS.map((g) => (
