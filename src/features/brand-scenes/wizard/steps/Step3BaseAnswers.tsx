@@ -363,9 +363,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         />
       </Section>
 
-      <p className="text-[11px] text-muted-foreground/80">
-        Aspect ratio is locked to 4:5 (portrait) — the standard preview format.
-      </p>
     </div>
   );
 }
