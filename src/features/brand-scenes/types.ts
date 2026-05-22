@@ -106,6 +106,9 @@ export interface BrandSceneCast {
   group_dynamic?: GroupDynamic;
   hands_on_product?: HandsOnProduct;
   diversity?: Diversity;
+
+  // Phase 7d — flexible cast styling map.
+  extras?: Record<string, string>;
 }
 
 export interface BrandSceneScale {
