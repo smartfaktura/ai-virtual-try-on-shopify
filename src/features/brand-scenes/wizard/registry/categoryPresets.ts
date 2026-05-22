@@ -6,7 +6,13 @@
  *   1. PRESETS[family].sub[sub_family]
  *   2. PRESETS[family]
  *   3. Global defaults from constants/scene.ts & constants/cast.ts
+ *
+ * NOTE (Phase 7p): the `settings` field here is *descriptive only* — Step3's
+ * setting picker reads from `getSettingPool()` in `settingsBySubfamily.ts`,
+ * which is scene-type-aware. Edit `settingsBySubfamily.ts` to change which
+ * setting strings users actually see.
  */
+
 
 import type { BrandSceneModule } from "../../constants";
 import type { ScalePreset } from "../constants/scale";
