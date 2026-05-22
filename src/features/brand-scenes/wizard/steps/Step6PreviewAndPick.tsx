@@ -113,11 +113,11 @@ function AdminPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/30">
+    <div className="rounded-2xl border border-border bg-muted/30">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+        className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
       >
         <span>{label}</span>
         <ChevronDown
