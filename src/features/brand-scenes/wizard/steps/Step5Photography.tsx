@@ -46,7 +46,7 @@ interface Props {
 
 const PHOTO_GROUPS: { label: string; keys: string[]; defaultOpen?: boolean }[] = [
   {
-    label: "Camera",
+    label: "Camera angle",
     keys: [
       "camera_angle",
       "camera_angle_apparel",
@@ -56,10 +56,11 @@ const PHOTO_GROUPS: { label: string; keys: string[]; defaultOpen?: boolean }[] =
     ],
   },
   {
-    label: "Composition & crop",
+    label: "Motion & crop",
     keys: ["motion", "composition_energy", "crop_safety"],
   },
 ];
+
 
 export function Step5Photography({
   module,
@@ -96,7 +97,11 @@ export function Step5Photography({
 
   return (
     <div className="space-y-7">
-      <Section label="Camera & lens" expandable>
+      <Section
+        label="Lens look"
+        helper="Wide = roomy and dramatic. Long = compressed and flattering."
+        expandable
+      >
         {(expanded) => (
           <ChipRow
             options={lenses(expanded)}
@@ -106,7 +111,11 @@ export function Step5Photography({
         )}
       </Section>
 
-      <Section label="Depth of field" expandable>
+      <Section
+        label="How blurry the background is"
+        helper="Shallow = creamy bokeh behind the product. Deep = everything stays in focus."
+        expandable
+      >
         {(expanded) => (
           <ChipRow
             options={dofs(expanded)}
@@ -118,7 +127,10 @@ export function Step5Photography({
         )}
       </Section>
 
-      <Section label="Composition geometry">
+      <Section
+        label="How the shot is composed"
+        helper="Where the product sits inside the frame."
+      >
         <ChipRow
           options={COMPOSITIONS}
           current={value.composition}
@@ -126,7 +138,10 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section label="Negative-space intent">
+      <Section
+        label="Empty space around the product"
+        helper="Tight = packed and busy. Generous = lots of breathing room."
+      >
         <ChipRow
           options={NEG_SPACE_INTENTS}
           current={value.negative_space_intent}
@@ -136,7 +151,10 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section label="Subject focus">
+      <Section
+        label="What the eye lands on first"
+        helper="Product, model, or both equally."
+      >
         <ChipRow
           options={SUBJECT_FOCUSES}
           current={value.subject_focus}
@@ -144,7 +162,10 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section label="Shadows / reflections">
+      <Section
+        label="Shadows"
+        helper="Soft = gentle, diffused. Hard = bold, defined edges."
+      >
         <ChipRow
           options={SHADOWS}
           current={value.shadows}
@@ -152,7 +173,10 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section label="Realism level">
+      <Section
+        label="How realistic"
+        helper="Photo-real vs stylized / illustrative."
+      >
         <ChipRow
           options={REALISM_LEVELS}
           current={value.realism}
@@ -160,7 +184,11 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section label="Color palette anchor" expandable>
+      <Section
+        label="Color palette"
+        helper="The anchor color story for the whole shot."
+        expandable
+      >
         {(expanded) => (
           <PaletteBlock
             presets={palettes(expanded)}
@@ -176,7 +204,10 @@ export function Step5Photography({
         )}
       </Section>
 
-      <Section label="Color contrast">
+      <Section
+        label="Contrast"
+        helper="How punchy the difference between lights and darks should feel."
+      >
         <ChipRow
           options={COLOR_CONTRASTS}
           current={value.color_contrast}
@@ -184,7 +215,10 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section label="Saturation">
+      <Section
+        label="Color intensity"
+        helper="Muted, true to life, or vivid."
+      >
         <ChipRow
           options={SATURATIONS}
           current={value.saturation}
@@ -192,7 +226,11 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section label="Finish / film look" expandable>
+      <Section
+        label="Film / finish look"
+        helper="The final grade — clean digital, filmic, glossy magazine, etc."
+        expandable
+      >
         {(expanded) => (
           <ChipRow
             options={finishes(expanded)}
@@ -201,6 +239,7 @@ export function Step5Photography({
           />
         )}
       </Section>
+
 
       <div className="space-y-4 pt-2 border-t border-border/60">
         <div className="pt-2">
