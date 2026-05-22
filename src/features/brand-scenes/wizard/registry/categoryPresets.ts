@@ -112,13 +112,15 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     lens: ["portrait", "standard", "tele"],
     depth_of_field: ["shallow", "balanced"],
     interactions: ["wearing", "holding", "beside", "hero"],
-    cast_presets: ["solo", "none"],
+    // Phase 7p — include "hands" so In-hand offering / detail macro shots are valid.
+    cast_presets: ["solo", "hands", "none"],
     default_cast: "solo",
     settings: ["Studio cyclorama", "Outdoor location", "Urban street", "Architectural interior"],
     surfaces: ["polished_stone", "linen", "paper"],
     prop_density_max: 3,
     body_part_focus: ["face", "detail"],
   },
+
 
   fashion: {
     scale: ["on_body"],
