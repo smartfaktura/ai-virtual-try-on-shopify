@@ -100,78 +100,41 @@ export function FootwearQuestions({ value, onChange, mode = "detailed" }: Props)
         </div>
       </Block>
 
-      {/* Scene */}
-      <Block label="Scene setting">
-        <div className="space-y-3">
-          <SmallField label="Surface / pedestal">
-            <Input
-              maxLength={FOOTWEAR_TEXT_MAX}
-              value={v.scene?.surface ?? ""}
-              onChange={(e) =>
-                onChange({ scene: { ...v.scene, surface: e.target.value } })
-              }
-              placeholder="e.g. raw plaster slab, polished marble"
-            />
-          </SmallField>
-          <SmallField label="Location specifics">
-            <Input
-              maxLength={FOOTWEAR_TEXT_MAX}
-              value={v.scene?.location ?? ""}
-              onChange={(e) =>
-                onChange({ scene: { ...v.scene, location: e.target.value } })
-              }
-              placeholder="e.g. sunlit corridor, long shadows"
-            />
-          </SmallField>
-          {hasPerson && (
-            <SmallField label="Pose / movement">
+      {/* Finishing — detailed mode only */}
+      {mode === "detailed" && (
+        <Block label="Finishing">
+          <div className="space-y-3">
+            <SmallField label="Color anchor">
               <Input
                 maxLength={FOOTWEAR_TEXT_MAX}
-                value={v.scene?.pose ?? ""}
+                value={v.finishing?.color_anchor ?? ""}
                 onChange={(e) =>
-                  onChange({ scene: { ...v.scene, pose: e.target.value } })
+                  onChange({
+                    finishing: { ...v.finishing, color_anchor: e.target.value },
+                  })
                 }
-                placeholder="e.g. mid-stride, weight on heel"
+                placeholder="e.g. chalk white, smoked olive"
               />
             </SmallField>
-          )}
-        </div>
-      </Block>
-
-      {/* Finishing */}
-      <Block label="Finishing">
-        <div className="space-y-3">
-          <SmallField label="Color anchor">
-            <Input
-              maxLength={FOOTWEAR_TEXT_MAX}
-              value={v.finishing?.color_anchor ?? ""}
-              onChange={(e) =>
-                onChange({
-                  finishing: { ...v.finishing, color_anchor: e.target.value },
-                })
-              }
-              placeholder="e.g. chalk white, smoked olive"
-            />
-          </SmallField>
-          <SmallField
-            label="Camera feel"
-            hint={`${(v.finishing?.camera_feel ?? []).length}/${FOOTWEAR_MAX_CAMERA_FEELS}`}
-          >
-            <div className="flex flex-wrap gap-2">
-              {FOOTWEAR_CAMERA_FEELS.map((c) => (
-                <Chip
-                  key={c}
-                  active={(v.finishing?.camera_feel ?? []).includes(c as never)}
-                  onClick={() => toggleCamera(c)}
-
-                >
-                  {c}
-                </Chip>
-              ))}
-            </div>
-          </SmallField>
-        </div>
-      </Block>
+            <SmallField
+              label="Camera feel"
+              hint={`${(v.finishing?.camera_feel ?? []).length}/${FOOTWEAR_MAX_CAMERA_FEELS}`}
+            >
+              <div className="flex flex-wrap gap-2">
+                {FOOTWEAR_CAMERA_FEELS.map((c) => (
+                  <Chip
+                    key={c}
+                    active={(v.finishing?.camera_feel ?? []).includes(c as never)}
+                    onClick={() => toggleCamera(c)}
+                  >
+                    {c}
+                  </Chip>
+                ))}
+              </div>
+            </SmallField>
+          </div>
+        </Block>
+      )}
     </div>
   );
 }
