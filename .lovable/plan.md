@@ -1,110 +1,86 @@
-## Phase 1 — Migration (additive only)
+# Phase 2 — Types & Validation Foundation
 
-Adds Brand Scenes ownership columns to `product_image_scenes`, tightens RLS to allow user-owned scenes, and installs a safety trigger. Behavior for anon, regular users, and admins on existing rows stays identical.
+Goal: lay down the **TypeScript + Zod foundation** for brand scenes so every later phase (wizard, generation, RLS-aware reads) speaks the same language. **No UI, no behavior change, no DB change.** Pure additive code in a new isolated folder.
 
-### What changes
+---
 
-**New columns on `product_image_scenes`** (all nullable / defaulted — zero impact on existing rows):
+## What we build
 
-- `owner_user_id uuid` — null = admin/global (current behavior), set = private brand scene
-- `is_brand_scene boolean default false`
-- `brand_scene_answers jsonb default '{}'`
-- `brand_scene_schema_version int default 1`
-- `brand_scene_module text` — e.g. `'activewear.v1'`
-- `source_generation_id uuid`
-
-**Indexes:** `(owner_user_id, is_active)` + partial `where is_brand_scene = true`.
-
-### RLS rewrite (behavior-preserving)
-
-Drops the two existing SELECT policies (one too loose) and replaces with explicit anon/auth policies. Admins keep full access. Adds user CRUD limited to their own brand scenes.
-
-```sql
-DROP POLICY "Public can read active scenes" ON product_image_scenes;
-DROP POLICY "Authenticated can read active scenes" ON product_image_scenes;
-
--- Anon: only global active scenes (= today's public behavior)
-CREATE POLICY "Anon read active global scenes" ON product_image_scenes
-  FOR SELECT TO anon
-  USING (is_active = true AND owner_user_id IS NULL);
-
--- Authenticated: global active scenes + their own brand scenes; admins see all
-CREATE POLICY "Auth read scenes" ON product_image_scenes
-  FOR SELECT TO authenticated
-  USING (
-    has_role(auth.uid(),'admin')
-    OR (is_active = true AND (owner_user_id IS NULL OR owner_user_id = auth.uid()))
-  );
-
--- Users write their own brand scenes only
-CREATE POLICY "Users insert own brand scenes" ON product_image_scenes
-  FOR INSERT TO authenticated
-  WITH CHECK (owner_user_id = auth.uid() AND is_brand_scene = true);
-
-CREATE POLICY "Users update own brand scenes" ON product_image_scenes
-  FOR UPDATE TO authenticated
-  USING (owner_user_id = auth.uid() AND is_brand_scene = true)
-  WITH CHECK (owner_user_id = auth.uid() AND is_brand_scene = true);
-
-CREATE POLICY "Users delete own brand scenes" ON product_image_scenes
-  FOR DELETE TO authenticated
-  USING (owner_user_id = auth.uid() AND is_brand_scene = true);
+### 1. New isolated folder
+```text
+src/features/brand-scenes/
+  types.ts          // TS interfaces + enums
+  schema.ts         // Zod schemas (runtime validation)
+  constants.ts      // SCHEMA_VERSION, ID prefix, module list
+  index.ts          // public re-exports
+  __tests__/
+    schema.test.ts  // round-trip + reject-bad-input tests
 ```
 
-Admin INSERT/UPDATE/DELETE policies are untouched.
+Nothing else in the app imports from here yet. Safe to delete if we abort.
 
-### Safety trigger (`saugiklis`)
+### 2. Core types (mirrors the 6 new DB columns)
 
-Blocks misuse from the user-write path. Admin SECURITY DEFINER RPCs (e.g. `toggle_scene_featured`) are unaffected because they only operate on rows where `is_brand_scene = false`.
+- `BrandSceneModule` — union of category modules we'll build wizards for, one at a time:
+  `'apparel' | 'footwear' | 'eyewear' | 'bags' | 'fragrance' | 'activewear' | 'accessories' | 'beauty' | 'home'`
+- `BrandSceneAnswers` — discriminated union keyed by `module`. Phase 2 ships only the **shared base shape** (aesthetic, palette, mood, lighting, location, framing) + an empty per-module slot. Each category wizard fills its slot in its own future phase.
+- `BrandScene` — full row shape matching `product_image_scenes` + brand fields.
+- `BrandSceneDraft` — pre-insert shape (no id, no timestamps).
 
-```sql
-CREATE OR REPLACE FUNCTION public.protect_brand_scene_writes()
-RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
-BEGIN
-  IF NEW.is_brand_scene = true THEN
-    IF NEW.scene_id IS NULL OR NEW.scene_id NOT LIKE 'brand-%' THEN
-      RAISE EXCEPTION 'Brand scene scene_id must start with "brand-"';
-    END IF;
-    IF NEW.category_collection = 'bundle' THEN
-      RAISE EXCEPTION 'Brand scenes cannot use bundle collection';
-    END IF;
-    IF NEW.sort_order < 0 AND NOT has_role(auth.uid(),'admin') THEN
-      RAISE EXCEPTION 'Only admins can feature scenes (sort_order < 0)';
-    END IF;
-    IF NEW.owner_user_id IS NULL THEN
-      RAISE EXCEPTION 'Brand scenes must have owner_user_id set';
-    END IF;
-  END IF;
+### 3. Zod schemas (`schema.ts`)
+- `brandSceneAnswersSchema` — validates JSONB before insert/update.
+- `brandSceneDraftSchema` — validates a wizard payload end-to-end.
+- Hard rules enforced in Zod (mirrors DB trigger, double safety):
+  - `scene_key` starts with `brand-`
+  - `category_collection !== 'bundle'`
+  - `is_brand_scene === true`
+  - `sort_order >= 0`
+  - `schema_version === CURRENT_SCHEMA_VERSION` (starts at `1`)
 
-  IF TG_OP = 'UPDATE'
-     AND OLD.owner_user_id IS NOT NULL
-     AND NEW.owner_user_id IS DISTINCT FROM OLD.owner_user_id
-     AND NOT has_role(auth.uid(),'admin') THEN
-    RAISE EXCEPTION 'Cannot change owner_user_id';
-  END IF;
+### 4. Constants
+- `BRAND_SCENE_SCHEMA_VERSION = 1`
+- `BRAND_SCENE_KEY_PREFIX = 'brand-'`
+- `BRAND_SCENE_MODULES` array (drives wizard registry later)
 
-  RETURN NEW;
-END;
-$$;
+### 5. Tests (`__tests__/schema.test.ts`)
+- Valid draft passes.
+- Missing `brand-` prefix rejected.
+- `category_collection: 'bundle'` rejected.
+- Wrong schema version rejected.
+- Unknown module rejected.
 
-CREATE TRIGGER protect_brand_scene_writes_trg
-  BEFORE INSERT OR UPDATE ON public.product_image_scenes
-  FOR EACH ROW EXECUTE FUNCTION public.protect_brand_scene_writes();
-```
+Run via `bunx vitest run src/features/brand-scenes`.
 
-### What does NOT change
+---
 
-- No existing rows are modified (all new columns default to NULL / false / `{}`).
-- Anon SELECT keeps returning exactly the same scenes (`is_active = true`, all rows still have `owner_user_id IS NULL`).
-- Admin paths and the existing CRUD hook in `useProductImageScenes` keep working.
-- Edge functions: untouched.
-- `generate-workflow`, scene picker, Create with Prompt: untouched.
+## Safety guarantees (saugikliai)
 
-### Post-migration smoke check
+| Rail | How |
+|------|-----|
+| Zero DB impact | No migration in this phase |
+| Zero UI impact | New folder, not imported anywhere |
+| Zero edge function impact | Not touched |
+| Reversible | `rm -rf src/features/brand-scenes` undoes everything |
+| Feature flag still off | `brand_scenes_enabled` stays false |
+| Schema versioning baked in | Future shape changes bump `SCHEMA_VERSION`, old rows stay readable |
 
-I'll run a read-only verification after the migration applies:
-- count of rows visible to anon = count of `is_active = true` rows (proves anon policy intact)
-- `\d product_image_scenes` shows the 6 new columns
-- `pg_trigger` shows `protect_brand_scene_writes_trg`
+---
 
-No code changes, no UI changes in this phase. After the smoke check passes, we stop and wait for **"let's move to next phase"** before starting Phase 2 (types & validation).
+## Out of scope for Phase 2 (explicit)
+
+- No wizard UI, no route, no sidebar entry
+- No category-specific question sets (those come one-by-one in later phases, on your signal)
+- No insert/update calls to Supabase
+- No edits to existing scene hooks/components
+- No prompt-engineering logic
+
+---
+
+## Acceptance checklist
+
+- [ ] New folder created, builds clean
+- [ ] `bunx vitest run src/features/brand-scenes` passes
+- [ ] `rg "from '@/features/brand-scenes'"` returns **0 hits** outside the folder itself
+- [ ] No diff in any existing file except possibly `.lovable/plan.md`
+
+After this lands I stop and wait for **"let's move to next phase"** before starting Phase 3 (wizard shell, admin-only behind the feature flag).
