@@ -84,13 +84,18 @@ export function Section({
       <div
         className={
           missing
-            ? "rounded-xl ring-1 ring-border bg-muted/20 p-3 -mx-1 transition-colors"
+            ? "rounded-xl ring-1 ring-destructive/30 bg-muted/20 p-3 -mx-1 transition-colors"
             : undefined
         }
       >
         {body}
       </div>
 
+      {missing && (
+        <p className="text-[11px] text-destructive/80 leading-relaxed">
+          This section is required to continue
+        </p>
+      )}
       {hint && <p className="text-[11px] text-muted-foreground/80">{hint}</p>}
     </div>
   );

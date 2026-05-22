@@ -181,7 +181,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  <span className="flex-1">{JumpButton}</span>
+                  <span className="flex-1">{NextButton}</span>
                 </DisabledTooltip>
               ) : (
                 <span className="flex-1">{NextButton}</span>
@@ -203,7 +203,7 @@ export function WizardLayout({
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
                 <DisabledTooltip reason={nextDisabledReason}>
-                  {JumpButton}
+                  {NextButton}
                 </DisabledTooltip>
               ) : (
                 NextButton
