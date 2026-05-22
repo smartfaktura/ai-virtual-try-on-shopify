@@ -10,7 +10,7 @@ export const CAST_PRESETS = [
   { value: "two", label: "Two people", hasPeople: true },
   { value: "group", label: "Group (3+)", hasPeople: true },
   { value: "hands", label: "Hands only", hasPeople: false },
-  { value: "none", label: "No people — product hero", hasPeople: false },
+  { value: "none", label: "No people", hasPeople: false },
   // Reference-only — surfaced conditionally in the UI.
   { value: "replicate", label: "Replicate reference exactly", hasPeople: false },
 ] as const;
