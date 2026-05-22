@@ -363,74 +363,139 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
       </Section>
 
 
-      {/* Phase 7g — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
-      <div className="space-y-7 pt-2 border-t border-border/60">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+
+      {/* Phase 7j — Stage C grouped collapsibles. */}
+      <div className="space-y-3 pt-2 border-t border-border/60">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
           Stage C · More creative dials
         </div>
-        {applicableFieldsCtx(SCENE_EXTRAS_FIELDS, {
-          module,
-          sub_family: subFamily,
-          scene_type: sceneType,
-          setting: value.setting,
-          cast: castPreset,
-          values: { ...(value.extras ?? {}), _weather: value.weather },
-          auto: value.auto ?? {},
-          recommendations: value.recommendations ?? {},
-        }).map((f) => {
-          const isColorField =
-            f.key === "backdrop_color" ||
-            f.key === "backdrop_color_a" ||
-            f.key === "backdrop_color_b";
+        {(() => {
+          const ctx: SceneCtx = {
+            module,
+            sub_family: subFamily,
+            scene_type: sceneType,
+            setting: value.setting,
+            cast: castPreset,
+            values: { ...(value.extras ?? {}), _weather: value.weather },
+            auto: value.auto ?? {},
+            recommendations: value.recommendations ?? {},
+          };
+          const fields = applicableFieldsCtx(SCENE_EXTRAS_FIELDS, ctx);
+
+          const GROUPS: { label: string; keys: string[]; defaultOpen?: boolean }[] = [
+            {
+              label: "Backdrop & floor",
+              defaultOpen: true,
+              keys: [
+                "backdrop_type",
+                "backdrop_color",
+                "backdrop_color_a",
+                "backdrop_color_b",
+                "backdrop_gradient",
+                "gradient_direction",
+                "floor",
+                "studio_fx",
+              ],
+            },
+            {
+              label: "Light & time",
+              keys: ["time_of_day_detail", "light_direction", "light_quality"],
+            },
+            {
+              label: "Camera",
+              keys: [
+                "camera_angle",
+                "camera_angle_apparel",
+                "camera_angle_footwear",
+                "camera_angle_eyewear",
+                "camera_angle_jewelry",
+              ],
+            },
+            {
+              label: "Composition & crop",
+              keys: ["motion", "composition_energy", "crop_safety"],
+            },
+          ];
+
+          const renderField = (f: typeof fields[number]) => {
+            const isColorField =
+              f.key === "backdrop_color" ||
+              f.key === "backdrop_color_a" ||
+              f.key === "backdrop_color_b";
+            // Phase 7j — resolve presets dynamically when the field opts in.
+            const resolved = f.presetsResolver
+              ? { ...f, presets: f.presetsResolver(ctx) }
+              : f;
+            const writeCtx: SceneCtx = {
+              ...ctx,
+              values: value.extras ?? {},
+            };
+            return (
+              <ExtrasPillField
+                key={f.key}
+                field={resolved}
+                value={value.extras?.[f.key]}
+                autoFilled={!!value.auto?.[f.key]}
+                recommended={value.recommendations?.[f.key]}
+                onChange={(next) => {
+                  const { values, auto, recommendations } = applyCascade(
+                    f.key,
+                    next,
+                    writeCtx,
+                  );
+                  const cleaned: Record<string, string> = {};
+                  for (const [k, v] of Object.entries(values))
+                    if (v !== undefined) cleaned[k] = v;
+                  onChange({ extras: cleaned, auto, recommendations });
+                }}
+              >
+                {isColorField && (
+                  <BackdropColorField
+                    value={value.extras?.[f.key]}
+                    onChange={(next) => {
+                      const { values, auto, recommendations } = applyCascade(
+                        f.key,
+                        next,
+                        writeCtx,
+                      );
+                      const cleaned: Record<string, string> = {};
+                      for (const [k, v] of Object.entries(values))
+                        if (v !== undefined) cleaned[k] = v;
+                      onChange({ extras: cleaned, auto, recommendations });
+                    }}
+                  />
+                )}
+              </ExtrasPillField>
+            );
+          };
+
+          const groupedKeys = new Set(GROUPS.flatMap((g) => g.keys));
+          const ungrouped = fields.filter((f) => !groupedKeys.has(f.key));
+
           return (
-            <ExtrasPillField
-              key={f.key}
-              field={f}
-              value={value.extras?.[f.key]}
-              autoFilled={!!value.auto?.[f.key]}
-              recommended={value.recommendations?.[f.key]}
-              onChange={(next) => {
-                const ctx: SceneCtx = {
-                  module,
-                  sub_family: subFamily,
-                  scene_type: sceneType,
-                  setting: value.setting,
-                  cast: castPreset,
-                  values: value.extras ?? {},
-                  auto: value.auto ?? {},
-                  recommendations: value.recommendations ?? {},
-                };
-                const { values, auto, recommendations } = applyCascade(f.key, next, ctx);
-                const cleaned: Record<string, string> = {};
-                for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
-                onChange({ extras: cleaned, auto, recommendations });
-              }}
-            >
-              {isColorField && (
-                <BackdropColorField
-                  value={value.extras?.[f.key]}
-                  onChange={(next) => {
-                    const ctx: SceneCtx = {
-                      module,
-                      sub_family: subFamily,
-                      scene_type: sceneType,
-                      setting: value.setting,
-                      cast: castPreset,
-                      values: value.extras ?? {},
-                      auto: value.auto ?? {},
-                      recommendations: value.recommendations ?? {},
-                    };
-                    const { values, auto, recommendations } = applyCascade(f.key, next, ctx);
-                    const cleaned: Record<string, string> = {};
-                    for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
-                    onChange({ extras: cleaned, auto, recommendations });
-                  }}
-                />
+            <>
+              {GROUPS.map((g) => {
+                const groupFields = fields.filter((f) => g.keys.includes(f.key));
+                if (groupFields.length === 0) return null;
+                return (
+                  <StageCGroup
+                    key={g.label}
+                    label={g.label}
+                    defaultOpen={g.defaultOpen}
+                  >
+                    {groupFields.map(renderField)}
+                  </StageCGroup>
+                );
+              })}
+              {ungrouped.length > 0 && (
+                <StageCGroup label="More">{ungrouped.map(renderField)}</StageCGroup>
               )}
-            </ExtrasPillField>
+            </>
           );
-        })}
+        })()}
       </div>
+
+
 
 
 
