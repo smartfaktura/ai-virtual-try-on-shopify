@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Chip, AddChip } from "./Chip";
 import { Section } from "./Section";
+import { AutoFillBadge } from "./AutoFillBadge";
 import type { ExtrasField } from "../constants/extras";
 
 interface Props {
@@ -10,19 +11,43 @@ interface Props {
   onChange: (next: string | undefined) => void;
   /** When true, all presets are shown by default; otherwise the first 8. */
   showAllInitially?: boolean;
+  /** This value was set by a cascade rule. */
+  autoFilled?: boolean;
+  /** Optional dependent UI rendered beneath the chip row (e.g. color pickers). */
+  children?: ReactNode;
 }
 
 /**
  * Preset chips + a "+ Custom…" affordance. The stored value is a free string
  * — either a preset label or whatever the user typed.
  */
-export function ExtrasPillField({ field, value, onChange, showAllInitially }: Props) {
+export function ExtrasPillField({
+  field,
+  value,
+  onChange,
+  showAllInitially,
+  autoFilled,
+  children,
+}: Props) {
   const isCustom = !!value && !field.presets.includes(value);
   const [customOpen, setCustomOpen] = useState(isCustom);
   const [customDraft, setCustomDraft] = useState(isCustom ? value! : "");
 
   return (
-    <Section label={field.label} hint={field.hint} expandable={!showAllInitially}>
+    <Section
+      label={
+        autoFilled ? (
+          <span className="inline-flex items-center gap-2">
+            {field.label}
+            <AutoFillBadge onClear={() => onChange(undefined)} />
+          </span>
+        ) : (
+          field.label
+        )
+      }
+      hint={field.hint}
+      expandable={!showAllInitially}
+    >
       {(expanded) => {
         const visible = expanded || showAllInitially
           ? field.presets
@@ -86,6 +111,7 @@ export function ExtrasPillField({ field, value, onChange, showAllInitially }: Pr
                 />
               </div>
             )}
+            {children && <div className="mt-3">{children}</div>}
           </div>
         );
       }}

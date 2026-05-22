@@ -1,108 +1,154 @@
-# Phase 7e — Wizard polish, ordering, and inconsistencies
+# Phase 7f — Smart, Conditional Wizard
 
-Fix the friction the user flagged plus a small audit of related blind spots.
+Goal: stop dumping 100+ pills at the user. Pick **Cast → Scene Type → Setting** first, then reveal only the dials that matter, with **dependent fields** that auto-prefill sensible values (e.g. "Two-tone hard split" backdrop → instantly show two color pickers prefilled from the palette anchor). Setting pools become **category × sub-family aware** (swimwear → beach/pool/villa/jungle; jackets → city/forest/snow, not beach). Allow exotic combos like "rain in studio".
 
-## 1. Re-order steps — Cast first
+---
 
-New step order:
+## 1. New flow inside the Aesthetic step
 
+Current: one long scrolling step with every dial.
+New: a **3-stage progressive form** inside Step 4 (Aesthetic):
+
+```text
+Stage A — Scene type        (1 choice, 6 cards: Studio / Indoor lifestyle /
+                             Outdoor location / Outdoor nature / Architectural /
+                             Tabletop & flat-lay)
+   ↓ reveals
+Stage B — Setting / sub-environment
+   pool filtered by  module × sub_family × scene_type
+   e.g. swimwear + Outdoor location  → Beach, Hotel pool deck, Yacht,
+                                       Modern villa, Jungle pool, Rooftop pool
+        jackets + Outdoor location   → City street, Forest trail, Snowy alley,
+                                       Mountain pass, Industrial loft exterior
+   ↓ reveals
+Stage C — Contextual dials only (lighting, props, weather, backdrop, ...).
+   Each dial declares `appliesWhen({ scene_type, setting, module, sub_family, cast })`
+   and is hidden otherwise.
 ```
-Source → Family → Sub-family → Cast & product → Scene aesthetic → Category details → Preview → Review
+
+Each completed stage collapses into a compact summary chip the user can click to edit. No stage shows more than ~12 chips at once; an inline "Show more" reveals the global pool as today.
+
+---
+
+## 2. Rule engine for dependent fields
+
+New module `wizard/rules/sceneRules.ts` exporting a declarative table:
+
+```ts
+type RuleCtx = {
+  module?: BrandSceneModule;
+  sub_family?: string;
+  scene_type?: SceneType;
+  setting?: string;
+  cast?: CastPreset;
+  values: Record<string, string | undefined>;   // current extras
+};
+
+type FieldRule = {
+  key: string;                       // extras key the field writes
+  appliesWhen?: (c: RuleCtx) => boolean;
+  /** When this field gets a value, seed/clear other fields. */
+  cascade?: (value: string, c: RuleCtx) => Partial<Record<string, string|undefined>>;
+  /** Reveal extra child fields once a specific value is picked. */
+  childrenWhen?: (value: string) => string[];
+};
 ```
 
-Why: cast determines which scene dials are even relevant (no people = hide wardrobe, gaze, body-part focus, makeup, hair, pose energy, group dynamic, hands-on-product, walking/seated angles, apparel-only camera angles, etc.). Putting cast first means Step "Scene aesthetic" never shows irrelevant blocks. The current order surfaces dead controls.
+Examples:
+- `backdrop_type = "Two-tone hard split"` → cascades `backdrop_color_a`, `backdrop_color_b` to two complementary swatches drawn from the chosen `palette_preset` (or default dusty-rose + cocoa). Reveals two color-picker fields.
+- `backdrop_type = "Soft gradient wall"` → reveals `gradient_direction` (chips: top→bottom, left→right, radial) + `gradient_stops` (auto from palette).
+- `scene_type = "Indoor studio"` + `weather = "Rain"` → unlocks `studio_fx` field with presets `Practical rain rig`, `Water mist`, `Wet-look spray`, `Reflective wet floor`, plus auto-sets `shadows = "wet"`.
+- `setting = "Beach"` → cascades `light_direction = "Backlit golden hour"`, `motion = "Wind in hair"`, hides `backdrop_type` (outdoor).
+- `cast = none` → hides `pose_energy`, `gaze`, `hair`, `makeup`, body-part angles (already partly in place; rules engine unifies it).
+- `aesthetic_era = "Brutalist"` → cascades `realism = "documentary"`, `saturation = "desaturated"` unless user has overridden.
 
-Implementation:
-- Swap the indexes in `BrandSceneWizard.tsx` step switch + `META_WIZARD`.
-- Renumber `STEPS_WIZARD` / `STEPS_REFERENCE` labels in `WizardLayout.tsx`.
-- Re-point `nextDisabled` gates: Cast gate now applies at the new earlier index; Scene aesthetic gate is unchanged (already permissive).
-- Update `useWizardState` reducer's `next/back` so the reference path still skips Step "Category details".
+Cascades only fire when the target field is empty or marked `auto`, never overwriting user picks. Every auto-filled field shows a tiny "✦ auto" badge and a one-click "clear" affordance.
 
-## 2. Hide irrelevant scene dials when cast = none
+---
 
-After cast is chosen, `Step3BaseAnswers` reads `answers.cast?.preset` and:
+## 3. Category × sub-family setting pools
 
-- Hides the entire "Cast styling" block (already on Step 4).
-- Hides camera-angle groups that require a person: apparel angles (walking/seated/bust/hip/knee), eyewear "on-face" subset, jewelry "on-finger/on-wrist/on-neck/on-ear", footwear "on-foot" subset.
-- Hides subject-focus options `person` and `equal` from the chip pool.
-- Hides "Negative-space intent: reserved for headline/logo" only if `output_use_case` was the trigger — see #3.
+Replace the single `SCENE_SETTINGS` list with `wizard/registry/settingsBySubfamily.ts`:
 
-`applicableFields` already gets `castPreset`; extend it to read a new `hideWhenNoCast?: boolean` flag on each `ExtrasField` and split the apparel/footwear/eyewear/jewelry angle pools into "with people" vs "product only" variants.
+```ts
+SETTINGS_BY_SUBFAMILY: Record<string /* `${module}/${sub_family}` */, {
+  [scene_type: string]: string[];      // ordered pool
+}>
+```
 
-## 3. Remove dead/awkward controls
+Seed entries (excerpt):
+- `fashion/swimwear` → outdoor_location: Beach, Hotel pool deck, Yacht, Modern villa pool, Jungle pool, Rooftop pool, Salt flats, Cliff edge; outdoor_nature: Ocean shoreline, Tropical lagoon, Desert oasis.
+- `fashion/jackets` → outdoor_location: City street, Old town alley, Industrial loft exterior, Mountain pass; outdoor_nature: Forest trail, Snowy alley, Foggy moor; indoor_lifestyle: Loft, Atelier, Diner.
+- `fashion/dresses` → architectural lobby, Gallery, Rooftop terrace, Ballroom, Garden.
+- `footwear/sneakers` → Skate plaza, Subway platform, Court, Rooftop, Warehouse.
+- `eyewear/sunglasses` → Beach boardwalk, Marina, Convertible interior, Rooftop pool.
+- `beauty/fragrance` → Marble vanity, Sunlit windowsill, Velvet drape, Wet glass, Garden bench.
+- `home/tabletop` → Linen-set table, Kitchen counter, Outdoor terrace, Studio plinth.
 
-- Delete the **"Surface under product"** Section from Step 3 — already redundant with the new "Floor surface" and "Backdrop type" dials. The Zod field `base.surface` stays for back-compat but no UI writes it anymore.
-- Delete the **"Output use case"** Section from Step 3 — out of scope for a creative scene wizard; output sizing is handled at generation time, not here. Field stays on the schema for back-compat.
-- Delete the footer text **"Aspect ratio is locked to 4:5 (portrait) — the standard preview format."** — the lock is already enforced silently in the assembler.
+Fallback chain: `module/sub_family` → `module/*` → global pool. Anything missing degrades gracefully so we don't block new sub-families.
 
-## 4. Fix scroll-on-step-change
+Same registry-driven approach is extended to `BACKDROP_TYPES`, `FLOOR_TYPES`, `MOTION`, `CAMERA_ANGLES`, `LIGHT_DIRECTIONS`. Each pool can be tagged `{ indoor?: bool, outdoor?: bool, needsCast?: bool, family?: string[] }` so the rule engine filters them on the fly.
 
-`BrandSceneWizard` calls `dispatch({type:'next'})` but the page keeps the previous scroll position, so users land mid-page on the next step.
+---
 
-- Add a `useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); /* scroll the wizard's nearest scroll container, not just window — find the closest `overflow-y-auto` ancestor of the wizard root and reset its scrollTop too */ }, [step])` inside `BrandSceneWizard`.
-- Verify by visually checking Step 3 → Step 4 transition: the title should be at the top of the visible area.
+## 4. Dependent UI primitives
 
-## 5. Surface "why is Next disabled?"
+New components under `wizard/components/`:
+- `ConditionalField.tsx` — wraps a Section, hides itself when `appliesWhen` returns false, plays a 120 ms fade-in when it appears.
+- `AutoFillBadge.tsx` — tiny ✦ pill rendered next to auto-cascaded values, with a "use my own" click target.
+- `DualColorPicker.tsx` — used by two-tone backdrops and gradient stops; seeded from `palette_preset`.
+- `SmartSettingCard.tsx` — large image-less cards used in Stage B with the contextual setting names (Beach, Villa, Jungle, …) and a one-line vibe note.
 
-Today the Next button is disabled silently and, on a long form, the user cannot even reach the missing field. Two changes:
+`ExtrasPillField` is updated to accept an optional `children` slot rendered after the chip row, so a backdrop type can immediately reveal its color-pickers in-place.
 
-- **Tooltip on the disabled Next button** explaining the first unmet requirement, e.g.:
-  - "Pick a cast option"
-  - "Pick a product interaction"
-  - "Pick a product scale"
-  - "Add a reference image, scene name, and intent"
-  - "Answer the required category questions"
+---
 
-  Implementation: compute a `nextDisabledReason: string | null` next to `nextDisabled` in `BrandSceneWizard` and forward it to `WizardLayout`. Wrap the `<Button>` in the existing `Tooltip` only when disabled+reason.
+## 5. State, schema, assembler
 
-- **Inline highlight + auto-scroll to the first missing required Section** when the user clicks the disabled Next anyway:
-  - Replace `disabled={nextDisabled}` with `disabled={false}` + an `onClick` guard that, when invalid, scrolls the first required-and-empty Section into view and flashes a red ring on it for 1.4 s.
-  - Required Sections get a `data-required` attribute and a `data-missing` toggled by the parent.
+- `useWizardState.ts`: add `scene_type` and `setting_subtype` to `base`, and add a `auto: Record<string, true>` flag map so we know which values were cascaded vs. user-chosen.
+- `schema.ts`: extend `brandSceneBaseAnswersSchema` with `scene_type` (enum) and keep `extras` open. Add validation: certain combos are blocked (`scene_type = Tabletop` + `cast = solo` → error "Tabletop scenes have no people; switch cast first").
+- `assembleSceneDirective.ts`: render the new keys in canonical order (Scene type → Setting → Backdrop {colors A/B if present} → Light → Motion → FX → Composition). Unknown keys continue to render as `Style (key): value.`
 
-## 6. Family-picker inconsistencies
+---
 
-Blurbs in `Step1ChooseModule.tsx` overlap:
+## 6. Authoring & extensibility
 
-- `wellness: "Supplements, skincare, ritual"` mentions "skincare" but `beauty-skincare` actually lives under **Beauty & Fragrance**. Fix blurbs:
-  - `wellness: "Supplements, vitamins, ritual"`
-  - `"beauty-fragrance": "Skincare, makeup, perfume, atmospheric still-life"` (was just "Bottles, jars, atmospheric still-life" — undersold)
-  - `home: "Furniture, decor, soft goods"` (kitchenware lives in Food / Drink, not Home)
-  - `"food-drink": "Plates, drinks, kitchenware lifestyle"`
-  - `tech: "Phones, audio, gadgets, accessories"`
+- All pools and rules live in plain TS tables (`registry/` + `rules/`) — no JSX changes needed to add new sub-family scenes.
+- A new dev-only `/dev/wizard-rules` page (admin) lists every rule and lets us test `RuleCtx` snapshots, so adding "swimwear → jungle pool" is one PR.
 
-Step 2 sub-family chips also display the raw slug-derived label when no override exists. Audit `SUB_FAMILY_LABEL_OVERRIDES` and Title-Case the user-facing labels: e.g. "skincare" → "Skincare", "supplements-wellness" already overrides to "wellness" but should be "Supplements & wellness".
+---
 
-## 7. Additional blind spots found in the audit
+## 7. Tests (Vitest, additive)
 
-- **"Mood" free-text + "Brand voice" pills overlap** — keep pills, remove the free-text "Mood" field on Step 3 (it duplicates Brand voice + Aesthetic era).
-- **"Framing" free-text + "Composition geometry" pills overlap** — keep pills, remove the Framing free-text.
-- **"Lighting" free-text + "Light direction" + "Light quality" extras overlap** — remove the legacy free-text Lighting, the two new pill blocks fully replace it.
-- **Step 2** auto-skips when only one sub-family exists, but never visually announces that — confusing because the URL/step counter jumps. Add a quick toast or inline "Auto-selected sole sub-family" hint on Step 3 when we skipped.
-- **Step 4 Cast** doesn't make it visible that picking `none` (no people) is a first-class scene choice — give it a larger card with the copy "Just the product — no models" so users don't think the wizard requires a model.
-- **`Replicate reference` cast** is currently mixed in with other cast options. Move it to its own row at the top of the cast picker with a small "Reference only" badge so it's not picked accidentally when the user just wanted "solo".
-- **`Scene type` (Indoor studio, Outdoor location, etc.)** is required but its prompt impact is now duplicated by `Setting` + `Backdrop type`. Demote it to "optional headline" — required check stays only on Cast + Interaction + Scale + Reference fields.
+- `scene-rules.test.ts` — Two-tone hard split seeds color A/B from palette; clearing backdrop clears children; rain + indoor studio unlocks `studio_fx` and sets `shadows = wet`.
+- `setting-pools.test.ts` — swimwear outdoor pool excludes "snowy alley"; jackets outdoor pool excludes "beach"; missing sub-family falls back to module pool.
+- `progressive-flow.test.ts` — Stage B is hidden until `scene_type` chosen; Stage C is hidden until `setting` chosen; cast-none hides person-only dials.
+- `assembler-rules.test.ts` — Cascaded values render with their friendly prefixes; auto-fill clearing removes them from the prompt.
 
-## 8. Out of scope
+Existing 90 tests stay green.
 
-- Restructuring the DB schema (`base.surface`, `base.output_use_case` stay as nullable, simply no longer written by the UI).
-- Re-wiring the live generation pipeline (assembler already handles all current and new fields; the deleted UI fields are just no-ops).
-- Brand-memory-fed defaults for the new step order.
+---
 
-## Technical
+## 8. Files touched / created
 
-- **Edited:**
-  - `wizard/BrandSceneWizard.tsx` — step order, `nextDisabledReason`, scroll-to-top effect.
-  - `wizard/WizardLayout.tsx` — accept `nextDisabledReason`, render tooltip on disabled Next, "click-anyway" scroll-to-missing hook, renumber step labels.
-  - `wizard/useWizardState.ts` — re-point `next/back` for the new order (cast is now Step 3, aesthetic is Step 4).
-  - `wizard/steps/Step3BaseAnswers.tsx` — remove "Surface under product", "Output use case", footer aspect-ratio line, Mood / Framing / Lighting free-text fields. Pass `castPreset` into `applicableFields` and skip cast-dependent angle pools.
-  - `wizard/steps/Step4Cast.tsx` — promote `none` and `replicate` presentation; nothing else.
-  - `wizard/steps/Step1ChooseModule.tsx` — fix blurbs.
-  - `wizard/components/Section.tsx` — add `required`/`data-required` + `data-missing` + flash-ring animation.
-  - `wizard/constants/extras.ts` — add `hideWhenNoCast?: boolean`; split apparel/footwear/eyewear/jewelry angle pools into "with-cast" and "product-only" subsets; tag the with-cast ones.
-  - `lib/onboardingTaxonomy.ts` — Title-Case sub-family overrides.
+Created:
+- `src/features/brand-scenes/wizard/rules/sceneRules.ts`
+- `src/features/brand-scenes/wizard/registry/settingsBySubfamily.ts`
+- `src/features/brand-scenes/wizard/components/ConditionalField.tsx`
+- `src/features/brand-scenes/wizard/components/AutoFillBadge.tsx`
+- `src/features/brand-scenes/wizard/components/DualColorPicker.tsx`
+- `src/features/brand-scenes/wizard/components/SmartSettingCard.tsx`
+- `src/features/brand-scenes/__tests__/scene-rules.test.ts`
+- `src/features/brand-scenes/__tests__/setting-pools.test.ts`
+- `src/features/brand-scenes/__tests__/progressive-flow.test.ts`
+- `src/features/brand-scenes/__tests__/assembler-rules.test.ts`
 
-- **Tests:**
-  - `wizard-order.test.ts` — given step 3 (cast none) → step 4 (aesthetic) hides person-dependent extras.
-  - `next-disabled-reason.test.ts` — each gate returns the correct human-readable reason.
-  - `taxonomy-labels.test.ts` — no sub-family slug renders as bare slug; all labels are Title Case.
-  - Existing 89 tests remain green.
+Edited:
+- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` (3-stage progressive layout)
+- `src/features/brand-scenes/wizard/components/ExtrasPillField.tsx` (children slot, auto badge)
+- `src/features/brand-scenes/wizard/constants/extras.ts` (rule hooks, tagged pools)
+- `src/features/brand-scenes/wizard/useWizardState.ts` (scene_type, auto map)
+- `src/features/brand-scenes/schema.ts` & `types.ts` (scene_type enum, combo validation)
+- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` (new keys + canonical order)
+
+No backend or DB changes. Aspect ratio lock and step order (Cast → Aesthetic → Category → Preview → Review) from Phase 7e are preserved.

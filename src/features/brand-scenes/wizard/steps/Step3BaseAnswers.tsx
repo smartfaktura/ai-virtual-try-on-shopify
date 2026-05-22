@@ -43,8 +43,11 @@ import {
   type BrandVoice,
   type SubjectFocus,
 } from "../constants/sceneExtras";
-import { SCENE_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
+import { SCENE_EXTRAS_FIELDS, applicableFieldsCtx } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
+import { SmartSettingCard } from "../components/SmartSettingCard";
+import { SCENE_TYPES, getSettingPool, type SceneTypeId } from "../registry/settingsBySubfamily";
+import { applyCascade, applySettingCascade, type SceneCtx } from "../rules/sceneRules";
 import { resolveAll, tuningLabel } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
 
@@ -57,7 +60,7 @@ interface Props {
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
 
-const SCENE_TYPES = [
+const LEGACY_SCENE_TYPES = [
   "Indoor studio",
   "Indoor lifestyle",
   "Outdoor location",
@@ -66,6 +69,13 @@ const SCENE_TYPES = [
   "Architectural",
   "Tabletop / Flat lay",
 ] as const;
+void SCENE_TYPES;
+void SmartSettingCard;
+void getSettingPool;
+void applyCascade;
+void applySettingCascade;
+type _SceneTypeId = SceneTypeId;
+type _SceneCtx = SceneCtx;
 
 
 const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
@@ -108,7 +118,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
       <PillField
         label="Scene type"
-        presets={SCENE_TYPES as unknown as readonly string[]}
+        presets={LEGACY_SCENE_TYPES as unknown as readonly string[]}
         current={value.aesthetic ?? ""}
         placeholder="Describe your own scene type"
         onChange={(next) => onChange({ aesthetic: next })}
@@ -313,16 +323,35 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
           More creative dials
         </div>
-        {applicableFields(SCENE_EXTRAS_FIELDS, module, castPreset).map((f) => (
+        {applicableFieldsCtx(SCENE_EXTRAS_FIELDS, {
+          module,
+          sub_family: subFamily,
+          scene_type: value.scene_type,
+          setting: value.setting,
+          cast: castPreset,
+          values: { ...(value.extras ?? {}), _weather: value.weather },
+          auto: value.auto ?? {},
+        }).map((f) => (
           <ExtrasPillField
             key={f.key}
             field={f}
             value={value.extras?.[f.key]}
+            autoFilled={!!value.auto?.[f.key]}
             onChange={(next) => {
-              const nextExtras = { ...(value.extras ?? {}) };
-              if (next === undefined) delete nextExtras[f.key];
-              else nextExtras[f.key] = next;
-              onChange({ extras: nextExtras });
+              const ctx: SceneCtx = {
+                module,
+                sub_family: subFamily,
+                scene_type: value.scene_type,
+                setting: value.setting,
+                cast: castPreset,
+                values: value.extras ?? {},
+                auto: value.auto ?? {},
+              };
+              const { values, auto } = applyCascade(f.key, next, ctx);
+              // Strip undefined entries.
+              const cleaned: Record<string, string> = {};
+              for (const [k, v] of Object.entries(values)) if (v !== undefined) cleaned[k] = v;
+              onChange({ extras: cleaned, auto });
             }}
           />
         ))}

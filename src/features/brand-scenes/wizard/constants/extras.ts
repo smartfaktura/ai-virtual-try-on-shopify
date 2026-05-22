@@ -17,6 +17,8 @@
 
 import type { BrandSceneModule } from "../../constants";
 import type { CastPreset } from "./cast";
+import type { SceneCtx } from "../rules/sceneRules";
+import { isOutdoor, isIndoor, type SceneTypeId } from "../registry/settingsBySubfamily";
 
 export interface ExtrasField {
   key: string;
@@ -29,6 +31,10 @@ export interface ExtrasField {
   castOnly?: CastPreset[];
   /** Hide this field when no people are in the scene (cast = 'none'). */
   hideWhenNoCast?: boolean;
+  /** Optional dynamic gate — full context aware. */
+  appliesWhen?: (ctx: SceneCtx) => boolean;
+  /** Hidden by default until a parent field unlocks it. */
+  dependent?: boolean;
   hint?: string;
 }
 
@@ -129,6 +135,29 @@ export const BACKDROP_GRADIENT_STYLES: string[] = [
   "Vignette",
   "Two-tone hard split",
 ];
+
+export const GRADIENT_DIRECTIONS: string[] = [
+  "Top → bottom",
+  "Bottom → top",
+  "Left → right",
+  "Right → left",
+  "Diagonal ↗",
+  "Diagonal ↘",
+  "Radial",
+];
+
+export const STUDIO_FX: string[] = [
+  "Practical rain rig",
+  "Water mist",
+  "Wet-look spray",
+  "Reflective wet floor",
+  "Smoke / fog machine",
+  "Hazer atmosphere",
+  "Wind machine",
+  "Confetti drop",
+  "Petal drop",
+];
+
 
 export const TIMES_OF_DAY_EXT: string[] = [
   "Pre-dawn blue",
@@ -406,6 +435,8 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Backdrop type",
     prefix: "Backdrop",
     presets: BACKDROP_TYPES,
+    // Backdrops are studio / tabletop / architectural only.
+    appliesWhen: (c) => isIndoor(c.scene_type),
   },
   {
     key: "backdrop_color",
@@ -413,6 +444,32 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Backdrop color / gradient anchor",
     prefix: "Backdrop color",
     presets: BACKDROP_COLORS,
+    appliesWhen: (c) =>
+      isIndoor(c.scene_type) &&
+      // Hide once a hard split is chosen — color A/B take over.
+      c.values.backdrop_type !== "Two-tone hard split",
+  },
+  {
+    key: "backdrop_color_a",
+    scope: "scene",
+    label: "Backdrop color A (split / gradient)",
+    prefix: "Backdrop color A",
+    presets: BACKDROP_COLORS,
+    dependent: true,
+    appliesWhen: (c) =>
+      c.values.backdrop_type === "Two-tone hard split" ||
+      c.values.backdrop_type === "Soft gradient wall",
+  },
+  {
+    key: "backdrop_color_b",
+    scope: "scene",
+    label: "Backdrop color B (split / gradient)",
+    prefix: "Backdrop color B",
+    presets: BACKDROP_COLORS,
+    dependent: true,
+    appliesWhen: (c) =>
+      c.values.backdrop_type === "Two-tone hard split" ||
+      c.values.backdrop_type === "Soft gradient wall",
   },
   {
     key: "backdrop_gradient",
@@ -420,6 +477,16 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Backdrop gradient style",
     prefix: "Gradient",
     presets: BACKDROP_GRADIENT_STYLES,
+    appliesWhen: (c) => isIndoor(c.scene_type),
+  },
+  {
+    key: "gradient_direction",
+    scope: "scene",
+    label: "Gradient direction",
+    prefix: "Gradient direction",
+    presets: GRADIENT_DIRECTIONS,
+    dependent: true,
+    appliesWhen: (c) => c.values.backdrop_type === "Soft gradient wall",
   },
   {
     key: "floor",
@@ -427,6 +494,19 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Floor surface",
     prefix: "Floor",
     presets: FLOOR_TYPES,
+  },
+  {
+    key: "studio_fx",
+    scope: "scene",
+    label: "Studio FX",
+    prefix: "Studio FX",
+    presets: STUDIO_FX,
+    dependent: true,
+    hint: "Practical effects rigged inside the studio",
+    appliesWhen: (c) =>
+      c.scene_type === "studio" &&
+      // Rain/snow/smoke weather inside a studio = unlock practical FX.
+      ["rain", "snow", "smoke", "fog"].includes(c.values._weather ?? ""),
   },
   {
     key: "time_of_day_detail",
@@ -604,3 +684,18 @@ export function applicableFields(
     return true;
   });
 }
+
+/** Phase 7f — context-aware filter (scene_type + dependent fields). */
+export function applicableFieldsCtx(
+  fields: ExtrasField[],
+  ctx: SceneCtx,
+): ExtrasField[] {
+  return applicableFields(fields, ctx.module, ctx.cast).filter((f) => {
+    if (f.appliesWhen && !f.appliesWhen(ctx)) return false;
+    return true;
+  });
+}
+
+void isOutdoor;
+void isIndoor;
+export type { SceneTypeId };
