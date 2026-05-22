@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   BRAND_SCENE_GENERATION_COST,
   BRAND_SCENE_VARIATIONS_PER_GENERATION,
@@ -27,6 +26,8 @@ import {
   metaX,
 } from "../constants/sceneExtras";
 import { SCENE_TYPES } from "../registry/settingsBySubfamily";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 
 interface Props {
   answers: BrandSceneAnswers;
@@ -35,7 +36,7 @@ interface Props {
 
 export function Step5Review({ answers }: Props) {
   const isReference = answers.source === "reference";
-  const [showPayload, setShowPayload] = useState(false);
+  const { isAdmin } = useIsAdmin();
   const avoidValue = answers.base?.avoid ?? answers.negative_note ?? "";
 
   return (
@@ -55,18 +56,36 @@ export function Step5Review({ answers }: Props) {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setShowPayload((v) => !v)}
-        className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
-      >
-        {showPayload ? "− Hide payload" : "+ Show payload"}
-      </button>
-      {showPayload && (
-        <pre className="rounded-2xl border border-border bg-muted/40 p-4 text-xs overflow-auto max-h-[320px] font-mono text-foreground/80">
+      {isAdmin && <AdminDebug answers={answers} />}
+    </div>
+  );
+}
+
+function AdminDebug({ answers }: { answers: BrandSceneAnswers }) {
+  const directive = assembleSceneDirective(answers);
+  return (
+    <div className="space-y-3 pt-4 border-t border-border/60">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        Admin debug
+      </div>
+
+      <div className="rounded-2xl border border-border bg-muted/30 p-4">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+          Compiled final prompt
+        </div>
+        <pre className="text-xs leading-relaxed text-foreground/85 whitespace-pre-wrap font-mono">
+{directive || "(empty)"}
+        </pre>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-muted/30 p-4">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+          Full payload
+        </div>
+        <pre className="text-xs leading-relaxed text-foreground/85 whitespace-pre-wrap font-mono overflow-auto max-h-[400px]">
 {JSON.stringify(answers, null, 2)}
         </pre>
-      )}
+      </div>
     </div>
   );
 }

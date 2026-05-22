@@ -24,8 +24,8 @@ const STEPS_WIZARD = [
   { n: 1, label: "Family" },
   { n: 2, label: "Sub-family" },
   { n: 3, label: "Cast" },
-  { n: 4, label: "Aesthetic" },
-  { n: 5, label: "Details" },
+  { n: 4, label: "Environment" },
+  { n: 5, label: "Photo & edit" },
   { n: 6, label: "Preview" },
   { n: 7, label: "Review" },
 ] as const;

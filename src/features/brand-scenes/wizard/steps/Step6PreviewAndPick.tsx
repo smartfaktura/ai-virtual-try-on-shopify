@@ -1,35 +1,105 @@
-import { useMemo } from "react";
-import { Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Sparkles, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import type { BrandSceneAnswers } from "../../types";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
+import {
+  BRAND_SCENE_GENERATION_COST,
+  BRAND_SCENE_VARIATIONS_PER_GENERATION,
+} from "../../constants";
 
 interface Props {
   answers: BrandSceneAnswers;
 }
 
-/**
- * Step 6 — Preview & pick.
- *
- * This is the UX scaffold for the 3-variant generation loop. A live
- * generation endpoint for Brand Scenes does not yet exist; this step
- * shows the assembled directive so the user can verify exactly what
- * will be sent, and reserves the grid + "Save" affordance for the
- * follow-up PR that wires `assembleSceneDirective` into an edge
- * function and writes chosen variants back via `setPreviewVariants`.
- */
+function humanize(s: string): string {
+  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function pickSummary(answers: BrandSceneAnswers) {
+  const base = answers.base ?? {};
+  const cast = answers.cast;
+  const who =
+    cast?.preset === "none" || !cast
+      ? "No people — product only"
+      : cast.preset
+        ? humanize(cast.preset)
+        : undefined;
+  const where = base.setting || (base.scene_type && humanize(base.scene_type));
+  const how = [
+    base.lens && humanize(base.lens),
+    base.depth_of_field && humanize(base.depth_of_field),
+    base.finish && humanize(base.finish),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const avoid = base.avoid ?? answers.negative_note;
+  return { who, where, how, avoid };
+}
+
 export function Step6PreviewAndPick({ answers }: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
+  const { isAdmin } = useIsAdmin();
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [showPayload, setShowPayload] = useState(false);
+
+  const { who, where, how, avoid } = pickSummary(answers);
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          <Sparkles className="w-3 h-3" />
-          Final scene directive
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          Ready to generate
         </div>
-        <pre className="mt-3 text-xs leading-relaxed text-foreground/85 whitespace-pre-wrap font-mono">
-{directive || "(empty — go back and fill in the scene)"}
-        </pre>
+        <div className="mt-1 text-base font-semibold tracking-tight">
+          {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · 4:5 ·{" "}
+          {BRAND_SCENE_GENERATION_COST} credits
+        </div>
+
+        <dl className="mt-4 grid grid-cols-[88px_1fr] gap-x-4 gap-y-1.5 text-sm">
+          {who && (
+            <>
+              <dt className="text-muted-foreground">Who</dt>
+              <dd className="text-foreground/90">{who}</dd>
+            </>
+          )}
+          {where && (
+            <>
+              <dt className="text-muted-foreground">Where</dt>
+              <dd className="text-foreground/90">{where}</dd>
+            </>
+          )}
+          {how && (
+            <>
+              <dt className="text-muted-foreground">How shot</dt>
+              <dd className="text-foreground/90">{how}</dd>
+            </>
+          )}
+          {avoid && (
+            <>
+              <dt className="text-muted-foreground">Avoid</dt>
+              <dd className="text-foreground/90">{avoid}</dd>
+            </>
+          )}
+        </dl>
+
+        <div className="mt-5">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button disabled className="rounded-full font-semibold gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Generate 3 variations
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Available in a later phase</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -43,11 +113,61 @@ export function Step6PreviewAndPick({ answers }: Props) {
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Generating three variants is the next step. When you pick one it gets
-        saved to your Brand Scenes library, the other two are discarded, and the
-        full directive above is stored so the scene can be re-rendered later.
-      </p>
+      {isAdmin && (
+        <div className="space-y-3 pt-4 border-t border-border/60">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            Admin debug
+          </div>
+
+          <AdminPanel
+            label="Compiled prompt"
+            open={showPrompt}
+            onToggle={() => setShowPrompt((v) => !v)}
+          >
+            <pre className="text-xs leading-relaxed text-foreground/85 whitespace-pre-wrap font-mono">
+{directive || "(empty — go back and fill in the scene)"}
+            </pre>
+          </AdminPanel>
+
+          <AdminPanel
+            label="Raw payload"
+            open={showPayload}
+            onToggle={() => setShowPayload((v) => !v)}
+          >
+            <pre className="text-xs leading-relaxed text-foreground/85 whitespace-pre-wrap font-mono overflow-auto max-h-[400px]">
+{JSON.stringify(answers, null, 2)}
+            </pre>
+          </AdminPanel>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AdminPanel({
+  label,
+  open,
+  onToggle,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-muted/30">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+      >
+        <span>{label}</span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && <div className="px-4 pb-4">{children}</div>}
     </div>
   );
 }
