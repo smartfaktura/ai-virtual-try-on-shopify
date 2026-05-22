@@ -34,6 +34,7 @@ export function Section({
   missing,
   hint,
   helper,
+  tooltip,
   children,
 }: SectionProps) {
   const body = typeof children === "function" ? children(true) : children;
@@ -50,6 +51,24 @@ export function Section({
           <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {label}
           </Label>
+          {tooltip && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-muted-foreground/60 hover:text-foreground transition-colors"
+                    aria-label="More info"
+                  >
+                    <HelpCircle className="w-3 h-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-xs">
+                  {tooltip}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {required && (
             <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
               Required
@@ -71,6 +90,7 @@ export function Section({
       >
         {body}
       </div>
+
       {hint && <p className="text-[11px] text-muted-foreground/80">{hint}</p>}
     </div>
   );
