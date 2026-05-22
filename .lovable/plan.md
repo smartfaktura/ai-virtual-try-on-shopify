@@ -1,347 +1,239 @@
-# Brand Scenes — full question list (plain options)
+# Brand Scenes — MVP (logic only, no generation yet)
 
-Every question uses clear, everyday labels. No marketing words like "quiet luxury", "editorial", "avant-garde". A first-time user should understand each option without thinking.
-
-Wizard order: Category → Scene basics → Category-specific → People & outfit (only if person) → Camera & format → Review.
+Goal of this MVP: stand up the full data + logic pipeline for Brand Scenes so a user can pick a category, answer only the relevant questions, save structured JSON, and get a clean professional prompt out. No image generation is wired in this MVP — we stop at "prompt produced + saved".
 
 ---
 
-## Step 1 — Pick category
+## What ships in this MVP
 
-**Q1.1 Family** *(single, required)*
-Fashion · Footwear · Bags & accessories · Jewelry · Eyewear · Beauty · Fragrance · Home · Food & drink · Pets · Tech & gadgets · Kids & baby · Sports & outdoor · Cars & moto · Other
+1. A typed option library (every UI option carries `label`, `value`, `promptFragment`, `appliesTo`, `conflictsWith`, `questionsToShow`, `questionsToHide`).
+2. Category Scene Modules (one per family, declares which questions appear for which subject mode).
+3. A Wizard UI on `/app/brand-scenes/new` that walks the user through: Category → Subcategory → Subject Mode → Relevant Questions → Review.
+4. A Validator that strips irrelevant fields, resolves conflicts, and merges category-specific avoid rules.
+5. A Prompt Compiler that turns the validated JSON into one coherent natural-language prompt in the exact 11-step order.
+6. A `brand_scenes` table that stores the answers, the validated JSON, the compiled prompt, and the aspect ratio (sent separately on future generation calls).
+7. A list page `/app/brand-scenes` showing the user's saved scenes with the compiled prompt visible (copy button).
 
-**Q1.2 Subcategory** *(single, required — list changes based on family)*
-Examples for Fashion: T-shirts · Shirts · Dresses · Jeans · Pants · Skirts · Sweaters · Jackets & coats · Swimwear · Underwear & loungewear · Activewear · Suits
-Examples for Footwear: Sneakers · Boots · Heels · Flats · Sandals · Slippers
-(35+ subcategories total — same list the app already uses.)
-
----
-
-## Step 2 — Scene basics (asked for every scene)
-
-**Q2.1 Where is the scene? (background type)** *(single)*
-- Plain studio background
-- Indoor room (home / cafe / office)
-- Outdoor city street
-- Outdoor nature (beach, forest, mountain, garden)
-- Surface only (table, floor, fabric)
-- Solid color background
-
-**Q2.2 Time of day** *(single)*
-- Morning
-- Midday
-- Afternoon / golden hour
-- Evening / sunset
-- Night
-- Doesn't matter
-
-**Q2.3 Lighting** *(single)*
-- Soft natural daylight
-- Bright sunlight with shadows
-- Warm indoor lamp light
-- Studio softbox (clean and even)
-- Moody / low light
-- Hard shadow / high contrast
-
-**Q2.4 Mood** *(single)*
-- Calm and clean
-- Warm and cozy
-- Fresh and energetic
-- Luxurious and quiet
-- Playful and fun
-- Bold and dramatic
-
-**Q2.5 Background color tone** *(single)*
-- White
-- Off-white / cream
-- Beige / sand
-- Grey
-- Black
-- Warm tones (brown, terracotta)
-- Cool tones (blue, green)
-- Pastel
-- Matches the mood (auto)
-
-**Q2.6 Is there a person in the scene?** *(single — gates the Outfit step)*
-- No, product only
-- Yes, full person with face
-- Yes, but only hands / arms / partial body
-- Yes, but face hidden / from behind
-
-**Q2.7 Number of products visible** *(single)*
-- Just one
-- Two
-- A small group (3–5)
-- A flat lay arrangement
-
-**Q2.8 Props around the product** *(multi, optional)*
-- None — keep it clean
-- Natural items (plants, flowers, fruit, stones)
-- Fabric / paper textures
-- Everyday objects (cup, book, keys)
-- Matching product accessories
-- Let the system decide
+Out of scope for this MVP: image generation, scene previews, sharing, editing after save, admin moderation.
 
 ---
 
-## Step 3 — Category-specific questions
+## File / module structure
 
-Only the questions matching the chosen subcategory show up.
+```text
+src/lib/brandScenes/
+  types.ts                  // Option, Question, Module, SceneAnswers, CompiledScene
+  options/                  // shared option pools
+    lighting.ts
+    colors.ts
+    photoLook.ts
+    camera.ts
+    surfaces.ts
+    props.ts
+  modules/                  // one file per family
+    fashion.ts
+    footwear.ts
+    bags.ts
+    jewelry.ts
+    eyewear.ts
+    beauty.ts
+    fragrance.ts
+    home.ts
+    foodDrink.ts
+    pets.ts
+    tech.ts
+    kids.ts
+    sportsOutdoor.ts
+    carsMoto.ts
+    other.ts
+  registry.ts               // family -> module map, subcategory lookup
+  validator.ts              // strip irrelevant, resolve conflicts, inject avoid rules
+  promptCompiler.ts         // 11-step natural-language assembler
+  aspectRatio.ts            // maps "Portrait 4:5" -> { apiValue: "4:5", promptHint?: "" }
 
-### Fashion / Apparel
-- Pose: Standing · Sitting · Walking · Leaning · Close-up detail · Movement (jumping, twirling)
-- Show full outfit or just the product? Full outfit · Focus on this piece only
-- Garment angle: Front · Side · Back · 3/4 angle
+src/pages/
+  BrandScenesNew.tsx        // wizard
+  BrandScenesList.tsx       // saved list
 
-### Footwear
-- View: Side profile · Top down · Worn on a person · On a stand or surface · In motion
-- Pair shown as: Both shoes · One shoe · One on, one off
-- Surface: Studio floor · Wood · Concrete · Grass · Sand · Tile
-
-### Bags & accessories
-- Carry style: Held in hand · On shoulder · Crossbody · On a table · Hanging · Worn
-- Bag open or closed? Closed · Slightly open · Fully open showing inside
-- Show contents? Empty · A few items spilling out · Don't show
-
-### Jewelry
-- Worn or product-only? On a person · On a stand / surface · Both
-- Body part: Neck · Ears · Wrist · Finger · Multiple
-- Skin tone preference: Light · Medium · Deep · Mixed · No preference
-- Close-up tightness: Tight macro · Mid close-up · Full portrait
-
-### Eyewear
-- On a face or on a surface? On face · On surface · Floating / hero shot
-- Face angle: Front · 3/4 side · Pure profile
-- Hair away from temples? Yes (show frames clearly) · Natural
-
-### Beauty (makeup, skincare, haircare)
-- Show the product or show the result on a person? Product only · Person using it · Both side by side
-- Skin type look: Dewy · Matte · Natural · No preference
-- Close-up area: Face · Eyes · Lips · Hands · Hair · Full portrait
-
-### Fragrance
-- Style: Just the bottle · Bottle with mood / nature elements · Person holding / spraying
-- Setting feeling: Soft and dreamy · Sharp and clean · Warm and intimate · Fresh outdoors
-
-### Home (decor, kitchen, furniture)
-- Room: Living room · Bedroom · Kitchen · Bathroom · Office · Outdoor patio · No room, surface only
-- Style of the room: Modern · Classic · Rustic · Minimal · Cozy
-- Daylight or lamp light? Daylight · Lamp light · Mixed
-
-### Food & drink
-- Surface: Wood · Stone / marble · Linen · Plate · Dark surface
-- Steam / freshness cues? Yes · No
-- Drink in glass? Yes · No / not a drink
-- Hands in shot? None · Pouring · Holding · Cutting / preparing
-
-### Pets
-- Pet with product or product only? Product only · Pet in scene · Pet using product
-- Setting: Home · Outdoor · Studio
-
-### Tech & gadgets
-- View: Front · Side · Top down · In use by a person · Lifestyle on a desk
-- Screen on or off? On (show interface) · Off (clean look)
-- Setting: Studio · Desk · Hand-held · Lifestyle room
-
-### Kids & baby
-- Child in shot? Yes · No, product only
-- Age range (if yes): Baby · Toddler · Child
-- Setting: Home · Playground · Studio
-
-### Sports & outdoor
-- In use or static? Static product · Person using it · Action shot
-- Setting: Gym · Outdoor field · Mountain / trail · Water · Studio
-
-### Cars & moto
-- Whole vehicle or detail? Full vehicle · Detail / part close-up · Interior
-- Setting: Studio · Street · Showroom · Nature
-
-### Other
-- Free text: "Describe the scene you want" (300 chars)
+src/components/brandScenes/
+  WizardShell.tsx
+  StepCategory.tsx
+  StepSubjectMode.tsx
+  StepQuestions.tsx         // renders only the visible questions for the current module
+  StepReview.tsx
+  OptionGrid.tsx            // shared visual picker
+  PromptPreview.tsx
+```
 
 ---
 
-## Step 4 — People & outfit (only if Q2.6 says yes)
+## Core types
 
-### Person basics
-**P1 Gender presentation** — Woman · Man · Non-binary look · Doesn't matter
-**P2 Age range** — Teen · 20s · 30s · 40s · 50s · 60+ · Mixed group
-**P3 Skin tone** — Light · Medium · Tan · Deep · Mixed · No preference
-**P4 Body type** — Slim · Athletic · Curvy · Plus size · Mixed · No preference
-**P5 How many people?** — 1 · 2 · Small group (3–5)
+```ts
+type Family = 'fashion' | 'footwear' | 'bags' | 'jewelry' | 'eyewear'
+  | 'beauty' | 'fragrance' | 'home' | 'food_drink' | 'pets'
+  | 'tech' | 'kids' | 'sports_outdoor' | 'cars_moto' | 'other';
 
-### Outfit (skipped if Q2.6 = "only hands")
-**O1 Overall style** *(single)*
-- Casual everyday
-- Smart casual
-- Office / business
-- Sporty / activewear
-- Beachwear / vacation
-- Loungewear / cozy at home
-- Evening / dressed up
-- Streetwear
+type SubjectMode =
+  | 'product_only'
+  | 'product_on_surface'
+  | 'product_in_environment'
+  | 'with_person_full'
+  | 'with_person_hands'
+  | 'with_person_faceless'
+  | 'flat_lay';
 
-**O2 Fit** *(single)*
-- Tight / fitted
-- Regular fit
-- Loose / oversized
-- Mixed (e.g. fitted top, loose pants)
+interface Option {
+  label: string;                 // plain user-facing text, no jargon
+  value: string;                 // stable internal id
+  promptFragment: string;        // natural photographic sentence, not a label
+  appliesTo?: Family[];          // omit = all families
+  conflictsWith?: string[];      // other option values that cannot coexist
+  questionsToShow?: string[];    // question ids to reveal when this option is picked
+  questionsToHide?: string[];    // question ids to hide when this option is picked
+}
 
-**O3 Top** *(single — hidden if O4 is dress or jumpsuit)*
-- T-shirt
-- Tank top
-- Shirt with buttons
-- Blouse
-- Sweater
-- Hoodie / sweatshirt
-- Crop top
-- Blazer only
-- Turtleneck
-- Sports bra
-- Matches the product (for shoes / bags)
+interface Question {
+  id: string;                    // e.g. "lighting", "surface", "pose"
+  label: string;                 // plain user-facing question
+  type: 'single' | 'multi' | 'text';
+  required?: boolean;
+  options?: Option[];            // omit for text type
+  showWhen?: (a: SceneAnswers) => boolean; // module-level guard
+}
 
-**O4 Bottom** *(single)*
-- Jeans
-- Trousers / pants
-- Shorts
-- Skirt (short)
-- Skirt (long)
-- Leggings
-- Dress (no separate top)
-- Jumpsuit (no separate top)
+interface SceneModule {
+  family: Family;
+  subcategories: { value: string; label: string }[];
+  subjectModes: Option[];        // options for the Subject Mode step
+  questionsBySubjectMode: Record<SubjectMode, Question[]>;
+  avoidRules: string[];          // category-specific negative prompt sentences
+  defaultAspectRatio?: string;   // e.g. "4:5"
+}
 
-**O5 Shoes** *(single — locked to "Matches the product" for footwear category)*
-- Sneakers
-- Heels
-- Flats / loafers
-- Boots
-- Sandals
-- Barefoot
-- Athletic shoes
-- Matches the product
+interface SceneAnswers {
+  family: Family;
+  subcategory: string;
+  subjectMode: SubjectMode;
+  answers: Record<string, string | string[]>; // questionId -> value(s)
+  aspectRatio: string;           // sent via API config, not the prompt
+  name: string;
+}
 
-**O6 Jacket or coat (optional)** — None · Blazer · Coat · Leather jacket · Denim jacket · Cardigan · Puffer · Trench
-
-**O7 Outfit colors** *(multi, max 3)*
-- Black
-- White / cream
-- Beige / brown
-- Grey
-- Navy / blue
-- Green
-- Red / burgundy
-- Pink / pastel
-- Bright accent (red, yellow, cobalt)
-- Metallic
-
-**O8 Fabric look** *(multi, max 2)*
-- Cotton
-- Linen
-- Silk / shiny
-- Wool / knit
-- Denim
-- Leather
-- Sporty / technical
-- Sheer / lace
-
-**O9 Accessories** *(multi, optional)*
-- None
-- Sunglasses
-- Hat / cap
-- Belt
-- Watch
-- Necklace / earrings
-- Scarf
-- Bag *(hidden if product is a bag)*
-
-**O10 Hair** *(single)*
-- Loose and natural
-- Ponytail
-- Bun / updo
-- Wet / slicked back
-- Curly / textured
-- Short / cropped
-- Covered (hat or scarf)
-
-**O11 Makeup** *(single)*
-- No makeup
-- Light natural
-- Polished daytime
-- Bold / evening
-- Matches the product *(default for beauty)*
-
-**O12 Extra notes** *(text, 200 chars, optional)*
-e.g. "sleeves rolled up", "shirt untucked", "no jewelry"
-
----
-
-## Step 5 — Camera & format
-
-**C1 Distance** *(single)*
-- Extreme close-up (detail / texture)
-- Close-up (product fills frame)
-- Medium (product + a bit of surrounding)
-- Wide (full scene visible)
-
-**C2 Angle** *(single)*
-- Eye level / straight on
-- Slightly above (15–30°)
-- Top down (90°)
-- Slightly below
-- 3/4 angle
-
-**C3 Aspect ratio** *(single)*
-- Square (1:1)
-- Portrait (4:5)
-- Tall portrait (9:16) — stories / reels
-- Landscape (16:9)
-- Wide landscape (3:2)
-
-**C4 Depth of field** *(single)*
-- Sharp everywhere
-- Soft background blur
-- Heavy blur (only product sharp)
-
----
-
-## Step 6 — Review & save
-
-Shown as a single recap card with chips for every answer. User can edit any step before saving.
-
-**Final fields the user names:**
-- Scene name (required, 60 chars)
-- Optional cover image (auto-generated preview or user upload)
-
----
-
-## Category overrides (what auto-locks or hides)
-
-- **Footwear category** → O5 Shoes locked to "Matches the product"; prompt adds "show full shoe, no foot crop".
-- **Bags category** → O9 Accessories "Bag" option hidden; carry style asked in Step 3 instead.
-- **Jewelry category** → O11 Makeup defaults to light; hair defaults to pulled back; the jewelry slot under Accessories is hidden.
-- **Eyewear category** → O9 sunglasses hidden; hair defaults to away from face.
-- **Beauty (makeup)** → O11 locked to "Matches the product".
-- **Skincare / Fragrance / Home / Food / Pets / Tech** → Outfit step collapsed to "simple neutral basics" by default; user can expand to control it.
-- **Swimwear / Lingerie / Loungewear subcategories** → O3 Top + O4 Bottom merged into one picker called "Swim / lingerie style".
-- **Activewear** → O5 Shoes locked to "Athletic shoes"; outfit auto-filtered to sport options.
-- **Kids & baby** → adult-only options hidden (no heels, no evening, no bold makeup).
-
----
-
-## Saved data shape (for reference)
-
-```jsonc
-{
-  "category": { "family": "Fashion", "subcategory": "Dresses" },
-  "scene_basics": { /* Q2.1 – Q2.8 answers */ },
-  "category_specific": { /* Step 3 answers for that subcategory */ },
-  "people": { /* P1 – P5, null if product only */ },
-  "outfit": { /* O1 – O12, null if product only or hands only */ },
-  "camera": { /* C1 – C4 */ },
-  "name": "Sunlit linen dress on rooftop",
-  "cover_image_url": null
+interface CompiledScene {
+  prompt: string;                // final natural-language paragraph
+  aspectRatio: string;           // for API config
+  validatedAnswers: SceneAnswers;
+  removedFields: string[];       // for debugging
+  resolvedConflicts: string[];   // for debugging
 }
 ```
 
-Every answer is plain text the user picked, so the prompt builder can rebuild the scene description from these values without needing to ask again.
+---
+
+## Validator (`validator.ts`)
+
+Pure function `validate(answers, module): { answers, removedFields, resolvedConflicts }`.
+
+Steps in order:
+1. Drop any answer whose question id isn't in `questionsBySubjectMode[subjectMode]`.
+2. For multi-select answers, deduplicate values.
+3. For every selected option, if it lists `conflictsWith`, remove the lower-priority option (priority = order in the question's options array — earlier wins).
+4. For every selected option with `questionsToHide`, drop those questions' answers.
+5. For required questions with no value after the above, fill from module default if present, otherwise mark missing (wizard blocks Save).
+6. Append the module's `avoidRules` to a reserved `_avoid` bucket used only by the compiler.
+
+The validator never throws — it returns a clean answers object the compiler can trust.
+
+---
+
+## Prompt Compiler (`promptCompiler.ts`)
+
+Pure function `compile(validated, module): string`. Produces ONE paragraph in this fixed order, joined with single spaces and natural punctuation:
+
+1. **Opening command** — always: `Create a realistic commercial photograph of` + one-line subject summary built from family + subcategory + subject mode (e.g. "a single perfume bottle presented as the hero subject").
+2. **Category and subject mode summary** — one sentence describing what we're shooting and how the subject relates to the scene.
+3. **Scene environment** — `promptFragment` from the environment / setting question.
+4. **Subject placement or action** — fragments from pose / placement / interaction questions.
+5. **Styling and props** — fragments from props / surface / accessories.
+6. **Lighting** — fragment from lighting question.
+7. **Colors** — fragment from color palette question.
+8. **Photo look** — fragment from photo-look question (e.g. "muted premium tones, soft contrast, smooth shadows, refined commercial finish, no harsh saturation.").
+9. **Camera and composition** — fragments from framing / angle / depth-of-field.
+10. **Realism / quality direction** — fixed sentence appended for every scene: "Sharp focus on the product, true-to-life textures, accurate proportions, professional commercial photography quality."
+11. **Avoid rules** — single trailing sentence: "Avoid: " + joined `_avoid` items + category-specific avoid rules.
+
+Cleanup pass at the end:
+- Collapse repeated words/phrases that appear in more than one fragment (case-insensitive).
+- Trim duplicate punctuation, ensure each step ends with a period before the next begins.
+- Never emit a `key: value` shape; never emit option labels verbatim — only `promptFragment` text.
+
+Result reads like one creative direction written by a photographer, not a checklist.
+
+---
+
+## Example: Fragrance module behaviour
+
+User picks: Fragrance → Eau de Parfum → "Bottle on surface" → answers a few questions → Portrait 4:5.
+
+- Subject Mode "Bottle on surface" carries:
+  - `promptFragment`: "place one perfume bottle upright on the selected surface as the clear main subject, with the cap visible and realistic glass reflections."
+  - `questionsToShow`: ["surface", "lighting", "colors", "photo_look", "camera", "props_light"]
+  - `questionsToHide`: ["pose", "outfit", "person_framing"]
+- "Premium matte photo" option for `photo_look` carries:
+  - `promptFragment`: "muted premium tones, soft contrast, smooth shadows, refined commercial finish, no harsh saturation."
+- Module `avoidRules`: ["text or logos on the bottle that aren't in the reference", "extra bottles", "liquid spills", "human hands unless requested"].
+- `aspectRatio` "4:5" goes into `CompiledScene.aspectRatio` and is NOT injected into the prompt text.
+
+Compiled prompt (shape):
+> Create a realistic commercial photograph of a single perfume bottle presented as the hero subject. The shot focuses on one eau de parfum bottle staged as a clean product still life. The scene sits on a warm travertine surface in a softly lit studio corner. Place one perfume bottle upright on the selected surface as the clear main subject, with the cap visible and realistic glass reflections. A few small dried botanicals rest beside the bottle for quiet styling. Soft directional daylight from the left creates gentle highlights along the glass. The palette stays in warm sand and cream tones. Muted premium tones, soft contrast, smooth shadows, refined commercial finish, no harsh saturation. Shot at eye level with an 85mm-equivalent lens and a shallow depth of field. Sharp focus on the product, true-to-life textures, accurate proportions, professional commercial photography quality. Avoid: text or logos on the bottle that aren't in the reference, extra bottles, liquid spills, human hands unless requested.
+
+---
+
+## Wizard UX
+
+Step 1 — Category: family grid, then subcategory chips.
+Step 2 — Subject Mode: visual cards from `module.subjectModes` (only modes that apply to that subcategory).
+Step 3 — Questions: render only the questions returned by `module.questionsBySubjectMode[subjectMode]`, applying `showWhen` and `questionsToHide` reactively as the user clicks options. Plain labels, no fancy naming.
+Step 4 — Review: shows chips for every answer + a live `PromptPreview` that re-runs `validate → compile` on every change. Aspect ratio shown as its own field, labelled "Sent to the generator separately".
+Save → inserts a row in `brand_scenes` (see schema below) and routes to `/app/brand-scenes`.
+
+---
+
+## Database — `brand_scenes`
+
+Columns (created via migration when this plan is approved):
+- `id` uuid pk default gen_random_uuid()
+- `user_id` uuid not null (RLS: owner-only read/write/delete)
+- `name` text not null
+- `family` text not null
+- `subcategory` text not null
+- `subject_mode` text not null
+- `answers` jsonb not null            // raw answers before validation
+- `validated_answers` jsonb not null  // after validator
+- `compiled_prompt` text not null
+- `aspect_ratio` text not null        // e.g. "4:5", consumed by future API config
+- `avoid_rules` text[] not null default '{}'
+- `created_at`, `updated_at` timestamps with the standard updated_at trigger
+
+RLS: `auth.uid() = user_id` on select/insert/update/delete. No public read.
+
+---
+
+## Acceptance checklist for the MVP
+
+- Picking Fashion → Dresses → "Single model wearing it" hides surface / flat-lay questions and shows pose / outfit fit.
+- Picking Fragrance → "Bottle on surface" hides every person/outfit question.
+- Selecting two options that conflict keeps only the earlier-listed one and surfaces a small "adjusted" note under the field.
+- The live preview never shows raw labels like "photo_look: premium_matte" — only natural sentences.
+- Aspect ratio is stored on the row and shown as a separate field on Review, not glued into the prompt text.
+- A scene saved today can be reopened tomorrow and the compiled prompt is byte-identical (compiler is pure, no randomness).
+
+---
+
+## What's intentionally NOT in this MVP
+
+- No image generation call. The compiled prompt is only stored and copyable.
+- No edit-after-save flow (saves are immutable for now).
+- No admin tools, no sharing, no presets library.
+- Only the 4 most important families ship with FULL question sets at launch — Fashion, Footwear, Fragrance, Beauty. The other 11 families ship with the Subject Mode step plus a minimal universal question set (environment, lighting, colors, photo look, camera) so the compiler still produces a strong prompt. We expand them in the next iteration.
