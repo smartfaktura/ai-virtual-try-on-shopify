@@ -36,7 +36,18 @@ export interface ExtrasField {
   /** Hidden by default until a parent field unlocks it. */
   dependent?: boolean;
   hint?: string;
+  /** Phase 7i — show only when sub_family matches one of these slugs. */
+  subFamilyOnly?: string[];
+  /** Phase 7i — hide when sub_family matches one of these slugs. */
+  subFamilyExcept?: string[];
+  /**
+   * Phase 7i — field renders via a bespoke component in the step file
+   * (e.g. EthnicityChips). The value is still assembled into the prompt
+   * via this field's `prefix`, so the assembler ignores `customRender`.
+   */
+  customRender?: string;
 }
+
 
 // ============================================================================
 // SCENE extras (Step 3)
