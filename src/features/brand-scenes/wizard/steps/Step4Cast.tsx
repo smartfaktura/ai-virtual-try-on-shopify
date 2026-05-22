@@ -143,10 +143,25 @@ export function Step4Cast({
 
   const warnings = sceneWarnings(answers);
 
+  const showBehaviorGroup =
+    !isReplicate &&
+    (hasPeople || preset === "two" || preset === "group");
+  const showStylingGroup =
+    !isReplicate &&
+    (
+      (hasPeople &&
+        wardrobes.length > 0 &&
+        !["swimwear", "lingerie"].includes(subFamily ?? "")) ||
+      applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
+        .filter((f) => f.key !== "build").length > 0
+    );
+
   return (
     <div className="space-y-8">
+      <GroupHeader title="People" />
       {/* Cast preset */}
       <Section label="Who's in the shot" required missing={!preset}>
+
         {(expanded) => (
           <div className="flex flex-wrap gap-2">
             {visibleCastPresets(expanded).map((p) => (
