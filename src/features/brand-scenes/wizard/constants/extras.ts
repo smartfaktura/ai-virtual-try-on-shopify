@@ -17,6 +17,8 @@
 
 import type { BrandSceneModule } from "../../constants";
 import type { CastPreset } from "./cast";
+import type { SceneCtx } from "../rules/sceneRules";
+import { isOutdoor, isIndoor, type SceneTypeId } from "../registry/settingsBySubfamily";
 
 export interface ExtrasField {
   key: string;
@@ -29,6 +31,10 @@ export interface ExtrasField {
   castOnly?: CastPreset[];
   /** Hide this field when no people are in the scene (cast = 'none'). */
   hideWhenNoCast?: boolean;
+  /** Optional dynamic gate — full context aware. */
+  appliesWhen?: (ctx: SceneCtx) => boolean;
+  /** Hidden by default until a parent field unlocks it. */
+  dependent?: boolean;
   hint?: string;
 }
 
