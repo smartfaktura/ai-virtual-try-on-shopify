@@ -62,7 +62,8 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   if (base.season && base.season !== "seasonless") {
     lines.push(`Season: ${base.season}.`);
   }
-  if (base.time_of_day) lines.push(`Time of day: ${base.time_of_day}.`);
+  // Phase 7k: legacy `base.time_of_day` retired. `extras.time_of_day_detail`
+  // is the single source of truth and gets emitted by the extras loop below.
 
   // Mood / brand voice / era / realism
   const moodParts: string[] = [];
