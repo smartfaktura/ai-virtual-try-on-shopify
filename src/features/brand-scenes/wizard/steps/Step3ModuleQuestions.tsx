@@ -2,6 +2,8 @@ import { Sparkles } from "lucide-react";
 import type { BrandSceneModule } from "../../constants";
 import { ApparelQuestions } from "../../modules/apparel/ApparelQuestions";
 import type { ApparelModuleAnswers } from "../../modules/apparel/schema";
+import { FootwearQuestions } from "../../modules/footwear/FootwearQuestions";
+import type { FootwearModuleAnswers } from "../../modules/footwear/schema";
 
 const LABELS: Record<BrandSceneModule, string> = {
   apparel: "Apparel",
@@ -26,6 +28,15 @@ export function Step3ModuleQuestions({ module, answers, onChange }: Props) {
     return (
       <ApparelQuestions
         value={answers as Partial<ApparelModuleAnswers>}
+        onChange={(patch) => onChange(patch as Record<string, unknown>)}
+      />
+    );
+  }
+
+  if (module === "footwear") {
+    return (
+      <FootwearQuestions
+        value={answers as Partial<FootwearModuleAnswers>}
         onChange={(patch) => onChange(patch as Record<string, unknown>)}
       />
     );

@@ -6,6 +6,8 @@ import { Step3ModuleQuestions } from "./steps/Step3ModuleQuestions";
 import { Step4Review } from "./steps/Step4Review";
 import { isApparelStepValid } from "../modules/apparel/ApparelQuestions";
 import type { ApparelModuleAnswers } from "../modules/apparel/schema";
+import { isFootwearStepValid } from "../modules/footwear/schema";
+import type { FootwearModuleAnswers } from "../modules/footwear/schema";
 
 const META: Record<
   1 | 2 | 3 | 4,
@@ -24,8 +26,14 @@ export function BrandSceneWizard() {
 
   const nextDisabled =
     step === 3 &&
-    answers.module === "apparel" &&
-    !isApparelStepValid(answers.module_answers as Partial<ApparelModuleAnswers>);
+    ((answers.module === "apparel" &&
+      !isApparelStepValid(
+        answers.module_answers as Partial<ApparelModuleAnswers>,
+      )) ||
+      (answers.module === "footwear" &&
+        !isFootwearStepValid(
+          answers.module_answers as Partial<FootwearModuleAnswers>,
+        )));
 
   return (
     <WizardLayout
