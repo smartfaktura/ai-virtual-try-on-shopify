@@ -122,7 +122,13 @@ export function Step4Cast({
     const base = expanded
       ? CAST_INTERACTIONS
       : CAST_INTERACTIONS.filter((i) => resolved.interactions.includes(i.value));
-    return base.filter((i) => !forbiddenInter.has(i.value));
+    const filtered = base.filter((i) => !forbiddenInter.has(i.value));
+    // Family-recommended options first; rest keep their natural order.
+    const rank = (v: string) => {
+      const idx = resolved.interactions.indexOf(v as CastInteraction);
+      return idx === -1 ? 999 : idx;
+    };
+    return [...filtered].sort((a, b) => rank(a.value) - rank(b.value));
   };
 
   const visibleHandsOnProduct =
