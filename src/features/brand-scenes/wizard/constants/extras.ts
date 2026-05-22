@@ -713,16 +713,6 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     castOnly: ["solo", "two", "group", "hands"],
   },
 ];
-  {
-    key: "storytelling_moment",
-    scope: "cast",
-    label: "Storytelling moment",
-    prefix: "Moment",
-    // Default presets — Step4Cast overrides via getStorytellingMoments(subFamily).
-    presets: STORYTELLING_MOMENT,
-    castOnly: ["solo", "two", "group", "hands"],
-  },
-];
 
 /** Filter helper: returns fields applicable to the current category + cast. */
 export function applicableFields(
