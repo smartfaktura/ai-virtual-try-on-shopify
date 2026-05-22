@@ -22,7 +22,6 @@ import {
   type SceneFinish,
 } from "../constants/scene";
 import {
-  SURFACES,
   PROP_DENSITY_LABELS,
   COLOR_CONTRASTS,
   SATURATIONS,
@@ -32,9 +31,7 @@ import {
   AESTHETIC_ERAS,
   REALISM_LEVELS,
   BRAND_VOICES,
-  OUTPUT_USE_CASES,
   SUBJECT_FOCUSES,
-  type Surface,
   type PropDensity,
   type ColorContrast,
   type Saturation,
@@ -44,16 +41,18 @@ import {
   type AestheticEra,
   type RealismLevel,
   type BrandVoice,
-  type OutputUseCase,
   type SubjectFocus,
 } from "../constants/sceneExtras";
 import { SCENE_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { resolveAll, tuningLabel } from "../registry/resolvePresets";
+import type { CastPreset } from "../constants/cast";
 
 interface Props {
   module?: BrandSceneModule;
   subFamily?: string;
+  /** Cast preset from Step 3 — used to hide person-only dials when cast = none. */
+  castPreset?: CastPreset;
   value: BrandSceneBaseAnswers;
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
@@ -68,18 +67,6 @@ const SCENE_TYPES = [
   "Tabletop / Flat lay",
 ] as const;
 
-const MOODS = [
-  "Calm", "Energetic", "Quiet", "Playful", "Confident", "Intimate", "Cinematic",
-] as const;
-
-const LIGHTINGS = [
-  "Soft window", "Golden hour", "Hard noon sun", "Studio softbox",
-  "Overcast", "Candlelit", "Neon / mixed",
-] as const;
-
-const FRAMINGS = [
-  "Wide 3/4", "Tight crop", "Top-down", "Eye-level", "Low angle", "Over-shoulder",
-] as const;
 
 const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
   { value: "morning", label: "Morning" },
@@ -88,7 +75,7 @@ const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: 
   { value: "night", label: "Night" },
 ];
 
-export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) {
+export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChange }: Props) {
   const resolved = useMemo(
     () => resolveAll(module, subFamily),
     [module, subFamily],
@@ -108,8 +95,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
     expanded ? SCENE_PALETTES : SCENE_PALETTES.filter((p) => resolved.palettes.includes(p.value));
   const finishes = (expanded: boolean) =>
     expanded ? SCENE_FINISHES : SCENE_FINISHES.filter((f) => resolved.finishes.includes(f.value));
-  const surfaces = (expanded: boolean) =>
-    expanded ? SURFACES : SURFACES.filter((s) => resolved.surfaces.includes(s.value));
 
   const propDensityMax = resolved.propDensityMax;
 
@@ -123,7 +108,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
 
       <PillField
         label="Scene type"
-        required
         presets={SCENE_TYPES as unknown as readonly string[]}
         current={value.aesthetic ?? ""}
         placeholder="Describe your own scene type"
@@ -141,15 +125,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
         )}
       </Section>
 
-      <Section label="Surface under product" expandable>
-        {(expanded) => (
-          <ChipRow
-            options={surfaces(expanded)}
-            current={value.surface}
-            onPick={(v) => onChange({ surface: v as Surface | undefined })}
-          />
-        )}
-      </Section>
 
       <Section label="Weather / atmosphere">
         <ChipRow
@@ -185,13 +160,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
         </div>
       </Section>
 
-      <PillField
-        label="Mood"
-        presets={MOODS as unknown as readonly string[]}
-        current={value.mood ?? ""}
-        placeholder="Describe the mood"
-        onChange={(next) => onChange({ mood: next })}
-      />
 
       <Section label="Brand voice">
         <ChipRow
@@ -217,13 +185,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
         />
       </Section>
 
-      <PillField
-        label="Lighting"
-        presets={LIGHTINGS as unknown as readonly string[]}
-        current={value.lighting ?? ""}
-        placeholder="Describe the lighting"
-        onChange={(next) => onChange({ lighting: next })}
-      />
 
       <Section label="Shadows / reflections">
         <ChipRow
@@ -255,13 +216,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
         )}
       </Section>
 
-      <PillField
-        label="Framing"
-        presets={FRAMINGS as unknown as readonly string[]}
-        current={value.framing ?? ""}
-        placeholder="Describe the framing"
-        onChange={(next) => onChange({ framing: next })}
-      />
 
       <Section label="Composition geometry">
         <ChipRow
@@ -353,20 +307,13 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
         </div>
       </Section>
 
-      <Section label="Output use case">
-        <ChipRow
-          options={OUTPUT_USE_CASES}
-          current={value.output_use_case}
-          onPick={(v) => onChange({ output_use_case: v as OutputUseCase | undefined })}
-        />
-      </Section>
 
       {/* Phase 7d — flexible scene dials (backdrop, floor, camera angles, lighting…) */}
       <div className="space-y-7 pt-2 border-t border-border/60">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
           More creative dials
         </div>
-        {applicableFields(SCENE_EXTRAS_FIELDS, module, undefined).map((f) => (
+        {applicableFields(SCENE_EXTRAS_FIELDS, module, castPreset).map((f) => (
           <ExtrasPillField
             key={f.key}
             field={f}
@@ -404,9 +351,6 @@ export function Step3BaseAnswers({ module, subFamily, value, onChange }: Props) 
         />
       </Section>
 
-      <p className="text-[11px] text-muted-foreground/80">
-        Aspect ratio is locked to 4:5 (portrait) — the standard preview format.
-      </p>
     </div>
   );
 }

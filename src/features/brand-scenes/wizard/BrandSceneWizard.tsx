@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWizardState, type WizardStep } from "./useWizardState";
 import { WizardLayout } from "./WizardLayout";
 import { Step0ChooseSource } from "./steps/Step0ChooseSource";
@@ -36,12 +36,12 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "This becomes the catalog group your scene lives under.",
   },
   3: {
-    title: "Scene aesthetic",
-    subtitle: "Pick the kind of scene you want — we'll match the rest.",
+    title: "Cast & product interaction",
+    subtitle: "Who's in the scene and how they relate to the product",
   },
   4: {
-    title: "Cast & product interaction",
-    subtitle: "Who's in the scene and how they relate to the product.",
+    title: "Scene aesthetic",
+    subtitle: "Pick the kind of scene you want — we'll match the rest",
   },
   5: {
     title: "Category details",
@@ -111,12 +111,56 @@ export function BrandSceneWizard() {
             )
           : true;
 
+  // ---- Gating (post-reorder: Cast = step 3 in wizard flow, step 4 in reference flow) ----
+  const wizardCastStep = isReference ? 4 : 3;
+  const wizardAestheticStep = isReference ? null : 4;
+
   const nextDisabled =
     (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
-    (step === 4 && !castStepValid) ||
+    (step === wizardCastStep && !castStepValid) ||
     (step === 5 && !isReference && !moduleStepValid);
+
+  let nextDisabledReason: string | null = null;
+  if (nextDisabled) {
+    if (step === 1) nextDisabledReason = "Pick a product family";
+    else if (step === 2) nextDisabledReason = "Pick a sub-family";
+    else if (step === 3 && isReference) {
+      if (!answers.reference_image_paths?.length)
+        nextDisabledReason = "Add a reference image";
+      else if (!answers.name?.trim())
+        nextDisabledReason = "Name this scene";
+      else if (!answers.reference_intent)
+        nextDisabledReason = "Choose how strictly to follow the reference";
+    } else if (step === wizardCastStep) {
+      if (!answers.cast?.preset) nextDisabledReason = "Pick a cast option";
+      else if (
+        answers.cast.preset !== "replicate" &&
+        !answers.cast.interaction
+      )
+        nextDisabledReason = "Pick how the cast interacts with the product";
+      else if (!answers.scale?.preset)
+        nextDisabledReason = "Pick a product scale";
+    } else if (step === 5) {
+      nextDisabledReason = "Answer the required category questions";
+    }
+  }
+  void wizardAestheticStep;
+
+  // Reset scroll to top of the wizard whenever the step changes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    // Also reset any scrollable ancestor (when the wizard sits inside a sticky shell).
+    let el: HTMLElement | null = document.querySelector(
+      "[data-wizard-root]",
+    ) as HTMLElement | null;
+    while (el) {
+      if (el.scrollTop > 0) el.scrollTop = 0;
+      el = el.parentElement;
+    }
+  }, [step]);
 
   const handleNext = () => {
     // Step 1: auto-skip sub-family if only one option.
@@ -124,7 +168,7 @@ export function BrandSceneWizard() {
       dispatch({ type: "setStep", step: 3 });
       return;
     }
-    // Step 4 (Cast): reference skips Step 5 (module questions) → goes to Preview.
+    // Reference flow: Cast (step 4) → skip module questions → Preview (step 6).
     if (step === 4 && isReference) {
       dispatch({ type: "setStep", step: 6 });
       return;
@@ -162,6 +206,7 @@ export function BrandSceneWizard() {
         onBack={handleBack}
         onNext={handleNext}
         nextDisabled={nextDisabled}
+        nextDisabledReason={nextDisabledReason}
         isLastStep={step === 7}
       >
         {step === 0 && (
@@ -188,12 +233,17 @@ export function BrandSceneWizard() {
           />
         )}
 
+        {/* Step 3 — wizard flow: CAST. Reference flow: REFERENCE & INTENT. */}
         {step === 3 && !isReference && (
-          <Step3BaseAnswers
+          <Step4Cast
             module={answers.module}
             subFamily={answers.sub_family}
-            value={answers.base}
-            onChange={(patch) => dispatch({ type: "setBase", patch })}
+            source={answers.source}
+            answers={answers}
+            cast={answers.cast}
+            scale={answers.scale}
+            onCastChange={(patch) => dispatch({ type: "setCast", patch })}
+            onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
           />
         )}
 
@@ -215,7 +265,18 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 4 && (
+        {/* Step 4 — wizard flow: SCENE AESTHETIC. Reference flow: CAST. */}
+        {step === 4 && !isReference && (
+          <Step3BaseAnswers
+            module={answers.module}
+            subFamily={answers.sub_family}
+            castPreset={answers.cast?.preset}
+            value={answers.base}
+            onChange={(patch) => dispatch({ type: "setBase", patch })}
+          />
+        )}
+
+        {step === 4 && isReference && (
           <Step4Cast
             module={answers.module}
             subFamily={answers.sub_family}

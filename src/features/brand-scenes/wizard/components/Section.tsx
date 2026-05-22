@@ -4,6 +4,8 @@ import { Label } from "@/components/ui/label";
 interface SectionProps {
   label: string;
   required?: boolean;
+  /** True when the section is required AND currently empty — surfaces a subtle red ring + scroll target. */
+  missing?: boolean;
   hint?: string;
   /** When true, renders the "Show all options" toggle and exposes its state via render-prop. */
   expandable?: boolean;
@@ -17,6 +19,7 @@ interface SectionProps {
 export function Section({
   label,
   required,
+  missing,
   hint,
   expandable,
   children,
@@ -26,7 +29,17 @@ export function Section({
     typeof children === "function" ? children(expanded) : children;
 
   return (
-    <div className="space-y-2.5">
+    <div
+      className={[
+        "space-y-2.5 rounded-2xl transition-shadow",
+        missing
+          ? "ring-1 ring-destructive/60 ring-offset-4 ring-offset-background animate-pulse"
+          : "",
+      ].join(" ")}
+      data-section-label={label}
+      data-required={required ? "1" : undefined}
+      data-missing={missing ? "1" : undefined}
+    >
       <div className="flex items-center justify-between gap-3">
         <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           {label}

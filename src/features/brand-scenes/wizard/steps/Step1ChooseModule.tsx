@@ -19,11 +19,11 @@ const FAMILY_BLURBS: Record<BrandSceneModule, string> = {
   watches: "Wrist shots, top-down detail",
   eyewear: "On-face and product still-life",
   jewelry: "Macro and worn jewelry",
-  "beauty-fragrance": "Bottles, jars, atmospheric still-life",
-  home: "Decor, kitchenware, soft goods",
-  tech: "Devices, gadgets, accessories",
-  "food-drink": "Plates, bottles, lifestyle table",
-  wellness: "Supplements, skincare, ritual",
+  "beauty-fragrance": "Skincare, makeup, perfume, atmospheric still-life",
+  home: "Furniture, decor, soft goods",
+  tech: "Phones, audio, gadgets, accessories",
+  "food-drink": "Plates, drinks, kitchenware lifestyle",
+  wellness: "Supplements, vitamins, ritual",
 };
 
 export function Step1ChooseModule({ value, onChange }: Props) {
