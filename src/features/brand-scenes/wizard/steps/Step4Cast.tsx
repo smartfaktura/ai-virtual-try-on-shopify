@@ -27,6 +27,14 @@ import {
   type ScalePreset,
   type ScaleUnit,
 } from "../constants/scale";
+import {
+  defaultScaleForFamily,
+  SCALE_PRESETS,
+  SCALE_UNITS,
+  type ScalePreset,
+  type ScaleUnit,
+} from "../constants/scale";
+import { WARDROBE_COLORS, type WardrobeColor } from "../constants/scene";
 import type {
   BrandSceneAnswers,
   BrandSceneCast,
@@ -194,6 +202,30 @@ export function Step4Cast({
                 }
               >
                 {a.label}
+              </Chip>
+            ))}
+          </div>
+        </Block>
+      )}
+
+      {/* Wardrobe color anchor */}
+      {hasPeople && !isReplicate && (
+        <Block label="Wardrobe color anchor">
+          <div className="flex flex-wrap gap-2">
+            {WARDROBE_COLORS.map((w) => (
+              <Chip
+                key={w.value}
+                active={cast?.wardrobe_color === w.value}
+                onClick={() =>
+                  onCastChange({
+                    wardrobe_color:
+                      cast?.wardrobe_color === w.value
+                        ? undefined
+                        : (w.value as WardrobeColor),
+                  })
+                }
+              >
+                {w.label}
               </Chip>
             ))}
           </div>
