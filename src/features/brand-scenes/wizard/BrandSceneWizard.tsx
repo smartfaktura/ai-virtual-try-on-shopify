@@ -25,15 +25,15 @@ const RESPONSIBILITY_KEY = "brand-scenes:responsibility-accepted";
 const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
   0: {
     title: "How do you want to build this scene?",
-    subtitle: "Pick a starting point — wizard inputs or a reference image.",
+    subtitle: "Pick a starting point — wizard inputs or a reference image",
   },
   1: {
     title: "Choose a product family",
-    subtitle: "Matches the 12 canonical families used across the app.",
+    subtitle: "Matches the 12 canonical families used across the app",
   },
   2: {
     title: "Choose a sub-family",
-    subtitle: "This becomes the catalog group your scene lives under.",
+    subtitle: "This becomes the catalog group your scene lives under",
   },
   3: {
     title: "Cast & product interaction",
@@ -45,15 +45,15 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
   },
   5: {
     title: "Category details",
-    subtitle: "Questions tailored to the family you picked.",
+    subtitle: "Questions tailored to the family you picked",
   },
   6: {
     title: "Preview & pick",
-    subtitle: "Generate three variants, then save the one that fits.",
+    subtitle: "Generate three variants, then save the one that fits",
   },
   7: {
     title: "Review",
-    subtitle: "Confirm the payload before saving.",
+    subtitle: "Confirm the payload before saving",
   },
 };
 
@@ -61,8 +61,7 @@ const META_REFERENCE: Record<WizardStep, { title: string; subtitle: string }> = 
   ...META_WIZARD,
   3: {
     title: "Reference & intent",
-    subtitle:
-      "Your image plus how strictly the AI should follow it.",
+    subtitle: "Your image plus how strictly the AI should follow it",
   },
   4: {
     title: "Cast & product interaction",
