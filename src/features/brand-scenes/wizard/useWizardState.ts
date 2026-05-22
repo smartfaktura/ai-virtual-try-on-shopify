@@ -1,5 +1,6 @@
 import { useReducer } from "react";
-import type { BrandSceneAnswers, BrandSceneModule } from "../types";
+import type { BrandSceneAnswers } from "../types";
+import type { BrandSceneModule } from "../constants";
 
 export type WizardStep = 1 | 2 | 3 | 4;
 
