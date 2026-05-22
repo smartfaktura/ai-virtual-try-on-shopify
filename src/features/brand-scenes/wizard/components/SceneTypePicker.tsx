@@ -6,7 +6,7 @@ interface Props {
 }
 
 /**
- * Stage A — 6 scene-type cards. Clicking the active one clears it.
+ * Stage A — 5 scene-type cards. Clicking the active one clears it.
  */
 export function SceneTypePicker({ value, onChange }: Props) {
   return (
