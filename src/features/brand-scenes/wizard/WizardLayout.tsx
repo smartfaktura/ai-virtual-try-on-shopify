@@ -125,52 +125,54 @@ export function WizardLayout({
         )}
       </div>
 
-      <div className="min-h-[280px]">{children}</div>
+      <div className="min-h-[280px] pb-4">{children}</div>
 
-      {nextDisabled && nextDisabledReason && !isLastStep && (
-        <p
-          className="text-[12px] text-destructive/80 -mb-2 pt-2 flex items-center gap-1.5"
-          data-testid="next-disabled-reason"
-        >
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-destructive/70 animate-pulse" />
-          {nextDisabledReason}
-        </p>
-      )}
-
-      <div className="flex items-center justify-between pt-6 border-t border-border">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          disabled={step === 0}
-          className="rounded-full gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Button>
-
-        {isLastStep ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0}>
-                  <Button disabled className="rounded-full font-semibold gap-2">
-                    Save scene
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>Available in a later phase</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : nextDisabled && nextDisabledReason ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>{NextButton}</TooltipTrigger>
-              <TooltipContent>{nextDisabledReason}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          NextButton
+      <div className="sticky bottom-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 bg-background/95 backdrop-blur-md border-t border-border">
+        {nextDisabled && nextDisabledReason && !isLastStep && (
+          <p
+            className="text-[12px] text-destructive/80 mb-2 flex items-center gap-1.5"
+            data-testid="next-disabled-reason"
+          >
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-destructive/70 animate-pulse" />
+            {nextDisabledReason}
+          </p>
         )}
+
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            disabled={step === 0}
+            className="rounded-full gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
+
+          {isLastStep ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>
+                    <Button disabled className="rounded-full font-semibold gap-2">
+                      Save scene
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Available in a later phase</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : nextDisabled && nextDisabledReason ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>{NextButton}</TooltipTrigger>
+                <TooltipContent>{nextDisabledReason}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            NextButton
+          )}
+        </div>
       </div>
     </div>
   );
