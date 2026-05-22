@@ -41,11 +41,6 @@ import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constant
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
 import {
-  QuickDetailedToggle,
-  CustomizeLink,
-  useWizardMode,
-} from "../components/QuickDetailedToggle";
-import {
   getStorytellingMoments,
   hasExplicitMoments,
 } from "../registry/storytellingBySubfamily";
@@ -107,12 +102,10 @@ export function Step4Cast({
   const forbiddenCast = forbiddenCastPresets(scalePreset, module);
 
   // Resolved + filtered.
-  const showAllScales = (expanded: boolean): typeof SCALE_PRESETS =>
-    expanded
-      ? SCALE_PRESETS
-      : (SCALE_PRESETS.filter((s) =>
-          resolved.scale.values.includes(s.value),
-        ) as unknown as typeof SCALE_PRESETS);
+  const visibleScales = SCALE_PRESETS.filter((s) =>
+    resolved.scale.values.includes(s.value),
+  );
+  const showScaleSection = visibleScales.length > 1;
 
   const visibleCastPresets = (expanded: boolean) => {
     const base = expanded
@@ -143,8 +136,6 @@ export function Step4Cast({
   const [showExact, setShowExact] = useState(!!scale?.dimensions);
 
   const warnings = sceneWarnings(answers);
-  const { mode } = useWizardMode();
-  const isQuick = mode === "quick";
 
   return (
     <div className="space-y-8">
