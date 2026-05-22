@@ -190,6 +190,8 @@ export function BrandSceneWizard() {
 
         {step === 3 && !isReference && (
           <Step3BaseAnswers
+            module={answers.module}
+            subFamily={answers.sub_family}
             value={answers.base}
             onChange={(patch) => dispatch({ type: "setBase", patch })}
           />
@@ -216,7 +218,9 @@ export function BrandSceneWizard() {
         {step === 4 && (
           <Step4Cast
             module={answers.module}
+            subFamily={answers.sub_family}
             source={answers.source}
+            answers={answers}
             cast={answers.cast}
             scale={answers.scale}
             onCastChange={(patch) => dispatch({ type: "setCast", patch })}
