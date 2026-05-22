@@ -2,19 +2,26 @@ import { describe, expect, it } from "vitest";
 import { fashionModuleAnswersSchema } from "../modules/fashion/schema";
 
 const base = () => ({
-  archetype: "editorial_studio" as const,
-  garment_focus: ["Outerwear"],
   wearer: "on_model_full" as const,
   scene: {},
   finishing: {},
 });
 
 describe("fashionModuleAnswersSchema", () => {
-  it("accepts a minimal valid payload", () => {
+  it("accepts a minimal valid payload (wearer only)", () => {
     expect(fashionModuleAnswersSchema.safeParse(base()).success).toBe(true);
   });
 
-  it("rejects empty garment_focus", () => {
+  it("still accepts legacy payloads with archetype + garment_focus", () => {
+    const v = {
+      ...base(),
+      archetype: "editorial_studio" as const,
+      garment_focus: ["Outerwear"],
+    };
+    expect(fashionModuleAnswersSchema.safeParse(v).success).toBe(true);
+  });
+
+  it("rejects empty garment_focus when supplied", () => {
     const v = { ...base(), garment_focus: [] };
     expect(fashionModuleAnswersSchema.safeParse(v).success).toBe(false);
   });
@@ -53,7 +60,7 @@ describe("fashionModuleAnswersSchema", () => {
     expect(fashionModuleAnswersSchema.safeParse(v).success).toBe(true);
   });
 
-  it("rejects unknown archetype", () => {
+  it("rejects unknown archetype value", () => {
     const v = { ...base(), archetype: "noir_jazz" };
     expect(fashionModuleAnswersSchema.safeParse(v).success).toBe(false);
   });
