@@ -120,6 +120,17 @@ export const brandSceneBaseAnswersSchema = z
       .record(z.string().trim().min(1).max(60), z.string().trim().min(1).max(160))
       .refine((r) => Object.keys(r).length <= 40, "too many extras")
       .optional(),
+    scene_type: z
+      .enum([
+        "studio",
+        "indoor_lifestyle",
+        "outdoor_location",
+        "outdoor_nature",
+        "architectural",
+        "tabletop",
+      ])
+      .optional(),
+    auto: z.record(z.string(), z.literal(true)).optional(),
   })
   .strict();
 
