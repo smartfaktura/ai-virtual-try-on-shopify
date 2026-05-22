@@ -26,8 +26,7 @@ const STEPS_WIZARD = [
   { n: 3 as WizardStep, label: "Cast" },
   { n: 4 as WizardStep, label: "Environment" },
   { n: 5 as WizardStep, label: "Photo & edit" },
-  { n: 6 as WizardStep, label: "Preview" },
-  { n: 7 as WizardStep, label: "Review" },
+  { n: 6 as WizardStep, label: "Review" },
 ] as const;
 
 const STEPS_REFERENCE = [
@@ -36,8 +35,7 @@ const STEPS_REFERENCE = [
   { n: 2 as WizardStep, label: "Sub-family" },
   { n: 3 as WizardStep, label: "Reference" },
   { n: 4 as WizardStep, label: "Cast" },
-  { n: 6 as WizardStep, label: "Preview" },
-  { n: 7 as WizardStep, label: "Review" },
+  { n: 6 as WizardStep, label: "Review" },
 ] as const;
 
 export function WizardLayout({
