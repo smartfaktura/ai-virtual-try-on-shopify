@@ -39,6 +39,8 @@ import {
   type HandsOnProduct,
   type Diversity,
 } from "../constants/sceneExtras";
+import { CAST_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
+import { ExtrasPillField } from "../components/ExtrasPillField";
 import { resolveAll } from "../registry/resolvePresets";
 import {
   forbiddenInteractions,
