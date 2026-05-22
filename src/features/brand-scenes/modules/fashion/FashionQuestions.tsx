@@ -161,9 +161,8 @@ export function FashionQuestions({ value, onChange }: Props) {
 
     </div>
   );
-}
 
-// drop trailing close
+
 
 
 function Block({
