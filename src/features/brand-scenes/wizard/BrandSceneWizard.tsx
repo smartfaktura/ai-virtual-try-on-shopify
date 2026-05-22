@@ -8,6 +8,8 @@ import { isApparelStepValid } from "../modules/apparel/ApparelQuestions";
 import type { ApparelModuleAnswers } from "../modules/apparel/schema";
 import { isFootwearStepValid } from "../modules/footwear/schema";
 import type { FootwearModuleAnswers } from "../modules/footwear/schema";
+import { isEyewearStepValid } from "../modules/eyewear/schema";
+import type { EyewearModuleAnswers } from "../modules/eyewear/schema";
 
 const META: Record<
   1 | 2 | 3 | 4,
@@ -33,6 +35,10 @@ export function BrandSceneWizard() {
       (answers.module === "footwear" &&
         !isFootwearStepValid(
           answers.module_answers as Partial<FootwearModuleAnswers>,
+        )) ||
+      (answers.module === "eyewear" &&
+        !isEyewearStepValid(
+          answers.module_answers as Partial<EyewearModuleAnswers>,
         )));
 
   return (

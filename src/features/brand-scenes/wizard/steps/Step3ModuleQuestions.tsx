@@ -4,6 +4,8 @@ import { ApparelQuestions } from "../../modules/apparel/ApparelQuestions";
 import type { ApparelModuleAnswers } from "../../modules/apparel/schema";
 import { FootwearQuestions } from "../../modules/footwear/FootwearQuestions";
 import type { FootwearModuleAnswers } from "../../modules/footwear/schema";
+import { EyewearQuestions } from "../../modules/eyewear/EyewearQuestions";
+import type { EyewearModuleAnswers } from "../../modules/eyewear/schema";
 
 const LABELS: Record<BrandSceneModule, string> = {
   apparel: "Apparel",
@@ -41,6 +43,17 @@ export function Step3ModuleQuestions({ module, answers, onChange }: Props) {
       />
     );
   }
+
+  if (module === "eyewear") {
+    return (
+      <EyewearQuestions
+        value={answers as Partial<EyewearModuleAnswers>}
+        onChange={(patch) => onChange(patch as Record<string, unknown>)}
+      />
+    );
+  }
+
+
 
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
