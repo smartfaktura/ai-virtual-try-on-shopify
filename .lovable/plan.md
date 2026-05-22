@@ -1,90 +1,64 @@
-# Phase 7z — error UX refinement, simpler family cards, structured cast step
+# Phase 7aa — environment & photo step polish
 
-Three focused polish changes for `/app/brand-scenes/new`. Frontend/presentation only.
+Frontend-only refinement of the Environment and Photo & edit steps. No logic, no schema, no prompt changes.
 
-## 1. Refined error / missing-field treatment
+## 1. Scene type cards — match wizard card style
 
-Current state is loud and feels broken: a pulsing red dot + red text ("Pick a starting point") floats above the sticky bar, and required sections show a red asterisk.
+**`src/features/brand-scenes/wizard/components/SceneTypePicker.tsx`** — replace the custom inline `<button>` (which uses `text-sm font-medium` + `text-[11px]` vibe line) with the shared `WizardCard` component so spacing, font weight, and active treatment match the Source and Family cards exactly.
 
-**`src/features/brand-scenes/wizard/WizardLayout.tsx`** (lines 170–179) — replace the floating red error line with a quieter inline pill rendered **inside** the sticky card, above the buttons:
+- Grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3`
+- Each option renders `<WizardCard title={t.label} body={t.vibe} active={...} onClick={...} />`
+- Clicking the active card still clears selection (toggle behavior).
 
-```text
-[ ◷ Pick a starting point ]
-```
+Result: card titles become `text-base font-semibold`, bodies become `text-sm`, padding `p-5`, active state is the solid foreground card — visually consistent with Step 0/1.
 
-- Container: `rounded-full border border-border bg-muted/40 px-3 py-1.5 text-[11px] text-muted-foreground` with a small static `Lock` (or `Info`) icon, no animation.
-- Mobile + desktop: render inside the same card the buttons live in (drops the standalone red line above the card entirely).
-- Tooltip on hover/focus of the disabled Next button stays as-is (already neutral).
+## 2. Environment — flatten "Optional fine-tuning"
 
-**`src/features/brand-scenes/wizard/components/Section.tsx`** — soften the required treatment:
-- Replace the red `*` (`text-destructive/80`) with a small `Required` chip next to the label: `text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70`.
-- When `missing`, drop any destructive coloring on labels; instead add a subtle `ring-1 ring-border` + `bg-muted/20` wrapper around the section content so the user sees focus without alarm. Keep `data-missing="1"` on the wrapper so the existing "scroll to first missing" logic in `WizardLayout.handleNextClick` still works.
+**`src/features/brand-scenes/wizard/steps/Step4Environment.tsx`** — remove the nested-collapsible "inception":
 
-No behavior changes — only visual tone.
+- Delete the `<div ... border-t border-border/60>` wrapper and the "OPTIONAL FINE-TUNING — skip and we'll pick smart defaults" header (lines 208–216).
+- Stop using `StageCGroup` for the `ENV_GROUPS` ("Backdrop & floor", "Light & time"). Replace each group with a flat `<Section label={g.label}>` rendered open, fields inside.
+- Inside each group, render each fine-tuning field as a `<Section label={field.label}>` with the pills directly visible — no nested "Backdrop type" sub-collapsible. (The `ExtrasPillField` already shows its own label; we drop the outer collapsible chrome only, so the existing field labels become the section labels.)
 
-## 2. Family cards — titles only
+Net effect: one flat list — `Setting`, `Weather`, `Season`, `Brand voice`, `Aesthetic era`, `Prop density`, then Backdrop & floor section (flat, with its field labels like "Backdrop type", "Backdrop color", "Floor", "Studio FX" rendered as normal Sections inline), then Light & time section the same way. No double-nested chevrons.
 
-**`src/features/brand-scenes/wizard/steps/Step1ChooseModule.tsx`**:
-- Delete the `FAMILY_BLURBS` map and stop passing `body` to `WizardCard`.
-- Cards become title-only ("Fashion", "Footwear", …) — `WizardCard` already gracefully omits `body` when not provided.
-- Tighten card sizing: reduce min height by adjusting padding on the title-only branch (small follow-up in WizardCard: `p-5` stays; nothing else needed).
-- Keep the existing "ships soon" footnote for locked modules.
+Keep `StageCGroup` file untouched (still used elsewhere? confirm with grep — if only here, leave file in place but unused for now).
 
-Step subtitle on this step ("Your saved scene will appear under this category in your library") already lives in `BrandSceneWizard.tsx` and stays.
+## 3. Photo & edit — quieter copy, less text
 
-## 3. Step 3 ("Who's in the scene?") — clear groupings
+**`src/features/brand-scenes/wizard/steps/Step5Photography.tsx`** — the page reads as a wall of helpers. Simplify:
 
-The step renders ~12 Sections in conditional sequence, which reads as a random wall of chip rows. Introduce visual grouping headers so the eye lands on logical clusters.
+- Drop the `helper` prop from every `<Section>` in this step. Helpers are duplicating the label intent (e.g. "Where the product sits inside the frame." under "How the shot is composed").
+- Replace section labels with plain-language, shorter equivalents:
+  - "Lens look" stays
+  - "How blurry the background is" → **"Background blur"**
+  - "How the shot is composed" → **"Composition"**
+  - "Empty space around the product" → **"Negative space"**
+  - "What the eye lands on first" → **"Focus"**
+  - "Shadows" stays
+  - "How realistic" → **"Realism"**
+  - "Color palette" stays
+  - "Contrast" stays
+  - "Color intensity" → **"Saturation"**
+  - "Film / finish look" → **"Finish"**
+- Add a single page-level intro line under the step title (already present: "Camera, light, color, finish — plain-language") — keep as-is.
+- For the three sections that benefit from a one-line hint (Lens, Background blur, Finish), add a small inline `info` tooltip (use `lucide-react` `HelpCircle` next to the label inside the Section, opened on hover) rather than rendering full sentences. Implementation: extend `Section` to accept optional `tooltip?: string` prop that renders a `HelpCircle` icon with shadcn `Tooltip` next to the label. Drop the existing `helper` rendering use here.
 
-**`src/features/brand-scenes/wizard/steps/Step4Cast.tsx`**:
-
-Wrap existing Sections into 5 named groups using a new lightweight `<GroupHeader>` (defined inline at the top of the file):
-
-```tsx
-function GroupHeader({ title, hint }: { title: string; hint?: string }) {
-  return (
-    <div className="pt-2 first:pt-0">
-      <div className="text-[11px] font-semibold tracking-tight text-foreground/90">
-        {title}
-      </div>
-      {hint && (
-        <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-relaxed">
-          {hint}
-        </p>
-      )}
-      <div className="mt-3 h-px bg-border/70" />
-    </div>
-  );
-}
-```
-
-Group order and contents (reorders existing Sections — no logic changes):
-
-1. **People** — `Who's in the shot`, Gender, Age, Energy / vibe, Build, EthnicityChips.
-2. **Product interaction** — `Product interaction`, Hands on product, Body-part focus.
-3. **Behavior & energy** — Gaze direction, Group dynamic, Action / energy.
-4. **Styling & wardrobe** — Wardrobe color anchor, the existing "Optional styling — skip and we'll pick smart defaults" extras block (collapsed inside this group; remove its own duplicate divider since the GroupHeader now provides one).
-5. **Product scale** — Product scale + exact dimensions toggle.
-6. **Notes** — Cast note textarea.
-
-Each group's existing conditional visibility is preserved by wrapping the group in a fragment that early-returns `null` when none of its inner Sections render (helper: `groupHasContent` boolean computed inline). Replicate-mode (`isReplicate`) still hides most groups exactly as today; only "People (limited)" + "Product scale" + the replicate hint render.
-
-Warnings block stays after groups, before the existing extras block (which now lives inside Styling & wardrobe).
-
-The `<GroupHeader>` only renders when the group will produce visible content; no empty headers.
-
----
+Also flatten the Photo & edit "Optional fine-tuning" block (lines 244–316) the same way as Environment — remove the wrapper + "Optional fine-tuning" header + `StageCGroup`; render PHOTO_GROUPS as flat `<Section>` blocks ("Camera angle", "Motion & crop").
 
 ## Out of scope
-- No changes to generation pipeline, schemas, RLS, prompt assembler, or tests.
-- No copy edits beyond removing family blurbs and the loud error line.
-- No restructuring of Section/Chip primitives beyond the small `missing`/`required` style update.
+
+- No changes to scene-type IDs, registries, cascade rules, or stored field keys.
+- No changes to the prompt assembler, generation flow, or backend.
+- No copy edits beyond the section labels listed above.
 
 ## Files touched
-- `src/features/brand-scenes/wizard/WizardLayout.tsx`
-- `src/features/brand-scenes/wizard/components/Section.tsx`
-- `src/features/brand-scenes/wizard/steps/Step1ChooseModule.tsx`
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
+
+- `src/features/brand-scenes/wizard/components/SceneTypePicker.tsx`
+- `src/features/brand-scenes/wizard/components/Section.tsx` (add optional `tooltip` prop)
+- `src/features/brand-scenes/wizard/steps/Step4Environment.tsx`
+- `src/features/brand-scenes/wizard/steps/Step5Photography.tsx`
 
 ## Test impact
-Existing 175 tests should continue to pass — no schema, prompt, or routing changes. Spot-check that any test asserting `data-missing="1"` still finds it on the Section wrapper.
+
+Existing 175 tests should pass — no schema, prompt, routing, or field-key changes. Spot-check tests asserting Section label text since 6 labels are renamed in Step 5.
