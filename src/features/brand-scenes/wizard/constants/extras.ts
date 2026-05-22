@@ -136,6 +136,29 @@ export const BACKDROP_GRADIENT_STYLES: string[] = [
   "Two-tone hard split",
 ];
 
+export const GRADIENT_DIRECTIONS: string[] = [
+  "Top → bottom",
+  "Bottom → top",
+  "Left → right",
+  "Right → left",
+  "Diagonal ↗",
+  "Diagonal ↘",
+  "Radial",
+];
+
+export const STUDIO_FX: string[] = [
+  "Practical rain rig",
+  "Water mist",
+  "Wet-look spray",
+  "Reflective wet floor",
+  "Smoke / fog machine",
+  "Hazer atmosphere",
+  "Wind machine",
+  "Confetti drop",
+  "Petal drop",
+];
+
+
 export const TIMES_OF_DAY_EXT: string[] = [
   "Pre-dawn blue",
   "Sunrise",
