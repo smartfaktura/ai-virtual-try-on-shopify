@@ -146,8 +146,31 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       swimwear: {
         settings: ["Beach / water", "Studio cyclorama", "Outdoor location"],
       },
+      // Phase 7o — streetwear leans urban-grit and bold.
+      streetwear: {
+        moods: ["Confident", "Bold", "Cinematic"],
+        interactions: ["wearing", "hero"],
+        default_cast: "solo",
+      },
+      jackets: {
+        moods: ["Cinematic", "Editorial", "Confident"],
+        interactions: ["wearing", "hero"],
+      },
+      hoodies: {
+        moods: ["Casual", "Cinematic", "Quiet"],
+        interactions: ["wearing", "hero"],
+      },
+      jeans: {
+        moods: ["Casual", "Editorial", "Confident"],
+        interactions: ["wearing", "hero"],
+      },
+      garments: {
+        moods: ["Editorial", "Clean", "Quiet"],
+        interactions: ["wearing", "hero"],
+      },
     },
   },
+
 
   footwear: {
     scale: ["on_body", "handheld"],
