@@ -69,6 +69,11 @@ export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
   caps: 'Caps',
   hats: 'Hats',
   beanies: 'Beanies',
+  watches: 'Watches',
+  eyewear: 'Eyewear',
+  fragrance: 'Fragrance',
+  food: 'Food',
+  beverages: 'Beverages',
   'wallets-cardholders': 'Cardholders',
   'bags-accessories': 'Bags',
   'beauty-skincare': 'Skincare',
@@ -83,7 +88,7 @@ export const SUB_FAMILY_LABEL_OVERRIDES: Record<string, string> = {
   'wallets': 'Wallets',
   'tech-devices': 'Devices',
   'snacks-food': 'Snacks',
-  'supplements-wellness': 'Wellness',
+  'supplements-wellness': 'Supplements & Wellness',
 };
 
 export function getSubFamilyLabel(slug: string): string {
