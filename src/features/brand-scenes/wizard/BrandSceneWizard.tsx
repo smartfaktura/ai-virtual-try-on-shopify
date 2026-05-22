@@ -44,8 +44,8 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "Pick the kind of scene you want — we'll match the rest",
   },
   5: {
-    title: "Category details",
-    subtitle: "Questions tailored to the family you picked",
+    title: "Category specifics",
+    subtitle: "A few extras unique to the family you picked",
   },
   6: {
     title: "Preview & pick",

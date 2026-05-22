@@ -340,10 +340,15 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
 
 
-      {/* Phase 7j — Stage C grouped collapsibles. */}
+      {/* Phase 7j — Stage C grouped collapsibles. Phase 7r — rebranded as optional. */}
       <div className="space-y-3 pt-2 border-t border-border/60">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-          More creative dials
+        <div className="pt-2">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+            Optional fine-tuning
+          </div>
+          <p className="text-[11px] text-muted-foreground/70 mt-1">
+            Skip this — we'll pick smart defaults
+          </p>
         </div>
         {(() => {
           const ctx: SceneCtx = {

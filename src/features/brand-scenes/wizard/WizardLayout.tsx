@@ -127,6 +127,16 @@ export function WizardLayout({
 
       <div className="min-h-[280px]">{children}</div>
 
+      {nextDisabled && nextDisabledReason && !isLastStep && (
+        <p
+          className="text-[12px] text-destructive/80 -mb-2 pt-2 flex items-center gap-1.5"
+          data-testid="next-disabled-reason"
+        >
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-destructive/70 animate-pulse" />
+          {nextDisabledReason}
+        </p>
+      )}
+
       <div className="flex items-center justify-between pt-6 border-t border-border">
         <Button
           variant="ghost"
