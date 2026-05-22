@@ -90,10 +90,7 @@ export function WizardLayout({
 
   return (
     <div ref={rootRef} className="max-w-3xl mx-auto space-y-8 pb-2">
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        <Lock className="w-3 h-3" />
-        Admin preview — Brand Scenes wizard
-      </div>
+
 
       {/* Clickable step bars + labels */}
       <div className="space-y-2">
