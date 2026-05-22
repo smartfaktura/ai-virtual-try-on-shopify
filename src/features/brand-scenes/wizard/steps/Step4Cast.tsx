@@ -547,13 +547,10 @@ export function Step4Cast({
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
       {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
       {!isReplicate && (
-        <div className="space-y-3 pt-2 border-t border-border/60">
+        <div className="space-y-4 pt-2 border-t border-border/60">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-            Optional styling
+            Optional styling <span className="normal-case tracking-normal text-muted-foreground/60">— skip and we'll pick smart defaults</span>
           </div>
-          <p className="text-[11px] text-muted-foreground/80 -mt-1">
-            Skip these — we'll pick smart defaults
-          </p>
           <div className="space-y-7">
 
           {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
