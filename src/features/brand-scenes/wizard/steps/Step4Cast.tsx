@@ -335,9 +335,11 @@ export function Step4Cast({
         </>
       )}
 
-      {/* Interaction */}
+      {/* Product interaction group */}
+      {!isReplicate && <GroupHeader title="Product interaction" />}
       {!isReplicate && (
         <Section label="Product interaction" required missing={!cast?.interaction}>
+
           {(expanded) => (
             <div className="flex flex-wrap gap-2">
               {visibleInteractions(expanded).map((i) => (
