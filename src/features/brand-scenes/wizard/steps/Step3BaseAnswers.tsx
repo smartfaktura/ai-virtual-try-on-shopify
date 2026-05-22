@@ -140,26 +140,28 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
   return (
     <div className="space-y-7">
-      <Section label="Scene type" hint="Pick the world — everything below tunes to it">
+      <Section label="Scene type">
         <SceneTypePicker value={sceneType} onChange={handleSceneType} />
       </Section>
 
-      <Section
-        label="Setting / environment"
-        hint={
-          sceneType
-            ? "Tailored to your category — or add your own"
-            : "Pick a scene type above to see tailored settings (you can still type your own)"
-        }
-      >
-        <div className="scroll-mt-24">
-          <SettingPicker
-            options={settingPool}
-            value={value.setting}
-            onChange={handleSetting}
-          />
-        </div>
-      </Section>
+      {sceneType ? (
+        <Section
+          label="Setting / environment"
+          hint="Tailored to your category — or add your own"
+        >
+          <div className="scroll-mt-24">
+            <SettingPicker
+              options={settingPool}
+              value={value.setting}
+              onChange={handleSetting}
+            />
+          </div>
+        </Section>
+      ) : (
+        <p className="text-[11px] text-muted-foreground/70 -mt-3">
+          Pick a scene type above to unlock tailored settings
+        </p>
+      )}
 
 
       {warnings.length > 0 && (
