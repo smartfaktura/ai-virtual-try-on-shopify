@@ -27,13 +27,6 @@ import {
   type ScalePreset,
   type ScaleUnit,
 } from "../constants/scale";
-import {
-  defaultScaleForFamily,
-  SCALE_PRESETS,
-  SCALE_UNITS,
-  type ScalePreset,
-  type ScaleUnit,
-} from "../constants/scale";
 import { WARDROBE_COLORS, type WardrobeColor } from "../constants/scene";
 import type {
   BrandSceneAnswers,
