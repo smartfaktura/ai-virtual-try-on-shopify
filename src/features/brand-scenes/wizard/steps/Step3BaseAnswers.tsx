@@ -343,7 +343,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
       {/* Phase 7j — Stage C grouped collapsibles. */}
       <div className="space-y-3 pt-2 border-t border-border/60">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
-          Stage C · More creative dials
+          More creative dials
         </div>
         {(() => {
           const ctx: SceneCtx = {
