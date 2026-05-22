@@ -120,7 +120,6 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
 
       <PillField
         label="Scene type"
-        required
         presets={SCENE_TYPES as unknown as readonly string[]}
         current={value.aesthetic ?? ""}
         placeholder="Describe your own scene type"
