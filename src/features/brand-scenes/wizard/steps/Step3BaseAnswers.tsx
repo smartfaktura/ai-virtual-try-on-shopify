@@ -44,6 +44,7 @@ import {
 } from "../constants/sceneExtras";
 import { SCENE_EXTRAS_FIELDS, applicableFieldsCtx } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
+import { StageCGroup } from "../components/StageCGroup";
 import { SceneTypePicker } from "../components/SceneTypePicker";
 import { SettingPicker } from "../components/SettingPicker";
 import { BackdropColorField } from "../components/BackdropColorField";
