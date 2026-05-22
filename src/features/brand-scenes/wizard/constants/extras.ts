@@ -341,7 +341,7 @@ export const ETHNICITY_HINT: string[] = [
 // CAMERA ANGLES — grouped by category context
 // ============================================================================
 
-export const CAMERA_ANGLES_GENERAL: string[] = [
+export const CAMERA_ANGLES_HUMAN: string[] = [
   "Straight on, eye level",
   "¾ left, eye level",
   "¾ right, eye level",
@@ -350,17 +350,28 @@ export const CAMERA_ANGLES_GENERAL: string[] = [
   "Back ¾",
   "Worm's eye low",
   "Low ¾",
-  "Top-down 90°",
   "High 45°",
   "High ¾",
+  "Dutch tilt 5°",
+  "Dutch tilt 15°",
+];
+
+export const CAMERA_ANGLES_PRODUCT: string[] = [
+  "Straight on, eye level",
+  "¾ left, eye level",
+  "¾ right, eye level",
+  "Top-down 90°",
+  "High 45°",
   "Eye level macro",
   "Pour shot",
   "Splash shot",
   "Steam shot",
   "Floating product",
   "Dutch tilt 5°",
-  "Dutch tilt 15°",
 ];
+
+/** @deprecated kept for back-compat. Use CAMERA_ANGLES_HUMAN / _PRODUCT. */
+export const CAMERA_ANGLES_GENERAL: string[] = CAMERA_ANGLES_HUMAN;
 
 
 export const CAMERA_ANGLES_APPAREL: string[] = [
