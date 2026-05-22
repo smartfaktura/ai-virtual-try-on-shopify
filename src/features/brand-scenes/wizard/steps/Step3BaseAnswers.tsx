@@ -67,18 +67,6 @@ const SCENE_TYPES = [
   "Tabletop / Flat lay",
 ] as const;
 
-const MOODS = [
-  "Calm", "Energetic", "Quiet", "Playful", "Confident", "Intimate", "Cinematic",
-] as const;
-
-const LIGHTINGS = [
-  "Soft window", "Golden hour", "Hard noon sun", "Studio softbox",
-  "Overcast", "Candlelit", "Neon / mixed",
-] as const;
-
-const FRAMINGS = [
-  "Wide 3/4", "Tight crop", "Top-down", "Eye-level", "Low angle", "Over-shoulder",
-] as const;
 
 const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
   { value: "morning", label: "Morning" },
