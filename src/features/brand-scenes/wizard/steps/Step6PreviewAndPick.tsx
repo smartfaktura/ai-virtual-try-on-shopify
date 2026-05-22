@@ -56,7 +56,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
 
       {/* Variant placeholders */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[0, 1, 2].map((i) => (
+        {Array.from({ length: BRAND_SCENE_VARIATIONS_PER_GENERATION }).map((_, i) => (
           <div
             key={i}
             className="aspect-[4/5] rounded-2xl border border-dashed border-border bg-muted/30 flex items-center justify-center text-xs text-muted-foreground"
