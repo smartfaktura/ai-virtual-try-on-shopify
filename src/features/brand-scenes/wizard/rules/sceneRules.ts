@@ -148,8 +148,11 @@ export function softWarnings(ctx: SceneCtx): string[] {
   if (/swimwear/i.test(sf) && /snow|winter|mountain pass/.test(setting)) {
     out.push("Swimwear in a cold setting — high concept, the AI may struggle with realism.");
   }
-  if (ctx.scene_type === "tabletop" && ctx.cast && ctx.cast !== "none" && ctx.cast !== "hands") {
-    out.push("Tabletop / flat-lay usually has no full cast — consider switching cast to 'none' or 'hands'.");
+  if (/boots/i.test(sf) && /beach|pool|tropical/.test(setting)) {
+    out.push("Boots on a beach — unusual; the AI may downplay the boots.");
+  }
+  if (/high-heels|heels/i.test(sf) && /trail|mountain|forest/.test(setting)) {
+    out.push("Heels on rough terrain — concept shot, expect a stylised result.");
   }
   if (ctx.scene_type === "studio" && /rain|fog|smoke|snow/.test(ctx.values._weather ?? "")) {
     out.push("Studio + outdoor weather — use Studio FX (rain rig, haze) to make it convincing.");
