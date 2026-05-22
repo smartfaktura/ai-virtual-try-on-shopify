@@ -62,8 +62,8 @@ const META_REFERENCE: Record<WizardStep, { title: string; subtitle?: string }> =
 
 export function BrandSceneWizard() {
   const { state, dispatch } = useWizardState();
-  const { step, answers } = state;
-  const isReference = answers.source === "reference";
+  const { step, answers, sourcePicked } = state;
+  const isReference = sourcePicked && answers.source === "reference";
   const META = isReference ? META_REFERENCE : META_WIZARD;
 
   // Phase 7j — append sub-family label to step titles so the user sees the wizard is tuned.
@@ -104,10 +104,12 @@ export function BrandSceneWizard() {
   const wizardCastStep = isReference ? 4 : 3;
 
   const nextDisabled =
+    (step === 0 && !sourcePicked) ||
     (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
     (step === wizardCastStep && !castStepValid);
+
 
   let nextDisabledReason: string | null = null;
   if (nextDisabled) {
