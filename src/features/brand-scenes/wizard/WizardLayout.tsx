@@ -22,17 +22,21 @@ const STEPS_WIZARD = [
   { n: 1, label: "Family" },
   { n: 2, label: "Sub-family" },
   { n: 3, label: "Aesthetic" },
-  { n: 4, label: "Details" },
-  { n: 5, label: "Review" },
+  { n: 4, label: "Cast" },
+  { n: 5, label: "Details" },
+  { n: 6, label: "Preview" },
+  { n: 7, label: "Review" },
 ] as const;
 
-// Reference path collapses Step 4 into Step 3 (one combined screen)
+// Reference path skips Step 5 (category details).
 const STEPS_REFERENCE = [
   { n: 0, label: "Source" },
   { n: 1, label: "Family" },
   { n: 2, label: "Sub-family" },
   { n: 3, label: "Reference" },
-  { n: 5, label: "Review" },
+  { n: 4, label: "Cast" },
+  { n: 6, label: "Preview" },
+  { n: 7, label: "Review" },
 ] as const;
 
 export function WizardLayout({
