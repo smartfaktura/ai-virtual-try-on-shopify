@@ -12,7 +12,6 @@ import {
   GAZE_DIRECTIONS,
   GROUP_DYNAMICS,
   HANDS_ON_PRODUCT,
-  DIVERSITY_OPTIONS,
   metaX,
   type BodyPartFocus,
   type GazeDirection,
