@@ -43,8 +43,9 @@ describe("Phase 7q · wizard UI polish", () => {
     expect(src).not.toMatch(/Stage A ·/);
     expect(src).not.toMatch(/Stage B ·/);
     expect(src).not.toMatch(/Stage C ·/);
-    // The Stage C wrapper now reads "More creative dials".
-    expect(src).toMatch(/More creative dials/);
+    // Phase 7r — Stage C wrapper rebranded to "Optional fine-tuning".
+    expect(src).toMatch(/Optional fine-tuning/);
+
   });
 
   it("BUG-5 — 'More cast & styling dials' label removed from Step4Cast", () => {

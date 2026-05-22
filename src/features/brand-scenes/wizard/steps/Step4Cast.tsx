@@ -142,7 +142,7 @@ export function Step4Cast({
   return (
     <div className="space-y-8">
       {/* Cast preset */}
-      <Section label="Cast" required expandable>
+      <Section label="Cast" required missing={!preset}>
         {(expanded) => (
           <div className="flex flex-wrap gap-2">
             {visibleCastPresets(expanded).map((p) => (
@@ -200,29 +200,62 @@ export function Step4Cast({
       {/* People details */}
       {hasPeople && !isReplicate && (
         <>
-          <Section label="Gender mix">
-            <MultiSelect
-              options={CAST_GENDERS}
-              current={cast?.gender ?? []}
-              onToggle={(v) =>
+          {(() => {
+            const isSingle = preset === "solo" || preset === "hands";
+            // "Mixed" only makes sense with 2+ people.
+            const genderOpts = isSingle
+              ? CAST_GENDERS.filter((g) => g.value !== "mixed")
+              : CAST_GENDERS;
+            const ageOpts = isSingle
+              ? CAST_AGES.filter((a) => a.value !== "mixed")
+              : CAST_AGES;
+            const genderLabel = isSingle ? "Gender" : "Gender mix";
+            const ageLabel = isSingle ? "Age feel" : "Age mix";
+            const handleGender = (v: string) => {
+              if (isSingle) {
+                // Single subject — radio behavior.
+                const current = (cast?.gender ?? [])[0];
+                onCastChange({
+                  gender: current === v ? [] : [v as CastGender],
+                });
+              } else {
                 onCastChange({
                   gender: toggleArr(cast?.gender ?? [], v as CastGender),
-                })
+                });
               }
-            />
-          </Section>
-
-          <Section label="Age feel">
-            <MultiSelect
-              options={CAST_AGES}
-              current={cast?.age ?? []}
-              onToggle={(v) =>
+            };
+            const handleAge = (v: string) => {
+              if (isSingle) {
+                const current = (cast?.age ?? [])[0];
+                onCastChange({
+                  age: current === v ? [] : [v as CastAge],
+                });
+              } else {
                 onCastChange({
                   age: toggleArr(cast?.age ?? [], v as CastAge),
-                })
+                });
               }
-            />
-          </Section>
+            };
+            return (
+              <>
+                <Section label={genderLabel}>
+                  <MultiSelect
+                    options={genderOpts}
+                    current={cast?.gender ?? []}
+                    onToggle={handleGender}
+                  />
+                </Section>
+
+                <Section label={ageLabel}>
+                  <MultiSelect
+                    options={ageOpts}
+                    current={cast?.age ?? []}
+                    onToggle={handleAge}
+                  />
+                </Section>
+              </>
+            );
+          })()}
 
           <Section label="Vibe">
             <div className="flex flex-wrap gap-2">
@@ -243,23 +276,49 @@ export function Step4Cast({
             </div>
           </Section>
 
-          <Section label="Ethnicity / casting hint">
-            <EthnicityChips
-              value={cast?.extras?.ethnicity}
-              onChange={(next) => {
-                const nextExtras = { ...(cast?.extras ?? {}) };
-                if (next === undefined) delete nextExtras.ethnicity;
-                else nextExtras.ethnicity = next;
-                onCastChange({ extras: nextExtras });
-              }}
-            />
-          </Section>
+          {/* Phase 7r — Build lives next to the other people dials, not at the bottom. */}
+          {(() => {
+            const builds = buildsForCast(preset);
+            if (!builds.length) return null;
+            const current = cast?.extras?.build;
+            return (
+              <Section label="Build">
+                <div className="flex flex-wrap gap-2">
+                  {builds.map((b) => (
+                    <Chip
+                      key={b}
+                      active={current === b}
+                      onClick={() => {
+                        const nextExtras = { ...(cast?.extras ?? {}) };
+                        if (current === b) delete nextExtras.build;
+                        else nextExtras.build = b;
+                        onCastChange({ extras: nextExtras });
+                      }}
+                    >
+                      {b}
+                    </Chip>
+                  ))}
+                </div>
+              </Section>
+            );
+          })()}
+
+          {/* EthnicityChips renders its own header + tooltip — no wrapping Section to avoid duplicate label. */}
+          <EthnicityChips
+            value={cast?.extras?.ethnicity}
+            onChange={(next) => {
+              const nextExtras = { ...(cast?.extras ?? {}) };
+              if (next === undefined) delete nextExtras.ethnicity;
+              else nextExtras.ethnicity = next;
+              onCastChange({ extras: nextExtras });
+            }}
+          />
         </>
       )}
 
       {/* Interaction */}
       {!isReplicate && (
-        <Section label="Product interaction" required expandable>
+        <Section label="Product interaction" required missing={!cast?.interaction}>
           {(expanded) => (
             <div className="flex flex-wrap gap-2">
               {visibleInteractions(expanded).map((i) => (
@@ -427,7 +486,7 @@ export function Step4Cast({
       )}
 
       {/* Scale */}
-      <Section label="Product scale" required expandable>
+      <Section label="Product scale" required missing={!scale?.preset}>
         {(expanded) => (
           <>
             <div className="flex flex-wrap gap-2">
@@ -480,11 +539,20 @@ export function Step4Cast({
       )}
 
       {/* Phase 7j/7k — flexible cast styling dials with per-subfamily storytelling. */}
+      {/* Phase 7r — `build` rendered above near the people dials; filter it out here to avoid duplicates. */}
       {!isReplicate && (
         <div className="space-y-3 pt-2 border-t border-border/60">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80 pt-2">
+            Optional styling
+          </div>
+          <p className="text-[11px] text-muted-foreground/80 -mt-1">
+            Skip these — we'll pick smart defaults
+          </p>
           <div className="space-y-7">
 
-          {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily).map((f) => {
+          {applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
+            .filter((f) => f.key !== "build")
+            .map((f) => {
             // Inject sub-family-specific moments at render time.
             let resolved = f;
             if (f.key === "storytelling_moment") {
