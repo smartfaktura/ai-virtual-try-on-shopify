@@ -116,33 +116,43 @@ export function Step4Environment({
 
   const propDensityMax = 4 as PropDensity;
 
+  const hasSceneType = !!sceneType;
+
   return (
     <div className="space-y-7">
-      <Section label="Scene type">
+      <Section
+        label="Scene type"
+        helper="Pick this first — everything else tunes to it."
+      >
         <SceneTypePicker value={sceneType} onChange={handleSceneType} />
       </Section>
 
-      {sceneType ? (
-        <Section label="Setting / environment">
-          <SettingPicker
-            options={settingPool}
-            value={value.setting}
-            onChange={handleSetting}
-          />
-        </Section>
-      ) : (
-        <p className="text-[11px] text-muted-foreground/70 -mt-3">
-          Pick a scene type above to unlock tailored settings
-        </p>
-      )}
-
-      {warnings.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] px-3 py-2 text-[12px] text-amber-700 dark:text-amber-300 space-y-1">
-          {warnings.map((w) => (
-            <div key={w}>· {w}</div>
-          ))}
+      {!hasSceneType && (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-5 py-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Pick a scene type above to unlock setting, weather, mood, and fine-tuning.
+          </p>
         </div>
       )}
+
+      {hasSceneType && (
+        <>
+          <Section label="Setting / environment">
+            <SettingPicker
+              options={settingPool}
+              value={value.setting}
+              onChange={handleSetting}
+            />
+          </Section>
+
+          {warnings.length > 0 && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] px-3 py-2 text-[12px] text-amber-700 dark:text-amber-300 space-y-1">
+              {warnings.map((w) => (
+                <div key={w}>· {w}</div>
+              ))}
+            </div>
+          )}
+
 
       <Section label="Weather / atmosphere">
         <ChipRow
