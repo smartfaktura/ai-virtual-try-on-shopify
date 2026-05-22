@@ -717,3 +717,21 @@ function NumberField({
     </div>
   );
 }
+
+function GroupHeader({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="pt-2 first:pt-0">
+      <div className="text-[11px] font-semibold tracking-tight text-foreground/90">
+        {title}
+      </div>
+      {hint && (
+        <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-relaxed">
+          {hint}
+        </p>
+      )}
+      <div className="mt-3 h-px bg-border/70" />
+    </div>
+  );
+}
+
+}
