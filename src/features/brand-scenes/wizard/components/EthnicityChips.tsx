@@ -1,8 +1,9 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { Chip } from "./Chip";
 
 /**
- * Phase 7i — clearer two-line ethnicity / casting chips.
+ * Phase 7v — flattened to pill chips so it matches the rest of the wizard.
  * Value is stored as a free string on `cast.extras.ethnicity` so the
  * prompt assembler renders it verbatim.
  */
@@ -51,33 +52,18 @@ export function EthnicityChips({ value, onChange }: Props) {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div className="flex flex-wrap gap-2">
         {ETHNICITY_OPTIONS.map((o) => {
           const active = value === o.value;
           return (
-            <button
+            <Chip
               key={o.value}
-              type="button"
+              active={active}
               onClick={() => onChange(active ? undefined : o.value)}
-              className={[
-                "text-left rounded-2xl border px-3 py-2 transition-colors",
-                active
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-background text-foreground hover:border-foreground/40",
-              ].join(" ")}
+              title={o.desc}
             >
-              <div className="text-[12px] font-medium leading-tight">
-                {o.label}
-              </div>
-              <div
-                className={[
-                  "text-[10px] leading-tight mt-0.5",
-                  active ? "text-background/70" : "text-muted-foreground",
-                ].join(" ")}
-              >
-                {o.desc}
-              </div>
-            </button>
+              {o.label}
+            </Chip>
           );
         })}
       </div>
