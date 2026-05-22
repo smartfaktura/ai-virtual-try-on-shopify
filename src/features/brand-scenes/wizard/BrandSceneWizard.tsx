@@ -165,17 +165,14 @@ export function BrandSceneWizard() {
   void wizardAestheticStep;
 
   // Reset scroll to top of the wizard whenever the step changes.
+  // The wizard renders inside AppShell's <main id="app-main-scroll"> which is
+  // the actual scroll container — window.scrollTo is a fallback for cases
+  // where the wizard mounts standalone.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const main = document.getElementById("app-main-scroll");
+    if (main) main.scrollTo({ top: 0, behavior: "auto" });
     window.scrollTo({ top: 0, behavior: "auto" });
-    // Also reset any scrollable ancestor (when the wizard sits inside a sticky shell).
-    let el: HTMLElement | null = document.querySelector(
-      "[data-wizard-root]",
-    ) as HTMLElement | null;
-    while (el) {
-      if (el.scrollTop > 0) el.scrollTop = 0;
-      el = el.parentElement;
-    }
   }, [step]);
 
   const handleNext = () => {
