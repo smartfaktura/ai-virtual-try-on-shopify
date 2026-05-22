@@ -50,7 +50,7 @@ export const CAST_INTERACTIONS = [
   { value: "holding", label: "Holding" },
   { value: "using", label: "Using" },
   { value: "beside", label: "Placed beside" },
-  { value: "hero", label: "Hero — product only" },
+  { value: "hero", label: "Product only" },
 ] as const;
 export type CastInteraction = (typeof CAST_INTERACTIONS)[number]["value"];
 
