@@ -350,12 +350,18 @@ export const CAMERA_ANGLES_GENERAL: string[] = [
   "Back ¾",
   "Worm's eye low",
   "Low ¾",
-  "Top-down flat-lay",
+  "Top-down 90°",
   "High 45°",
   "High ¾",
+  "Eye level macro",
+  "Pour shot",
+  "Splash shot",
+  "Steam shot",
+  "Floating product",
   "Dutch tilt 5°",
   "Dutch tilt 15°",
 ];
+
 
 export const CAMERA_ANGLES_APPAREL: string[] = [
   "Full-length front",
