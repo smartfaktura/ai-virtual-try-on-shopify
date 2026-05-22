@@ -116,6 +116,10 @@ export const brandSceneBaseAnswersSchema = z
     realism: realismSchema.optional(),
     brand_voice: brandVoiceSchema.optional(),
     output_use_case: outputUseCaseSchema.optional(),
+    extras: z
+      .record(z.string().trim().min(1).max(60), z.string().trim().min(1).max(160))
+      .refine((r) => Object.keys(r).length <= 40, "too many extras")
+      .optional(),
   })
   .strict();
 
