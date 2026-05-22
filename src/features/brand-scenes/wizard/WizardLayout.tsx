@@ -3,9 +3,11 @@ import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WizardStep } from "./useWizardState";
+import type { BrandSceneSource } from "../constants";
 
 interface Props {
   step: WizardStep;
+  source: BrandSceneSource;
   title: string;
   subtitle?: string;
   onBack: () => void;
@@ -15,7 +17,7 @@ interface Props {
   children: ReactNode;
 }
 
-const STEPS = [
+const STEPS_WIZARD = [
   { n: 0, label: "Source" },
   { n: 1, label: "Family" },
   { n: 2, label: "Sub-family" },
@@ -24,10 +26,18 @@ const STEPS = [
   { n: 5, label: "Review" },
 ] as const;
 
-const TOTAL_STEPS = STEPS.length;
+// Reference path collapses Step 4 into Step 3 (one combined screen)
+const STEPS_REFERENCE = [
+  { n: 0, label: "Source" },
+  { n: 1, label: "Family" },
+  { n: 2, label: "Sub-family" },
+  { n: 3, label: "Reference" },
+  { n: 5, label: "Review" },
+] as const;
 
 export function WizardLayout({
   step,
+  source,
   title,
   subtitle,
   onBack,
@@ -36,6 +46,11 @@ export function WizardLayout({
   isLastStep,
   children,
 }: Props) {
+  const steps = source === "reference" ? STEPS_REFERENCE : STEPS_WIZARD;
+  const total = steps.length;
+  const currentIdx = steps.findIndex((s) => s.n === step);
+  const displayIdx = currentIdx >= 0 ? currentIdx : 0;
+
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -44,17 +59,17 @@ export function WizardLayout({
       </div>
 
       <div className="flex items-center gap-2">
-        {STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <div key={s.n} className="flex items-center gap-2 flex-1">
             <div
               className={[
                 "h-1 flex-1 rounded-full transition-colors",
-                s.n <= step ? "bg-foreground" : "bg-border",
+                i <= displayIdx ? "bg-foreground" : "bg-border",
               ].join(" ")}
             />
-            {i === STEPS.length - 1 && (
+            {i === steps.length - 1 && (
               <span className="text-xs text-muted-foreground tabular-nums">
-                {step + 1}/{TOTAL_STEPS}
+                {displayIdx + 1}/{total}
               </span>
             )}
           </div>
