@@ -261,7 +261,7 @@ export function Step4Cast({
             );
           })()}
 
-          <Section label="Vibe">
+          <Section label="Energy / vibe">
             <div className="flex flex-wrap gap-2">
               {CAST_VIBES.map((v) => (
                 <Chip
