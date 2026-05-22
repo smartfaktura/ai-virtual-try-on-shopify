@@ -41,6 +41,8 @@ import {
 } from "../constants/sceneExtras";
 import { CAST_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
+import { EthnicityChips } from "../components/EthnicityChips";
+import { getStorytellingMoments } from "../registry/storytellingBySubfamily";
 import { resolveAll } from "../registry/resolvePresets";
 import {
   forbiddenInteractions,
@@ -240,25 +242,16 @@ export function Step4Cast({
             </div>
           </Section>
 
-          <Section label="Diversity">
-            <div className="flex flex-wrap gap-2">
-              {DIVERSITY_OPTIONS.map((d) => (
-                <Chip
-                  key={d.value}
-                  active={cast?.diversity === d.value}
-                  onClick={() =>
-                    onCastChange({
-                      diversity:
-                        cast?.diversity === d.value
-                          ? undefined
-                          : (d.value as Diversity),
-                    })
-                  }
-                >
-                  {d.label}
-                </Chip>
-              ))}
-            </div>
+          <Section label="Ethnicity / casting hint">
+            <EthnicityChips
+              value={cast?.extras?.ethnicity}
+              onChange={(next) => {
+                const nextExtras = { ...(cast?.extras ?? {}) };
+                if (next === undefined) delete nextExtras.ethnicity;
+                else nextExtras.ethnicity = next;
+                onCastChange({ extras: nextExtras });
+              }}
+            />
           </Section>
         </>
       )}
@@ -407,8 +400,9 @@ export function Step4Cast({
         </Section>
       )}
 
-      {/* Wardrobe color anchor */}
-      {hasPeople && !isReplicate && wardrobes.length > 0 && (
+      {/* Wardrobe color anchor — hidden for swimwear/lingerie where it's not relevant. */}
+      {hasPeople && !isReplicate && wardrobes.length > 0 &&
+        subFamily !== "swimwear" && subFamily !== "lingerie" && (
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
             {wardrobes.map((w) => (

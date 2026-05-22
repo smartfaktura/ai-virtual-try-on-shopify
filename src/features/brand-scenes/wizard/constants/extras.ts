@@ -36,7 +36,18 @@ export interface ExtrasField {
   /** Hidden by default until a parent field unlocks it. */
   dependent?: boolean;
   hint?: string;
+  /** Phase 7i — show only when sub_family matches one of these slugs. */
+  subFamilyOnly?: string[];
+  /** Phase 7i — hide when sub_family matches one of these slugs. */
+  subFamilyExcept?: string[];
+  /**
+   * Phase 7i — field renders via a bespoke component in the step file
+   * (e.g. EthnicityChips). The value is still assembled into the prompt
+   * via this field's `prefix`, so the assembler ignores `customRender`.
+   */
+  customRender?: string;
 }
+
 
 // ============================================================================
 // SCENE extras (Step 3)
@@ -339,12 +350,18 @@ export const CAMERA_ANGLES_GENERAL: string[] = [
   "Back ¾",
   "Worm's eye low",
   "Low ¾",
-  "Top-down flat-lay",
+  "Top-down 90°",
   "High 45°",
   "High ¾",
+  "Eye level macro",
+  "Pour shot",
+  "Splash shot",
+  "Steam shot",
+  "Floating product",
   "Dutch tilt 5°",
   "Dutch tilt 15°",
 ];
+
 
 export const CAMERA_ANGLES_APPAREL: string[] = [
   "Full-length front",
@@ -590,24 +607,23 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     category: ["jewelry", "watches"],
     hideWhenNoCast: true,
   },
-  {
-    key: "camera_angle_tabletop",
-    scope: "scene",
-    label: "Tabletop / product angle",
-    prefix: "Tabletop angle",
-    presets: CAMERA_ANGLES_TABLETOP,
-    category: ["beauty-fragrance", "tech", "food-drink", "wellness", "home"],
-  },
+  // Phase 7i — generic camera angles already include the useful tabletop ones
+  // (Top-down 90°, Pour, Splash, Steam, Floating). The dedicated tabletop
+  // field is removed because the Tabletop scene type was removed too.
 ];
 
 export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
+  // Phase 7i — age_band & ethnicity removed from here.
+  //   • Age is already captured by the hardcoded "Age feel" section (cast.age).
+  //   • Ethnicity is rendered by the bespoke EthnicityChips component.
   {
-    key: "age_band",
+    key: "ethnicity",
     scope: "cast",
-    label: "Age band",
-    prefix: "Age",
-    presets: AGE_BANDS,
+    label: "Ethnicity / casting hint",
+    prefix: "Ethnicity",
+    presets: ETHNICITY_HINT,
     castOnly: ["solo", "two", "group"],
+    customRender: "ethnicity",
   },
   {
     key: "build",
@@ -615,14 +631,6 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     label: "Build",
     prefix: "Build",
     presets: BUILDS,
-    castOnly: ["solo", "two", "group"],
-  },
-  {
-    key: "ethnicity",
-    scope: "cast",
-    label: "Ethnicity hint",
-    prefix: "Ethnicity",
-    presets: ETHNICITY_HINT,
     castOnly: ["solo", "two", "group"],
   },
   {
@@ -648,6 +656,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Hair",
     presets: HAIR_STYLES,
     castOnly: ["solo", "two", "group"],
+    subFamilyExcept: ["swimwear", "lingerie"],
   },
   {
     key: "makeup",
@@ -657,11 +666,41 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
     presets: MAKEUP_LOOKS,
     castOnly: ["solo", "two", "group"],
   },
+  // Phase 7i — swimwear-specific styling, replaces generic clothing pills.
+  {
+    key: "swim_styling",
+    scope: "cast",
+    label: "Swim styling",
+    prefix: "Swim styling",
+    presets: ["One-piece", "Bikini", "High-waist bottom", "Surf shorts", "Cover-up over", "Wrap skirt over"],
+    castOnly: ["solo", "two", "group"],
+    subFamilyOnly: ["swimwear"],
+  },
+  {
+    key: "wetness",
+    scope: "cast",
+    label: "Wetness",
+    prefix: "Wetness",
+    presets: ["Dry", "Damp / misted", "Freshly out of water", "Glistening / sun-dried"],
+    castOnly: ["solo", "two", "group", "hands"],
+    subFamilyOnly: ["swimwear"],
+  },
+  // Phase 7i — lingerie layering replaces generic clothing pills.
+  {
+    key: "lingerie_layer",
+    scope: "cast",
+    label: "Lingerie layering",
+    prefix: "Layer",
+    presets: ["Bare", "Robe open", "Sheet draped", "Slip dress over", "Cardigan over"],
+    castOnly: ["solo", "two", "group"],
+    subFamilyOnly: ["lingerie"],
+  },
   {
     key: "storytelling_moment",
     scope: "cast",
     label: "Storytelling moment",
     prefix: "Moment",
+    // Default presets — Step4Cast overrides via getStorytellingMoments(subFamily).
     presets: STORYTELLING_MOMENT,
     castOnly: ["solo", "two", "group", "hands"],
   },
@@ -672,12 +711,15 @@ export function applicableFields(
   fields: ExtrasField[],
   module: BrandSceneModule | undefined,
   castPreset: CastPreset | undefined,
+  subFamily?: string,
 ): ExtrasField[] {
   return fields.filter((f) => {
     if (f.category && (!module || !f.category.includes(module))) return false;
     if (f.excludes && module && f.excludes.includes(module)) return false;
     if (f.castOnly && (!castPreset || !f.castOnly.includes(castPreset))) return false;
     if (f.hideWhenNoCast && castPreset === "none") return false;
+    if (f.subFamilyOnly && (!subFamily || !f.subFamilyOnly.includes(subFamily))) return false;
+    if (f.subFamilyExcept && subFamily && f.subFamilyExcept.includes(subFamily)) return false;
     return true;
   });
 }
@@ -687,11 +729,12 @@ export function applicableFieldsCtx(
   fields: ExtrasField[],
   ctx: SceneCtx,
 ): ExtrasField[] {
-  return applicableFields(fields, ctx.module, ctx.cast).filter((f) => {
+  return applicableFields(fields, ctx.module, ctx.cast, ctx.sub_family).filter((f) => {
     if (f.appliesWhen && !f.appliesWhen(ctx)) return false;
     return true;
   });
 }
+
 
 void isOutdoor;
 void isIndoor;
