@@ -59,7 +59,7 @@ export function ExtrasPillField({
       hint={field.hint}
     >
       <div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-x-2 gap-y-2.5">
           {field.presets.map((p) => (
             <Chip
               key={p}

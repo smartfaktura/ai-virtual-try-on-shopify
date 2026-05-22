@@ -19,12 +19,12 @@ export function Chip({ active = false, disabled = false, onClick, children }: Ch
       disabled={disabled}
       onClick={onClick}
       className={[
-        "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors whitespace-nowrap",
+        "inline-flex items-center justify-center min-h-[36px] rounded-full border px-4 py-2 text-[13.5px] leading-none transition-colors whitespace-nowrap",
         disabled
           ? "border-border bg-muted/30 text-muted-foreground cursor-not-allowed"
           : active
-            ? "border-foreground bg-foreground text-background"
-            : "border-border bg-card text-foreground hover:border-foreground/40",
+            ? "border-foreground bg-foreground text-background font-medium"
+            : "border-border bg-card text-foreground hover:border-foreground/40 hover:bg-muted/30",
       ].join(" ")}
     >
       {children}
@@ -43,7 +43,7 @@ export function AddChip({ onClick, label = "Custom" }: AddChipProps) {
     <button
       type="button"
       onClick={onClick}
-      className="rounded-full border border-dashed border-border bg-transparent px-3.5 py-1.5 text-[13px] text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+      className="inline-flex items-center justify-center min-h-[36px] gap-1.5 rounded-full border border-dashed border-border bg-transparent px-4 py-2 text-[13.5px] leading-none text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors"
     >
       <Plus className="w-3.5 h-3.5" />
       {label}

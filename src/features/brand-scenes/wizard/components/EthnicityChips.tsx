@@ -31,7 +31,7 @@ interface Props {
 
 export function EthnicityChips({ value, onChange }: Props) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-x-2 gap-y-2.5">
       {ETHNICITY_OPTIONS.map((o) => {
         const active = value === o.value;
         return (
