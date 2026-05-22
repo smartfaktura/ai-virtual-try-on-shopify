@@ -71,7 +71,20 @@ export function BrandSceneWizard() {
   const { step, answers } = state;
   const isReference = answers.source === "reference";
   const META = isReference ? META_REFERENCE : META_WIZARD;
-  const { title, subtitle } = META[step];
+
+  // Phase 7j — append sub-family label to step titles so the user sees the wizard is tuned.
+  const subFamilyLabel = (() => {
+    if (!answers.module || !answers.sub_family) return null;
+    const subs = SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? [];
+    return subs.find((s) => s.slug === answers.sub_family)?.label ?? null;
+  })();
+  const stepShowsSubFamily = step === 3 || step === 4 || step === 5;
+  const baseTitle = META[step].title;
+  const title =
+    stepShowsSubFamily && subFamilyLabel
+      ? `${baseTitle} · ${subFamilyLabel}`
+      : baseTitle;
+  const { subtitle } = META[step];
 
   const sessionAccepted =
     typeof window !== "undefined" &&
