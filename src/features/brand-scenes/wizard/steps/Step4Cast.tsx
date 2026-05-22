@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Chip } from "../components/Chip";
+import { Chip, AddChip } from "../components/Chip";
 import { Section } from "../components/Section";
 import {
   CAST_ACTIONS,
