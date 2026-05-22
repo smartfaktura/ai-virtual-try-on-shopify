@@ -143,10 +143,25 @@ export function Step4Cast({
 
   const warnings = sceneWarnings(answers);
 
+  const showBehaviorGroup =
+    !isReplicate &&
+    (hasPeople || preset === "two" || preset === "group");
+  const showStylingGroup =
+    !isReplicate &&
+    (
+      (hasPeople &&
+        wardrobes.length > 0 &&
+        !["swimwear", "lingerie"].includes(subFamily ?? "")) ||
+      applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
+        .filter((f) => f.key !== "build").length > 0
+    );
+
   return (
     <div className="space-y-8">
+      <GroupHeader title="People" />
       {/* Cast preset */}
       <Section label="Who's in the shot" required missing={!preset}>
+
         {(expanded) => (
           <div className="flex flex-wrap gap-2">
             {visibleCastPresets(expanded).map((p) => (
@@ -320,9 +335,11 @@ export function Step4Cast({
         </>
       )}
 
-      {/* Interaction */}
+      {/* Product interaction group */}
+      {!isReplicate && <GroupHeader title="Product interaction" />}
       {!isReplicate && (
         <Section label="Product interaction" required missing={!cast?.interaction}>
+
           {(expanded) => (
             <div className="flex flex-wrap gap-2">
               {visibleInteractions(expanded).map((i) => (
@@ -392,8 +409,10 @@ export function Step4Cast({
         </Section>
       )}
 
+      {showBehaviorGroup && <GroupHeader title="Behavior & energy" />}
       {/* Gaze */}
       {hasPeople && !isReplicate && (
+
         <Section label="Gaze direction">
           <div className="flex flex-wrap gap-2">
             {GAZE_DIRECTIONS.map((g) => (
@@ -464,9 +483,11 @@ export function Step4Cast({
         </Section>
       )}
 
+      {showStylingGroup && <GroupHeader title="Styling & wardrobe" />}
       {/* Wardrobe color anchor — irrelevant for swimwear/lingerie. */}
       {hasPeople && !isReplicate && wardrobes.length > 0 &&
         !["swimwear", "lingerie"].includes(subFamily ?? "") && (
+
         <Section label="Wardrobe color anchor">
           <div className="flex flex-wrap gap-2">
             {wardrobes.map((w) => (
@@ -489,8 +510,10 @@ export function Step4Cast({
         </Section>
       )}
 
+      {showScaleSection && <GroupHeader title="Product scale" />}
       {/* Scale — only show when there's more than one relevant option for this family */}
       {showScaleSection && (
+
         <Section label="Product scale" required missing={!scale?.preset}>
           <>
             <div className="flex flex-wrap gap-2">
@@ -588,9 +611,11 @@ export function Step4Cast({
         </div>
       )}
 
+      {!isReplicate && <GroupHeader title="Notes" />}
       {/* Cast note */}
       {!isReplicate && (
         <Section label="Note">
+
           <Textarea
             value={cast?.note ?? ""}
             maxLength={CAST_NOTE_MAX}
@@ -692,3 +717,20 @@ function NumberField({
     </div>
   );
 }
+
+function GroupHeader({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="pt-2 first:pt-0">
+      <div className="text-[11px] font-semibold tracking-tight text-foreground/90">
+        {title}
+      </div>
+      {hint && (
+        <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-relaxed">
+          {hint}
+        </p>
+      )}
+      <div className="mt-3 h-px bg-border/70" />
+    </div>
+  );
+}
+

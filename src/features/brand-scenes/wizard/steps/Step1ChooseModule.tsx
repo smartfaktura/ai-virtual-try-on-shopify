@@ -11,21 +11,6 @@ interface Props {
   onChange: (m: BrandSceneModule) => void;
 }
 
-const FAMILY_BLURBS: Record<BrandSceneModule, string> = {
-  fashion: "Apparel on models or flat-lay",
-  footwear: "Sneakers, heels, boots",
-  "bags-accessories": "Handbags, belts, small leather",
-  "hats-caps-beanies": "Headwear on or off model",
-  watches: "Wrist shots, top-down detail",
-  eyewear: "On-face and product still-life",
-  jewelry: "Macro and worn jewelry",
-  "beauty-fragrance": "Skincare, makeup, perfume, atmospheric still-life",
-  home: "Furniture, decor, soft goods",
-  tech: "Phones, audio, gadgets, accessories",
-  "food-drink": "Plates, drinks, kitchenware lifestyle",
-  wellness: "Supplements, vitamins, ritual",
-};
-
 export function Step1ChooseModule({ value, onChange }: Props) {
   const selected = value;
   const selectedNeedsFallback =
@@ -33,14 +18,13 @@ export function Step1ChooseModule({ value, onChange }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {BRAND_SCENE_MODULES.map((m) => (
           <WizardCard
             key={m}
             active={m === selected}
             onClick={() => onChange(m)}
             title={BRAND_SCENE_MODULE_LABELS[m]}
-            body={FAMILY_BLURBS[m]}
           />
         ))}
       </div>

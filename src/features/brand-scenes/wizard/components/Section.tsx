@@ -36,11 +36,15 @@ export function Section({
       data-missing={missing ? "1" : undefined}
     >
       <div className="space-y-1">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
           <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {label}
-            {required && <span className="text-destructive/80 ml-1">*</span>}
           </Label>
+          {required && (
+            <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+              Required
+            </span>
+          )}
         </div>
         {helper && (
           <p className="text-[11px] text-muted-foreground/80 leading-relaxed">
@@ -48,8 +52,17 @@ export function Section({
           </p>
         )}
       </div>
-      {body}
+      <div
+        className={
+          missing
+            ? "rounded-xl ring-1 ring-border bg-muted/20 p-3 -mx-1 transition-colors"
+            : undefined
+        }
+      >
+        {body}
+      </div>
       {hint && <p className="text-[11px] text-muted-foreground/80">{hint}</p>}
     </div>
   );
 }
+
