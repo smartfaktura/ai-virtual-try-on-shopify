@@ -304,7 +304,7 @@ Still travels two ways:
 
 ### Validator additions
 
-- Verify every `[PRODUCT IMAGE]` / `[MODEL IMAGE]` token has a matching attached reference; if not, swap the fidelity paragraph for a generic equivalent ("the provided product / model") so the prompt never ships with unresolved tokens.
+- Guarantee `[PRODUCT IMAGE]` appears in every saved prompt, and `[MODEL IMAGE]` appears whenever the subject mode includes a person. If a compile pass would emit a prompt missing a required token, the validator re-injects the family-specific fidelity / identity paragraph before save.
 - Deduplicate palette entries by hex; keep the first label seen.
 - Strip the negative styling line for any item the user explicitly opted into (e.g. don't say "no sunglasses" if the user chose sunglasses as an accessory).
 
