@@ -82,7 +82,7 @@ export function BrandSceneWizard() {
     const subs = SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? [];
     return subs.find((s) => s.slug === answers.sub_family)?.label ?? null;
   })();
-  const stepShowsSubFamily = step === 3 || step === 4 || step === 5;
+  const stepShowsSubFamily = (step === 3 && !isReference) || step === 4 || step === 5;
   const baseTitle = META[step].title;
   const title =
     stepShowsSubFamily && subFamilyLabel
