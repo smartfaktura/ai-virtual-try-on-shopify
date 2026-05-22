@@ -1,5 +1,12 @@
 import { type ReactNode } from "react";
+import { HelpCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SectionProps {
   label: ReactNode;
@@ -9,6 +16,8 @@ interface SectionProps {
   hint?: string;
   /** Optional plain-language helper rendered under the label. */
   helper?: ReactNode;
+  /** Optional short hint rendered as an info-icon tooltip next to the label. */
+  tooltip?: string;
   /**
    * Legacy prop kept for API compatibility. The "+ Show all" toggle was removed
    * in Phase 7r; sections now always render the full list. The render-prop form
@@ -18,12 +27,14 @@ interface SectionProps {
   children: ReactNode | ((expanded: boolean) => ReactNode);
 }
 
+
 export function Section({
   label,
   required,
   missing,
   hint,
   helper,
+  tooltip,
   children,
 }: SectionProps) {
   const body = typeof children === "function" ? children(true) : children;
@@ -40,6 +51,24 @@ export function Section({
           <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {label}
           </Label>
+          {tooltip && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-muted-foreground/60 hover:text-foreground transition-colors"
+                    aria-label="More info"
+                  >
+                    <HelpCircle className="w-3 h-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-xs">
+                  {tooltip}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {required && (
             <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
               Required
@@ -61,6 +90,7 @@ export function Section({
       >
         {body}
       </div>
+
       {hint && <p className="text-[11px] text-muted-foreground/80">{hint}</p>}
     </div>
   );

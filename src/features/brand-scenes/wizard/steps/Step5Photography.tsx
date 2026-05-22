@@ -29,7 +29,6 @@ import {
 } from "../constants/sceneExtras";
 import { SCENE_EXTRAS_FIELDS, applicableFieldsCtx } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
-import { StageCGroup } from "../components/StageCGroup";
 import type { SceneTypeId } from "../registry/settingsBySubfamily";
 import { applyCascade, type SceneCtx } from "../rules/sceneRules";
 import { resolveAll } from "../registry/resolvePresets";
@@ -44,23 +43,16 @@ interface Props {
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
 
-const PHOTO_GROUPS: { label: string; keys: string[]; defaultOpen?: boolean }[] = [
-  {
-    label: "Camera angle",
-    keys: [
-      "camera_angle",
-      "camera_angle_apparel",
-      "camera_angle_footwear",
-      "camera_angle_eyewear",
-      "camera_angle_jewelry",
-    ],
-  },
-  {
-    label: "Motion & crop",
-    keys: ["motion", "composition_energy", "crop_safety"],
-  },
+const PHOTO_EXTRAS_KEYS = [
+  "camera_angle",
+  "camera_angle_apparel",
+  "camera_angle_footwear",
+  "camera_angle_eyewear",
+  "camera_angle_jewelry",
+  "motion",
+  "composition_energy",
+  "crop_safety",
 ];
-
 
 export function Step5Photography({
   module,
@@ -98,8 +90,8 @@ export function Step5Photography({
   return (
     <div className="space-y-7">
       <Section
-        label="Lens look"
-        helper="Wide = roomy and dramatic. Long = compressed and flattering."
+        label="Lens"
+        tooltip="Wide = roomy and dramatic. Long = compressed and flattering."
         expandable
       >
         {(expanded) => (
@@ -112,8 +104,8 @@ export function Step5Photography({
       </Section>
 
       <Section
-        label="How blurry the background is"
-        helper="Shallow = creamy bokeh behind the product. Deep = everything stays in focus."
+        label="Background blur"
+        tooltip="Shallow = creamy bokeh behind the product. Deep = everything in focus."
         expandable
       >
         {(expanded) => (
@@ -127,10 +119,7 @@ export function Step5Photography({
         )}
       </Section>
 
-      <Section
-        label="How the shot is composed"
-        helper="Where the product sits inside the frame."
-      >
+      <Section label="Composition">
         <ChipRow
           options={COMPOSITIONS}
           current={value.composition}
@@ -138,10 +127,7 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section
-        label="Empty space around the product"
-        helper="Tight = packed and busy. Generous = lots of breathing room."
-      >
+      <Section label="Negative space">
         <ChipRow
           options={NEG_SPACE_INTENTS}
           current={value.negative_space_intent}
@@ -151,10 +137,7 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section
-        label="What the eye lands on first"
-        helper="Product, model, or both equally."
-      >
+      <Section label="Focus">
         <ChipRow
           options={SUBJECT_FOCUSES}
           current={value.subject_focus}
@@ -162,10 +145,7 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section
-        label="Shadows"
-        helper="Soft = gentle, diffused. Hard = bold, defined edges."
-      >
+      <Section label="Shadows">
         <ChipRow
           options={SHADOWS}
           current={value.shadows}
@@ -173,10 +153,7 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section
-        label="How realistic"
-        helper="Photo-real vs stylized / illustrative."
-      >
+      <Section label="Realism">
         <ChipRow
           options={REALISM_LEVELS}
           current={value.realism}
@@ -184,11 +161,7 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section
-        label="Color palette"
-        helper="The anchor color story for the whole shot."
-        expandable
-      >
+      <Section label="Color palette" expandable>
         {(expanded) => (
           <PaletteBlock
             presets={palettes(expanded)}
@@ -204,10 +177,7 @@ export function Step5Photography({
         )}
       </Section>
 
-      <Section
-        label="Contrast"
-        helper="How punchy the difference between lights and darks should feel."
-      >
+      <Section label="Contrast">
         <ChipRow
           options={COLOR_CONTRASTS}
           current={value.color_contrast}
@@ -215,10 +185,7 @@ export function Step5Photography({
         />
       </Section>
 
-      <Section
-        label="Color intensity"
-        helper="Muted, true to life, or vivid."
-      >
+      <Section label="Saturation">
         <ChipRow
           options={SATURATIONS}
           current={value.saturation}
@@ -227,8 +194,8 @@ export function Step5Photography({
       </Section>
 
       <Section
-        label="Film / finish look"
-        helper="The final grade — clean digital, filmic, glossy magazine, etc."
+        label="Finish"
+        tooltip="The final grade — clean digital, filmic, glossy magazine, etc."
         expandable
       >
         {(expanded) => (
@@ -240,80 +207,56 @@ export function Step5Photography({
         )}
       </Section>
 
+      {(() => {
+        const ctx: SceneCtx = {
+          module,
+          sub_family: subFamily,
+          scene_type: sceneType,
+          setting: value.setting,
+          cast: castPreset,
+          values: { ...(value.extras ?? {}), _weather: value.weather },
+          auto: value.auto ?? {},
+          recommendations: value.recommendations ?? {},
+        };
+        const fields = applicableFieldsCtx(SCENE_EXTRAS_FIELDS, ctx).filter(
+          (f) => PHOTO_EXTRAS_KEYS.includes(f.key),
+        );
 
-      <div className="space-y-4 pt-2 border-t border-border/60">
-        <div className="pt-2">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
-            Optional fine-tuning{" "}
-            <span className="normal-case tracking-normal text-muted-foreground/60">
-              — skip and we'll pick smart defaults
-            </span>
-          </div>
-        </div>
-        {(() => {
-          const ctx: SceneCtx = {
-            module,
-            sub_family: subFamily,
-            scene_type: sceneType,
-            setting: value.setting,
-            cast: castPreset,
-            values: { ...(value.extras ?? {}), _weather: value.weather },
-            auto: value.auto ?? {},
-            recommendations: value.recommendations ?? {},
-          };
-          const fields = applicableFieldsCtx(SCENE_EXTRAS_FIELDS, ctx);
-
-          const renderField = (f: typeof fields[number]) => {
-            const resolvedF = f.presetsResolver
-              ? { ...f, presets: f.presetsResolver(ctx) }
-              : f;
-            const writeCtx: SceneCtx = { ...ctx, values: value.extras ?? {} };
-            return (
-              <ExtrasPillField
-                key={f.key}
-                field={resolvedF}
-                showAllInitially
-                value={value.extras?.[f.key]}
-                autoFilled={!!value.auto?.[f.key]}
-                recommended={value.recommendations?.[f.key]}
-                onChange={(next) => {
-                  const { values, auto, recommendations } = applyCascade(
-                    f.key,
-                    next,
-                    writeCtx,
-                  );
-                  const cleaned: Record<string, string> = {};
-                  for (const [k, v] of Object.entries(values))
-                    if (v !== undefined) cleaned[k] = v;
-                  onChange({ extras: cleaned, auto, recommendations });
-                }}
-              />
-            );
-          };
-
+        const renderField = (f: typeof fields[number]) => {
+          const resolvedF = f.presetsResolver
+            ? { ...f, presets: f.presetsResolver(ctx) }
+            : f;
+          const writeCtx: SceneCtx = { ...ctx, values: value.extras ?? {} };
           return (
-            <>
-              {PHOTO_GROUPS.map((g) => {
-                const groupFields = fields.filter((f) => g.keys.includes(f.key));
-                if (groupFields.length === 0) return null;
-                const filledCount = groupFields.filter(
-                  (f) => !!value.extras?.[f.key],
-                ).length;
-                return (
-                  <StageCGroup
-                    key={g.label}
-                    label={g.label}
-                    defaultOpen={g.defaultOpen}
-                    count={filledCount}
-                  >
-                    {groupFields.map(renderField)}
-                  </StageCGroup>
+            <ExtrasPillField
+              key={f.key}
+              field={resolvedF}
+              showAllInitially
+              value={value.extras?.[f.key]}
+              autoFilled={!!value.auto?.[f.key]}
+              recommended={value.recommendations?.[f.key]}
+              onChange={(next) => {
+                const { values, auto, recommendations } = applyCascade(
+                  f.key,
+                  next,
+                  writeCtx,
                 );
-              })}
-            </>
+                const cleaned: Record<string, string> = {};
+                for (const [k, v] of Object.entries(values))
+                  if (v !== undefined) cleaned[k] = v;
+                onChange({ extras: cleaned, auto, recommendations });
+              }}
+            />
           );
-        })()}
-      </div>
+        };
+
+        const ordered = [...fields].sort(
+          (a, b) =>
+            PHOTO_EXTRAS_KEYS.indexOf(a.key) -
+            PHOTO_EXTRAS_KEYS.indexOf(b.key),
+        );
+        return <>{ordered.map(renderField)}</>;
+      })()}
     </div>
   );
 }

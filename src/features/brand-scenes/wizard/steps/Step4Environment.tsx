@@ -20,7 +20,7 @@ import {
 } from "../constants/sceneExtras";
 import { SCENE_EXTRAS_FIELDS, applicableFieldsCtx } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
-import { StageCGroup } from "../components/StageCGroup";
+
 import { SceneTypePicker } from "../components/SceneTypePicker";
 import { SettingPicker } from "../components/SettingPicker";
 import { BackdropColorField } from "../components/BackdropColorField";
@@ -205,100 +205,82 @@ export function Step4Environment({
         </div>
       </Section>
 
-      <div className="space-y-4 pt-2 border-t border-border/60">
-        <div className="pt-2">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
-            Optional fine-tuning{" "}
-            <span className="normal-case tracking-normal text-muted-foreground/60">
-              — skip and we'll pick smart defaults
-            </span>
-          </div>
-        </div>
-        {(() => {
-          const ctx: SceneCtx = {
-            module,
-            sub_family: subFamily,
-            scene_type: sceneType,
-            setting: value.setting,
-            cast: castPreset,
-            values: { ...(value.extras ?? {}), _weather: value.weather },
-            auto: value.auto ?? {},
-            recommendations: value.recommendations ?? {},
-          };
-          const fields = applicableFieldsCtx(SCENE_EXTRAS_FIELDS, ctx);
+      {(() => {
+        const ctx: SceneCtx = {
+          module,
+          sub_family: subFamily,
+          scene_type: sceneType,
+          setting: value.setting,
+          cast: castPreset,
+          values: { ...(value.extras ?? {}), _weather: value.weather },
+          auto: value.auto ?? {},
+          recommendations: value.recommendations ?? {},
+        };
+        const fields = applicableFieldsCtx(SCENE_EXTRAS_FIELDS, ctx);
 
-          const renderField = (f: typeof fields[number]) => {
-            const isColorField =
-              f.key === "backdrop_color" ||
-              f.key === "backdrop_color_a" ||
-              f.key === "backdrop_color_b";
-            const resolved = f.presetsResolver
-              ? { ...f, presets: f.presetsResolver(ctx) }
-              : f;
-            const writeCtx: SceneCtx = { ...ctx, values: value.extras ?? {} };
-            return (
-              <ExtrasPillField
-                key={f.key}
-                field={resolved}
-                showAllInitially
-                value={value.extras?.[f.key]}
-                autoFilled={!!value.auto?.[f.key]}
-                recommended={value.recommendations?.[f.key]}
-                onChange={(next) => {
-                  const { values, auto, recommendations } = applyCascade(
-                    f.key,
-                    next,
-                    writeCtx,
-                  );
-                  const cleaned: Record<string, string> = {};
-                  for (const [k, v] of Object.entries(values))
-                    if (v !== undefined) cleaned[k] = v;
-                  onChange({ extras: cleaned, auto, recommendations });
-                }}
-              >
-                {isColorField && (
-                  <BackdropColorField
-                    value={value.extras?.[f.key]}
-                    onChange={(next) => {
-                      const { values, auto, recommendations } = applyCascade(
-                        f.key,
-                        next,
-                        writeCtx,
-                      );
-                      const cleaned: Record<string, string> = {};
-                      for (const [k, v] of Object.entries(values))
-                        if (v !== undefined) cleaned[k] = v;
-                      onChange({ extras: cleaned, auto, recommendations });
-                    }}
-                  />
-                )}
-              </ExtrasPillField>
-            );
-          };
-
+        const renderField = (f: typeof fields[number]) => {
+          const isColorField =
+            f.key === "backdrop_color" ||
+            f.key === "backdrop_color_a" ||
+            f.key === "backdrop_color_b";
+          const resolved = f.presetsResolver
+            ? { ...f, presets: f.presetsResolver(ctx) }
+            : f;
+          const writeCtx: SceneCtx = { ...ctx, values: value.extras ?? {} };
           return (
-            <>
-              {ENV_GROUPS.map((g) => {
-                const groupFields = fields.filter((f) => g.keys.includes(f.key));
-                if (groupFields.length === 0) return null;
-                const filledCount = groupFields.filter(
-                  (f) => !!value.extras?.[f.key],
-                ).length;
-                return (
-                  <StageCGroup
-                    key={g.label}
-                    label={g.label}
-                    defaultOpen={g.defaultOpen}
-                    count={filledCount}
-                  >
-                    {groupFields.map(renderField)}
-                  </StageCGroup>
+            <ExtrasPillField
+              key={f.key}
+              field={resolved}
+              showAllInitially
+              value={value.extras?.[f.key]}
+              autoFilled={!!value.auto?.[f.key]}
+              recommended={value.recommendations?.[f.key]}
+              onChange={(next) => {
+                const { values, auto, recommendations } = applyCascade(
+                  f.key,
+                  next,
+                  writeCtx,
                 );
-              })}
-            </>
+                const cleaned: Record<string, string> = {};
+                for (const [k, v] of Object.entries(values))
+                  if (v !== undefined) cleaned[k] = v;
+                onChange({ extras: cleaned, auto, recommendations });
+              }}
+            >
+              {isColorField && (
+                <BackdropColorField
+                  value={value.extras?.[f.key]}
+                  onChange={(next) => {
+                    const { values, auto, recommendations } = applyCascade(
+                      f.key,
+                      next,
+                      writeCtx,
+                    );
+                    const cleaned: Record<string, string> = {};
+                    for (const [k, v] of Object.entries(values))
+                      if (v !== undefined) cleaned[k] = v;
+                    onChange({ extras: cleaned, auto, recommendations });
+                  }}
+                />
+              )}
+            </ExtrasPillField>
           );
-        })()}
-      </div>
+        };
+
+        // Render every applicable fine-tuning field as a flat Section,
+        // preserving the original group ordering.
+        const orderedKeys = ENV_GROUPS.flatMap((g) => g.keys);
+        const ordered = [
+          ...fields.filter((f) => orderedKeys.includes(f.key))
+            .sort(
+              (a, b) =>
+                orderedKeys.indexOf(a.key) - orderedKeys.indexOf(b.key),
+            ),
+          ...fields.filter((f) => !orderedKeys.includes(f.key)),
+        ];
+        return <>{ordered.map(renderField)}</>;
+      })()}
+
 
       <Section label="Avoid in this scene">
         <Textarea
