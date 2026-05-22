@@ -161,6 +161,9 @@ export function FashionQuestions({ value, onChange }: Props) {
 
     </div>
   );
+}
+
+
 
 
 
