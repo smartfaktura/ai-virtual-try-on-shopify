@@ -1,40 +1,62 @@
-## Phase 7m — Wizard chrome & residual legacy cleanup
+## Phase 7n — Cast/ethnicity prompt-plumbing & stale-comment cleanup
 
-Another sweep after 7l. Focused on small but real bugs around the wizard's step header (reference flow), the Review summary, and one dead validation rule that hasn't fired since Phase 7k.
+Another sweep after 7m. Three real issues found, all caused by Phase 7k/7j leftovers that the previous polish rounds didn't catch.
 
 ### Issues found
 
-1. **Reference flow shows the wrong title on step 4.**
-   `META_REFERENCE` only overrides step 3 (Reference & intent). On step 4 the user sees the **Cast** UI, but the header still reads `"Scene aesthetic — Pick the kind of scene you want — we'll match the rest"` (inherited from `META_WIZARD`). Should read `"Cast & product interaction"`.
+1. **`cast.extras.ethnicity` is rendered as an ugly fallback string in prompts.**
+   Phase 7k added the `EthnicityChips` UI which writes `cast.extras.ethnicity`. But `ethnicity` is intentionally **not** in `CAST_EXTRAS_FIELDS` (so it doesn't render as a duplicate pill block). The downstream consequence in `assembleSceneDirective.ts`:
+   ```
+   const knownCastKeys = new Set(CAST_EXTRAS_FIELDS.map((f) => f.key));
+   for (const [k, v] of Object.entries(castExtras)) {
+     if (!knownCastKeys.has(k) && v?.trim()) {
+       lines.push(`Cast style (${k}): ${v.trim()}.`);   // ← ethnicity hits this
+     }
+   }
+   ```
+   Prompts ship with `Cast style (ethnicity): Pan-European.` instead of a clean `Ethnicity: Pan-European.`. Same problem appears in **Step5Review**: the Cast bucket maps `CAST_EXTRAS_FIELDS` only, so the user's ethnicity choice is invisible in the summary.
 
-2. **Sub-family chip is appended to reference step 3.**
-   `stepShowsSubFamily = step === 3 || 4 || 5` adds `· Sub-family` to the title. On reference flow step 3 the screen is "Reference & intent" — the sub-family chip there is noise.
+2. **`cast.diversity` is dead code in the prompt pipeline.**
+   `buildCastDirective.ts:83-84` still reads `cast.diversity` via `DIVERSITY_OPTIONS` and appends it to the cast descriptor. The wizard hasn't written `cast.diversity` since Phase 7k — `EthnicityChips` writes `cast.extras.ethnicity` instead. The line is dead for new scenes; only legacy data triggers it, and even then it conflicts with the new ethnicity path. Should be removed for prompt hygiene.
 
-3. **Step5Review hides the user's free-text notes.**
-   Both `base.notes` (Scene-level notes) and `cast.note` (Cast note) are written by the wizard but never surfaced in the Summary card. Avoid is shown; Notes is not. Users lose visibility of what they typed.
-
-4. **Dead validation rule in `combinationGuards.ts`.**
-   The "night + clear" warning still keys off `base.time_of_day === "night"`, but that field was retired in Phase 7k — the wizard now writes `extras.time_of_day_detail`. The warning has been silently dead since 7k. Either re-wire it to read the detail string, or drop it.
+3. **Stale step-map docstring in `useWizardState.ts`.**
+   The header comment claims:
+   ```
+   3 Scene aesthetic (wizard) | Reference & intent (reference)
+   4 Cast & product interaction (BOTH flows)
+   ```
+   But `BrandSceneWizard.tsx` actually wires wizard flow as **step 3 = Cast** and **step 4 = Scene aesthetic** (since the Phase 7i reorder). Future maintainers will trust the comment and get confused. Pure docs fix, but worth correcting.
 
 ### Fixes
 
-**`wizard/BrandSceneWizard.tsx`**
-- Add `4: { title: "Cast & product interaction", subtitle: "Who's in the scene and how they relate to the product" }` to `META_REFERENCE`.
-- Tighten the sub-family chip: `const stepShowsSubFamily = (step === 3 && !isReference) || step === 4 || step === 5;` so reference step 3 stays clean.
+**`prompt/assembleSceneDirective.ts`** — surface ethnicity as a first-class line before the unknown-key fallback loop:
+```ts
+if (castExtras.ethnicity?.trim()) {
+  lines.push(`Ethnicity: ${castExtras.ethnicity.trim()}.`);
+}
+```
+…and extend `knownCastKeys` with `"ethnicity"` so the fallback loop no longer double-emits it.
 
-**`wizard/steps/Step5Review.tsx`** — extend the Scene bucket with a `Notes` row (from `base.notes`, truncated) and the Cast bucket with a `Cast note` row (from `cast.note`, truncated). Both already pass through `Bucket`'s value-filter so empty values stay hidden.
+**`prompt/buildCastDirective.ts`** — drop the dead `cast.diversity` branch (and the `DIVERSITY_OPTIONS` import). Keep the `Diversity` type import removed too. Old-scene `diversity` values stop appearing in prompts; ethnicity (via `extras.ethnicity`) is the single source of truth.
 
-**`wizard/rules/combinationGuards.ts`** — replace the dead night/clear check with a read against `base.extras?.time_of_day_detail` (case-insensitive `startsWith("night")` or `startsWith("after dark")`), so the existing soft warning fires again. Keep the same `severity: "warn"` + message.
+**`wizard/steps/Step5Review.tsx`** — Cast bucket: prepend an explicit `{ label: "Ethnicity", value: castExtras.ethnicity }` row so the user sees it in the summary alongside the other cast fields.
+
+**`wizard/useWizardState.ts`** — correct the step-map docblock to match reality:
+```
+3 Cast & product interaction (wizard) | Reference & intent (reference)
+4 Scene aesthetic (wizard) | Cast & product interaction (reference)
+```
 
 ### Tests
 
-New `wizard-polish-7m.test.tsx`:
-- `META_REFERENCE` resolves step 4 title to "Cast & product interaction".
-- Step5Review renders `Notes` row when `base.notes` is set, and `Cast note` row when `cast.note` is set; both omitted when empty.
-- `combinationGuards.warnings(...)` returns the night-clear warning when `extras.time_of_day_detail` starts with "Night" and `weather === "clear"`, and silence otherwise.
+New `wizard-polish-7n.test.tsx`:
+- `assembleSceneDirective` emits `Ethnicity: Pan-European.` (not `Cast style (ethnicity): …`) when `cast.extras.ethnicity` is set.
+- `assembleSceneDirective` emits **only one** ethnicity line (no double-emit via the unknown-key fallback).
+- `buildCastDirective` no longer references `cast.diversity` — passing a legacy `diversity` value does not append a descriptor.
+- `Step5Review` renders an `Ethnicity` row when `cast.extras.ethnicity` is set, and omits it when unset.
 
 ### Files
-- **Edited**: `wizard/BrandSceneWizard.tsx`, `wizard/steps/Step5Review.tsx`, `wizard/rules/combinationGuards.ts`.
-- **New**: `__tests__/wizard-polish-7m.test.tsx`.
+- **Edited**: `prompt/assembleSceneDirective.ts`, `prompt/buildCastDirective.ts`, `wizard/steps/Step5Review.tsx`, `wizard/useWizardState.ts`.
+- **New**: `__tests__/wizard-polish-7n.test.tsx`.
 
-No DB / schema / generation behavior changes. The `placement_hint`, `base.aesthetic`, `base.mood`, `base.lighting`, `base.framing`, `cast.diversity` legacy fields stay in place for back-compat read paths and aren't touched here.
+No DB / schema / type-contract changes. Legacy `cast.diversity` field stays on the type for back-compat reads (the schema still accepts it), it just stops getting rendered in prompts.

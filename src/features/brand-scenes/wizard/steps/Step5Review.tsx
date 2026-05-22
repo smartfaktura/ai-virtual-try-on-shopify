@@ -187,6 +187,7 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
         { label: "Body-part focus", value: cast.body_part_focus && humanize(cast.body_part_focus) },
         { label: "Hands on product", value: cast.hands_on_product && humanize(cast.hands_on_product) },
         { label: "Wardrobe", value: cast.wardrobe_custom ?? cast.wardrobe_color },
+        { label: "Ethnicity", value: castExtras.ethnicity },
         ...CAST_EXTRAS_FIELDS.map((f) => ({
           label: f.label,
           value: castExtras[f.key],

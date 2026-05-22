@@ -155,11 +155,20 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
 
   // Cast extras (skin, hair, makeup, pose energy, storytelling…)
   const castExtras = answers.cast?.extras ?? {};
+  // Phase 7n — ethnicity is written by the bespoke EthnicityChips UI (not in
+  // CAST_EXTRAS_FIELDS). Emit it as a clean "Ethnicity:" line so it doesn't
+  // fall into the unknown-key fallback as "Cast style (ethnicity): …".
+  if (castExtras.ethnicity?.trim()) {
+    lines.push(`Ethnicity: ${castExtras.ethnicity.trim()}.`);
+  }
   for (const f of CAST_EXTRAS_FIELDS) {
     const v = castExtras[f.key];
     if (v && v.trim()) lines.push(`${f.prefix}: ${v.trim()}.`);
   }
-  const knownCastKeys = new Set(CAST_EXTRAS_FIELDS.map((f) => f.key));
+  const knownCastKeys = new Set<string>([
+    ...CAST_EXTRAS_FIELDS.map((f) => f.key),
+    "ethnicity",
+  ]);
   for (const [k, v] of Object.entries(castExtras)) {
     if (!knownCastKeys.has(k) && v?.trim()) {
       lines.push(`Cast style (${k}): ${v.trim()}.`);
