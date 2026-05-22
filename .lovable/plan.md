@@ -1,64 +1,97 @@
-# Phase 7q — Brand Scenes wizard UI/UX polish
+## Phase 7r — Brand Scene Wizard UX cleanup
 
-Bug sweep based on the user's four specific complaints: redundant copy, off-size pills, strange collapsed-section behavior, and the jarring "jump to bottom" after pressing Next.
+Pure frontend/presentation pass. No DB, no prompt-assembler, no schema changes.
 
-## Bugs found
+### 1. Bug: "Gender mix" with 1 person
+Step 4 (Cast) renders the same "Gender mix" multiselect for every cast preset that has people, including `solo` and `hands`. Mixing makes no sense for 1 subject.
 
-### BUG-1 — Scroll-to-top is silently broken
-`BrandSceneWizard.tsx` runs `window.scrollTo(0)` on every step change, then walks ancestors of `[data-wizard-root]` resetting their scrollTop. But:
-- No element in the tree sets `data-wizard-root`, so the walker does nothing.
-- The wizard renders inside AppShell's `<main id="app-main-scroll" class="overflow-y-auto">`. `window.scrollTo` does not move that container.
+Fix in `Step4Cast.tsx`:
+- Rename label dynamically: `Gender` when `preset ∈ {solo, hands}`, `Gender mix` only when `preset ∈ {two, group}`.
+- For `solo`/`hands`, render single-select chips (collapse `gender` array to one entry on click). Stored value stays an array for schema parity.
+- Same treatment for `Age feel` (solo = 1 age band; group keeps multiselect).
 
-Result: after Next, the new step renders at whatever scroll offset the user was at — perceived as "hopping to bottom".
+### 2. "Build" lives in the wrong section
+`build` is currently rendered inside the Stage-C "More creative dials" extras loop at the bottom of Step 4. Users expect it near the people dials.
 
-**Fix:** reset `document.getElementById("app-main-scroll")?.scrollTo({ top: 0 })` plus `window.scrollTo(0)` as fallback. Drop the dead walker.
+Fix:
+- Add an explicit `<Section label="Build">` block right after Vibe (only when `hasPeople && !isReplicate`), wired to `cast.extras.build` using `buildsForCast(preset)`.
+- Filter `build` out of the `applicableFields(...)` extras loop so it doesn't appear twice.
 
-### BUG-2 — `autoFocus` on already-open custom inputs steals scroll on step entry
-`PaletteBlock` (Step3BaseAnswers L570) and `PillFieldInner` (L648) initialize `showCustom = !!current.length` and then render `<Input autoFocus>`. When the user re-enters Step 4 (aesthetic) with a previously-typed custom palette, the input mounts already open → browser scrolls it into view → page jumps. Same pattern in `Step3BaseAnswers` PaletteBlock.
+### 3. Ethnicity subtitle duplicated
+`Section label="Ethnicity / casting hint"` wraps `EthnicityChips`, which renders its own `Ethnicity / casting hint` header + info tooltip — same label printed twice.
 
-**Fix:** remove `autoFocus` from these two inputs. Keep it on `ExtrasPillField` (only opens via explicit user click during the current step) and `SettingPicker` search (mounted via user toggle).
+Fix:
+- Drop the outer `<Section label="Ethnicity / casting hint">` wrapper in `Step4Cast.tsx`; render `<EthnicityChips />` directly. Keep the inner header + tooltip (it owns the explanation).
 
-### BUG-3 — Subtitle text breaks brand voice rule
-`META_WIZARD` / `META_REFERENCE` subtitles end with periods ("Pick a starting point — wizard inputs or a reference image."). Project memory: *no terminal periods in single-sentence subtitles / empty-state descriptions*.
+### 4. Kill the "+ Show all" / "− Tuned only" button
+Reads like dev jargon and creates a second hidden layer on top of the Stage-C collapsibles.
 
-**Fix:** strip trailing periods from all 8 subtitles.
+Fix in `components/Section.tsx`:
+- Remove the expandable toggle entirely. `Section` becomes a plain wrapper.
+- For sections that previously toggled expansion (Cast preset, Interaction, Scale, Camera & lens, DOF, Palette, Finish), pass the full list directly. Tuned-first ordering is preserved by sorting `resolved.*` matches to the front and appending the remainder muted (`opacity-60`) so users still see "what we recommend" without a hidden mode.
+- Update `Step3BaseAnswers.tsx` and `Step4Cast.tsx` callers: replace `(expanded) => ...` render-props with the sorted list helper.
 
-### BUG-4 — Redundant "Category-tuned · fashion · activewear" chip
-The step title already appends `· {subFamilyLabel}` (e.g. "Scene aesthetic · Activewear"). The chip at the top of Step3BaseAnswers repeats the same info one row below.
+### 5. "Category details" step is redundant
+Step 5 (`Step4ModuleQuestions`) re-asks shot context already chosen in Step 4 (e.g. shot type, framing). For modules without truly unique fields it's noise.
 
-**Fix:** delete the chip block (L142–146 of `Step3BaseAnswers.tsx`).
+Fix:
+- Audit `modules/{fashion,footwear,eyewear}/questions.ts` and remove any field whose answer is already captured by Step 4 (scene_type, setting, body_part_focus, hands_on_product, camera_angle_*, cast/interaction). Keep only module-specific dials (e.g. fashion fit/silhouette, footwear lacing/closure, eyewear lens tint).
+- If after pruning a module has 0 questions, auto-skip Step 5 (gating already allows this — add the skip in `BrandSceneWizard.handleNext`).
+- Rename step header from "Category details" to `"{SubFamily} specifics"` — clarifies it's *not* re-asking the scene.
 
-### BUG-5 — "Stage A / Stage B / Stage C" engineering jargon leaks into UI
-Section headers read `Stage A · Scene type`, `Stage B · Setting / environment`, `Stage C · More creative dials`. Users don't know what stages are.
+### 6. "More creative dials" header doesn't match the flow
+Header is engineering-y and sits inside "Scene aesthetic" with no visual demarcation.
 
-**Fix:** drop "Stage A ·" and "Stage B ·" prefixes (sections stand alone). Rename the Stage C header to `More creative dials`. Drop the analogous `More cast & styling dials` wrapper in Step4Cast — keep the divider, drop the label.
+Fix in `Step3BaseAnswers.tsx`:
+- Rename group header to `Optional fine-tuning`.
+- Add one-line helper underneath: `Skip this — we'll pick smart defaults`.
+- Visually de-emphasize (smaller, muted) so users know it's safe to ignore.
 
-### BUG-6 — Double-collapse inside Stage C groups feels strange
-A `StageCGroup` (chevron-collapsible) contains `ExtrasPillField` items, and each one wraps its chips in a `Section` with its own `+ Show all` toggle. So when you open a group, every field inside *is itself collapsed* to 8 chips with another mini-toggle. Two collapse mechanisms layered.
+### 7. Gray Next button gives no signal
+Today the disabled reason only appears in a tooltip. On mobile (the current 440px viewport) there is no hover → tooltip never shows.
 
-**Fix:** pass `showAllInitially` to every `ExtrasPillField` rendered inside a `StageCGroup`. The outer chevron handles bulk collapse; inside, all presets render flat. Removes the inner "+ Show all" toggle and the half-truncated chip rows.
+Fix in `WizardLayout.tsx`:
+- Always render `nextDisabledReason` as inline text right above the Back/Next row (`text-[12px] text-destructive/80`) when present.
+- Keep the existing scroll-to-missing-section behavior on click.
+- Add a pulsing dot next to the section label of every required-but-empty `Section` (Section already has `data-missing` plumbing — wire it from each step by passing `missing={!value}` to required Sections).
 
-### BUG-7 — Collapsed `StageCGroup` shows no summary
-Each chevron-collapsed group shows only its label. Users can't tell which dials inside are already filled.
+### 8. Quiz mode — Quick vs Detailed
+Address the "20 boxes from first view" complaint without rebuilding the flow.
 
-**Fix:** add a `count` prop. Header renders `{label}` plus a small `· N set` suffix when count > 0. Step3BaseAnswers computes count per group from `value.extras`.
+Fix:
+- Add a top-of-step toggle on **Step 4 (Aesthetic)** and **Step 5 (Specifics)**:
+  - **Quick** (default): show only required Section + Scene type + Setting. Everything else is replaced by a single `+ Customize` button that expands the full panel.
+  - **Detailed**: current full view.
+- Toggle state lives in component-local `useState` (no schema). Choice is remembered per session via `sessionStorage`.
+- Quick mode lets the user reach Step 6 (Preview) after answering ~3 questions; smart defaults from existing `resolved.*` registry fill the rest.
 
-### BUG-8 — Chips too large on mobile (440px viewport)
-`Chip` is fixed at `px-4 py-2 text-sm whitespace-nowrap`. Long labels like *"Walking past camera"*, *"Dappled through leaves"*, *"Pan-European"* combined with that padding push only 2 chips per row at 440 CSS px, making 20-option sections extremely tall and exaggerating the scroll problem.
+### 9. Wording polish (brand voice rule)
+- Step 4 subtitle: "Pick the kind of scene you want — we'll match the rest" (already clean, no period).
+- Section hints: drop terminal periods on single-sentence hints in `Section.hint`, `SceneTypePicker`, `SettingPicker`.
 
-**Fix:** tighten to `px-3 py-1.5 text-[13px]` on mobile, restore `sm:px-4 sm:py-2 sm:text-sm` on ≥ sm. Apply identically to `AddChip` so they line up. No change to colors or shape.
+### Files to touch
+**Modified**
+- `src/features/brand-scenes/wizard/components/Section.tsx`
+- `src/features/brand-scenes/wizard/components/EthnicityChips.tsx` (no change — verified inner header is the source of truth)
+- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
+- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx`
+- `src/features/brand-scenes/wizard/steps/Step4ModuleQuestions.tsx`
+- `src/features/brand-scenes/wizard/WizardLayout.tsx`
+- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` (auto-skip Step 5 when 0 questions)
+- `src/features/brand-scenes/modules/{fashion,footwear,eyewear}/questions.ts` (prune redundant fields)
 
-## Out of scope
-- Reworking the actual section order or merging "Brand voice / Aesthetic era / Realism level" into one card (structural, separate phase).
-- Touching backend, prompt assembler, or saved-scene shape.
-- Visual redesign of the wizard chrome — keep current layout and tokens.
+**New**
+- `src/features/brand-scenes/wizard/components/QuickDetailedToggle.tsx`
+- `src/features/brand-scenes/__tests__/wizard-polish-7r.test.tsx` — unit tests covering:
+  - Gender label flips to "Gender" for solo/hands, "Gender mix" for two/group
+  - Build chip rendered once, near Vibe, not in extras loop
+  - EthnicityChips header rendered exactly once
+  - `Section` exports no `expandable` prop / no "Show all" text anywhere
+  - `WizardLayout` shows `nextDisabledReason` inline on disabled
+  - Pruned module questions absent from `questions.ts`
 
-## Files
-- **Edit** `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` — scroll fix + subtitle cleanup.
-- **Edit** `src/features/brand-scenes/wizard/components/Chip.tsx` — responsive sizing.
-- **Edit** `src/features/brand-scenes/wizard/components/StageCGroup.tsx` — accept `count`, render summary.
-- **Edit** `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` — remove tuning chip, drop Stage prefixes, pass `showAllInitially`, supply per-group count, remove `autoFocus` from PaletteBlock + PillFieldInner.
-- **Edit** `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — drop wrapper label.
-- **New** `src/features/brand-scenes/__tests__/wizard-polish-7q.test.tsx` — assertions: subtitles have no trailing period; `Chip` has responsive class; `StageCGroup` renders count when provided; scroll handler resolves the main element id.
-
-No DB / schema / type changes. No effect on saved scenes.
+### Out of scope
+- Restructuring step order or merging Cast + Aesthetic into one step
+- Prompt assembler changes (data shape unchanged)
+- Backend / scene saving / publishing logic
+- Visual redesign beyond the rewording + hierarchy fixes above
