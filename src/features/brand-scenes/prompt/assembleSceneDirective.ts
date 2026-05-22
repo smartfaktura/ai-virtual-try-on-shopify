@@ -30,40 +30,65 @@ import {
 } from "../wizard/constants/extras";
 
 /**
- * Canonical-order assembler. Skips empty sections; returns a single
- * newline-joined string suitable for direct use in a prompt.
+ * Canonical scene-directive assembler. Produces a structured, Gemini-style
+ * prompt grouped under section headers (ROLE / SUBJECT / SCENE / CAMERA /
+ * COLOR & FINISH / STYLING DETAILS / CAST DETAILS / OUTPUT / NEGATIVE /
+ * NOTES / REFERENCE / NAME). Sections with no data are omitted.
+ *
+ * Individual lines preserve their canonical "Key: value." form so downstream
+ * grep-style tests and matchers continue to work.
+ *
  * Aspect ratio is HARD-CODED to 4:5.
  */
 export function assembleSceneDirective(answers: BrandSceneAnswers): string {
-  const lines: string[] = [];
   const base = answers.base ?? {};
 
+  // ---- Per-section line buckets ----
+  const subject: string[] = [];
+  const scene: string[] = [];
+  const camera: string[] = [];
+  const color: string[] = [];
+  const styling: string[] = [];
+  const castDetails: string[] = [];
+  const output: string[] = [];
+  const negative: string[] = [];
+  const notes: string[] = [];
+  const reference: string[] = [];
+  const name: string[] = [];
+
+  // ----- REFERENCE -----
   const refLine =
     answers.source === "reference"
       ? buildReferenceDirective(answers.reference_intent)
       : "";
-  if (refLine) lines.push(refLine);
+  if (refLine) reference.push(refLine);
 
-  if (base.scene_type) lines.push(`Scene type: ${base.scene_type.replace(/_/g, " ")}.`);
-  else if (base.aesthetic) lines.push(`Scene type: ${base.aesthetic}.`);
+  // ----- SUBJECT (cast + scale) -----
+  if (answers.cast) subject.push(buildCastDirective(answers.cast));
+  if (answers.scale) {
+    subject.push(
+      buildScaleDirective(answers.scale, { castPreset: answers.cast?.preset }),
+    );
+  }
 
-  // Setting + surface
+  // ----- SCENE -----
+  if (base.scene_type) scene.push(`Scene type: ${base.scene_type.replace(/_/g, " ")}.`);
+  else if (base.aesthetic) scene.push(`Scene type: ${base.aesthetic}.`);
+
   if (base.setting) {
     const surface = metaX(SURFACES, base.surface);
-    lines.push(
+    scene.push(
       `Setting: ${base.setting}${surface ? ` on ${surface.directive}` : ""}.`,
     );
   } else if (base.surface) {
     const surface = metaX(SURFACES, base.surface)!;
-    lines.push(`Surface: ${surface.directive}.`);
+    scene.push(`Surface: ${surface.directive}.`);
   }
 
-  if (base.weather) lines.push(`Weather: ${base.weather}.`);
+  if (base.weather) scene.push(`Weather: ${base.weather}.`);
   if (base.season && base.season !== "seasonless") {
-    lines.push(`Season: ${base.season}.`);
+    scene.push(`Season: ${base.season}.`);
   }
-  // Phase 7k: legacy `base.time_of_day` retired. `extras.time_of_day_detail`
-  // is the single source of truth and gets emitted by the extras loop below.
 
   // Mood / brand voice / era / realism
   const moodParts: string[] = [];
@@ -74,37 +99,38 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   if (era) moodParts.push(era.directive);
   const realism = metaX(REALISM_LEVELS, base.realism);
   if (realism) moodParts.push(realism.directive);
-  if (moodParts.length) lines.push(`Mood: ${moodParts.join(" — ")}.`);
+  if (moodParts.length) scene.push(`Mood: ${moodParts.join(" — ")}.`);
 
-  // Lighting + shadows
+  // Lighting + shadows → scene
   const lightingParts: string[] = [];
   if (base.lighting) lightingParts.push(base.lighting);
   const shadow = metaX(SHADOWS, base.shadows);
   if (shadow) lightingParts.push(shadow.directive);
-  if (lightingParts.length) lines.push(`Lighting: ${lightingParts.join(" — ")}.`);
+  if (lightingParts.length) scene.push(`Lighting: ${lightingParts.join(" — ")}.`);
 
-  // Camera + DoF
+  // ----- CAMERA -----
   const lensMeta = meta(SCENE_LENSES, base.lens);
   const dofMeta = meta(SCENE_DEPTH_OF_FIELD, base.depth_of_field);
   if (lensMeta || dofMeta) {
     const camParts: string[] = [];
     if (lensMeta) camParts.push(`Camera: ${lensMeta.directive}`);
     if (dofMeta) camParts.push(`Depth of field: ${dofMeta.directive}`);
-    lines.push(camParts.join(" — ") + ".");
+    camera.push(camParts.join(" — ") + ".");
   }
 
-  // Framing + composition + negative space
+  // Framing + composition + negative space → camera
   const composeParts: string[] = [];
   if (base.framing) composeParts.push(base.framing);
   const composition = metaX(COMPOSITIONS, base.composition);
   if (composition) composeParts.push(composition.directive);
   const negSpace = metaX(NEG_SPACE_INTENTS, base.negative_space_intent);
   if (negSpace && negSpace.directive) composeParts.push(negSpace.directive);
-  if (composeParts.length) lines.push(`Framing: ${composeParts.join(" — ")}.`);
+  if (composeParts.length) camera.push(`Framing: ${composeParts.join(" — ")}.`);
 
-  lines.push("Aspect ratio: 4:5 (portrait, vertical) — REQUIRED.");
+  const focus = metaX(SUBJECT_FOCUSES, base.subject_focus);
+  if (focus) camera.push(`Subject focus: ${focus.directive}.`);
 
-  // Palette + contrast + saturation + finish
+  // ----- COLOR & FINISH -----
   const paletteDirective =
     base.palette_custom ?? meta(SCENE_PALETTES, base.palette_preset)?.directive;
   const colorParts: string[] = [];
@@ -113,57 +139,32 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   if (contrast) colorParts.push(contrast.directive);
   const saturation = metaX(SATURATIONS, base.saturation);
   if (saturation) colorParts.push(saturation.directive);
-  if (colorParts.length) lines.push(`Color: ${colorParts.join(" — ")}.`);
+  if (colorParts.length) color.push(`Color: ${colorParts.join(" — ")}.`);
 
   const finishMeta = meta(SCENE_FINISHES, base.finish);
-  if (finishMeta) lines.push(`Finish: ${finishMeta.directive}.`);
+  if (finishMeta) color.push(`Finish: ${finishMeta.directive}.`);
 
-  const focus = metaX(SUBJECT_FOCUSES, base.subject_focus);
-  if (focus) lines.push(`Subject focus: ${focus.directive}.`);
-
-  if (answers.cast) lines.push(buildCastDirective(answers.cast));
-  if (answers.scale) {
-    lines.push(
-      buildScaleDirective(answers.scale, {
-        castPreset: answers.cast?.preset,
-      }),
-    );
-  }
-
-  if (typeof base.prop_density === "number") {
-    lines.push(
-      `Prop density: ${PROP_DENSITY_LABELS[base.prop_density]} (level ${base.prop_density}/4).`,
-    );
-  }
-
-  const useCase = metaX(OUTPUT_USE_CASES, base.output_use_case);
-  if (useCase) lines.push(`Output: ${useCase.directive}.`);
-
-  // Phase 7d — scene extras (backdrop, floor, camera-angle, light, motion…)
+  // ----- STYLING DETAILS (scene extras: backdrop, floor, camera-angle, light, motion…) -----
   const sceneExtras = base.extras ?? {};
   for (const f of SCENE_EXTRAS_FIELDS) {
     const v = sceneExtras[f.key];
-    if (v && v.trim()) lines.push(`${f.prefix}: ${v.trim()}.`);
+    if (v && v.trim()) styling.push(`${f.prefix}: ${v.trim()}.`);
   }
-  // Unknown extras (forward-compat) — render as Style lines.
   const knownSceneKeys = new Set(SCENE_EXTRAS_FIELDS.map((f) => f.key));
   for (const [k, v] of Object.entries(sceneExtras)) {
     if (!knownSceneKeys.has(k) && v?.trim()) {
-      lines.push(`Style (${k}): ${v.trim()}.`);
+      styling.push(`Style (${k}): ${v.trim()}.`);
     }
   }
 
-  // Cast extras (skin, hair, makeup, pose energy, storytelling…)
+  // ----- CAST DETAILS -----
   const castExtras = answers.cast?.extras ?? {};
-  // Phase 7n — ethnicity is written by the bespoke EthnicityChips UI (not in
-  // CAST_EXTRAS_FIELDS). Emit it as a clean "Ethnicity:" line so it doesn't
-  // fall into the unknown-key fallback as "Cast style (ethnicity): …".
   if (castExtras.ethnicity?.trim()) {
-    lines.push(`Ethnicity: ${castExtras.ethnicity.trim()}.`);
+    castDetails.push(`Ethnicity: ${castExtras.ethnicity.trim()}.`);
   }
   for (const f of CAST_EXTRAS_FIELDS) {
     const v = castExtras[f.key];
-    if (v && v.trim()) lines.push(`${f.prefix}: ${v.trim()}.`);
+    if (v && v.trim()) castDetails.push(`${f.prefix}: ${v.trim()}.`);
   }
   const knownCastKeys = new Set<string>([
     ...CAST_EXTRAS_FIELDS.map((f) => f.key),
@@ -171,18 +172,61 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   ]);
   for (const [k, v] of Object.entries(castExtras)) {
     if (!knownCastKeys.has(k) && v?.trim()) {
-      lines.push(`Cast style (${k}): ${v.trim()}.`);
+      castDetails.push(`Cast style (${k}): ${v.trim()}.`);
     }
   }
 
-  if (base.notes?.trim()) lines.push(`Notes: ${base.notes.trim()}.`);
-
-  const avoid = base.avoid?.trim() || answers.negative_note?.trim();
-  if (avoid) lines.push(`Avoid: ${avoid}.`);
-
-  if (answers.name?.trim()) {
-    lines.push(`Scene name: ${answers.name.trim()}.`);
+  // ----- OUTPUT -----
+  output.push("Aspect ratio: 4:5 (portrait, vertical) — REQUIRED.");
+  if (typeof base.prop_density === "number") {
+    output.push(
+      `Prop density: ${PROP_DENSITY_LABELS[base.prop_density]} (level ${base.prop_density}/4).`,
+    );
   }
+  const useCase = metaX(OUTPUT_USE_CASES, base.output_use_case);
+  if (useCase) output.push(`Output: ${useCase.directive}.`);
 
-  return lines.filter(Boolean).join("\n");
+  // ----- NEGATIVE -----
+  const avoid = base.avoid?.trim() || answers.negative_note?.trim();
+  if (avoid) negative.push(`Avoid: ${avoid}.`);
+
+  // ----- NOTES -----
+  if (base.notes?.trim()) notes.push(`Notes: ${base.notes.trim()}.`);
+
+  // ----- NAME -----
+  if (answers.name?.trim()) name.push(`Scene name: ${answers.name.trim()}.`);
+
+  // ----- Compose final string with section headers -----
+  const out: string[] = [];
+  const push = (header: string, lines: string[]) => {
+    const filtered = lines.filter(Boolean);
+    if (!filtered.length) return;
+    out.push(header);
+    for (const l of filtered) out.push(l);
+    out.push(""); // blank spacer between sections
+  };
+
+  // Role header always present.
+  out.push("ROLE");
+  out.push(
+    "You are a commercial product-photography art director. Produce one hero image for an e-commerce brand scene.",
+  );
+  out.push("");
+
+  push("SUBJECT", subject);
+  push("SCENE", scene);
+  push("CAMERA", camera);
+  push("COLOR & FINISH", color);
+  push("STYLING DETAILS", styling);
+  push("CAST DETAILS", castDetails);
+  push("OUTPUT", output);
+  push("NEGATIVE", negative);
+  push("NOTES", notes);
+  push("REFERENCE", reference);
+  push("NAME", name);
+
+  // Trim trailing blank line.
+  while (out.length && out[out.length - 1] === "") out.pop();
+
+  return out.join("\n");
 }
