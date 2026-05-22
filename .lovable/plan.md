@@ -246,12 +246,16 @@ The compiler must produce output in the same shape as the activewear example: mu
 
 ### Tokens the compiler injects
 
-- `[PRODUCT IMAGE]` — always inserted when a product is attached. Carries a fidelity block (cut, color, fabric, seams, stitching, proportions). Wording is family-specific (activewear talks about compression fit and waistband; fragrance talks about glass, cap, label; footwear talks about sole, upper, laces; jewelry talks about stones, settings, metal finish).
-- `[MODEL IMAGE]` — inserted only when subject mode includes a person AND a model reference exists. Carries the identity-preservation block (facial structure, body proportions, skin tone, posture, natural presence) tuned to the family vibe (athletic, elegant, candid, etc.).
-- `{{productName}}` — replaced with the chosen product's name.
-- `{{brandLogoText}}` — same as existing system, only injected when scene calls for visible packaging.
-- `{{subcategoryNoun}}` — e.g. "activewear", "perfume bottle", "sneakers" — auto-derived from family + subcategory.
-- `{{poseSentence}}`, `{{environmentSentence}}`, `{{stylingSentence}}` — pre-baked rich sentences from each option's `prosePromptFragment` (see below).
+**Scenes are reusable templates.** A saved scene gets paired with a different product (and optionally a different model) every time it's generated. So the saved prompt MUST always contain the reference tokens — they are not optional and not conditional on what's attached during authoring.
+
+- `[PRODUCT IMAGE]` — **always inserted in every saved scene, no exceptions.** The fidelity paragraph is rendered family-specific (activewear: compression fit, waistband, seams / fragrance: glass, cap, label / footwear: sole, upper, laces / jewelry: stones, setting, metal finish, etc.).
+- `[MODEL IMAGE]` — **always inserted whenever the subject mode includes a person** (full / hands / faceless), regardless of whether a model reference exists at authoring time. Carries the identity-preservation block (facial structure, body proportions, skin tone, posture, natural presence) tuned to the family vibe. Omitted only for pure product-only / surface / flat-lay modes.
+- `{{productName}}` — left as a literal token in the saved prompt; the existing generator pipeline resolves it at run time.
+- `{{brandLogoText}}` — same as existing system, left literal, resolved at run time when packaging is visible.
+- `{{subcategoryNoun}}` — resolved at compile time (e.g. "activewear", "perfume bottle", "sneakers"), since it's a property of the scene itself.
+- `{{poseSentence}}`, `{{environmentSentence}}`, `{{stylingSentence}}` — resolved at compile time from each option's `prosePromptFragment`.
+
+The validator does NOT swap `[PRODUCT IMAGE]` or `[MODEL IMAGE]` for generic phrasing — they're required tokens in the saved output. The existing reference-attachment system in the product visuals pipeline is what binds them to real files at generation time, exactly like every other prompt in the app.
 
 ### Option schema, upgraded
 
@@ -300,7 +304,7 @@ Still travels two ways:
 
 ### Validator additions
 
-- Verify every `[PRODUCT IMAGE]` / `[MODEL IMAGE]` token has a matching attached reference; if not, swap the fidelity paragraph for a generic equivalent ("the provided product / model") so the prompt never ships with unresolved tokens.
+- Guarantee `[PRODUCT IMAGE]` appears in every saved prompt, and `[MODEL IMAGE]` appears whenever the subject mode includes a person. If a compile pass would emit a prompt missing a required token, the validator re-injects the family-specific fidelity / identity paragraph before save.
 - Deduplicate palette entries by hex; keep the first label seen.
 - Strip the negative styling line for any item the user explicitly opted into (e.g. don't say "no sunglasses" if the user chose sunglasses as an accessory).
 
