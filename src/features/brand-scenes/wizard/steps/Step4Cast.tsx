@@ -510,8 +510,10 @@ export function Step4Cast({
         </Section>
       )}
 
+      {showScaleSection && <GroupHeader title="Product scale" />}
       {/* Scale — only show when there's more than one relevant option for this family */}
       {showScaleSection && (
+
         <Section label="Product scale" required missing={!scale?.preset}>
           <>
             <div className="flex flex-wrap gap-2">
