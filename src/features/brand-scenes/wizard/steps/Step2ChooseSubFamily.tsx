@@ -13,9 +13,9 @@ export function Step2ChooseSubFamily({ module, value, onChange }: Props) {
 
   if (subs.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center">
         <p className="text-sm text-muted-foreground">
-          No sub-families defined for this family yet.
+          No sub-families defined for this family yet
         </p>
       </div>
     );
@@ -23,15 +23,15 @@ export function Step2ChooseSubFamily({ module, value, onChange }: Props) {
 
   if (subs.length === 1) {
     return (
-      <div className="rounded-2xl border border-border bg-muted/40 p-6">
+      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           Auto-selected
         </div>
-        <div className="text-base font-semibold tracking-tight mt-1">
+        <div className="text-base font-semibold tracking-tight mt-1.5">
           {subs[0].label}
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          This family has a single sub-family. Continue to the next step.
+        <p className="text-xs text-muted-foreground mt-2">
+          This family has a single sub-family — continue to the next step
         </p>
       </div>
     );
