@@ -3,7 +3,7 @@
  * Mirrors the 6 new columns added to product_image_scenes in Phase 1.
  */
 
-import type { BrandSceneModule } from "./constants";
+import type { BrandSceneModule, BrandSceneSource } from "./constants";
 
 /** Shared base shape every category wizard collects. */
 export interface BrandSceneBaseAnswers {
@@ -17,18 +17,23 @@ export interface BrandSceneBaseAnswers {
 }
 
 /**
- * Discriminated union keyed by `module`. Phase 2 ships only the shared
- * base shape + an empty per-module slot. Each category wizard fills its
- * own slot in its dedicated future phase.
+ * Discriminated union keyed by `module`. Each category wizard fills its
+ * own slot in its dedicated phase.
  */
 export interface BrandSceneAnswers {
+  /** Origin of the scene inputs. */
+  source: BrandSceneSource;
   module: BrandSceneModule;
+  /** Sub-family slug — becomes category_collection on the saved row. */
+  sub_family: string;
   base: BrandSceneBaseAnswers;
-  /** Per-module question payload. Filled in by category wizards later. */
+  /** Per-module question payload. Filled in by category wizards. */
   module_answers: Record<string, unknown>;
+  /** Storage paths of uploaded reference images (only when source === 'reference'). */
+  reference_image_paths?: string[];
 }
 
-/** Full row shape (post-insert) matching product_image_scenes + brand fields. */
+/** Full row shape (post-insert). */
 export interface BrandScene {
   id: string;
   scene_key: string;
@@ -45,7 +50,7 @@ export interface BrandScene {
   updated_at: string;
 }
 
-/** Pre-insert wizard payload (no id, no timestamps). */
+/** Pre-insert wizard payload. */
 export interface BrandSceneDraft {
   scene_key: string;
   category_collection: string;

@@ -8,10 +8,21 @@ import {
   BRAND_SCENE_KEY_PREFIX,
   BRAND_SCENE_MODULES,
   BRAND_SCENE_SCHEMA_VERSION,
+  BRAND_SCENE_SOURCES,
+  BRAND_SCENE_REFERENCE_MAX_IMAGES,
+  type BrandSceneModule,
 } from "./constants";
+import {
+  FAMILY_ID_TO_NAME,
+  SUB_TYPES_BY_FAMILY,
+} from "@/lib/onboardingTaxonomy";
 
 export const brandSceneModuleSchema = z.enum(
   BRAND_SCENE_MODULES as unknown as [string, ...string[]],
+);
+
+export const brandSceneSourceSchema = z.enum(
+  BRAND_SCENE_SOURCES as unknown as [string, ...string[]],
 );
 
 export const brandSceneBaseAnswersSchema = z
@@ -26,13 +37,43 @@ export const brandSceneBaseAnswersSchema = z
   })
   .strict();
 
+/** Sub-family slugs allowed for a given module id. */
+export function getSubFamilySlugs(module: BrandSceneModule): string[] {
+  const famName = FAMILY_ID_TO_NAME[module];
+  if (!famName) return [];
+  return (SUB_TYPES_BY_FAMILY[famName] ?? []).map((s) => s.slug);
+}
+
 export const brandSceneAnswersSchema = z
   .object({
+    source: brandSceneSourceSchema,
     module: brandSceneModuleSchema,
+    sub_family: z.string().trim().min(1),
     base: brandSceneBaseAnswersSchema,
     module_answers: z.record(z.unknown()),
+    reference_image_paths: z
+      .array(z.string().trim().min(1).max(512))
+      .max(BRAND_SCENE_REFERENCE_MAX_IMAGES)
+      .optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (v) => getSubFamilySlugs(v.module as BrandSceneModule).includes(v.sub_family),
+    {
+      message: "sub_family must belong to the chosen module's family",
+      path: ["sub_family"],
+    },
+  )
+  .refine(
+    (v) =>
+      v.source === "wizard"
+        ? !v.reference_image_paths || v.reference_image_paths.length === 0
+        : true,
+    {
+      message: "reference_image_paths only allowed when source is 'reference'",
+      path: ["reference_image_paths"],
+    },
+  );
 
 export const brandSceneDraftSchema = z
   .object({
@@ -64,9 +105,16 @@ export const brandSceneDraftSchema = z
   .refine(
     (v) => v.brand_scene_answers.module === v.brand_scene_module,
     {
-      message:
-        "brand_scene_answers.module must match brand_scene_module",
+      message: "brand_scene_answers.module must match brand_scene_module",
       path: ["brand_scene_answers", "module"],
+    },
+  )
+  .refine(
+    (v) => v.brand_scene_answers.sub_family === v.category_collection,
+    {
+      message:
+        "category_collection must equal brand_scene_answers.sub_family",
+      path: ["category_collection"],
     },
   );
 
