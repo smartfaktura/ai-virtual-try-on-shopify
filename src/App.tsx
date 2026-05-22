@@ -82,6 +82,7 @@ const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
 const BrandModelNew = lazy(() => import('@/pages/BrandModelNew'));
 const BrandScenes = lazy(() => import('@/pages/BrandScenes'));
+const BrandSceneWizard = lazy(() => import('@/pages/BrandSceneWizard'));
 const AppPricing = lazy(() => import('@/pages/AppPricing'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
@@ -279,6 +280,7 @@ const App = () => {
                         <Route path="/models" element={<BrandModels />} />
                         <Route path="/models/new" element={<BrandModelNew />} />
                         <Route path="/brand-scenes" element={<BrandScenes />} />
+                        <Route path="/brand-scenes/new" element={<BrandSceneWizard />} />
                         <Route path="/admin/models" element={<AdminModels />} />
                         <Route path="/admin/scenes" element={<AdminScenes />} />
                         <Route path="/admin/scene-upload" element={<AdminSceneUpload />} />
