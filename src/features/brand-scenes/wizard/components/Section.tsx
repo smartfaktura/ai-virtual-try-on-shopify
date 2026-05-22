@@ -36,7 +36,7 @@ export function Section({
           ? "ring-1 ring-destructive/60 ring-offset-4 ring-offset-background animate-pulse"
           : "",
       ].join(" ")}
-      data-section-label={label}
+      data-section-label={typeof label === "string" ? label : undefined}
       data-required={required ? "1" : undefined}
       data-missing={missing ? "1" : undefined}
     >
