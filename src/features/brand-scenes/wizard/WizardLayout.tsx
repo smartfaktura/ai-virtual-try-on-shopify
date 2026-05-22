@@ -162,7 +162,7 @@ export function WizardLayout({
       <div className="min-h-[280px]">{children}</div>
 
       {/* Sticky bottom floating card — mirrors ProductImagesStickyBar */}
-      <div className="sticky bottom-4 z-20 max-w-full min-w-0 overflow-hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="sticky bottom-4 z-20 max-w-full min-w-0 pb-[env(safe-area-inset-bottom)]">
         <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
           {nextDisabled && nextDisabledReason && !isLastStep && (
             <div className="px-3 sm:px-4 pt-3 pb-0 flex">
