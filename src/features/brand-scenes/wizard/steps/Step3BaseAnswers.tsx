@@ -573,7 +573,6 @@ function PaletteBlock({
           onChange={(e) => onCustom(e.target.value)}
           placeholder="Describe your own palette (e.g. dusty rose + cocoa)"
           className="rounded-xl mt-2"
-          autoFocus
         />
       )}
     </div>
