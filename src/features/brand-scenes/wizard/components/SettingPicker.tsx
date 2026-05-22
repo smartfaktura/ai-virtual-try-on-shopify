@@ -54,7 +54,7 @@ export function SettingPicker({ options, value, onChange, emptyHint }: Props) {
           className="rounded-2xl border border-dashed border-border bg-transparent px-4 py-3 text-left text-sm text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors inline-flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Add your own
+          Custom setting
         </button>
       </div>
       {customOpen && (
