@@ -484,6 +484,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Apparel angle",
     presets: CAMERA_ANGLES_APPAREL,
     category: ["fashion"],
+    hideWhenNoCast: true,
   },
   {
     key: "camera_angle_footwear",
@@ -492,6 +493,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Footwear angle",
     presets: CAMERA_ANGLES_FOOTWEAR,
     category: ["footwear"],
+    hideWhenNoCast: true,
   },
   {
     key: "camera_angle_eyewear",
@@ -500,6 +502,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Eyewear angle",
     presets: CAMERA_ANGLES_EYEWEAR,
     category: ["eyewear"],
+    hideWhenNoCast: true,
   },
   {
     key: "camera_angle_jewelry",
@@ -508,6 +511,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
     prefix: "Jewelry angle",
     presets: CAMERA_ANGLES_JEWELRY,
     category: ["jewelry", "watches"],
+    hideWhenNoCast: true,
   },
   {
     key: "camera_angle_tabletop",
