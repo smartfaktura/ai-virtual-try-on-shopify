@@ -22,7 +22,6 @@ import {
   type SceneFinish,
 } from "../constants/scene";
 import {
-  SURFACES,
   PROP_DENSITY_LABELS,
   COLOR_CONTRASTS,
   SATURATIONS,
@@ -32,9 +31,7 @@ import {
   AESTHETIC_ERAS,
   REALISM_LEVELS,
   BRAND_VOICES,
-  OUTPUT_USE_CASES,
   SUBJECT_FOCUSES,
-  type Surface,
   type PropDensity,
   type ColorContrast,
   type Saturation,
@@ -44,16 +41,18 @@ import {
   type AestheticEra,
   type RealismLevel,
   type BrandVoice,
-  type OutputUseCase,
   type SubjectFocus,
 } from "../constants/sceneExtras";
 import { SCENE_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { resolveAll, tuningLabel } from "../registry/resolvePresets";
+import type { CastPreset } from "../constants/cast";
 
 interface Props {
   module?: BrandSceneModule;
   subFamily?: string;
+  /** Cast preset from Step 3 — used to hide person-only dials when cast = none. */
+  castPreset?: CastPreset;
   value: BrandSceneBaseAnswers;
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
