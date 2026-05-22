@@ -24,6 +24,10 @@ import {
   PROP_DENSITY_LABELS,
   metaX,
 } from "../wizard/constants/sceneExtras";
+import {
+  SCENE_EXTRAS_FIELDS,
+  CAST_EXTRAS_FIELDS,
+} from "../wizard/constants/extras";
 
 /**
  * Canonical-order assembler. Skips empty sections; returns a single
