@@ -87,6 +87,11 @@ export interface BrandSceneBaseAnswers {
   // Phase 7d — flexible dial map. Keys come from `wizard/constants/extras`.
   // Values are free strings (preset label OR user custom entry).
   extras?: Record<string, string>;
+
+  // Phase 7f — scene type (Stage A) for progressive flow + rule context.
+  scene_type?: "studio" | "indoor_lifestyle" | "outdoor_location" | "outdoor_nature" | "architectural" | "tabletop";
+  /** Marks which extras keys were auto-cascaded (vs user-picked). */
+  auto?: Record<string, true>;
 }
 
 export interface BrandSceneCast {
