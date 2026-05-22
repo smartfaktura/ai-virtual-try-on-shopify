@@ -78,7 +78,8 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
     () => resolveAll(module, subFamily),
     [module, subFamily],
   );
-  const tuned = tuningLabel(module, subFamily);
+
+
 
   // Filter helpers — expanded=true returns the full global list.
   const lenses = (expanded: boolean) =>
