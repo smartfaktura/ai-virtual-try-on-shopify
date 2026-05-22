@@ -530,6 +530,12 @@ export function Step4Cast({
         )}
       </Section>
 
+      {isQuick && !isReplicate && (
+        <div className="pt-2">
+          <CustomizeLink label="+ Customize cast & styling" />
+        </div>
+      )}
+
       {/* Warnings */}
       {warnings.length > 0 && (
         <div className="space-y-2">
