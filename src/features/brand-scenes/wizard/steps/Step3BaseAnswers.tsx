@@ -70,12 +70,8 @@ interface Props {
 
 
 
-const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
-  { value: "morning", label: "Morning" },
-  { value: "midday", label: "Midday" },
-  { value: "evening", label: "Evening" },
-  { value: "night", label: "Night" },
-];
+// Phase 7k — top-level "Time of day" removed (was duplicating Stage C → Light & time
+// → "Time of day (detail)"). The 14-option detail field is the single source of truth.
 
 export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChange }: Props) {
   const resolved = useMemo(
@@ -197,23 +193,7 @@ export function Step3BaseAnswers({ module, subFamily, castPreset, value, onChang
         />
       </Section>
 
-      <Section label="Time of day">
-        <div className="flex flex-wrap gap-2">
-          {TIMES_OF_DAY.map((t) => (
-            <Chip
-              key={t.value}
-              active={value.time_of_day === t.value}
-              onClick={() =>
-                onChange({
-                  time_of_day: value.time_of_day === t.value ? undefined : t.value,
-                })
-              }
-            >
-              {t.label}
-            </Chip>
-          ))}
-        </div>
-      </Section>
+      {/* Phase 7k — "Time of day" moved to Stage C → Light & time (single field). */}
 
 
       <Section label="Brand voice">
