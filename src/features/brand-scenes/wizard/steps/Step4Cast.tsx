@@ -167,7 +167,7 @@ export function Step4Cast({
     );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <GroupHeader title="People" />
       {/* Cast preset */}
       <Section label="Who's in the shot" required missing={!preset}>
@@ -726,7 +726,7 @@ function NumberField({
 
 function GroupHeader({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="pt-2 first:pt-0">
+    <div className="pt-6 border-t border-border/40 first:pt-0 first:border-t-0">
       <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         {title}
       </div>
