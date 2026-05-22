@@ -596,7 +596,7 @@ export function Step4Cast({
       )}
 
       {/* Cast note */}
-      {!isReplicate && (
+      {!isQuick && !isReplicate && (
         <Section label="Note">
           <Textarea
             value={cast?.note ?? ""}
