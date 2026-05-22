@@ -15,34 +15,31 @@ import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy
 
 const RESPONSIBILITY_KEY = "brand-scenes:responsibility-accepted";
 
-const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
+const META_WIZARD: Record<WizardStep, { title: string; subtitle?: string }> = {
   0: {
-    title: "How do you want to build this scene?",
-    subtitle: "Pick a starting point — wizard inputs or a reference image",
+    title: "Where do we start?",
   },
   1: {
-    title: "Choose a product family",
-    subtitle: "Matches the 12 canonical families used across the app",
+    title: "Pick a product family",
   },
   2: {
-    title: "Choose a sub-family",
-    subtitle: "This becomes the catalog group your scene lives under",
+    title: "Pick a sub-family",
   },
   3: {
-    title: "Who's in the scene",
-    subtitle: "Pick the cast and how they relate to the product",
+    title: "Who's in the scene?",
+    subtitle: "Cast and how they relate to the product",
   },
   4: {
-    title: "Environment",
-    subtitle: "Where the shot lives — pick the world it sits in",
+    title: "Where does it happen?",
+    subtitle: "Scene type first — settings unlock after",
   },
   5: {
-    title: "Photography & edit",
-    subtitle: "How the shot is taken and graded",
+    title: "How is the photo taken?",
+    subtitle: "Camera, light, color, finish — plain-language",
   },
   6: {
-    title: "Preview & pick",
-    subtitle: "Review the scene, then generate 3 variations",
+    title: "Preview",
+    subtitle: "Review and generate variations",
   },
   7: {
     title: "Review",
@@ -50,22 +47,23 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
   },
 };
 
-const META_REFERENCE: Record<WizardStep, { title: string; subtitle: string }> = {
+const META_REFERENCE: Record<WizardStep, { title: string; subtitle?: string }> = {
   ...META_WIZARD,
   3: {
     title: "Reference & intent",
     subtitle: "Your image plus how strictly the AI should follow it",
   },
   4: {
-    title: "Who's in the scene",
-    subtitle: "Pick the cast and how they relate to the product",
+    title: "Who's in the scene?",
+    subtitle: "Cast and how they relate to the product",
   },
 };
 
+
 export function BrandSceneWizard() {
   const { state, dispatch } = useWizardState();
-  const { step, answers } = state;
-  const isReference = answers.source === "reference";
+  const { step, answers, sourcePicked } = state;
+  const isReference = sourcePicked && answers.source === "reference";
   const META = isReference ? META_REFERENCE : META_WIZARD;
 
   // Phase 7j — append sub-family label to step titles so the user sees the wizard is tuned.
@@ -106,14 +104,18 @@ export function BrandSceneWizard() {
   const wizardCastStep = isReference ? 4 : 3;
 
   const nextDisabled =
+    (step === 0 && !sourcePicked) ||
     (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
     (step === wizardCastStep && !castStepValid);
 
+
   let nextDisabledReason: string | null = null;
   if (nextDisabled) {
-    if (step === 1) nextDisabledReason = "Pick a product family";
+    if (step === 0) nextDisabledReason = "Pick a starting point";
+    else if (step === 1) nextDisabledReason = "Pick a product family";
+
     else if (step === 2) nextDisabledReason = "Pick a sub-family";
     else if (step === 3 && isReference) {
       if (!answers.reference_image_paths?.length)
@@ -183,11 +185,12 @@ export function BrandSceneWizard() {
     <>
       <WizardLayout
         step={step}
-        source={answers.source}
+        source={sourcePicked ? answers.source : "wizard"}
         title={title}
         subtitle={subtitle}
         onBack={handleBack}
         onNext={handleNext}
+        onGoToStep={(s) => dispatch({ type: "setStep", step: s })}
         nextDisabled={nextDisabled}
         nextDisabledReason={nextDisabledReason}
         isLastStep={step === 7}
@@ -195,11 +198,13 @@ export function BrandSceneWizard() {
         {step === 0 && (
           <Step0ChooseSource
             value={answers.source}
+            picked={sourcePicked}
             onChange={(s) => dispatch({ type: "setSource", source: s })}
             onPickReference={handlePickReference}
             referenceUnlocked={sessionAccepted || state.responsibilityAccepted}
           />
         )}
+
 
         {step === 1 && (
           <Step1ChooseModule

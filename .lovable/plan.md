@@ -1,140 +1,185 @@
-## Brand Scenes wizard — restructure steps 4-7
+## Brand Scenes Wizard — UX polish (Phase 7x)
 
-Split today's giant "Scene aesthetic" step into two focused steps (Environment + Photography & edit), drop the awkward "Category specifics" step, redesign Preview & pick, and lock the raw payload + compiled prompt behind admin only.
+Scope: `/app/brand-scenes/new`. UI/presentation only — no DB, no generation backend, no schema changes.
 
-### New step map
+### 1. Sticky bottom bar — match Product Images
 
-```text
-0 Source
-1 Family
-2 Sub-family
-3 Who's in the scene        (cast — unchanged)
-4 Environment               (NEW — the world the shot lives in)
-5 Photography & edit        (NEW — how the shot is taken and graded)
-6 Preview & pick            (redesigned)
-7 Review                    (admin-only payload + compiled prompt)
+Replace the current `WizardLayout` footer (full-width sticky bar that sits flush with the page edges) with the same rounded "floating card" pattern used in `ProductImagesStickyBar`:
+
+- `sticky bottom-4`, rounded-xl card, border + `bg-card/95` + backdrop-blur + shadow, safe-area padding.
+- Left: tiny step dots (filled = done, scaled = current) + tiny label of current step.
+- Right: Back (pill, ghost/outline) + Next (pill, primary, with `ArrowRight`).
+- On the last step keep the disabled "Save scene" tooltip behavior.
+- Keep current "soft-disabled → scroll to first `[data-missing="1"]`" behavior.
+- Keep the inline destructive reason text above the bar when Next is soft-disabled.
+- Mobile: stacked variant identical to ProductImages (dots + label row, then buttons row).
+
+File: `src/features/brand-scenes/wizard/WizardLayout.tsx` — swap footer markup, drop the full-width border-top style.
+
+### 2. Step 0 — no preselected card
+
+`useWizardState.ts` initial state currently sets `source: "wizard"`, which makes the first card look preselected.
+
+- Make `answers.source` optional (`BrandSceneSource | undefined`) in `BrandSceneAnswers`, default `undefined`.
+- `Step0ChooseSource` renders neither card as active until the user clicks.
+- `BrandSceneWizard` gates Next on step 0 with `!answers.source` → reason "Pick a starting point".
+- Anywhere `answers.source === "reference"` is checked, treat `undefined` as wizard for layout purposes only (steps array, META) — actual gating still requires a pick before leaving step 0.
+
+### 3. Step 1 — remove subtitle on family page
+
+Drop `subtitle` for step 1 in `META_WIZARD` (`"Matches the 12 canonical families used across the app"`). Title stays.
+
+### 4. Step 2 — remove the "Sub-family" tag chip
+
+In `Step2ChooseSubFamily.tsx`, remove the `tag="Sub-family"` prop on each `WizardCard`. The page title already says "Choose a sub-family".
+
+Also drop the redundant `META_WIZARD[2].subtitle` ("This becomes the catalog group your scene lives under").
+
+### 5. Step progress — clickable to go back
+
+In `WizardLayout`:
+
+- Render each step bar as a button. Clicking a bar at index `i` where `i <= displayIdx` dispatches `setStep` to that step's `n`.
+- Forward steps stay disabled / non-interactive.
+- Add a step label under (or aria-label on) each bar so it's clear what each segment is. Use the existing `STEPS_WIZARD` / `STEPS_REFERENCE` labels.
+- Visually: thin progress bars stay, but become focusable buttons with hover ring; small label text under each segment on `sm+`. On mobile keep label-less bars to save space.
+
+Wire via a new `onGoToStep(step: WizardStep)` prop from `BrandSceneWizard`, which dispatches `setStep` only when target ≤ current and the step is in the active flow's step list.
+
+### 6. Cleaner step titles + helpers
+
+Tighten `META_WIZARD`:
+
+```
+0  "Where do we start?"               — (no subtitle)
+1  "Pick a product family"            — (no subtitle)
+2  "Pick a sub-family"                — (no subtitle)
+3  "Who's in the scene?"              "Cast and how they relate to the product"
+4  "Where does it happen?"            "Scene type first — settings unlock after"
+5  "How is the photo taken?"          "Camera, light, color, finish — plain-language"
+6  "Preview"                          "Review and generate variations"
+7  "Review"                           "Confirm before saving"
 ```
 
-The "Category specifics" step is removed entirely. Category-specific module questions (fashion/footwear/eyewear) have been the source of repeated complaints and the prompt already works without them. `answers.module_answers` stays in state with an empty default so saved-scene shape and the prompt builder don't break — no UI surfaces it.
+### 7. Step 4 (Environment) — scene type first, reveal rest after
 
-### Step 4 — Environment
+Restructure `Step4Environment.tsx` so initially only the **Scene type** picker is visible. The current "Pick a scene type above to unlock tailored settings" hint is replaced with a single primary card containing the picker.
 
-Pure "world / location / mood". Pulled out of today's `Step3BaseAnswers`:
+After `value.scene_type` is set:
 
-- Scene type
-- Setting / environment (unlocked once a scene type is picked)
-- Weather / atmosphere
-- Season
-- Brand voice
-- Aesthetic era
-- Prop density
-- Avoid in this scene (textarea)
-- Notes (textarea)
-- Collapsibles: "Backdrop & floor", "Light & time" (existing Stage-C groups)
+- A divider appears, then "Setting / environment", "Weather", "Season", "Brand voice", "Aesthetic era", "Prop density", "Avoid", "Notes", and the "Optional fine-tuning" group.
+- Mount these inside an animated container (simple `[hidden]` + transition or just conditional render — no motion library beyond what's already used).
+- If user clears `scene_type`, the secondary fields collapse again.
 
-### Step 5 — Photography & edit
+### 8. Step 5 (Photography & edit) — plain-language relabel
 
-Everything about how the photo is taken and graded:
+Rename the Section labels to friendly equivalents (and add a one-line helper under each label via a new optional `helper` prop on `Section`, or via an inline `<p className="text-xs text-muted-foreground">`):
 
-- Camera & lens
-- Depth of field
-- Composition geometry
-- Negative-space intent
-- Subject focus
-- Shadows / reflections
-- Realism level
-- Color palette anchor
-- Color contrast
-- Saturation
-- Finish / film look
-- Collapsibles: "Camera", "Composition & crop" (existing Stage-C groups)
+| Old | New | Helper |
+|---|---|---|
+| Camera & lens | Lens look | Wide = roomy and dramatic. Long = compressed and flattering. |
+| Depth of field | How blurry the background is | Shallow = creamy bokeh. Deep = everything in focus. |
+| Composition geometry | How the shot is composed | Where the product sits inside the frame. |
+| Negative-space intent | Empty space around the product | Tight = packed. Generous = lots of breathing room. |
+| Subject focus | What the eye lands on first | Product, model, or both equally. |
+| Shadows / reflections | Shadows | Soft = gentle. Hard = bold edges. |
+| Realism level | How realistic | Photo-real vs stylized. |
+| Color palette anchor | Color palette | Anchor color story for the shot. |
+| Color contrast | Contrast | How punchy lights vs darks should feel. |
+| Saturation | Color intensity | Muted, true, or vivid. |
+| Finish / film look | Film / finish look | Final grade — clean, filmic, glossy, etc. |
 
-Both new steps reuse the existing building blocks (`Section`, `ChipRow`, `PaletteBlock`, `StageCGroup`, `ExtrasPillField`, etc.) and write to the same `answers.base` object — no schema or prompt-builder changes. We just split the render into two files. The old `Step3BaseAnswers.tsx` is removed.
+Group label "Camera" → "Camera angle". "Composition & crop" → "Motion & crop".
 
-### Step 6 — Preview & pick (redesign)
+### 9. Better compiled prompt (Gemini-style)
 
-Today it shows a debug `<pre>` of the directive plus three empty dashed boxes. New layout:
+Rewrite `assembleSceneDirective` so the output reads like a structured Gemini image prompt instead of a flat list of `Key: value.` lines. Same inputs, much richer output.
 
-```text
-┌─────────────────────────────────────────────┐
-│  Ready to generate                          │
-│  3 variations · 4:5 · {cost} credits        │
-│                                             │
-│  Compact summary: who · where · how shot ·  │
-│  what to avoid                              │
-│                                             │
-│  [ Generate 3 variations ]  (primary CTA)   │
-└─────────────────────────────────────────────┘
+New structure (sections only emitted when relevant data exists):
 
-┌──────────┬──────────┬──────────┐
-│ Variant1 │ Variant2 │ Variant3 │   ← placeholders until backend exists
-└──────────┴──────────┴──────────┘
+```
+ROLE
+You are a commercial product-photography art director. Produce one
+hero image for an e-commerce brand scene.
+
+SUBJECT
+- Family: <family> / <sub-family>
+- Cast: <cast preset + interaction, scale, ethnicity if set>
+- Product scale: <…>
+
+SCENE
+- Scene type: <…>
+- Setting: <… on <surface>>
+- Weather / season: <…>
+- Time & light: <time_of_day_detail, light_direction, light_quality>
+- Mood: <mood — brand voice — era — realism, joined with em-dashes>
+
+CAMERA
+- Lens: <…>
+- Depth of field: <…>
+- Framing & composition: <framing — composition — negative-space>
+- Subject focus: <…>
+
+COLOR & FINISH
+- Palette: <preset directive or custom>
+- Contrast / saturation: <…>
+- Finish: <…>
+
+STYLING DETAILS (only if any extras present)
+- Backdrop: <backdrop_type, color/gradient, floor, studio_fx>
+- Other styling: <remaining scene extras as "label: value" bullets>
+
+CAST DETAILS (only if any cast extras present)
+- Skin / hair / makeup / pose / storytelling bullets
+
+OUTPUT
+- Aspect ratio: 4:5 (portrait) — REQUIRED.
+- Use case: <…> (if set)
+- Prop density: <label> (level n/4) (if set)
+
+NEGATIVE
+- Avoid: <…>
+
+NOTES
+- <free notes>
+
+REFERENCE (only if reference flow)
+- <reference directive>
+
+NAME
+- <scene name>
 ```
 
-- Top card: friendly summary built from the same row data Step 7 already produces. No raw JSON, no `<pre>` directive.
-- Primary action: "Generate 3 variations" button — stays disabled with a "Available in a later phase" tooltip (matches today's reality; backend not wired in this PR).
-- Admin-only extras, gated by `useIsAdmin().isAdmin`, rendered below the variant grid:
-  - Collapsible "Compiled prompt" panel showing `assembleSceneDirective(answers)`.
-  - Collapsible "Raw payload" panel showing the full `answers` JSON.
+Implementation:
 
-Note: the wizard page is already admin-gated, but the admin-view toggle (`useAdminView`) means even an admin can choose to see the customer view — so gating these panels on `isAdmin` (not `isRealAdmin`) keeps the customer-view preview clean.
+- Keep the existing helper imports (`meta`, `metaX`, etc.).
+- Build per-section string arrays; only push a section header + bullets when the array is non-empty.
+- Reuse `buildCastDirective`, `buildScaleDirective`, `buildReferenceDirective` outputs — embed them under SUBJECT / REFERENCE rather than as flat lines.
+- Group scene extras by the same `ENV_GROUPS` / `PHOTO_GROUPS` buckets used in the UI so the prompt mirrors the user's mental model. Backdrop/floor/light → SCENE. Camera-angle / composition_energy / crop_safety / motion → CAMERA.
+- Final string joins with `\n`. Add a small jsdoc explaining the format.
+- Update the existing `assembleSceneDirective` unit test snapshot(s) if any — search and adjust expected strings.
 
-### Step 7 — Review
-
-- For regular users (admin view off): keep the friendly `SummaryCard` (Scene / Look & light / Cast / Output buckets), keep the Avoid block, **drop the "Show payload" toggle entirely**.
-- For admins (admin view on): add an always-visible "Admin debug" block with:
-  1. **Compiled final prompt** — `assembleSceneDirective(answers)` in a monospace block.
-  2. **Full payload** — pretty-printed JSON of all of `answers` (base, base.extras, cast, cast.extras, module_answers, reference_*, scale, auto, recommendations).
-
-### Wizard plumbing
-
-`BrandSceneWizard.tsx`:
-- `META_WIZARD` updated:
-  - `4`: "Environment" / "Where the shot lives — pick the world it sits in"
-  - `5`: "Photography & edit" / "How the shot is taken and graded"
-  - `6`: "Preview & pick" / "Review the scene, then generate 3 variations"
-  - `7`: "Review" / "Confirm before saving"
-- `META_REFERENCE` unchanged in shape: reference flow stays 0 → 1 → 2 → 3 ref → 4 cast → 6 preview → 7 review. Reference flow does NOT get env/photo split (reference uploads bypass all base styling). Existing `step === 4 && isReference → setStep 6` skip stays.
-- Step routing in render switch:
-  - `step === 4 && !isReference` → `<Step4Environment>`
-  - `step === 5 && !isReference` → `<Step5Photography>` (replaces `Step4ModuleQuestions`)
-  - `step === 6` → redesigned `Step6PreviewAndPick`
-  - `step === 7` → `Step5Review` (with admin debug block inside)
-- Gating: remove `moduleStepValid`, `moduleHasCustomQuestions`, and the `step === 5 && !isReference && !moduleStepValid` branch from `nextDisabled` / `nextDisabledReason`. Photography step has no required fields → step 5 is always passable. `Step1ChooseModule` auto-skip-to-step-3 behavior unchanged.
-
-`useWizardState.ts`:
-- Step-map comment block updated to match the new flow.
-- No state shape changes.
-
-`WizardLayout.tsx`:
-- `STEPS_WIZARD` progress labels updated:
-  - `{ n: 3, label: "Cast" }`
-  - `{ n: 4, label: "Environment" }`
-  - `{ n: 5, label: "Photo & edit" }`
-  - `{ n: 6, label: "Preview" }`
-  - `{ n: 7, label: "Review" }`
-
-### Out of scope
-
-- No prompt-builder changes — `assembleSceneDirective` and `module_answers` remain untouched, so existing saved scenes render identically.
-- No DB / RLS / edge-function changes.
-- No changes to the reference flow.
-- Generation backend stays unimplemented; "Generate 3 variations" stays disabled.
+The admin "Compiled prompt" panel in Step 6 + Step 7 picks up the new output automatically.
 
 ### Files
 
-**New**
-- `src/features/brand-scenes/wizard/steps/Step4Environment.tsx`
-- `src/features/brand-scenes/wizard/steps/Step5Photography.tsx`
-
 **Modified**
-- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx`
-- `src/features/brand-scenes/wizard/WizardLayout.tsx`
-- `src/features/brand-scenes/wizard/useWizardState.ts`
-- `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`
-- `src/features/brand-scenes/wizard/steps/Step5Review.tsx`
+- `src/features/brand-scenes/wizard/WizardLayout.tsx` — new sticky bar styling + clickable progress
+- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` — META copy, step 0 gating, `onGoToStep`
+- `src/features/brand-scenes/wizard/useWizardState.ts` — `source: undefined` default
+- `src/features/brand-scenes/types.ts` — make `source` optional on `BrandSceneAnswers`
+- `src/features/brand-scenes/wizard/steps/Step0ChooseSource.tsx` — accept `undefined`
+- `src/features/brand-scenes/wizard/steps/Step2ChooseSubFamily.tsx` — drop tag
+- `src/features/brand-scenes/wizard/steps/Step4Environment.tsx` — scene-type-first reveal
+- `src/features/brand-scenes/wizard/steps/Step5Photography.tsx` — plain-language labels + helper text
+- `src/features/brand-scenes/wizard/components/Section.tsx` — optional `helper` prop
+- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — structured Gemini-style output
+- Any failing `assembleSceneDirective` test under `src/features/brand-scenes/__tests__/`
 
-**Deleted**
-- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx`
+**No changes**: prompt builders for cast/scale/reference, schemas, generation pipeline, RLS, edge functions.
 
-`Step4ModuleQuestions.tsx` and the module-specific `*Questions.tsx` / `is*StepValid` helpers stay on disk (no longer wired) — safer than deleting given existing test coverage and saved-scene shape compatibility.
+### Out of scope
+
+- Generation backend (still disabled CTA).
+- Reference-flow redesign beyond what's needed for step 0 gating.
+- Category-specific module questions (already removed in 7w).

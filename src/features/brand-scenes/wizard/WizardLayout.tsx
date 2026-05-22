@@ -1,5 +1,5 @@
 import { ReactNode, useRef } from "react";
-import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WizardStep } from "./useWizardState";
@@ -12,33 +12,32 @@ interface Props {
   subtitle?: string;
   onBack: () => void;
   onNext: () => void;
+  onGoToStep?: (step: WizardStep) => void;
   nextDisabled?: boolean;
-  /** Human-readable reason shown in a tooltip when Next is disabled. */
   nextDisabledReason?: string | null;
   isLastStep?: boolean;
   children: ReactNode;
 }
 
 const STEPS_WIZARD = [
-  { n: 0, label: "Source" },
-  { n: 1, label: "Family" },
-  { n: 2, label: "Sub-family" },
-  { n: 3, label: "Cast" },
-  { n: 4, label: "Environment" },
-  { n: 5, label: "Photo & edit" },
-  { n: 6, label: "Preview" },
-  { n: 7, label: "Review" },
+  { n: 0 as WizardStep, label: "Source" },
+  { n: 1 as WizardStep, label: "Family" },
+  { n: 2 as WizardStep, label: "Sub-family" },
+  { n: 3 as WizardStep, label: "Cast" },
+  { n: 4 as WizardStep, label: "Environment" },
+  { n: 5 as WizardStep, label: "Photo & edit" },
+  { n: 6 as WizardStep, label: "Preview" },
+  { n: 7 as WizardStep, label: "Review" },
 ] as const;
 
-// Reference path skips Step 5 (category details).
 const STEPS_REFERENCE = [
-  { n: 0, label: "Source" },
-  { n: 1, label: "Family" },
-  { n: 2, label: "Sub-family" },
-  { n: 3, label: "Reference" },
-  { n: 4, label: "Cast" },
-  { n: 6, label: "Preview" },
-  { n: 7, label: "Review" },
+  { n: 0 as WizardStep, label: "Source" },
+  { n: 1 as WizardStep, label: "Family" },
+  { n: 2 as WizardStep, label: "Sub-family" },
+  { n: 3 as WizardStep, label: "Reference" },
+  { n: 4 as WizardStep, label: "Cast" },
+  { n: 6 as WizardStep, label: "Preview" },
+  { n: 7 as WizardStep, label: "Review" },
 ] as const;
 
 export function WizardLayout({
@@ -48,6 +47,7 @@ export function WizardLayout({
   subtitle,
   onBack,
   onNext,
+  onGoToStep,
   nextDisabled,
   nextDisabledReason,
   isLastStep,
@@ -57,10 +57,9 @@ export function WizardLayout({
   const total = steps.length;
   const currentIdx = steps.findIndex((s) => s.n === step);
   const displayIdx = currentIdx >= 0 ? currentIdx : 0;
+  const currentLabel = steps[displayIdx]?.label ?? "";
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // When Next is "soft-disabled", clicking still scrolls to the first
-  // missing required Section + flashes it instead of doing nothing.
   const handleNextClick = () => {
     if (!nextDisabled) {
       onNext();
@@ -74,44 +73,84 @@ export function WizardLayout({
     }
   };
 
+  const ctaLabel = isLastStep ? "Save scene" : "Next";
+  const showGenIcon = false;
+
   const NextButton = (
     <Button
+      size="pill"
       onClick={handleNextClick}
-      // Keep visual disabled state, but allow the click to surface guidance.
       aria-disabled={nextDisabled || undefined}
-      className={[
-        "rounded-full font-semibold gap-2",
-        nextDisabled ? "opacity-50 hover:opacity-50" : "",
-      ].join(" ")}
+      disabled={isLastStep}
+      className={["gap-1.5", nextDisabled ? "opacity-50 hover:opacity-50" : ""].join(" ")}
     >
-      Next
-      <ArrowRight className="w-4 h-4" />
+      {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
+      {ctaLabel}
+      {!showGenIcon && !isLastStep && <ArrowRight className="w-3.5 h-3.5" />}
     </Button>
   );
 
   return (
-    <div ref={rootRef} className="max-w-3xl mx-auto space-y-8">
+    <div ref={rootRef} className="max-w-3xl mx-auto space-y-8 pb-2">
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         <Lock className="w-3 h-3" />
         Admin preview — Brand Scenes wizard
       </div>
 
-      <div className="flex items-center gap-2">
-        {steps.map((s, i) => (
-          <div key={s.n} className="flex items-center gap-2 flex-1">
-            <div
-              className={[
-                "h-1 flex-1 rounded-full transition-colors",
-                i <= displayIdx ? "bg-foreground" : "bg-border",
-              ].join(" ")}
-            />
-            {i === steps.length - 1 && (
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {displayIdx + 1}/{total}
-              </span>
-            )}
-          </div>
-        ))}
+      {/* Clickable step bars + labels */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          {steps.map((s, i) => {
+            const isPast = i < displayIdx;
+            const isCurrent = i === displayIdx;
+            const clickable = !!onGoToStep && i <= displayIdx;
+            return (
+              <button
+                key={s.n}
+                type="button"
+                onClick={clickable ? () => onGoToStep!(s.n) : undefined}
+                disabled={!clickable}
+                aria-label={`Go to step ${i + 1}: ${s.label}`}
+                aria-current={isCurrent ? "step" : undefined}
+                className={[
+                  "h-1 flex-1 rounded-full transition-colors outline-none",
+                  isPast || isCurrent ? "bg-foreground" : "bg-border",
+                  clickable
+                    ? "hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/40"
+                    : "cursor-default",
+                ].join(" ")}
+              />
+            );
+          })}
+          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+            {displayIdx + 1}/{total}
+          </span>
+        </div>
+        {/* Step labels (desktop) */}
+        <div className="hidden sm:flex items-start gap-2 pr-10">
+          {steps.map((s, i) => {
+            const isCurrent = i === displayIdx;
+            const clickable = !!onGoToStep && i <= displayIdx;
+            return (
+              <button
+                key={s.n}
+                type="button"
+                onClick={clickable ? () => onGoToStep!(s.n) : undefined}
+                disabled={!clickable}
+                className={[
+                  "flex-1 text-[10px] uppercase tracking-[0.14em] text-center truncate transition-colors",
+                  isCurrent
+                    ? "text-foreground font-medium"
+                    : clickable
+                      ? "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground/50 cursor-default",
+                ].join(" ")}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div>
@@ -125,12 +164,13 @@ export function WizardLayout({
         )}
       </div>
 
-      <div className="min-h-[280px] pb-4">{children}</div>
+      <div className="min-h-[280px]">{children}</div>
 
-      <div className="sticky bottom-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 bg-background/95 backdrop-blur-md border-t border-border">
+      {/* Sticky bottom floating card — mirrors ProductImagesStickyBar */}
+      <div className="sticky bottom-4 z-20 max-w-full min-w-0 overflow-hidden pb-[env(safe-area-inset-bottom)]">
         {nextDisabled && nextDisabledReason && !isLastStep && (
           <p
-            className="text-[12px] text-destructive/80 mb-2 flex items-center gap-1.5"
+            className="text-[12px] text-destructive/80 mb-2 flex items-center gap-1.5 px-1"
             data-testid="next-disabled-reason"
           >
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-destructive/70 animate-pulse" />
@@ -138,42 +178,124 @@ export function WizardLayout({
           </p>
         )}
 
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            disabled={step === 0}
-            className="rounded-full gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
+        <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
+          {/* Mobile: stacked */}
+          <div className="flex flex-col gap-2 p-3 sm:hidden">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {steps.map((s, i) => (
+                  <div
+                    key={s.n}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      i === displayIdx
+                        ? "bg-primary scale-125"
+                        : i < displayIdx
+                          ? "bg-primary/40"
+                          : "bg-border"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {currentLabel}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {step > 0 && (
+                <Button
+                  variant="outline"
+                  size="pill"
+                  className="flex-shrink-0"
+                  onClick={onBack}
+                >
+                  Back
+                </Button>
+              )}
+              {isLastStep ? (
+                <SaveTooltip>
+                  <Button size="pill" disabled className="gap-1.5 flex-1">
+                    Save scene
+                  </Button>
+                </SaveTooltip>
+              ) : nextDisabled && nextDisabledReason ? (
+                <DisabledTooltip reason={nextDisabledReason}>
+                  <span className="flex-1">{NextButton}</span>
+                </DisabledTooltip>
+              ) : (
+                <span className="flex-1">{NextButton}</span>
+              )}
+            </div>
+          </div>
 
-          {isLastStep ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
+          {/* Desktop: single row */}
+          <div className="hidden sm:flex items-center justify-between gap-3 p-3 sm:p-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-1">
+                {steps.map((s, i) => (
+                  <div
+                    key={s.n}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      i === displayIdx
+                        ? "bg-primary scale-125"
+                        : i < displayIdx
+                          ? "bg-primary/40"
+                          : "bg-border"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {currentLabel}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {step > 0 && (
+                <Button variant="outline" size="pill" onClick={onBack}>
+                  Back
+                </Button>
+              )}
+              {isLastStep ? (
+                <SaveTooltip>
                   <span tabIndex={0}>
-                    <Button disabled className="rounded-full font-semibold gap-2">
+                    <Button size="pill" disabled className="gap-1.5">
                       Save scene
                     </Button>
                   </span>
-                </TooltipTrigger>
-                <TooltipContent>Available in a later phase</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : nextDisabled && nextDisabledReason ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>{NextButton}</TooltipTrigger>
-                <TooltipContent>{nextDisabledReason}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            NextButton
-          )}
+                </SaveTooltip>
+              ) : nextDisabled && nextDisabledReason ? (
+                <DisabledTooltip reason={nextDisabledReason}>
+                  {NextButton}
+                </DisabledTooltip>
+              ) : (
+                NextButton
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function SaveTooltip({ children }: { children: ReactNode }) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent>Available in a later phase</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function DisabledTooltip({ children, reason }: { children: ReactNode; reason: string }) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent>{reason}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

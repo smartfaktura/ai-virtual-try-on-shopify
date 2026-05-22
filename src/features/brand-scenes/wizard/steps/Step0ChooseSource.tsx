@@ -4,6 +4,7 @@ import { WizardCard } from "../components/WizardCard";
 
 interface Props {
   value: BrandSceneSource;
+  picked: boolean;
   onChange: (s: BrandSceneSource) => void;
   onPickReference: () => void;
   referenceUnlocked: boolean;
@@ -11,6 +12,7 @@ interface Props {
 
 export function Step0ChooseSource({
   value,
+  picked,
   onChange,
   onPickReference,
   referenceUnlocked,
@@ -18,14 +20,14 @@ export function Step0ChooseSource({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <WizardCard
-        active={value === "wizard"}
+        active={picked && value === "wizard"}
         onClick={() => onChange("wizard")}
         icon={<Wand2 className="w-5 h-5" />}
         title="Build from the wizard"
         body="Answer a short series of brand questions. We turn them into a tailored scene."
       />
       <WizardCard
-        active={value === "reference"}
+        active={picked && value === "reference"}
         onClick={() => {
           if (referenceUnlocked) onChange("reference");
           else onPickReference();
