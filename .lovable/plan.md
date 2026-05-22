@@ -1,68 +1,140 @@
-## Step 3-5 polish pass
+## Brand Scenes wizard — restructure steps 4-7
 
-Pure UI/copy fixes. No prompt-builder or schema changes.
+Split today's giant "Scene aesthetic" step into two focused steps (Environment + Photography & edit), drop the awkward "Category specifics" step, redesign Preview & pick, and lock the raw payload + compiled prompt behind admin only.
 
-### 1. Step labels & section headers
+### New step map
 
-- BrandSceneWizard `META_WIZARD` step 3 title: `"Cast & product interaction"` → **"Who's in the scene"**, subtitle stays.
-- Step 4 wizard title: drop the `· {sub-family}` suffix on Step 4 (Scene aesthetic). Title becomes just **"Scene & mood"** (subtitle: "Pick the world — everything below tunes to it"). The `· Clothing` appendix is what's breaking the line in the screenshot.
-- Step 3 (cast) **keeps** the `· {sub-family}` suffix because the dials are family-aware; Step 5 keeps it.
+```text
+0 Source
+1 Family
+2 Sub-family
+3 Who's in the scene        (cast — unchanged)
+4 Environment               (NEW — the world the shot lives in)
+5 Photography & edit        (NEW — how the shot is taken and graded)
+6 Preview & pick            (redesigned)
+7 Review                    (admin-only payload + compiled prompt)
+```
 
-### 2. Step 3 (Cast) field renames
+The "Category specifics" step is removed entirely. Category-specific module questions (fashion/footwear/eyewear) have been the source of repeated complaints and the prompt already works without them. `answers.module_answers` stays in state with an empty default so saved-scene shape and the prompt builder don't break — no UI surfaces it.
 
-In `Step4Cast.tsx`:
-- `<Section label="Cast" required>` → **"Who's in the shot"**
-- `<Section label="Vibe">` → **"Energy / vibe"**
-- Gender section: keep "Gender" / "Gender mix"; rename **"Age feel" → "Age range"** and **"Age mix" → "Age range (mix)"**.
-- Subtitle row under `Optional styling`: rephrase to a single line: **"Optional styling — skip and we'll pick smart defaults"** (drop the standalone "Pose energy" / extra paragraph confusion by collapsing the two-line header into one).
+### Step 4 — Environment
 
-In `constants/cast.ts`:
-- `{ value: "none", label: "No people — product hero" }` → **"No people"** (short).
-- Hero/interaction label `{ value: "hero", label: "Hero — product only" }` → **"Product only"**.
+Pure "world / location / mood". Pulled out of today's `Step3BaseAnswers`:
 
-### 3. Required-interaction chips ordering
+- Scene type
+- Setting / environment (unlocked once a scene type is picked)
+- Weather / atmosphere
+- Season
+- Brand voice
+- Aesthetic era
+- Prop density
+- Avoid in this scene (textarea)
+- Notes (textarea)
+- Collapsibles: "Backdrop & floor", "Light & time" (existing Stage-C groups)
 
-In `Step4Cast.tsx` `visibleInteractions`, when the cast preset has interactions filtered by family, sort the resulting list so the family-tuned (recommended) options come first, falling back to the static order for the rest. Concretely: stable-sort by `resolved.interactions.indexOf(value)` ascending, with non-recommended pushed to the bottom.
+### Step 5 — Photography & edit
 
-### 4. EthnicityChips style alignment
+Everything about how the photo is taken and graded:
 
-`EthnicityChips.tsx` currently renders **bordered cards** with a two-line title+description grid — every other section uses pill `<Chip>`s. Rewrite the body as:
-- Same `<Section>` wrapper (with the Info tooltip merged into the label via a small inline icon) for consistent spacing.
-- Replace the card grid with a `flex flex-wrap gap-2` of pill `<Chip>`s using only the `label` text. Drop the `desc` line (move it into the chip's `title` attribute for hover).
-- Keeps the same value contract (`onChange(string | undefined)`).
+- Camera & lens
+- Depth of field
+- Composition geometry
+- Negative-space intent
+- Subject focus
+- Shadows / reflections
+- Realism level
+- Color palette anchor
+- Color contrast
+- Saturation
+- Finish / film look
+- Collapsibles: "Camera", "Composition & crop" (existing Stage-C groups)
 
-### 5. Step 4 (Scene aesthetic) copy fixes
+Both new steps reuse the existing building blocks (`Section`, `ChipRow`, `PaletteBlock`, `StageCGroup`, `ExtrasPillField`, etc.) and write to the same `answers.base` object — no schema or prompt-builder changes. We just split the render into two files. The old `Step3BaseAnswers.tsx` is removed.
 
-In `Step3BaseAnswers.tsx`:
-- Scene type section: drop the `hint="Pick the world — everything below tunes to it"` (it duplicates the page subtitle which we'll set in step 1 above).
-- Setting / environment section:
-  - Label stays **"Setting / environment"**.
-  - When no `sceneType` is picked: replace the empty-state placeholder text inside `SettingPicker` ("Pick a scene type first to see tailored settings") with a muted helper line above the picker reading **"Pick a scene type above first"** and hide the picker entirely until a scene type exists. This kills the duplicated "Pick a scene type..." appearing twice.
-- "Optional fine-tuning" header (line 343-352): collapse the two-line title+paragraph into one row: **"Optional fine-tuning — skip and we'll pick smart defaults"**. Mirror the same wording for Step 3 cast's "Optional styling" block so they read identically.
+### Step 6 — Preview & pick (redesign)
 
-### 6. Sticky bottom Back / Next bar
+Today it shows a debug `<pre>` of the directive plus three empty dashed boxes. New layout:
 
-`WizardLayout.tsx` currently puts Back/Next inline at the end of the page. Match the workflows page pattern (sticky footer):
+```text
+┌─────────────────────────────────────────────┐
+│  Ready to generate                          │
+│  3 variations · 4:5 · {cost} credits        │
+│                                             │
+│  Compact summary: who · where · how shot ·  │
+│  what to avoid                              │
+│                                             │
+│  [ Generate 3 variations ]  (primary CTA)   │
+└─────────────────────────────────────────────┘
 
-- Wrap the Back/Next row in a `<div className="sticky bottom-0 z-20 -mx-* px-* py-4 bg-background/95 backdrop-blur border-t border-border">` so it stays visible while scrolling long steps. Keep the existing `nextDisabledReason` pill rendering right above it inside the sticky area so the reason travels with the button.
-- Use the same horizontal padding as the surrounding `max-w-3xl mx-auto` container so the bar visually spans the page.
-- Reference style: same as `/app/workflows` bottom action bar.
+┌──────────┬──────────┬──────────┐
+│ Variant1 │ Variant2 │ Variant3 │   ← placeholders until backend exists
+└──────────┴──────────┴──────────┘
+```
 
-### 7. "Pick how the cast interacts with the product" disabled-reason copy
+- Top card: friendly summary built from the same row data Step 7 already produces. No raw JSON, no `<pre>` directive.
+- Primary action: "Generate 3 variations" button — stays disabled with a "Available in a later phase" tooltip (matches today's reality; backend not wired in this PR).
+- Admin-only extras, gated by `useIsAdmin().isAdmin`, rendered below the variant grid:
+  - Collapsible "Compiled prompt" panel showing `assembleSceneDirective(answers)`.
+  - Collapsible "Raw payload" panel showing the full `answers` JSON.
 
-In `BrandSceneWizard.tsx`, swap the reason string to a friendlier line: **"Pick how the cast holds, wears, or stands next to the product"** — short, plain English, and rephrase the other reasons in the same block:
-- `"Pick a cast option"` → `"Choose who's in the shot"`
-- `"Pick a product scale"` → `"Pick a product scale"` (unchanged — still clear)
-- `"Answer the required category questions"` → `"Fill in the remaining required details"`
+Note: the wizard page is already admin-gated, but the admin-view toggle (`useAdminView`) means even an admin can choose to see the customer view — so gating these panels on `isAdmin` (not `isRealAdmin`) keeps the customer-view preview clean.
+
+### Step 7 — Review
+
+- For regular users (admin view off): keep the friendly `SummaryCard` (Scene / Look & light / Cast / Output buckets), keep the Avoid block, **drop the "Show payload" toggle entirely**.
+- For admins (admin view on): add an always-visible "Admin debug" block with:
+  1. **Compiled final prompt** — `assembleSceneDirective(answers)` in a monospace block.
+  2. **Full payload** — pretty-printed JSON of all of `answers` (base, base.extras, cast, cast.extras, module_answers, reference_*, scale, auto, recommendations).
+
+### Wizard plumbing
+
+`BrandSceneWizard.tsx`:
+- `META_WIZARD` updated:
+  - `4`: "Environment" / "Where the shot lives — pick the world it sits in"
+  - `5`: "Photography & edit" / "How the shot is taken and graded"
+  - `6`: "Preview & pick" / "Review the scene, then generate 3 variations"
+  - `7`: "Review" / "Confirm before saving"
+- `META_REFERENCE` unchanged in shape: reference flow stays 0 → 1 → 2 → 3 ref → 4 cast → 6 preview → 7 review. Reference flow does NOT get env/photo split (reference uploads bypass all base styling). Existing `step === 4 && isReference → setStep 6` skip stays.
+- Step routing in render switch:
+  - `step === 4 && !isReference` → `<Step4Environment>`
+  - `step === 5 && !isReference` → `<Step5Photography>` (replaces `Step4ModuleQuestions`)
+  - `step === 6` → redesigned `Step6PreviewAndPick`
+  - `step === 7` → `Step5Review` (with admin debug block inside)
+- Gating: remove `moduleStepValid`, `moduleHasCustomQuestions`, and the `step === 5 && !isReference && !moduleStepValid` branch from `nextDisabled` / `nextDisabledReason`. Photography step has no required fields → step 5 is always passable. `Step1ChooseModule` auto-skip-to-step-3 behavior unchanged.
+
+`useWizardState.ts`:
+- Step-map comment block updated to match the new flow.
+- No state shape changes.
+
+`WizardLayout.tsx`:
+- `STEPS_WIZARD` progress labels updated:
+  - `{ n: 3, label: "Cast" }`
+  - `{ n: 4, label: "Environment" }`
+  - `{ n: 5, label: "Photo & edit" }`
+  - `{ n: 6, label: "Preview" }`
+  - `{ n: 7, label: "Review" }`
 
 ### Out of scope
-- No changes to prompt builder, schema, validation logic, or saved-scene shape.
-- Step ordering, gating, and the Phase 7r/7t cleanups stay as-is.
 
-### Files touched
+- No prompt-builder changes — `assembleSceneDirective` and `module_answers` remain untouched, so existing saved scenes render identically.
+- No DB / RLS / edge-function changes.
+- No changes to the reference flow.
+- Generation backend stays unimplemented; "Generate 3 variations" stays disabled.
+
+### Files
+
+**New**
+- `src/features/brand-scenes/wizard/steps/Step4Environment.tsx`
+- `src/features/brand-scenes/wizard/steps/Step5Photography.tsx`
+
+**Modified**
 - `src/features/brand-scenes/wizard/BrandSceneWizard.tsx`
 - `src/features/brand-scenes/wizard/WizardLayout.tsx`
+- `src/features/brand-scenes/wizard/useWizardState.ts`
+- `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`
+- `src/features/brand-scenes/wizard/steps/Step5Review.tsx`
+
+**Deleted**
 - `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx`
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
-- `src/features/brand-scenes/wizard/components/EthnicityChips.tsx`
-- `src/features/brand-scenes/wizard/constants/cast.ts`
+
+`Step4ModuleQuestions.tsx` and the module-specific `*Questions.tsx` / `is*StepValid` helpers stay on disk (no longer wired) — safer than deleting given existing test coverage and saved-scene shape compatibility.
