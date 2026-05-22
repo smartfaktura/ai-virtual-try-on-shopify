@@ -248,9 +248,9 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {/* Step 4 — wizard flow: SCENE AESTHETIC. Reference flow: CAST. */}
+        {/* Step 4 — wizard flow: ENVIRONMENT. Reference flow: CAST. */}
         {step === 4 && !isReference && (
-          <Step3BaseAnswers
+          <Step4Environment
             module={answers.module}
             subFamily={answers.sub_family}
             castPreset={answers.cast?.preset}
@@ -272,11 +272,14 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 5 && !isReference && answers.module && (
-          <Step4ModuleQuestions
+        {/* Step 5 — wizard flow: PHOTOGRAPHY & EDIT. (Reference flow skips to step 6.) */}
+        {step === 5 && !isReference && (
+          <Step5Photography
             module={answers.module}
-            answers={answers.module_answers}
-            onChange={(patch) => dispatch({ type: "setModuleAnswers", patch })}
+            subFamily={answers.sub_family}
+            castPreset={answers.cast?.preset}
+            value={answers.base}
+            onChange={(patch) => dispatch({ type: "setBase", patch })}
           />
         )}
 
