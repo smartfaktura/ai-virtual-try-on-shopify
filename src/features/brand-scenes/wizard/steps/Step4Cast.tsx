@@ -142,7 +142,7 @@ export function Step4Cast({
   return (
     <div className="space-y-8">
       {/* Cast preset */}
-      <Section label="Cast" required expandable>
+      <Section label="Cast" required missing={!preset}>
         {(expanded) => (
           <div className="flex flex-wrap gap-2">
             {visibleCastPresets(expanded).map((p) => (
