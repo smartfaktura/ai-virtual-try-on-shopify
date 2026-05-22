@@ -423,7 +423,7 @@ export function Step4Cast({
       )}
 
       {/* Group dynamic */}
-      {!isReplicate && (preset === "two" || preset === "group") && (
+      {!isQuick && !isReplicate && (preset === "two" || preset === "group") && (
         <Section label="Group dynamic">
           <div className="flex flex-wrap gap-2">
             {GROUP_DYNAMICS.map((g) => (
