@@ -41,6 +41,8 @@ import {
 } from "../constants/sceneExtras";
 import { CAST_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
+import { EthnicityChips } from "../components/EthnicityChips";
+import { getStorytellingMoments } from "../registry/storytellingBySubfamily";
 import { resolveAll } from "../registry/resolvePresets";
 import {
   forbiddenInteractions,
