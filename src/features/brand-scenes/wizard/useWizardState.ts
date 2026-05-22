@@ -7,7 +7,6 @@ export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5;
 
 export interface WizardState {
   step: WizardStep;
-  /** Whether the user has accepted the responsibility modal this session. */
   responsibilityAccepted: boolean;
   answers: BrandSceneAnswers;
 }
@@ -32,10 +31,9 @@ type Action =
   | { type: "acceptResponsibility" }
   | { type: "reset" };
 
-const DEFAULT_MODULE: BrandSceneModule = "fashion";
-
 /** Returns the only sub-family slug if the family has exactly one; else "". */
-function autoSubFamily(module: BrandSceneModule): string {
+function autoSubFamily(module: BrandSceneModule | undefined): string {
+  if (!module) return "";
   const subs = SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[module]] ?? [];
   return subs.length === 1 ? subs[0].slug : "";
 }
@@ -45,8 +43,9 @@ const initial: WizardState = {
   responsibilityAccepted: false,
   answers: {
     source: "wizard",
-    module: DEFAULT_MODULE,
-    sub_family: autoSubFamily(DEFAULT_MODULE),
+    // No pre-selected family — user must explicitly pick one in Step 1.
+    module: undefined,
+    sub_family: "",
     base: {},
     module_answers: {},
   },
@@ -72,7 +71,6 @@ function reducer(state: WizardState, action: Action): WizardState {
         answers: {
           ...state.answers,
           source: action.source,
-          // Drop reference-only fields when switching back to wizard
           reference_image_paths:
             action.source === "wizard"
               ? undefined

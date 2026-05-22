@@ -25,8 +25,14 @@ const text = z.string().trim().max(FASHION_TEXT_MAX);
 
 export const fashionModuleAnswersSchema = z
   .object({
-    archetype: archetypeSchema,
-    garment_focus: z.array(garmentSchema).min(1).max(FASHION_MAX_GARMENTS),
+    // Legacy fields — kept optional so historic saved rows still parse.
+    archetype: archetypeSchema.optional(),
+    garment_focus: z
+      .array(garmentSchema)
+      .min(1)
+      .max(FASHION_MAX_GARMENTS)
+      .optional(),
+
     wearer: wearerSchema,
     scene: z
       .object({
@@ -59,3 +65,8 @@ export const fashionModuleAnswersSchema = z
   );
 
 export type FashionModuleAnswers = z.infer<typeof fashionModuleAnswersSchema>;
+
+/** Validator used by the wizard. Only Wearer is required now. */
+export function isFashionStepValid(a: Partial<FashionModuleAnswers>): boolean {
+  return !!a.wearer;
+}

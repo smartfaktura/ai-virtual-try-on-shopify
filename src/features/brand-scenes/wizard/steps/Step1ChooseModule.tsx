@@ -1,4 +1,3 @@
-import { Lock } from "lucide-react";
 import {
   BRAND_SCENE_MODULES,
   BRAND_SCENE_MODULE_LABELS,
@@ -8,7 +7,7 @@ import {
 import { WizardCard } from "../components/WizardCard";
 
 interface Props {
-  value: BrandSceneModule;
+  value: BrandSceneModule | undefined;
   onChange: (m: BrandSceneModule) => void;
 }
 
@@ -28,24 +27,32 @@ const FAMILY_BLURBS: Record<BrandSceneModule, string> = {
 };
 
 export function Step1ChooseModule({ value, onChange }: Props) {
+  const selected = value;
+  const selectedNeedsFallback =
+    selected && !BRAND_SCENE_UNLOCKED_MODULES.includes(selected);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {BRAND_SCENE_MODULES.map((m) => {
-        const active = m === value;
-        const unlocked = BRAND_SCENE_UNLOCKED_MODULES.includes(m);
-        return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {BRAND_SCENE_MODULES.map((m) => (
           <WizardCard
             key={m}
-            active={active}
-            disabled={!unlocked}
-            onClick={() => unlocked && onChange(m)}
+            active={m === selected}
+            onClick={() => onChange(m)}
             title={BRAND_SCENE_MODULE_LABELS[m]}
             body={FAMILY_BLURBS[m]}
-            tag={unlocked ? "Available" : "Coming soon"}
-            icon={!unlocked ? <Lock className="w-4 h-4" /> : undefined}
           />
-        );
-      })}
+        ))}
+      </div>
+      {selectedNeedsFallback && (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          More tailored questions for{" "}
+          <span className="text-foreground font-medium">
+            {BRAND_SCENE_MODULE_LABELS[selected!]}
+          </span>{" "}
+          ship soon — you can still build this scene from the base details.
+        </p>
+      )}
     </div>
   );
 }

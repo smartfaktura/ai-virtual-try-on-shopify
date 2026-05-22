@@ -9,7 +9,7 @@ import { Step3Reference } from "./steps/Step3Reference";
 import { Step4ModuleQuestions } from "./steps/Step4ModuleQuestions";
 import { Step5Review } from "./steps/Step5Review";
 import { ResponsibilityModal } from "./components/ResponsibilityModal";
-import { isFashionStepValid } from "../modules/fashion/FashionQuestions";
+import { isFashionStepValid } from "../modules/fashion/schema";
 import type { FashionModuleAnswers } from "../modules/fashion/schema";
 import { isFootwearStepValid } from "../modules/footwear/schema";
 import type { FootwearModuleAnswers } from "../modules/footwear/schema";
@@ -34,8 +34,8 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "This becomes the catalog group your scene lives under.",
   },
   3: {
-    title: "Brand aesthetic",
-    subtitle: "The shared mood that anchors every scene you build.",
+    title: "Scene aesthetic",
+    subtitle: "Pick the kind of scene you want — we'll match the rest.",
   },
   4: {
     title: "Category details",
@@ -75,8 +75,9 @@ export function BrandSceneWizard() {
     window.sessionStorage.getItem(RESPONSIBILITY_KEY) === "1";
   const [modalOpen, setModalOpen] = useState(false);
 
-  const subFamilyCount =
-    (SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? []).length;
+  const subFamilyCount = answers.module
+    ? (SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? []).length
+    : 0;
 
   // Step gating
   const referenceStepValid =
@@ -84,23 +85,28 @@ export function BrandSceneWizard() {
     !!answers.name &&
     answers.name.trim().length > 0;
 
-  const moduleStepValid =
-    answers.module === "fashion"
+  const moduleHasCustomQuestions =
+    answers.module &&
+    BRAND_SCENE_UNLOCKED_MODULES.includes(answers.module);
+
+  const moduleStepValid = !moduleHasCustomQuestions
+    ? true
+    : answers.module === "fashion"
       ? isFashionStepValid(
           answers.module_answers as Partial<FashionModuleAnswers>,
         )
       : answers.module === "footwear"
-      ? isFootwearStepValid(
-          answers.module_answers as Partial<FootwearModuleAnswers>,
-        )
-      : answers.module === "eyewear"
-      ? isEyewearStepValid(
-          answers.module_answers as Partial<EyewearModuleAnswers>,
-        )
-      : true;
+        ? isFootwearStepValid(
+            answers.module_answers as Partial<FootwearModuleAnswers>,
+          )
+        : answers.module === "eyewear"
+          ? isEyewearStepValid(
+              answers.module_answers as Partial<EyewearModuleAnswers>,
+            )
+          : true;
 
   const nextDisabled =
-    (step === 1 && !BRAND_SCENE_UNLOCKED_MODULES.includes(answers.module)) ||
+    (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
     (step === 4 && !isReference && !moduleStepValid);
@@ -167,7 +173,7 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 2 && (
+        {step === 2 && answers.module && (
           <Step2ChooseSubFamily
             module={answers.module}
             value={answers.sub_family}
@@ -200,7 +206,7 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 4 && !isReference && (
+        {step === 4 && !isReference && answers.module && (
           <Step4ModuleQuestions
             module={answers.module}
             answers={answers.module_answers}
