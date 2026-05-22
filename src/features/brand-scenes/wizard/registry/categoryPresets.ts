@@ -219,7 +219,33 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     cast_presets: ["solo", "hands", "none"],
     default_cast: "solo",
     body_part_focus: ["face", "full_body", "detail"],
+    settings: ["Urban street", "Outdoor location", "Studio cyclorama", "Architectural interior", "Domestic", "Nature"],
+    sub: {
+      // Phase 7o — sport / skate energy.
+      caps: {
+        settings: ["Urban street", "Studio cyclorama", "Outdoor location"],
+        moods: ["Confident", "Energetic", "Cinematic"],
+        interactions: ["wearing", "holding", "hero"],
+        body_part_focus: ["face", "full_body"],
+      },
+      // Phase 7o — editorial / formal millinery.
+      hats: {
+        settings: ["Architectural interior", "Nature", "Studio cyclorama", "Domestic"],
+        moods: ["Editorial", "Romantic", "Cinematic"],
+        interactions: ["wearing", "holding", "hero"],
+        lens: ["portrait", "tele"],
+        body_part_focus: ["face", "full_body", "detail"],
+      },
+      // Phase 7o — cold-weather / cozy.
+      beanies: {
+        settings: ["Nature", "Urban street", "Studio cyclorama"],
+        moods: ["Cozy", "Cinematic", "Quiet"],
+        interactions: ["wearing", "holding", "hero"],
+        body_part_focus: ["face", "full_body"],
+      },
+    },
   },
+
 
   "beauty-fragrance": {
     scale: ["pocket"],
