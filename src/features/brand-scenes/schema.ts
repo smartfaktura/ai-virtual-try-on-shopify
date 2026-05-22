@@ -28,6 +28,9 @@ export const brandSceneSourceSchema = z.enum(
   BRAND_SCENE_SOURCES as unknown as [string, ...string[]],
 );
 
+const sceneAspectRatioSchema = z.enum(["4:5", "1:1", "3:4", "16:9"]);
+const sceneTimeOfDaySchema = z.enum(["morning", "midday", "evening", "night"]);
+
 export const brandSceneBaseAnswersSchema = z
   .object({
     aesthetic: z.string().trim().min(1).max(120).optional(),
@@ -37,6 +40,98 @@ export const brandSceneBaseAnswersSchema = z
     location: z.string().trim().min(1).max(160).optional(),
     framing: z.string().trim().min(1).max(120).optional(),
     notes: z.string().trim().max(600).optional(),
+    aspect_ratio: sceneAspectRatioSchema.optional(),
+    time_of_day: sceneTimeOfDaySchema.optional(),
+  })
+  .strict();
+
+const castPresetSchema = z.enum([
+  "solo",
+  "two",
+  "group",
+  "hands",
+  "none",
+  "replicate",
+]);
+const castGenderSchema = z.enum(["woman", "man", "mixed", "any"]);
+const castAgeSchema = z.enum(["young", "adult", "mature", "mixed"]);
+const castVibeSchema = z.enum([
+  "athlete",
+  "creative",
+  "professional",
+  "casual",
+  "editorial",
+]);
+const castInteractionSchema = z.enum([
+  "wearing",
+  "holding",
+  "using",
+  "beside",
+  "hero",
+]);
+const castActionSchema = z.enum([
+  "still",
+  "walking",
+  "motion",
+  "seated",
+  "candid",
+]);
+
+export const brandSceneCastSchema = z
+  .object({
+    preset: castPresetSchema,
+    gender: z.array(castGenderSchema).max(4).optional(),
+    age: z.array(castAgeSchema).max(4).optional(),
+    vibe: castVibeSchema.optional(),
+    interaction: castInteractionSchema.optional(),
+    action: castActionSchema.optional(),
+    note: z.string().trim().max(160).optional(),
+  })
+  .strict()
+  .refine(
+    (c) => c.preset === "replicate" || !!c.interaction,
+    {
+      message: "interaction is required unless preset is 'replicate'",
+      path: ["interaction"],
+    },
+  );
+
+const scalePresetSchema = z.enum([
+  "pocket",
+  "handheld",
+  "carry",
+  "furniture",
+  "architectural",
+  "on_body",
+]);
+
+export const brandSceneScaleSchema = z
+  .object({
+    preset: scalePresetSchema,
+    dimensions: z
+      .object({
+        w: z.number().positive(),
+        h: z.number().positive(),
+        d: z.number().positive().optional(),
+        units: z.enum(["cm", "in"]),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
+const referenceIntentSchema = z.enum([
+  "replicate",
+  "location",
+  "composition",
+  "vibe",
+]);
+
+const previewVariantSchema = z
+  .object({
+    image_url: z.string().url().max(2048),
+    generation_id: z.string().min(1).max(80),
+    chosen: z.boolean().optional(),
   })
   .strict();
 
@@ -59,7 +154,12 @@ export const brandSceneAnswersSchema = z
       .max(BRAND_SCENE_REFERENCE_MAX_IMAGES)
       .optional(),
     reference_preview_url: z.string().trim().url().max(2048).optional(),
+    reference_intent: referenceIntentSchema.optional(),
     placement_hint: z.string().trim().max(BRAND_SCENE_PLACEMENT_MAX).optional(),
+    cast: brandSceneCastSchema.optional(),
+    scale: brandSceneScaleSchema.optional(),
+    negative_note: z.string().trim().max(240).optional(),
+    preview_variants: z.array(previewVariantSchema).max(6).optional(),
     name: z.string().trim().min(1).max(BRAND_SCENE_NAME_MAX).optional(),
     note: z.string().trim().max(BRAND_SCENE_NOTE_MAX).optional(),
   })
@@ -84,12 +184,12 @@ export const brandSceneAnswersSchema = z
   .refine(
     (v) =>
       v.source === "wizard"
-        ? !v.placement_hint && !v.reference_preview_url
+        ? !v.placement_hint && !v.reference_preview_url && !v.reference_intent
         : true,
     {
       message:
-        "placement_hint and reference_preview_url only allowed when source is 'reference'",
-      path: ["placement_hint"],
+        "reference fields only allowed when source is 'reference'",
+      path: ["reference_intent"],
     },
   );
 

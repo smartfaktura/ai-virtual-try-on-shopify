@@ -6,8 +6,10 @@ import { Step1ChooseModule } from "./steps/Step1ChooseModule";
 import { Step2ChooseSubFamily } from "./steps/Step2ChooseSubFamily";
 import { Step3BaseAnswers } from "./steps/Step3BaseAnswers";
 import { Step3Reference } from "./steps/Step3Reference";
+import { Step4Cast } from "./steps/Step4Cast";
 import { Step4ModuleQuestions } from "./steps/Step4ModuleQuestions";
 import { Step5Review } from "./steps/Step5Review";
+import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
 import { ResponsibilityModal } from "./components/ResponsibilityModal";
 import { isFashionStepValid } from "../modules/fashion/schema";
 import type { FashionModuleAnswers } from "../modules/fashion/schema";
@@ -38,28 +40,29 @@ const META_WIZARD: Record<WizardStep, { title: string; subtitle: string }> = {
     subtitle: "Pick the kind of scene you want — we'll match the rest.",
   },
   4: {
+    title: "Cast & product interaction",
+    subtitle: "Who's in the scene and how they relate to the product.",
+  },
+  5: {
     title: "Category details",
     subtitle: "Questions tailored to the family you picked.",
   },
-  5: {
+  6: {
+    title: "Preview & pick",
+    subtitle: "Generate three variants, then save the one that fits.",
+  },
+  7: {
     title: "Review",
     subtitle: "Confirm the payload before saving.",
   },
 };
 
 const META_REFERENCE: Record<WizardStep, { title: string; subtitle: string }> = {
-  0: META_WIZARD[0],
-  1: META_WIZARD[1],
-  2: META_WIZARD[2],
+  ...META_WIZARD,
   3: {
-    title: "Reference & details",
+    title: "Reference & intent",
     subtitle:
-      "Your image is the brief — we'll replicate framing, lighting, and environment.",
-  },
-  4: META_WIZARD[4],
-  5: {
-    title: "Review",
-    subtitle: "Confirm before saving.",
+      "Your image plus how strictly the AI should follow it.",
   },
 };
 
@@ -79,11 +82,16 @@ export function BrandSceneWizard() {
     ? (SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? []).length
     : 0;
 
-  // Step gating
+  // Gating
   const referenceStepValid =
     !!answers.reference_image_paths?.length &&
-    !!answers.name &&
-    answers.name.trim().length > 0;
+    !!answers.name?.trim() &&
+    !!answers.reference_intent;
+
+  const castStepValid =
+    !!answers.cast?.preset &&
+    (answers.cast.preset === "replicate" || !!answers.cast.interaction) &&
+    !!answers.scale?.preset;
 
   const moduleHasCustomQuestions =
     answers.module &&
@@ -92,9 +100,7 @@ export function BrandSceneWizard() {
   const moduleStepValid = !moduleHasCustomQuestions
     ? true
     : answers.module === "fashion"
-      ? isFashionStepValid(
-          answers.module_answers as Partial<FashionModuleAnswers>,
-        )
+      ? isFashionStepValid(answers.module_answers as Partial<FashionModuleAnswers>)
       : answers.module === "footwear"
         ? isFootwearStepValid(
             answers.module_answers as Partial<FootwearModuleAnswers>,
@@ -109,17 +115,18 @@ export function BrandSceneWizard() {
     (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
-    (step === 4 && !isReference && !moduleStepValid);
+    (step === 4 && !castStepValid) ||
+    (step === 5 && !isReference && !moduleStepValid);
 
   const handleNext = () => {
-    // Auto-skip Step 2 when the family has a single sub-family
+    // Step 1: auto-skip sub-family if only one option.
     if (step === 1 && subFamilyCount <= 1) {
       dispatch({ type: "setStep", step: 3 });
       return;
     }
-    // Reference path skips Step 4 (module questions)
-    if (step === 3 && isReference) {
-      dispatch({ type: "setStep", step: 5 });
+    // Step 4 (Cast): reference skips Step 5 (module questions) → goes to Preview.
+    if (step === 4 && isReference) {
+      dispatch({ type: "setStep", step: 6 });
       return;
     }
     dispatch({ type: "next" });
@@ -130,8 +137,8 @@ export function BrandSceneWizard() {
       dispatch({ type: "setStep", step: 1 });
       return;
     }
-    if (step === 5 && isReference) {
-      dispatch({ type: "setStep", step: 3 });
+    if (step === 6 && isReference) {
+      dispatch({ type: "setStep", step: 4 });
       return;
     }
     dispatch({ type: "back" });
@@ -155,7 +162,7 @@ export function BrandSceneWizard() {
         onBack={handleBack}
         onNext={handleNext}
         nextDisabled={nextDisabled}
-        isLastStep={step === 5}
+        isLastStep={step === 7}
       >
         {step === 0 && (
           <Step0ChooseSource
@@ -193,20 +200,31 @@ export function BrandSceneWizard() {
             imagePath={answers.reference_image_paths?.[0]}
             previewUrl={answers.reference_preview_url}
             name={answers.name}
-            placementHint={answers.placement_hint}
+            intent={answers.reference_intent}
             note={answers.note}
             onImageChange={(path, previewUrl) =>
               dispatch({ type: "setReferenceImage", path, previewUrl })
             }
             onNameChange={(name) => dispatch({ type: "setName", name })}
-            onPlacementChange={(hint) =>
-              dispatch({ type: "setPlacementHint", hint })
+            onIntentChange={(intent) =>
+              dispatch({ type: "setReferenceIntent", intent })
             }
             onNoteChange={(note) => dispatch({ type: "setNote", note })}
           />
         )}
 
-        {step === 4 && !isReference && answers.module && (
+        {step === 4 && (
+          <Step4Cast
+            module={answers.module}
+            source={answers.source}
+            cast={answers.cast}
+            scale={answers.scale}
+            onCastChange={(patch) => dispatch({ type: "setCast", patch })}
+            onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
+          />
+        )}
+
+        {step === 5 && !isReference && answers.module && (
           <Step4ModuleQuestions
             module={answers.module}
             answers={answers.module_answers}
@@ -214,7 +232,16 @@ export function BrandSceneWizard() {
           />
         )}
 
-        {step === 5 && <Step5Review answers={answers} />}
+        {step === 6 && <Step6PreviewAndPick answers={answers} />}
+
+        {step === 7 && (
+          <Step5Review
+            answers={answers}
+            onNegativeNoteChange={(note) =>
+              dispatch({ type: "setNegativeNote", note })
+            }
+          />
+        )}
       </WizardLayout>
 
       <ResponsibilityModal

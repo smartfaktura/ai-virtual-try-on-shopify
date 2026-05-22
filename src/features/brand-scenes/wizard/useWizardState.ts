@@ -1,9 +1,25 @@
 import { useReducer } from "react";
-import type { BrandSceneAnswers } from "../types";
+import type {
+  BrandSceneAnswers,
+  BrandSceneCast,
+  BrandSceneScale,
+} from "../types";
 import type { BrandSceneModule, BrandSceneSource } from "../constants";
+import type { ReferenceIntent } from "../prompt/buildReferenceDirective";
 import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy";
 
-export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5;
+/**
+ * Step map:
+ *  0 Source
+ *  1 Family
+ *  2 Sub-family
+ *  3 Scene aesthetic (wizard) | Reference & intent (reference)
+ *  4 Cast & product interaction (BOTH flows)
+ *  5 Category details (wizard only)
+ *  6 Preview & pick
+ *  7 Review / saved
+ */
+export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface WizardState {
   step: WizardStep;
@@ -25,13 +41,15 @@ type Action =
       path: string | null;
       previewUrl: string | null;
     }
+  | { type: "setReferenceIntent"; intent: ReferenceIntent }
+  | { type: "setCast"; patch: Partial<BrandSceneCast> }
+  | { type: "setScale"; patch: Partial<BrandSceneScale> }
+  | { type: "setNegativeNote"; note: string }
   | { type: "setName"; name: string }
-  | { type: "setPlacementHint"; hint: string }
   | { type: "setNote"; note: string }
   | { type: "acceptResponsibility" }
   | { type: "reset" };
 
-/** Returns the only sub-family slug if the family has exactly one; else "". */
 function autoSubFamily(module: BrandSceneModule | undefined): string {
   if (!module) return "";
   const subs = SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[module]] ?? [];
@@ -43,15 +61,14 @@ const initial: WizardState = {
   responsibilityAccepted: false,
   answers: {
     source: "wizard",
-    // No pre-selected family — user must explicitly pick one in Step 1.
     module: undefined,
     sub_family: "",
-    base: {},
+    base: { aspect_ratio: "4:5" },
     module_answers: {},
   },
 };
 
-const MAX_STEP: WizardStep = 5;
+const MAX_STEP: WizardStep = 7;
 
 function clampStep(n: number): WizardStep {
   return Math.max(0, Math.min(MAX_STEP, n)) as WizardStep;
@@ -79,6 +96,10 @@ function reducer(state: WizardState, action: Action): WizardState {
             action.source === "wizard"
               ? undefined
               : state.answers.reference_preview_url,
+          reference_intent:
+            action.source === "wizard"
+              ? undefined
+              : state.answers.reference_intent,
           placement_hint:
             action.source === "wizard"
               ? undefined
@@ -125,13 +146,34 @@ function reducer(state: WizardState, action: Action): WizardState {
           reference_preview_url: action.previewUrl ?? undefined,
         },
       };
-    case "setName":
-      return { ...state, answers: { ...state.answers, name: action.name } };
-    case "setPlacementHint":
+    case "setReferenceIntent":
       return {
         ...state,
-        answers: { ...state.answers, placement_hint: action.hint || undefined },
+        answers: { ...state.answers, reference_intent: action.intent },
       };
+    case "setCast": {
+      const prev = state.answers.cast;
+      const next = { ...(prev ?? { preset: "solo" as const }), ...action.patch };
+      return { ...state, answers: { ...state.answers, cast: next } };
+    }
+    case "setScale": {
+      const prev = state.answers.scale;
+      const next = {
+        ...(prev ?? { preset: "handheld" as const }),
+        ...action.patch,
+      };
+      return { ...state, answers: { ...state.answers, scale: next } };
+    }
+    case "setNegativeNote":
+      return {
+        ...state,
+        answers: {
+          ...state.answers,
+          negative_note: action.note || undefined,
+        },
+      };
+    case "setName":
+      return { ...state, answers: { ...state.answers, name: action.name } };
     case "setNote":
       return {
         ...state,

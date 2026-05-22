@@ -49,6 +49,20 @@ const FRAMINGS = [
   "Over-shoulder",
 ] as const;
 
+const ASPECT_RATIOS: { value: "4:5" | "1:1" | "3:4" | "16:9"; label: string }[] = [
+  { value: "4:5", label: "4:5 — portrait" },
+  { value: "1:1", label: "1:1 — square" },
+  { value: "3:4", label: "3:4 — classic" },
+  { value: "16:9", label: "16:9 — landscape" },
+];
+
+const TIMES_OF_DAY: { value: "morning" | "midday" | "evening" | "night"; label: string }[] = [
+  { value: "morning", label: "Morning" },
+  { value: "midday", label: "Midday" },
+  { value: "evening", label: "Evening" },
+  { value: "night", label: "Night" },
+];
+
 export function Step3BaseAnswers({ value, onChange }: Props) {
   return (
     <div className="space-y-7">
@@ -84,6 +98,45 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
         placeholder="Describe the framing"
         onChange={(next) => onChange({ framing: next })}
       />
+
+      <div className="space-y-2.5">
+        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          Aspect ratio
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {ASPECT_RATIOS.map((r) => (
+            <Chip
+              key={r.value}
+              active={(value.aspect_ratio ?? "4:5") === r.value}
+              onClick={() => onChange({ aspect_ratio: r.value })}
+            >
+              {r.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2.5">
+        <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          Time of day
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {TIMES_OF_DAY.map((t) => (
+            <Chip
+              key={t.value}
+              active={value.time_of_day === t.value}
+              onClick={() =>
+                onChange({
+                  time_of_day:
+                    value.time_of_day === t.value ? undefined : t.value,
+                })
+              }
+            >
+              {t.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-1.5">
         <Label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
