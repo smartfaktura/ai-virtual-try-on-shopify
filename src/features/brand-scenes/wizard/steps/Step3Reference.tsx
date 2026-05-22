@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,6 +45,7 @@ export function Step3Reference({
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
@@ -103,6 +104,21 @@ export function Step3Reference({
     if (inputRef.current) inputRef.current.value = "";
   };
 
+  // Paste-from-clipboard support (only when no image yet)
+  useEffect(() => {
+    if (imagePath) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const files = e.clipboardData?.files;
+      if (files && files.length > 0) {
+        e.preventDefault();
+        handleFiles(files);
+      }
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imagePath, user?.id]);
+
   return (
     <div className="space-y-6">
       {/* Upload */}
@@ -119,7 +135,7 @@ export function Step3Reference({
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex items-center justify-between p-3">
+            <div className="flex items-center justify-between p-3 gap-2">
               <span className="text-xs text-muted-foreground truncate">
                 Uploaded — used as the scene preview and generation guide
               </span>
@@ -127,7 +143,7 @@ export function Step3Reference({
                 variant="ghost"
                 size="sm"
                 onClick={handleRemove}
-                className="rounded-full gap-1.5"
+                className="rounded-full gap-1.5 shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Replace
@@ -135,11 +151,24 @@ export function Step3Reference({
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className="mt-2 w-full rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center hover:border-foreground/40 transition-colors disabled:opacity-60"
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragging(false);
+              handleFiles(e.dataTransfer.files);
+            }}
+            className={[
+              "mt-2 w-full rounded-2xl border border-dashed p-6 sm:p-8 text-center transition-colors min-h-[220px] flex flex-col items-center justify-center",
+              isDragging
+                ? "border-foreground bg-foreground/[0.03]"
+                : "border-border bg-card/50",
+              uploading && "opacity-60",
+            ].join(" ")}
           >
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
               {uploading ? (
@@ -149,12 +178,25 @@ export function Step3Reference({
               )}
             </div>
             <p className="text-sm font-medium text-foreground">
-              {uploading ? "Uploading…" : "Upload a reference image"}
+              {uploading ? "Uploading…" : "Add your reference image"}
             </p>
             <p className="text-xs text-muted-foreground mt-1.5">
               JPG, PNG or WEBP · up to {MAX_MB}MB
             </p>
-          </button>
+
+            <Button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className="rounded-full font-semibold gap-2 mt-4 w-full sm:w-auto"
+            >
+              <UploadCloud className="w-4 h-4" />
+              Choose image
+            </Button>
+            <p className="text-[11px] text-muted-foreground mt-2.5">
+              or drag &amp; drop · paste from clipboard
+            </p>
+          </div>
         )}
         <input
           ref={inputRef}
