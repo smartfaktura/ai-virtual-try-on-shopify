@@ -113,7 +113,9 @@ export function BrandSceneWizard() {
 
   let nextDisabledReason: string | null = null;
   if (nextDisabled) {
-    if (step === 1) nextDisabledReason = "Pick a product family";
+    if (step === 0) nextDisabledReason = "Pick a starting point";
+    else if (step === 1) nextDisabledReason = "Pick a product family";
+
     else if (step === 2) nextDisabledReason = "Pick a sub-family";
     else if (step === 3 && isReference) {
       if (!answers.reference_image_paths?.length)
@@ -183,11 +185,12 @@ export function BrandSceneWizard() {
     <>
       <WizardLayout
         step={step}
-        source={answers.source}
+        source={sourcePicked ? answers.source : "wizard"}
         title={title}
         subtitle={subtitle}
         onBack={handleBack}
         onNext={handleNext}
+        onGoToStep={(s) => dispatch({ type: "setStep", step: s })}
         nextDisabled={nextDisabled}
         nextDisabledReason={nextDisabledReason}
         isLastStep={step === 7}
@@ -195,11 +198,13 @@ export function BrandSceneWizard() {
         {step === 0 && (
           <Step0ChooseSource
             value={answers.source}
+            picked={sourcePicked}
             onChange={(s) => dispatch({ type: "setSource", source: s })}
             onPickReference={handlePickReference}
             referenceUnlocked={sessionAccepted || state.responsibilityAccepted}
           />
         )}
+
 
         {step === 1 && (
           <Step1ChooseModule
