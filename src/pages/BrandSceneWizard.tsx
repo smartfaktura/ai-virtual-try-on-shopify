@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { useIsAdmin } from "@/hooks/useIsAdmin";

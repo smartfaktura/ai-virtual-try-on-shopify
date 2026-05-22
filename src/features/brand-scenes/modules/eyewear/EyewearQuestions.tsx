@@ -170,7 +170,7 @@ export function EyewearQuestions({ value, onChange }: Props) {
                   key={c}
                   active={(v.finishing?.camera_feel ?? []).includes(c as never)}
                   onClick={() => toggleCamera(c)}
-                  size="sm"
+
                 >
                   {c}
                 </Chip>
