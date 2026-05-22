@@ -47,6 +47,8 @@ import {
   type OutputUseCase,
   type SubjectFocus,
 } from "../constants/sceneExtras";
+import { SCENE_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
+import { ExtrasPillField } from "../components/ExtrasPillField";
 import { resolveAll, tuningLabel } from "../registry/resolvePresets";
 
 interface Props {
