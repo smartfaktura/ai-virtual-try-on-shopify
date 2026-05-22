@@ -24,8 +24,11 @@ export type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export interface WizardState {
   step: WizardStep;
   responsibilityAccepted: boolean;
+  /** True once the user explicitly picks Source on step 0 (wizard or reference). */
+  sourcePicked: boolean;
   answers: BrandSceneAnswers;
 }
+
 
 type Action =
   | { type: "setStep"; step: WizardStep }
@@ -59,6 +62,7 @@ function autoSubFamily(module: BrandSceneModule | undefined): string {
 const initial: WizardState = {
   step: 0,
   responsibilityAccepted: false,
+  sourcePicked: false,
   answers: {
     source: "wizard",
     module: undefined,
@@ -69,6 +73,7 @@ const initial: WizardState = {
 };
 
 const MAX_STEP: WizardStep = 7;
+
 
 function clampStep(n: number): WizardStep {
   return Math.max(0, Math.min(MAX_STEP, n)) as WizardStep;
@@ -85,6 +90,7 @@ function reducer(state: WizardState, action: Action): WizardState {
     case "setSource":
       return {
         ...state,
+        sourcePicked: true,
         answers: {
           ...state.answers,
           source: action.source,
@@ -106,6 +112,7 @@ function reducer(state: WizardState, action: Action): WizardState {
               : state.answers.placement_hint,
         },
       };
+
     case "setModule":
       return {
         ...state,
