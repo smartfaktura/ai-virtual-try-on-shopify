@@ -484,6 +484,28 @@ export function Step4Cast({
         </div>
       )}
 
+      {/* Phase 7d — flexible cast styling dials */}
+      {!isReplicate && (
+        <div className="space-y-7 pt-2 border-t border-border/60">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+            More cast & styling dials
+          </div>
+          {applicableFields(CAST_EXTRAS_FIELDS, module, preset).map((f) => (
+            <ExtrasPillField
+              key={f.key}
+              field={f}
+              value={cast?.extras?.[f.key]}
+              onChange={(next) => {
+                const nextExtras = { ...(cast?.extras ?? {}) };
+                if (next === undefined) delete nextExtras[f.key];
+                else nextExtras[f.key] = next;
+                onCastChange({ extras: nextExtras });
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Cast note */}
       {!isReplicate && (
         <Section label="Note">
