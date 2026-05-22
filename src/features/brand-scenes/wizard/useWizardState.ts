@@ -21,7 +21,14 @@ type Action =
   | { type: "setSubFamily"; sub_family: string }
   | { type: "setBase"; patch: Partial<BrandSceneAnswers["base"]> }
   | { type: "setModuleAnswers"; patch: Record<string, unknown> }
-  | { type: "setReferenceImages"; paths: string[] }
+  | {
+      type: "setReferenceImage";
+      path: string | null;
+      previewUrl: string | null;
+    }
+  | { type: "setName"; name: string }
+  | { type: "setPlacementHint"; hint: string }
+  | { type: "setNote"; note: string }
   | { type: "acceptResponsibility" }
   | { type: "reset" };
 
@@ -65,9 +72,19 @@ function reducer(state: WizardState, action: Action): WizardState {
         answers: {
           ...state.answers,
           source: action.source,
-          // Drop reference paths when switching back to wizard
+          // Drop reference-only fields when switching back to wizard
           reference_image_paths:
-            action.source === "wizard" ? undefined : state.answers.reference_image_paths,
+            action.source === "wizard"
+              ? undefined
+              : state.answers.reference_image_paths,
+          reference_preview_url:
+            action.source === "wizard"
+              ? undefined
+              : state.answers.reference_preview_url,
+          placement_hint:
+            action.source === "wizard"
+              ? undefined
+              : state.answers.placement_hint,
         },
       };
     case "setModule":
@@ -101,10 +118,26 @@ function reducer(state: WizardState, action: Action): WizardState {
           module_answers: { ...state.answers.module_answers, ...action.patch },
         },
       };
-    case "setReferenceImages":
+    case "setReferenceImage":
       return {
         ...state,
-        answers: { ...state.answers, reference_image_paths: action.paths },
+        answers: {
+          ...state.answers,
+          reference_image_paths: action.path ? [action.path] : undefined,
+          reference_preview_url: action.previewUrl ?? undefined,
+        },
+      };
+    case "setName":
+      return { ...state, answers: { ...state.answers, name: action.name } };
+    case "setPlacementHint":
+      return {
+        ...state,
+        answers: { ...state.answers, placement_hint: action.hint || undefined },
+      };
+    case "setNote":
+      return {
+        ...state,
+        answers: { ...state.answers, note: action.note || undefined },
       };
     case "acceptResponsibility":
       return { ...state, responsibilityAccepted: true };
