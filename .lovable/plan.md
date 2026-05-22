@@ -1,221 +1,122 @@
-# Wizard upgrade — category-aware presets, combo guards, more dials
+# Phase 7d — Versatile Brand Scene Wizard
 
-The wizard today treats every pill list as a global menu. Two problems flow from that:
+Goal: turn the wizard into a power-user tool. Every pill block grows 3-5× in options, gets category/sub-category-aware filtering, and accepts a free-text "Custom…" entry. Fill the blind spots we left for apparel, footwear, eyewear, jewelry, fragrance, beauty, home, tech, food, wellness.
 
-1. Users can build nonsense scenes (cast = "No people — product hero" + interaction = "Holding").
-2. The same scale / lens / setting menu is shown for a 4 mm ring and a 2 m sofa, which is useless.
+## 1. Background / Backdrop library (NEW, Step 3)
 
-This plan fixes both and adds the dials the wizard is still missing for real production-grade scenes.
+Single new block "Backdrop & floor" with three sub-axes that combine:
 
-## 1. Catalog of illogical combos to forbid
+- **Backdrop type** — Solid color, Gradient, Seamless paper, Cyclorama, Brick wall, Concrete wall, Plaster wall, Tile wall, Wood paneling, Marble slab, Stone slab, Drape (linen/velvet/silk), Mesh / scrim, Glass / acrylic, Mirror, Industrial corrugated, Painted texture, Outdoor (sky / horizon / foliage / asphalt / sand / water).
+- **Floor / surface** — Concrete, Polished stone, Marble, Terrazzo, Raw wood, Parquet, Sand, Pebble, Grass, Tile, Rug, Glass, Water, Reflective acrylic, Painted floor, Asphalt, Cobblestone, None (floating).
+- **Backdrop color/gradient** — preset swatches (warm white, cool white, ivory, putty, sage, terracotta, cobalt, oxblood, charcoal, black) + "Custom hex" + gradient direction picker (linear / radial, 2-stop).
 
-These are gated at the UI layer (option hidden or disabled with tooltip) **and** in the Zod schema, so the prompt never receives an impossible pairing.
+Floor pool is filtered by `setting` (Architectural interior hides Grass/Sand, Beach hides Parquet, etc.).
 
-### Cast × Interaction
+## 2. Camera angle expansion (apparel / footwear / eyewear)
 
-| Cast | Forbidden interactions | Reason |
-|---|---|---|
-| `none` (product hero) | wearing, holding, using, beside-with-person | No people exist in the frame |
-| `none` | only `hero` is valid | Product is the sole subject |
-| `hands` (hands only) | wearing | Face/body required to "wear" most items |
-| `replicate` (reference) | all interactions | Reference dictates the relationship |
-| any with people | `hero` | Hero means product-only |
+Replace today's lens-only control with a two-axis camera block:
 
-### Interaction × Family
+- **Lens** (kept) — 24 / 35 / 50 / 85 / 135 / Macro.
+- **Camera angle** — 100+ presets, exposed in groups so the user is not overwhelmed:
+  - *Eye level* — straight on, ¾ left, ¾ right, profile L, profile R, back, ¾ back L, ¾ back R.
+  - *Low* — worm's eye, low ¾, low profile, low back, low hero.
+  - *High* — overhead flat-lay, top-down 45°, high ¾, high profile.
+  - *Dutch / tilt* — slight 5°, strong 15°, vertical roll.
+  - *Movement* — walking toward, walking away, mid-stride side, jumping, sitting, leaning, crouching, reclined.
+  - *Apparel-specific* — full-length front, full-length back, half-body, bust crop, hip crop, knee crop, ankle crop, detail crop (collar, cuff, hem, pocket, button, zip, seam, label, lining).
+  - *Footwear-specific* — top-down pair, single shoe ¾, sole-up, heel-back, tongue close, lace detail, side profile pair, on-foot walking, on-foot seated, on-foot stairs, kicked-off arrangement.
+  - *Eyewear-specific* — front on-face, ¾ on-face, profile on-face, top-down folded, top-down open, lens detail, temple detail, bridge detail, on-hair, in-hand.
+  - *Jewelry-specific* — macro stone, macro clasp, on-finger, on-wrist, on-neck, on-ear, paired on tray, in-hand offering.
 
-Already partially gated by `interactionsForFamily()`. Extend with:
+Each preset carries its own prompt directive. Category determines which group appears; "Show all angles" reveals everything.
 
-| Family | Forbidden | Notes |
-|---|---|---|
-| fragrance / beauty / skincare | wearing | You don't "wear" perfume; use holding/beside |
-| home / furniture / tech-large | wearing, holding (when scale ≥ furniture) | Scale-gated |
-| food & drink | wearing | Reserved for edible-themed garments only |
-| jewelry / watches / eyewear | using | Reserved for tech/wellness |
+## 3. Category / sub-category-aware pools
 
-### Scale × Interaction
+Single source of truth: `categoryPresets.ts` keyed by `family` with optional `sub_family`. Resolution: `sub_family` → `family` → global default. Tuned bundles:
 
-| Scale | Forbidden interactions |
-|---|---|
-| `architectural` (>200 cm) | holding, wearing |
-| `furniture` (80–200 cm) | wearing; holding requires explicit confirm |
-| `pocket` ≤15 cm | (no restriction, all allowed) |
+- **Apparel** (tops / bottoms / dresses / outerwear / knitwear / activewear / swim / loungewear) — full camera-angle and gesture pools, all wardrobe colors, all backdrops.
+- **Footwear** (sneakers / boots / heels / loafers / sandals) — footwear angles, surface bias (asphalt, polished stone, sand for sandals only).
+- **Eyewear** (sunglasses / optical) — eyewear angles, no "wearing on feet" gestures.
+- **Jewelry** (rings / necklaces / earrings / bracelets / watches) — macro lenses default, pocket/handheld scale only, jewelry gestures.
+- **Fragrance / Beauty** — pocket/handheld scale, no "wearing" interaction, splash / pour / smoke surface options unlocked.
+- **Home / Furniture** — architectural/furniture scale only, no human "wearing", room-set backdrops.
+- **Tech / Gadgets** — handheld scale, macro + standard lenses, clean cyclorama backdrop default.
+- **Food / Beverage** — overhead + 45° angles, surface bias to wood/marble/linen, pour/steam shadow.
+- **Wellness / Supplements** — pocket/handheld, soft palette default.
 
-### Scale × Cast
+Settings that don't apply are pruned from the menu (e.g. jewelry never sees "Vehicle").
 
-| Scale | Forbidden cast |
-|---|---|
-| `architectural` | `hands` (out of scale) |
-| `pocket` jewelry/eyewear | `group` (4+ people don't fit a ring shot) |
+## 4. Custom-input everywhere
 
-### Wardrobe color × Cast
+Every pill block gains a trailing "+ Custom…" pill that opens a small inline input and stores the raw string as a directive. Applies to: setting, weather, season, lens, camera angle, depth of field, palette, finish, surface, backdrop type, backdrop color, wardrobe color, body part focus, gaze, hands-on-product gesture, group dynamic, era, brand voice, output use case.
 
-- `wardrobe_color` only valid when `cast.preset ∈ {solo, two, group}`. Already enforced; documented for completeness.
+## 5. Blind-spot dials (NEW)
 
-### Other cross-field guards
+- **Time of day** — golden hour, blue hour, midday, overcast noon, night, studio (no time).
+- **Light direction** — front, ¾, side rim, back-lit, top, bottom, ring.
+- **Light quality** — soft box, hard sun, dappled, neon, candle, mixed practical.
+- **Motion / energy** — still, breeze, fabric in motion, jump freeze, long exposure trail.
+- **Skin finish** (only with cast) — natural, dewy, matte, glossy editorial.
+- **Hair styling** (only with cast) — natural, wet-look, slicked, tousled, braided, updo, covered.
+- **Makeup** (only with cast) — bare, no-makeup makeup, editorial, graphic liner, glossy lip, bold lip.
+- **Pose energy** — relaxed, powerful, candid, dynamic, contemplative, playful.
+- **Sub-cast detail** — age band (18-25 / 25-35 / 35-50 / 50+ / mixed), build (slim / athletic / curvy / plus / mixed), height bias.
+- **Storytelling moment** — arriving, departing, mid-action, resting, ritual (apply, pour, lace, fasten).
+- **Crop safety** — title-safe top, bottom, left, right (for paid ad placements).
 
-- `time_of_day = night` + `weather = clear` → silently allowed but assembler emits "night-clear (moonlit / artificial light)".
-- `lens = macro` + `cast ∈ {solo, two, group}` → warn that macro will not capture full body; suggest swap to `hands` or `none`.
-- `season = winter` + `setting = Beach / water` → warn (allowed for editorial, but flagged).
+All of these accept a Custom… entry and most are category-aware.
 
-### Implementation
+## 6. Combo guards (carried over from 7c)
 
-- New `src/features/brand-scenes/wizard/rules/combinationGuards.ts` exports:
-  - `forbiddenInteractions(cast, family, scale): Set<CastInteraction>`
-  - `forbiddenCastPresets(scale, family): Set<CastPreset>`
-  - `warnings(answers): Array<{ field, message, severity }>`  ← soft, non-blocking
-- `Step4Cast.tsx` consumes these to **hide** options outright when forbidden (cleaner than disabling) and renders warnings inline under each affected block.
-- Schema (`schema.ts`) adds `.refine()` calls mirroring every hard rule.
+`combinationGuards.ts` blocks impossible pairs at the UI and Zod layer:
 
-## 2. Category-aware presets (the big one)
+- `none` cast + wearing/holding/using.
+- `hands` cast + wearing.
+- Architectural / furniture scale + wearing.
+- Fragrance / beauty / jewelry + wearing-on-body when no body part is selected.
+- `night` time + `clear` weather → auto-rewrites to "moonlit clear".
+- `macro` lens + `solo/two/group` cast → warns the macro won't capture the body.
 
-Each pill section now reads its options from a single registry keyed by **family** with optional **sub-family** override. Falls back to a "default" list when a family hasn't been specialised.
+## 7. Prompt assembler
 
-### New file: `src/features/brand-scenes/wizard/registry/categoryPresets.ts`
-
-```ts
-type FamilyKey = BrandSceneModule;
-type SubKey = string; // sub_family slug
-
-interface PresetBundle {
-  scale?: ScalePreset[];           // ordered, first = default
-  settings?: string[];             // overrides SCENE_SETTINGS
-  lighting?: string[];             // overrides LIGHTINGS
-  lens?: SceneLens[];              // recommended subset
-  depth_of_field?: SceneDepthOfField[];
-  framings?: string[];
-  moods?: string[];
-  palette_presets?: ScenePalette[];
-  finishes?: SceneFinish[];
-  interactions?: CastInteraction[]; // sharper than interactionsForFamily()
-  wardrobe_colors?: WardrobeColor[];
-  cast_presets?: CastPreset[];     // e.g. furniture defaults to "none"
-  default_scale?: ScalePreset;
-  default_cast?: CastPreset;
-}
-
-const PRESETS: Record<FamilyKey, PresetBundle & {
-  sub?: Record<SubKey, Partial<PresetBundle>>;
-}>;
-```
-
-Resolution order (most → least specific):
-1. `PRESETS[family].sub[sub_family]`
-2. `PRESETS[family]` (family-level)
-3. Global defaults (current behaviour)
-
-### Examples of curated bundles
-
-| Family / sub-family | Scale | Lens | DoF | Cast default | Notes |
-|---|---|---|---|---|---|
-| `jewelry / rings` | pocket only (≤5 cm hint) | macro, portrait | extreme, shallow | hands | No "wearing on body" — gestures only |
-| `jewelry / necklaces` | pocket | portrait, tele | shallow | solo | Wearing valid |
-| `eyewear` | pocket | portrait, standard | shallow, balanced | solo | Hands forbidden (face needed) |
-| `watches` | pocket | macro, portrait, tele | extreme, shallow | hands, solo | Same as jewelry but wrist-only |
-| `fashion / dresses` | on_body | portrait, standard, tele | shallow, balanced | solo | Wearing default |
-| `fashion / activewear` | on_body | standard, tele | balanced | solo | Motion-heavy actions surfaced first |
-| `footwear / sneakers` | on_body, handheld | standard, tele, macro | shallow, balanced | solo, hands, none | All three archetypes valid |
-| `footwear / high-heels` | on_body, handheld | portrait, tele | shallow | solo, hands | Editorial-leaning |
-| `bags / backpacks` | carry | standard, tele | balanced | solo | Wearing valid, hero valid |
-| `bags / wallets` | pocket, handheld | macro, portrait | shallow | hands, none | No wearing |
-| `beauty / fragrance` | pocket | macro, portrait | extreme, shallow | none, hands | Wearing forbidden |
-| `beauty / skincare` | pocket | macro, portrait | shallow | hands, none | |
-| `beauty / makeup` | pocket | macro, portrait | shallow | hands, solo | Solo allowed (on-face application) |
-| `home / furniture` | furniture, architectural | wide, standard | deep, balanced | none, solo (for scale) | Holding/wearing forbidden |
-| `home / decor` | handheld, carry, furniture | standard, portrait | balanced | none, hands | |
-| `tech / devices` | pocket, handheld | macro, standard | shallow, balanced | hands, solo, none | Using valid |
-| `food-drink / beverages` | handheld | macro, standard, portrait | shallow | hands, none, solo | Using/holding valid |
-| `food-drink / food` | tabletop scale | macro, standard | shallow | none, hands | |
-| `wellness / supplements` | pocket, handheld | macro, portrait | shallow | hands, none | |
-
-Setting menus are also pruned: jewelry never gets "Vehicle / transit", furniture always gets "Architectural interior" first, tech gets "Studio cyclorama" first.
-
-### UI behaviour
-
-- When the user lands on Step 3 or Step 4, the visible pills are the resolved bundle.
-- A small text link **"Show all options"** under each section reveals the global list for power users (stored as `power_mode` boolean per section, not persisted across sessions).
-- Defaults are pre-applied only when the user has not yet touched that section.
-
-## 3. New dials for versatility
-
-Added to Step 3 (Scene aesthetic) unless noted:
-
-- **Subject focus** — pill: `Product is hero`, `Person is hero`, `Equal weight`, `Environment is hero`. Drives composition and DoF emphasis. Solves the ambiguity behind "what is the photo about?".
-- **Surface / material under product** (sub-block, only when `cast ∈ {none, hands}` or `interaction = beside`): `Concrete`, `Linen drape`, `Polished stone`, `Raw wood`, `Glass`, `Sand`, `Water`, `Paper`, `Velvet`. Category-aware (jewelry never gets "Sand").
-- **Prop density** — slider 0–4: `None`, `Minimal`, `Considered`, `Rich`, `Maximalist`. Category-aware ceiling (jewelry caps at 2, fashion lifestyle caps at 4).
-- **Color contrast** — pill: `Tonal / monochrome`, `Soft contrast`, `Bold contrast`, `Complementary clash`. Pairs with palette anchor.
-- **Saturation** — pill: `Desaturated`, `Natural`, `Vivid`.
-- **Reflections / shadows** — pill: `Hard shadow`, `Soft shadow`, `No shadow / floating`, `Mirror reflection`, `Wet reflection`.
-- **Composition geometry** — pill: `Rule of thirds`, `Centered`, `Symmetry`, `Negative space left`, `Negative space right`, `Negative space top`. Critical for thumbnails and ad placements.
-- **Negative space intent** — `Reserved for headline`, `Reserved for logo`, `None`. Marketing-aware; emits a layout hint.
-- **Aesthetic era** — pill: `Contemporary`, `90s editorial`, `Y2K`, `70s film`, `Brutalist`, `Quiet luxury`, `Maximalist 2020s`.
-- **Realism level** — pill: `Photorealistic`, `Editorial high-fashion`, `Documentary`, `Stylised render`, `Surreal`.
-- **Brand voice tone** — pill: `Premium quiet`, `Energetic`, `Playful`, `Technical`, `Romantic`, `Bold rebel`. Drives copy-equivalent micro-styling.
-- **Output use case** — pill: `Website hero`, `Social square crop sibling`, `Lookbook page`, `Paid ad`, `Editorial print`. Only used to inject layout/safe-area hints; aspect stays 4:5.
-
-Added to Step 4 (Cast):
-
-- **Skin/age diversity** — pill: `As-cast`, `Diverse cast`. (Sensitive — kept minimal per existing memory.)
-- **Hands-on-product** — pill (only when `cast.preset !== none` and product is `pocket`/`handheld`): `Both hands cradling`, `Fingertip pinch`, `Pinching cap`, `Pouring`, `Wrist showing watch`, etc. Category-aware list.
-- **Body part focus** — pill: `Face`, `Hands`, `Wrist`, `Neck`, `Feet`, `Full body`, `Detail crop`. Resolves which body part the frame should center.
-- **Gaze direction** — pill: `To camera`, `Away`, `Down at product`, `Closed eyes`.
-- **Group dynamic** — pill (only when `cast.preset ∈ {two, group}`): `Independent`, `Interacting`, `Mirrored`, `Lined up`.
-
-## 4. Default behaviour & power-user escape hatch
-
-- All new fields are optional in the schema (JSONB-safe).
-- Each section renders **only the relevant pills for the resolved family + sub-family**.
-- **"Show all options"** link under each block reveals the full global list for power users — never modifies what we save, just expands selectable values.
-- A small inline summary chip "Category-tuned: jewelry / rings" appears at the top of Step 3 and Step 4 so the user knows why their menu is smaller than someone else's.
-
-## 5. Prompt assembler updates
-
-`assembleSceneDirective.ts` extended in canonical order:
+`assembleSceneDirective.ts` extended to render the new fields in canonical order:
 
 ```text
-SCENE TYPE
-SETTING (+ surface)
-WEATHER / SEASON / TIME OF DAY
-MOOD / BRAND VOICE / AESTHETIC ERA / REALISM
-LIGHTING (+ reflections/shadows)
-CAMERA (lens) + DEPTH OF FIELD
-FRAMING + COMPOSITION GEOMETRY + NEGATIVE SPACE intent
-ASPECT RATIO: 4:5 (locked)
-COLOR PALETTE + CONTRAST + SATURATION + FINISH
-SUBJECT FOCUS
-CAST (+ wardrobe color, body-part focus, gaze, group dynamic)
-PRODUCT SCALE (+ cast-vs-product sentence)
-PROP DENSITY
-OUTPUT USE CASE layout hint
-REFERENCE INTENT (if any)
-NOTES
-AVOID
+SCENE
+  setting → backdrop → floor → backdrop-color → weather → season → time-of-day
+  lens → camera-angle → DOF → light-direction → light-quality → motion
+  palette → finish → surface → era → realism → brand-voice → use-case
+  composition → neg-space-intent → subject-focus
+
+CAST
+  cast-preset → interaction → wardrobe-color → body-part-focus → gaze →
+  group-dynamic → diversity → age-band → build → pose-energy →
+  skin-finish → hair → makeup → hands-on-product → storytelling-moment
+
+PRODUCT
+  scale → cast-vs-product relationship
+
+GUARDRAILS
+  4:5 portrait (locked) → negative note → crop-safe zones
 ```
 
-## 6. Out of scope (separate PRs)
+Custom strings are appended verbatim with a `[user-custom]` marker so they survive prompt normalization.
 
-- Wiring the directive bundle into live `product-images` / `catalog` generation pipelines.
-- Persisting "Show all options" preference across sessions.
-- Brand-memory-fed defaults (e.g. read brand palette from settings and pre-select it).
-- New aesthetic memory documents per sub-family (only menu pruning here).
+## 8. UI
 
-## 7. Files
+- Each block collapses to its top 6 pills by default with a "Show all (N)" link.
+- Category-tuned defaults are pre-applied only when the user hasn't touched the section.
+- Step 5 Review summary chips are grouped (Scene / Light / Cast / Product / Output) so the wall of dials stays readable.
 
-**New**
-- `src/features/brand-scenes/wizard/registry/categoryPresets.ts` — single source of truth for per-family / per-sub-family pill bundles.
-- `src/features/brand-scenes/wizard/registry/resolvePresets.ts` — resolution helper with the family > sub > default cascade.
-- `src/features/brand-scenes/wizard/rules/combinationGuards.ts` — hard + soft combo rules.
-- `src/features/brand-scenes/wizard/constants/sceneExtras.ts` — new dial constants (surface, prop density, contrast, saturation, shadows, composition, era, realism, brand voice, output use case, body-part focus, gaze, group dynamic, hands-on-product).
-- `src/features/brand-scenes/__tests__/combination-guards.test.ts`
-- `src/features/brand-scenes/__tests__/category-presets.test.ts`
-- `src/features/brand-scenes/__tests__/scene-dials.test.ts`
+## 9. Out of scope
 
-**Edited**
-- `src/features/brand-scenes/wizard/steps/Step3BaseAnswers.tsx` — consume resolved presets, add new dial blocks, "Show all options" link.
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — resolved interactions/cast presets, new dial blocks, render combo warnings.
-- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` — summarise new fields.
-- `src/features/brand-scenes/wizard/useWizardState.ts` — setters for new dials.
-- `src/features/brand-scenes/types.ts` & `schema.ts` — optional new fields + `.refine()` for forbidden combos.
-- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — render new fields in canonical order.
-- `src/features/brand-scenes/prompt/buildCastDirective.ts` — body-part focus, gaze, group dynamic, hands-on-product.
-- `src/features/brand-scenes/wizard/constants/cast.ts` — extend `interactionsForFamily` callers to also consult scale.
-- `src/features/brand-scenes/wizard/constants/scale.ts` — keep, but `defaultScaleForFamily` now defers to registry when present.
+- Persisting "Show all" preference.
+- New aesthetic memory docs.
+- Pipeline wiring beyond the assembler — Visual Studio consumes the existing directive string.
+
+## Technical
+
+- New: `wizard/constants/backdrop.ts`, `wizard/constants/cameraAngles.ts`, `wizard/constants/lighting.ts`, `wizard/constants/styling.ts`, `wizard/constants/categoryPresets.ts`, `wizard/constants/combinationGuards.ts`, `wizard/components/CustomPillInput.tsx`, `wizard/components/ChipGroup.tsx` (handles "Show all" + custom).
+- Edited: `Step3BaseAnswers.tsx`, `Step4Cast.tsx`, `Step5Review.tsx`, `useWizardState.ts`, `types.ts`, `schema.ts`, `prompt/assembleSceneDirective.ts`, `prompt/buildCastDirective.ts`, `prompt/buildScaleDirective.ts`.
+- Tests: `backdrop-directive.test.ts`, `camera-angle-pools.test.ts`, `combo-guards.test.ts`, `custom-pill.test.ts`, `category-presets.test.ts`, plus updates to existing assembler tests.
+- 4:5 lock and all current behaviour preserved.
