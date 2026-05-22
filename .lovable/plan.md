@@ -320,3 +320,95 @@ Still travels two ways:
 - Generating a scene with Activewear → Yoga pose → Villa pool + a product named "Onyx Compression Set" produces output structurally identical to the user's reference example: opens with `[MODEL IMAGE]` and `[PRODUCT IMAGE]` paragraphs, includes a hex palette bullet list, closes with realism + avoid paragraph.
 - Removing the model reference makes the `[MODEL IMAGE]` paragraph disappear and shifts the prompt to a product-only narrative without leftover person language.
 - Changing aspect ratio from 4:5 to 16:9 changes only the composition sentence + the stored `aspect_ratio` column; no other paragraph changes.
+
+---
+
+## Worked example — what the compiled prompt actually looks like
+
+**User picks:**
+- Family: Fashion → Subcategory: Activewear
+- Subject mode: With person, full body
+- Pose: Yoga flow beside villa pool
+- Environment: Private villa pool terrace
+- Lighting: Warm morning sunlight, dappled through trees
+- Photo look: Soft editorial film
+- Camera: Eye level, medium distance, shallow depth of field
+- Aspect ratio: 4:5 (stored separately on the row, sent via API config)
+- Styling guards inherited from Activewear module: no sneakers, no sunglasses, no heavy jewelry, no bag, no hat, no oversized layers, barefoot only
+
+**Saved `compiled_prompt` text:**
+
+> Use [MODEL IMAGE] to preserve the model's realistic identity, facial structure, body proportions, skin tone, posture, and natural presence. The model must feel athletic, focused, elegant, and real — not stiff, over-posed, or AI-looking.
+>
+> Use [PRODUCT IMAGE] {{productName}} as the exact source of truth for the activewear, preserving the exact cut, color, fabric texture, seams, waistband, straps, stitching, compression fit, proportions, and material behavior. The activewear must remain fully accurate and physically believable on the body during movement. Do not redesign, simplify, recolor, or invent new garment details.
+>
+> Create a realistic luxury activewear image of the model performing a strong yoga flow pose beside a private villa pool. The model is in a dynamic three-legged downward dog variation, both hands grounded on the stone terrace, one foot firmly planted, the other leg lifted high with a soft bend at the knee. The pose feels powerful, controlled, feminine, and athletic, with realistic yoga mechanics and believable balance.
+>
+> Frame the image vertically from a medium distance, keeping the full body, activewear set, extended leg shape, grounded hands, and poolside environment clearly visible. Shoot at eye level with a shallow depth of field so the pose creates a strong sculptural silhouette against the greenery and water.
+>
+> The setting is a refined villa pool terrace with pale stone flooring, dark green garden trees, tropical plants, soft pink flowers, and a calm pool in the background. The environment feels private, fresh, warm, and wellness-focused — like a quiet morning Pilates or yoga session at a luxury villa.
+>
+> Use a natural poolside wellness palette:
+> - black activewear preserved from [PRODUCT IMAGE]: #111111
+> - pale stone terrace: #D8D2C5
+> - deep garden green: #1F331F
+> - soft leaf green: #5F7139
+> - pool shadow blue-green: #2F5B5A
+> - warm sunlight highlight: #E2B47A
+> - soft pink flowers: #D96F9A
+> - warm skin glow: #C9916B
+>
+> Lighting feels like warm natural morning sunlight, softly filtered through the surrounding trees. Realistic highlights fall on the skin and activewear, gentle shadows sit under the body, and soft dappled light moves across the terrace. The light feels real, calm, and flattering — not studio-lit or overly polished.
+>
+> Add subtle cinematic grain and a clean editorial texture. The image should feel like a real activewear photograph captured on a high-end camera, elevated with a soft lifestyle campaign finish: natural contrast, realistic sharpness, warm highlights, and fine organic grain.
+>
+> Styling stays minimal and athletic. The model wears the activewear as the hero garment. No sneakers, no sunglasses, no heavy jewelry, no bag, no hat, no oversized layers. Barefoot only. Optional tiny earrings or a slim bracelet are allowed only if they feel natural. Hair is tied back or softly pulled away from the face for movement.
+>
+> Keep the activewear clearly visible and easy to read across the sports bra or top, straps, waistband, hips, leggings, seams, and fabric tension. Preserve exact product color, fit, material, construction, and proportions from [PRODUCT IMAGE]. Do not change the garment design.
+>
+> The mood feels strong, calm, sculptural, and premium — like a luxury activewear campaign focused on movement, flexibility, and quiet power. The final image should feel like a real captured photograph, not a CGI or AI render. Preserve natural skin texture, realistic anatomy, believable hands and feet, accurate yoga pose mechanics, true fabric tension, real poolside shadows, greenery texture, and subtle film grain.
+>
+> Avoid: plastic skin, fake body proportions, distorted limbs, extra fingers, incorrect joints, over-retouching, surreal lighting, overly polished studio styling, sneakers, sunglasses, heavy jewelry, bags, hats, oversized layers.
+
+**Stored alongside:** `aspect_ratio: "4:5"`, `family: "fashion"`, `subcategory: "activewear"`, `subject_mode: "with_person_full"`, plus the raw and validated answer JSON.
+
+Notice:
+- `[PRODUCT IMAGE]` appears 3× and `[MODEL IMAGE]` appears 1× — literally in the prose, not as placeholders.
+- `{{productName}}` is the only token left unresolved in the saved text, because the consuming generator binds the active product at run time (same convention as the existing product visuals system).
+- The aspect ratio (4:5) is described in prose ("Frame the image vertically") but the actual `4:5` value travels via the API config, not the prompt body.
+
+---
+
+## Worked example — fragrance (product-only, no person)
+
+**User picks:** Fragrance → Eau de Parfum → "Bottle on warm stone surface" → Soft daylight from left → Premium matte photo → Warm sand palette → 1:1.
+
+**Saved `compiled_prompt` text:**
+
+> Use [PRODUCT IMAGE] {{productName}} as the exact source of truth for the perfume bottle, preserving the exact glass shape, cap, neck, shoulders, label artwork, typography, liquid color, and surface reflections. The bottle must remain fully accurate and physically believable on the surface. Do not redesign, simplify, recolor, or invent new bottle details.
+>
+> Create a realistic commercial photograph of a single perfume bottle presented as the hero subject of a quiet still-life composition.
+>
+> Frame the image as a clean square crop, eye-level, medium close-up, with a soft shallow depth of field so the bottle reads as the focal point and the surface fades gently behind it.
+>
+> The bottle sits upright on a warm travertine surface in a softly lit studio corner, with a few small dried botanicals resting beside it for quiet styling. The setting feels intimate, refined, and calm.
+>
+> Use a warm sand palette:
+> - bottle glass preserved from [PRODUCT IMAGE]: as referenced
+> - warm travertine surface: #D8C9B0
+> - cream backdrop: #EFE6D6
+> - soft shadow taupe: #8A7A66
+>
+> Lighting is soft directional daylight from the left, creating gentle highlights along the glass edge and a long, soft shadow that anchors the bottle to the surface. No harsh specular hot spots.
+>
+> Muted premium tones, soft contrast, smooth shadows, refined commercial finish, no harsh saturation.
+>
+> Styling stays minimal. No human hands, no extra bottles, no spilled liquid, no competing props.
+>
+> Keep the bottle clearly visible across the cap, neck, shoulders, body, label, and base. Preserve exact glass color, label artwork, and proportions from [PRODUCT IMAGE]. Do not change the bottle design.
+>
+> The mood feels quiet, premium, and editorial. The final image should feel like a real captured photograph, not a CGI or AI render. Preserve realistic glass refraction, accurate label legibility, true surface texture, and natural shadow behaviour.
+>
+> Avoid: text or logos on the bottle that aren't in the reference, extra bottles, liquid spills, human hands unless requested, plastic-looking glass, surreal lighting, over-retouching.
+
+**Stored alongside:** `aspect_ratio: "1:1"`. `[MODEL IMAGE]` is absent because the subject mode is product-only.
