@@ -20,17 +20,6 @@ const SCENE_TYPES = [
   "Tabletop / Flat lay",
 ] as const;
 
-const AESTHETIC_FLAVORS = [
-  "Quiet luxury",
-  "Raw editorial",
-  "Warm artisanal",
-  "Clean minimal",
-  "Sun-bleached",
-  "Bold graphic",
-  "Vintage film",
-  "Soft natural",
-] as const;
-
 const MOODS = [
   "Calm",
   "Energetic",
@@ -72,17 +61,6 @@ export function Step3BaseAnswers({ value, onChange }: Props) {
         onChange={(next) => onChange({ aesthetic: next })}
       />
 
-      <PillField
-        label="Aesthetic flavor"
-        presets={AESTHETIC_FLAVORS as unknown as readonly string[]}
-        current={value.mood && AESTHETIC_FLAVORS.includes(value.mood as never) ? "" : ""}
-        placeholder="Describe your own aesthetic"
-        onChange={() => {
-          /* handled below — overridden by inline implementation */
-        }}
-      />
-
-      {/* Mood */}
       <PillField
         label="Mood"
         presets={MOODS as unknown as readonly string[]}
