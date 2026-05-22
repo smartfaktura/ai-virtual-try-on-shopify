@@ -26,14 +26,14 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
     <div className="space-y-6">
       {/* Hero — ready to generate */}
       <div className="rounded-2xl border border-border bg-card p-6">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Ready to generate
         </div>
         <div className="mt-1 text-base font-semibold tracking-tight">
           {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · 4:5 ·{" "}
           {BRAND_SCENE_GENERATION_COST} credits
         </div>
-        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+        <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
           Saving the scene is free. Only generating variations deducts credits.
         </p>
 
@@ -42,9 +42,9 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <span tabIndex={0}>
-                  <Button disabled className="rounded-full font-semibold gap-2">
+                  <Button size="pill" disabled className="gap-2">
                     <Sparkles className="w-4 h-4" />
-                    Generate 3 variations
+                    Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations
                   </Button>
                 </span>
               </TooltipTrigger>
