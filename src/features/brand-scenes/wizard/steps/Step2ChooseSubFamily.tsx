@@ -1,5 +1,6 @@
 import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy";
 import type { BrandSceneModule } from "../../constants";
+import { WizardCard } from "../components/WizardCard";
 
 interface Props {
   module: BrandSceneModule;
@@ -37,25 +38,16 @@ export function Step2ChooseSubFamily({ module, value, onChange }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {subs.map((s) => {
-        const active = s.slug === value;
-        return (
-          <button
-            key={s.slug}
-            type="button"
-            onClick={() => onChange(s.slug)}
-            className={[
-              "rounded-full border px-4 py-2 text-sm transition-colors",
-              active
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-card text-foreground hover:border-foreground/40",
-            ].join(" ")}
-          >
-            {s.label}
-          </button>
-        );
-      })}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {subs.map((s) => (
+        <WizardCard
+          key={s.slug}
+          active={s.slug === value}
+          onClick={() => onChange(s.slug)}
+          title={s.label}
+          tag="Sub-family"
+        />
+      ))}
     </div>
   );
 }

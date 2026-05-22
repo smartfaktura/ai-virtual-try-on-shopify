@@ -5,50 +5,45 @@ import {
   BRAND_SCENE_UNLOCKED_MODULES,
   type BrandSceneModule,
 } from "../../constants";
+import { WizardCard } from "../components/WizardCard";
 
 interface Props {
   value: BrandSceneModule;
   onChange: (m: BrandSceneModule) => void;
 }
 
+const FAMILY_BLURBS: Record<BrandSceneModule, string> = {
+  fashion: "Apparel on models or flat-lay",
+  footwear: "Sneakers, heels, boots",
+  "bags-accessories": "Handbags, belts, small leather",
+  "hats-caps-beanies": "Headwear on or off model",
+  watches: "Wrist shots, top-down detail",
+  eyewear: "On-face and product still-life",
+  jewelry: "Macro and worn jewelry",
+  "beauty-fragrance": "Bottles, jars, atmospheric still-life",
+  home: "Decor, kitchenware, soft goods",
+  tech: "Devices, gadgets, accessories",
+  "food-drink": "Plates, bottles, lifestyle table",
+  wellness: "Supplements, skincare, ritual",
+};
+
 export function Step1ChooseModule({ value, onChange }: Props) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {BRAND_SCENE_MODULES.map((m) => {
         const active = m === value;
         const unlocked = BRAND_SCENE_UNLOCKED_MODULES.includes(m);
         return (
-          <button
+          <WizardCard
             key={m}
-            type="button"
+            active={active}
             disabled={!unlocked}
             onClick={() => unlocked && onChange(m)}
-            className={[
-              "relative rounded-2xl border px-4 py-5 text-left transition-all",
-              !unlocked
-                ? "border-border bg-muted/30 text-muted-foreground cursor-not-allowed"
-                : active
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-card hover:border-foreground/40",
-            ].join(" ")}
-          >
-            <div className="text-sm font-semibold tracking-tight">
-              {BRAND_SCENE_MODULE_LABELS[m]}
-            </div>
-            <div
-              className={[
-                "text-[11px] uppercase tracking-[0.16em] mt-1 flex items-center gap-1.5",
-                !unlocked
-                  ? "text-muted-foreground"
-                  : active
-                    ? "text-background/60"
-                    : "text-muted-foreground",
-              ].join(" ")}
-            >
-              {!unlocked && <Lock className="w-3 h-3" />}
-              {unlocked ? "Available" : "Coming soon"}
-            </div>
-          </button>
+            title={BRAND_SCENE_MODULE_LABELS[m]}
+            body={FAMILY_BLURBS[m]}
+            tag={unlocked ? "Available" : "Coming soon"}
+            icon={!unlocked ? <Lock className="w-4 h-4" /> : undefined}
+          />
         );
       })}
     </div>

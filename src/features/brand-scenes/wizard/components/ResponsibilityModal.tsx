@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const REQUIRED_PHRASE = "I AGREE";
+const REQUIRED_PHRASE = "AGREE";
 
 interface Props {
   open: boolean;
@@ -36,11 +36,12 @@ export function ResponsibilityModal({ open, onCancel, onAccept }: Props) {
             <ShieldAlert className="w-5 h-5 text-destructive" />
           </div>
           <DialogTitle className="tracking-tight">
-            Reference images — responsibility check
+            Reference image — quick check
           </DialogTitle>
           <DialogDescription className="leading-relaxed">
-            VOVV.AI uses your references to extract mood, color, and composition.
-            Confirm the three statements below before uploading anything.
+            Your reference is sent to the AI as a visual guide. It replicates
+            framing, lighting and environment while swapping in your product.
+            Confirm the three statements below before uploading.
           </DialogDescription>
         </DialogHeader>
 
@@ -48,17 +49,17 @@ export function ResponsibilityModal({ open, onCancel, onAccept }: Props) {
           <Row
             checked={c1}
             onChange={setC1}
-            label="I own these images or have explicit permission to use them"
+            label="I own this image or have explicit permission to use it"
           />
           <Row
             checked={c2}
             onChange={setC2}
-            label="They do not contain copyrighted logos, trademarks, or recognizable people without consent"
+            label="It does not contain copyrighted logos, trademarks, or recognizable people without consent"
           />
           <Row
             checked={c3}
             onChange={setC3}
-            label="I understand VOVV.AI uses them only to extract mood, color, and composition — never to reproduce them"
+            label="I understand VOVV.AI will use it as a composition guide to generate a new scene with my product"
           />
 
           <div className="pt-2">
