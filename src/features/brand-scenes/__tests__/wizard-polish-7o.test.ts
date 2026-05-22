@@ -9,34 +9,37 @@ import { getStorytellingMoments } from "../wizard/registry/storytellingBySubfami
 import { assembleSceneDirective } from "../prompt/assembleSceneDirective";
 import type { BrandSceneAnswers } from "../types";
 
-describe("Phase 7o — hats-caps-beanies subfamily overrides", () => {
-  it("caps and beanies have distinct settings + moods", () => {
-    const caps = resolveAll("hats-caps-beanies", "caps");
-    const beanies = resolveAll("hats-caps-beanies", "beanies");
-    expect(caps.settings).not.toEqual(beanies.settings);
-    expect(caps.settings).toContain("Urban street");
-    expect(beanies.settings).toContain("Nature");
+import { getSettingPool } from "../wizard/registry/settingsBySubfamily";
+
+describe("Phase 7o → 7p — hats-caps-beanies subfamily pools", () => {
+  it("caps and beanies have distinct outdoor pools", () => {
+    const caps = getSettingPool("hats-caps-beanies", "caps", "outdoor_location");
+    const beanies = getSettingPool("hats-caps-beanies", "beanies", "outdoor_nature");
+    expect(caps).not.toEqual(beanies);
+    expect(caps).toContain("Skate plaza");
+    expect(beanies).toContain("Snowy alley");
   });
 
-  it("hats falls back to its own indoor/editorial settings", () => {
-    const hats = resolveAll("hats-caps-beanies", "hats");
-    expect(hats.settings).toContain("Architectural interior");
-    expect(hats.lens).toContain("portrait");
+  it("hats indoor pool leans editorial", () => {
+    const hats = getSettingPool("hats-caps-beanies", "hats", "indoor_lifestyle");
+    expect(hats).toContain("Atelier");
   });
 });
 
-describe("Phase 7o — footwear/shoes override", () => {
-  it("dress shoes exclude Nature and lean indoor", () => {
-    const shoes = resolveAll("footwear", "shoes");
-    expect(shoes.settings).not.toContain("Nature");
-    expect(shoes.settings).toContain("Architectural interior");
+describe("Phase 7o → 7p — footwear/shoes pool", () => {
+  it("dress shoes have an indoor_lifestyle pool but no outdoor_nature", () => {
+    expect(getSettingPool("footwear", "shoes", "indoor_lifestyle")).toContain("Hotel lobby");
+    // shoes pool has no outdoor_nature entry → falls back to GLOBAL nature list
+    const fallback = getSettingPool("footwear", "shoes", "outdoor_nature");
+    expect(fallback).toContain("Forest trail"); // GLOBAL fallback, not shoes-specific
   });
 
-  it("sneakers still get Urban street", () => {
-    const sneakers = resolveAll("footwear", "sneakers");
-    expect(sneakers.settings).toContain("Urban street");
+  it("sneakers outdoor_location pool is skate-flavored", () => {
+    const sneakers = getSettingPool("footwear", "sneakers", "outdoor_location");
+    expect(sneakers).toContain("Skate plaza");
   });
 });
+
 
 describe("Phase 7o — fashion/streetwear override", () => {
   it("streetwear bundles bold moods", () => {
