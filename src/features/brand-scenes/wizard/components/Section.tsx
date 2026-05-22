@@ -1,5 +1,12 @@
 import { type ReactNode } from "react";
+import { HelpCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SectionProps {
   label: ReactNode;
@@ -9,6 +16,8 @@ interface SectionProps {
   hint?: string;
   /** Optional plain-language helper rendered under the label. */
   helper?: ReactNode;
+  /** Optional short hint rendered as an info-icon tooltip next to the label. */
+  tooltip?: string;
   /**
    * Legacy prop kept for API compatibility. The "+ Show all" toggle was removed
    * in Phase 7r; sections now always render the full list. The render-prop form
@@ -17,6 +26,7 @@ interface SectionProps {
   expandable?: boolean;
   children: ReactNode | ((expanded: boolean) => ReactNode);
 }
+
 
 export function Section({
   label,
