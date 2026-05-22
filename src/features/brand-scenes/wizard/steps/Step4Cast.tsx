@@ -143,6 +143,16 @@ export function Step4Cast({
 
   const warnings = sceneWarnings(answers);
 
+  const showHandsOn =
+    !isReplicate &&
+    visibleHandsOnProduct.length > 0 &&
+    (preset === "hands" || preset === "solo" || preset === "two" || preset === "group") &&
+    (scalePreset === "pocket" || scalePreset === "handheld");
+  const showBodyPart =
+    !isReplicate && preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0;
+  // Group header only when ≥2 sections sit under it.
+  const showInteractionGroup = !isReplicate && (showHandsOn || showBodyPart);
+
   const showBehaviorGroup =
     !isReplicate &&
     (hasPeople || preset === "two" || preset === "group");
