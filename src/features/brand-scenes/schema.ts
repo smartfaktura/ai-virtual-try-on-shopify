@@ -171,6 +171,10 @@ export const brandSceneCastSchema = z
     group_dynamic: groupDynamicSchema.optional(),
     hands_on_product: handsOnProductSchema.optional(),
     diversity: diversitySchema.optional(),
+    extras: z
+      .record(z.string().trim().min(1).max(60), z.string().trim().min(1).max(160))
+      .refine((r) => Object.keys(r).length <= 40, "too many cast extras")
+      .optional(),
   })
   .strict()
   .refine(
