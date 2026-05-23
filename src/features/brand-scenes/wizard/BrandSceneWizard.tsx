@@ -207,6 +207,7 @@ export function BrandSceneWizard() {
   };
 
   const SUB_LABEL: Record<Step4SubStep, string> = {
+    look: "Look",
     essentials: "Essentials",
     people: "People",
     interaction: "Interaction",
