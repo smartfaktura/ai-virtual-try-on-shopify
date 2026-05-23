@@ -12,6 +12,9 @@ import { Step5Review } from "./steps/Step5Review";
 import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
 import { ResponsibilityModal } from "./components/ResponsibilityModal";
 import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const RESPONSIBILITY_KEY = "brand-scenes:responsibility-accepted";
 
@@ -58,6 +61,7 @@ const META_REFERENCE: Record<WizardStep, { title: string; subtitle?: string }> =
 
 
 export function BrandSceneWizard() {
+  const { user } = useAuth();
   const { state, dispatch } = useWizardState();
   const { step, answers, sourcePicked } = state;
   const isReference = sourcePicked && answers.source === "reference";
@@ -298,7 +302,23 @@ export function BrandSceneWizard() {
       <ResponsibilityModal
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
-        onAccept={() => {
+        onAccept={async () => {
+          if (!user) {
+            toast.error("You must be signed in to continue");
+            return;
+          }
+          const { error } = await supabase
+            .from("reference_responsibility_acceptances")
+            .insert({
+              user_id: user.id,
+              user_email: user.email ?? null,
+              user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+              context: "brand_scene_wizard",
+            });
+          if (error) {
+            toast.error("Could not record your confirmation. Please try again.");
+            return;
+          }
           if (typeof window !== "undefined") {
             window.sessionStorage.setItem(RESPONSIBILITY_KEY, "1");
           }
