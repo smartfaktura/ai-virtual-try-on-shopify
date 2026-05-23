@@ -365,15 +365,38 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     }
   };
 
+  const logResponsibilityAcceptance = async () => {
+    if (!currentUser) {
+      toast.error('You must be signed in to continue');
+      return false;
+    }
+    const { error } = await supabase
+      .from('reference_responsibility_acceptances')
+      .insert({
+        user_id: currentUser.id,
+        user_email: currentUser.email ?? null,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        context: 'brand_model_reference',
+      });
+    if (error) {
+      toast.error('Could not record your confirmation. Please try again.');
+      return false;
+    }
+    return true;
+  };
+
   const handleGenerate = async () => {
     if (!canGenerate) return;
     // Reference mode requires a second confirmation step (skippable per-session).
     if (isReferenceMode && uploadedUrl) {
       const skip = typeof window !== 'undefined' && sessionStorage.getItem(SKIP_KEY) === '1';
       if (!skip) { setConfirmOpen(true); return; }
+      const ok = await logResponsibilityAcceptance();
+      if (!ok) return;
     }
     await runGenerate();
   };
+
 
   const handleRegenerateMissing = async () => {
     if (regenerating) return;
