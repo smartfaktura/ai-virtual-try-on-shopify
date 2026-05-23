@@ -692,6 +692,32 @@ function PeopleTab({
         </Section>
       )}
 
+      {lingerie && (
+        <div className="md:col-span-2">
+          <Section label="Lingerie mood">
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+              {LINGERIE_MOODS.map((m) => {
+                const current = cast?.extras?.lingerie_mood;
+                return (
+                  <Chip
+                    key={m.value}
+                    active={current === m.value}
+                    onClick={() => {
+                      const nextExtras = { ...(cast?.extras ?? {}) };
+                      if (current === m.value) delete nextExtras.lingerie_mood;
+                      else nextExtras.lingerie_mood = m.value;
+                      onCastChange({ extras: nextExtras });
+                    }}
+                  >
+                    {m.label}
+                  </Chip>
+                );
+              })}
+            </div>
+          </Section>
+        </div>
+      )}
+
       <div className="md:col-span-2">
         <Section
           label="Ethnicity / casting hint"
