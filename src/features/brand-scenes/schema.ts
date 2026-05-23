@@ -328,6 +328,30 @@ export const brandSceneAnswersSchema = z
       .optional(),
     reference_preview_url: z.string().trim().url().max(2048).optional(),
     reference_intent: referenceIntentSchema.optional(),
+    reference_outfit: z
+      .object({
+        description: z.string().trim().max(1200),
+        breakdown: z
+          .object({
+            silhouette: z.string().max(300).optional(),
+            top: z.string().max(300).optional(),
+            bottom: z.string().max(300).optional(),
+            outerwear: z.string().max(300).optional(),
+            footwear: z.string().max(300).optional(),
+            accessories: z.string().max(400).optional(),
+            palette: z.array(z.string().max(40)).max(6).optional(),
+            fabric_notes: z.string().max(300).optional(),
+            styling_notes: z.string().max(300).optional(),
+            era_or_vibe: z.string().max(160).optional(),
+          })
+          .partial()
+          .optional(),
+        source_image_path: z.string().trim().min(1).max(512),
+        generated_at: z.string().trim().min(1).max(40),
+        edited_by_user: z.boolean(),
+      })
+      .strict()
+      .optional(),
     placement_hint: z.string().trim().max(BRAND_SCENE_PLACEMENT_MAX).optional(),
     cast: brandSceneCastSchema.optional(),
     scale: brandSceneScaleSchema.optional(),
