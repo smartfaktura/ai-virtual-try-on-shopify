@@ -231,12 +231,14 @@ export function Step4Cast({
           <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
             <BranchCard
               active={mode === "skip"}
-              title="Skip — auto-cast"
+              title="Auto-cast"
+              body="We'll pick cast, scale and interaction for you"
               onClick={() => setMode("skip")}
             />
             <BranchCard
               active={mode === "yes"}
               title="Design the look"
+              body="Walk through People, Interaction and Styling"
               onClick={() => setMode("yes")}
             />
           </div>
