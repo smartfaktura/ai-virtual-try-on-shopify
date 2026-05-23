@@ -1,7 +1,10 @@
-import { useState } from "react";
-import { UserRound, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Sparkles, UserRound, Users, X } from "lucide-react";
 import { ModelCatalogModal } from "@/components/app/freestyle/ModelCatalogModal";
 import { getOptimizedUrl } from "@/lib/imageOptimization";
+import { mockModels } from "@/data/mockData";
+import { useModelSortOrder } from "@/hooks/useModelSortOrder";
+import { cn } from "@/lib/utils";
 import type { ModelProfile } from "@/types";
 import type { BrandSceneCast } from "../../types";
 
@@ -11,29 +14,42 @@ interface Props {
   helper?: string;
 }
 
-/**
- * Optional anchor model picker for Brand Scenes. Reuses the standard
- * ModelCatalogModal so brand and built-in models both appear with the same
- * filtering & sorting users see elsewhere in the app.
- */
+/** Curated quick-pick: Freya first, then mixed women + men. */
+const QUICK_PICK_IDS = [
+  "model_029", // Freya — Suggested
+  "model_018", // Anders
+  "model_031", // Zara
+  "model_051", // Jordan
+  "model_033", // Sienna
+  "model_036", // Marcus
+] as const;
+
+const SUGGESTED_ID = "model_029";
+
+function profileToRef(m: ModelProfile): NonNullable<BrandSceneCast["model_ref"]> {
+  return {
+    modelId: m.modelId,
+    name: m.name,
+    sourceImageUrl: m.sourceImageUrl || m.previewUrl,
+    previewUrl: m.previewUrl,
+    gender: m.gender,
+    ageRange: m.ageRange,
+    origin: m.modelId.startsWith("user-") ? "brand" : "built_in",
+  };
+}
+
 export function FeaturedModelPicker({ value, onChange, helper }: Props) {
   const [open, setOpen] = useState(false);
+  const [initialView, setInitialView] = useState<"all" | "brand">("all");
+  const { applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
 
-  const handleSelect = (m: ModelProfile | null) => {
-    if (!m) {
-      onChange(undefined);
-      return;
-    }
-    onChange({
-      modelId: m.modelId,
-      name: m.name,
-      sourceImageUrl: m.sourceImageUrl || m.previewUrl,
-      previewUrl: m.previewUrl,
-      gender: m.gender,
-      ageRange: m.ageRange,
-      origin: m.modelId.startsWith("user-") ? "brand" : "built_in",
-    });
-  };
+  const quickPicks = useMemo(() => {
+    const pool = filterHidden(applyNameOverrides(applyOverrides(mockModels)));
+    const byId = new Map(pool.map((m) => [m.modelId, m]));
+    return QUICK_PICK_IDS.map((id) => byId.get(id)).filter(
+      (m): m is ModelProfile => !!m,
+    );
+  }, [applyOverrides, applyNameOverrides, filterHidden]);
 
   const currentProfile: ModelProfile | null = value
     ? {
@@ -48,9 +64,19 @@ export function FeaturedModelPicker({ value, onChange, helper }: Props) {
       }
     : null;
 
-  return (
-    <>
-      {value ? (
+  const openAll = () => {
+    setInitialView("all");
+    setOpen(true);
+  };
+  const openBrand = () => {
+    setInitialView("brand");
+    setOpen(true);
+  };
+
+  // ── Selected state: compact card with Change / Remove ──
+  if (value) {
+    return (
+      <>
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
           <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
             <img
@@ -68,7 +94,7 @@ export function FeaturedModelPicker({ value, onChange, helper }: Props) {
           </div>
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={openAll}
             className="rounded-md px-2.5 py-1.5 text-[11px] font-medium text-foreground hover:bg-muted"
           >
             Change
@@ -82,34 +108,95 @@ export function FeaturedModelPicker({ value, onChange, helper }: Props) {
             <X className="h-4 w-4" />
           </button>
         </div>
-      ) : (
+
+        <ModelCatalogModal
+          open={open}
+          onOpenChange={setOpen}
+          selectedModel={currentProfile}
+          initialQuickView={initialView}
+          onSelect={(m) => {
+            onChange(m ? profileToRef(m) : undefined);
+            setOpen(false);
+          }}
+        />
+      </>
+    );
+  }
+
+  // ── Empty state: quick-pick grid + actions ──
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {quickPicks.map((m) => {
+          const isSuggested = m.modelId === SUGGESTED_ID;
+          return (
+            <button
+              key={m.modelId}
+              type="button"
+              onClick={() => onChange(profileToRef(m))}
+              className={cn(
+                "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-background text-left transition-all",
+                isSuggested
+                  ? "border-foreground/60 ring-1 ring-foreground/20"
+                  : "border-border hover:border-foreground/40 hover:-translate-y-0.5 hover:shadow-sm",
+              )}
+            >
+              <div className="relative aspect-square overflow-hidden bg-muted">
+                <img
+                  src={getOptimizedUrl(m.previewUrl, { quality: 60 })}
+                  alt={m.name}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {isSuggested && (
+                  <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-foreground px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-background">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    Suggested
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between px-2 py-1.5">
+                <p className="truncate text-[11px] font-medium">{m.name}</p>
+                <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
+                  {m.gender === "female" ? "W" : "M"}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => setOpen(true)}
-          className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-border bg-transparent p-3 text-left hover:border-foreground/40 hover:bg-muted/40"
+          onClick={openAll}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium hover:border-foreground/40 hover:bg-muted"
         >
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-            <UserRound className="h-5 w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">Choose featured model</p>
-            <p className="text-[11px] text-muted-foreground">
-              {helper ??
-                "Optional — lock the same face across all 3 variations"}
-            </p>
-          </div>
+          <UserRound className="h-3.5 w-3.5" />
+          See all models
         </button>
-      )}
+        <button
+          type="button"
+          onClick={openBrand}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium hover:border-foreground/40 hover:bg-muted"
+        >
+          <Users className="h-3.5 w-3.5" />
+          Use a Brand Model
+        </button>
+        {helper && (
+          <span className="text-[11px] text-muted-foreground">{helper}</span>
+        )}
+      </div>
 
       <ModelCatalogModal
         open={open}
         onOpenChange={setOpen}
         selectedModel={currentProfile}
+        initialQuickView={initialView}
         onSelect={(m) => {
-          handleSelect(m);
+          onChange(m ? profileToRef(m) : undefined);
           setOpen(false);
         }}
       />
-    </>
+    </div>
   );
 }
