@@ -159,7 +159,19 @@ export function Step4Cast({
   const setMode = (next: "yes" | "skip") => {
     const nextExtras = { ...(cast?.extras ?? {}) };
     nextExtras.design_specific_look = next;
-    onCastChange({ extras: nextExtras });
+    if (next === "skip") {
+      const seededPreset = cast?.preset ?? resolved.defaultCast;
+      const seededInteraction =
+        cast?.interaction ?? visibleInteractions[0]?.value;
+      onCastChange({
+        extras: nextExtras,
+        preset: seededPreset,
+        interaction: seededInteraction,
+      });
+      if (!scale?.preset) onScaleChange({ preset: resolved.scale.default });
+    } else {
+      onCastChange({ extras: nextExtras });
+    }
   };
 
   // Headline missing flags for the dot indicators.
