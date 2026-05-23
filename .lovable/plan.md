@@ -1,44 +1,75 @@
 ## Goal
 
-On `/app/brand-scenes/new` → Step 4 "Cast" → **Featured Model** section, replace the single "Choose featured model" button with a small grid of quick-pick models so the user can pick in one click. Freya is shown as the default suggestion. A "See all models" action opens the existing full catalog, and a dedicated "From Brand Models" entry jumps straight to the Brand Models tab.
+Two refinements on **Step 4 → People** tab in `/app/brand-scenes/new`:
 
-## What changes (UI)
+1. When the cast preset is **Two people** (or **Group**), let the user pick **2 (or up to 3) featured models** — not just one.
+2. Collapse the per-attribute chip clutter. Add a **"Custom settings"** pill next to *See all models* / *Use a Brand Model* that reveals Gender / Age / Build / Ethnicity. By default those are hidden.
 
-Current state: empty section shows one dashed row with an avatar icon and "Choose featured model".
+## 1. Multi-slot featured model
 
-New state for the **Featured Model** card when nothing is picked:
+### Schema
+- Add `model_refs?: ModelRef[]` to `BrandSceneCast` (new field, optional).
+- Keep `model_ref` as a derived "primary" mirror so existing prompt builder, Step6 preview and `assembleSceneDirective` keep working without touch:
+  - When `model_refs` is set, `model_ref = model_refs[0]`.
+  - When only `model_ref` is set (older sessions), `model_refs = [model_ref]`.
+- Helper functions in `FeaturedModelPicker` normalize both directions on every `onChange`.
+
+### UX
+`FeaturedModelPicker` becomes slot-aware. It receives the cast `preset` as a new prop and renders N slots:
+
+| Preset | Slots |
+|---|---|
+| solo / hands / none / replicate | 1 (unchanged) |
+| two | 2 |
+| group | 3 |
+
+Layout — side-by-side cards on desktop, stacked on mobile:
 
 ```text
-FEATURED MODEL
-Optional — lock this exact face across all 3 variations
+FEATURED MODELS
+Pick up to 2 anchor faces — other people are auto-cast
 
-[ Freya ✓ ] [ Aiden ] [ Maya ] [ Marcus ] [ Sara ] [ Noah ]   ← 6-tile grid, square avatars
-                                                                  Freya shown with subtle "Suggested" pill
-
-[ See all models → ]   [ Use a Brand Model ]
+┌─ Slot 1 ─────────┐   ┌─ Slot 2 ─────────┐
+│ [Freya selected] │   │ [+ Pick model]   │
+│  Change · Remove │   │                  │
+└──────────────────┘   └──────────────────┘
 ```
 
-- 6 quick-pick tiles, ~80×80, rounded, name underneath.
-- Curated list = **Freya** (model_029) first, then a balanced mix of 3 women + 3 men picked from `mockModels` (e.g. Aiden, Maya, Marcus, Sara, Noah — final names confirmed from `src/data/mockData.ts`).
-- Freya gets a small "Suggested" chip; she is **not auto-applied** to `cast.model_ref` (still optional, per existing semantics) but is the first tile and visually pre-highlighted so one click confirms her.
-- Clicking any tile sets `cast.model_ref` via the same mapping `FeaturedModelPicker` already uses.
-- "See all models" opens the existing `ModelCatalogModal` (unchanged).
-- "Use a Brand Model" opens the same modal but switches to its **My Brand Models** quick view by default. For free plans this still shows the existing upgrade upsell inside the modal.
+Each empty slot opens the same quick-pick grid (Freya suggested first time, then alternate suggested pick for slot 2, e.g. **Anders** → male anchor to balance) plus the existing *See all models* and *Use a Brand Model* buttons.
 
-When a model is already selected, the picker keeps today's compact "selected card" layout (avatar + name + Change/Remove). Nothing to relearn.
+### Prompt-side wiring (minimal but real)
+- `assembleSceneDirective` already inserts the primary model image as a reference. Extend it to also append `cast.model_refs[1..N].sourceImageUrl` as additional reference images, tagged `[MODEL IMAGE 2]`, `[MODEL IMAGE 3]`.
+- `buildCastDirective` adds one extra line when `model_refs.length > 1`: "Cast features the provided reference faces — preserve their identities across all subjects." No other prompt logic changes.
+- Section helper copy updates to reflect "up to N anchor faces".
+
+## 2. "Custom settings" pill — collapse Gender / Age / Build / Ethnicity
+
+### Today
+People tab always renders Energy/Vibe, Gender, Age, Build, Ethnicity even though most users with a featured model never need them — and the section feels noisy.
+
+### Change
+- **Energy / vibe** stays visible and required (it drives mood, not identity).
+- **Gender, Age, Build, Ethnicity** become **hidden by default** behind a toggle.
+- Add a third pill in the same row as *See all models* / *Use a Brand Model*:
+
+```text
+[ See all models ]  [ Use a Brand Model ]  [ + Custom settings ]
+```
+
+- Clicking *Custom settings* expands a single grouped block (Gender · Age · Build · Ethnicity) with a small "Hide" link to collapse again.
+- The toggle is local UI state (`useState`) — not persisted to the answers. If any of these fields already have values (returning to the step), the block auto-opens so the user sees their own choices.
+- When a model is selected today, Gender/Age/Build/Ethnicity already auto-hide. Keep that: with a model selected, *Custom settings* is still available but its label changes to "Override casting hints" and the existing "locked to your featured model" caption stays.
 
 ## Files touched
 
-- `src/features/brand-scenes/wizard/components/FeaturedModelPicker.tsx` — add quick-pick grid, "See all" + "Use a Brand Model" actions, "Suggested" chip on Freya. Accept new optional prop `initialCatalogView?: 'all' | 'brand'` for routing to the brand tab.
-- `src/components/app/freestyle/ModelCatalogModal.tsx` — accept a new optional `initialQuickView?: 'all' | 'brand'` prop and seed `quickView` state from it (kept backward compatible; default unchanged).
-- No changes to Step 4 logic, schema, prompt builder, or data.
-
-## Quick-pick curation
-
-Hard-coded list of 6 modelIds resolved at render time from `mockModels` (filter by id, fall back gracefully if a model is hidden via `useModelSortOrder().filterHidden`). Order: Freya first, alternating female/male.
+- `src/features/brand-scenes/types.ts` — add `model_refs?: ModelRef[]`.
+- `src/features/brand-scenes/wizard/components/FeaturedModelPicker.tsx` — slot-aware rendering, primary↔array sync helper, suggested-pick rotation per slot.
+- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (`PeopleTab`) — pass `preset` to the picker, wrap the four attribute sections in a single collapsible controlled by the new "Custom settings" pill, render the pill row.
+- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — append extra `[MODEL IMAGE n]` references when `model_refs.length > 1`.
+- `src/features/brand-scenes/prompt/buildCastDirective.ts` — add the multi-anchor line.
 
 ## Out of scope
 
-- No backend or schema changes.
-- No new "auto-apply Freya" — keeps Featured Model strictly optional as today.
-- No changes to other wizard steps or the brand-scenes prompt builder.
+- No DB / schema migration (the JSONB column already accepts the new field).
+- No change to Step 6 preview chrome — the primary face still renders as today.
+- No change to credit pricing or the variation count.
