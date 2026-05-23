@@ -236,34 +236,33 @@ export function Step4Cast({
 
 
       {subStep === "look" && flow.showBranchCard && (
-        <div className="animate-fade-in pt-6">
+        <div className="animate-fade-in space-y-6 pt-6">
           <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
             <BranchCard
               active={mode === "skip"}
               title="Auto-cast"
               body="We pick cast, interaction and scale"
-              recommended
+              secondary
               onClick={() => setMode("skip")}
             />
             <BranchCard
               active={mode === "yes"}
               title="Design the look"
               body="Choose cast, interaction and styling yourself"
-              secondary
+              recommended
               onClick={() => setMode("yes")}
             />
           </div>
-          <p className="mx-auto max-w-2xl mt-3 text-[11px] text-muted-foreground text-center">
-            You can switch any time — your picks won't be lost
-          </p>
           {mode === "skip" && (
-            <AutoCastSummary
-              cast={cast}
-              scale={scale}
-              hasPeople={hasPeople}
-              onJumpToEssentials={() => onSubStepChange?.("essentials")}
-              onJumpToInteraction={() => onSubStepChange?.("interaction")}
-            />
+            <div className="mx-auto max-w-2xl">
+              <AutoCastSummary
+                cast={cast}
+                scale={scale}
+                hasPeople={hasPeople}
+                onJumpToEssentials={() => onSubStepChange?.("essentials")}
+                onJumpToInteraction={() => onSubStepChange?.("interaction")}
+              />
+            </div>
           )}
         </div>
       )}
@@ -327,9 +326,10 @@ export function Step4Cast({
           {/* Product interaction (required unless replicate) */}
           {!isReplicate && (
             <Section
-              label="Product interaction"
+              label="How the product appears"
               required
               missing={!cast?.interaction}
+              helper="Defines how any product placed into this scene will be staged"
             >
               <div className="flex flex-wrap gap-x-2 gap-y-2.5">
                 {visibleInteractions.map((i) => (
