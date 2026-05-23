@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Sparkles, UserRound, Users, X } from "lucide-react";
+import { Sparkles, UserRound, Users, X } from "lucide-react";
 import { ModelCatalogModal } from "@/components/app/freestyle/ModelCatalogModal";
 import { getOptimizedUrl } from "@/lib/imageOptimization";
 import { mockModels } from "@/data/mockData";
