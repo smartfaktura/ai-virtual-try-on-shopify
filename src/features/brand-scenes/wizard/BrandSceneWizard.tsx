@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const RESPONSIBILITY_KEY = "brand-scenes:responsibility-accepted";
+
 
 const META_WIZARD: Record<WizardStep, { title: string; subtitle?: string }> = {
   0: {
@@ -87,9 +87,6 @@ export function BrandSceneWizard() {
       : baseTitle;
   const { subtitle } = META[step];
 
-  const sessionAccepted =
-    typeof window !== "undefined" &&
-    window.sessionStorage.getItem(RESPONSIBILITY_KEY) === "1";
   const [modalOpen, setModalOpen] = useState(false);
 
   const wizardCastStep = isReference ? 4 : 3;
