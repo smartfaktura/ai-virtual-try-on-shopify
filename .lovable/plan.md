@@ -1,65 +1,37 @@
-# Make saved brand scenes visible
+# Surface saved brand scenes in Product Visuals + Freestyle pickers
 
-Your save flow works end-to-end — the row, preview, and RLS are all correct. The missing piece is **UI surfaces** to see and use saved scenes.
+## Goal
 
-## 1. Replace "Coming soon" with a real listing on `/app/brand-scenes`
+Today, saving a brand scene writes `category_collection = null`, so the new scene only lives on `/app/brand-scenes`. After this change, every saved brand scene appears inside its matching category in both pickers as a "Brand Scenes" sub-group, exactly like any other scene.
 
-Rewrite `src/pages/BrandScenes.tsx` to show the current user's saved brand scenes.
+## Changes
 
-- Query:
-  ```ts
-  supabase
-    .from('product_image_scenes')
-    .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module, brand_scene_answers')
-    .eq('is_brand_scene', true)
-    .eq('owner_user_id', user.id)
-    .order('created_at', { ascending: false });
-  ```
-- Empty state → keep current "Coming soon" copy + "Create your first brand scene" CTA → `/app/brand-scenes/new`.
-- Populated state → grid of cards (preview image, title, created date, module badge) with actions:
-  - **Use in Product Images** → navigate to `/app/generate/product-images?scene={scene_id}` (deep link already supported by the picker).
-  - **Rename** → inline edit `title` (RLS already allows owner update).
-  - **Delete** → soft confirm, then `delete` (RLS already allows owner delete on brand scenes).
-- Keep the existing admin "Open wizard" button; also show a primary "New brand scene" button for all users (admin gating for the wizard can be relaxed later — out of scope here).
+### 1. `supabase/functions/save-brand-scene/index.ts`
+On insert into `product_image_scenes`, set:
+- `category_collection = answers.sub_family` (matches the schema invariant)
+- `sub_category = 'Brand Scenes'`
+- `sub_category_sort_order = -1000` (pins the group to the top of its category)
 
-## 2. Capture a name on save (so it isn't "Untitled scene")
+### 2. Backfill the user's one existing brand scene
+Run a one-off SQL update so the already-saved row also gets `category_collection`, `sub_category`, and `sub_category_sort_order`. Only rows where `is_brand_scene = true AND category_collection IS NULL` are touched.
 
-In `Step6PreviewAndPick.tsx`, before calling `saveBrandScene`:
-- Add a small required `Input` for **Scene name** above the Save button (defaults to a smart suggestion from `answers`, e.g. module + first descriptive answer).
-- Pass `name` to the `save-brand-scene` edge function (already accepted by the function — it's currently sending an empty/undefined value).
-- Disable Save until the name is non-empty.
+### 3. `src/hooks/useSceneCatalog.ts`
+Add a read-only hook `useUserBrandScenes(family, categoryCollection, enabled)` that returns the caller's own active brand scenes, filtered by the same family/sub-family expansion the freestyle modal already uses. RLS already restricts visibility to the owner.
 
-## 3. Show saved brand scenes inside the Product Images scene picker
+### 4. `src/components/app/freestyle/SceneCatalogModal.tsx`
+Render a small "Brand Scenes" section above the existing grid. Hidden when the hook returns zero rows. Selecting a card reuses the existing `onSelect(CatalogScene)` path.
 
-In `src/hooks/useSceneCatalog.ts`, add a dedicated "Your brand scenes" rail that bypasses the family/category filters:
+## Safety
 
-- New exported hook `useUserBrandScenesRail(enabled)`:
-  ```ts
-  supabase
-    .from('product_image_scenes')
-    .select(SLIM_COLUMNS)
-    .eq('is_active', true)
-    .eq('is_brand_scene', true)
-    .eq('owner_user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(24);
-  ```
-- In `ProductImages.tsx`, render this rail at the top of the scene picker (above the default rails) with header "Your brand scenes", only when results > 0.
-- No changes needed to `applyFilters` — brand scenes stay out of the global catalog because they lack `category_collection`.
-
-## 4. Sidebar entry (tiny)
-
-`AppShell.tsx` already references `/brand-scenes`; just confirm the label reads "Brand Scenes" and isn't admin-gated, so users can reach the listing.
-
-## Out of scope
-- No schema changes (table, columns, RLS are already in place).
-- No edge function changes (`save-brand-scene` already accepts `name`).
-- No changes to generation flow, credit logic, or admin scene management.
-- No public sharing of brand scenes across users.
+- **No schema migration, no RLS change.** Every field already exists and policies already isolate brand scenes to their owner.
+- **Fixes an existing invariant.** `src/features/brand-scenes/schema.ts` already requires `category_collection === answers.sub_family`; today's insert violates it.
+- **Product Visuals picker needs no code change** — `useProductImageScenes` already groups by `category_collection → sub_category`. The negative `sub_category_sort_order` floats "Brand Scenes" to the top of its category.
+- **Freestyle change is additive.** A new hook + a section header. No filter, taxonomy, or selection logic is altered.
+- **Out of scope:** wizard, generation, credits, sidebar, admin scene library, public sharing.
 
 ## Files
-- **Rewrite**: `src/pages/BrandScenes.tsx`
-- **Edit**: `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx` (name input + pass to save)
-- **Edit**: `src/hooks/useSceneCatalog.ts` (new `useUserBrandScenesRail`)
-- **Edit**: `src/pages/ProductImages.tsx` (render the new rail)
-- **Verify**: `src/components/app/AppShell.tsx` (sidebar label/visibility)
+
+- `supabase/functions/save-brand-scene/index.ts`
+- One backfill via the insert tool
+- `src/hooks/useSceneCatalog.ts`
+- `src/components/app/freestyle/SceneCatalogModal.tsx`
