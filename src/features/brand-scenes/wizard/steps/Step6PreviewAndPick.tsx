@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Sparkles, ChevronDown, Loader2, RefreshCw } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
