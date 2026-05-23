@@ -216,122 +216,7 @@ export function Step4Cast({
 
       {subStep === "essentials" && (
         <div className="space-y-10 animate-fade-in">
-          {/* 1. Cast preset */}
-          <Section label="Who's in the shot" required missing={!preset}>
-            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-              {visibleCastPresets.map((p) => (
-                <Chip
-                  key={p.value}
-                  active={preset === p.value}
-                  onClick={() => {
-                    if (p.value === "replicate") {
-                      onCastChange({
-                        preset: "replicate",
-                        gender: undefined,
-                        age: undefined,
-                        vibe: undefined,
-                        interaction: undefined,
-                        action: undefined,
-                        body_part_focus: undefined,
-                        gaze: undefined,
-                        group_dynamic: undefined,
-                        hands_on_product: undefined,
-                      });
-                      return;
-                    }
-                    onCastChange({
-                      preset: p.value,
-                      interaction:
-                        cast?.interaction &&
-                        !forbiddenInteractions(p.value, module, scalePreset).has(
-                          cast.interaction,
-                        )
-                          ? cast.interaction
-                          : undefined,
-                      group_dynamic:
-                        p.value === "two" || p.value === "group"
-                          ? cast?.group_dynamic
-                          : undefined,
-                    });
-                  }}
-                >
-                  {p.label}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {isReplicate && (
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Subject, pose, framing and lighting will be locked to your reference.
-              Product scale below still applies because the inserted product may
-              differ from what's in the image.
-            </p>
-          )}
-
-          {/* 2. Product interaction (required unless replicate) */}
-          {!isReplicate && (
-            <Section
-              label="Product interaction"
-              required
-              missing={!cast?.interaction}
-            >
-              <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                {visibleInteractions.map((i) => (
-                  <Chip
-                    key={i.value}
-                    active={cast?.interaction === i.value}
-                    onClick={() =>
-                      onCastChange({ interaction: i.value as CastInteraction })
-                    }
-                  >
-                    {i.label}
-                  </Chip>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* 3. Product scale */}
-          {showScaleSection && (
-            <Section label="Product scale" required missing={!scale?.preset}>
-              <>
-                <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                  {visibleScales.map((s) => (
-                    <Chip
-                      key={s.value}
-                      active={scalePreset === s.value}
-                      onClick={() => onScaleChange({ preset: s.value })}
-                    >
-                      {s.label}
-                    </Chip>
-                  ))}
-                </div>
-                <div className="mt-3">
-                  {showExact ? (
-                    <Chip
-                      onClick={() => {
-                        setShowExact(false);
-                        onScaleChange({ dimensions: undefined });
-                      }}
-                    >
-                      Hide exact size
-                    </Chip>
-                  ) : (
-                    <AddChip onClick={() => setShowExact(true)} label="Exact size" />
-                  )}
-                </div>
-                {showExact && (
-                  <ExactDimensions
-                    value={scale?.dimensions}
-                    onChange={(d) => onScaleChange({ dimensions: d })}
-                  />
-                )}
-              </>
-            </Section>
-          )}
-
-          {/* 4. Branch — design specific look? */}
+          {/* 1. Branch — design specific look? (asked FIRST) */}
           {flow.showBranchCard && (
             <Section
               label="Design a specific look?"
@@ -354,6 +239,126 @@ export function Step4Cast({
                 />
               </div>
             </Section>
+          )}
+
+          {/* Rest of Essentials only after the branch is answered (or if no branch card). */}
+          {(!flow.showBranchCard || !!mode) && (
+            <div className="space-y-10 animate-fade-in">
+              {/* 2. Cast preset */}
+              <Section label="Who's in the shot" required missing={!preset}>
+                <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                  {visibleCastPresets.map((p) => (
+                    <Chip
+                      key={p.value}
+                      active={preset === p.value}
+                      onClick={() => {
+                        if (p.value === "replicate") {
+                          onCastChange({
+                            preset: "replicate",
+                            gender: undefined,
+                            age: undefined,
+                            vibe: undefined,
+                            interaction: undefined,
+                            action: undefined,
+                            body_part_focus: undefined,
+                            gaze: undefined,
+                            group_dynamic: undefined,
+                            hands_on_product: undefined,
+                          });
+                          return;
+                        }
+                        onCastChange({
+                          preset: p.value,
+                          interaction:
+                            cast?.interaction &&
+                            !forbiddenInteractions(p.value, module, scalePreset).has(
+                              cast.interaction,
+                            )
+                              ? cast.interaction
+                              : undefined,
+                          group_dynamic:
+                            p.value === "two" || p.value === "group"
+                              ? cast?.group_dynamic
+                              : undefined,
+                        });
+                      }}
+                    >
+                      {p.label}
+                    </Chip>
+                  ))}
+                </div>
+              </Section>
+
+              {isReplicate && (
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Subject, pose, framing and lighting will be locked to your reference.
+                  Product scale below still applies because the inserted product may
+                  differ from what's in the image.
+                </p>
+              )}
+
+              {/* 3. Product interaction (required unless replicate) */}
+              {!isReplicate && (
+                <Section
+                  label="Product interaction"
+                  required
+                  missing={!cast?.interaction}
+                >
+                  <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                    {visibleInteractions.map((i) => (
+                      <Chip
+                        key={i.value}
+                        active={cast?.interaction === i.value}
+                        onClick={() =>
+                          onCastChange({ interaction: i.value as CastInteraction })
+                        }
+                      >
+                        {i.label}
+                      </Chip>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* 4. Product scale */}
+              {showScaleSection && (
+                <Section label="Product scale" required missing={!scale?.preset}>
+                  <>
+                    <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                      {visibleScales.map((s) => (
+                        <Chip
+                          key={s.value}
+                          active={scalePreset === s.value}
+                          onClick={() => onScaleChange({ preset: s.value })}
+                        >
+                          {s.label}
+                        </Chip>
+                      ))}
+                    </div>
+                    <div className="mt-3">
+                      {showExact ? (
+                        <Chip
+                          onClick={() => {
+                            setShowExact(false);
+                            onScaleChange({ dimensions: undefined });
+                          }}
+                        >
+                          Hide exact size
+                        </Chip>
+                      ) : (
+                        <AddChip onClick={() => setShowExact(true)} label="Exact size" />
+                      )}
+                    </div>
+                    {showExact && (
+                      <ExactDimensions
+                        value={scale?.dimensions}
+                        onChange={(d) => onScaleChange({ dimensions: d })}
+                      />
+                    )}
+                  </>
+                </Section>
+              )}
+            </div>
           )}
         </div>
       )}
