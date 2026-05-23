@@ -30,11 +30,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
           Ready to generate
         </div>
         <div className="mt-1 text-base font-semibold tracking-tight">
-          {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · 4:5 ·{" "}
+          {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations ·{" "}
           {BRAND_SCENE_GENERATION_COST} credits
         </div>
         <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-          Saving the scene is free. Only generating variations deducts credits.
+          We'll generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} preview variations. After they're ready, you can save the one you like best to your library.
         </p>
 
         <div className="mt-5">
