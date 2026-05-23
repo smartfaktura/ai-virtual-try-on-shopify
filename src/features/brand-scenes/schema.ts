@@ -169,6 +169,22 @@ const castActionSchema = z.enum([
   "candid",
 ]);
 
+const outfitSlotSchema = z
+  .object({
+    preset: z.string().trim().min(1).max(40).optional(),
+    custom: z.string().trim().min(1).max(80).optional(),
+  })
+  .strict();
+
+const outfitSchema = z
+  .object({
+    vibe: outfitSlotSchema.optional(),
+    top: outfitSlotSchema.optional(),
+    bottom: outfitSlotSchema.optional(),
+    footwear: outfitSlotSchema.optional(),
+  })
+  .strict();
+
 export const brandSceneCastSchema = z
   .object({
     preset: castPresetSchema,
@@ -189,6 +205,7 @@ export const brandSceneCastSchema = z
       .record(z.string().trim().min(1).max(60), z.string().trim().min(1).max(160))
       .refine((r) => Object.keys(r).length <= 40, "too many cast extras")
       .optional(),
+    outfit: outfitSchema.optional(),
   })
   .strict()
   .refine(
