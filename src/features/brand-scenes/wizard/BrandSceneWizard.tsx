@@ -333,6 +333,13 @@ export function BrandSceneWizard() {
               dispatch({ type: "setReferenceIntent", intent })
             }
             onNoteChange={(note) => dispatch({ type: "setNote", note })}
+            referenceOutfit={answers.reference_outfit}
+            onReferenceOutfitChange={(outfit) =>
+              dispatch({ type: "setReferenceOutfit", outfit })
+            }
+            onReferenceOutfitClear={() =>
+              dispatch({ type: "clearReferenceOutfit" })
+            }
           />
         )}
 

@@ -244,6 +244,17 @@ function ReferenceSummary({ answers }: { answers: BrandSceneAnswers }) {
             </p>
           </div>
         )}
+        {answers.reference_outfit?.description && (
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Outfit direction
+              {answers.reference_outfit.edited_by_user ? " · edited" : " · AI"}
+            </div>
+            <p className="mt-1 text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
+              {answers.reference_outfit.description}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

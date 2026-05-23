@@ -3,6 +3,7 @@ import type {
   BrandSceneAnswers,
   BrandSceneCast,
   BrandSceneScale,
+  ReferenceOutfit,
 } from "../types";
 import type { BrandSceneModule, BrandSceneSource } from "../constants";
 import type { ReferenceIntent } from "../prompt/buildReferenceDirective";
@@ -44,6 +45,8 @@ type Action =
       previewUrl: string | null;
     }
   | { type: "setReferenceIntent"; intent: ReferenceIntent }
+  | { type: "setReferenceOutfit"; outfit: ReferenceOutfit }
+  | { type: "clearReferenceOutfit" }
   | { type: "setCast"; patch: Partial<BrandSceneCast> }
   | { type: "setScale"; patch: Partial<BrandSceneScale> }
   | { type: "setNegativeNote"; note: string }
@@ -150,12 +153,24 @@ function reducer(state: WizardState, action: Action): WizardState {
           ...state.answers,
           reference_image_paths: action.path ? [action.path] : undefined,
           reference_preview_url: action.previewUrl ?? undefined,
+          // Image changed/removed → clear any previously analyzed outfit.
+          reference_outfit: undefined,
         },
       };
     case "setReferenceIntent":
       return {
         ...state,
         answers: { ...state.answers, reference_intent: action.intent },
+      };
+    case "setReferenceOutfit":
+      return {
+        ...state,
+        answers: { ...state.answers, reference_outfit: action.outfit },
+      };
+    case "clearReferenceOutfit":
+      return {
+        ...state,
+        answers: { ...state.answers, reference_outfit: undefined },
       };
     case "setCast": {
       const prev = state.answers.cast;

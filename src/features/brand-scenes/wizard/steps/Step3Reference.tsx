@@ -15,6 +15,8 @@ import {
   BRAND_SCENE_REFERENCE_MAX_BYTES,
 } from "../../constants";
 import type { ReferenceIntent } from "../../prompt/buildReferenceDirective";
+import type { ReferenceOutfit } from "../../types";
+import { ReferenceOutfitCard } from "../components/ReferenceOutfitCard";
 
 const REFERENCE_INTENTS: { value: ReferenceIntent; label: string; hint: string }[] = [
   {
@@ -41,10 +43,13 @@ interface Props {
   name?: string;
   intent?: ReferenceIntent;
   note?: string;
+  referenceOutfit?: ReferenceOutfit;
   onImageChange: (path: string | null, previewUrl: string | null) => void;
   onNameChange: (name: string) => void;
   onIntentChange: (intent: ReferenceIntent) => void;
   onNoteChange: (note: string) => void;
+  onReferenceOutfitChange: (outfit: ReferenceOutfit) => void;
+  onReferenceOutfitClear: () => void;
 }
 
 const ACCEPTED_MIME = ["image/jpeg", "image/png", "image/webp"];
@@ -56,10 +61,13 @@ export function Step3Reference({
   name = "",
   intent,
   note = "",
+  referenceOutfit,
   onImageChange,
   onNameChange,
   onIntentChange,
   onNoteChange,
+  onReferenceOutfitChange,
+  onReferenceOutfitClear,
 }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -266,6 +274,17 @@ export function Step3Reference({
           ))}
         </div>
       </div>
+
+      {/* AI outfit direction (only when an image is uploaded) */}
+      <ReferenceOutfitCard
+        imagePath={imagePath}
+        previewUrl={previewUrl}
+        outfit={referenceOutfit}
+        onChange={onReferenceOutfitChange}
+        onClear={onReferenceOutfitClear}
+      />
+
+
 
 
       {/* Extra direction */}
