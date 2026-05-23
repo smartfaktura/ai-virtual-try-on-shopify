@@ -650,6 +650,22 @@ function PeopleTab({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
       <div className="md:col-span-2">
+        <Section
+          label="Featured model"
+          helper={
+            preset === "solo"
+              ? "Optional — lock this exact face across all 3 variations"
+              : "Optional — anchor identity; other people are auto-cast"
+          }
+        >
+          <FeaturedModelPicker
+            value={cast?.model_ref}
+            onChange={(next) => onCastChange({ model_ref: next })}
+          />
+        </Section>
+      </div>
+
+      <div className="md:col-span-2">
         <Section label="Energy / vibe" required missing={vibeMissing}>
           <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {CAST_VIBES.map((v) => (
@@ -668,6 +684,7 @@ function PeopleTab({
           </div>
         </Section>
       </div>
+
 
       <Section label={genderLabel}>
         <MultiSelect
