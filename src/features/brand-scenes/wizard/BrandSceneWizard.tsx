@@ -13,6 +13,7 @@ import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
 import { ResponsibilityModal } from "./components/ResponsibilityModal";
 import {
   computeStep4Flow,
+  getStep4Mode,
   getSubStepDisabledReason,
   type Step4SubStep,
 } from "./step4Flow";
@@ -94,8 +95,30 @@ export function BrandSceneWizard() {
   const wizardCastStep = isReference ? 4 : 3;
   const onCastStep = step === wizardCastStep;
   const [step4SubStep, setStep4SubStep] = useState<Step4SubStep>("look");
+  const [visitedSubSteps, setVisitedSubSteps] = useState<Set<Step4SubStep>>(
+    () => new Set<Step4SubStep>(["look"]),
+  );
   const step4Ctx = { module: answers.module, subFamily: answers.sub_family, isReference };
   const step4Flow = computeStep4Flow(answers, step4Ctx);
+  const step4Mode = getStep4Mode(answers.cast);
+
+  // Track which sub-steps the user has actually visited (controls tab ✓).
+  useEffect(() => {
+    if (!onCastStep) return;
+    setVisitedSubSteps((prev) =>
+      prev.has(step4SubStep) ? prev : new Set(prev).add(step4SubStep),
+    );
+  }, [onCastStep, step4SubStep]);
+
+  // Auto-cast = treat every cast sub-step as "handled" (the system filled them).
+  useEffect(() => {
+    if (!onCastStep || step4Mode !== "skip") return;
+    setVisitedSubSteps((prev) => {
+      const next = new Set(prev);
+      for (const t of step4Flow.visibleTabs) next.add(t);
+      return next;
+    });
+  }, [onCastStep, step4Mode, step4Flow.visibleTabs]);
 
   // Snap to the first available sub-step if the current one disappears.
   useEffect(() => {
@@ -154,6 +177,16 @@ export function BrandSceneWizard() {
   const handleNext = () => {
     // Step 4 internal sub-step navigation.
     if (onCastStep) {
+      // Auto-cast on the Look chooser → skip all sub-steps, go to the next
+      // wizard step. Essentials/People/Interaction/Styling are already filled.
+      if (step4SubStep === "look" && step4Mode === "skip") {
+        if (step === 4 && isReference) {
+          dispatch({ type: "setStep", step: 6 });
+          return;
+        }
+        dispatch({ type: "next" });
+        return;
+      }
       const order = step4Flow.order;
       const idx = order.indexOf(step4SubStep);
       if (idx >= 0 && idx < order.length - 1) {
@@ -220,7 +253,12 @@ export function BrandSceneWizard() {
     if (idx >= 0 && idx < order.length - 1) return order[idx + 1];
     return null;
   })();
-  const nextLabel = nextSubStep ? `Continue to ${SUB_LABEL[nextSubStep]}` : undefined;
+  const nextLabel = (() => {
+    if (!onCastStep) return undefined;
+    // Auto-cast on Look → skips all sub-steps, so just say "Continue".
+    if (step4SubStep === "look" && step4Mode === "skip") return "Continue";
+    return nextSubStep ? `Continue to ${SUB_LABEL[nextSubStep]}` : undefined;
+  })();
 
   return (
     <>
@@ -276,6 +314,7 @@ export function BrandSceneWizard() {
             onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
             subStep={step4SubStep}
             onSubStepChange={setStep4SubStep}
+            visitedSubSteps={visitedSubSteps}
           />
         )}
 
@@ -320,6 +359,7 @@ export function BrandSceneWizard() {
             onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
             subStep={step4SubStep}
             onSubStepChange={setStep4SubStep}
+            visitedSubSteps={visitedSubSteps}
           />
         )}
 

@@ -1,71 +1,59 @@
-## Add "Other" free-text option to every chip field in Step 5 (How is the photo taken?)
+## Step 4 → Look sub-step UX fixes
 
-Mirror the pattern already used by Palette: each chip row gets an `+ Other` chip that opens a small inline input so users can write specific direction (e.g. "50mm f/1.4", "hard 45° rim shadow", "matte film grain Portra 400"). When a custom value is set it overrides the preset for that field, both in UI and in the generated prompt.
+Tighten the mode-chooser screen so the choice is obvious, the auto-cast path actually feels automatic, and the chrome around it stops contradicting itself. Visual-only changes — no business logic, no schema, no prompt changes.
 
-### Fields covered (all chip rows in Step 5)
-Lens · Background blur · Focus · Shadows · Composition · Negative space · Realism · Contrast · Saturation · Finish.
-Palette already has it — leave as is.
+### 1. Auto-cast actually skips ahead
+File: `BrandSceneWizard.tsx` (`handleNext`)
 
-The extras-driven block (`camera_angle`, `motion`, `composition_energy`, `crop_safety`) is rendered via `ExtrasPillField` and is out of scope of this change.
+When the user is on `subStep === "look"` and mode is `skip`, advance the wizard past `essentials` straight to the next wizard step (Photography / step 5). Today it stops on Essentials even though Auto-cast already filled everything.
 
-### UI
+- If `mode === "skip"` and `subStep === "look"`: skip the sub-step loop and go to `dispatch({type:"next"})` (which moves to step 5).
+- Keep `mode === "yes"` behaviour unchanged (walk through Essentials → People → Interaction → Styling).
+- Update `nextLabel` so the Look screen reads **"Continue"** when mode is skip, and **"Continue to Essentials"** only when mode is yes.
 
-Add a new shared helper next to `ChipRow` in `_baseHelpers.tsx`:
+### 2. Stop showing premature ✓ on tabs the user hasn't seen
+File: `Step4Cast.tsx` (tab bar `done` calculation)
 
-```text
-ChipRowWithOther
-  ├─ existing chips (preset values)
-  ├─ + Other chip          → reveals input
-  └─ <Input>               → custom text (max 120 chars)
-```
+A tab should only show a check if the user has actually visited it OR explicitly chose Auto-cast for it. Pass `subStepsVisited: Set<Step4SubStep>` from `BrandSceneWizard` (tracks which sub-steps have been the active one) and gate the ✓ on `visited.has(t)`. Auto-cast still marks all skipped tabs as visited so they read as "handled" rather than "to do".
 
-Behavior:
-- If `custom` is set, no preset chip is highlighted and the input is shown pre-filled.
-- Picking a preset chip clears `custom`.
-- Typing in the input clears `preset`.
-- Empty input + close = both cleared (same as palette).
-- Style matches `PaletteBlock` (rounded-xl input, mt-2, same placeholder tone).
+### 3. Visual hierarchy on the two cards
+File: `Step4Cast.tsx` `BranchCard` + the wrapper grid
 
-Swap each `ChipRow` in `Step5Photography.tsx` for `ChipRowWithOther`, passing a `custom` value and `onCustom` handler.
+- Active card gets a stronger treatment: 2px border (`border-foreground`), subtle inner ring (`ring-1 ring-foreground/10`), and a small **Recommended** chip on Auto-cast.
+- Add a tiny `aria-pressed` + visually-hidden "Selected" label.
+- Demote the secondary card slightly (smaller title weight, muted body) so the default choice is unambiguous.
+- Place a one-line caption under the grid: **"You can switch any time — your picks won't be lost."**
 
-### State / schema
+### 4. Show the auto-picked values inline
+File: `Step4Cast.tsx`, under the BranchCard grid when `mode === "skip"`
 
-Add optional `_custom` siblings to `BrandSceneBaseAnswers` (in `types.ts` and the matching zod schema in `schema.ts`):
+Render a small read-only summary row of chips with the seeded values (cast preset, interaction, scale) — e.g. `Solo · Holding · Handheld`. Tapping a chip jumps to Essentials with that field focused. Gives users confidence without forcing them through tabs.
 
-```
-lens_custom?, depth_of_field_custom?, subject_focus_custom?, shadows_custom?,
-composition_custom?, negative_space_intent_custom?, realism_custom?,
-color_contrast_custom?, saturation_custom?, finish_custom?
-```
+### 5. Unify vocabulary
+Files: `Step4Cast.tsx` (BranchCard body strings), and the tab `labelMap`.
 
-All optional strings, max 120 chars, trimmed.
+- Auto-cast body: **"We pick cast, interaction and scale"**
+- Design the look body: **"Choose cast, interaction and styling yourself"**
+- Tab order stays `Look · Essentials · People · Interaction · Styling` — but make the Auto-cast subtitle reference the same nouns ("cast, interaction, scale") used in Essentials so the words match what the tabs show.
 
-### Prompt wiring (`assembleSceneDirective.ts`)
+### 6. Single progress indicator on this screen
+File: `Step4Cast.tsx` tab bar
 
-For each field, prefer the custom string over the preset directive — same pattern as palette:
+The page header already shows `04 / 07`. Hide the right-aligned `Step 1 of 5` counter on the **Look** sub-step (the chooser has no real "step N" meaning). Keep it visible on Essentials/People/Interaction/Styling where it does help.
 
-```ts
-const lensDirective = base.lens_custom ?? meta(SCENE_LENSES, base.lens)?.directive;
-if (lensDirective) camParts.push(`Camera: ${lensDirective}`);
-```
+### 7. Action-bar spacing
+File: `WizardLayout` footer (or wherever the Back/Continue strip lives — confirm during build)
 
-Apply equivalently to dof, finish, shadows, composition, neg space, realism, focus, contrast, saturation. Keep prefixes ("Camera:", "Finish:", etc.) so directive structure is unchanged.
-
-### Review step
-
-`Step5Review.tsx` already reads these fields; update the lookup to fall back to the custom string when present so the review chip shows the user-typed text (in italic or plain — matching palette's current treatment).
+The white container around Back/Continue currently floats far below the cards. On the Look sub-step only, tighten the top padding of the footer so the cards and the CTA feel like one composition.
 
 ### Out of scope
 
-- Step 4 (Cast) and the `Where does it happen?` step — no Other added there in this pass.
-- `ExtrasPillField` (camera_angle etc.) — that component already has its own custom-input behavior managed separately.
-- Validation rules, autopick logic, recommendations — untouched.
+- No changes to `step4Flow` validation, prompt assembly, schema, or any other wizard step.
+- No copy changes to the page header / subtitle ("Who's in the scene?") — separate pass.
+- No keyboard shortcut work (noted for later).
 
-### Files
+### Files touched
 
-- `src/features/brand-scenes/wizard/steps/_baseHelpers.tsx` — new `ChipRowWithOther`
-- `src/features/brand-scenes/wizard/steps/Step5Photography.tsx` — swap 10 ChipRow usages
-- `src/features/brand-scenes/types.ts` — add 10 `*_custom` optional fields
-- `src/features/brand-scenes/schema.ts` — mirror in zod
-- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — prefer custom over preset
-- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` — display custom value when set
+- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` — skip-ahead routing, nextLabel, visited tracking
+- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — BranchCard styling, summary chips, vocab, conditional step counter, gated ✓
+- `src/features/brand-scenes/wizard/components/WizardLayout.tsx` (or footer file) — Look-only footer spacing tweak
