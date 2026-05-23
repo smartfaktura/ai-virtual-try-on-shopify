@@ -257,6 +257,8 @@ export function BrandSceneWizard() {
             scale={answers.scale}
             onCastChange={(patch) => dispatch({ type: "setCast", patch })}
             onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
+            subStep={step4SubStep}
+            onSubStepChange={setStep4SubStep}
           />
         )}
 
