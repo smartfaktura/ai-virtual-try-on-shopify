@@ -45,6 +45,8 @@ type Action =
       previewUrl: string | null;
     }
   | { type: "setReferenceIntent"; intent: ReferenceIntent }
+  | { type: "setReferenceOutfit"; outfit: ReferenceOutfit }
+  | { type: "clearReferenceOutfit" }
   | { type: "setCast"; patch: Partial<BrandSceneCast> }
   | { type: "setScale"; patch: Partial<BrandSceneScale> }
   | { type: "setNegativeNote"; note: string }
