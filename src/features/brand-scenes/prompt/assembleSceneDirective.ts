@@ -28,6 +28,12 @@ import {
   SCENE_EXTRAS_FIELDS,
   CAST_EXTRAS_FIELDS,
 } from "../wizard/constants/extras";
+import {
+  OUTFIT_VIBES,
+  OUTFIT_TOPS,
+  OUTFIT_BOTTOMS,
+  OUTFIT_FOOTWEAR,
+} from "../wizard/constants/outfit";
 
 /**
  * Canonical scene-directive assembler. Produces a structured, Gemini/Nano
