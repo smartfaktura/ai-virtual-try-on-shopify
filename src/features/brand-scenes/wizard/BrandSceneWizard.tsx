@@ -177,6 +177,16 @@ export function BrandSceneWizard() {
   const handleNext = () => {
     // Step 4 internal sub-step navigation.
     if (onCastStep) {
+      // Auto-cast on the Look chooser → skip all sub-steps, go to the next
+      // wizard step. Essentials/People/Interaction/Styling are already filled.
+      if (step4SubStep === "look" && step4Mode === "skip") {
+        if (step === 4 && isReference) {
+          dispatch({ type: "setStep", step: 6 });
+          return;
+        }
+        dispatch({ type: "next" });
+        return;
+      }
       const order = step4Flow.order;
       const idx = order.indexOf(step4SubStep);
       if (idx >= 0 && idx < order.length - 1) {
