@@ -384,6 +384,7 @@ export function BrandSceneWizard() {
             onNegativeNoteChange={(note) =>
               dispatch({ type: "setNegativeNote", note })
             }
+            onNameChange={(name) => dispatch({ type: "setName", name })}
           />
         )}
       </WizardLayout>
