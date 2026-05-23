@@ -34,6 +34,8 @@ import {
   OUTFIT_BOTTOMS,
   OUTFIT_FOOTWEAR,
 } from "../wizard/constants/outfit";
+import { resolveSubfamilyGuide } from "../wizard/registry/subfamilyGuides";
+import { CAST_PRESETS_WITH_PEOPLE } from "../wizard/constants/cast";
 
 /**
  * Canonical scene-directive assembler. Produces a structured, Gemini/Nano
@@ -61,6 +63,16 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   const notes: string[] = [];
   const reference: string[] = [];
   const name: string[] = [];
+  const productFocus: string[] = [];
+
+  // ----- PRODUCT FOCUS (sub-family-aware wardrobe / hero-piece directive) -----
+  const guide = resolveSubfamilyGuide(answers.module, answers.sub_family);
+  const castHasPeople = !!(
+    answers.cast && CAST_PRESETS_WITH_PEOPLE.includes(answers.cast.preset as any)
+  );
+  if (guide && castHasPeople) {
+    productFocus.push(guide.wardrobe);
+  }
 
   // ----- REFERENCE -----
   const refLine =
