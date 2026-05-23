@@ -193,10 +193,12 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
 
   // ----- CAST DETAILS -----
   const castExtras = answers.cast?.extras ?? {};
-  if (castExtras.ethnicity?.trim()) {
+  const modelLocked = !!answers.cast?.model_ref;
+  if (!modelLocked && castExtras.ethnicity?.trim()) {
     castDetails.push(`- Ethnicity: ${castExtras.ethnicity.trim()}.`);
   }
   for (const f of CAST_EXTRAS_FIELDS) {
+    if (modelLocked && f.key === "build") continue;
     const v = castExtras[f.key];
     if (v && v.trim()) castDetails.push(`- ${f.prefix}: ${v.trim()}.`);
   }
