@@ -42,26 +42,30 @@ interface Props {
   onChange: (patch: Partial<BrandSceneBaseAnswers>) => void;
 }
 
-const ENV_GROUPS: { label: string; keys: string[]; defaultOpen?: boolean }[] = [
-  {
-    label: "Backdrop & floor",
-    defaultOpen: true,
-    keys: [
-      "backdrop_type",
-      "backdrop_color",
-      "backdrop_color_a",
-      "backdrop_color_b",
-      "backdrop_gradient",
-      "gradient_direction",
-      "floor",
-      "studio_fx",
-    ],
-  },
-  {
-    label: "Light & time",
-    keys: ["time_of_day_detail", "light_direction", "light_quality"],
-  },
+const ENV_FIELD_ORDER = [
+  "backdrop_type",
+  "backdrop_color",
+  "backdrop_color_a",
+  "backdrop_color_b",
+  "backdrop_gradient",
+  "gradient_direction",
+  "floor",
+  "studio_fx",
+  "time_of_day_detail",
+  "light_direction",
+  "light_quality",
 ];
+
+function ChapterHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-14 mb-6 first:mt-0">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        {children}
+      </div>
+      <div className="mt-3 h-px bg-border/70" />
+    </div>
+  );
+}
 
 export function Step4Environment({
   module,
