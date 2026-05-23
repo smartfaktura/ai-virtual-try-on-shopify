@@ -447,33 +447,100 @@ function BranchCard({
   active,
   title,
   body,
+  recommended = false,
+  secondary = false,
   onClick,
 }: {
   active: boolean;
   title: string;
   body?: string;
+  recommended?: boolean;
+  secondary?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`text-left rounded-2xl border px-5 py-6 transition-colors ${
+      aria-pressed={active}
+      className={`relative text-left rounded-2xl border px-5 py-6 transition-colors ${
         active
-          ? "border-foreground bg-foreground/[0.04]"
+          ? "border-foreground border-2 bg-foreground/[0.04] ring-1 ring-foreground/10"
           : "border-border hover:border-foreground/40 hover:bg-muted/40"
       }`}
     >
+      {recommended && !active && (
+        <span className="absolute -top-2 left-4 rounded-full bg-foreground px-2 py-0.5 text-[9px] uppercase tracking-widest text-background">
+          Recommended
+        </span>
+      )}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold">{title}</span>
+        <span
+          className={`text-sm ${
+            secondary ? "font-medium text-foreground/80" : "font-semibold"
+          }`}
+        >
+          {title}
+        </span>
         {active && <Check className="w-3.5 h-3.5 text-foreground" />}
       </div>
       {body && (
-        <p className="text-[11px] text-muted-foreground leading-relaxed mt-1.5">
+        <p
+          className={`text-[11px] leading-relaxed mt-1.5 ${
+            secondary ? "text-muted-foreground/80" : "text-muted-foreground"
+          }`}
+        >
           {body}
         </p>
       )}
+      {active && <span className="sr-only">Selected</span>}
     </button>
+  );
+}
+
+/* ──────────────────────── Auto-cast summary ─────────────────────── */
+
+function AutoCastSummary({
+  cast,
+  scale,
+  onJumpToEssentials,
+}: {
+  cast?: BrandSceneCast;
+  scale?: BrandSceneScale;
+  onJumpToEssentials: () => void;
+}) {
+  const presetLabel = CAST_PRESETS.find((p) => p.value === cast?.preset)?.label;
+  const interactionLabel = CAST_INTERACTIONS.find(
+    (i) => i.value === cast?.interaction,
+  )?.label;
+  const scaleLabel = SCALE_PRESETS.find((s) => s.value === scale?.preset)?.label;
+  const chips = [presetLabel, interactionLabel, scaleLabel].filter(Boolean) as string[];
+  if (!chips.length) return null;
+  return (
+    <div className="mx-auto max-w-2xl mt-5 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
+          Auto-picked
+        </div>
+        <button
+          type="button"
+          onClick={onJumpToEssentials}
+          className="text-[11px] text-foreground/70 underline-offset-2 hover:underline"
+        >
+          Adjust
+        </button>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {chips.map((c) => (
+          <span
+            key={c}
+            className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-[11px] text-foreground/80"
+          >
+            {c}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
