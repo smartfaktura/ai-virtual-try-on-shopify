@@ -229,7 +229,7 @@ export function BrandSceneWizard() {
   };
 
   const handlePickReference = () => {
-    if (sessionAccepted || state.responsibilityAccepted) {
+    if (state.responsibilityAccepted) {
       dispatch({ type: "setSource", source: "reference" });
     } else {
       setModalOpen(true);
