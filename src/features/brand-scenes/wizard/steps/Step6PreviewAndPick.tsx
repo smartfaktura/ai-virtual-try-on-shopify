@@ -3,6 +3,9 @@ import { Sparkles, ChevronDown, Loader2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useCredits } from "@/contexts/CreditContext";
 import { useIsAdminSafe } from "../hooks/useIsAdminSafe";
 import { Step5Review } from "./Step5Review";
 import { BrandSceneGenerateLoading } from "../components/BrandSceneGenerateLoading";
@@ -15,21 +18,26 @@ import {
 } from "../../api/brandSceneApi";
 import type { BrandSceneAnswers } from "../../types";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
+import { injectReferenceTokens } from "../../prompt/injectReferenceTokens";
+import { CAST_PRESETS_WITH_PEOPLE } from "../constants/cast";
 import {
   BRAND_SCENE_GENERATION_COST,
+  BRAND_SCENE_NAME_MAX,
   BRAND_SCENE_VARIATIONS_PER_GENERATION,
 } from "../../constants";
 
 interface Props {
   answers: BrandSceneAnswers;
   onNegativeNoteChange?: (note: string) => void;
+  onNameChange?: (name: string) => void;
 }
 
 type Phase = "idle" | "generating" | "picking" | "saving";
 
-export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
+export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange }: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
   const { isAdmin } = useIsAdminSafe();
+  const { refreshBalance } = useCredits();
   const navigate = useNavigate();
   const [showPrompt, setShowPrompt] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
@@ -38,7 +46,14 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
   const [variations, setVariations] = useState<GeneratedVariation[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
 
-  const sceneName = answers.name?.trim() || "Untitled scene";
+  const trimmedName = answers.name?.trim() ?? "";
+  const nameValid = trimmedName.length >= 2;
+  const sceneName = trimmedName || "Untitled scene";
+  const isReferenceFlow = answers.source === "reference";
+
+  const hasPeople = !!(
+    answers.cast && CAST_PRESETS_WITH_PEOPLE.includes(answers.cast.preset as any)
+  );
 
   const referenceImageUrl =
     answers.source === "reference" ? answers.reference_preview_url : undefined;
