@@ -24,9 +24,10 @@ interface Props {
 export function OutfitQuiz({ value, onChange, vibeRequired, hideGarments }: Props) {
   const v = value ?? {};
   const setSlot = (key: keyof OutfitAnswers, slot: OutfitSlotValue | undefined) => {
-    const next = { ...v };
+    const next: OutfitAnswers = { ...v };
     if (slot && (slot.preset || slot.custom)) {
-      next[key] = slot;
+      // Each slot's preset type is narrow; this generic helper assigns through.
+      (next as Record<string, OutfitSlotValue>)[key as string] = slot;
     } else {
       delete next[key];
     }
