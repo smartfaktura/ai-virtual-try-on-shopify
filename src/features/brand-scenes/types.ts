@@ -116,6 +116,14 @@ export interface BrandSceneCast {
 
   // Phase 7d — flexible cast styling map.
   extras?: Record<string, string>;
+
+  // Outfit-direction quiz (Styling tab). Each slot is preset+custom string.
+  outfit?: {
+    vibe?: { preset?: string; custom?: string };
+    top?: { preset?: string; custom?: string };
+    bottom?: { preset?: string; custom?: string };
+    footwear?: { preset?: string; custom?: string };
+  };
 }
 
 export interface BrandSceneScale {
