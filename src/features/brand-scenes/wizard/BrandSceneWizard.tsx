@@ -93,15 +93,15 @@ export function BrandSceneWizard() {
 
   const wizardCastStep = isReference ? 4 : 3;
   const onCastStep = step === wizardCastStep;
-  const [step4SubStep, setStep4SubStep] = useState<Step4SubStep>("essentials");
+  const [step4SubStep, setStep4SubStep] = useState<Step4SubStep>("look");
   const step4Ctx = { module: answers.module, subFamily: answers.sub_family, isReference };
   const step4Flow = computeStep4Flow(answers, step4Ctx);
 
-  // Snap back to essentials if the current sub-step disappears (e.g. mode flipped to skip).
+  // Snap to the first available sub-step if the current one disappears.
   useEffect(() => {
     if (!onCastStep) return;
     if (!step4Flow.order.includes(step4SubStep)) {
-      setStep4SubStep("essentials");
+      setStep4SubStep(step4Flow.order[0] ?? "essentials");
     }
   }, [onCastStep, step4Flow.order, step4SubStep]);
 
@@ -207,6 +207,7 @@ export function BrandSceneWizard() {
   };
 
   const SUB_LABEL: Record<Step4SubStep, string> = {
+    look: "Look",
     essentials: "Essentials",
     people: "People",
     interaction: "Interaction",

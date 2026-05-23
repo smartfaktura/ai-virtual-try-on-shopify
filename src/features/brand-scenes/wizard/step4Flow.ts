@@ -11,7 +11,7 @@ import { resolveAll } from "./registry/resolvePresets";
 import { hasOutfitVibe } from "./constants/outfit";
 import { CAST_EXTRAS_FIELDS, applicableFields } from "./constants/extras";
 
-export type Step4SubStep = "essentials" | "people" | "interaction" | "styling";
+export type Step4SubStep = "look" | "essentials" | "people" | "interaction" | "styling";
 
 export type Step4Mode = "yes" | "skip" | undefined;
 
@@ -65,7 +65,7 @@ export function computeStep4Flow(
 
   const resolved = resolveAll(ctx.module, ctx.subFamily);
 
-  const tabs: Step4SubStep[] = ["essentials"];
+  const tabs: Step4SubStep[] = ["look", "essentials"];
 
   // People tab — visible when the cast actually includes people.
   if (hasPeople) tabs.push("people");
@@ -82,7 +82,10 @@ export function computeStep4Flow(
   tabs.push("styling");
 
   const mode = getStep4Mode(cast);
-  const order: Step4SubStep[] = mode === "yes" ? tabs : ["essentials"];
+  let order: Step4SubStep[];
+  if (!mode) order = ["look"];
+  else if (mode === "skip") order = ["look", "essentials"];
+  else order = tabs;
 
   return {
     order,
@@ -106,20 +109,24 @@ export function getSubStepDisabledReason(
   const scale = answers.scale;
   const preset = cast?.preset;
 
-  if (sub === "essentials") {
-    if (!preset) return "Choose who's in the shot";
-    if (preset !== "replicate" && !cast?.interaction) {
-      return "Pick how the cast holds, wears, or stands next to the product";
-    }
-    if (!scale?.preset) return "Pick a product scale";
-    // Branch card answer.
+  if (sub === "look") {
     if (
+      preset &&
       preset !== "replicate" &&
       preset !== "none" &&
       !getStep4Mode(cast)
     ) {
       return "Pick whether to design a specific look";
     }
+    return null;
+  }
+
+  if (sub === "essentials") {
+    if (!preset) return "Choose who's in the shot";
+    if (preset !== "replicate" && !cast?.interaction) {
+      return "Pick how the cast holds, wears, or stands next to the product";
+    }
+    if (!scale?.preset) return "Pick a product scale";
     return null;
   }
 
