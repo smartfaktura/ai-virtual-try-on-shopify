@@ -1,5 +1,5 @@
 import { ReactNode, useRef } from "react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WizardStep } from "./useWizardState";
@@ -57,22 +57,19 @@ export function WizardLayout({
   const displayIdx = currentIdx >= 0 ? currentIdx : 0;
   const currentLabel = steps[displayIdx]?.label ?? "";
   const rootRef = useRef<HTMLDivElement>(null);
+  const progressPct = ((displayIdx + 1) / total) * 100;
+  const stepNum = String(displayIdx + 1).padStart(2, "0");
 
   const handleNextClick = () => {
     if (!nextDisabled) {
       onNext();
       return;
     }
-    const target = rootRef.current?.querySelector<HTMLElement>(
-      '[data-missing="1"]',
-    );
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    const target = rootRef.current?.querySelector<HTMLElement>('[data-missing="1"]');
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   const ctaLabel = isLastStep ? "Save scene" : "Next";
-  const showGenIcon = false;
 
   const NextButton = (
     <Button
@@ -82,119 +79,59 @@ export function WizardLayout({
       disabled={isLastStep}
       className={["gap-1.5", nextDisabled ? "opacity-50 hover:opacity-50" : ""].join(" ")}
     >
-      {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
       {ctaLabel}
-      {!showGenIcon && !isLastStep && <ArrowRight className="w-3.5 h-3.5" />}
+      {!isLastStep && <ArrowRight className="w-3.5 h-3.5" />}
     </Button>
   );
 
-
   return (
-    <div ref={rootRef} className="max-w-3xl mx-auto space-y-8 pb-2">
-
-
-      {/* Clickable step bars + labels */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          {steps.map((s, i) => {
-            const isPast = i < displayIdx;
-            const isCurrent = i === displayIdx;
-            const clickable = !!onGoToStep && i <= displayIdx;
-            return (
-              <button
-                key={s.n}
-                type="button"
-                onClick={clickable ? () => onGoToStep!(s.n) : undefined}
-                disabled={!clickable}
-                aria-label={`Go to step ${i + 1}: ${s.label}`}
-                aria-current={isCurrent ? "step" : undefined}
-                className={[
-                  "h-1 flex-1 rounded-full transition-colors outline-none",
-                  isPast || isCurrent ? "bg-foreground" : "bg-border",
-                  clickable
-                    ? "hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/40"
-                    : "cursor-default",
-                ].join(" ")}
-              />
-            );
-          })}
-          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-            {displayIdx + 1}/{total}
+    <div ref={rootRef} className="max-w-2xl mx-auto w-full">
+      {/* Quiet progress track */}
+      <div className="space-y-2 pt-1">
+        <button
+          type="button"
+          onClick={
+            onGoToStep && displayIdx > 0
+              ? () => onGoToStep(steps[displayIdx - 1].n)
+              : undefined
+          }
+          aria-label="Progress"
+          className="block w-full h-0.5 bg-border rounded-full overflow-hidden cursor-default"
+        >
+          <div
+            className="h-full bg-foreground transition-all duration-500 ease-out"
+            style={{ width: `${progressPct}%` }}
+          />
+        </button>
+        <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="tabular-nums">
+            {stepNum} <span className="text-muted-foreground/50">/ {String(total).padStart(2, "0")}</span>
           </span>
-        </div>
-        {/* Step labels (desktop) */}
-        <div className="hidden sm:flex items-start gap-2 pr-10">
-          {steps.map((s, i) => {
-            const isCurrent = i === displayIdx;
-            const clickable = !!onGoToStep && i <= displayIdx;
-            return (
-              <button
-                key={s.n}
-                type="button"
-                onClick={clickable ? () => onGoToStep!(s.n) : undefined}
-                disabled={!clickable}
-                className={[
-                  "flex-1 text-[10px] uppercase tracking-[0.14em] text-center truncate transition-colors",
-                  isCurrent
-                    ? "text-foreground font-medium"
-                    : clickable
-                      ? "text-muted-foreground hover:text-foreground"
-                      : "text-muted-foreground/50 cursor-default",
-                ].join(" ")}
-              >
-                {s.label}
-              </button>
-            );
-          })}
+          <span>{currentLabel}</span>
         </div>
       </div>
 
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+      {/* Question block */}
+      <div key={step} className="animate-fade-in pt-12 pb-10">
+        <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight leading-[1.15]">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
+          <p className="text-base text-muted-foreground mt-3 leading-relaxed max-w-xl">
             {subtitle}
           </p>
         )}
+
+        <div className="mt-10">{children}</div>
       </div>
 
-      <div className="min-h-[280px]">{children}</div>
-
-      {/* Sticky bottom floating card — mirrors ProductImagesStickyBar */}
-      <div className="sticky bottom-4 z-20 max-w-full min-w-0 pb-[env(safe-area-inset-bottom)]">
-        <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg max-w-full overflow-hidden">
-
-          {/* Mobile: stacked */}
-          <div className="flex flex-col gap-2 p-3 sm:hidden">
-            <div className="flex items-center gap-2">
-              {step > 0 && (
-                <Button
-                  variant="outline"
-                  size="pill"
-                  className="flex-shrink-0"
-                  onClick={onBack}
-                >
-                  Back
-                </Button>
-              )}
-              {isLastStep ? null : nextDisabled && nextDisabledReason ? (
-                <DisabledTooltip reason={nextDisabledReason}>
-                  <span className="flex-1">{NextButton}</span>
-                </DisabledTooltip>
-              ) : (
-                <span className="flex-1">{NextButton}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Desktop: single row */}
-          <div className="hidden sm:flex items-center justify-between gap-3 p-3 sm:p-4">
-            <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              {currentLabel}
+      {/* Sticky footer */}
+      <div className="sticky bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
+        <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+          <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
+            <span className="text-[11px] text-muted-foreground/80 truncate">
+              {nextDisabled && nextDisabledReason ? nextDisabledReason : ""}
             </span>
-
             <div className="flex items-center gap-2 flex-shrink-0">
               {step > 0 && (
                 <Button variant="outline" size="pill" onClick={onBack}>
@@ -202,9 +139,7 @@ export function WizardLayout({
                 </Button>
               )}
               {isLastStep ? null : nextDisabled && nextDisabledReason ? (
-                <DisabledTooltip reason={nextDisabledReason}>
-                  {NextButton}
-                </DisabledTooltip>
+                <DisabledTooltip reason={nextDisabledReason}>{NextButton}</DisabledTooltip>
               ) : (
                 NextButton
               )}
@@ -215,7 +150,6 @@ export function WizardLayout({
     </div>
   );
 }
-
 
 function DisabledTooltip({ children, reason }: { children: ReactNode; reason: string }) {
   return (
