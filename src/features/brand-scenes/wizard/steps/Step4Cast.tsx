@@ -40,6 +40,7 @@ import {
   type GroupDynamic,
   type HandsOnProduct,
 } from "../constants/sceneExtras";
+import { ChipRowWithOther } from "./_baseHelpers";
 import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
@@ -701,12 +702,10 @@ function InteractionTab({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
       {hasPeople && (
         <div className="md:col-span-2">
-          <Section
-            label="Pose"
-            required
-            missing={headlineMissing}
-            help="Sets the body language and composition"
-          >
+          <Section label="Pose" required missing={headlineMissing}>
+            <p className="-mt-2 mb-3 text-[11px] text-muted-foreground">
+              Sets the body language and composition
+            </p>
             <ChipRowWithOther
               options={CAST_ACTIONS}
               current={cast?.action_note ? undefined : cast?.action}
