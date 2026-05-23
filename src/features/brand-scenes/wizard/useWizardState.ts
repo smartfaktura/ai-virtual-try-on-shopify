@@ -153,12 +153,24 @@ function reducer(state: WizardState, action: Action): WizardState {
           ...state.answers,
           reference_image_paths: action.path ? [action.path] : undefined,
           reference_preview_url: action.previewUrl ?? undefined,
+          // Image changed/removed → clear any previously analyzed outfit.
+          reference_outfit: undefined,
         },
       };
     case "setReferenceIntent":
       return {
         ...state,
         answers: { ...state.answers, reference_intent: action.intent },
+      };
+    case "setReferenceOutfit":
+      return {
+        ...state,
+        answers: { ...state.answers, reference_outfit: action.outfit },
+      };
+    case "clearReferenceOutfit":
+      return {
+        ...state,
+        answers: { ...state.answers, reference_outfit: undefined },
       };
     case "setCast": {
       const prev = state.answers.cast;
