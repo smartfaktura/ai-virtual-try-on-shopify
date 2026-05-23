@@ -253,7 +253,12 @@ export function BrandSceneWizard() {
     if (idx >= 0 && idx < order.length - 1) return order[idx + 1];
     return null;
   })();
-  const nextLabel = nextSubStep ? `Continue to ${SUB_LABEL[nextSubStep]}` : undefined;
+  const nextLabel = (() => {
+    if (!onCastStep) return undefined;
+    // Auto-cast on Look → skips all sub-steps, so just say "Continue".
+    if (step4SubStep === "look" && step4Mode === "skip") return "Continue";
+    return nextSubStep ? `Continue to ${SUB_LABEL[nextSubStep]}` : undefined;
+  })();
 
   return (
     <>
