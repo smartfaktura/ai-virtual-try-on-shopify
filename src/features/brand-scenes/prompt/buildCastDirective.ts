@@ -36,6 +36,7 @@ export interface CastInput {
   group_dynamic?: GroupDynamic;
   hands_on_product?: HandsOnProduct;
   diversity?: Diversity;
+  model_ref?: { name?: string } | undefined;
 }
 
 const PRESET_PEOPLE: Record<CastPreset, string> = {
