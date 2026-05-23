@@ -206,6 +206,21 @@ export function BrandSceneWizard() {
     }
   };
 
+  const SUB_LABEL: Record<Step4SubStep, string> = {
+    essentials: "Essentials",
+    people: "People",
+    interaction: "Interaction",
+    styling: "Styling",
+  };
+  const nextSubStep = (() => {
+    if (!onCastStep) return null;
+    const order = step4Flow.order;
+    const idx = order.indexOf(step4SubStep);
+    if (idx >= 0 && idx < order.length - 1) return order[idx + 1];
+    return null;
+  })();
+  const nextLabel = nextSubStep ? `Continue to ${SUB_LABEL[nextSubStep]}` : undefined;
+
   return (
     <>
       <WizardLayout
@@ -218,6 +233,7 @@ export function BrandSceneWizard() {
         onGoToStep={(s) => dispatch({ type: "setStep", step: s })}
         nextDisabled={nextDisabled}
         nextDisabledReason={nextDisabledReason}
+        nextLabel={nextLabel}
         isLastStep={step === 6}
       >
         {step === 0 && (
