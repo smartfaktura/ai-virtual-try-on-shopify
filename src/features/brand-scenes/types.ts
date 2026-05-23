@@ -163,6 +163,7 @@ export interface BrandSceneAnswers {
   reference_image_paths?: string[];
   reference_preview_url?: string;
   reference_intent?: ReferenceIntent;
+  reference_outfit?: ReferenceOutfit;
   /** @deprecated Superseded by `cast` + `scale`; kept for back-compat. */
   placement_hint?: string;
 
@@ -173,6 +174,25 @@ export interface BrandSceneAnswers {
 
   name?: string;
   note?: string;
+}
+
+export interface ReferenceOutfit {
+  description: string;
+  breakdown?: {
+    silhouette?: string;
+    top?: string;
+    bottom?: string;
+    outerwear?: string;
+    footwear?: string;
+    accessories?: string;
+    palette?: string[];
+    fabric_notes?: string;
+    styling_notes?: string;
+    era_or_vibe?: string;
+  };
+  source_image_path: string;
+  generated_at: string;
+  edited_by_user: boolean;
 }
 
 export interface BrandScene {
