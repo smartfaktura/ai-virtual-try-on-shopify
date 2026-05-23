@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Sparkles, UserRound, Users, X } from "lucide-react";
+import { Plus, Sparkles, UserRound, Users, X } from "lucide-react";
 import { ModelCatalogModal } from "@/components/app/freestyle/ModelCatalogModal";
 import { getOptimizedUrl } from "@/lib/imageOptimization";
 import { mockModels } from "@/data/mockData";
@@ -8,25 +8,38 @@ import { cn } from "@/lib/utils";
 import type { ModelProfile } from "@/types";
 import type { BrandSceneCast } from "../../types";
 
+type ModelRef = NonNullable<BrandSceneCast["model_refs"]>[number];
+
 interface Props {
-  value: BrandSceneCast["model_ref"];
-  onChange: (next: BrandSceneCast["model_ref"]) => void;
-  helper?: string;
+  /** Cast preset — drives number of slots. */
+  preset?: BrandSceneCast["preset"];
+  refs: ModelRef[]; // normalized array (may be empty)
+  onChange: (next: ModelRef[]) => void;
 }
 
 /** Curated quick-pick: Freya first, then mixed women + men. */
 const QUICK_PICK_IDS = [
-  "model_029", // Freya — Suggested
-  "model_018", // Anders
+  "model_029", // Freya — Suggested (slot 0)
+  "model_018", // Anders — Suggested for slot 1 (male)
   "model_031", // Zara
   "model_051", // Jordan
   "model_033", // Sienna
   "model_036", // Marcus
 ] as const;
 
-const SUGGESTED_ID = "model_029";
+const SLOT_SUGGESTED: Record<number, string> = {
+  0: "model_029", // Freya
+  1: "model_018", // Anders
+  2: "model_036", // Marcus
+};
 
-function profileToRef(m: ModelProfile): NonNullable<BrandSceneCast["model_ref"]> {
+function slotsForPreset(preset?: BrandSceneCast["preset"]): number {
+  if (preset === "two") return 2;
+  if (preset === "group") return 3;
+  return 1;
+}
+
+function profileToRef(m: ModelProfile): ModelRef {
   return {
     modelId: m.modelId,
     name: m.name,
@@ -38,102 +51,187 @@ function profileToRef(m: ModelProfile): NonNullable<BrandSceneCast["model_ref"]>
   };
 }
 
-export function FeaturedModelPicker({ value, onChange, helper }: Props) {
-  const [open, setOpen] = useState(false);
+function refToProfile(r: ModelRef): ModelProfile {
+  return {
+    modelId: r.modelId,
+    name: r.name,
+    gender: (r.gender as any) || "female",
+    bodyType: "average" as any,
+    ageRange: (r.ageRange as any) || "adult",
+    ethnicity: "",
+    previewUrl: r.previewUrl,
+    sourceImageUrl: r.sourceImageUrl,
+  };
+}
+
+export function FeaturedModelPicker({ preset, refs, onChange }: Props) {
+  const slotCount = slotsForPreset(preset);
+  const [openSlot, setOpenSlot] = useState<number | null>(null);
   const [initialView, setInitialView] = useState<"all" | "brand">("all");
   const { applyOverrides, applyNameOverrides, filterHidden } = useModelSortOrder();
 
-  const quickPicks = useMemo(() => {
-    const pool = filterHidden(applyNameOverrides(applyOverrides(mockModels)));
-    const byId = new Map(pool.map((m) => [m.modelId, m]));
-    return QUICK_PICK_IDS.map((id) => byId.get(id)).filter(
-      (m): m is ModelProfile => !!m,
-    );
-  }, [applyOverrides, applyNameOverrides, filterHidden]);
+  const pool = useMemo(
+    () => filterHidden(applyNameOverrides(applyOverrides(mockModels))),
+    [applyOverrides, applyNameOverrides, filterHidden],
+  );
+  const poolById = useMemo(() => new Map(pool.map((m) => [m.modelId, m])), [pool]);
 
-  const currentProfile: ModelProfile | null = value
-    ? {
-        modelId: value.modelId,
-        name: value.name,
-        gender: (value.gender as any) || "female",
-        bodyType: "average" as any,
-        ageRange: (value.ageRange as any) || "adult",
-        ethnicity: "",
-        previewUrl: value.previewUrl,
-        sourceImageUrl: value.sourceImageUrl,
-      }
-    : null;
-
-  const openAll = () => {
-    setInitialView("all");
-    setOpen(true);
-  };
-  const openBrand = () => {
-    setInitialView("brand");
-    setOpen(true);
+  // ── Slot mutation helpers ──
+  const setSlot = (idx: number, ref: ModelRef | null) => {
+    const next = [...refs];
+    // Pad with undefined for sparse indexes
+    while (next.length <= idx) (next as any[]).push(undefined);
+    if (ref) next[idx] = ref;
+    else next.splice(idx, 1);
+    // Strip undefined holes
+    onChange((next as (ModelRef | undefined)[]).filter(Boolean) as ModelRef[]);
   };
 
-  // ── Selected state: compact card with Change / Remove ──
-  if (value) {
-    return (
-      <>
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-            <img
-              src={getOptimizedUrl(value.previewUrl, { quality: 60 })}
-              alt={value.name}
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{value.name}</p>
-            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              {value.origin === "brand" ? "Brand model" : "Built-in"} · anchor
-              identity
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={openAll}
-            className="rounded-md px-2.5 py-1.5 text-[11px] font-medium text-foreground hover:bg-muted"
-          >
-            Change
-          </button>
-          <button
-            type="button"
-            onClick={() => onChange(undefined)}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label="Remove featured model"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+  const openCatalog = (slot: number, view: "all" | "brand" = "all") => {
+    setInitialView(view);
+    setOpenSlot(slot);
+  };
 
-        <ModelCatalogModal
-          open={open}
-          onOpenChange={setOpen}
-          selectedModel={currentProfile}
-          initialQuickView={initialView}
-          onSelect={(m) => {
-            onChange(m ? profileToRef(m) : undefined);
-            setOpen(false);
-          }}
+  // ── Render ──
+  const slots = Array.from({ length: slotCount }, (_, i) => refs[i]);
+  const helperLine =
+    slotCount === 1
+      ? "Optional — lock this face across all 3 variations"
+      : `Optional — pick up to ${slotCount} anchor faces, others are auto-cast`;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] text-muted-foreground">{helperLine}</p>
+
+      {slots.map((slot, idx) => (
+        <SlotBlock
+          key={idx}
+          slotIndex={idx}
+          slot={slot}
+          slotCount={slotCount}
+          pool={pool}
+          poolById={poolById}
+          onPick={(ref) => setSlot(idx, ref)}
+          onClear={() => setSlot(idx, null)}
+          onOpenAll={() => openCatalog(idx, "all")}
+          onOpenBrand={() => openCatalog(idx, "brand")}
         />
-      </>
+      ))}
+
+      <ModelCatalogModal
+        open={openSlot !== null}
+        onOpenChange={(o) => { if (!o) setOpenSlot(null); }}
+        selectedModel={
+          openSlot !== null && refs[openSlot] ? refToProfile(refs[openSlot]) : null
+        }
+        initialQuickView={initialView}
+        onSelect={(m) => {
+          if (openSlot !== null) setSlot(openSlot, m ? profileToRef(m) : null);
+          setOpenSlot(null);
+        }}
+      />
+    </div>
+  );
+}
+
+/* ────────────────────────── Slot block ────────────────────────── */
+
+function SlotBlock({
+  slotIndex,
+  slot,
+  slotCount,
+  pool,
+  poolById,
+  onPick,
+  onClear,
+  onOpenAll,
+  onOpenBrand,
+}: {
+  slotIndex: number;
+  slot: ModelRef | undefined;
+  slotCount: number;
+  pool: ModelProfile[];
+  poolById: Map<string, ModelProfile>;
+  onPick: (ref: ModelRef) => void;
+  onClear: () => void;
+  onOpenAll: () => void;
+  onOpenBrand: () => void;
+}) {
+  // Selected state — compact card
+  if (slot) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+        {slotCount > 1 && (
+          <span className="shrink-0 text-[10px] uppercase tracking-widest text-muted-foreground">
+            #{slotIndex + 1}
+          </span>
+        )}
+        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
+          <img
+            src={getOptimizedUrl(slot.previewUrl, { quality: 60 })}
+            alt={slot.name}
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{slot.name}</p>
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            {slot.origin === "brand" ? "Brand model" : "Built-in"} ·{" "}
+            {slotCount > 1 ? `anchor ${slotIndex + 1}` : "anchor identity"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenAll}
+          className="rounded-md px-2.5 py-1.5 text-[11px] font-medium text-foreground hover:bg-muted"
+        >
+          Change
+        </button>
+        <button
+          type="button"
+          onClick={onClear}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label="Remove featured model"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
     );
   }
 
-  // ── Empty state: quick-pick grid + actions ──
+  // Empty state — quick-pick grid + actions for THIS slot
+  // Order quick-picks so suggested for this slot comes first
+  const suggestedId = SLOT_SUGGESTED[slotIndex] ?? QUICK_PICK_IDS[0];
+  const ordered = [
+    suggestedId,
+    ...QUICK_PICK_IDS.filter((id) => id !== suggestedId),
+  ];
+  const quickPicks = ordered
+    .map((id) => poolById.get(id))
+    .filter((m): m is ModelProfile => !!m)
+    .slice(0, 6);
+
   return (
-    <div className="space-y-3">
+    <div className="rounded-2xl border border-dashed border-border p-3 space-y-3">
+      {slotCount > 1 && (
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Anchor {slotIndex + 1} of {slotCount}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground/70">
+            <Plus className="h-3 w-3" /> Optional
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {quickPicks.map((m) => {
-          const isSuggested = m.modelId === SUGGESTED_ID;
+          const isSuggested = m.modelId === suggestedId;
           return (
             <button
               key={m.modelId}
               type="button"
-              onClick={() => onChange(profileToRef(m))}
+              onClick={() => onPick(profileToRef(m))}
               className={cn(
                 "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-background text-left transition-all",
                 isSuggested
@@ -168,7 +266,7 @@ export function FeaturedModelPicker({ value, onChange, helper }: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={openAll}
+          onClick={onOpenAll}
           className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium hover:border-foreground/40 hover:bg-muted"
         >
           <UserRound className="h-3.5 w-3.5" />
@@ -176,27 +274,13 @@ export function FeaturedModelPicker({ value, onChange, helper }: Props) {
         </button>
         <button
           type="button"
-          onClick={openBrand}
+          onClick={onOpenBrand}
           className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium hover:border-foreground/40 hover:bg-muted"
         >
           <Users className="h-3.5 w-3.5" />
           Use a Brand Model
         </button>
-        {helper && (
-          <span className="text-[11px] text-muted-foreground">{helper}</span>
-        )}
       </div>
-
-      <ModelCatalogModal
-        open={open}
-        onOpenChange={setOpen}
-        selectedModel={currentProfile}
-        initialQuickView={initialView}
-        onSelect={(m) => {
-          onChange(m ? profileToRef(m) : undefined);
-          setOpen(false);
-        }}
-      />
     </div>
   );
 }
