@@ -701,25 +701,30 @@ function InteractionTab({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
       {hasPeople && (
         <div className="md:col-span-2">
-          <Section label="Action" required missing={headlineMissing}>
-            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-              {CAST_ACTIONS.map((a) => (
-                <Chip
-                  key={a.value}
-                  active={cast?.action === a.value}
-                  onClick={() =>
-                    onCastChange({
-                      action:
-                        cast?.action === a.value
-                          ? undefined
-                          : (a.value as CastAction),
-                    })
-                  }
-                >
-                  {a.label}
-                </Chip>
-              ))}
-            </div>
+          <Section
+            label="Pose"
+            required
+            missing={headlineMissing}
+            help="Sets the body language and composition"
+          >
+            <ChipRowWithOther
+              options={CAST_ACTIONS}
+              current={cast?.action_note ? undefined : cast?.action}
+              custom={cast?.action_note}
+              onPick={(v) =>
+                onCastChange({
+                  action: v as CastAction | undefined,
+                  action_note: undefined,
+                })
+              }
+              onCustom={(c) =>
+                onCastChange({
+                  action_note: c,
+                  action: c ? undefined : cast?.action,
+                })
+              }
+              placeholder="e.g. mid-jump, sitting on stairs, arms crossed"
+            />
           </Section>
         </div>
       )}
