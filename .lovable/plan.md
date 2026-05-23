@@ -1,47 +1,44 @@
-## Problem
+## Goal
 
-On the **Review & generate** step (Step 6), the user sees what looks like three "Back" pills stacked at the bottom of the wizard card (visible in the screenshot during the `generating` phase).
+On `/app/brand-scenes/new` → Step 4 "Cast" → **Featured Model** section, replace the single "Choose featured model" button with a small grid of quick-pick models so the user can pick in one click. Freya is shown as the default suggestion. A "See all models" action opens the existing full catalog, and a dedicated "From Brand Models" entry jumps straight to the Brand Models tab.
 
-Source of truth: only one `<Button>Back</Button>` exists in `WizardLayout.tsx` (line 147). The Review step itself (`Step6PreviewAndPick.tsx`) does not render its own Back button. The visual triplication comes from the sticky footer's own pill-shaped card (`rounded-2xl border bg-card/95 backdrop-blur-sm shadow-lg`) sitting under a content area that already overflows into the safe-area inset on small iOS viewports — the rounded card's border, the backdrop-blur halo and the actual Back button all read as separate "pill" outlines, which is exactly what we're seeing.
+## What changes (UI)
 
-On Step 6 the sticky footer is also functionally redundant:
+Current state: empty section shows one dashed row with an avatar icon and "Choose featured model".
 
-- There is no `Next` action (`isLastStep ? null` already hides the CTA).
-- The real CTAs are inside the content card (`Generate · X credits` → `Save to library · free` / `Regenerate`).
-- The progress dots above can already navigate back.
+New state for the **Featured Model** card when nothing is picked:
 
-## Fix
+```text
+FEATURED MODEL
+Optional — lock this exact face across all 3 variations
 
-Hide the sticky footer entirely on the last step and surface a single, plain inline `Back` button at the top-left of the Step 6 content (above the Scene name card), so the user still has a clear way back without the stacked-pill visual.
+[ Freya ✓ ] [ Aiden ] [ Maya ] [ Marcus ] [ Sara ] [ Noah ]   ← 6-tile grid, square avatars
+                                                                  Freya shown with subtle "Suggested" pill
 
-### Changes
+[ See all models → ]   [ Use a Brand Model ]
+```
 
-**`src/features/brand-scenes/wizard/WizardLayout.tsx`**
-- Wrap the sticky footer (`<div className="sticky bottom-2 …">…</div>`) so it only renders when `!isLastStep`.
-- Drop the matching `pb-28 sm:pb-10` bottom padding on the content block when `isLastStep` (use `pb-10` only) so the page no longer reserves space for the missing footer.
+- 6 quick-pick tiles, ~80×80, rounded, name underneath.
+- Curated list = **Freya** (model_029) first, then a balanced mix of 3 women + 3 men picked from `mockModels` (e.g. Aiden, Maya, Marcus, Sara, Noah — final names confirmed from `src/data/mockData.ts`).
+- Freya gets a small "Suggested" chip; she is **not auto-applied** to `cast.model_ref` (still optional, per existing semantics) but is the first tile and visually pre-highlighted so one click confirms her.
+- Clicking any tile sets `cast.model_ref` via the same mapping `FeaturedModelPicker` already uses.
+- "See all models" opens the existing `ModelCatalogModal` (unchanged).
+- "Use a Brand Model" opens the same modal but switches to its **My Brand Models** quick view by default. For free plans this still shows the existing upgrade upsell inside the modal.
 
-**`src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`**
-- Add a new prop `onBack: () => void`.
-- Render a small inline back control at the very top of the returned tree:
-  ```tsx
-  <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
-    <ChevronLeft className="w-3.5 h-3.5" /> Back to photo &amp; edit
-  </button>
-  ```
-- Import `ChevronLeft` from `lucide-react`.
+When a model is already selected, the picker keeps today's compact "selected card" layout (avatar + name + Change/Remove). Nothing to relearn.
 
-**`src/features/brand-scenes/wizard/BrandSceneWizard.tsx`**
-- Pass `onBack={handleBack}` to `<Step6PreviewAndPick … />` (line 381).
+## Files touched
 
-### Out of scope
+- `src/features/brand-scenes/wizard/components/FeaturedModelPicker.tsx` — add quick-pick grid, "See all" + "Use a Brand Model" actions, "Suggested" chip on Freya. Accept new optional prop `initialCatalogView?: 'all' | 'brand'` for routing to the brand tab.
+- `src/components/app/freestyle/ModelCatalogModal.tsx` — accept a new optional `initialQuickView?: 'all' | 'brand'` prop and seed `quickView` state from it (kept backward compatible; default unchanged).
+- No changes to Step 4 logic, schema, prompt builder, or data.
 
-- No changes to other wizard steps — the sticky footer continues to work normally on Steps 0–5.
-- No changes to `Step5Review`, prompt assembly, edge function, or scene generation logic.
-- No schema / API changes.
+## Quick-pick curation
 
-### Verification
+Hard-coded list of 6 modelIds resolved at render time from `mockModels` (filter by id, fall back gracefully if a model is hidden via `useModelSortOrder().filterHidden`). Order: Freya first, alternating female/male.
 
-- Open `/app/brand-scenes/new`, advance through to Step 7/7 "Review & generate" on a 414-px viewport.
-- Confirm only the inline "Back to photo & edit" link is visible; no sticky pill-bar at the bottom of the wizard card.
-- Click it and confirm it returns to Step 5 (or to Cast in the reference flow, matching the existing `handleBack` rules).
-- Confirm Steps 0–5 still show the original sticky footer with the single Back + Next buttons.
+## Out of scope
+
+- No backend or schema changes.
+- No new "auto-apply Freya" — keeps Featured Model strictly optional as today.
+- No changes to other wizard steps or the brand-scenes prompt builder.
