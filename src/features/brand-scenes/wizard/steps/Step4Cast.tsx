@@ -648,20 +648,38 @@ function PeopleTab({
 
   const builds = buildsForCast(preset);
 
+  // Normalize model_ref ↔ model_refs (primary mirrors slot 0).
+  const refs = (cast?.model_refs && cast.model_refs.length > 0)
+    ? cast.model_refs
+    : cast?.model_ref
+      ? [cast.model_ref]
+      : [];
+  const hasAnyModel = refs.length > 0;
+
+  // "Custom settings" collapsible — auto-open if any of the fields are already set.
+  const hasCustomValues =
+    (cast?.gender?.length ?? 0) > 0 ||
+    (cast?.age?.length ?? 0) > 0 ||
+    !!cast?.extras?.build ||
+    !!cast?.extras?.ethnicity;
+  const [customOpen, setCustomOpen] = useState(hasCustomValues);
+  const customLabel = hasAnyModel ? "Override casting hints" : "Custom settings";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
       <div className="md:col-span-2">
         <Section
-          label="Featured model"
-          helper={
-            preset === "solo"
-              ? "Optional — lock this exact face across all 3 variations"
-              : "Optional — anchor identity; other people are auto-cast"
-          }
+          label={refs.length > 1 || preset === "two" || preset === "group" ? "Featured models" : "Featured model"}
         >
           <FeaturedModelPicker
-            value={cast?.model_ref}
-            onChange={(next) => onCastChange({ model_ref: next })}
+            preset={preset}
+            refs={refs}
+            onChange={(nextRefs) =>
+              onCastChange({
+                model_refs: nextRefs.length > 0 ? nextRefs : undefined,
+                model_ref: nextRefs[0],
+              })
+            }
           />
         </Section>
       </div>
@@ -685,15 +703,25 @@ function PeopleTab({
           </div>
         </Section>
       </div>
-      {cast?.model_ref && (
-        <div className="md:col-span-2 -mt-4">
-          <p className="text-[11px] text-muted-foreground">
+
+      {/* Custom settings pill — collapses Gender / Age / Build / Ethnicity */}
+      <div className="md:col-span-2 -mt-2">
+        <button
+          type="button"
+          onClick={() => setCustomOpen((o) => !o)}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium hover:border-foreground/40 hover:bg-muted"
+        >
+          <span>{customOpen ? "−" : "+"}</span>
+          {customLabel}
+        </button>
+        {hasAnyModel && !customOpen && (
+          <p className="mt-2 text-[11px] text-muted-foreground">
             Gender, age, build and ethnicity are locked to your featured model
           </p>
-        </div>
-      )}
+        )}
+      </div>
 
-      {!cast?.model_ref && (
+      {customOpen && (
         <>
           <Section label={genderLabel}>
             <MultiSelect
@@ -734,6 +762,23 @@ function PeopleTab({
               </div>
             </Section>
           )}
+
+          <div className="md:col-span-2">
+            <Section
+              label="Ethnicity / casting hint"
+              tooltip="A styling hint, not a hard cast. The AI uses it to guide features when no brand model is attached."
+            >
+              <EthnicityChips
+                value={cast?.extras?.ethnicity}
+                onChange={(next) => {
+                  const nextExtras = { ...(cast?.extras ?? {}) };
+                  if (next === undefined) delete nextExtras.ethnicity;
+                  else nextExtras.ethnicity = next;
+                  onCastChange({ extras: nextExtras });
+                }}
+              />
+            </Section>
+          </div>
         </>
       )}
 
@@ -759,25 +804,6 @@ function PeopleTab({
                 );
               })}
             </div>
-          </Section>
-        </div>
-      )}
-
-      {!cast?.model_ref && (
-        <div className="md:col-span-2">
-          <Section
-            label="Ethnicity / casting hint"
-            tooltip="A styling hint, not a hard cast. The AI uses it to guide features when no brand model is attached."
-          >
-            <EthnicityChips
-              value={cast?.extras?.ethnicity}
-              onChange={(next) => {
-                const nextExtras = { ...(cast?.extras ?? {}) };
-                if (next === undefined) delete nextExtras.ethnicity;
-                else nextExtras.ethnicity = next;
-                onCastChange({ extras: nextExtras });
-              }}
-            />
           </Section>
         </div>
       )}
