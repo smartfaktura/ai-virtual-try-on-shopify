@@ -32,6 +32,7 @@ function pickError(error: unknown, data: any): BrandSceneApiError {
 export async function generateBrandScene(args: {
   compiledPrompt: string;
   referenceImageUrl?: string;
+  modelImageUrl?: string;
   name?: string;
 }): Promise<GenerateBrandSceneResult> {
   const { data, error } = await supabase.functions.invoke("generate-brand-scene", {
