@@ -35,10 +35,13 @@ async function urlToInlineData(url: string): Promise<{ mimeType: string; data: s
 async function generateSingleImage(
   prompt: string,
   referenceInlineData: { mimeType: string; data: string } | undefined,
+  modelInlineData: { mimeType: string; data: string } | undefined,
   apiKey: string,
   model: string,
 ): Promise<string> {
   const parts: any[] = [];
+  // Model reference first → Gemini treats it as the primary identity anchor.
+  if (modelInlineData) parts.push({ inlineData: modelInlineData });
   if (referenceInlineData) parts.push({ inlineData: referenceInlineData });
   parts.push({ text: prompt });
 
