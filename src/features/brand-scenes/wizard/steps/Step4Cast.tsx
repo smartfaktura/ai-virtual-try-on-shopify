@@ -149,7 +149,7 @@ export function Step4Cast({
   // If the active sub-step is no longer visible (cast changed), bounce back.
   useEffect(() => {
     if (!flow.visibleTabs.includes(subStep)) {
-      onSubStepChange?.("essentials");
+      onSubStepChange?.(flow.visibleTabs[0] ?? "essentials");
     }
   }, [flow.visibleTabs, subStep, onSubStepChange]);
 
