@@ -46,6 +46,15 @@ export const BRAND_SCENE_UNLOCKED_MODULES: readonly BrandSceneModule[] = [
   "fashion",
   "footwear",
   "eyewear",
+  "watches",
+  "jewelry",
+  "bags-accessories",
+  "hats-caps-beanies",
+  "beauty-fragrance",
+  "home",
+  "tech",
+  "food-drink",
+  "wellness",
 ] as const;
 
 export function isBrandSceneModuleUnlocked(m: BrandSceneModule): boolean {
