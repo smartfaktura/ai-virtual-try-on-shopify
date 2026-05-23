@@ -61,10 +61,13 @@ export function Step3Reference({
   name = "",
   intent,
   note = "",
+  referenceOutfit,
   onImageChange,
   onNameChange,
   onIntentChange,
   onNoteChange,
+  onReferenceOutfitChange,
+  onReferenceOutfitClear,
 }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
