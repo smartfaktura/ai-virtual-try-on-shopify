@@ -30,11 +30,12 @@ interface Props {
   answers: BrandSceneAnswers;
   onNegativeNoteChange?: (note: string) => void;
   onNameChange?: (name: string) => void;
+  onBack?: () => void;
 }
 
 type Phase = "idle" | "generating" | "picking" | "saving";
 
-export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange }: Props) {
+export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange, onBack }: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
   const { isAdmin } = useIsAdminSafe();
   const { refreshBalance } = useCredits();
