@@ -197,7 +197,6 @@ export function Step4Cast({
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 }`}
               >
-                <span className="opacity-60 tabular-nums">{idx + 1}</span>
                 <span>{labelMap[t]}</span>
                 {done && (
                   <Check
@@ -210,7 +209,7 @@ export function Step4Cast({
             );
           })}
           <div className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/60 self-center">
-            {subStep === "essentials" ? "Required" : "Required headline · rest optional"}
+            Step {Math.max(1, flow.visibleTabs.indexOf(subStep) + 1)} of {flow.visibleTabs.length}
           </div>
         </div>
       )}

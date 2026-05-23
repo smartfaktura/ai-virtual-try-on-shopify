@@ -15,6 +15,7 @@ interface Props {
   onGoToStep?: (step: WizardStep) => void;
   nextDisabled?: boolean;
   nextDisabledReason?: string | null;
+  nextLabel?: string;
   isLastStep?: boolean;
   children: ReactNode;
 }
@@ -48,6 +49,7 @@ export function WizardLayout({
   onGoToStep,
   nextDisabled,
   nextDisabledReason,
+  nextLabel,
   isLastStep,
   children,
 }: Props) {
@@ -69,7 +71,7 @@ export function WizardLayout({
     if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const ctaLabel = isLastStep ? "Save scene" : "Next";
+  const ctaLabel = isLastStep ? "Save scene" : (nextLabel ?? "Next");
 
   const NextButton = (
     <Button
