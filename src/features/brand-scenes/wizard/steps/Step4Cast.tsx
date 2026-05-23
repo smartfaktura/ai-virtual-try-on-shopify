@@ -417,14 +417,14 @@ function BranchCard({
 }: {
   active: boolean;
   title: string;
-  body: string;
+  body?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`text-left rounded-2xl border p-4 transition-colors ${
+      className={`text-left rounded-2xl border px-5 py-6 transition-colors ${
         active
           ? "border-foreground bg-foreground/[0.04]"
           : "border-border hover:border-foreground/40 hover:bg-muted/40"
@@ -434,9 +434,11 @@ function BranchCard({
         <span className="text-sm font-semibold">{title}</span>
         {active && <Check className="w-3.5 h-3.5 text-foreground" />}
       </div>
-      <p className="text-[11px] text-muted-foreground leading-relaxed mt-1.5">
-        {body}
-      </p>
+      {body && (
+        <p className="text-[11px] text-muted-foreground leading-relaxed mt-1.5">
+          {body}
+        </p>
+      )}
     </button>
   );
 }
