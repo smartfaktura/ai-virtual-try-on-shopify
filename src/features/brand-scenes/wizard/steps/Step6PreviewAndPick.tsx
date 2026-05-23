@@ -205,7 +205,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       {phase === "generating" && <BrandSceneGenerateLoading />}
 
       {(phase === "picking" || phase === "saving") && variations.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
           <div>
             <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Pick your favorite
@@ -224,12 +224,12 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
             onSelect={(url) => phase === "picking" && setSelectedUrl(url)}
           />
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
               onClick={handleRegenerate}
               disabled={phase === "saving"}
-              className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 disabled:opacity-40"
+              className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 disabled:opacity-40"
             >
               <RefreshCw className="w-3 h-3" />
               Regenerate · {BRAND_SCENE_GENERATION_COST} credits
@@ -238,7 +238,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
               size="pill"
               onClick={handleSave}
               disabled={!selectedUrl || phase === "saving"}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
             >
               {phase === "saving" ? (
                 <>
