@@ -802,6 +802,80 @@ function InteractionTab({
         </div>
       )}
 
+      {lingerie && (
+        <div className="md:col-span-2">
+          <Section label="Lingerie pose suggestions">
+            <p className="-mt-2 mb-3 text-[11px] text-muted-foreground">
+              Tap to set a curated pose (fills the Pose note above)
+            </p>
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+              {LINGERIE_POSE_SUGGESTIONS.map((p) => (
+                <Chip
+                  key={p}
+                  active={cast?.action_note === p}
+                  onClick={() =>
+                    onCastChange({
+                      action_note: cast?.action_note === p ? undefined : p,
+                      action: undefined,
+                    })
+                  }
+                >
+                  {p}
+                </Chip>
+              ))}
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {lingerie && (
+        <Section label="Camera angle">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+            {LINGERIE_CAMERA_ANGLES.map((a) => {
+              const current = cast?.extras?.lingerie_camera_angle;
+              return (
+                <Chip
+                  key={a.value}
+                  active={current === a.value}
+                  onClick={() => {
+                    const nextExtras = { ...(cast?.extras ?? {}) };
+                    if (current === a.value) delete nextExtras.lingerie_camera_angle;
+                    else nextExtras.lingerie_camera_angle = a.value;
+                    onCastChange({ extras: nextExtras });
+                  }}
+                >
+                  {a.label}
+                </Chip>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
+      {lingerie && (
+        <Section label="Framing">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+            {LINGERIE_FRAMINGS.map((f) => {
+              const current = cast?.extras?.lingerie_framing;
+              return (
+                <Chip
+                  key={f.value}
+                  active={current === f.value}
+                  onClick={() => {
+                    const nextExtras = { ...(cast?.extras ?? {}) };
+                    if (current === f.value) delete nextExtras.lingerie_framing;
+                    else nextExtras.lingerie_framing = f.value;
+                    onCastChange({ extras: nextExtras });
+                  }}
+                >
+                  {f.label}
+                </Chip>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
       {!hasPeople && showHandsOn && (
         <div className="md:col-span-2">
           <Section label="Hands on product" required missing={headlineMissing}>
