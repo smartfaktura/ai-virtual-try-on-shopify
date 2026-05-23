@@ -135,6 +135,21 @@ export interface BrandSceneCast {
     bottom?: { preset?: string; custom?: string };
     footwear?: { preset?: string; custom?: string };
   };
+
+  /**
+   * Optional featured model anchor. When set, generation uses this image as
+   * the primary identity reference and the saved prompt swaps generic cast
+   * descriptors for `[MODEL IMAGE]`.
+   */
+  model_ref?: {
+    modelId: string;
+    name: string;
+    sourceImageUrl: string;
+    previewUrl: string;
+    gender?: string;
+    ageRange?: string;
+    origin: "built_in" | "brand";
+  };
 }
 
 export interface BrandSceneScale {
