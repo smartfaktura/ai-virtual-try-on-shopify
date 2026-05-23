@@ -3,6 +3,9 @@ import { Sparkles, ChevronDown, Loader2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useCredits } from "@/contexts/CreditContext";
 import { useIsAdminSafe } from "../hooks/useIsAdminSafe";
 import { Step5Review } from "./Step5Review";
 import { BrandSceneGenerateLoading } from "../components/BrandSceneGenerateLoading";
@@ -15,21 +18,26 @@ import {
 } from "../../api/brandSceneApi";
 import type { BrandSceneAnswers } from "../../types";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
+import { injectReferenceTokens } from "../../prompt/injectReferenceTokens";
+import { CAST_PRESETS_WITH_PEOPLE } from "../constants/cast";
 import {
   BRAND_SCENE_GENERATION_COST,
+  BRAND_SCENE_NAME_MAX,
   BRAND_SCENE_VARIATIONS_PER_GENERATION,
 } from "../../constants";
 
 interface Props {
   answers: BrandSceneAnswers;
   onNegativeNoteChange?: (note: string) => void;
+  onNameChange?: (name: string) => void;
 }
 
 type Phase = "idle" | "generating" | "picking" | "saving";
 
-export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
+export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange }: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
   const { isAdmin } = useIsAdminSafe();
+  const { refreshBalance } = useCredits();
   const navigate = useNavigate();
   const [showPrompt, setShowPrompt] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
@@ -38,7 +46,14 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
   const [variations, setVariations] = useState<GeneratedVariation[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
 
-  const sceneName = answers.name?.trim() || "Untitled scene";
+  const trimmedName = answers.name?.trim() ?? "";
+  const nameValid = trimmedName.length >= 2;
+  const sceneName = trimmedName || "Untitled scene";
+  const isReferenceFlow = answers.source === "reference";
+
+  const hasPeople = !!(
+    answers.cast && CAST_PRESETS_WITH_PEOPLE.includes(answers.cast.preset as any)
+  );
 
   const referenceImageUrl =
     answers.source === "reference" ? answers.reference_preview_url : undefined;
@@ -48,6 +63,10 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
       toast.error("Add at least one detail before generating");
       return;
     }
+    if (!nameValid) {
+      toast.error("Name this scene before generating");
+      return;
+    }
     setPhase("generating");
     setVariations([]);
     setSelectedUrl(null);
@@ -55,12 +74,18 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
       const res = await generateBrandScene({
         compiledPrompt: directive,
         referenceImageUrl,
+        name: trimmedName,
       });
       setVariations(res.variations);
       if (res.variations.length > 0) {
         setSelectedUrl(res.variations[0].url);
       }
       setPhase("picking");
+      if (typeof res.new_balance === "number") {
+        toast.success(`−${BRAND_SCENE_GENERATION_COST} credits · balance ${res.new_balance}`);
+      }
+      // Sync sidebar credit chip with the server-side balance.
+      refreshBalance().catch(() => {});
       if (res.partial) {
         toast.warning(`Generated ${res.variations.length} of 3 — try again if you want more options`);
       }
@@ -68,8 +93,10 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
       setPhase("idle");
       if (e instanceof BrandSceneApiError) {
         if (e.code === "RATE_LIMIT") toast.error("Too many requests, try again shortly");
-        else if (e.code === "INSUFFICIENT_CREDITS")
+        else if (e.code === "INSUFFICIENT_CREDITS") {
           toast.error(`You need ${BRAND_SCENE_GENERATION_COST} credits to generate brand scene variations`);
+          refreshBalance().catch(() => {});
+        }
         else if (e.code === "GENERATION_FAILED") toast.error("Generation failed. Please try again.");
         else toast.error(e.message);
       } else {
@@ -79,19 +106,31 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
   };
 
   const handleRegenerate = () => {
+    if (!nameValid) {
+      toast.error("Name this scene before generating");
+      return;
+    }
     if (!confirm(`Generate 3 new variations? This will cost ${BRAND_SCENE_GENERATION_COST} credits.`)) return;
     handleGenerate();
   };
 
   const handleSave = async () => {
     if (!selectedUrl) return;
+    if (!nameValid) {
+      toast.error("Name this scene before saving");
+      return;
+    }
     setPhase("saving");
     try {
+      // Inject [PRODUCT IMAGE] / [MODEL IMAGE] tokens into the stored prompt
+      // template so downstream `generate-workflow` substitutes the user's real
+      // product and model references at generation time.
+      const persistedPrompt = injectReferenceTokens(directive, { hasPeople });
       await saveBrandScene({
         answers,
-        name: sceneName,
+        name: trimmedName,
         pickedVariationUrl: selectedUrl,
-        compiledPrompt: directive,
+        compiledPrompt: persistedPrompt,
       });
       toast.success("Saved to your library");
       navigate("/app/brand-scenes");
@@ -101,8 +140,30 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
     }
   };
 
+
   return (
     <div className="space-y-6">
+      {/* Scene name — mandatory in wizard flow. Reference flow already collected
+          it in Step 3 but we let the user edit it here too. */}
+      {!isReferenceFlow && (
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <Label htmlFor="brand-scene-name" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Scene name
+          </Label>
+          <Input
+            id="brand-scene-name"
+            value={answers.name ?? ""}
+            onChange={(e) => onNameChange?.(e.target.value.slice(0, BRAND_SCENE_NAME_MAX))}
+            placeholder="e.g. Lingerie morning bedroom"
+            maxLength={BRAND_SCENE_NAME_MAX}
+            className="mt-2"
+          />
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Required — this is how the scene appears in your library.
+          </p>
+        </div>
+      )}
+
       {/* Hero — generate / pick / save */}
       {phase === "idle" && (
         <div className="rounded-2xl border border-border bg-card p-6">
@@ -117,13 +178,24 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
           </p>
 
           <div className="mt-5">
-            <Button size="pill" onClick={handleGenerate} className="gap-2">
+            <Button
+              size="pill"
+              onClick={handleGenerate}
+              disabled={!nameValid}
+              className="gap-2"
+            >
               <Sparkles className="w-4 h-4" />
               Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
             </Button>
+            {!nameValid && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Name this scene to enable generation.
+              </p>
+            )}
           </div>
         </div>
       )}
+
 
       {phase === "generating" && <BrandSceneGenerateLoading />}
 
