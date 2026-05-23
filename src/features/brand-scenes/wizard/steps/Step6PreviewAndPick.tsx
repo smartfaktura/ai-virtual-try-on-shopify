@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Sparkles, ChevronDown, Loader2, RefreshCw } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,12 @@ interface Props {
   answers: BrandSceneAnswers;
   onNegativeNoteChange?: (note: string) => void;
   onNameChange?: (name: string) => void;
+  onBack?: () => void;
 }
 
 type Phase = "idle" | "generating" | "picking" | "saving";
 
-export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange }: Props) {
+export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange, onBack }: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
   const { isAdmin } = useIsAdminSafe();
   const { refreshBalance } = useCredits();
@@ -146,6 +147,16 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
 
   return (
     <div className="space-y-6">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          Back
+        </button>
+      )}
       {/* Scene name — mandatory in wizard flow. Reference flow already collected
           it in Step 3 but we let the user edit it here too. */}
       {!isReferenceFlow && (

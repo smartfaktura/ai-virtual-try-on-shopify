@@ -122,7 +122,7 @@ export function WizardLayout({
       </div>
 
       {/* Question block */}
-      <div key={step} className="animate-fade-in pt-12 pb-28 sm:pb-10">
+      <div key={step} className={`animate-fade-in pt-12 ${isLastStep ? "pb-10" : "pb-28 sm:pb-10"}`}>
         <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight leading-[1.15]">
           {title}
         </h1>
@@ -135,28 +135,30 @@ export function WizardLayout({
         <div className="mt-10">{children}</div>
       </div>
 
-      {/* Sticky footer */}
-      <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
-        <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
-          <div className="flex items-center justify-between gap-2 p-2.5 sm:p-4">
-            <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
-              {nextDisabled && nextDisabledReason ? nextDisabledReason : ""}
-            </span>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-              {step > 0 && (
-                <Button variant="outline" size="pill" onClick={onBack}>
-                  Back
-                </Button>
-              )}
-              {isLastStep ? null : nextDisabled && nextDisabledReason ? (
-                <DisabledTooltip reason={nextDisabledReason}>{NextButton}</DisabledTooltip>
-              ) : (
-                NextButton
-              )}
+      {/* Sticky footer — hidden on the final Review step (Step 6 has its own inline CTAs). */}
+      {!isLastStep && (
+        <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
+          <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+            <div className="flex items-center justify-between gap-2 p-2.5 sm:p-4">
+              <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
+                {nextDisabled && nextDisabledReason ? nextDisabledReason : ""}
+              </span>
+              <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                {step > 0 && (
+                  <Button variant="outline" size="pill" onClick={onBack}>
+                    Back
+                  </Button>
+                )}
+                {nextDisabled && nextDisabledReason ? (
+                  <DisabledTooltip reason={nextDisabledReason}>{NextButton}</DisabledTooltip>
+                ) : (
+                  NextButton
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
