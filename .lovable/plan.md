@@ -1,87 +1,35 @@
-## Goal
-On `/app/brand-scenes/new` Step 3 (Reference & Intent), when the user uploads a reference image, run an AI analysis that produces a **highly detailed outfit direction** for the people in that image. Store it on the scene, show it to the user inline with an editable text area, and feed it forward into Step 4 (Cast → Styling/Outfit) so it drives later product visual generations.
+Polish the `Look` sub-step of Step 4 on `/app/brand-scenes/new` so the recommendation, copy, spacing, and "Product interaction" framing match the brand-scenes use case (user is creating a reusable scene, no product is selected yet).
 
-## UX flow (Step 3)
+## Changes
 
-After a successful upload (in `Step3Reference.tsx`), a new card appears beneath the image:
+### 1. Swap the recommended branch card
+File: `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (Look sub-step, ~lines 240–255)
+- Move the `recommended` flag from `Auto-cast` to `Design the look`.
+- Drop the `secondary` styling from `Design the look` so it reads as the primary option; apply `secondary` (lighter weight) to `Auto-cast` instead.
+- Order stays the same (Auto-cast left, Design the look right) so muscle memory is preserved; only the visual emphasis flips.
 
-```text
-┌─ AI outfit direction ──────────────────┐
-│ [Analyzing reference…] (spinner)       │
-│   ↓                                    │
-│ <multiline textarea, prefilled>        │
-│ [Re-analyze]   [Use as outfit guide ✓] │
-└────────────────────────────────────────┘
-```
+### 2. Remove the switch-anytime caption
+Same file, ~lines 256–258.
+- Delete the `<p>You can switch any time — your picks won't be lost</p>` line entirely. No replacement copy.
 
-- Auto-runs once when an image is added (only if no description exists yet).
-- User can edit freely (max ~1200 chars).
-- "Re-analyze" re-runs the edge function and overwrites if user confirms.
-- Removing/replacing the image clears the analysis.
-- Skippable — empty value = no outfit direction injected.
+### 3. Tighten and unify spacing in the Look view
+Same file, Look sub-step container.
+- Replace ad-hoc `pt-6`, `mt-3`, and the outer `space-y-8` rhythm around the branch cards with a single consistent vertical scale (`space-y-6` inside the Look block, `mt-6` before `AutoCastSummary`).
+- Ensure the `AutoCastSummary` panel sits flush with the same max-width (`max-w-2xl mx-auto`) as the branch cards so the column doesn't visually shift when expanding.
+- Audit the four sub-step panels (`essentials`, `people`, `interaction`, `styling`) to use the same outer rhythm (`space-y-10` already in essentials becomes the standard) and the same `Section` gap so headlines align across tabs.
 
-## What the AI returns (structured)
-
-Single edge function `analyze-reference-outfit` calling Lovable AI Gateway (`google/gemini-3-flash-preview`, vision + JSON tool-calling) with the reference image URL. Returns:
-
-- `people_present` (bool) — if false, we show a small "no people detected — skip" hint and don't save.
-- `outfit_description` — long-form paragraph, the editable field.
-- `breakdown`:
-  - `silhouette` (fit, length, layering)
-  - `top` (garment type, fabric, color, pattern, details)
-  - `bottom`
-  - `outerwear`
-  - `footwear`
-  - `accessories` (bag, jewelry, eyewear, headwear, belts, watches)
-  - `palette` (2–4 dominant colors w/ rough hex)
-  - `fabric_notes` (texture, sheen, drape)
-  - `styling_notes` (tucked/untucked, sleeves rolled, buttons, posture cues affecting fit)
-  - `era_or_vibe` (e.g. "quiet luxury 2020s editorial")
-
-The textarea is prefilled from `outfit_description`; the breakdown is shown as small read-only chips below it for transparency (collapsible "Details" disclosure).
-
-## Data model
-
-Extend `BrandSceneAnswers.base.reference` (or top-level base) with:
-
-```ts
-reference_outfit?: {
-  description: string;        // editable, primary
-  breakdown?: { ... };        // raw structured (read-only display + future use)
-  source_image_path: string;  // so we know it's stale if image changes
-  generated_at: string;
-  edited_by_user: boolean;
-};
-```
-
-Mirror in `schema.ts` (Zod). Persisted alongside other answers (no DB schema change — already JSONB).
-
-## Prompt wiring (forwarding into generations)
-
-In `buildCastDirective.ts` / `assembleSceneDirective.ts`:
-- If `base.reference_outfit.description` exists AND cast includes people, append as a new "Outfit Direction (from reference):" block, **after** the existing manual outfit slots so user overrides still win.
-- Add a guard: if Step 4 outfit slots are filled, prefer those for the matching slot but keep the reference outfit text as supplemental context.
-- A unit test ensures the directive includes the outfit text when present.
-
-Step 4 Cast / OutfitQuiz: show a small banner "Using outfit from reference — edit in Step 3 or override per slot below" when reference outfit exists.
-
-## Files to add / edit
-
-**New**
-- `supabase/functions/analyze-reference-outfit/index.ts` — JWT-verified, validates payload (`imageUrl` or `imagePath`), calls Lovable AI Gateway with vision + tool-call schema, returns JSON. Handles 429/402 passthrough.
-- `src/features/brand-scenes/wizard/components/ReferenceOutfitCard.tsx` — UI card (loading, textarea, breakdown disclosure, re-analyze).
-- `src/features/brand-scenes/__tests__/reference-outfit-directive.test.ts` — verifies prompt assembly.
-
-**Edited**
-- `src/features/brand-scenes/wizard/steps/Step3Reference.tsx` — mount new card after upload; pipe value into wizard state; clear on image remove.
-- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` — new dispatch actions (`setReferenceOutfit`, `clearReferenceOutfit`) and wiring to Step 3.
-- `src/features/brand-scenes/types.ts` + `schema.ts` — add `reference_outfit` shape.
-- `src/features/brand-scenes/prompt/buildCastDirective.ts` + `assembleSceneDirective.ts` — inject reference outfit block.
-- `src/features/brand-scenes/wizard/components/OutfitQuiz.tsx` — add "from reference" banner.
-- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` — show outfit direction in review.
+### 4. Clarify "Product interaction" for scene-only flow
+Context: brand-scenes wizard creates a reusable scene; no specific product is attached at this step, so labels like "Wearing / Holding / Using / Placed beside" read ambiguously.
+- Rename the section label from `Product interaction` to `How the product appears` (keeps the underlying `cast.interaction` field unchanged).
+- Add a one-line helper under the label (via the existing `Section` `hint`/description slot, or a `<p className="text-[11px] text-muted-foreground">` directly under the label) reading: `Defines how any product placed into this scene will be staged.`
+- Keep chip labels (Wearing, Holding, Using, Placed beside) — they're fine once the framing sentence is in place.
+- Mirror the same label change in `Step5Review.tsx` where the interaction value is summarized, so the review screen stays consistent.
 
 ## Out of scope
-- No DB migration (uses existing JSONB answers column).
-- No changes to other wizards / Product Images flow.
-- No new secrets — uses existing `LOVABLE_API_KEY`.
-- Doesn't auto-apply outfit to individual slot pickers (top/bottom/footwear) — only injects as a freeform direction so user retains slot-level control.
+- No changes to the underlying `CastInteraction` enum, schema, or prompt assembly.
+- No changes to other Step 4 tabs' logic, only their spacing tokens.
+- No changes to Step 4 on other entry points (Visual Studio, Product Images) — only the brand-scenes wizard.
+
+## Files touched
+- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (branch cards, caption removal, spacing pass, interaction label + helper)
+- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` (mirror the renamed label in the summary row)
