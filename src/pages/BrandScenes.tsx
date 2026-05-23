@@ -78,8 +78,8 @@ export default function BrandScenes() {
     <div className="space-y-8 sm:space-y-10">
       <SEOHead title="Brand Scenes — VOVV.AI" description="Your custom brand scenes" noindex />
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Brand Scenes</h1>
           <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
             Your custom signature scenes — use them on any product
@@ -88,7 +88,7 @@ export default function BrandScenes() {
         {hasScenes && (
           <Button
             onClick={() => navigate('/app/brand-scenes/new')}
-            className="rounded-full font-semibold gap-2"
+            className="rounded-full font-semibold gap-2 shrink-0"
           >
             <Plus className="w-4 h-4" />
             New brand scene
