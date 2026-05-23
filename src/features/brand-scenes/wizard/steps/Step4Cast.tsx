@@ -515,7 +515,12 @@ function AutoCastSummary({
     (i) => i.value === cast?.interaction,
   )?.label;
   const scaleLabel = SCALE_PRESETS.find((s) => s.value === scale?.preset)?.label;
-  const chips = [presetLabel, interactionLabel, scaleLabel].filter(Boolean) as string[];
+  const poseLabel =
+    cast?.action_note ??
+    CAST_ACTIONS.find((a) => a.value === cast?.action)?.label;
+  const chips = [presetLabel, interactionLabel, poseLabel, scaleLabel].filter(
+    Boolean,
+  ) as string[];
   if (!chips.length) return null;
   return (
     <div className="mx-auto max-w-2xl mt-5 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">

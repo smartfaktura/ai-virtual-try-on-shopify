@@ -144,7 +144,7 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
         { label: "Age", value: joinLabels(CAST_AGES, cast.age) },
         { label: "Vibe", value: lookupLabel(CAST_VIBES, cast.vibe) },
         { label: "Interaction", value: lookupLabel(CAST_INTERACTIONS, cast.interaction) },
-        { label: "Action", value: lookupLabel(CAST_ACTIONS, cast.action) },
+        { label: "Pose", value: cast.action_note ?? lookupLabel(CAST_ACTIONS, cast.action) },
         { label: "Group dynamic", value: cast.group_dynamic && humanize(cast.group_dynamic) },
         { label: "Gaze", value: cast.gaze && humanize(cast.gaze) },
         { label: "Body-part focus", value: cast.body_part_focus && humanize(cast.body_part_focus) },
