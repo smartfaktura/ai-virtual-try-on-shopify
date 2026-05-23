@@ -1161,7 +1161,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           }
           confirmLabel="Yes, generate"
           cancelLabel="Cancel"
-          onConfirm={async () => { setConfirmOpen(false); await runGenerate(); }}
+          onConfirm={async () => {
+            setConfirmOpen(false);
+            const ok = await logResponsibilityAcceptance();
+            if (!ok) return;
+            await runGenerate();
+          }}
         />
       </div>
     );
