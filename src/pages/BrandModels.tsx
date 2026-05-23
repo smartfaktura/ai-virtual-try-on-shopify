@@ -205,6 +205,7 @@ const AgeSlider = ({ value, onCommit }: { value: number; onCommit: (n: number) =
 
 /* ── Unified Generator ── */
 export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSuccess: () => void; isAdmin: boolean; layout?: 'card' | 'sections' }) {
+  const { user: currentUser } = useAuth();
   // Model name
   const [modelName, setModelName] = useState('');
 
