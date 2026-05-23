@@ -139,6 +139,13 @@ serve(async (req) => {
         ? answers.sub_family.trim()
         : null;
 
+    // Derive trigger_blocks + outfit_hint from the wizard answers so saved
+    // brand scenes behave the same as admin-imported scenes inside Product
+    // Images (model picker enabled when people are in scene, outfit hint
+    // surfaced in the Scene-controlled Outfit System).
+    const triggerBlocks = deriveTriggerBlocks(answers);
+    const outfitHint = deriveOutfitHint(answers);
+
     const { data: row, error: insertError } = await supabaseAdmin
       .from("product_image_scenes")
       .insert({
@@ -158,7 +165,9 @@ serve(async (req) => {
         brand_scene_module: module,
         brand_scene_schema_version: 1,
         brand_scene_answers: answers,
-        trigger_blocks: [],
+        trigger_blocks: triggerBlocks,
+        outfit_hint: outfitHint || null,
+        requires_extra_reference: false,
       })
       .select()
       .single();
