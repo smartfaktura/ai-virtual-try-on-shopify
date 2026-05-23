@@ -49,6 +49,13 @@ import {
   hasExplicitMoments,
 } from "../registry/storytellingBySubfamily";
 import { resolveSubfamilyGuide } from "../registry/subfamilyGuides";
+import {
+  LINGERIE_POSE_SUGGESTIONS,
+  LINGERIE_CAMERA_ANGLES,
+  LINGERIE_FRAMINGS,
+  LINGERIE_MOODS,
+  isLingerie,
+} from "../registry/lingerieCast";
 import { resolveAll } from "../registry/resolvePresets";
 import {
   forbiddenInteractions,
