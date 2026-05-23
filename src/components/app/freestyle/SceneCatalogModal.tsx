@@ -153,6 +153,9 @@ export function SceneCatalogModal({
   );
   const counts = useSceneCounts();
 
+  // User's own saved Brand Scenes — surfaced as a labeled strip above the grid.
+  const brandScenes = useUserBrandScenes(family, categoryCollection, open);
+
   // Custom scenes kept only to resolve `cs-` selection IDs from prior sessions.
   const customScenesQuery = useCustomScenes();
 
