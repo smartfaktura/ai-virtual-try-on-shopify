@@ -398,6 +398,8 @@ export function Step4Cast({
 
       {subStep === "people" && !isReplicate && (
         <PeopleTab
+          module={module}
+          subFamily={subFamily}
           preset={preset}
           cast={cast}
           onCastChange={onCastChange}
@@ -407,6 +409,8 @@ export function Step4Cast({
 
       {subStep === "interaction" && !isReplicate && (
         <InteractionTab
+          module={module}
+          subFamily={subFamily}
           preset={preset}
           hasPeople={hasPeople}
           scalePreset={scalePreset}
@@ -582,11 +586,15 @@ function AutoCastSummary({
 /* ────────────────────────── Tab: People ────────────────────────── */
 
 function PeopleTab({
+  module,
+  subFamily,
   preset,
   cast,
   onCastChange,
   vibeMissing,
 }: {
+  module?: BrandSceneModule;
+  subFamily?: string;
   preset?: CastPreset;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
@@ -601,6 +609,7 @@ function PeopleTab({
     : CAST_AGES;
   const genderLabel = isSingle ? "Gender" : "Gender mix";
   const ageLabel = isSingle ? "Age range" : "Age range (mix)";
+  const lingerie = isLingerie(module, subFamily);
 
   const handleGender = (v: string) => {
     if (isSingle) {
