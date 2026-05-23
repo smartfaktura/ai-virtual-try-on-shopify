@@ -37,6 +37,7 @@ export interface CastInput {
   hands_on_product?: HandsOnProduct;
   diversity?: Diversity;
   model_ref?: { name?: string } | undefined;
+  model_refs?: Array<{ name?: string; gender?: string; ageRange?: string }> | undefined;
 }
 
 const PRESET_PEOPLE: Record<CastPreset, string> = {
@@ -103,6 +104,21 @@ export function buildCastDirective(cast: CastInput): string {
     parts.push(
       `Featured model: use the person from [MODEL IMAGE] exactly — preserve face, skin tone, hair, build, and proportions across all variations.`,
     );
+    const extras = (cast.model_refs ?? []).slice(1);
+    if (extras.length > 0) {
+      const descs = extras
+        .map((m) => {
+          const bits = [m?.name].filter(Boolean) as string[];
+          const meta = [m?.gender, m?.ageRange].filter(Boolean).join("/");
+          return meta ? `${bits.join("")} (${meta})` : bits.join("");
+        })
+        .filter(Boolean);
+      if (descs.length > 0) {
+        parts.push(
+          `Additional anchor${descs.length > 1 ? "s" : ""}: ${descs.join(", ")} — cast a distinct person matching each description; do not duplicate the primary face.`,
+        );
+      }
+    }
   }
 
 

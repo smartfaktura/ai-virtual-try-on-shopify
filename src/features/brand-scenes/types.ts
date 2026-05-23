@@ -150,6 +150,22 @@ export interface BrandSceneCast {
     ageRange?: string;
     origin: "built_in" | "brand";
   };
+
+  /**
+   * Multi-anchor support for "two" / "group" presets. Slot 0 mirrors
+   * `model_ref` for backward compatibility; only slot 0's image is attached
+   * to the generation request today — additional slots are emitted as
+   * descriptive cast direction.
+   */
+  model_refs?: Array<{
+    modelId: string;
+    name: string;
+    sourceImageUrl: string;
+    previewUrl: string;
+    gender?: string;
+    ageRange?: string;
+    origin: "built_in" | "brand";
+  }>;
 }
 
 export interface BrandSceneScale {
