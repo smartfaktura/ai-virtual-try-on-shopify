@@ -194,6 +194,12 @@ export function Step4Cast({
   })();
   const outfitVibeMissing = !hasOutfitVibe(cast?.outfit);
 
+  const activeTabRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [subStep]);
+
+
   return (
     <div className="space-y-8">
       {/* Tabs */}
