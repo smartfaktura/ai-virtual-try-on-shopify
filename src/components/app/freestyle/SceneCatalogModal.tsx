@@ -14,6 +14,7 @@ import {
 } from './SceneCatalogFilters';
 import { SceneCatalogSidebar, type QuickView } from './SceneCatalogSidebar';
 import { SceneCatalogGrid } from './SceneCatalogGrid';
+import { SceneCatalogCard } from './SceneCatalogCard';
 import { useSceneCatalog, useInterleavedSceneCatalog, useUserBrandScenes, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
