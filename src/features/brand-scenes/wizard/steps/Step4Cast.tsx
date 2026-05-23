@@ -563,8 +563,8 @@ function InteractionTab({
   preset?: CastPreset;
   hasPeople: boolean;
   scalePreset: ScalePreset;
-  visibleHandsOnProduct: typeof HANDS_ON_PRODUCT;
-  visibleBodyPart: typeof BODY_PART_FOCUS;
+  visibleHandsOnProduct: ReadonlyArray<{ value: string; label: string }>;
+  visibleBodyPart: ReadonlyArray<{ value: string; label: string }>;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
 }) {
