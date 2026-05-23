@@ -65,7 +65,7 @@ export function computeStep4Flow(
 
   const resolved = resolveAll(ctx.module, ctx.subFamily);
 
-  const tabs: Step4SubStep[] = ["essentials"];
+  const tabs: Step4SubStep[] = ["look", "essentials"];
 
   // People tab — visible when the cast actually includes people.
   if (hasPeople) tabs.push("people");
@@ -82,7 +82,10 @@ export function computeStep4Flow(
   tabs.push("styling");
 
   const mode = getStep4Mode(cast);
-  const order: Step4SubStep[] = mode === "yes" ? tabs : ["essentials"];
+  let order: Step4SubStep[];
+  if (!mode) order = ["look"];
+  else if (mode === "skip") order = ["look", "essentials"];
+  else order = tabs;
 
   return {
     order,
