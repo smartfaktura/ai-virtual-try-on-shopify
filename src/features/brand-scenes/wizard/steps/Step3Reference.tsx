@@ -275,6 +275,17 @@ export function Step3Reference({
         </div>
       </div>
 
+      {/* AI outfit direction (only when an image is uploaded) */}
+      <ReferenceOutfitCard
+        imagePath={imagePath}
+        previewUrl={previewUrl}
+        outfit={referenceOutfit}
+        onChange={onReferenceOutfitChange}
+        onClear={onReferenceOutfitClear}
+      />
+
+
+
 
       {/* Extra direction */}
       <div>
