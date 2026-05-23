@@ -314,6 +314,7 @@ export function BrandSceneWizard() {
             onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
             subStep={step4SubStep}
             onSubStepChange={setStep4SubStep}
+            visitedSubSteps={visitedSubSteps}
           />
         )}
 
