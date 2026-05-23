@@ -88,7 +88,7 @@ export function Step5Photography({
   const sceneType = value.scene_type as SceneTypeId | undefined;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-10">
       <Section
         label="Lens"
         tooltip="Wide = roomy and dramatic. Long = compressed and flattering."
