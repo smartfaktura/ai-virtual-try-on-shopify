@@ -28,10 +28,7 @@ export function Step0ChooseSource({
       />
       <WizardCard
         active={picked && value === "reference" && referenceUnlocked}
-        onClick={() => {
-          if (referenceUnlocked) onChange("reference");
-          else onPickReference();
-        }}
+        onClick={onPickReference}
         icon={
           referenceUnlocked ? (
             <ImagePlus className="w-5 h-5" />

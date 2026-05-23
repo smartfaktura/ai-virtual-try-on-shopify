@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const RESPONSIBILITY_KEY = "brand-scenes:responsibility-accepted";
+
 
 const META_WIZARD: Record<WizardStep, { title: string; subtitle?: string }> = {
   0: {
@@ -87,9 +87,6 @@ export function BrandSceneWizard() {
       : baseTitle;
   const { subtitle } = META[step];
 
-  const sessionAccepted =
-    typeof window !== "undefined" &&
-    window.sessionStorage.getItem(RESPONSIBILITY_KEY) === "1";
   const [modalOpen, setModalOpen] = useState(false);
 
   const wizardCastStep = isReference ? 4 : 3;
@@ -232,7 +229,7 @@ export function BrandSceneWizard() {
   };
 
   const handlePickReference = () => {
-    if (sessionAccepted || state.responsibilityAccepted) {
+    if (state.responsibilityAccepted) {
       dispatch({ type: "setSource", source: "reference" });
     } else {
       setModalOpen(true);
@@ -281,7 +278,7 @@ export function BrandSceneWizard() {
             picked={sourcePicked}
             onChange={(s) => dispatch({ type: "setSource", source: s })}
             onPickReference={handlePickReference}
-            referenceUnlocked={sessionAccepted || state.responsibilityAccepted}
+            referenceUnlocked={state.responsibilityAccepted}
           />
         )}
 
@@ -410,9 +407,6 @@ export function BrandSceneWizard() {
           if (error) {
             toast.error("Could not record your confirmation. Please try again.");
             return;
-          }
-          if (typeof window !== "undefined") {
-            window.sessionStorage.setItem(RESPONSIBILITY_KEY, "1");
           }
           dispatch({ type: "acceptResponsibility" });
           dispatch({ type: "setSource", source: "reference" });
