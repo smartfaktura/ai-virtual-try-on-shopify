@@ -36,6 +36,7 @@ export interface CastInput {
   group_dynamic?: GroupDynamic;
   hands_on_product?: HandsOnProduct;
   diversity?: Diversity;
+  model_ref?: { name?: string } | undefined;
 }
 
 const PRESET_PEOPLE: Record<CastPreset, string> = {
@@ -95,6 +96,13 @@ export function buildCastDirective(cast: CastInput): string {
   }
 
   if (subjectBits.length) parts.push(`Cast: ${subjectBits.join(", ")}.`);
+
+  if (cast.model_ref && cast.preset !== "none" && cast.preset !== "hands") {
+    parts.push(
+      `Featured model: use the person from [MODEL IMAGE] exactly — preserve face, skin tone, hair, build, and proportions across all variations.`,
+    );
+  }
+
 
   if (cast.interaction && cast.preset !== "none") {
     parts.push(`Interaction: ${INTERACTION[cast.interaction]}.`);

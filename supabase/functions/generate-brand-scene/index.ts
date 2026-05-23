@@ -35,10 +35,13 @@ async function urlToInlineData(url: string): Promise<{ mimeType: string; data: s
 async function generateSingleImage(
   prompt: string,
   referenceInlineData: { mimeType: string; data: string } | undefined,
+  modelInlineData: { mimeType: string; data: string } | undefined,
   apiKey: string,
   model: string,
 ): Promise<string> {
   const parts: any[] = [];
+  // Model reference first → Gemini treats it as the primary identity anchor.
+  if (modelInlineData) parts.push({ inlineData: modelInlineData });
   if (referenceInlineData) parts.push({ inlineData: referenceInlineData });
   parts.push({ text: prompt });
 
@@ -127,6 +130,7 @@ serve(async (req) => {
     const body = await req.json();
     const compiledPrompt: string = (body.compiledPrompt ?? "").toString();
     const referenceImageUrl: string | undefined = body.referenceImageUrl;
+    const modelImageUrl: string | undefined = body.modelImageUrl;
     const sceneName: string = (body.name ?? "").toString().trim();
 
     if (!compiledPrompt.trim()) {
@@ -190,6 +194,15 @@ serve(async (req) => {
       }
     }
 
+    let modelInlineData: { mimeType: string; data: string } | undefined;
+    if (modelImageUrl) {
+      try {
+        modelInlineData = await urlToInlineData(modelImageUrl);
+      } catch (e) {
+        console.warn("Model reference fetch failed, continuing without it:", e);
+      }
+    }
+
     const runId = crypto.randomUUID();
 
     // Per-slot retry: try Gemini 3 Pro, fall back to Gemini 3.1 Flash.
@@ -199,7 +212,7 @@ serve(async (req) => {
       let lastErr: unknown = null;
       for (const model of models) {
         try {
-          const b64 = await generateSingleImage(variantPrompt, referenceInlineData, GEMINI_KEY, model);
+          const b64 = await generateSingleImage(variantPrompt, referenceInlineData, modelInlineData, GEMINI_KEY, model);
           return await uploadBase64Image(supabaseAdmin, user.id, runId, slot, b64);
         } catch (e) {
           lastErr = e;

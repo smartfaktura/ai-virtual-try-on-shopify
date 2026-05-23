@@ -51,12 +51,14 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   const sceneName = trimmedName || "Untitled scene";
   const isReferenceFlow = answers.source === "reference";
 
-  const hasPeople = !!(
-    answers.cast && CAST_PRESETS_WITH_PEOPLE.includes(answers.cast.preset as any)
-  );
+  const hasModelRef = !!answers.cast?.model_ref;
+  const hasPeople =
+    hasModelRef ||
+    !!(answers.cast && CAST_PRESETS_WITH_PEOPLE.includes(answers.cast.preset as any));
 
   const referenceImageUrl =
     answers.source === "reference" ? answers.reference_preview_url : undefined;
+  const modelImageUrl = answers.cast?.model_ref?.sourceImageUrl;
 
   const handleGenerate = async () => {
     if (!directive.trim()) {
@@ -74,6 +76,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       const res = await generateBrandScene({
         compiledPrompt: directive,
         referenceImageUrl,
+        modelImageUrl,
         name: trimmedName,
       });
       setVariations(res.variations);
