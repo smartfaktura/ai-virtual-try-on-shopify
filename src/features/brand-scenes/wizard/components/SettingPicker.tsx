@@ -8,13 +8,15 @@ interface Props {
   value: string | undefined;
   onChange: (next: string | undefined) => void;
   emptyHint?: string;
+  /** Optional map of preset name → short vibe line shown under the card title. */
+  descriptions?: Record<string, string>;
 }
 
 /**
  * Stage B — setting picker. Compact 2-col card grid + "Add your own" inline input.
  * Freedom-first: any custom string is accepted.
  */
-export function SettingPicker({ options, value, onChange, emptyHint }: Props) {
+export function SettingPicker({ options, value, onChange, emptyHint, descriptions }: Props) {
   const [customOpen, setCustomOpen] = useState(
     !!value && !options.includes(value),
   );
@@ -37,6 +39,7 @@ export function SettingPicker({ options, value, onChange, emptyHint }: Props) {
           <SmartSettingCard
             key={opt}
             label={opt}
+            vibe={descriptions?.[opt]}
             active={value === opt}
             onClick={() => onChange(value === opt ? undefined : opt)}
           />

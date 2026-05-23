@@ -35,6 +35,11 @@ import {
   OUTFIT_FOOTWEAR,
 } from "../wizard/constants/outfit";
 import { resolveSubfamilyGuide } from "../wizard/registry/subfamilyGuides";
+import {
+  LINGERIE_CAMERA_ANGLES,
+  LINGERIE_FRAMINGS,
+  LINGERIE_MOODS,
+} from "../wizard/registry/lingerieCast";
 import { CAST_PRESETS_WITH_PEOPLE } from "../wizard/constants/cast";
 
 /**
@@ -199,10 +204,23 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
     ...CAST_EXTRAS_FIELDS.map((f) => f.key),
     "ethnicity",
     "design_specific_look",
+    "lingerie_camera_angle",
+    "lingerie_framing",
+    "lingerie_mood",
   ]);
+
+  // Lingerie-specific structured extras → human-readable directive lines.
+  const angle = LINGERIE_CAMERA_ANGLES.find((a) => a.value === castExtras.lingerie_camera_angle);
+  if (angle) castDetails.push(`- Camera angle: ${angle.directive}.`);
+  const framing = LINGERIE_FRAMINGS.find((f) => f.value === castExtras.lingerie_framing);
+  if (framing) castDetails.push(`- Framing: ${framing.directive}.`);
+  const lingerieMood = LINGERIE_MOODS.find((m) => m.value === castExtras.lingerie_mood);
+  if (lingerieMood) castDetails.push(`- Mood: ${lingerieMood.directive}.`);
+
   for (const [k, v] of Object.entries(castExtras)) {
     if (!knownCastKeys.has(k) && v?.trim()) {
       castDetails.push(`- Cast style (${k}): ${v.trim()}.`);
+
     }
   }
 

@@ -49,6 +49,13 @@ import {
   hasExplicitMoments,
 } from "../registry/storytellingBySubfamily";
 import { resolveSubfamilyGuide } from "../registry/subfamilyGuides";
+import {
+  LINGERIE_POSE_SUGGESTIONS,
+  LINGERIE_CAMERA_ANGLES,
+  LINGERIE_FRAMINGS,
+  LINGERIE_MOODS,
+  isLingerie,
+} from "../registry/lingerieCast";
 import { resolveAll } from "../registry/resolvePresets";
 import {
   forbiddenInteractions,
@@ -391,6 +398,8 @@ export function Step4Cast({
 
       {subStep === "people" && !isReplicate && (
         <PeopleTab
+          module={module}
+          subFamily={subFamily}
           preset={preset}
           cast={cast}
           onCastChange={onCastChange}
@@ -400,6 +409,8 @@ export function Step4Cast({
 
       {subStep === "interaction" && !isReplicate && (
         <InteractionTab
+          module={module}
+          subFamily={subFamily}
           preset={preset}
           hasPeople={hasPeople}
           scalePreset={scalePreset}
@@ -575,11 +586,15 @@ function AutoCastSummary({
 /* ────────────────────────── Tab: People ────────────────────────── */
 
 function PeopleTab({
+  module,
+  subFamily,
   preset,
   cast,
   onCastChange,
   vibeMissing,
 }: {
+  module?: BrandSceneModule;
+  subFamily?: string;
   preset?: CastPreset;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
@@ -594,6 +609,7 @@ function PeopleTab({
     : CAST_AGES;
   const genderLabel = isSingle ? "Gender" : "Gender mix";
   const ageLabel = isSingle ? "Age range" : "Age range (mix)";
+  const lingerie = isLingerie(module, subFamily);
 
   const handleGender = (v: string) => {
     if (isSingle) {
@@ -676,6 +692,32 @@ function PeopleTab({
         </Section>
       )}
 
+      {lingerie && (
+        <div className="md:col-span-2">
+          <Section label="Lingerie mood">
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+              {LINGERIE_MOODS.map((m) => {
+                const current = cast?.extras?.lingerie_mood;
+                return (
+                  <Chip
+                    key={m.value}
+                    active={current === m.value}
+                    onClick={() => {
+                      const nextExtras = { ...(cast?.extras ?? {}) };
+                      if (current === m.value) delete nextExtras.lingerie_mood;
+                      else nextExtras.lingerie_mood = m.value;
+                      onCastChange({ extras: nextExtras });
+                    }}
+                  >
+                    {m.label}
+                  </Chip>
+                );
+              })}
+            </div>
+          </Section>
+        </div>
+      )}
+
       <div className="md:col-span-2">
         <Section
           label="Ethnicity / casting hint"
@@ -699,6 +741,8 @@ function PeopleTab({
 /* ────────────────────────── Tab: Interaction ────────────────────────── */
 
 function InteractionTab({
+  module,
+  subFamily,
   preset,
   hasPeople,
   scalePreset,
@@ -708,6 +752,8 @@ function InteractionTab({
   onCastChange,
   headlineMissing,
 }: {
+  module?: BrandSceneModule;
+  subFamily?: string;
   preset?: CastPreset;
   hasPeople: boolean;
   scalePreset: ScalePreset;
@@ -724,6 +770,7 @@ function InteractionTab({
   const showBodyPart =
     preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0;
   const showGroup = preset === "two" || preset === "group";
+  const lingerie = isLingerie(module, subFamily) && hasPeople;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
@@ -753,6 +800,80 @@ function InteractionTab({
             />
           </Section>
         </div>
+      )}
+
+      {lingerie && (
+        <div className="md:col-span-2">
+          <Section label="Lingerie pose suggestions">
+            <p className="-mt-2 mb-3 text-[11px] text-muted-foreground">
+              Tap to set a curated pose (fills the Pose note above)
+            </p>
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+              {LINGERIE_POSE_SUGGESTIONS.map((p) => (
+                <Chip
+                  key={p}
+                  active={cast?.action_note === p}
+                  onClick={() =>
+                    onCastChange({
+                      action_note: cast?.action_note === p ? undefined : p,
+                      action: undefined,
+                    })
+                  }
+                >
+                  {p}
+                </Chip>
+              ))}
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {lingerie && (
+        <Section label="Camera angle">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+            {LINGERIE_CAMERA_ANGLES.map((a) => {
+              const current = cast?.extras?.lingerie_camera_angle;
+              return (
+                <Chip
+                  key={a.value}
+                  active={current === a.value}
+                  onClick={() => {
+                    const nextExtras = { ...(cast?.extras ?? {}) };
+                    if (current === a.value) delete nextExtras.lingerie_camera_angle;
+                    else nextExtras.lingerie_camera_angle = a.value;
+                    onCastChange({ extras: nextExtras });
+                  }}
+                >
+                  {a.label}
+                </Chip>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
+      {lingerie && (
+        <Section label="Framing">
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+            {LINGERIE_FRAMINGS.map((f) => {
+              const current = cast?.extras?.lingerie_framing;
+              return (
+                <Chip
+                  key={f.value}
+                  active={current === f.value}
+                  onClick={() => {
+                    const nextExtras = { ...(cast?.extras ?? {}) };
+                    if (current === f.value) delete nextExtras.lingerie_framing;
+                    else nextExtras.lingerie_framing = f.value;
+                    onCastChange({ extras: nextExtras });
+                  }}
+                >
+                  {f.label}
+                </Chip>
+              );
+            })}
+          </div>
+        </Section>
       )}
 
       {!hasPeople && showHandsOn && (

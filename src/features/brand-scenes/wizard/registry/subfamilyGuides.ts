@@ -31,9 +31,12 @@ export const SUBFAMILY_GUIDES: Partial<Record<Key, SubfamilyGuide>> = {
   "fashion/lingerie": {
     productNoun: "lingerie set",
     wardrobe:
-      "Model wears a well-fitted lingerie set (bralette + briefs, matching slip or bodysuit) as the hero garment — visible, on-body, photographed as the focal product.",
+      "Model wears a well-fitted brand lingerie set as the hero garment — matching bralette + briefs, or a slip / bodysuit / corset — fully visible, on-body, fabric and lace texture readable. Pose framed so the lingerie leads the image; supporting layers (silk robe, sheer kimono) may drape but never cover the hero piece. Render skin tone naturally with realistic pores and shadow; avoid AI-glossy or over-airbrushed skin.",
     safeguards: [
-      "Do not render pajamas, oversized t-shirts, robes, loungewear or sweats in place of the lingerie hero piece.",
+      "Do not render pajamas, oversized t-shirts, bathrobes, towels, loungewear, sweats, hoodies or bath wraps in place of the lingerie.",
+      "Do not pixelate, blur, censor or pixel-mosaic the lingerie; render true-to-fabric.",
+      "Do not change the hero garment into swimwear or activewear.",
+      "Avoid clichéd wet-look skin or oily over-glossy rendering unless explicitly requested.",
     ],
     mustWearProduct: true,
   },
