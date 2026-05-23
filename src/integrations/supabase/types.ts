@@ -1807,6 +1807,39 @@ export type Database = {
           },
         ]
       }
+      reference_responsibility_acceptances: {
+        Row: {
+          accepted_at: string
+          context: string
+          created_at: string
+          id: string
+          ip_address: unknown
+          user_agent: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          context: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Update: {
+          accepted_at?: string
+          context?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       resend_event_log: {
         Row: {
           created_at: string
