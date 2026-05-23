@@ -143,6 +143,27 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
 
   return (
     <div className="space-y-6">
+      {/* Scene name — mandatory in wizard flow. Reference flow already collected
+          it in Step 3 but we let the user edit it here too. */}
+      {!isReferenceFlow && (
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <Label htmlFor="brand-scene-name" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Scene name
+          </Label>
+          <Input
+            id="brand-scene-name"
+            value={answers.name ?? ""}
+            onChange={(e) => onNameChange?.(e.target.value.slice(0, BRAND_SCENE_NAME_MAX))}
+            placeholder="e.g. Lingerie morning bedroom"
+            maxLength={BRAND_SCENE_NAME_MAX}
+            className="mt-2"
+          />
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Required — this is how the scene appears in your library.
+          </p>
+        </div>
+      )}
+
       {/* Hero — generate / pick / save */}
       {phase === "idle" && (
         <div className="rounded-2xl border border-border bg-card p-6">
@@ -157,13 +178,24 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
           </p>
 
           <div className="mt-5">
-            <Button size="pill" onClick={handleGenerate} className="gap-2">
+            <Button
+              size="pill"
+              onClick={handleGenerate}
+              disabled={!nameValid}
+              className="gap-2"
+            >
               <Sparkles className="w-4 h-4" />
               Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
             </Button>
+            {!nameValid && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Name this scene to enable generation.
+              </p>
+            )}
           </div>
         </div>
       )}
+
 
       {phase === "generating" && <BrandSceneGenerateLoading />}
 
