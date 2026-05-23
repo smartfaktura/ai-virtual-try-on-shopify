@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -194,53 +194,70 @@ export function Step4Cast({
   })();
   const outfitVibeMissing = !hasOutfitVibe(cast?.outfit);
 
+  const activeTabRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [subStep]);
+
+
   return (
     <div className="space-y-8">
       {/* Tabs */}
       {flow.visibleTabs.length > 1 && (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-border/50">
-          {flow.visibleTabs.map((t) => {
-            const active = subStep === t;
-            const labelMap: Record<Step4SubStep, string> = {
-              look: "Look",
-              essentials: "Essentials",
-              people: "People",
-              interaction: "Interaction",
-              styling: "Styling",
-            };
-            const headlineAnswered =
-              getSubStepDisabledReason(t, answers, { module, subFamily, isReference }) === null;
-            const visited = visitedSubSteps?.has(t) ?? (t === subStep);
-            const done = headlineAnswered && visited;
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => onSubStepChange?.(t)}
-                className={`relative pb-3 -mb-px border-b-2 text-[12px] font-medium transition-colors inline-flex items-center gap-1.5 ${
-                  active
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span>{labelMap[t]}</span>
-                {done && (
-                  <Check
-                    className={`w-3 h-3 ${
-                      active ? "text-foreground" : "text-foreground/50"
-                    }`}
-                  />
-                )}
-              </button>
-            );
-          })}
+        <div className="space-y-2">
           {subStep !== "look" && (
-            <div className="ml-auto pb-3 text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground/60 sm:hidden">
               Step {Math.max(1, flow.visibleTabs.indexOf(subStep) + 1)} of {flow.visibleTabs.length}
             </div>
           )}
+          <div className="-mx-4 px-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:overflow-visible sm:mx-0 sm:px-0 border-b border-border/50">
+            <div className="flex items-center gap-5 sm:gap-6 sm:flex-wrap whitespace-nowrap">
+              {flow.visibleTabs.map((t) => {
+                const active = subStep === t;
+                const labelMap: Record<Step4SubStep, string> = {
+                  look: "Look",
+                  essentials: "Essentials",
+                  people: "People",
+                  interaction: "Interaction",
+                  styling: "Styling",
+                };
+                const headlineAnswered =
+                  getSubStepDisabledReason(t, answers, { module, subFamily, isReference }) === null;
+                const visited = visitedSubSteps?.has(t) ?? (t === subStep);
+                const done = headlineAnswered && visited;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    ref={active ? activeTabRef : undefined}
+                    onClick={() => onSubStepChange?.(t)}
+                    className={`relative pb-3 -mb-px border-b-2 text-[12px] font-medium transition-colors inline-flex items-center gap-1.5 snap-start shrink-0 ${
+                      active
+                        ? "border-foreground text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span>{labelMap[t]}</span>
+                    {done && (
+                      <Check
+                        className={`w-3 h-3 ${
+                          active ? "text-foreground" : "text-foreground/50"
+                        }`}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+              {subStep !== "look" && (
+                <div className="hidden sm:block ml-auto pb-3 text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                  Step {Math.max(1, flow.visibleTabs.indexOf(subStep) + 1)} of {flow.visibleTabs.length}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
+
 
 
       {subStep === "look" && flow.showBranchCard && (

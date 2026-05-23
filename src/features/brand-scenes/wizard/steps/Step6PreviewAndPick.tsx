@@ -146,7 +146,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       {/* Scene name — mandatory in wizard flow. Reference flow already collected
           it in Step 3 but we let the user edit it here too. */}
       {!isReferenceFlow && (
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
           <Label htmlFor="brand-scene-name" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Scene name
           </Label>
@@ -158,7 +158,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
             maxLength={BRAND_SCENE_NAME_MAX}
             className="mt-2"
           />
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
             Required — this is how the scene appears in your library.
           </p>
         </div>
@@ -166,7 +166,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
 
       {/* Hero — generate / pick / save */}
       {phase === "idle" && (
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Ready to generate
           </div>
@@ -182,10 +182,15 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
               size="pill"
               onClick={handleGenerate}
               disabled={!nameValid}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto whitespace-normal text-center"
             >
-              <Sparkles className="w-4 h-4" />
-              Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
+              <Sparkles className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">
+                Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
+              </span>
+              <span className="sm:hidden">
+                Generate · {BRAND_SCENE_GENERATION_COST} credits
+              </span>
             </Button>
             {!nameValid && (
               <p className="mt-2 text-[11px] text-muted-foreground">
@@ -200,7 +205,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       {phase === "generating" && <BrandSceneGenerateLoading />}
 
       {(phase === "picking" || phase === "saving") && variations.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
           <div>
             <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Pick your favorite
@@ -219,12 +224,12 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
             onSelect={(url) => phase === "picking" && setSelectedUrl(url)}
           />
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
               onClick={handleRegenerate}
               disabled={phase === "saving"}
-              className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 disabled:opacity-40"
+              className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 disabled:opacity-40"
             >
               <RefreshCw className="w-3 h-3" />
               Regenerate · {BRAND_SCENE_GENERATION_COST} credits
@@ -233,7 +238,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
               size="pill"
               onClick={handleSave}
               disabled={!selectedUrl || phase === "saving"}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
             >
               {phase === "saving" ? (
                 <>

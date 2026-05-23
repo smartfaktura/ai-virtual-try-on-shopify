@@ -1,67 +1,47 @@
-## Brand Scenes — fix credits, naming, saved-scene hygiene & dynamic tokens
+# Mobile fixes for Brand Scenes wizard
 
-Four real issues in `/app/brand-scenes/new`. Scope is the brand-scenes wizard + `save-brand-scene` edge function only. No changes to global generation pipeline.
+Targeting `/app/brand-scenes/new` on viewports ≤ 480px. Frontend/presentation only — no business logic, no edge function changes.
 
----
+## Bugs observed
 
-### 1. Credits aren't visibly deducted
+1. **Sticky footer clipping / "three Back buttons"** — On the screenshot at 440px the sticky footer renders the disabled-reason text un-truncated next to two Back buttons (a Back from a transitioning step + the current Back), so the card overflows horizontally and clips text ("ick…").
+2. **Footer hidden under iOS chrome** — `bottom-4` + `pb-[env(safe-area-inset-bottom)]` still lets the CTA sit under the browser bottom bar; the disabled "Generate 3 variations · 20 credits" button on Step 6 is partially behind the chat/safe-area on iOS.
+3. **CTA labels too long for mobile** — "Generate 3 variations · 20 credits" and "Continue to Interaction" overflow the pill and force the footer to flex-wrap into the body.
+4. **Step 4 Cast tabs (the "floating step menu")** — `flex-wrap gap-x-6` makes the Look/Essentials/People/Interaction/Styling tabs wrap onto multiple rows on mobile, the "Step X of Y" pushes to a third row, and tapping a wrapped tab is awkward (no horizontal scroll, no active-scroll-into-view).
+5. **Top progress strip cramped** — `10px` step-counter + label on one row leaves no breathing room next to the sub-family suffix ("Review & generate" + sub-family chip would overflow).
+6. **Page content sits under sticky footer** — the wizard body has `pb-10` but no allowance for the ~72px sticky footer, so the last field/Save button is covered when scrolled to the bottom.
+7. **Step 6 hero card padding** — `p-6` on a 440px screen leaves little room; "Saving the variation you like is free" wraps awkwardly and the disabled-state hint is hidden under the footer.
 
-Today `generate-brand-scene` already calls `deduct_credits(user, 20)` and returns `new_balance`, but the UI never propagates it — the sidebar credit chip is only refreshed on focus/queue events, so the deduction looks invisible right after Generate / Regenerate.
+## Changes
 
-Fix:
-- In `Step6PreviewAndPick.handleGenerate`, after a successful `generateBrandScene`, push the returned `new_balance` into our existing credits store (the same path used by `useCredits` / queue completion). Show a small toast `−20 credits (balance: N)`.
-- If `INSUFFICIENT_CREDITS` comes back, also dispatch a refetch so the chip syncs.
-- Add a single integration test (`generate-brand-scene_test.ts`) asserting `deduct_credits` is called once per request and `new_balance` is in the response shape.
+### `src/features/brand-scenes/wizard/WizardLayout.tsx`
+- Add `pb-28` (mobile) / `sm:pb-10` to the body wrapper so the sticky footer never covers content.
+- Sticky footer:
+  - Reduce padding on mobile (`p-2.5 sm:p-4`), tighten gap.
+  - Make the disabled-reason text `hidden sm:block` (or move it above the buttons as a small line on mobile) so the buttons always fit on one row.
+  - Add `min-w-0` + `truncate` to the reason span.
+  - Buttons row: `flex-shrink-0`; CTA pill gets `max-w-full truncate`.
+  - Replace `bottom-4` with `bottom-2 sm:bottom-4` and keep safe-area padding.
+- Shorten Next-button label on mobile via a responsive variant: full label on `sm+`, abbreviated ("Next", "Save", "Continue") on mobile. Implemented by passing both `nextLabel` and a derived short label and rendering `<span className="hidden sm:inline">long</span><span className="sm:hidden">short</span>`.
+- Top progress row: stack to two lines on very narrow widths (`flex-col items-start sm:flex-row sm:items-center`), and clamp the right-side label with `truncate max-w-[60%]`.
 
-### 2. Scene name should be mandatory (wizard flow too)
+### `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (tabs only)
+- Replace the wrapping tab row with a **horizontally scrollable, snap-x** strip on mobile:
+  - Wrapper: `-mx-4 px-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:overflow-visible sm:mx-0 sm:px-0`.
+  - Inner: `flex items-center gap-5 sm:gap-6 sm:flex-wrap whitespace-nowrap`.
+  - Each tab: `snap-start shrink-0`.
+  - Move "Step X of Y" to a separate line above the tabs on mobile (`sm:ml-auto sm:pb-3`) so it never fights for space.
+  - Auto-scroll the active tab into view on `subStep` change via a `ref` + `scrollIntoView({ inline: "center", block: "nearest" })`.
 
-Currently `name` is only required in the reference flow's Step 3. In the wizard flow it defaults to `"Untitled scene"`, so users save unnamed library entries.
+### `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`
+- Hero "Ready to generate" card: `p-4 sm:p-6`, CTA pill wraps long label across two lines via `whitespace-normal text-left` and uses a shorter label on mobile (`Generate · 20 credits` mobile / full label on `sm+`).
+- "Pick your favorite" footer row: stack on mobile (`flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between`); Save button full-width on mobile.
+- Scene-name card: reduce padding on mobile and ensure the helper copy wraps cleanly.
 
-Fix:
-- Add a `Scene name` input at the top of `Step6PreviewAndPick` (wizard flow). For the reference flow it stays in Step 3.
-- Gate `Generate` and `Regenerate` buttons on `answers.name?.trim().length >= 2`. Show the same disabled-reason pattern (`"Name this scene"`).
-- Add the same name guard on the server in `save-brand-scene` (already present) and `generate-brand-scene` (new — reject 400 if missing) so a stale client can't bypass it.
+### Nothing else
+- No registry, prompt, edge-function, or schema changes.
+- No new components or files; all edits are scoped to the three files above.
 
-### 3. Saved scene has empty "Outfit Direction" & no trigger blocks → no model can be picked
-
-`save-brand-scene` hardcodes `trigger_blocks: []` and never writes `outfit_hint`. Downstream the Product Images model/outfit pickers rely on these two fields, so saved brand scenes show up but can't generate with a model.
-
-Fix in `save-brand-scene/index.ts`:
-- Derive `trigger_blocks` from `answers.cast.preset` using `CAST_PRESETS_WITH_PEOPLE`:
-  - people scene → `['personDetails']` (plus `['outfit']` if any outfit slot or `reference_outfit.description` is set)
-  - product-only scene → `[]` (unchanged)
-- Persist `outfit_hint` by reusing the same logic our prompt assembler uses:
-  - prefer manual `answers.cast.outfit` slots → join via existing `OUTFIT_*` directives
-  - else fall back to `answers.reference_outfit.description`
-  - else empty string
-- Persist `scene_type` already (already done) and add `requires_extra_reference: false` so it matches the schema of admin-imported scenes.
-- Add `product_image_scenes` insert test asserting `trigger_blocks`/`outfit_hint` are correctly set for `solo`, `duo`, and `productOnly` cast presets.
-
-### 4. Compiled prompt has no `[MODEL IMAGE]` / `[PRODUCT IMAGE]` dynamics
-
-`assembleSceneDirective` writes a fully self-contained directive. When the scene is later used inside Product Images, `generate-workflow` swaps `[PRODUCT IMAGE]` and `[MODEL IMAGE]` placeholders into the template — without those tokens, the user's actual product/model references are never referenced in-prompt and the model substitutes generic stand-ins (the same root cause as "lingerie scene without lingerie").
-
-Fix:
-- Add a new helper `injectReferenceTokens(directive, { hasPeople })` in `src/features/brand-scenes/prompt/`:
-  - Prepends a `REFERENCE TOKENS` header explaining `[PRODUCT IMAGE]` is the hero garment/object and (when `hasPeople`) `[MODEL IMAGE]` is the cast subject.
-  - Rewrites the `PRODUCT FOCUS` and `SUBJECT` sections to refer to `[PRODUCT IMAGE]` / `[MODEL IMAGE]` explicitly (string-level replace on the already-emitted lines, e.g. `"Hero garment"` → `"Hero garment from [PRODUCT IMAGE]"`, `"the model"` → `"the person from [MODEL IMAGE]"`).
-- `Step6PreviewAndPick.handleGenerate` keeps using `directive` directly (the live preview still needs no placeholder because we feed a literal reference image in `referenceInlineData`). Only the value sent to `save-brand-scene` as `compiledPrompt` goes through `injectReferenceTokens` — so the **stored** `prompt_template` carries the tokens that downstream `generate-workflow` already knows how to substitute.
-- Snapshot test in `__tests__/assembleSceneDirective.test.ts` verifying the saved template contains `[PRODUCT IMAGE]` always, and `[MODEL IMAGE]` only when the cast has people.
-
----
-
-### Files
-
-- `supabase/functions/generate-brand-scene/index.ts` — 400 on missing name, response unchanged.
-- `supabase/functions/save-brand-scene/index.ts` — derive `trigger_blocks`, `outfit_hint`, `requires_extra_reference`.
-- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — small refactor so cast / product-focus lines are token-friendly.
-- `src/features/brand-scenes/prompt/injectReferenceTokens.ts` *(new)*.
-- `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx` — name input + gating, credit refresh, tokenised save payload.
-- `src/features/brand-scenes/api/brandSceneApi.ts` — pass through `new_balance` to caller (already typed, just wire it).
-- `src/features/brand-scenes/__tests__/*` — 2 new tests as described.
-
-### Out of scope
-
-- No DB migration.
-- No changes to `generate-workflow`, Product Images UI, or the credit balance RPC.
-- No new sub-family wardrobe registries (lingerie work landed earlier).
+## QA
+- Use `preview_ui--set_preview_device_viewport: mobile`, then walk Steps 0 → 6 in both wizard and reference flows, paying attention to: sticky footer never covering content, single-row buttons, Step 4 tabs scroll horizontally with the active tab centered, Step 6 hero card readable and CTA tappable above iOS safe area.
+- Re-screenshot Step 6 at 440px to confirm the "three Backs" overflow is gone and the Generate button label fits.

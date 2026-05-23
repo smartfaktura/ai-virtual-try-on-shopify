@@ -72,6 +72,13 @@ export function WizardLayout({
   };
 
   const ctaLabel = isLastStep ? "Save scene" : (nextLabel ?? "Next");
+  const ctaLabelShort = isLastStep
+    ? "Save"
+    : nextLabel
+      ? nextLabel.startsWith("Continue to")
+        ? "Continue"
+        : nextLabel
+      : "Next";
 
   const NextButton = (
     <Button
@@ -79,10 +86,11 @@ export function WizardLayout({
       onClick={handleNextClick}
       aria-disabled={nextDisabled || undefined}
       disabled={isLastStep}
-      className={["gap-1.5", nextDisabled ? "opacity-50 hover:opacity-50" : ""].join(" ")}
+      className={["gap-1.5 max-w-full", nextDisabled ? "opacity-50 hover:opacity-50" : ""].join(" ")}
     >
-      {ctaLabel}
-      {!isLastStep && <ArrowRight className="w-3.5 h-3.5" />}
+      <span className="hidden sm:inline truncate">{ctaLabel}</span>
+      <span className="sm:hidden truncate">{ctaLabelShort}</span>
+      {!isLastStep && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0" />}
     </Button>
   );
 
@@ -105,16 +113,16 @@ export function WizardLayout({
             style={{ width: `${progressPct}%` }}
           />
         </button>
-        <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          <span className="tabular-nums">
+        <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="tabular-nums flex-shrink-0">
             {stepNum} <span className="text-muted-foreground/50">/ {String(total).padStart(2, "0")}</span>
           </span>
-          <span>{currentLabel}</span>
+          <span className="truncate text-right">{currentLabel}</span>
         </div>
       </div>
 
       {/* Question block */}
-      <div key={step} className="animate-fade-in pt-12 pb-10">
+      <div key={step} className="animate-fade-in pt-12 pb-28 sm:pb-10">
         <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight leading-[1.15]">
           {title}
         </h1>
@@ -128,13 +136,13 @@ export function WizardLayout({
       </div>
 
       {/* Sticky footer */}
-      <div className="sticky bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
+      <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
         <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
-          <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
-            <span className="text-[11px] text-muted-foreground/80 truncate">
+          <div className="flex items-center justify-between gap-2 p-2.5 sm:p-4">
+            <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
               {nextDisabled && nextDisabledReason ? nextDisabledReason : ""}
             </span>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
               {step > 0 && (
                 <Button variant="outline" size="pill" onClick={onBack}>
                   Back
