@@ -15,6 +15,8 @@ import {
   BRAND_SCENE_REFERENCE_MAX_BYTES,
 } from "../../constants";
 import type { ReferenceIntent } from "../../prompt/buildReferenceDirective";
+import type { ReferenceOutfit } from "../../types";
+import { ReferenceOutfitCard } from "../components/ReferenceOutfitCard";
 
 const REFERENCE_INTENTS: { value: ReferenceIntent; label: string; hint: string }[] = [
   {
