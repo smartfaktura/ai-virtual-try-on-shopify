@@ -185,7 +185,6 @@ export function Step4Cast({
               styling: "Styling",
             };
             const done =
-              t !== "essentials" &&
               getSubStepDisabledReason(t, answers, { module, subFamily, isReference }) === null;
             return (
               <button
