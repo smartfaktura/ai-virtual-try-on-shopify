@@ -278,7 +278,7 @@ export function BrandSceneWizard() {
             picked={sourcePicked}
             onChange={(s) => dispatch({ type: "setSource", source: s })}
             onPickReference={handlePickReference}
-            referenceUnlocked={sessionAccepted || state.responsibilityAccepted}
+            referenceUnlocked={state.responsibilityAccepted}
           />
         )}
 
@@ -407,9 +407,6 @@ export function BrandSceneWizard() {
           if (error) {
             toast.error("Could not record your confirmation. Please try again.");
             return;
-          }
-          if (typeof window !== "undefined") {
-            window.sessionStorage.setItem(RESPONSIBILITY_KEY, "1");
           }
           dispatch({ type: "acceptResponsibility" });
           dispatch({ type: "setSource", source: "reference" });
