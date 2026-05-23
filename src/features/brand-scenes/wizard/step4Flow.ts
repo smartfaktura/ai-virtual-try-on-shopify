@@ -11,7 +11,7 @@ import { resolveAll } from "./registry/resolvePresets";
 import { hasOutfitVibe } from "./constants/outfit";
 import { CAST_EXTRAS_FIELDS, applicableFields } from "./constants/extras";
 
-export type Step4SubStep = "essentials" | "people" | "interaction" | "styling";
+export type Step4SubStep = "look" | "essentials" | "people" | "interaction" | "styling";
 
 export type Step4Mode = "yes" | "skip" | undefined;
 
