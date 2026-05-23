@@ -1,112 +1,67 @@
+## Brand Scenes — fix credits, naming, saved-scene hygiene & dynamic tokens
 
-# Improve Lingerie category in Brand Scenes wizard
+Four real issues in `/app/brand-scenes/new`. Scope is the brand-scenes wizard + `save-brand-scene` edge function only. No changes to global generation pipeline.
 
-Lingerie currently shares the generic interior options and a tiny moment list, and the prompt safeguards aren't strong enough — generations come out as random bedrooms with the model out of the hero garment. This plan upgrades the lingerie sub-family end-to-end without touching unrelated categories.
+---
 
-## Goals
+### 1. Credits aren't visibly deducted
 
-1. Make the **interior / setting** picker for lingerie rich, visual and easy to choose from (not just 4 generic strings).
-2. Add **lingerie-specific cast options**: poses, angles, framing, mood — surfaced only when sub-family is lingerie.
-3. Improve **storytelling moments** (currently 4 entries) into a curated, named library.
-4. Strengthen **prompt safeguards** so the model actually wears the lingerie set, not a robe or pajamas.
+Today `generate-brand-scene` already calls `deduct_credits(user, 20)` and returns `new_balance`, but the UI never propagates it — the sidebar credit chip is only refreshed on focus/queue events, so the deduction looks invisible right after Generate / Regenerate.
 
-## 1. Setting / environment library (the "interior" picker)
+Fix:
+- In `Step6PreviewAndPick.handleGenerate`, after a successful `generateBrandScene`, push the returned `new_balance` into our existing credits store (the same path used by `useCredits` / queue completion). Show a small toast `−20 credits (balance: N)`.
+- If `INSUFFICIENT_CREDITS` comes back, also dispatch a refetch so the chip syncs.
+- Add a single integration test (`generate-brand-scene_test.ts`) asserting `deduct_credits` is called once per request and `new_balance` is in the response shape.
 
-Today `settingsBySubfamily.ts` for `fashion/lingerie` only exposes:
-- `indoor_lifestyle`: 4 strings
-- `studio`: 3 strings
+### 2. Scene name should be mandatory (wizard flow too)
 
-Expand to a curated, photography-led pool grouped by scene_type so the user picks an interior by *name + vibe*, not by guessing:
+Currently `name` is only required in the reference flow's Step 3. In the wizard flow it defaults to `"Untitled scene"`, so users save unnamed library entries.
 
-- `indoor_lifestyle` (12 presets, each with a short vibe description):
-  Bedroom morning · Velvet boudoir · Sunlit linen room · Marble bath edge · Hotel suite drape · Dressing-room mirror · Loft bedroom by window · Silk-curtain bay · Quiet hallway with sheers · Powder room corner · Walk-in closet bench · Reading nook chaise.
-- `studio` (6 presets):
-  Soft silk drape · Painted plaster wall · Cyclorama soft sweep · Pleated paper backdrop · Floating tulle veil · Hard-light split studio.
-- `architectural` (4 presets):
-  Marble bathhouse · Stone cloister · Brutalist concrete bedroom · Glass atrium banquette.
+Fix:
+- Add a `Scene name` input at the top of `Step6PreviewAndPick` (wizard flow). For the reference flow it stays in Step 3.
+- Gate `Generate` and `Regenerate` buttons on `answers.name?.trim().length >= 2`. Show the same disabled-reason pattern (`"Name this scene"`).
+- Add the same name guard on the server in `save-brand-scene` (already present) and `generate-brand-scene` (new — reject 400 if missing) so a stale client can't bypass it.
 
-UX change in `SettingPicker`: when the active sub-family is lingerie, render each preset as a card with the **name + one-line vibe** (instead of a flat chip). This is a small additive variant — uses existing component, just a `descriptions?` prop sourced from a new map. Other categories keep their chip style.
+### 3. Saved scene has empty "Outfit Direction" & no trigger blocks → no model can be picked
 
-Files:
-- `src/features/brand-scenes/wizard/registry/settingsBySubfamily.ts` — expand `fashion/lingerie` pools.
-- `src/features/brand-scenes/wizard/registry/settingDescriptions.ts` — new file: `{module/sub_family → {settingName → "one-line vibe"}}`.
-- `src/features/brand-scenes/wizard/components/SettingPicker.tsx` — accept optional `descriptions` map; when present, render two-line card; otherwise current chip.
-- `src/features/brand-scenes/wizard/steps/Step4Environment.tsx` — pass descriptions for the active sub-family.
+`save-brand-scene` hardcodes `trigger_blocks: []` and never writes `outfit_hint`. Downstream the Product Images model/outfit pickers rely on these two fields, so saved brand scenes show up but can't generate with a model.
 
-## 2. Lingerie-specific cast: poses, angles, framing
+Fix in `save-brand-scene/index.ts`:
+- Derive `trigger_blocks` from `answers.cast.preset` using `CAST_PRESETS_WITH_PEOPLE`:
+  - people scene → `['personDetails']` (plus `['outfit']` if any outfit slot or `reference_outfit.description` is set)
+  - product-only scene → `[]` (unchanged)
+- Persist `outfit_hint` by reusing the same logic our prompt assembler uses:
+  - prefer manual `answers.cast.outfit` slots → join via existing `OUTFIT_*` directives
+  - else fall back to `answers.reference_outfit.description`
+  - else empty string
+- Persist `scene_type` already (already done) and add `requires_extra_reference: false` so it matches the schema of admin-imported scenes.
+- Add `product_image_scenes` insert test asserting `trigger_blocks`/`outfit_hint` are correctly set for `solo`, `duo`, and `productOnly` cast presets.
 
-Extend the per-sub-family resolver so lingerie surfaces a curated set instead of the generic global lists.
+### 4. Compiled prompt has no `[MODEL IMAGE]` / `[PRODUCT IMAGE]` dynamics
 
-In `resolvePresets.ts` (or a new `castBySubfamily.ts`) add a `fashion/lingerie` overlay:
+`assembleSceneDirective` writes a fully self-contained directive. When the scene is later used inside Product Images, `generate-workflow` swaps `[PRODUCT IMAGE]` and `[MODEL IMAGE]` placeholders into the template — without those tokens, the user's actual product/model references are never referenced in-prompt and the model substitutes generic stand-ins (the same root cause as "lingerie scene without lingerie").
 
-- **Poses** (lingerie-specific, replaces the generic CAST_ACTIONS list when sub_family = lingerie):
-  Standing portrait · Hand on hip · Seated edge of bed · Lying on linen · Lying side-profile · Kneeling on bed · Stretching at window · Slip-strap adjust · Looking over shoulder · Back-to-camera contrapposto · Hands-in-hair · Sitting cross-legged.
-- **Camera angles** (new field surfaced only for lingerie):
-  Eye-level portrait · Slight high · Low-3/4 hero · Profile silhouette · Over-shoulder · Floor-up vertical · Tight bust crop · Full-body wide.
-- **Framing presets** (lingerie chip row):
-  Full body · 3/4 body · Bust crop · Hip-to-knee · Detail (strap/lace) · Silhouette only.
-- **Mood/vibe** (lingerie chip row):
-  Soft-romantic · Editorial-cool · Slow morning · Boudoir cinematic · Quiet luxury · Confident-modern.
+Fix:
+- Add a new helper `injectReferenceTokens(directive, { hasPeople })` in `src/features/brand-scenes/prompt/`:
+  - Prepends a `REFERENCE TOKENS` header explaining `[PRODUCT IMAGE]` is the hero garment/object and (when `hasPeople`) `[MODEL IMAGE]` is the cast subject.
+  - Rewrites the `PRODUCT FOCUS` and `SUBJECT` sections to refer to `[PRODUCT IMAGE]` / `[MODEL IMAGE]` explicitly (string-level replace on the already-emitted lines, e.g. `"Hero garment"` → `"Hero garment from [PRODUCT IMAGE]"`, `"the model"` → `"the person from [MODEL IMAGE]"`).
+- `Step6PreviewAndPick.handleGenerate` keeps using `directive` directly (the live preview still needs no placeholder because we feed a literal reference image in `referenceInlineData`). Only the value sent to `save-brand-scene` as `compiledPrompt` goes through `injectReferenceTokens` — so the **stored** `prompt_template` carries the tokens that downstream `generate-workflow` already knows how to substitute.
+- Snapshot test in `__tests__/assembleSceneDirective.test.ts` verifying the saved template contains `[PRODUCT IMAGE]` always, and `[MODEL IMAGE]` only when the cast has people.
 
-These are wired into the `PeopleTab` / `InteractionTab` chip rows via the resolver — no new step, just richer chips when sub_family matches.
+---
 
-Files:
-- `src/features/brand-scenes/wizard/registry/categoryPresets.ts` — add lingerie overlay (poses, angles, framing, vibes).
-- `src/features/brand-scenes/wizard/registry/resolvePresets.ts` — expose the new arrays through `resolveAll(...)`.
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (`PeopleTab` + `InteractionTab`) — render lingerie-specific chips when arrays are non-empty.
-- `src/features/brand-scenes/prompt/buildCastDirective.ts` + `assembleSceneDirective.ts` — emit `Camera angle:` and `Framing:` lines when set.
+### Files
 
-## 3. Storytelling moments — expanded lingerie library
+- `supabase/functions/generate-brand-scene/index.ts` — 400 on missing name, response unchanged.
+- `supabase/functions/save-brand-scene/index.ts` — derive `trigger_blocks`, `outfit_hint`, `requires_extra_reference`.
+- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — small refactor so cast / product-focus lines are token-friendly.
+- `src/features/brand-scenes/prompt/injectReferenceTokens.ts` *(new)*.
+- `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx` — name input + gating, credit refresh, tokenised save payload.
+- `src/features/brand-scenes/api/brandSceneApi.ts` — pass through `new_balance` to caller (already typed, just wire it).
+- `src/features/brand-scenes/__tests__/*` — 2 new tests as described.
 
-Replace the 4-moment list in `storytellingBySubfamily.ts → fashion/lingerie` with a curated 16:
-Slipping on a robe · Sitting on the bed edge · Standing by the window · Lying on linen sheets · Adjusting strap · Tying a sheer robe · Brushing hair at vanity · Reading in bed · Stretching at sunrise · Hand on neck · Looking down quietly · Walking through silk curtain · Sitting at vanity mirror · Reaching for perfume · Lacing a bodice · Tugging a slip strap.
+### Out of scope
 
-## 4. Prompt safeguards — stronger hero-garment enforcement
-
-In `subfamilyGuides.ts`, beef up `fashion/lingerie`:
-
-```ts
-wardrobe:
-  "Model wears a well-fitted brand lingerie set as the hero garment — " +
-  "matching bralette + briefs OR a slip / bodysuit / corset — fully visible, " +
-  "on-body, fabric and lace texture readable. Pose framed so the lingerie " +
-  "leads the image; supporting layers (silk robe, sheer kimono) may drape " +
-  "but never cover the hero piece.",
-safeguards: [
-  "Do not render pajamas, oversized t-shirts, bathrobes, towels, loungewear, sweats, or bath wraps in place of the lingerie.",
-  "Do not pixelate, blur or censor the lingerie; render true-to-fabric.",
-  "Do not change the hero garment into swimwear or activewear.",
-  "Avoid clichéd 'wet-look' or oily-skin rendering unless explicitly requested.",
-],
-```
-
-Also assemble a small `lingerie-style guidance` block into PRODUCT FOCUS (skin tone fidelity, lace transparency handled tastefully, no over-glossy AI skin).
-
-## 5. Out of scope
-
-- No DB schema changes.
-- No changes to other sub-families (swimwear, dresses, etc.) — they keep their current pools.
-- No new wizard step / no admin UI changes.
-- No credit / pricing changes.
-- Visual `SettingPicker` description variant is additive — falls back to current chip style for every other category.
-
-## Files touched (summary)
-
-- `src/features/brand-scenes/wizard/registry/settingsBySubfamily.ts`
-- `src/features/brand-scenes/wizard/registry/settingDescriptions.ts` (new)
-- `src/features/brand-scenes/wizard/registry/storytellingBySubfamily.ts`
-- `src/features/brand-scenes/wizard/registry/categoryPresets.ts`
-- `src/features/brand-scenes/wizard/registry/resolvePresets.ts`
-- `src/features/brand-scenes/wizard/registry/subfamilyGuides.ts`
-- `src/features/brand-scenes/wizard/components/SettingPicker.tsx`
-- `src/features/brand-scenes/wizard/steps/Step4Environment.tsx`
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
-- `src/features/brand-scenes/prompt/buildCastDirective.ts`
-- `src/features/brand-scenes/prompt/assembleSceneDirective.ts`
-
-## QA
-
-- Open `/app/brand-scenes/new` → choose **Fashion → Lingerie**; verify Setting picker shows the new named interiors with one-line vibes.
-- Verify People / Interaction tabs show lingerie poses, angles, framing, mood chips.
-- Verify Storytelling moments list shows the new 16 options.
-- Generate 3 variations and confirm the model wears lingerie (not a robe/pajamas) and the scene matches the chosen interior.
+- No DB migration.
+- No changes to `generate-workflow`, Product Images UI, or the credit balance RPC.
+- No new sub-family wardrobe registries (lingerie work landed earlier).
