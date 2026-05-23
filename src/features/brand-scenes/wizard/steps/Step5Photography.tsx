@@ -33,7 +33,7 @@ import type { SceneTypeId } from "../registry/settingsBySubfamily";
 import { applyCascade, type SceneCtx } from "../rules/sceneRules";
 import { resolveAll } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
-import { ChipRow, PaletteBlock } from "./_baseHelpers";
+import { ChipRow, ChipRowWithOther, PaletteBlock } from "./_baseHelpers";
 
 interface Props {
   module?: BrandSceneModule;
