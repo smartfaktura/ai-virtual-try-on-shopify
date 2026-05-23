@@ -63,6 +63,10 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       toast.error("Add at least one detail before generating");
       return;
     }
+    if (!nameValid) {
+      toast.error("Name this scene before generating");
+      return;
+    }
     setPhase("generating");
     setVariations([]);
     setSelectedUrl(null);
@@ -70,12 +74,18 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       const res = await generateBrandScene({
         compiledPrompt: directive,
         referenceImageUrl,
+        name: trimmedName,
       });
       setVariations(res.variations);
       if (res.variations.length > 0) {
         setSelectedUrl(res.variations[0].url);
       }
       setPhase("picking");
+      if (typeof res.new_balance === "number") {
+        toast.success(`−${BRAND_SCENE_GENERATION_COST} credits · balance ${res.new_balance}`);
+      }
+      // Sync sidebar credit chip with the server-side balance.
+      refreshBalance().catch(() => {});
       if (res.partial) {
         toast.warning(`Generated ${res.variations.length} of 3 — try again if you want more options`);
       }
@@ -83,8 +93,10 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       setPhase("idle");
       if (e instanceof BrandSceneApiError) {
         if (e.code === "RATE_LIMIT") toast.error("Too many requests, try again shortly");
-        else if (e.code === "INSUFFICIENT_CREDITS")
+        else if (e.code === "INSUFFICIENT_CREDITS") {
           toast.error(`You need ${BRAND_SCENE_GENERATION_COST} credits to generate brand scene variations`);
+          refreshBalance().catch(() => {});
+        }
         else if (e.code === "GENERATION_FAILED") toast.error("Generation failed. Please try again.");
         else toast.error(e.message);
       } else {
@@ -94,19 +106,31 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   };
 
   const handleRegenerate = () => {
+    if (!nameValid) {
+      toast.error("Name this scene before generating");
+      return;
+    }
     if (!confirm(`Generate 3 new variations? This will cost ${BRAND_SCENE_GENERATION_COST} credits.`)) return;
     handleGenerate();
   };
 
   const handleSave = async () => {
     if (!selectedUrl) return;
+    if (!nameValid) {
+      toast.error("Name this scene before saving");
+      return;
+    }
     setPhase("saving");
     try {
+      // Inject [PRODUCT IMAGE] / [MODEL IMAGE] tokens into the stored prompt
+      // template so downstream `generate-workflow` substitutes the user's real
+      // product and model references at generation time.
+      const persistedPrompt = injectReferenceTokens(directive, { hasPeople });
       await saveBrandScene({
         answers,
-        name: sceneName,
+        name: trimmedName,
         pickedVariationUrl: selectedUrl,
-        compiledPrompt: directive,
+        compiledPrompt: persistedPrompt,
       });
       toast.success("Saved to your library");
       navigate("/app/brand-scenes");
@@ -115,6 +139,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       toast.error(e instanceof Error ? e.message : "Could not save scene");
     }
   };
+
 
   return (
     <div className="space-y-6">
