@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { ShieldAlert } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-const REQUIRED_PHRASE = "AGREE";
 
 interface Props {
   open: boolean;
@@ -24,67 +21,50 @@ export function ResponsibilityModal({ open, onCancel, onAccept }: Props) {
   const [c1, setC1] = useState(false);
   const [c2, setC2] = useState(false);
   const [c3, setC3] = useState(false);
-  const [phrase, setPhrase] = useState("");
 
-  const canAccept = c1 && c2 && c3 && phrase.trim().toUpperCase() === REQUIRED_PHRASE;
+  const canAccept = c1 && c2 && c3;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center mb-2">
-            <ShieldAlert className="w-5 h-5 text-destructive" />
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="space-y-2">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-1">
+            <ImageIcon className="w-5 h-5 text-foreground/70" />
           </div>
-          <DialogTitle className="tracking-tight">
-            Reference image — quick check
-          </DialogTitle>
+          <DialogTitle className="tracking-tight">Before you upload</DialogTitle>
           <DialogDescription className="leading-relaxed">
-            Your reference is sent to the AI as a visual guide. It replicates
-            framing, lighting and environment while swapping in your product.
-            Confirm the three statements below before uploading.
+            Your image guides framing, lighting and mood — your product replaces the original. Please confirm:
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 py-2">
+        <div className="space-y-2 py-1">
           <Row
             checked={c1}
             onChange={setC1}
-            label="I own this image or have explicit permission to use it"
+            label="I own this image or have permission to use it"
           />
           <Row
             checked={c2}
             onChange={setC2}
-            label="It does not contain copyrighted logos, trademarks, or recognizable people without consent"
+            label="No copyrighted logos or recognizable people"
           />
           <Row
             checked={c3}
             onChange={setC3}
-            label="I understand VOVV.AI will use it as a composition guide to generate a new scene with my product"
+            label="It's used only as a composition guide"
           />
-
-          <div className="pt-2">
-            <label className="text-xs text-muted-foreground">
-              Type <span className="font-mono text-foreground">{REQUIRED_PHRASE}</span> to confirm
-            </label>
-            <Input
-              value={phrase}
-              onChange={(e) => setPhrase(e.target.value)}
-              placeholder={REQUIRED_PHRASE}
-              className="mt-1.5"
-            />
-          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="pt-2">
           <Button variant="ghost" onClick={onCancel} className="rounded-full">
             Cancel
           </Button>
           <Button
             onClick={onAccept}
             disabled={!canAccept}
-            className="rounded-full font-semibold"
+            className="rounded-full font-medium"
           >
-            I take responsibility, continue
+            Continue
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -102,7 +82,7 @@ function Row({
   label: string;
 }) {
   return (
-    <label className="flex items-start gap-3 cursor-pointer text-sm leading-relaxed">
+    <label className="flex items-start gap-3 cursor-pointer text-sm leading-relaxed rounded-xl border border-border/60 bg-muted/30 hover:bg-muted/50 transition-colors px-3.5 py-3">
       <Checkbox
         checked={checked}
         onCheckedChange={(v) => onChange(v === true)}
