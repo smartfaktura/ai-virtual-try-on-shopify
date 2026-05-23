@@ -152,6 +152,15 @@ export function BrandSceneWizard() {
   }, [step]);
 
   const handleNext = () => {
+    // Step 4 internal sub-step navigation.
+    if (onCastStep) {
+      const order = step4Flow.order;
+      const idx = order.indexOf(step4SubStep);
+      if (idx >= 0 && idx < order.length - 1) {
+        setStep4SubStep(order[idx + 1]);
+        return;
+      }
+    }
     // Step 1: auto-skip sub-family if only one option.
     if (step === 1 && subFamilyCount <= 1) {
       dispatch({ type: "setStep", step: 3 });
@@ -166,11 +175,23 @@ export function BrandSceneWizard() {
   };
 
   const handleBack = () => {
+    // Step 4 internal sub-step navigation.
+    if (onCastStep) {
+      const order = step4Flow.order;
+      const idx = order.indexOf(step4SubStep);
+      if (idx > 0) {
+        setStep4SubStep(order[idx - 1]);
+        return;
+      }
+    }
     if (step === 3 && subFamilyCount <= 1) {
       dispatch({ type: "setStep", step: 1 });
       return;
     }
     if (step === 6 && isReference) {
+      // Returning to cast — land on the last sub-step.
+      const order = step4Flow.order;
+      setStep4SubStep(order[order.length - 1] ?? "essentials");
       dispatch({ type: "setStep", step: 4 });
       return;
     }
