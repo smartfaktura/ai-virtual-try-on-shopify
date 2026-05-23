@@ -178,6 +178,7 @@ export function Step4Cast({
           {flow.visibleTabs.map((t, idx) => {
             const active = subStep === t;
             const labelMap: Record<Step4SubStep, string> = {
+              look: "Look",
               essentials: "Essentials",
               people: "People",
               interaction: "Interaction",
