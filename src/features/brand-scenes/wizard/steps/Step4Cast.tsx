@@ -711,7 +711,7 @@ function StylingTab({
   subFamily?: string;
   preset?: CastPreset;
   hasPeople: boolean;
-  wardrobes: typeof WARDROBE_COLORS;
+  wardrobes: ReadonlyArray<{ value: string; label: string }>;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
 }) {
