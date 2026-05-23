@@ -3,6 +3,7 @@ import type {
   BrandSceneAnswers,
   BrandSceneCast,
   BrandSceneScale,
+  ReferenceOutfit,
 } from "../types";
 import type { BrandSceneModule, BrandSceneSource } from "../constants";
 import type { ReferenceIntent } from "../prompt/buildReferenceDirective";
