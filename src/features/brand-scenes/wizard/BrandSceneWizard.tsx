@@ -91,6 +91,20 @@ export function BrandSceneWizard() {
     window.sessionStorage.getItem(RESPONSIBILITY_KEY) === "1";
   const [modalOpen, setModalOpen] = useState(false);
 
+  const wizardCastStep = isReference ? 4 : 3;
+  const onCastStep = step === wizardCastStep;
+  const [step4SubStep, setStep4SubStep] = useState<Step4SubStep>("essentials");
+  const step4Ctx = { module: answers.module, subFamily: answers.sub_family, isReference };
+  const step4Flow = computeStep4Flow(answers, step4Ctx);
+
+  // Snap back to essentials if the current sub-step disappears (e.g. mode flipped to skip).
+  useEffect(() => {
+    if (!onCastStep) return;
+    if (!step4Flow.order.includes(step4SubStep)) {
+      setStep4SubStep("essentials");
+    }
+  }, [onCastStep, step4Flow.order, step4SubStep]);
+
   const subFamilyCount = answers.module
     ? (SUB_TYPES_BY_FAMILY[FAMILY_ID_TO_NAME[answers.module]] ?? []).length
     : 0;
@@ -101,27 +115,21 @@ export function BrandSceneWizard() {
     !!answers.name?.trim() &&
     !!answers.reference_intent;
 
-  const castStepValid =
-    !!answers.cast?.preset &&
-    (answers.cast.preset === "replicate" || !!answers.cast.interaction) &&
-    !!answers.scale?.preset;
-
-  // ---- Gating (post-reorder: Cast = step 3 in wizard flow, step 4 in reference flow) ----
-  const wizardCastStep = isReference ? 4 : 3;
+  const step4SubReason = onCastStep
+    ? getSubStepDisabledReason(step4SubStep, answers, step4Ctx)
+    : null;
 
   const nextDisabled =
     (step === 0 && !sourcePicked) ||
     (step === 1 && !answers.module) ||
     (step === 2 && !answers.sub_family) ||
     (step === 3 && isReference && !referenceStepValid) ||
-    (step === wizardCastStep && !castStepValid);
-
+    (onCastStep && step4SubReason !== null);
 
   let nextDisabledReason: string | null = null;
   if (nextDisabled) {
     if (step === 0) nextDisabledReason = "Pick a starting point";
     else if (step === 1) nextDisabledReason = "Pick a product family";
-
     else if (step === 2) nextDisabledReason = "Pick a sub-family";
     else if (step === 3 && isReference) {
       if (!answers.reference_image_paths?.length)
@@ -130,22 +138,12 @@ export function BrandSceneWizard() {
         nextDisabledReason = "Name this scene";
       else if (!answers.reference_intent)
         nextDisabledReason = "Choose how strictly to follow the reference";
-    } else if (step === wizardCastStep) {
-      if (!answers.cast?.preset) nextDisabledReason = "Choose who's in the shot";
-      else if (
-        answers.cast.preset !== "replicate" &&
-        !answers.cast.interaction
-      )
-        nextDisabledReason = "Pick how the cast holds, wears, or stands next to the product";
-      else if (!answers.scale?.preset)
-        nextDisabledReason = "Pick a product scale";
+    } else if (onCastStep) {
+      nextDisabledReason = step4SubReason;
     }
   }
 
   // Reset scroll to top of the wizard whenever the step changes.
-  // The wizard renders inside AppShell's <main id="app-main-scroll"> which is
-  // the actual scroll container — window.scrollTo is a fallback for cases
-  // where the wizard mounts standalone.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const main = document.getElementById("app-main-scroll");
@@ -154,6 +152,15 @@ export function BrandSceneWizard() {
   }, [step]);
 
   const handleNext = () => {
+    // Step 4 internal sub-step navigation.
+    if (onCastStep) {
+      const order = step4Flow.order;
+      const idx = order.indexOf(step4SubStep);
+      if (idx >= 0 && idx < order.length - 1) {
+        setStep4SubStep(order[idx + 1]);
+        return;
+      }
+    }
     // Step 1: auto-skip sub-family if only one option.
     if (step === 1 && subFamilyCount <= 1) {
       dispatch({ type: "setStep", step: 3 });
@@ -168,11 +175,23 @@ export function BrandSceneWizard() {
   };
 
   const handleBack = () => {
+    // Step 4 internal sub-step navigation.
+    if (onCastStep) {
+      const order = step4Flow.order;
+      const idx = order.indexOf(step4SubStep);
+      if (idx > 0) {
+        setStep4SubStep(order[idx - 1]);
+        return;
+      }
+    }
     if (step === 3 && subFamilyCount <= 1) {
       dispatch({ type: "setStep", step: 1 });
       return;
     }
     if (step === 6 && isReference) {
+      // Returning to cast — land on the last sub-step.
+      const order = step4Flow.order;
+      setStep4SubStep(order[order.length - 1] ?? "essentials");
       dispatch({ type: "setStep", step: 4 });
       return;
     }
@@ -238,6 +257,8 @@ export function BrandSceneWizard() {
             scale={answers.scale}
             onCastChange={(patch) => dispatch({ type: "setCast", patch })}
             onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
+            subStep={step4SubStep}
+            onSubStepChange={setStep4SubStep}
           />
         )}
 
@@ -280,6 +301,8 @@ export function BrandSceneWizard() {
             scale={answers.scale}
             onCastChange={(patch) => dispatch({ type: "setCast", patch })}
             onScaleChange={(patch) => dispatch({ type: "setScale", patch })}
+            subStep={step4SubStep}
+            onSubStepChange={setStep4SubStep}
           />
         )}
 
