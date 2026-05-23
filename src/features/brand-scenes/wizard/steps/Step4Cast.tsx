@@ -159,7 +159,19 @@ export function Step4Cast({
   const setMode = (next: "yes" | "skip") => {
     const nextExtras = { ...(cast?.extras ?? {}) };
     nextExtras.design_specific_look = next;
-    onCastChange({ extras: nextExtras });
+    if (next === "skip") {
+      const seededPreset = cast?.preset ?? resolved.defaultCast;
+      const seededInteraction =
+        cast?.interaction ?? visibleInteractions[0]?.value;
+      onCastChange({
+        extras: nextExtras,
+        preset: seededPreset,
+        interaction: seededInteraction,
+      });
+      if (!scale?.preset) onScaleChange({ preset: resolved.scale.default });
+    } else {
+      onCastChange({ extras: nextExtras });
+    }
   };
 
   // Headline missing flags for the dot indicators.
@@ -174,8 +186,8 @@ export function Step4Cast({
     <div className="space-y-8">
       {/* Tabs */}
       {flow.visibleTabs.length > 1 && (
-        <div className="flex flex-wrap gap-1.5 border-b border-border/50 pb-3">
-          {flow.visibleTabs.map((t, idx) => {
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-border/50">
+          {flow.visibleTabs.map((t) => {
             const active = subStep === t;
             const labelMap: Record<Step4SubStep, string> = {
               look: "Look",
@@ -191,40 +203,43 @@ export function Step4Cast({
                 key={t}
                 type="button"
                 onClick={() => onSubStepChange?.(t)}
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-colors inline-flex items-center gap-1.5 ${
+                className={`relative pb-3 -mb-px border-b-2 text-[12px] font-medium transition-colors inline-flex items-center gap-1.5 ${
                   active
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span>{labelMap[t]}</span>
                 {done && (
                   <Check
                     className={`w-3 h-3 ${
-                      active ? "text-background/80" : "text-foreground/60"
+                      active ? "text-foreground" : "text-foreground/50"
                     }`}
                   />
                 )}
               </button>
             );
           })}
-          <div className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/60 self-center">
+          <div className="ml-auto pb-3 text-[10px] uppercase tracking-widest text-muted-foreground/60">
             Step {Math.max(1, flow.visibleTabs.indexOf(subStep) + 1)} of {flow.visibleTabs.length}
           </div>
         </div>
       )}
+
 
       {subStep === "look" && flow.showBranchCard && (
         <div className="animate-fade-in pt-6">
           <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
             <BranchCard
               active={mode === "skip"}
-              title="Skip — auto-cast"
+              title="Auto-cast"
+              body="We'll pick cast, scale and interaction for you"
               onClick={() => setMode("skip")}
             />
             <BranchCard
               active={mode === "yes"}
               title="Design the look"
+              body="Walk through People, Interaction and Styling"
               onClick={() => setMode("yes")}
             />
           </div>

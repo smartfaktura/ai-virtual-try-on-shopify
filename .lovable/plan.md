@@ -1,50 +1,36 @@
-## Goal
+## Changes
 
-Make the **Look**, **Environment ("Where does it happen?")**, and **Photography ("How is the photo taken?")** sub-steps feel less like a dense form and more like a Typeform — fewer words, more breathing room, clear visual chapters instead of one long flat list. Presentation only; no schema/prompt/logic changes.
+### 1. Rename Skip card + restore subtitles (`Step4Cast.tsx`)
 
-## 1. Look sub-step (`Step4Cast.tsx`)
+Rename **"Skip — auto-cast"** → **"Auto-cast"** (no em-dash) and put a one-line subtitle back on both cards so the choice is self-explanatory:
 
-Currently shows a Section helper ("Skip auto-casts a generic look…") plus two BranchCards with two lines of copy each — visually heavy for a binary choice.
+- **Auto-cast** — "We'll pick cast, scale and interaction for you"
+- **Design the look** — "Walk through People, Interaction and Styling"
 
-- Drop the Section helper paragraph entirely. The H1 already asks the question.
-- Reduce each BranchCard to a single short phrase:
-  - "Skip — auto-cast" → keep title, drop sub-line
-  - "Yes, design the look" → keep title, drop sub-line
-- Center the two cards in a wider 2-col grid with `gap-4`, give the row `pt-6` so it floats in space instead of stacking right under the tab bar.
+Cards stay in the same 2-col grid; subtitle is the same muted `text-[11px]` used elsewhere.
 
-## 2. Environment — "Where does it happen?" (`Step4Environment.tsx`)
+### 2. Skip actually auto-picks defaults (`Step4Cast.tsx`)
 
-Currently ~10 stacked Sections (Scene type → Setting → Weather → Season → Brand voice → Aesthetic era → Prop density → fine-tuning fields → Avoid → Notes) all at the same visual weight. Reads as a long list.
+Today picking Skip only writes `design_specific_look = "skip"` — the user then lands on Essentials with missing cast preset / interaction / scale and the Next button stays disabled. Fix `setMode("skip")` to also seed sensible defaults in the same `onCastChange` / `onScaleChange` call:
 
-Re-chapter into 3 visual groups, each introduced by a larger uppercase chapter label with extra top/bottom space:
+- `cast.preset` ← keep current, else `resolved.defaultCast`
+- `cast.interaction` ← keep current, else first entry of `visibleInteractions` (already filtered against `forbiddenInter`)
+- `scale.preset` ← keep current, else `resolved.scale.default`
 
-```text
-SCENE                ← Scene type + Setting
-MOOD & ATMOSPHERE    ← Weather, Season, Brand voice, Aesthetic era, Prop density
-FINE-TUNING          ← existing extras loop + Avoid + Notes
-```
+These are exactly the three fields `getSubStepDisabledReason("essentials", …)` checks, so after Skip the Essentials step is valid and the wizard can advance immediately. `setMode("yes")` is unchanged.
 
-- Add a small `ChapterHeading` helper inside the file (uppercase `text-[10px] tracking-[0.18em] text-muted-foreground`, with a hairline divider below and `mt-14 mb-6` rhythm). No new shared component.
-- Bump outer wrapper from `space-y-10` to `space-y-12` and let chapter spacing carry the rest.
-- Shorten the "Pick a scene type above to unlock…" empty-state to "Pick a scene type to continue" and lower visual weight (no border, lighter copy).
-- Remove the `defaultOpen` `ENV_GROUPS` constant — no longer used after re-chaptering.
+### 3. Tab-bar spacing (`Step4Cast.tsx`)
 
-## 3. Photography — "How is the photo taken?" (`Step5Photography.tsx`)
+Current row uses `gap-1.5` with `px-3.5` pills — active pill has a filled background, inactive labels don't, which makes the gap look uneven (as in screenshot: "Look" pill abuts "Essentials" tightly, "Essentials → People → Interaction → Styling" drift). Switch to a more Typeform-like underline row:
 
-11 identical Sections in a row. Same re-chapter treatment using the same `ChapterHeading` pattern (duplicated locally — keeps the change scoped):
+- Container: `flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-border/50 pb-3`
+- Each tab: text-only button `pb-2 text-[12px] font-medium` with a 2px underline applied via `border-b-2 border-foreground` when active, `border-transparent` otherwise. Remove the filled-pill background entirely.
+- Inactive: `text-muted-foreground hover:text-foreground`. Done check stays inline next to the label.
+- "Step X of Y" stays right-aligned via `ml-auto`.
 
-```text
-LENS & FOCUS         ← Lens, Background blur, Focus, Shadows
-COMPOSITION          ← Composition, Negative space, Realism, + extras (camera_angle*, motion, composition_energy, crop_safety)
-COLOR & FINISH       ← Color palette, Contrast, Saturation, Finish
-```
-
-- Move the extras loop into the **Composition** chapter rather than dangling at the bottom.
-- Outer wrapper: `space-y-12`.
-- Trim tooltips that repeat the label (e.g. keep "Wide = roomy. Long = compressed." style — already short, leave as is).
+Result: even rhythm between tabs, clear active indicator, no jarring pill width difference.
 
 ## Out of scope
 
-- No changes to `Section`, `Chip`, `ChipRow`, `ExtrasPillField`, `SceneTypePicker`, or any shared component
-- No prompt, validation, schema, or routing changes
-- No changes to other sub-steps (Essentials / People / Interaction / Styling) or other wizard steps
+- No changes to step4Flow logic, validation, prompt, or other sub-steps
+- No changes to Environment / Photography (already re-chaptered)
