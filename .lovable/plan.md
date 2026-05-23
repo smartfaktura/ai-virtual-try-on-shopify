@@ -1,36 +1,71 @@
-## Changes
+## Add "Other" free-text option to every chip field in Step 5 (How is the photo taken?)
 
-### 1. Rename Skip card + restore subtitles (`Step4Cast.tsx`)
+Mirror the pattern already used by Palette: each chip row gets an `+ Other` chip that opens a small inline input so users can write specific direction (e.g. "50mm f/1.4", "hard 45° rim shadow", "matte film grain Portra 400"). When a custom value is set it overrides the preset for that field, both in UI and in the generated prompt.
 
-Rename **"Skip — auto-cast"** → **"Auto-cast"** (no em-dash) and put a one-line subtitle back on both cards so the choice is self-explanatory:
+### Fields covered (all chip rows in Step 5)
+Lens · Background blur · Focus · Shadows · Composition · Negative space · Realism · Contrast · Saturation · Finish.
+Palette already has it — leave as is.
 
-- **Auto-cast** — "We'll pick cast, scale and interaction for you"
-- **Design the look** — "Walk through People, Interaction and Styling"
+The extras-driven block (`camera_angle`, `motion`, `composition_energy`, `crop_safety`) is rendered via `ExtrasPillField` and is out of scope of this change.
 
-Cards stay in the same 2-col grid; subtitle is the same muted `text-[11px]` used elsewhere.
+### UI
 
-### 2. Skip actually auto-picks defaults (`Step4Cast.tsx`)
+Add a new shared helper next to `ChipRow` in `_baseHelpers.tsx`:
 
-Today picking Skip only writes `design_specific_look = "skip"` — the user then lands on Essentials with missing cast preset / interaction / scale and the Next button stays disabled. Fix `setMode("skip")` to also seed sensible defaults in the same `onCastChange` / `onScaleChange` call:
+```text
+ChipRowWithOther
+  ├─ existing chips (preset values)
+  ├─ + Other chip          → reveals input
+  └─ <Input>               → custom text (max 120 chars)
+```
 
-- `cast.preset` ← keep current, else `resolved.defaultCast`
-- `cast.interaction` ← keep current, else first entry of `visibleInteractions` (already filtered against `forbiddenInter`)
-- `scale.preset` ← keep current, else `resolved.scale.default`
+Behavior:
+- If `custom` is set, no preset chip is highlighted and the input is shown pre-filled.
+- Picking a preset chip clears `custom`.
+- Typing in the input clears `preset`.
+- Empty input + close = both cleared (same as palette).
+- Style matches `PaletteBlock` (rounded-xl input, mt-2, same placeholder tone).
 
-These are exactly the three fields `getSubStepDisabledReason("essentials", …)` checks, so after Skip the Essentials step is valid and the wizard can advance immediately. `setMode("yes")` is unchanged.
+Swap each `ChipRow` in `Step5Photography.tsx` for `ChipRowWithOther`, passing a `custom` value and `onCustom` handler.
 
-### 3. Tab-bar spacing (`Step4Cast.tsx`)
+### State / schema
 
-Current row uses `gap-1.5` with `px-3.5` pills — active pill has a filled background, inactive labels don't, which makes the gap look uneven (as in screenshot: "Look" pill abuts "Essentials" tightly, "Essentials → People → Interaction → Styling" drift). Switch to a more Typeform-like underline row:
+Add optional `_custom` siblings to `BrandSceneBaseAnswers` (in `types.ts` and the matching zod schema in `schema.ts`):
 
-- Container: `flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-border/50 pb-3`
-- Each tab: text-only button `pb-2 text-[12px] font-medium` with a 2px underline applied via `border-b-2 border-foreground` when active, `border-transparent` otherwise. Remove the filled-pill background entirely.
-- Inactive: `text-muted-foreground hover:text-foreground`. Done check stays inline next to the label.
-- "Step X of Y" stays right-aligned via `ml-auto`.
+```
+lens_custom?, depth_of_field_custom?, subject_focus_custom?, shadows_custom?,
+composition_custom?, negative_space_intent_custom?, realism_custom?,
+color_contrast_custom?, saturation_custom?, finish_custom?
+```
 
-Result: even rhythm between tabs, clear active indicator, no jarring pill width difference.
+All optional strings, max 120 chars, trimmed.
 
-## Out of scope
+### Prompt wiring (`assembleSceneDirective.ts`)
 
-- No changes to step4Flow logic, validation, prompt, or other sub-steps
-- No changes to Environment / Photography (already re-chaptered)
+For each field, prefer the custom string over the preset directive — same pattern as palette:
+
+```ts
+const lensDirective = base.lens_custom ?? meta(SCENE_LENSES, base.lens)?.directive;
+if (lensDirective) camParts.push(`Camera: ${lensDirective}`);
+```
+
+Apply equivalently to dof, finish, shadows, composition, neg space, realism, focus, contrast, saturation. Keep prefixes ("Camera:", "Finish:", etc.) so directive structure is unchanged.
+
+### Review step
+
+`Step5Review.tsx` already reads these fields; update the lookup to fall back to the custom string when present so the review chip shows the user-typed text (in italic or plain — matching palette's current treatment).
+
+### Out of scope
+
+- Step 4 (Cast) and the `Where does it happen?` step — no Other added there in this pass.
+- `ExtrasPillField` (camera_angle etc.) — that component already has its own custom-input behavior managed separately.
+- Validation rules, autopick logic, recommendations — untouched.
+
+### Files
+
+- `src/features/brand-scenes/wizard/steps/_baseHelpers.tsx` — new `ChipRowWithOther`
+- `src/features/brand-scenes/wizard/steps/Step5Photography.tsx` — swap 10 ChipRow usages
+- `src/features/brand-scenes/types.ts` — add 10 `*_custom` optional fields
+- `src/features/brand-scenes/schema.ts` — mirror in zod
+- `src/features/brand-scenes/prompt/assembleSceneDirective.ts` — prefer custom over preset
+- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` — display custom value when set

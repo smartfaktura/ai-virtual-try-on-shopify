@@ -119,16 +119,16 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
   const lookRows: Row[] = [
     { label: "Brand voice", value: metaX(BRAND_VOICES, base.brand_voice)?.label },
     { label: "Era", value: metaX(AESTHETIC_ERAS, base.aesthetic_era)?.label },
-    { label: "Realism", value: metaX(REALISM_LEVELS, base.realism)?.label },
+    { label: "Realism", value: base.realism_custom ?? metaX(REALISM_LEVELS, base.realism)?.label },
     { label: "Palette", value: palette },
     {
       label: "Color contrast",
-      value: metaX(COLOR_CONTRASTS, base.color_contrast)?.label,
+      value: base.color_contrast_custom ?? metaX(COLOR_CONTRASTS, base.color_contrast)?.label,
     },
-    { label: "Saturation", value: metaX(SATURATIONS, base.saturation)?.label },
+    { label: "Saturation", value: base.saturation_custom ?? metaX(SATURATIONS, base.saturation)?.label },
     {
       label: "Finish",
-      value: base.finish ? meta(SCENE_FINISHES, base.finish)?.label : undefined,
+      value: base.finish_custom ?? (base.finish ? meta(SCENE_FINISHES, base.finish)?.label : undefined),
     },
     ...SCENE_EXTRAS_FIELDS.map((f) => ({
       label: f.label,

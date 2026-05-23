@@ -64,23 +64,33 @@ export interface BrandSceneBaseAnswers {
   weather?: SceneWeather;
   season?: SceneSeason;
   lens?: SceneLens;
+  lens_custom?: string;
   depth_of_field?: SceneDepthOfField;
+  depth_of_field_custom?: string;
   palette_preset?: ScenePalette;
   palette_custom?: string;
   finish?: SceneFinish;
+  finish_custom?: string;
   avoid?: string;
 
   // Phase 7c additions — versatility dials.
   subject_focus?: SubjectFocus;
+  subject_focus_custom?: string;
   surface?: Surface;
   prop_density?: PropDensity;
   color_contrast?: ColorContrast;
+  color_contrast_custom?: string;
   saturation?: Saturation;
+  saturation_custom?: string;
   shadows?: Shadow;
+  shadows_custom?: string;
   composition?: Composition;
+  composition_custom?: string;
   negative_space_intent?: NegSpaceIntent;
+  negative_space_intent_custom?: string;
   aesthetic_era?: AestheticEra;
   realism?: RealismLevel;
+  realism_custom?: string;
   brand_voice?: BrandVoice;
   output_use_case?: OutputUseCase;
 

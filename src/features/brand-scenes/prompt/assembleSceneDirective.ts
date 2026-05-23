@@ -103,52 +103,63 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   if (voice) moodParts.push(voice.directive);
   const era = metaX(AESTHETIC_ERAS, base.aesthetic_era);
   if (era) moodParts.push(era.directive);
-  const realism = metaX(REALISM_LEVELS, base.realism);
-  if (realism) moodParts.push(realism.directive);
+  const realismDirective =
+    base.realism_custom ?? metaX(REALISM_LEVELS, base.realism)?.directive;
+  if (realismDirective) moodParts.push(realismDirective);
   if (moodParts.length) scene.push(`Mood: ${moodParts.join(" — ")}.`);
 
   // Lighting + shadows → scene
   const lightingParts: string[] = [];
   if (base.lighting) lightingParts.push(base.lighting);
-  const shadow = metaX(SHADOWS, base.shadows);
-  if (shadow) lightingParts.push(shadow.directive);
+  const shadowDirective =
+    base.shadows_custom ?? metaX(SHADOWS, base.shadows)?.directive;
+  if (shadowDirective) lightingParts.push(shadowDirective);
   if (lightingParts.length) scene.push(`Lighting: ${lightingParts.join(" — ")}.`);
 
   // ----- CAMERA & FRAMING -----
-  const lensMeta = meta(SCENE_LENSES, base.lens);
-  const dofMeta = meta(SCENE_DEPTH_OF_FIELD, base.depth_of_field);
-  if (lensMeta || dofMeta) {
+  const lensDirective =
+    base.lens_custom ?? meta(SCENE_LENSES, base.lens)?.directive;
+  const dofDirective =
+    base.depth_of_field_custom ?? meta(SCENE_DEPTH_OF_FIELD, base.depth_of_field)?.directive;
+  if (lensDirective || dofDirective) {
     const camParts: string[] = [];
-    if (lensMeta) camParts.push(`Camera: ${lensMeta.directive}`);
-    if (dofMeta) camParts.push(`Depth of field: ${dofMeta.directive}`);
+    if (lensDirective) camParts.push(`Camera: ${lensDirective}`);
+    if (dofDirective) camParts.push(`Depth of field: ${dofDirective}`);
     camera.push(camParts.join(" — ") + ".");
   }
 
   // Framing + composition + negative space → camera
   const composeParts: string[] = [];
   if (base.framing) composeParts.push(base.framing);
-  const composition = metaX(COMPOSITIONS, base.composition);
-  if (composition) composeParts.push(composition.directive);
-  const negSpace = metaX(NEG_SPACE_INTENTS, base.negative_space_intent);
-  if (negSpace && negSpace.directive) composeParts.push(negSpace.directive);
+  const compositionDirective =
+    base.composition_custom ?? metaX(COMPOSITIONS, base.composition)?.directive;
+  if (compositionDirective) composeParts.push(compositionDirective);
+  const negSpaceDirective =
+    base.negative_space_intent_custom ??
+    metaX(NEG_SPACE_INTENTS, base.negative_space_intent)?.directive;
+  if (negSpaceDirective) composeParts.push(negSpaceDirective);
   if (composeParts.length) camera.push(`Framing: ${composeParts.join(" — ")}.`);
 
-  const focus = metaX(SUBJECT_FOCUSES, base.subject_focus);
-  if (focus) camera.push(`Subject focus: ${focus.directive}.`);
+  const focusDirective =
+    base.subject_focus_custom ?? metaX(SUBJECT_FOCUSES, base.subject_focus)?.directive;
+  if (focusDirective) camera.push(`Subject focus: ${focusDirective}.`);
 
   // ----- COLOR & FINISH -----
   const paletteDirective =
     base.palette_custom ?? meta(SCENE_PALETTES, base.palette_preset)?.directive;
   const colorParts: string[] = [];
   if (paletteDirective) colorParts.push(paletteDirective);
-  const contrast = metaX(COLOR_CONTRASTS, base.color_contrast);
-  if (contrast) colorParts.push(contrast.directive);
-  const saturation = metaX(SATURATIONS, base.saturation);
-  if (saturation) colorParts.push(saturation.directive);
+  const contrastDirective =
+    base.color_contrast_custom ?? metaX(COLOR_CONTRASTS, base.color_contrast)?.directive;
+  if (contrastDirective) colorParts.push(contrastDirective);
+  const saturationDirective =
+    base.saturation_custom ?? metaX(SATURATIONS, base.saturation)?.directive;
+  if (saturationDirective) colorParts.push(saturationDirective);
   if (colorParts.length) color.push(`Color: ${colorParts.join(" — ")}.`);
 
-  const finishMeta = meta(SCENE_FINISHES, base.finish);
-  if (finishMeta) color.push(`Finish: ${finishMeta.directive}.`);
+  const finishDirective =
+    base.finish_custom ?? meta(SCENE_FINISHES, base.finish)?.directive;
+  if (finishDirective) color.push(`Finish: ${finishDirective}.`);
 
   // ----- STYLING DETAILS (scene extras: backdrop, floor, camera-angle, light, motion…) -----
   const sceneExtras = base.extras ?? {};

@@ -33,7 +33,7 @@ import type { SceneTypeId } from "../registry/settingsBySubfamily";
 import { applyCascade, type SceneCtx } from "../rules/sceneRules";
 import { resolveAll } from "../registry/resolvePresets";
 import type { CastPreset } from "../constants/cast";
-import { ChipRow, PaletteBlock } from "./_baseHelpers";
+import { ChipRowWithOther, PaletteBlock } from "./_baseHelpers";
 
 interface Props {
   module?: BrandSceneModule;
@@ -98,10 +98,13 @@ export function Step5Photography({
             expandable
           >
             {(expanded) => (
-              <ChipRow
+              <ChipRowWithOther
                 options={lenses(expanded)}
                 current={value.lens}
+                custom={value.lens_custom}
+                placeholder="e.g. 50mm f/1.4, anamorphic 40mm"
                 onPick={(v) => onChange({ lens: v as SceneLens | undefined })}
+                onCustom={(c) => onChange({ lens_custom: c })}
               />
             )}
           </Section>
@@ -112,29 +115,38 @@ export function Step5Photography({
             expandable
           >
             {(expanded) => (
-              <ChipRow
+              <ChipRowWithOther
                 options={dofs(expanded)}
                 current={value.depth_of_field}
+                custom={value.depth_of_field_custom}
+                placeholder="e.g. razor-thin focus on the logo only"
                 onPick={(v) =>
                   onChange({ depth_of_field: v as SceneDepthOfField | undefined })
                 }
+                onCustom={(c) => onChange({ depth_of_field_custom: c })}
               />
             )}
           </Section>
 
           <Section label="Focus">
-            <ChipRow
+            <ChipRowWithOther
               options={SUBJECT_FOCUSES}
               current={value.subject_focus}
+              custom={value.subject_focus_custom}
+              placeholder="e.g. focus on the strap stitching"
               onPick={(v) => onChange({ subject_focus: v as SubjectFocus | undefined })}
+              onCustom={(c) => onChange({ subject_focus_custom: c })}
             />
           </Section>
 
           <Section label="Shadows">
-            <ChipRow
+            <ChipRowWithOther
               options={SHADOWS}
               current={value.shadows}
+              custom={value.shadows_custom}
+              placeholder="e.g. hard 45° rim shadow, no fill"
               onPick={(v) => onChange({ shadows: v as Shadow | undefined })}
+              onCustom={(c) => onChange({ shadows_custom: c })}
             />
           </Section>
         </div>
@@ -144,28 +156,37 @@ export function Step5Photography({
         <ChapterHeading>Composition</ChapterHeading>
         <div className="space-y-10">
           <Section label="Composition">
-            <ChipRow
+            <ChipRowWithOther
               options={COMPOSITIONS}
               current={value.composition}
+              custom={value.composition_custom}
+              placeholder="e.g. low-angle diagonal, product bottom-right"
               onPick={(v) => onChange({ composition: v as Composition | undefined })}
+              onCustom={(c) => onChange({ composition_custom: c })}
             />
           </Section>
 
           <Section label="Negative space">
-            <ChipRow
+            <ChipRowWithOther
               options={NEG_SPACE_INTENTS}
               current={value.negative_space_intent}
+              custom={value.negative_space_intent_custom}
+              placeholder="e.g. wide empty sky above for copy"
               onPick={(v) =>
                 onChange({ negative_space_intent: v as NegSpaceIntent | undefined })
               }
+              onCustom={(c) => onChange({ negative_space_intent_custom: c })}
             />
           </Section>
 
           <Section label="Realism">
-            <ChipRow
+            <ChipRowWithOther
               options={REALISM_LEVELS}
               current={value.realism}
+              custom={value.realism_custom}
+              placeholder="e.g. 35mm film grain, slight halation"
               onPick={(v) => onChange({ realism: v as RealismLevel | undefined })}
+              onCustom={(c) => onChange({ realism_custom: c })}
             />
           </Section>
 
@@ -242,18 +263,24 @@ export function Step5Photography({
           </Section>
 
           <Section label="Contrast">
-            <ChipRow
+            <ChipRowWithOther
               options={COLOR_CONTRASTS}
               current={value.color_contrast}
+              custom={value.color_contrast_custom}
+              placeholder="e.g. high-key with single ember accent"
               onPick={(v) => onChange({ color_contrast: v as ColorContrast | undefined })}
+              onCustom={(c) => onChange({ color_contrast_custom: c })}
             />
           </Section>
 
           <Section label="Saturation">
-            <ChipRow
+            <ChipRowWithOther
               options={SATURATIONS}
               current={value.saturation}
+              custom={value.saturation_custom}
+              placeholder="e.g. muted except for product hue"
               onPick={(v) => onChange({ saturation: v as Saturation | undefined })}
+              onCustom={(c) => onChange({ saturation_custom: c })}
             />
           </Section>
 
@@ -263,10 +290,13 @@ export function Step5Photography({
             expandable
           >
             {(expanded) => (
-              <ChipRow
+              <ChipRowWithOther
                 options={finishes(expanded)}
                 current={value.finish}
+                custom={value.finish_custom}
+                placeholder="e.g. Portra 400 film grade, soft halation"
                 onPick={(v) => onChange({ finish: v as SceneFinish | undefined })}
+                onCustom={(c) => onChange({ finish_custom: c })}
               />
             )}
           </Section>
