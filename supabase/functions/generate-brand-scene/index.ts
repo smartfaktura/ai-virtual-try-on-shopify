@@ -127,6 +127,7 @@ serve(async (req) => {
     const body = await req.json();
     const compiledPrompt: string = (body.compiledPrompt ?? "").toString();
     const referenceImageUrl: string | undefined = body.referenceImageUrl;
+    const modelImageUrl: string | undefined = body.modelImageUrl;
     const sceneName: string = (body.name ?? "").toString().trim();
 
     if (!compiledPrompt.trim()) {
