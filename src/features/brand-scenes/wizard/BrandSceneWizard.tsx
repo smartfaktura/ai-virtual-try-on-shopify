@@ -61,6 +61,7 @@ const META_REFERENCE: Record<WizardStep, { title: string; subtitle?: string }> =
 
 
 export function BrandSceneWizard() {
+  const { user } = useAuth();
   const { state, dispatch } = useWizardState();
   const { step, answers, sourcePicked } = state;
   const isReference = sourcePicked && answers.source === "reference";
