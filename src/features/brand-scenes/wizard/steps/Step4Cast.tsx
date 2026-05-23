@@ -215,30 +215,22 @@ export function Step4Cast({
       )}
 
       {subStep === "look" && flow.showBranchCard && (
-        <div className="space-y-10 animate-fade-in">
-          <Section
-            label="Design a specific look?"
-            required
-            missing={!mode}
-            helper="Skip auto-casts a generic look. Choose to design it and we'll walk through People, Interaction and Styling step by step."
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <BranchCard
-                active={mode === "skip"}
-                title="Skip — auto-cast"
-                body="We'll fill in look, outfit and energy with sensible defaults"
-                onClick={() => setMode("skip")}
-              />
-              <BranchCard
-                active={mode === "yes"}
-                title="Yes, design the look"
-                body="Walk through People, Interaction and a styling quiz"
-                onClick={() => setMode("yes")}
-              />
-            </div>
-          </Section>
+        <div className="animate-fade-in pt-6">
+          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
+            <BranchCard
+              active={mode === "skip"}
+              title="Skip — auto-cast"
+              onClick={() => setMode("skip")}
+            />
+            <BranchCard
+              active={mode === "yes"}
+              title="Design the look"
+              onClick={() => setMode("yes")}
+            />
+          </div>
         </div>
       )}
+
 
       {subStep === "essentials" && (
         <div className="space-y-10 animate-fade-in">
