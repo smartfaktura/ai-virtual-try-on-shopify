@@ -13,6 +13,7 @@ import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
 import { ResponsibilityModal } from "./components/ResponsibilityModal";
 import {
   computeStep4Flow,
+  getStep4Mode,
   getSubStepDisabledReason,
   type Step4SubStep,
 } from "./step4Flow";
