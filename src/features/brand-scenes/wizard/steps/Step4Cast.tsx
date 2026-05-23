@@ -215,151 +215,147 @@ export function Step4Cast({
         </div>
       )}
 
+      {subStep === "look" && flow.showBranchCard && (
+        <div className="space-y-10 animate-fade-in">
+          <Section
+            label="Design a specific look?"
+            required
+            missing={!mode}
+            helper="Skip auto-casts a generic look. Choose to design it and we'll walk through People, Interaction and Styling step by step."
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <BranchCard
+                active={mode === "skip"}
+                title="Skip — auto-cast"
+                body="We'll fill in look, outfit and energy with sensible defaults"
+                onClick={() => setMode("skip")}
+              />
+              <BranchCard
+                active={mode === "yes"}
+                title="Yes, design the look"
+                body="Walk through People, Interaction and a styling quiz"
+                onClick={() => setMode("yes")}
+              />
+            </div>
+          </Section>
+        </div>
+      )}
+
       {subStep === "essentials" && (
         <div className="space-y-10 animate-fade-in">
-          {/* 1. Branch — design specific look? (asked FIRST) */}
-          {flow.showBranchCard && (
+          {/* Cast preset */}
+          <Section label="Who's in the shot" required missing={!preset}>
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+              {visibleCastPresets.map((p) => (
+                <Chip
+                  key={p.value}
+                  active={preset === p.value}
+                  onClick={() => {
+                    if (p.value === "replicate") {
+                      onCastChange({
+                        preset: "replicate",
+                        gender: undefined,
+                        age: undefined,
+                        vibe: undefined,
+                        interaction: undefined,
+                        action: undefined,
+                        body_part_focus: undefined,
+                        gaze: undefined,
+                        group_dynamic: undefined,
+                        hands_on_product: undefined,
+                      });
+                      return;
+                    }
+                    onCastChange({
+                      preset: p.value,
+                      interaction:
+                        cast?.interaction &&
+                        !forbiddenInteractions(p.value, module, scalePreset).has(
+                          cast.interaction,
+                        )
+                          ? cast.interaction
+                          : undefined,
+                      group_dynamic:
+                        p.value === "two" || p.value === "group"
+                          ? cast?.group_dynamic
+                          : undefined,
+                    });
+                  }}
+                >
+                  {p.label}
+                </Chip>
+              ))}
+            </div>
+          </Section>
+
+          {isReplicate && (
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Subject, pose, framing and lighting will be locked to your reference.
+              Product scale below still applies because the inserted product may
+              differ from what's in the image.
+            </p>
+          )}
+
+          {/* Product interaction (required unless replicate) */}
+          {!isReplicate && (
             <Section
-              label="Design a specific look?"
+              label="Product interaction"
               required
-              missing={!mode}
-              helper="Skip auto-casts a generic look. Choose to design it and we'll walk through People, Interaction and Styling step by step."
+              missing={!cast?.interaction}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <BranchCard
-                  active={mode === "skip"}
-                  title="Skip — auto-cast"
-                  body="We'll fill in look, outfit and energy with sensible defaults"
-                  onClick={() => setMode("skip")}
-                />
-                <BranchCard
-                  active={mode === "yes"}
-                  title="Yes, design the look"
-                  body="Walk through People, Interaction and a styling quiz"
-                  onClick={() => setMode("yes")}
-                />
+              <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                {visibleInteractions.map((i) => (
+                  <Chip
+                    key={i.value}
+                    active={cast?.interaction === i.value}
+                    onClick={() =>
+                      onCastChange({ interaction: i.value as CastInteraction })
+                    }
+                  >
+                    {i.label}
+                  </Chip>
+                ))}
               </div>
             </Section>
           )}
 
-          {/* Rest of Essentials only after the branch is answered (or if no branch card). */}
-          {(!flow.showBranchCard || !!mode) && (
-            <div className="space-y-10 animate-fade-in">
-              {/* 2. Cast preset */}
-              <Section label="Who's in the shot" required missing={!preset}>
+          {/* Product scale */}
+          {showScaleSection && (
+            <Section label="Product scale" required missing={!scale?.preset}>
+              <>
                 <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                  {visibleCastPresets.map((p) => (
+                  {visibleScales.map((s) => (
                     <Chip
-                      key={p.value}
-                      active={preset === p.value}
-                      onClick={() => {
-                        if (p.value === "replicate") {
-                          onCastChange({
-                            preset: "replicate",
-                            gender: undefined,
-                            age: undefined,
-                            vibe: undefined,
-                            interaction: undefined,
-                            action: undefined,
-                            body_part_focus: undefined,
-                            gaze: undefined,
-                            group_dynamic: undefined,
-                            hands_on_product: undefined,
-                          });
-                          return;
-                        }
-                        onCastChange({
-                          preset: p.value,
-                          interaction:
-                            cast?.interaction &&
-                            !forbiddenInteractions(p.value, module, scalePreset).has(
-                              cast.interaction,
-                            )
-                              ? cast.interaction
-                              : undefined,
-                          group_dynamic:
-                            p.value === "two" || p.value === "group"
-                              ? cast?.group_dynamic
-                              : undefined,
-                        });
-                      }}
+                      key={s.value}
+                      active={scalePreset === s.value}
+                      onClick={() => onScaleChange({ preset: s.value })}
                     >
-                      {p.label}
+                      {s.label}
                     </Chip>
                   ))}
                 </div>
-              </Section>
-
-              {isReplicate && (
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Subject, pose, framing and lighting will be locked to your reference.
-                  Product scale below still applies because the inserted product may
-                  differ from what's in the image.
-                </p>
-              )}
-
-              {/* 3. Product interaction (required unless replicate) */}
-              {!isReplicate && (
-                <Section
-                  label="Product interaction"
-                  required
-                  missing={!cast?.interaction}
-                >
-                  <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                    {visibleInteractions.map((i) => (
-                      <Chip
-                        key={i.value}
-                        active={cast?.interaction === i.value}
-                        onClick={() =>
-                          onCastChange({ interaction: i.value as CastInteraction })
-                        }
-                      >
-                        {i.label}
-                      </Chip>
-                    ))}
-                  </div>
-                </Section>
-              )}
-
-              {/* 4. Product scale */}
-              {showScaleSection && (
-                <Section label="Product scale" required missing={!scale?.preset}>
-                  <>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                      {visibleScales.map((s) => (
-                        <Chip
-                          key={s.value}
-                          active={scalePreset === s.value}
-                          onClick={() => onScaleChange({ preset: s.value })}
-                        >
-                          {s.label}
-                        </Chip>
-                      ))}
-                    </div>
-                    <div className="mt-3">
-                      {showExact ? (
-                        <Chip
-                          onClick={() => {
-                            setShowExact(false);
-                            onScaleChange({ dimensions: undefined });
-                          }}
-                        >
-                          Hide exact size
-                        </Chip>
-                      ) : (
-                        <AddChip onClick={() => setShowExact(true)} label="Exact size" />
-                      )}
-                    </div>
-                    {showExact && (
-                      <ExactDimensions
-                        value={scale?.dimensions}
-                        onChange={(d) => onScaleChange({ dimensions: d })}
-                      />
-                    )}
-                  </>
-                </Section>
-              )}
-            </div>
+                <div className="mt-3">
+                  {showExact ? (
+                    <Chip
+                      onClick={() => {
+                        setShowExact(false);
+                        onScaleChange({ dimensions: undefined });
+                      }}
+                    >
+                      Hide exact size
+                    </Chip>
+                  ) : (
+                    <AddChip onClick={() => setShowExact(true)} label="Exact size" />
+                  )}
+                </div>
+                {showExact && (
+                  <ExactDimensions
+                    value={scale?.dimensions}
+                    onChange={(d) => onScaleChange({ dimensions: d })}
+                  />
+                )}
+              </>
+            </Section>
           )}
         </div>
       )}
