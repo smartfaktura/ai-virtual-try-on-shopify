@@ -78,6 +78,8 @@ interface Props {
   /** Active sub-step (controlled by the wizard so footer Next can advance it). */
   subStep?: Step4SubStep;
   onSubStepChange?: (s: Step4SubStep) => void;
+  /** Sub-steps the user has actually visited (controls ✓ display). */
+  visitedSubSteps?: Set<Step4SubStep>;
 }
 
 export function Step4Cast({
@@ -91,6 +93,7 @@ export function Step4Cast({
   onScaleChange,
   subStep = "essentials",
   onSubStepChange,
+  visitedSubSteps,
 }: Props) {
   const isReference = source === "reference";
   const resolved = useMemo(
