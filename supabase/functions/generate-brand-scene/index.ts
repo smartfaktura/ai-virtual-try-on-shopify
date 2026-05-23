@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const MAX_PROMPT_CHARS = 8000;
 const BUCKET = "scratch-uploads";
+const GENERATION_COST = 20;
 
 // ── Detect actual image format from magic bytes ──
 function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
