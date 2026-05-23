@@ -41,13 +41,19 @@ export function Section({
 
   return (
     <div
-      className="space-y-3.5 rounded-2xl"
+      className="space-y-3.5"
       data-section-label={typeof label === "string" ? label : undefined}
       data-required={required ? "1" : undefined}
       data-missing={missing ? "1" : undefined}
     >
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
+          {missing && (
+            <span
+              aria-hidden
+              className="w-1.5 h-1.5 rounded-full bg-foreground/40"
+            />
+          )}
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             {label}
           </Label>
@@ -70,7 +76,11 @@ export function Section({
             </TooltipProvider>
           )}
           {required && (
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
+            <span
+              className={`text-[10px] uppercase tracking-widest ${
+                missing ? "text-foreground/70" : "text-muted-foreground/60"
+              }`}
+            >
               Required
             </span>
           )}
@@ -81,21 +91,7 @@ export function Section({
           </p>
         )}
       </div>
-      <div
-        className={
-          missing
-            ? "rounded-xl ring-1 ring-destructive/30 bg-muted/20 p-3 -mx-1 transition-colors"
-            : undefined
-        }
-      >
-        {body}
-      </div>
-
-      {missing && (
-        <p className="text-[11px] text-destructive/80 leading-relaxed">
-          This section is required to continue
-        </p>
-      )}
+      <div>{body}</div>
       {hint && <p className="text-[11px] text-muted-foreground/80">{hint}</p>}
     </div>
   );

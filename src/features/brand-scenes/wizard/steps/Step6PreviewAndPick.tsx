@@ -54,20 +54,9 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
         </div>
       </div>
 
-      {/* Variant placeholders */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {Array.from({ length: BRAND_SCENE_VARIATIONS_PER_GENERATION }).map((_, i) => (
-          <div
-            key={i}
-            className="aspect-[4/5] rounded-2xl border border-dashed border-border bg-muted/30 flex items-center justify-center text-xs text-muted-foreground"
-          >
-            Variant {i + 1}
-          </div>
-        ))}
-      </div>
-
       {/* Full structured summary (ported from Step5Review) */}
       <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
+
 
       {/* Admin debug — single instance */}
       {isAdmin && (
