@@ -741,6 +741,8 @@ function PeopleTab({
 /* ────────────────────────── Tab: Interaction ────────────────────────── */
 
 function InteractionTab({
+  module,
+  subFamily,
   preset,
   hasPeople,
   scalePreset,
@@ -750,6 +752,8 @@ function InteractionTab({
   onCastChange,
   headlineMissing,
 }: {
+  module?: BrandSceneModule;
+  subFamily?: string;
   preset?: CastPreset;
   hasPeople: boolean;
   scalePreset: ScalePreset;
@@ -766,6 +770,7 @@ function InteractionTab({
   const showBodyPart =
     preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0;
   const showGroup = preset === "two" || preset === "group";
+  const lingerie = isLingerie(module, subFamily) && hasPeople;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
