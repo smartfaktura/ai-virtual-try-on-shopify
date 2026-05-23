@@ -53,30 +53,7 @@ serve(async (req) => {
       });
     }
 
-    // Verify balance & deduct credits.
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("credits_balance")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!profile || profile.credits_balance < SAVE_COST) {
-      return new Response(JSON.stringify({
-        error: `You need ${SAVE_COST} credits to save a brand scene.`,
-        code: "INSUFFICIENT_CREDITS",
-      }), {
-        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: newBalance, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
-      p_user_id: user.id,
-      p_amount: SAVE_COST,
-    });
-    if (deductError) {
-      console.error("deduct_credits failed:", deductError);
-      throw new Error("Failed to deduct credits");
-    }
+    // Save is free — credits were deducted at generation time.
 
     const sceneId = `brand-${crypto.randomUUID()}`;
     const module: string = answers.module ?? "fashion";
@@ -114,14 +91,13 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error("Insert failed, refunding:", insertError);
-      await supabaseAdmin.rpc("refund_credits", { p_user_id: user.id, p_amount: SAVE_COST });
+      console.error("Insert failed:", insertError);
       return new Response(JSON.stringify({ error: "Failed to save scene" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ scene: row, new_balance: newBalance }), {
+    return new Response(JSON.stringify({ scene: row }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
