@@ -1,59 +1,80 @@
-## Step 4 → Look sub-step UX fixes
+## Goal
 
-Tighten the mode-chooser screen so the choice is obvious, the auto-cast path actually feels automatic, and the chrome around it stops contradicting itself. Visual-only changes — no business logic, no schema, no prompt changes.
+Expand the Step 4 · Cast → Interaction "Action" row (today: Still / Walking / Mid-motion / Seated / Candid) into a richer **Pose** picker with an **Other** free-text fallback, and make sure the user can override the pose even when **Auto-cast** is selected — because pose materially changes the composition once people are in the scene.
 
-### 1. Auto-cast actually skips ahead
-File: `BrandSceneWizard.tsx` (`handleNext`)
+## 1. Richer pose options (`wizard/constants/cast.ts`)
 
-When the user is on `subStep === "look"` and mode is `skip`, advance the wizard past `essentials` straight to the next wizard step (Photography / step 5). Today it stops on Essentials even though Auto-cast already filled everything.
+Replace `CAST_ACTIONS` with a longer, pose-oriented list and add a free-text companion field.
 
-- If `mode === "skip"` and `subStep === "look"`: skip the sub-step loop and go to `dispatch({type:"next"})` (which moves to step 5).
-- Keep `mode === "yes"` behaviour unchanged (walk through Essentials → People → Interaction → Styling).
-- Update `nextLabel` so the Look screen reads **"Continue"** when mode is skip, and **"Continue to Essentials"** only when mode is yes.
+```ts
+export const CAST_ACTIONS = [
+  { value: "standing",     label: "Standing" },
+  { value: "seated",       label: "Sitting" },
+  { value: "crossed_legs", label: "Crossed legs" },
+  { value: "leaning",      label: "Leaning" },
+  { value: "kneeling",     label: "Kneeling / crouched" },
+  { value: "walking",      label: "Walking" },
+  { value: "motion",       label: "Mid-motion" },
+  { value: "jumping",      label: "Jumping" },
+  { value: "still",        label: "Still & composed" },
+  { value: "candid",       label: "Candid moment" },
+] as const;
 
-### 2. Stop showing premature ✓ on tabs the user hasn't seen
-File: `Step4Cast.tsx` (tab bar `done` calculation)
+export const CAST_ACTION_NOTE_MAX = 80;
+```
 
-A tab should only show a check if the user has actually visited it OR explicitly chose Auto-cast for it. Pass `subStepsVisited: Set<Step4SubStep>` from `BrandSceneWizard` (tracks which sub-steps have been the active one) and gate the ✓ on `visited.has(t)`. Auto-cast still marks all skipped tabs as visited so they read as "handled" rather than "to do".
+Order: static poses first (standing / sitting / crossed legs / leaning / kneeling) → motion (walking / motion / jumping) → mood (still / candid). Default seed for auto-cast stays `standing` unless the resolved preset says otherwise.
 
-### 3. Visual hierarchy on the two cards
-File: `Step4Cast.tsx` `BranchCard` + the wrapper grid
+## 2. "Other" free-text on the Pose row (`Step4Cast.tsx → InteractionTab`)
 
-- Active card gets a stronger treatment: 2px border (`border-foreground`), subtle inner ring (`ring-1 ring-foreground/10`), and a small **Recommended** chip on Auto-cast.
-- Add a tiny `aria-pressed` + visually-hidden "Selected" label.
-- Demote the secondary card slightly (smaller title weight, muted body) so the default choice is unambiguous.
-- Place a one-line caption under the grid: **"You can switch any time — your picks won't be lost."**
+Swap the raw `Chip` row for the existing `ChipRowWithOther` helper used elsewhere in the wizard:
 
-### 4. Show the auto-picked values inline
-File: `Step4Cast.tsx`, under the BranchCard grid when `mode === "skip"`
+- `options` = `CAST_ACTIONS`
+- `current` = `cast?.action`
+- `custom` = `cast?.action_note`
+- `onPick` → `onCastChange({ action })`
+- `onCustom` → `onCastChange({ action_note })` (clears `action` when set, and vice-versa, mirroring how the helper already toggles)
+- placeholder: `"e.g. mid-jump, sitting on stairs, arms crossed"`
+- max length 80 chars
 
-Render a small read-only summary row of chips with the seeded values (cast preset, interaction, scale) — e.g. `Solo · Holding · Handheld`. Tapping a chip jumps to Essentials with that field focused. Gives users confidence without forcing them through tabs.
+Section label changes from **Action** → **Pose** to match user vocabulary; subtitle: *Sets the body language and composition*.
 
-### 5. Unify vocabulary
-Files: `Step4Cast.tsx` (BranchCard body strings), and the tab `labelMap`.
+## 3. New field plumbing
 
-- Auto-cast body: **"We pick cast, interaction and scale"**
-- Design the look body: **"Choose cast, interaction and styling yourself"**
-- Tab order stays `Look · Essentials · People · Interaction · Styling` — but make the Auto-cast subtitle reference the same nouns ("cast, interaction, scale") used in Essentials so the words match what the tabs show.
+- **`types.ts`** — add `action_note?: string` to `BrandSceneCast`.
+- **`schema.ts`** — add `action_note: z.string().max(80).optional()` on the cast schema.
+- **`prompt/buildCastDirective.ts`** —
+  - extend the `ACTION` map with the new values (`standing`, `crossed_legs`, `leaning`, `kneeling`, `jumping`) using natural-language directives, e.g. `crossed_legs: "seated with crossed legs"`, `jumping: "captured mid-jump, both feet off the ground"`, `leaning: "leaning casually against a surface"`, `kneeling: "in a low kneeling / crouched pose"`, `standing: "standing upright, weight balanced"`.
+  - if `cast.action_note` is set, prefer it: `parts.push(`Pose: ${cast.action_note}.`);` and skip the preset action line.
+- **`Step5Review.tsx`** — surface the chosen pose (or custom note) in the summary chips so the user sees it before generating.
 
-### 6. Single progress indicator on this screen
-File: `Step4Cast.tsx` tab bar
+## 4. Auto-cast still lets the user steer pose (the important bit)
 
-The page header already shows `04 / 07`. Hide the right-aligned `Step 1 of 5` counter on the **Look** sub-step (the chooser has no real "step N" meaning). Keep it visible on Essentials/People/Interaction/Styling where it does help.
+Currently `mode === "skip"` jumps straight past every sub-step, including Interaction, so pose is auto-picked and never user-confirmed. Change:
 
-### 7. Action-bar spacing
-File: `WizardLayout` footer (or wherever the Back/Continue strip lives — confirm during build)
+- In `Step4Cast.tsx`, render the new `AutoCastSummary` (already added) with the seeded **Pose** chip explicitly visible alongside Cast / Interaction / Scale.
+- Each summary chip is clickable and routes into its sub-step with that field focused — for pose, that means jumping to the Interaction sub-step with the Pose section scrolled into view. The auto-jump in `BrandSceneWizard.handleNext` only fires when the user hits **Continue**; clicking a summary chip overrides the skip and lets them edit before continuing.
+- Add a one-line caption under the Auto-cast card: *"Pose strongly affects composition — tap it above to fine-tune."*
+- After the user customises pose, persist `mode === "skip"` but mark `action`/`action_note` as user-touched so subsequent re-seeds don't overwrite it. Tracked with a small `userTouched: Set<keyof BrandSceneCast>` in wizard state (or simpler: a boolean `castUserEdited` if scope creeps).
 
-The white container around Back/Continue currently floats far below the cards. On the Look sub-step only, tighten the top padding of the footer so the cards and the CTA feel like one composition.
+## 5. Forbidden-pose guards (lightweight)
 
-### Out of scope
+In `combinationGuards.ts`, add a small `forbiddenActions(preset, scalePreset, module)` helper so that, e.g.:
+- `preset === "hands"` or `"none"` → no pose row at all (already hidden via `hasPeople`).
+- `scalePreset === "architectural"` + `jumping` is allowed (no restriction), but `kneeling` for `furniture` scale gets a soft hint, not a block. Keep guards minimal — over-restricting hurts creative control.
 
-- No changes to `step4Flow` validation, prompt assembly, schema, or any other wizard step.
-- No copy changes to the page header / subtitle ("Who's in the scene?") — separate pass.
-- No keyboard shortcut work (noted for later).
+## Out of scope
 
-### Files touched
+- No changes to other chip fields, other wizard steps, schema migrations, or stored data shape beyond the additive `action_note` field.
+- No DB / edge function changes.
+- No copy changes outside the Pose section + the one Auto-cast caption.
 
-- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx` — skip-ahead routing, nextLabel, visited tracking
-- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — BranchCard styling, summary chips, vocab, conditional step counter, gated ✓
-- `src/features/brand-scenes/wizard/components/WizardLayout.tsx` (or footer file) — Look-only footer spacing tweak
+## Files touched
+
+- `src/features/brand-scenes/wizard/constants/cast.ts`
+- `src/features/brand-scenes/types.ts`
+- `src/features/brand-scenes/schema.ts`
+- `src/features/brand-scenes/prompt/buildCastDirective.ts`
+- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (Pose row + AutoCastSummary pose chip + user-touched flag)
+- `src/features/brand-scenes/wizard/steps/Step5Review.tsx` (surface pose)
+- `src/features/brand-scenes/wizard/rules/combinationGuards.ts` (optional, minimal)

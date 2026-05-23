@@ -40,6 +40,7 @@ import {
   type GroupDynamic,
   type HandsOnProduct,
 } from "../constants/sceneExtras";
+import { ChipRowWithOther } from "./_baseHelpers";
 import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
@@ -259,7 +260,9 @@ export function Step4Cast({
             <AutoCastSummary
               cast={cast}
               scale={scale}
+              hasPeople={hasPeople}
               onJumpToEssentials={() => onSubStepChange?.("essentials")}
+              onJumpToInteraction={() => onSubStepChange?.("interaction")}
             />
           )}
         </div>
@@ -504,17 +507,30 @@ function AutoCastSummary({
   cast,
   scale,
   onJumpToEssentials,
+  onJumpToInteraction,
+  hasPeople,
 }: {
   cast?: BrandSceneCast;
   scale?: BrandSceneScale;
   onJumpToEssentials: () => void;
+  onJumpToInteraction?: () => void;
+  hasPeople: boolean;
 }) {
   const presetLabel = CAST_PRESETS.find((p) => p.value === cast?.preset)?.label;
   const interactionLabel = CAST_INTERACTIONS.find(
     (i) => i.value === cast?.interaction,
   )?.label;
   const scaleLabel = SCALE_PRESETS.find((s) => s.value === scale?.preset)?.label;
-  const chips = [presetLabel, interactionLabel, scaleLabel].filter(Boolean) as string[];
+  const poseLabel =
+    cast?.action_note ??
+    CAST_ACTIONS.find((a) => a.value === cast?.action)?.label;
+  const chips: { label: string; onClick: () => void; emphasize?: boolean }[] = [];
+  if (presetLabel) chips.push({ label: presetLabel, onClick: onJumpToEssentials });
+  if (interactionLabel)
+    chips.push({ label: interactionLabel, onClick: onJumpToEssentials });
+  if (hasPeople && poseLabel && onJumpToInteraction)
+    chips.push({ label: `Pose: ${poseLabel}`, onClick: onJumpToInteraction, emphasize: true });
+  if (scaleLabel) chips.push({ label: scaleLabel, onClick: onJumpToEssentials });
   if (!chips.length) return null;
   return (
     <div className="mx-auto max-w-2xl mt-5 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
@@ -532,14 +548,25 @@ function AutoCastSummary({
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {chips.map((c) => (
-          <span
-            key={c}
-            className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-[11px] text-foreground/80"
+          <button
+            key={c.label}
+            type="button"
+            onClick={c.onClick}
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] transition-colors ${
+              c.emphasize
+                ? "border-foreground/40 bg-card text-foreground hover:border-foreground"
+                : "border-border bg-card text-foreground/80 hover:border-foreground/40"
+            }`}
           >
-            {c}
-          </span>
+            {c.label}
+          </button>
         ))}
       </div>
+      {hasPeople && onJumpToInteraction && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Pose strongly affects composition — tap it above to fine-tune
+        </p>
+      )}
     </div>
   );
 }
@@ -701,25 +728,28 @@ function InteractionTab({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
       {hasPeople && (
         <div className="md:col-span-2">
-          <Section label="Action" required missing={headlineMissing}>
-            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-              {CAST_ACTIONS.map((a) => (
-                <Chip
-                  key={a.value}
-                  active={cast?.action === a.value}
-                  onClick={() =>
-                    onCastChange({
-                      action:
-                        cast?.action === a.value
-                          ? undefined
-                          : (a.value as CastAction),
-                    })
-                  }
-                >
-                  {a.label}
-                </Chip>
-              ))}
-            </div>
+          <Section label="Pose" required missing={headlineMissing}>
+            <p className="-mt-2 mb-3 text-[11px] text-muted-foreground">
+              Sets the body language and composition
+            </p>
+            <ChipRowWithOther
+              options={CAST_ACTIONS}
+              current={cast?.action_note ? undefined : cast?.action}
+              custom={cast?.action_note}
+              onPick={(v) =>
+                onCastChange({
+                  action: v as CastAction | undefined,
+                  action_note: undefined,
+                })
+              }
+              onCustom={(c) =>
+                onCastChange({
+                  action_note: c,
+                  action: c ? undefined : cast?.action,
+                })
+              }
+              placeholder="e.g. mid-jump, sitting on stairs, arms crossed"
+            />
           </Section>
         </div>
       )}

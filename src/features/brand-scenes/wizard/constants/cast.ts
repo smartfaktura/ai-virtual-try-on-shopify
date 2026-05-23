@@ -55,13 +55,20 @@ export const CAST_INTERACTIONS = [
 export type CastInteraction = (typeof CAST_INTERACTIONS)[number]["value"];
 
 export const CAST_ACTIONS = [
-  { value: "still", label: "Still" },
+  { value: "standing", label: "Standing" },
+  { value: "seated", label: "Sitting" },
+  { value: "crossed_legs", label: "Crossed legs" },
+  { value: "leaning", label: "Leaning" },
+  { value: "kneeling", label: "Kneeling / crouched" },
   { value: "walking", label: "Walking" },
   { value: "motion", label: "Mid-motion" },
-  { value: "seated", label: "Seated" },
-  { value: "candid", label: "Candid" },
+  { value: "jumping", label: "Jumping" },
+  { value: "still", label: "Still & composed" },
+  { value: "candid", label: "Candid moment" },
 ] as const;
 export type CastAction = (typeof CAST_ACTIONS)[number]["value"];
+
+export const CAST_ACTION_NOTE_MAX = 80;
 
 export const CAST_NOTE_MAX = 160;
 
