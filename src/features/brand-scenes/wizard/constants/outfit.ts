@@ -50,16 +50,16 @@ export type OutfitFootwear = (typeof OUTFIT_FOOTWEAR)[number]["value"];
 
 export const OUTFIT_CUSTOM_MAX = 80;
 
-export interface OutfitSlotValue<T extends string = string> {
-  preset?: T;
+export interface OutfitSlotValue {
+  preset?: string;
   custom?: string;
 }
 
 export interface OutfitAnswers {
-  vibe?: OutfitSlotValue<OutfitVibe>;
-  top?: OutfitSlotValue<OutfitTop>;
-  bottom?: OutfitSlotValue<OutfitBottom>;
-  footwear?: OutfitSlotValue<OutfitFootwear>;
+  vibe?: OutfitSlotValue;
+  top?: OutfitSlotValue;
+  bottom?: OutfitSlotValue;
+  footwear?: OutfitSlotValue;
 }
 
 /** Resolve a slot to its rendered text (custom wins, then preset directive). */
