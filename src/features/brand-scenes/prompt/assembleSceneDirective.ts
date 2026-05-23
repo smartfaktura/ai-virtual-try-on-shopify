@@ -287,6 +287,7 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   );
   out.push("");
 
+  push("PRODUCT FOCUS", productFocus);
   push("SUBJECT", subject);
   push("SCENE", scene);
   push("CAMERA & FRAMING", camera);
