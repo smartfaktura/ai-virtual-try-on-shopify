@@ -1,49 +1,43 @@
-# Fix Brand Scenes page UI/UX
+## Refine the "Reference image — quick check" modal
 
-Two surgical fixes to `src/pages/BrandScenes.tsx`. Frontend-only, no logic, schema, or routing changes.
+Goal: make the popup feel calm, premium and easy to scan. Less alarm, fewer words, no friction-for-friction's-sake.
 
-## 1. Header — align "New brand scene" button
+### File
+`src/features/brand-scenes/wizard/components/ResponsibilityModal.tsx`
 
-Current: `flex flex-wrap items-end justify-between` causes the button to align to the bottom of the subtitle, and on narrow screens it wraps below in an inconsistent way.
+### Changes
 
-Change to:
-- `items-start` so the button aligns with the **title baseline** (top), matching other pages in the app (Library, Workflows).
-- Keep `justify-between` and `flex-wrap` so it still stacks gracefully on mobile.
-- Add `shrink-0` to the button so it never gets squeezed.
+**1. Tone down the header**
+- Replace the red `ShieldAlert` destructive badge with a softer neutral `Sparkles` (or `ImageIcon`) in a muted circle (`bg-muted text-foreground/70`). It's a guideline, not a warning.
+- Shorten title to: **"Before you upload"**.
+- Rewrite description to one tight line: *"Your image guides framing, lighting and mood — your product replaces the original. Please confirm:"*
 
-## 2. Scene card — actions always visible, no overlap
+**2. Simplify and shorten the checklist**
+Three short, parallel lines (no walls of text):
+- "I own this image or have permission to use it"
+- "No copyrighted logos or recognizable people"
+- "It's used only as a composition guide"
 
-Current problems:
-- `absolute inset-x-0 bottom-0 … opacity-0 group-hover:opacity-100` overlay sits **on top of** the title/date and is invisible on touch devices.
-- Title "Untitled" is being covered by the gradient even at rest in the screenshot (z-stacking + overlay padding).
+Visual cleanup of each row:
+- Wrap each row in a subtle card: `rounded-xl border border-border/60 bg-muted/30 px-3.5 py-3 hover:bg-muted/50 transition-colors`
+- Whole row clickable (already a `<label>`), checkbox right-aligned would be cleaner — keep left to match conventions but tighten gap to `gap-3`, text `text-sm`.
 
-New structure (no hover dependency):
+**3. Remove the "Type AGREE" field**
+Three checkboxes are already explicit consent. The typed phrase is friction that makes the modal feel legalistic and crowded. Drop the `Input`, the `phrase` state, and the `REQUIRED_PHRASE` gate. `canAccept = c1 && c2 && c3`.
 
-```text
-┌─────────────────────────┐
-│      4:5 image          │
-│                         │
-│                         │  ← trash icon top-right, subtle, always visible
-└─────────────────────────┘
-│ Title                   │
-│ Date · module           │
-│ ┌──────────────┐        │
-│ │ ✨ Use scene │        │  ← primary action, full-width on mobile, auto on desktop
-│ └──────────────┘        │
-└─────────────────────────┘
-```
+**4. Footer**
+- Cancel: keep ghost, rounded-full.
+- Primary CTA shortened to **"Continue"** (rounded-full, font-medium). The three checkboxes are the responsibility acknowledgement — the button doesn't need to say it.
+- Right-align both, comfortable gap.
 
-Specifically:
-- Remove the absolute-positioned bottom overlay entirely.
-- Move **trash** to a small floating button in the **top-right corner of the image** (`absolute top-2 right-2`, `bg-background/80 backdrop-blur`, always visible but discreet; opacity bumps on hover).
-- Put **"Use scene"** as a normal block-level button inside the text section beneath the title/date — `w-full` on mobile, `w-auto` on `sm:` so it doesn't stretch awkwardly on desktop cards.
-- Keep image hover zoom (`group-hover:scale-[1.03]`) for the visual polish.
-- Card padding bumps from `p-3` to `p-3.5` to make room for the action without feeling cramped.
+**5. Spacing & container**
+- `DialogContent` → `sm:max-w-md` (down from `lg`) so it feels focused, not a form.
+- Tighten vertical rhythm: header `space-y-2`, checklist `space-y-2`, `pt-2` before footer.
 
-## Files
+### Out of scope
+- Trigger logic / where the modal is opened.
+- Copy in other modals.
+- The actual upload flow.
 
-- `src/pages/BrandScenes.tsx` — header flex alignment + `SceneCard` restructure (sections 81–97 and 140–205).
-
-## Out of scope
-
-- Empty state, delete confirmation dialog, query logic, navigation targets, and routing all stay as-is.
+### Memory note
+Follows project rules: no terminal periods in the short title, Inter weights only, semantic tokens (no raw colors), minimalist luxury restraint.
