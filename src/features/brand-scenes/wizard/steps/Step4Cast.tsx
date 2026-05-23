@@ -260,7 +260,9 @@ export function Step4Cast({
             <AutoCastSummary
               cast={cast}
               scale={scale}
+              hasPeople={hasPeople}
               onJumpToEssentials={() => onSubStepChange?.("essentials")}
+              onJumpToInteraction={() => onSubStepChange?.("interaction")}
             />
           )}
         </div>
@@ -505,10 +507,14 @@ function AutoCastSummary({
   cast,
   scale,
   onJumpToEssentials,
+  onJumpToInteraction,
+  hasPeople,
 }: {
   cast?: BrandSceneCast;
   scale?: BrandSceneScale;
   onJumpToEssentials: () => void;
+  onJumpToInteraction?: () => void;
+  hasPeople: boolean;
 }) {
   const presetLabel = CAST_PRESETS.find((p) => p.value === cast?.preset)?.label;
   const interactionLabel = CAST_INTERACTIONS.find(
@@ -518,9 +524,13 @@ function AutoCastSummary({
   const poseLabel =
     cast?.action_note ??
     CAST_ACTIONS.find((a) => a.value === cast?.action)?.label;
-  const chips = [presetLabel, interactionLabel, poseLabel, scaleLabel].filter(
-    Boolean,
-  ) as string[];
+  const chips: { label: string; onClick: () => void; emphasize?: boolean }[] = [];
+  if (presetLabel) chips.push({ label: presetLabel, onClick: onJumpToEssentials });
+  if (interactionLabel)
+    chips.push({ label: interactionLabel, onClick: onJumpToEssentials });
+  if (hasPeople && poseLabel && onJumpToInteraction)
+    chips.push({ label: `Pose: ${poseLabel}`, onClick: onJumpToInteraction, emphasize: true });
+  if (scaleLabel) chips.push({ label: scaleLabel, onClick: onJumpToEssentials });
   if (!chips.length) return null;
   return (
     <div className="mx-auto max-w-2xl mt-5 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
@@ -538,14 +548,25 @@ function AutoCastSummary({
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {chips.map((c) => (
-          <span
-            key={c}
-            className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-[11px] text-foreground/80"
+          <button
+            key={c.label}
+            type="button"
+            onClick={c.onClick}
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] transition-colors ${
+              c.emphasize
+                ? "border-foreground/40 bg-card text-foreground hover:border-foreground"
+                : "border-border bg-card text-foreground/80 hover:border-foreground/40"
+            }`}
           >
-            {c}
-          </span>
+            {c.label}
+          </button>
         ))}
       </div>
+      {hasPeople && onJumpToInteraction && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Pose strongly affects composition — tap it above to fine-tune
+        </p>
+      )}
     </div>
   );
 }
