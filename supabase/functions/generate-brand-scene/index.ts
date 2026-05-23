@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const MAX_PROMPT_CHARS = 8000;
 const BUCKET = "scratch-uploads";
+const GENERATION_COST = 20;
 
 // ── Detect actual image format from magic bytes ──
 function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
@@ -141,6 +142,39 @@ serve(async (req) => {
     const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_KEY) throw new Error("GEMINI_API_KEY not configured");
 
+    // Verify balance and deduct credits BEFORE calling Gemini.
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("credits_balance")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!profile || profile.credits_balance < GENERATION_COST) {
+      return new Response(JSON.stringify({
+        error: `You need ${GENERATION_COST} credits to generate brand scene variations.`,
+        code: "INSUFFICIENT_CREDITS",
+      }), {
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: newBalance, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
+      p_user_id: user.id,
+      p_amount: GENERATION_COST,
+    });
+    if (deductError) {
+      console.error("deduct_credits failed:", deductError);
+      throw new Error("Failed to deduct credits");
+    }
+
+    const refund = async () => {
+      try {
+        await supabaseAdmin.rpc("refund_credits", { p_user_id: user.id, p_amount: GENERATION_COST });
+      } catch (err) {
+        console.error("refund_credits failed:", err);
+      }
+    };
+
     let referenceInlineData: { mimeType: string; data: string } | undefined;
     if (referenceImageUrl) {
       try {
@@ -180,7 +214,8 @@ serve(async (req) => {
     const failedCount = 3 - variations.length;
 
     if (variations.length === 0) {
-      // Surface a meaningful error
+      // Refund — user got nothing.
+      await refund();
       const firstFailure = results.find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
       const msg = firstFailure?.reason instanceof Error ? firstFailure.reason.message : "All generation attempts failed";
       if (msg === "RATE_LIMIT") {
@@ -203,6 +238,7 @@ serve(async (req) => {
       variations,
       partial: failedCount > 0,
       failed_count: failedCount,
+      new_balance: newBalance,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

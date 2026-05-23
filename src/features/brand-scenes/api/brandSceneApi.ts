@@ -11,6 +11,7 @@ export interface GenerateBrandSceneResult {
   variations: GeneratedVariation[];
   partial: boolean;
   failed_count: number;
+  new_balance?: number;
 }
 
 export class BrandSceneApiError extends Error {

@@ -48,6 +48,7 @@ import {
   getStorytellingMoments,
   hasExplicitMoments,
 } from "../registry/storytellingBySubfamily";
+import { resolveSubfamilyGuide } from "../registry/subfamilyGuides";
 import { resolveAll } from "../registry/resolvePresets";
 import {
   forbiddenInteractions,
@@ -920,8 +921,22 @@ function StylingTab({
     })
     .filter((f): f is NonNullable<typeof f> => f !== null);
 
+  const guide = resolveSubfamilyGuide(module, subFamily);
+  const showHeroBanner = !!guide?.mustWearProduct && hasPeople;
+
   return (
     <div className="animate-fade-in space-y-10">
+      {showHeroBanner && (
+        <div className="rounded-2xl border border-foreground/20 bg-foreground/[0.03] px-4 py-3">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Hero garment enforced — {guide!.productNoun}
+          </div>
+          <p className="text-[11px] text-foreground/80 mt-1.5 leading-relaxed">
+            {guide!.wardrobe}
+          </p>
+        </div>
+      )}
+
       {showOutfit && (
         <OutfitQuiz
           value={cast?.outfit}

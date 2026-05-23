@@ -34,6 +34,8 @@ import {
   OUTFIT_BOTTOMS,
   OUTFIT_FOOTWEAR,
 } from "../wizard/constants/outfit";
+import { resolveSubfamilyGuide } from "../wizard/registry/subfamilyGuides";
+import { CAST_PRESETS_WITH_PEOPLE } from "../wizard/constants/cast";
 
 /**
  * Canonical scene-directive assembler. Produces a structured, Gemini/Nano
@@ -61,6 +63,16 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   const notes: string[] = [];
   const reference: string[] = [];
   const name: string[] = [];
+  const productFocus: string[] = [];
+
+  // ----- PRODUCT FOCUS (sub-family-aware wardrobe / hero-piece directive) -----
+  const guide = resolveSubfamilyGuide(answers.module, answers.sub_family);
+  const castHasPeople = !!(
+    answers.cast && CAST_PRESETS_WITH_PEOPLE.includes(answers.cast.preset as any)
+  );
+  if (guide && castHasPeople) {
+    productFocus.push(guide.wardrobe);
+  }
 
   // ----- REFERENCE -----
   const refLine =
@@ -224,8 +236,6 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   // Outfit direction analyzed from the reference image — only when people are
   // in the scene. Manual outfit slots above still take precedence (printed first).
   const refOutfit = answers.reference_outfit?.description?.trim();
-  const castHasPeople =
-    answers.cast && answers.cast.preset !== "none" && answers.cast.preset !== "replicate";
   if (refOutfit && castHasPeople) {
     castDetails.push(`- Outfit direction (from reference): ${refOutfit}`);
   }
@@ -250,6 +260,9 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   negative.push(
     "Do not render text, captions, logos, watermarks, UI chrome, or extra products.",
   );
+  if (guide && castHasPeople) {
+    for (const s of guide.safeguards) negative.push(s);
+  }
 
   // ----- NOTES -----
   if (base.notes?.trim()) notes.push(`Notes: ${base.notes.trim()}.`);
@@ -274,6 +287,7 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   );
   out.push("");
 
+  push("PRODUCT FOCUS", productFocus);
   push("SUBJECT", subject);
   push("SCENE", scene);
   push("CAMERA & FRAMING", camera);

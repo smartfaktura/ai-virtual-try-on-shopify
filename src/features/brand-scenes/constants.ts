@@ -65,8 +65,9 @@ export function isBrandSceneModuleUnlocked(m: BrandSceneModule): boolean {
 export const BRAND_SCENE_SOURCES = ["wizard", "reference"] as const;
 export type BrandSceneSource = (typeof BRAND_SCENE_SOURCES)[number];
 
-/** Generation economics — mirrors brand-models flow. */
+/** Generation economics — credits are deducted per generation (3 variations). */
 export const BRAND_SCENE_GENERATION_COST = 20 as const;
+export const BRAND_SCENE_SAVE_COST = 0 as const;
 export const BRAND_SCENE_VARIATIONS_PER_GENERATION = 3 as const;
 
 /** Reference-image upload limits (Path B — exactly one canonical reference). */

@@ -68,7 +68,8 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
       setPhase("idle");
       if (e instanceof BrandSceneApiError) {
         if (e.code === "RATE_LIMIT") toast.error("Too many requests, try again shortly");
-        else if (e.code === "INSUFFICIENT_CREDITS") toast.error("AI credits exhausted, try again later");
+        else if (e.code === "INSUFFICIENT_CREDITS")
+          toast.error(`You need ${BRAND_SCENE_GENERATION_COST} credits to generate brand scene variations`);
         else if (e.code === "GENERATION_FAILED") toast.error("Generation failed. Please try again.");
         else toast.error(e.message);
       } else {
@@ -78,7 +79,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
   };
 
   const handleRegenerate = () => {
-    if (!confirm("Generate 3 new variations? (Free — credits are only spent when you save.)")) return;
+    if (!confirm(`Generate 3 new variations? This will cost ${BRAND_SCENE_GENERATION_COST} credits.`)) return;
     handleGenerate();
   };
 
@@ -96,11 +97,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
       navigate("/app/brand-scenes");
     } catch (e) {
       setPhase("picking");
-      if (e instanceof BrandSceneApiError && e.code === "INSUFFICIENT_CREDITS") {
-        toast.error(`You need ${BRAND_SCENE_GENERATION_COST} credits to save a brand scene`);
-      } else {
-        toast.error(e instanceof Error ? e.message : "Could not save scene");
-      }
+      toast.error(e instanceof Error ? e.message : "Could not save scene");
     }
   };
 
@@ -113,16 +110,16 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
             Ready to generate
           </div>
           <div className="mt-1 text-base font-semibold tracking-tight">
-            {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations — free preview
+            {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
           </div>
           <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-            Previewing is free. You'll only spend {BRAND_SCENE_GENERATION_COST} credits when you save the variation you like to your library.
+            Each generation costs {BRAND_SCENE_GENERATION_COST} credits. Saving the variation you like is free.
           </p>
 
           <div className="mt-5">
             <Button size="pill" onClick={handleGenerate} className="gap-2">
               <Sparkles className="w-4 h-4" />
-              Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations
+              Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
             </Button>
           </div>
         </div>
@@ -140,7 +137,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
               {sceneName}
             </div>
             <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-              Select the variation that best matches what you want. Saving costs {BRAND_SCENE_GENERATION_COST} credits and adds it to your scene library.
+              Select the variation that best matches what you want. Saving is free.
             </p>
           </div>
 
@@ -158,7 +155,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
               className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 disabled:opacity-40"
             >
               <RefreshCw className="w-3 h-3" />
-              Regenerate (free)
+              Regenerate · {BRAND_SCENE_GENERATION_COST} credits
             </button>
             <Button
               size="pill"
@@ -174,7 +171,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange }: Props) {
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  Save to library · {BRAND_SCENE_GENERATION_COST} credits
+                  Save to library · free
                 </>
               )}
             </Button>

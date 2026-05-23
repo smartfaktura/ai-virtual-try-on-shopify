@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SAVE_COST = 20;
+// Save is free — credits are deducted at generation time.
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -53,30 +53,7 @@ serve(async (req) => {
       });
     }
 
-    // Verify balance & deduct credits.
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("credits_balance")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!profile || profile.credits_balance < SAVE_COST) {
-      return new Response(JSON.stringify({
-        error: `You need ${SAVE_COST} credits to save a brand scene.`,
-        code: "INSUFFICIENT_CREDITS",
-      }), {
-        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: newBalance, error: deductError } = await supabaseAdmin.rpc("deduct_credits", {
-      p_user_id: user.id,
-      p_amount: SAVE_COST,
-    });
-    if (deductError) {
-      console.error("deduct_credits failed:", deductError);
-      throw new Error("Failed to deduct credits");
-    }
+    // Save is free — credits were deducted at generation time.
 
     const sceneId = `brand-${crypto.randomUUID()}`;
     const module: string = answers.module ?? "fashion";
@@ -114,14 +91,13 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error("Insert failed, refunding:", insertError);
-      await supabaseAdmin.rpc("refund_credits", { p_user_id: user.id, p_amount: SAVE_COST });
+      console.error("Insert failed:", insertError);
       return new Response(JSON.stringify({ error: "Failed to save scene" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ scene: row, new_balance: newBalance }), {
+    return new Response(JSON.stringify({ scene: row }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
