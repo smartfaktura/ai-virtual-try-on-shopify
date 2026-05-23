@@ -21,6 +21,8 @@ interface ModelCatalogModalProps {
   onOpenChange: (open: boolean) => void;
   selectedModel: ModelProfile | null;
   onSelect: (model: ModelProfile | null) => void;
+  /** Initial sidebar quick view. Defaults to 'all'. */
+  initialQuickView?: 'all' | 'brand';
 }
 
 type GenderFilter = 'all' | Extract<ModelGender, 'female' | 'male'>;
@@ -39,7 +41,7 @@ const AGE_RANGES: { value: ModelAgeRange; label: string }[] = [
   { value: 'mature', label: 'Mature' },
 ];
 
-export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect }: ModelCatalogModalProps) {
+export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect, initialQuickView = 'all' }: ModelCatalogModalProps) {
   const navigate = useNavigate();
   const { plan, openBuyModal } = useCredits();
   const { asProfiles: customModels } = useCustomModels();
@@ -51,9 +53,14 @@ export function ModelCatalogModal({ open, onOpenChange, selectedModel, onSelect 
 
   const [gender, setGender] = useState<GenderFilter>('all');
   const [ageRange, setAgeRange] = useState<ModelAgeRange | null>(null);
-  const [quickView, setQuickView] = useState<QuickView>('all');
+  const [quickView, setQuickView] = useState<QuickView>(initialQuickView);
   const [sort, setSort] = useState<SortKey>('featured');
   const [pending, setPending] = useState<ModelProfile | null>(null);
+
+  // Re-seed quick view when modal opens with a different initial view.
+  useEffect(() => {
+    if (open) setQuickView(initialQuickView);
+  }, [open, initialQuickView]);
 
   const userModelIds = useMemo(() => new Set(userModelProfiles.map(m => m.modelId)), [userModelProfiles]);
 
