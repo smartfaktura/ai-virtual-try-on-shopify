@@ -221,6 +221,17 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
     }
   }
 
+  // Outfit direction analyzed from the reference image — only when people are
+  // in the scene. Manual outfit slots above still take precedence (printed first).
+  const refOutfit = answers.reference_outfit?.description?.trim();
+  const castHasPeople =
+    answers.cast && answers.cast.preset !== "none" && answers.cast.preset !== "replicate";
+  if (refOutfit && castHasPeople) {
+    castDetails.push(`- Outfit direction (from reference): ${refOutfit}`);
+  }
+
+
+
 
   // ----- OUTPUT -----
   output.push("Aspect ratio: 4:5 (portrait, vertical) — REQUIRED.");
