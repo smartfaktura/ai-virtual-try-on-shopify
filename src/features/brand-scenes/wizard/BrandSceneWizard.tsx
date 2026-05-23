@@ -149,7 +149,7 @@ export function BrandSceneWizard() {
     const main = document.getElementById("app-main-scroll");
     if (main) main.scrollTo({ top: 0, behavior: "auto" });
     window.scrollTo({ top: 0, behavior: "auto" });
-  }, [step]);
+  }, [step, step4SubStep]);
 
   const handleNext = () => {
     // Step 4 internal sub-step navigation.
