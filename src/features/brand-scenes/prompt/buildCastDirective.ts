@@ -83,8 +83,10 @@ export function buildCastDirective(cast: CastInput): string {
     subjectBits.push(PRESET_PEOPLE.hands);
   } else {
     const descriptors: string[] = [];
-    if (cast.age?.length) descriptors.push(cast.age.join("/"));
-    if (cast.gender?.length) descriptors.push(cast.gender.join("/"));
+    if (!cast.model_ref) {
+      if (cast.age?.length) descriptors.push(cast.age.join("/"));
+      if (cast.gender?.length) descriptors.push(cast.gender.join("/"));
+    }
     if (cast.vibe) descriptors.push(`${cast.vibe} vibe`);
     // Phase 7n — `cast.diversity` retired. Ethnicity now flows via
     // `cast.extras.ethnicity` and is emitted by assembleSceneDirective.

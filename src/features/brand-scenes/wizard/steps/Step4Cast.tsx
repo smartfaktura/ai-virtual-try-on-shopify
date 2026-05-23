@@ -685,46 +685,56 @@ function PeopleTab({
           </div>
         </Section>
       </div>
+      {cast?.model_ref && (
+        <div className="md:col-span-2 -mt-4">
+          <p className="text-[11px] text-muted-foreground">
+            Gender, age, build and ethnicity are locked to your featured model
+          </p>
+        </div>
+      )}
 
+      {!cast?.model_ref && (
+        <>
+          <Section label={genderLabel}>
+            <MultiSelect
+              options={genderOpts}
+              current={cast?.gender ?? []}
+              onToggle={handleGender}
+            />
+          </Section>
 
-      <Section label={genderLabel}>
-        <MultiSelect
-          options={genderOpts}
-          current={cast?.gender ?? []}
-          onToggle={handleGender}
-        />
-      </Section>
+          <Section label={ageLabel}>
+            <MultiSelect
+              options={ageOpts}
+              current={cast?.age ?? []}
+              onToggle={handleAge}
+            />
+          </Section>
 
-      <Section label={ageLabel}>
-        <MultiSelect
-          options={ageOpts}
-          current={cast?.age ?? []}
-          onToggle={handleAge}
-        />
-      </Section>
-
-      {builds.length > 0 && (
-        <Section label="Build">
-          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-            {builds.map((b) => {
-              const current = cast?.extras?.build;
-              return (
-                <Chip
-                  key={b}
-                  active={current === b}
-                  onClick={() => {
-                    const nextExtras = { ...(cast?.extras ?? {}) };
-                    if (current === b) delete nextExtras.build;
-                    else nextExtras.build = b;
-                    onCastChange({ extras: nextExtras });
-                  }}
-                >
-                  {b}
-                </Chip>
-              );
-            })}
-          </div>
-        </Section>
+          {builds.length > 0 && (
+            <Section label="Build">
+              <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                {builds.map((b) => {
+                  const current = cast?.extras?.build;
+                  return (
+                    <Chip
+                      key={b}
+                      active={current === b}
+                      onClick={() => {
+                        const nextExtras = { ...(cast?.extras ?? {}) };
+                        if (current === b) delete nextExtras.build;
+                        else nextExtras.build = b;
+                        onCastChange({ extras: nextExtras });
+                      }}
+                    >
+                      {b}
+                    </Chip>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+        </>
       )}
 
       {lingerie && (
@@ -753,22 +763,24 @@ function PeopleTab({
         </div>
       )}
 
-      <div className="md:col-span-2">
-        <Section
-          label="Ethnicity / casting hint"
-          tooltip="A styling hint, not a hard cast. The AI uses it to guide features when no brand model is attached."
-        >
-          <EthnicityChips
-            value={cast?.extras?.ethnicity}
-            onChange={(next) => {
-              const nextExtras = { ...(cast?.extras ?? {}) };
-              if (next === undefined) delete nextExtras.ethnicity;
-              else nextExtras.ethnicity = next;
-              onCastChange({ extras: nextExtras });
-            }}
-          />
-        </Section>
-      </div>
+      {!cast?.model_ref && (
+        <div className="md:col-span-2">
+          <Section
+            label="Ethnicity / casting hint"
+            tooltip="A styling hint, not a hard cast. The AI uses it to guide features when no brand model is attached."
+          >
+            <EthnicityChips
+              value={cast?.extras?.ethnicity}
+              onChange={(next) => {
+                const nextExtras = { ...(cast?.extras ?? {}) };
+                if (next === undefined) delete nextExtras.ethnicity;
+                else nextExtras.ethnicity = next;
+                onCastChange({ extras: nextExtras });
+              }}
+            />
+          </Section>
+        </div>
+      )}
     </div>
   );
 }
