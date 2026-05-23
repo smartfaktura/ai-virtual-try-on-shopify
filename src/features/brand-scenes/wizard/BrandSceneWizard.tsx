@@ -95,8 +95,30 @@ export function BrandSceneWizard() {
   const wizardCastStep = isReference ? 4 : 3;
   const onCastStep = step === wizardCastStep;
   const [step4SubStep, setStep4SubStep] = useState<Step4SubStep>("look");
+  const [visitedSubSteps, setVisitedSubSteps] = useState<Set<Step4SubStep>>(
+    () => new Set<Step4SubStep>(["look"]),
+  );
   const step4Ctx = { module: answers.module, subFamily: answers.sub_family, isReference };
   const step4Flow = computeStep4Flow(answers, step4Ctx);
+  const step4Mode = getStep4Mode(answers.cast);
+
+  // Track which sub-steps the user has actually visited (controls tab ✓).
+  useEffect(() => {
+    if (!onCastStep) return;
+    setVisitedSubSteps((prev) =>
+      prev.has(step4SubStep) ? prev : new Set(prev).add(step4SubStep),
+    );
+  }, [onCastStep, step4SubStep]);
+
+  // Auto-cast = treat every cast sub-step as "handled" (the system filled them).
+  useEffect(() => {
+    if (!onCastStep || step4Mode !== "skip") return;
+    setVisitedSubSteps((prev) => {
+      const next = new Set(prev);
+      for (const t of step4Flow.visibleTabs) next.add(t);
+      return next;
+    });
+  }, [onCastStep, step4Mode, step4Flow.visibleTabs]);
 
   // Snap to the first available sub-step if the current one disappears.
   useEffect(() => {
