@@ -43,10 +43,13 @@ interface Props {
   name?: string;
   intent?: ReferenceIntent;
   note?: string;
+  referenceOutfit?: ReferenceOutfit;
   onImageChange: (path: string | null, previewUrl: string | null) => void;
   onNameChange: (name: string) => void;
   onIntentChange: (intent: ReferenceIntent) => void;
   onNoteChange: (note: string) => void;
+  onReferenceOutfitChange: (outfit: ReferenceOutfit) => void;
+  onReferenceOutfitClear: () => void;
 }
 
 const ACCEPTED_MIME = ["image/jpeg", "image/png", "image/webp"];
