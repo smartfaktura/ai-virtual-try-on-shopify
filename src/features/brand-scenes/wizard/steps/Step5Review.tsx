@@ -169,7 +169,7 @@ function SummaryCard({ answers }: { answers: BrandSceneAnswers }) {
           } ${answers.scale.dimensions.units}`
         : undefined,
     },
-    { label: "Aspect ratio", value: "4:5 (locked)" },
+    
     {
       label: "Reference intent",
       value: answers.reference_intent && humanize(answers.reference_intent),

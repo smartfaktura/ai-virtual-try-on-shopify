@@ -18,7 +18,7 @@ export function Step1ChooseModule({ value, onChange }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr gap-3">
         {BRAND_SCENE_MODULES.map((m) => (
           <WizardCard
             key={m}
