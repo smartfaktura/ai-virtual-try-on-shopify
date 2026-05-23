@@ -2,8 +2,11 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Check } from "lucide-react";
 import { Chip, AddChip } from "../components/Chip";
 import { Section } from "../components/Section";
+import { OutfitQuiz } from "../components/OutfitQuiz";
+import { hasOutfitVibe } from "../constants/outfit";
 import {
   CAST_ACTIONS,
   CAST_AGES,
@@ -50,6 +53,12 @@ import {
   forbiddenCastPresets,
   warnings as sceneWarnings,
 } from "../rules/combinationGuards";
+import {
+  computeStep4Flow,
+  getStep4Mode,
+  getSubStepDisabledReason,
+  type Step4SubStep,
+} from "../step4Flow";
 import type {
   BrandSceneAnswers,
   BrandSceneCast,
@@ -66,9 +75,10 @@ interface Props {
   scale?: BrandSceneScale;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
   onScaleChange: (patch: Partial<BrandSceneScale>) => void;
+  /** Active sub-step (controlled by the wizard so footer Next can advance it). */
+  subStep?: Step4SubStep;
+  onSubStepChange?: (s: Step4SubStep) => void;
 }
-
-type TabKey = "essentials" | "people" | "interaction" | "styling";
 
 export function Step4Cast({
   module,
@@ -79,6 +89,8 @@ export function Step4Cast({
   scale,
   onCastChange,
   onScaleChange,
+  subStep = "essentials",
+  onSubStepChange,
 }: Props) {
   const isReference = source === "reference";
   const resolved = useMemo(
@@ -99,7 +111,6 @@ export function Step4Cast({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [module, subFamily]);
 
-  // Combo guards.
   const forbiddenInter = forbiddenInteractions(preset, module, scalePreset);
   const forbiddenCast = forbiddenCastPresets(scalePreset, module);
 
@@ -129,114 +140,82 @@ export function Step4Cast({
     WARDROBE_COLORS.filter((w) => resolved.wardrobeColors.includes(w.value));
 
   const [showExact, setShowExact] = useState(!!scale?.dimensions);
-  const [tab, setTab] = useState<TabKey>("essentials");
 
-  // Force essentials tab when cast is replicate (nothing else applies).
+  const flow = useMemo(
+    () => computeStep4Flow(answers, { module, subFamily, isReference }),
+    [answers, module, subFamily, isReference],
+  );
+
+  // If the active sub-step is no longer visible (cast changed), bounce back.
   useEffect(() => {
-    if (isReplicate) setTab("essentials");
-  }, [isReplicate]);
+    if (!flow.visibleTabs.includes(subStep)) {
+      onSubStepChange?.("essentials");
+    }
+  }, [flow.visibleTabs, subStep, onSubStepChange]);
 
+  const mode = getStep4Mode(cast);
   const warnings = sceneWarnings(answers);
 
-  // Tab availability
-  const showPeopleTab = !isReplicate && hasPeople;
-  const showInteractionTab =
-    !isReplicate &&
-    ((visibleHandsOnProduct.length > 0 &&
-      (preset === "hands" || preset === "solo" || preset === "two" || preset === "group") &&
-      (scalePreset === "pocket" || scalePreset === "handheld")) ||
-      (preset !== "none" && preset !== "hands" && visibleBodyPart.length > 0) ||
-      hasPeople ||
-      preset === "two" || preset === "group");
-  const showStylingTab =
-    !isReplicate &&
-    (
-      (hasPeople &&
-        wardrobes.length > 0 &&
-        !["swimwear", "lingerie"].includes(subFamily ?? "")) ||
-      applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
-        .filter((f) => f.key !== "build").length > 0 ||
-      true /* note always available */
-    );
+  const setMode = (next: "yes" | "skip") => {
+    const nextExtras = { ...(cast?.extras ?? {}) };
+    nextExtras.design_specific_look = next;
+    onCastChange({ extras: nextExtras });
+  };
 
-  const tabs: { key: TabKey; label: string; show: boolean; count?: number }[] = [
-    { key: "essentials", label: "Essentials", show: true },
-    {
-      key: "people",
-      label: "People",
-      show: showPeopleTab,
-      count: countActive([
-        cast?.gender?.length,
-        cast?.age?.length,
-        cast?.vibe,
-        cast?.extras?.build,
-        cast?.extras?.ethnicity,
-      ]),
-    },
-    {
-      key: "interaction",
-      label: "Interaction",
-      show: showInteractionTab,
-      count: countActive([
-        cast?.hands_on_product,
-        cast?.body_part_focus,
-        cast?.gaze,
-        cast?.group_dynamic,
-        cast?.action,
-      ]),
-    },
-    {
-      key: "styling",
-      label: "Styling",
-      show: showStylingTab,
-      count: countActive([
-        cast?.wardrobe_color,
-        ...Object.entries(cast?.extras ?? {})
-          .filter(([k]) => k !== "build" && k !== "ethnicity")
-          .map(([, v]) => v),
-        cast?.note,
-      ]),
-    },
-  ];
+  // Headline missing flags for the dot indicators.
+  const peopleVibeMissing = !cast?.vibe;
+  const interactionHeadlineMissing = (() => {
+    if (hasPeople) return !cast?.action;
+    return !cast?.hands_on_product;
+  })();
+  const outfitVibeMissing = !hasOutfitVibe(cast?.outfit);
 
   return (
     <div className="space-y-8">
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1.5 border-b border-border/50 pb-3">
-        {tabs
-          .filter((t) => t.show)
-          .map((t) => {
-            const active = tab === t.key;
+      {flow.visibleTabs.length > 1 && (
+        <div className="flex flex-wrap gap-1.5 border-b border-border/50 pb-3">
+          {flow.visibleTabs.map((t, idx) => {
+            const active = subStep === t;
+            const labelMap: Record<Step4SubStep, string> = {
+              essentials: "Essentials",
+              people: "People",
+              interaction: "Interaction",
+              styling: "Styling",
+            };
+            const done =
+              t !== "essentials" &&
+              getSubStepDisabledReason(t, answers, { module, subFamily, isReference }) === null;
             return (
               <button
-                key={t.key}
+                key={t}
                 type="button"
-                onClick={() => setTab(t.key)}
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
+                onClick={() => onSubStepChange?.(t)}
+                className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-colors inline-flex items-center gap-1.5 ${
                   active
                     ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 }`}
               >
-                {t.label}
-                {t.key !== "essentials" && t.count ? (
-                  <span
-                    className={`ml-1.5 text-[10px] ${
-                      active ? "text-background/70" : "text-muted-foreground/70"
+                <span className="opacity-60 tabular-nums">{idx + 1}</span>
+                <span>{labelMap[t]}</span>
+                {done && (
+                  <Check
+                    className={`w-3 h-3 ${
+                      active ? "text-background/80" : "text-foreground/60"
                     }`}
-                  >
-                    · {t.count}
-                  </span>
-                ) : null}
+                  />
+                )}
               </button>
             );
           })}
-        <div className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/60 self-center">
-          {tab === "essentials" ? "Required" : "Optional"}
+          <div className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/60 self-center">
+            {subStep === "essentials" ? "Required" : "Required headline · rest optional"}
+          </div>
         </div>
-      </div>
+      )}
 
-      {tab === "essentials" && (
+      {subStep === "essentials" && (
         <div className="space-y-10 animate-fade-in">
           {/* 1. Cast preset */}
           <Section label="Who's in the shot" required missing={!preset}>
@@ -353,38 +332,43 @@ export function Step4Cast({
             </Section>
           )}
 
-          {/* Helpful nudge to refine */}
-          {!isReplicate && (showPeopleTab || showInteractionTab || showStylingTab) && (
-            <div className="pt-2">
-              <p className="text-[11px] text-muted-foreground">
-                Want more control? Refine{" "}
-                {showPeopleTab && (
-                  <TabLink onClick={() => setTab("people")}>People</TabLink>
-                )}
-                {showPeopleTab && showInteractionTab && ", "}
-                {showInteractionTab && (
-                  <TabLink onClick={() => setTab("interaction")}>Interaction</TabLink>
-                )}
-                {(showPeopleTab || showInteractionTab) && showStylingTab && ", "}
-                {showStylingTab && (
-                  <TabLink onClick={() => setTab("styling")}>Styling</TabLink>
-                )}
-                . All optional.
-              </p>
-            </div>
+          {/* 4. Branch — design specific look? */}
+          {flow.showBranchCard && (
+            <Section
+              label="Design a specific look?"
+              required
+              missing={!mode}
+              helper="Skip auto-casts a generic look. Choose to design it and we'll walk through People, Interaction and Styling step by step."
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <BranchCard
+                  active={mode === "skip"}
+                  title="Skip — auto-cast"
+                  body="We'll fill in look, outfit and energy with sensible defaults"
+                  onClick={() => setMode("skip")}
+                />
+                <BranchCard
+                  active={mode === "yes"}
+                  title="Yes, design the look"
+                  body="Walk through People, Interaction and a styling quiz"
+                  onClick={() => setMode("yes")}
+                />
+              </div>
+            </Section>
           )}
         </div>
       )}
 
-      {tab === "people" && showPeopleTab && (
+      {subStep === "people" && !isReplicate && (
         <PeopleTab
           preset={preset}
           cast={cast}
           onCastChange={onCastChange}
+          vibeMissing={peopleVibeMissing}
         />
       )}
 
-      {tab === "interaction" && showInteractionTab && (
+      {subStep === "interaction" && !isReplicate && (
         <InteractionTab
           preset={preset}
           hasPeople={hasPeople}
@@ -393,10 +377,11 @@ export function Step4Cast({
           visibleBodyPart={visibleBodyPart}
           cast={cast}
           onCastChange={onCastChange}
+          headlineMissing={interactionHeadlineMissing}
         />
       )}
 
-      {tab === "styling" && showStylingTab && (
+      {subStep === "styling" && !isReplicate && (
         <StylingTab
           module={module}
           subFamily={subFamily}
@@ -405,11 +390,12 @@ export function Step4Cast({
           wardrobes={wardrobes}
           cast={cast}
           onCastChange={onCastChange}
+          outfitVibeMissing={outfitVibeMissing}
         />
       )}
 
       {/* Warnings — only inside refinement tabs */}
-      {tab !== "essentials" && warnings.length > 0 && (
+      {subStep !== "essentials" && warnings.length > 0 && (
         <div className="space-y-2 pt-6 border-t border-border/40">
           {warnings.map((w, i) => (
             <p
@@ -429,16 +415,52 @@ export function Step4Cast({
   );
 }
 
+/* ────────────────────────── Branch card ────────────────────────── */
+
+function BranchCard({
+  active,
+  title,
+  body,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  body: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left rounded-2xl border p-4 transition-colors ${
+        active
+          ? "border-foreground bg-foreground/[0.04]"
+          : "border-border hover:border-foreground/40 hover:bg-muted/40"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold">{title}</span>
+        {active && <Check className="w-3.5 h-3.5 text-foreground" />}
+      </div>
+      <p className="text-[11px] text-muted-foreground leading-relaxed mt-1.5">
+        {body}
+      </p>
+    </button>
+  );
+}
+
 /* ────────────────────────── Tab: People ────────────────────────── */
 
 function PeopleTab({
   preset,
   cast,
   onCastChange,
+  vibeMissing,
 }: {
   preset?: CastPreset;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
+  vibeMissing: boolean;
 }) {
   const isSingle = preset === "solo" || preset === "hands";
   const genderOpts = isSingle
@@ -471,6 +493,26 @@ function PeopleTab({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
+      <div className="md:col-span-2">
+        <Section label="Energy / vibe" required missing={vibeMissing}>
+          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+            {CAST_VIBES.map((v) => (
+              <Chip
+                key={v.value}
+                active={cast?.vibe === v.value}
+                onClick={() =>
+                  onCastChange({
+                    vibe: cast?.vibe === v.value ? undefined : (v.value as CastVibe),
+                  })
+                }
+              >
+                {v.label}
+              </Chip>
+            ))}
+          </div>
+        </Section>
+      </div>
+
       <Section label={genderLabel}>
         <MultiSelect
           options={genderOpts}
@@ -485,24 +527,6 @@ function PeopleTab({
           current={cast?.age ?? []}
           onToggle={handleAge}
         />
-      </Section>
-
-      <Section label="Energy / vibe">
-        <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-          {CAST_VIBES.map((v) => (
-            <Chip
-              key={v.value}
-              active={cast?.vibe === v.value}
-              onClick={() =>
-                onCastChange({
-                  vibe: cast?.vibe === v.value ? undefined : (v.value as CastVibe),
-                })
-              }
-            >
-              {v.label}
-            </Chip>
-          ))}
-        </div>
       </Section>
 
       {builds.length > 0 && (
@@ -559,6 +583,7 @@ function InteractionTab({
   visibleBodyPart,
   cast,
   onCastChange,
+  headlineMissing,
 }: {
   preset?: CastPreset;
   hasPeople: boolean;
@@ -567,6 +592,7 @@ function InteractionTab({
   visibleBodyPart: ReadonlyArray<{ value: string; label: string }>;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
+  headlineMissing: boolean;
 }) {
   const showHandsOn =
     visibleHandsOnProduct.length > 0 &&
@@ -578,7 +604,57 @@ function InteractionTab({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
-      {showHandsOn && (
+      {hasPeople && (
+        <div className="md:col-span-2">
+          <Section label="Action" required missing={headlineMissing}>
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+              {CAST_ACTIONS.map((a) => (
+                <Chip
+                  key={a.value}
+                  active={cast?.action === a.value}
+                  onClick={() =>
+                    onCastChange({
+                      action:
+                        cast?.action === a.value
+                          ? undefined
+                          : (a.value as CastAction),
+                    })
+                  }
+                >
+                  {a.label}
+                </Chip>
+              ))}
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {!hasPeople && showHandsOn && (
+        <div className="md:col-span-2">
+          <Section label="Hands on product" required missing={headlineMissing}>
+            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+              {visibleHandsOnProduct.map((h) => (
+                <Chip
+                  key={h.value}
+                  active={cast?.hands_on_product === h.value}
+                  onClick={() =>
+                    onCastChange({
+                      hands_on_product:
+                        cast?.hands_on_product === h.value
+                          ? undefined
+                          : (h.value as HandsOnProduct),
+                    })
+                  }
+                >
+                  {h.label}
+                </Chip>
+              ))}
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {hasPeople && showHandsOn && (
         <Section label="Hands on product">
           <div className="flex flex-wrap gap-x-2 gap-y-2.5">
             {visibleHandsOnProduct.map((h) => (
@@ -669,29 +745,6 @@ function InteractionTab({
           </div>
         </Section>
       )}
-
-      {hasPeople && (
-        <Section label="Action">
-          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-            {CAST_ACTIONS.map((a) => (
-              <Chip
-                key={a.value}
-                active={cast?.action === a.value}
-                onClick={() =>
-                  onCastChange({
-                    action:
-                      cast?.action === a.value
-                        ? undefined
-                        : (a.value as CastAction),
-                  })
-                }
-              >
-                {a.label}
-              </Chip>
-            ))}
-          </div>
-        </Section>
-      )}
     </div>
   );
 }
@@ -706,6 +759,7 @@ function StylingTab({
   wardrobes,
   cast,
   onCastChange,
+  outfitVibeMissing,
 }: {
   module?: BrandSceneModule;
   subFamily?: string;
@@ -714,11 +768,15 @@ function StylingTab({
   wardrobes: ReadonlyArray<{ value: string; label: string }>;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
+  outfitVibeMissing: boolean;
 }) {
   const showWardrobe =
     hasPeople &&
     wardrobes.length > 0 &&
     !["swimwear", "lingerie"].includes(subFamily ?? "");
+  const showOutfit =
+    hasPeople && preset !== "hands" && preset !== "none";
+  const hideGarments = ["swimwear", "lingerie"].includes(subFamily ?? "");
 
   const extraFields = applicableFields(CAST_EXTRAS_FIELDS, module, preset, subFamily)
     .filter((f) => f.key !== "build")
@@ -738,45 +796,56 @@ function StylingTab({
     .filter((f): f is NonNullable<typeof f> => f !== null);
 
   return (
-    <div className="animate-fade-in space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-        {showWardrobe && (
-          <Section label="Wardrobe color anchor">
-            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-              {wardrobes.map((w) => (
-                <Chip
-                  key={w.value}
-                  active={cast?.wardrobe_color === w.value}
-                  onClick={() =>
-                    onCastChange({
-                      wardrobe_color:
-                        cast?.wardrobe_color === w.value
-                          ? undefined
-                          : (w.value as WardrobeColor),
-                    })
-                  }
-                >
-                  {w.label}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-        )}
+    <div className="animate-fade-in space-y-10">
+      {showOutfit && (
+        <OutfitQuiz
+          value={cast?.outfit}
+          onChange={(next) => onCastChange({ outfit: next })}
+          vibeRequired
+          hideGarments={hideGarments}
+        />
+      )}
 
-        {extraFields.map((f) => (
-          <ExtrasPillField
-            key={f.key}
-            field={f}
-            value={cast?.extras?.[f.key]}
-            onChange={(next) => {
-              const nextExtras = { ...(cast?.extras ?? {}) };
-              if (next === undefined) delete nextExtras[f.key];
-              else nextExtras[f.key] = next;
-              onCastChange({ extras: nextExtras });
-            }}
-          />
-        ))}
-      </div>
+      {(showWardrobe || extraFields.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+          {showWardrobe && (
+            <Section label="Wardrobe color anchor">
+              <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                {wardrobes.map((w) => (
+                  <Chip
+                    key={w.value}
+                    active={cast?.wardrobe_color === w.value}
+                    onClick={() =>
+                      onCastChange({
+                        wardrobe_color:
+                          cast?.wardrobe_color === w.value
+                            ? undefined
+                            : (w.value as WardrobeColor),
+                      })
+                    }
+                  >
+                    {w.label}
+                  </Chip>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {extraFields.map((f) => (
+            <ExtrasPillField
+              key={f.key}
+              field={f}
+              value={cast?.extras?.[f.key]}
+              onChange={(next) => {
+                const nextExtras = { ...(cast?.extras ?? {}) };
+                if (next === undefined) delete nextExtras[f.key];
+                else nextExtras[f.key] = next;
+                onCastChange({ extras: nextExtras });
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <Section label="Note">
         <Textarea
@@ -793,33 +862,6 @@ function StylingTab({
 }
 
 /* ────────────────────────── Helpers ────────────────────────── */
-
-function TabLink({
-  onClick,
-  children,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-foreground underline-offset-2 hover:underline"
-    >
-      {children}
-    </button>
-  );
-}
-
-function countActive(vals: Array<unknown>): number {
-  return vals.filter((v) => {
-    if (v === undefined || v === null || v === "") return false;
-    if (Array.isArray(v) && v.length === 0) return false;
-    if (typeof v === "number" && v === 0) return false;
-    return true;
-  }).length;
-}
 
 function toggleArr<T>(arr: T[], v: T): T[] {
   return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];

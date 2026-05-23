@@ -11,6 +11,11 @@ import { Step4Cast } from "./steps/Step4Cast";
 import { Step5Review } from "./steps/Step5Review";
 import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
 import { ResponsibilityModal } from "./components/ResponsibilityModal";
+import {
+  computeStep4Flow,
+  getSubStepDisabledReason,
+  type Step4SubStep,
+} from "./step4Flow";
 import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";

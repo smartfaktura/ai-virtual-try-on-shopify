@@ -28,6 +28,12 @@ import {
   SCENE_EXTRAS_FIELDS,
   CAST_EXTRAS_FIELDS,
 } from "../wizard/constants/extras";
+import {
+  OUTFIT_VIBES,
+  OUTFIT_TOPS,
+  OUTFIT_BOTTOMS,
+  OUTFIT_FOOTWEAR,
+} from "../wizard/constants/outfit";
 
 /**
  * Canonical scene-directive assembler. Produces a structured, Gemini/Nano
@@ -169,12 +175,41 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   const knownCastKeys = new Set<string>([
     ...CAST_EXTRAS_FIELDS.map((f) => f.key),
     "ethnicity",
+    "design_specific_look",
   ]);
   for (const [k, v] of Object.entries(castExtras)) {
     if (!knownCastKeys.has(k) && v?.trim()) {
       castDetails.push(`- Cast style (${k}): ${v.trim()}.`);
     }
   }
+
+  // Outfit-direction quiz → single "Outfit:" line.
+  const outfit = answers.cast?.outfit;
+  if (outfit) {
+    const outfitParts: string[] = [];
+    const pickSlot = (
+      slot: { preset?: string; custom?: string } | undefined,
+      options: ReadonlyArray<{ value: string; directive: string }>,
+      suffix: string,
+    ) => {
+      if (!slot) return;
+      const custom = slot.custom?.trim();
+      if (custom) {
+        outfitParts.push(`${custom}${suffix ? ` ${suffix}` : ""}`);
+        return;
+      }
+      const match = options.find((o) => o.value === slot.preset);
+      if (match && match.directive) outfitParts.push(match.directive);
+    };
+    pickSlot(outfit.vibe, OUTFIT_VIBES, "vibe");
+    pickSlot(outfit.top, OUTFIT_TOPS, "top");
+    pickSlot(outfit.bottom, OUTFIT_BOTTOMS, "");
+    pickSlot(outfit.footwear, OUTFIT_FOOTWEAR, "");
+    if (outfitParts.length) {
+      castDetails.push(`- Outfit: ${outfitParts.join(", ")}.`);
+    }
+  }
+
 
   // ----- OUTPUT -----
   output.push("Aspect ratio: 4:5 (portrait, vertical) — REQUIRED.");
