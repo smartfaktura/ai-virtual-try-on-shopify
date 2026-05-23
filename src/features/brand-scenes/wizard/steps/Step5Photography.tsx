@@ -263,18 +263,24 @@ export function Step5Photography({
           </Section>
 
           <Section label="Contrast">
-            <ChipRow
+            <ChipRowWithOther
               options={COLOR_CONTRASTS}
               current={value.color_contrast}
+              custom={value.color_contrast_custom}
+              placeholder="e.g. high-key with single ember accent"
               onPick={(v) => onChange({ color_contrast: v as ColorContrast | undefined })}
+              onCustom={(c) => onChange({ color_contrast_custom: c })}
             />
           </Section>
 
           <Section label="Saturation">
-            <ChipRow
+            <ChipRowWithOther
               options={SATURATIONS}
               current={value.saturation}
+              custom={value.saturation_custom}
+              placeholder="e.g. muted except for product hue"
               onPick={(v) => onChange({ saturation: v as Saturation | undefined })}
+              onCustom={(c) => onChange({ saturation_custom: c })}
             />
           </Section>
 
@@ -284,10 +290,13 @@ export function Step5Photography({
             expandable
           >
             {(expanded) => (
-              <ChipRow
+              <ChipRowWithOther
                 options={finishes(expanded)}
                 current={value.finish}
+                custom={value.finish_custom}
+                placeholder="e.g. Portra 400 film grade, soft halation"
                 onPick={(v) => onChange({ finish: v as SceneFinish | undefined })}
+                onCustom={(c) => onChange({ finish_custom: c })}
               />
             )}
           </Section>
