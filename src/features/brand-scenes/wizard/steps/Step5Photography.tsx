@@ -88,175 +88,201 @@ export function Step5Photography({
   const sceneType = value.scene_type as SceneTypeId | undefined;
 
   return (
-    <div className="space-y-10">
-      <Section
-        label="Lens"
-        tooltip="Wide = roomy and dramatic. Long = compressed and flattering."
-        expandable
-      >
-        {(expanded) => (
-          <ChipRow
-            options={lenses(expanded)}
-            current={value.lens}
-            onPick={(v) => onChange({ lens: v as SceneLens | undefined })}
-          />
-        )}
-      </Section>
+    <div className="space-y-12">
+      <div>
+        <ChapterHeading>Lens & focus</ChapterHeading>
+        <div className="space-y-10">
+          <Section
+            label="Lens"
+            tooltip="Wide = roomy and dramatic. Long = compressed and flattering."
+            expandable
+          >
+            {(expanded) => (
+              <ChipRow
+                options={lenses(expanded)}
+                current={value.lens}
+                onPick={(v) => onChange({ lens: v as SceneLens | undefined })}
+              />
+            )}
+          </Section>
 
-      <Section
-        label="Background blur"
-        tooltip="Shallow = creamy bokeh behind the product. Deep = everything in focus."
-        expandable
-      >
-        {(expanded) => (
-          <ChipRow
-            options={dofs(expanded)}
-            current={value.depth_of_field}
-            onPick={(v) =>
-              onChange({ depth_of_field: v as SceneDepthOfField | undefined })
-            }
-          />
-        )}
-      </Section>
+          <Section
+            label="Background blur"
+            tooltip="Shallow = creamy bokeh behind the product. Deep = everything in focus."
+            expandable
+          >
+            {(expanded) => (
+              <ChipRow
+                options={dofs(expanded)}
+                current={value.depth_of_field}
+                onPick={(v) =>
+                  onChange({ depth_of_field: v as SceneDepthOfField | undefined })
+                }
+              />
+            )}
+          </Section>
 
-      <Section label="Composition">
-        <ChipRow
-          options={COMPOSITIONS}
-          current={value.composition}
-          onPick={(v) => onChange({ composition: v as Composition | undefined })}
-        />
-      </Section>
-
-      <Section label="Negative space">
-        <ChipRow
-          options={NEG_SPACE_INTENTS}
-          current={value.negative_space_intent}
-          onPick={(v) =>
-            onChange({ negative_space_intent: v as NegSpaceIntent | undefined })
-          }
-        />
-      </Section>
-
-      <Section label="Focus">
-        <ChipRow
-          options={SUBJECT_FOCUSES}
-          current={value.subject_focus}
-          onPick={(v) => onChange({ subject_focus: v as SubjectFocus | undefined })}
-        />
-      </Section>
-
-      <Section label="Shadows">
-        <ChipRow
-          options={SHADOWS}
-          current={value.shadows}
-          onPick={(v) => onChange({ shadows: v as Shadow | undefined })}
-        />
-      </Section>
-
-      <Section label="Realism">
-        <ChipRow
-          options={REALISM_LEVELS}
-          current={value.realism}
-          onPick={(v) => onChange({ realism: v as RealismLevel | undefined })}
-        />
-      </Section>
-
-      <Section label="Color palette" expandable>
-        {(expanded) => (
-          <PaletteBlock
-            presets={palettes(expanded)}
-            preset={value.palette_preset}
-            custom={value.palette_custom}
-            onPreset={(p) =>
-              onChange({ palette_preset: p, palette_custom: undefined })
-            }
-            onCustom={(c) =>
-              onChange({ palette_custom: c, palette_preset: undefined })
-            }
-          />
-        )}
-      </Section>
-
-      <Section label="Contrast">
-        <ChipRow
-          options={COLOR_CONTRASTS}
-          current={value.color_contrast}
-          onPick={(v) => onChange({ color_contrast: v as ColorContrast | undefined })}
-        />
-      </Section>
-
-      <Section label="Saturation">
-        <ChipRow
-          options={SATURATIONS}
-          current={value.saturation}
-          onPick={(v) => onChange({ saturation: v as Saturation | undefined })}
-        />
-      </Section>
-
-      <Section
-        label="Finish"
-        tooltip="The final grade — clean digital, filmic, glossy magazine, etc."
-        expandable
-      >
-        {(expanded) => (
-          <ChipRow
-            options={finishes(expanded)}
-            current={value.finish}
-            onPick={(v) => onChange({ finish: v as SceneFinish | undefined })}
-          />
-        )}
-      </Section>
-
-      {(() => {
-        const ctx: SceneCtx = {
-          module,
-          sub_family: subFamily,
-          scene_type: sceneType,
-          setting: value.setting,
-          cast: castPreset,
-          values: { ...(value.extras ?? {}), _weather: value.weather },
-          auto: value.auto ?? {},
-          recommendations: value.recommendations ?? {},
-        };
-        const fields = applicableFieldsCtx(SCENE_EXTRAS_FIELDS, ctx).filter(
-          (f) => PHOTO_EXTRAS_KEYS.includes(f.key),
-        );
-
-        const renderField = (f: typeof fields[number]) => {
-          const resolvedF = f.presetsResolver
-            ? { ...f, presets: f.presetsResolver(ctx) }
-            : f;
-          const writeCtx: SceneCtx = { ...ctx, values: value.extras ?? {} };
-          return (
-            <ExtrasPillField
-              key={f.key}
-              field={resolvedF}
-              showAllInitially
-              value={value.extras?.[f.key]}
-              autoFilled={!!value.auto?.[f.key]}
-              recommended={value.recommendations?.[f.key]}
-              onChange={(next) => {
-                const { values, auto, recommendations } = applyCascade(
-                  f.key,
-                  next,
-                  writeCtx,
-                );
-                const cleaned: Record<string, string> = {};
-                for (const [k, v] of Object.entries(values))
-                  if (v !== undefined) cleaned[k] = v;
-                onChange({ extras: cleaned, auto, recommendations });
-              }}
+          <Section label="Focus">
+            <ChipRow
+              options={SUBJECT_FOCUSES}
+              current={value.subject_focus}
+              onPick={(v) => onChange({ subject_focus: v as SubjectFocus | undefined })}
             />
-          );
-        };
+          </Section>
 
-        const ordered = [...fields].sort(
-          (a, b) =>
-            PHOTO_EXTRAS_KEYS.indexOf(a.key) -
-            PHOTO_EXTRAS_KEYS.indexOf(b.key),
-        );
-        return <>{ordered.map(renderField)}</>;
-      })()}
+          <Section label="Shadows">
+            <ChipRow
+              options={SHADOWS}
+              current={value.shadows}
+              onPick={(v) => onChange({ shadows: v as Shadow | undefined })}
+            />
+          </Section>
+        </div>
+      </div>
+
+      <div>
+        <ChapterHeading>Composition</ChapterHeading>
+        <div className="space-y-10">
+          <Section label="Composition">
+            <ChipRow
+              options={COMPOSITIONS}
+              current={value.composition}
+              onPick={(v) => onChange({ composition: v as Composition | undefined })}
+            />
+          </Section>
+
+          <Section label="Negative space">
+            <ChipRow
+              options={NEG_SPACE_INTENTS}
+              current={value.negative_space_intent}
+              onPick={(v) =>
+                onChange({ negative_space_intent: v as NegSpaceIntent | undefined })
+              }
+            />
+          </Section>
+
+          <Section label="Realism">
+            <ChipRow
+              options={REALISM_LEVELS}
+              current={value.realism}
+              onPick={(v) => onChange({ realism: v as RealismLevel | undefined })}
+            />
+          </Section>
+
+          {(() => {
+            const ctx: SceneCtx = {
+              module,
+              sub_family: subFamily,
+              scene_type: sceneType,
+              setting: value.setting,
+              cast: castPreset,
+              values: { ...(value.extras ?? {}), _weather: value.weather },
+              auto: value.auto ?? {},
+              recommendations: value.recommendations ?? {},
+            };
+            const fields = applicableFieldsCtx(SCENE_EXTRAS_FIELDS, ctx).filter(
+              (f) => PHOTO_EXTRAS_KEYS.includes(f.key),
+            );
+
+            const renderField = (f: typeof fields[number]) => {
+              const resolvedF = f.presetsResolver
+                ? { ...f, presets: f.presetsResolver(ctx) }
+                : f;
+              const writeCtx: SceneCtx = { ...ctx, values: value.extras ?? {} };
+              return (
+                <ExtrasPillField
+                  key={f.key}
+                  field={resolvedF}
+                  showAllInitially
+                  value={value.extras?.[f.key]}
+                  autoFilled={!!value.auto?.[f.key]}
+                  recommended={value.recommendations?.[f.key]}
+                  onChange={(next) => {
+                    const { values, auto, recommendations } = applyCascade(
+                      f.key,
+                      next,
+                      writeCtx,
+                    );
+                    const cleaned: Record<string, string> = {};
+                    for (const [k, v] of Object.entries(values))
+                      if (v !== undefined) cleaned[k] = v;
+                    onChange({ extras: cleaned, auto, recommendations });
+                  }}
+                />
+              );
+            };
+
+            const ordered = [...fields].sort(
+              (a, b) =>
+                PHOTO_EXTRAS_KEYS.indexOf(a.key) -
+                PHOTO_EXTRAS_KEYS.indexOf(b.key),
+            );
+            return <>{ordered.map(renderField)}</>;
+          })()}
+        </div>
+      </div>
+
+      <div>
+        <ChapterHeading>Color & finish</ChapterHeading>
+        <div className="space-y-10">
+          <Section label="Color palette" expandable>
+            {(expanded) => (
+              <PaletteBlock
+                presets={palettes(expanded)}
+                preset={value.palette_preset}
+                custom={value.palette_custom}
+                onPreset={(p) =>
+                  onChange({ palette_preset: p, palette_custom: undefined })
+                }
+                onCustom={(c) =>
+                  onChange({ palette_custom: c, palette_preset: undefined })
+                }
+              />
+            )}
+          </Section>
+
+          <Section label="Contrast">
+            <ChipRow
+              options={COLOR_CONTRASTS}
+              current={value.color_contrast}
+              onPick={(v) => onChange({ color_contrast: v as ColorContrast | undefined })}
+            />
+          </Section>
+
+          <Section label="Saturation">
+            <ChipRow
+              options={SATURATIONS}
+              current={value.saturation}
+              onPick={(v) => onChange({ saturation: v as Saturation | undefined })}
+            />
+          </Section>
+
+          <Section
+            label="Finish"
+            tooltip="The final grade — clean digital, filmic, glossy magazine, etc."
+            expandable
+          >
+            {(expanded) => (
+              <ChipRow
+                options={finishes(expanded)}
+                current={value.finish}
+                onPick={(v) => onChange({ finish: v as SceneFinish | undefined })}
+              />
+            )}
+          </Section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-14 mb-6 first:mt-0">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        {children}
+      </div>
+      <div className="mt-3 h-px bg-border/70" />
     </div>
   );
 }
