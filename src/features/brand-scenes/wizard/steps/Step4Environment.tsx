@@ -119,7 +119,7 @@ export function Step4Environment({
   const hasSceneType = !!sceneType;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-10">
       <Section
         label="Scene type"
         helper="Pick this first — everything else tunes to it."
