@@ -199,8 +199,10 @@ export function Step4Cast({
               interaction: "Interaction",
               styling: "Styling",
             };
-            const done =
+            const headlineAnswered =
               getSubStepDisabledReason(t, answers, { module, subFamily, isReference }) === null;
+            const visited = visitedSubSteps?.has(t) ?? (t === subStep);
+            const done = headlineAnswered && visited;
             return (
               <button
                 key={t}
@@ -223,9 +225,11 @@ export function Step4Cast({
               </button>
             );
           })}
-          <div className="ml-auto pb-3 text-[10px] uppercase tracking-widest text-muted-foreground/60">
-            Step {Math.max(1, flow.visibleTabs.indexOf(subStep) + 1)} of {flow.visibleTabs.length}
-          </div>
+          {subStep !== "look" && (
+            <div className="ml-auto pb-3 text-[10px] uppercase tracking-widest text-muted-foreground/60">
+              Step {Math.max(1, flow.visibleTabs.indexOf(subStep) + 1)} of {flow.visibleTabs.length}
+            </div>
+          )}
         </div>
       )}
 
@@ -236,16 +240,28 @@ export function Step4Cast({
             <BranchCard
               active={mode === "skip"}
               title="Auto-cast"
-              body="We'll pick cast, scale and interaction for you"
+              body="We pick cast, interaction and scale"
+              recommended
               onClick={() => setMode("skip")}
             />
             <BranchCard
               active={mode === "yes"}
               title="Design the look"
-              body="Walk through People, Interaction and Styling"
+              body="Choose cast, interaction and styling yourself"
+              secondary
               onClick={() => setMode("yes")}
             />
           </div>
+          <p className="mx-auto max-w-2xl mt-3 text-[11px] text-muted-foreground text-center">
+            You can switch any time — your picks won't be lost
+          </p>
+          {mode === "skip" && (
+            <AutoCastSummary
+              cast={cast}
+              scale={scale}
+              onJumpToEssentials={() => onSubStepChange?.("essentials")}
+            />
+          )}
         </div>
       )}
 
