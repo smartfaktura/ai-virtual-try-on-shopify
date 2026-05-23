@@ -25,6 +25,7 @@ import { SceneTypePicker } from "../components/SceneTypePicker";
 import { SettingPicker } from "../components/SettingPicker";
 import { BackdropColorField } from "../components/BackdropColorField";
 import { getSettingPool, type SceneTypeId } from "../registry/settingsBySubfamily";
+import { getSettingDescriptions } from "../registry/settingDescriptions";
 import {
   applyCascade,
   applySettingCascade,
@@ -78,6 +79,10 @@ export function Step4Environment({
   const settingPool = useMemo(
     () => getSettingPool(module, subFamily, sceneType),
     [module, subFamily, sceneType],
+  );
+  const settingDescriptions = useMemo(
+    () => getSettingDescriptions(module, subFamily),
+    [module, subFamily],
   );
 
   const ctxBase: Omit<SceneCtx, "values" | "auto" | "recommendations"> = {
@@ -143,6 +148,7 @@ export function Step4Environment({
                 options={settingPool}
                 value={value.setting}
                 onChange={handleSetting}
+                descriptions={settingDescriptions}
               />
             </Section>
           )}
