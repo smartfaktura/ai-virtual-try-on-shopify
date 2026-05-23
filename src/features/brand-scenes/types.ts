@@ -113,6 +113,7 @@ export interface BrandSceneCast {
   vibe?: CastVibe;
   interaction?: CastInteraction;
   action?: CastAction;
+  action_note?: string;
   note?: string;
   wardrobe_color?: WardrobeColor;
   wardrobe_custom?: string;

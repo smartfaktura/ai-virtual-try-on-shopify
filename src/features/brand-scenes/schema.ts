@@ -172,10 +172,15 @@ const castInteractionSchema = z.enum([
   "hero",
 ]);
 const castActionSchema = z.enum([
-  "still",
+  "standing",
+  "seated",
+  "crossed_legs",
+  "leaning",
+  "kneeling",
   "walking",
   "motion",
-  "seated",
+  "jumping",
+  "still",
   "candid",
 ]);
 
@@ -203,6 +208,7 @@ export const brandSceneCastSchema = z
     vibe: castVibeSchema.optional(),
     interaction: castInteractionSchema.optional(),
     action: castActionSchema.optional(),
+    action_note: z.string().trim().min(1).max(80).optional(),
     note: z.string().trim().max(160).optional(),
     wardrobe_color: wardrobeColorSchema.optional(),
     wardrobe_custom: z.string().trim().min(1).max(120).optional(),

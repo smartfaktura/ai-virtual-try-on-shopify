@@ -27,6 +27,7 @@ export interface CastInput {
   vibe?: CastVibe;
   interaction?: CastInteraction;
   action?: CastAction;
+  action_note?: string;
   note?: string;
   wardrobe_color?: WardrobeColor;
   wardrobe_custom?: string;
@@ -55,10 +56,15 @@ const INTERACTION: Record<CastInteraction, string> = {
 };
 
 const ACTION: Record<CastAction, string> = {
-  still: "still and composed",
+  standing: "standing upright with weight balanced naturally",
+  seated: "seated naturally",
+  crossed_legs: "seated with legs crossed",
+  leaning: "leaning casually against a surface",
+  kneeling: "in a low kneeling or crouched pose",
   walking: "walking through frame",
   motion: "captured mid-motion",
-  seated: "seated naturally",
+  jumping: "captured mid-jump with both feet off the ground",
+  still: "still and composed",
   candid: "a candid in-between moment",
 };
 
@@ -99,7 +105,11 @@ export function buildCastDirective(cast: CastInput): string {
   const hands = metaX(HANDS_ON_PRODUCT, cast.hands_on_product);
   if (hands) parts.push(`Hands: ${hands.directive}.`);
 
-  if (cast.action) parts.push(`Energy: ${ACTION[cast.action]}.`);
+  if (cast.action_note?.trim()) {
+    parts.push(`Pose: ${cast.action_note.trim()}.`);
+  } else if (cast.action) {
+    parts.push(`Pose: ${ACTION[cast.action]}.`);
+  }
 
   const bodyPart = metaX(BODY_PART_FOCUS, cast.body_part_focus);
   if (bodyPart) parts.push(`Body-part focus: ${bodyPart.label.toLowerCase()}.`);
