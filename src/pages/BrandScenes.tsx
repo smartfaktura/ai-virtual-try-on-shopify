@@ -151,8 +151,8 @@ function SceneCard({
     : null;
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden border border-border bg-card">
-      <div className="aspect-[4/5] bg-muted overflow-hidden">
+    <div className="group relative rounded-2xl overflow-hidden border border-border bg-card flex flex-col">
+      <div className="relative aspect-[4/5] bg-muted overflow-hidden">
         {imgSrc ? (
           <img
             src={imgSrc}
@@ -165,39 +165,39 @@ function SceneCard({
             <Mountain className="w-8 h-8 text-muted-foreground/40" />
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label="Delete brand scene"
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-background transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
 
-      <div className="p-3">
-        <h3 className="text-sm font-semibold text-foreground tracking-tight truncate">
-          {scene.title}
-        </h3>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
-          {new Date(scene.created_at).toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-          {scene.brand_scene_module ? ` · ${scene.brand_scene_module}` : ''}
-        </p>
-      </div>
+      <div className="p-3.5 flex flex-col gap-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight truncate">
+            {scene.title}
+          </h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+            {new Date(scene.created_at).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+            {scene.brand_scene_module ? ` · ${scene.brand_scene_module}` : ''}
+          </p>
+        </div>
 
-      <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-background/95 via-background/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between gap-2">
         <Button
           size="sm"
           onClick={onUse}
-          className="rounded-full gap-1.5 h-8 px-3 text-xs"
+          className="rounded-full gap-1.5 h-8 px-3 text-xs w-full sm:w-auto sm:self-start"
         >
           <Wand2 className="w-3.5 h-3.5" />
           Use scene
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onDelete}
-          className="rounded-full h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-          aria-label="Delete brand scene"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
         </Button>
       </div>
     </div>
