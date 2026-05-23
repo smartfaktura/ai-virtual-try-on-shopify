@@ -37,6 +37,7 @@ export interface CastInput {
   hands_on_product?: HandsOnProduct;
   diversity?: Diversity;
   model_ref?: { name?: string } | undefined;
+  model_refs?: Array<{ name?: string; gender?: string; ageRange?: string }> | undefined;
 }
 
 const PRESET_PEOPLE: Record<CastPreset, string> = {
