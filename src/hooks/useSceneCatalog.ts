@@ -152,6 +152,43 @@ export function useSceneRail(
     },
   });
 }
+/**
+ * User's own saved Brand Scenes, optionally filtered by the same family /
+ * sub-family expansion the Freestyle modal already uses. RLS restricts
+ * visibility to the owner, so no extra user_id filter is needed.
+ */
+export function useUserBrandScenes(
+  family: string | null | undefined,
+  categoryCollection: string | null | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ['user-brand-scenes', family ?? null, categoryCollection ?? null],
+    enabled,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      let q: any = supabase
+        .from('product_image_scenes')
+        .select(SLIM_COLUMNS)
+        .eq('is_active', true)
+        .eq('is_brand_scene', true)
+        .order('created_at', { ascending: false })
+        .limit(24);
+
+      if (categoryCollection) {
+        q = q.eq('category_collection', categoryCollection);
+      } else {
+        const familyCollections = familyToCollections(family);
+        if (familyCollections.length) q = q.in('category_collection', familyCollections);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as CatalogScene[];
+    },
+  });
+}
+
 
 /**
  * One-shot fetch of the active scene catalog for the default "All scenes" view.

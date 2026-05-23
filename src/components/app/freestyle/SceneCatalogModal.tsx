@@ -14,7 +14,8 @@ import {
 } from './SceneCatalogFilters';
 import { SceneCatalogSidebar, type QuickView } from './SceneCatalogSidebar';
 import { SceneCatalogGrid } from './SceneCatalogGrid';
-import { useSceneCatalog, useInterleavedSceneCatalog, type CatalogScene } from '@/hooks/useSceneCatalog';
+import { SceneCatalogCard } from './SceneCatalogCard';
+import { useSceneCatalog, useInterleavedSceneCatalog, useUserBrandScenes, type CatalogScene } from '@/hooks/useSceneCatalog';
 import { useSceneCounts } from '@/hooks/useSceneCounts';
 import { useRecommendedScenes } from '@/hooks/useRecommendedScenes';
 import { useCustomScenes, type CustomScene } from '@/hooks/useCustomScenes';
@@ -152,6 +153,9 @@ export function SceneCatalogModal({
     userPrefs?.subtypes ?? [],
   );
   const counts = useSceneCounts();
+
+  // User's own saved Brand Scenes — surfaced as a labeled strip above the grid.
+  const brandScenes = useUserBrandScenes(family, categoryCollection, open);
 
   // Custom scenes kept only to resolve `cs-` selection IDs from prior sessions.
   const customScenesQuery = useCustomScenes();
@@ -349,6 +353,27 @@ export function SceneCatalogModal({
 
           <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
             <div className="px-4 sm:px-6 py-4 space-y-4">
+              {(brandScenes.data?.length ?? 0) > 0 && quickView !== 'recommended' && (
+                <section className="space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      Brand Scenes
+                    </h3>
+                    <span className="text-[10px] text-muted-foreground/70">Your saved</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {brandScenes.data!.map(s => (
+                      <SceneCatalogCard
+                        key={s.id}
+                        scene={s}
+                        selected={currentSelectedId === s.scene_id}
+                        onSelect={handleSelect}
+                      />
+                    ))}
+                  </div>
+                  <div className="h-px bg-border/40 mt-4" />
+                </section>
+              )}
               {showRails ? (() => {
                 const fullList = interleavedGrid.data?.pages?.[0] ?? [];
                 const visible = fullList.slice(0, visiblePageCount * PAGE_SIZE);

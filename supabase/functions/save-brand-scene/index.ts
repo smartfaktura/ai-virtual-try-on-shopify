@@ -82,6 +82,12 @@ serve(async (req) => {
     const module: string = answers.module ?? "fashion";
     const sceneType: string = answers?.base?.scene_type ?? "packshot";
     const description = compiledPrompt.split(/[\.\n]/)[0]?.slice(0, 200) ?? "";
+    // Schema invariant: category_collection MUST equal answers.sub_family so the
+    // scene shows up in the matching category inside the Product Visuals + Freestyle pickers.
+    const subFamily: string | null =
+      typeof answers?.sub_family === "string" && answers.sub_family.trim()
+        ? answers.sub_family.trim()
+        : null;
 
     const { data: row, error: insertError } = await supabaseAdmin
       .from("product_image_scenes")
@@ -92,7 +98,9 @@ serve(async (req) => {
         prompt_template: compiledPrompt,
         preview_image_url: pickedVariationUrl,
         scene_type: sceneType,
-        category_collection: null,
+        category_collection: subFamily,
+        sub_category: "Brand Scenes",
+        sub_category_sort_order: -1000,
         is_active: true,
         sort_order: 0,
         is_brand_scene: true,
