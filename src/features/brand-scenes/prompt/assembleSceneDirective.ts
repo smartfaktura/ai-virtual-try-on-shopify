@@ -35,6 +35,11 @@ import {
   OUTFIT_FOOTWEAR,
 } from "../wizard/constants/outfit";
 import { resolveSubfamilyGuide } from "../wizard/registry/subfamilyGuides";
+import {
+  LINGERIE_CAMERA_ANGLES,
+  LINGERIE_FRAMINGS,
+  LINGERIE_MOODS,
+} from "../wizard/registry/lingerieCast";
 import { CAST_PRESETS_WITH_PEOPLE } from "../wizard/constants/cast";
 
 /**
