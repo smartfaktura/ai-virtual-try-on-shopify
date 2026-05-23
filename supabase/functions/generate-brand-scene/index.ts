@@ -127,9 +127,15 @@ serve(async (req) => {
     const body = await req.json();
     const compiledPrompt: string = (body.compiledPrompt ?? "").toString();
     const referenceImageUrl: string | undefined = body.referenceImageUrl;
+    const sceneName: string = (body.name ?? "").toString().trim();
 
     if (!compiledPrompt.trim()) {
       return new Response(JSON.stringify({ error: "compiledPrompt is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (sceneName.length < 2) {
+      return new Response(JSON.stringify({ error: "Name this scene before generating", code: "NAME_REQUIRED" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
