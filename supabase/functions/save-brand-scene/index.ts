@@ -119,10 +119,20 @@ serve(async (req) => {
       });
     }
 
-    // Validate the URL belongs to this user's storage prefix (anti-spoof).
+    // Validate URL: must be on this project's Supabase storage, in scratch-uploads
+    // bucket, under THIS user's brand-scenes prefix (anti-spoof + SSRF guard).
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const projectHost = new URL(SUPABASE_URL).host;
+    let parsed: URL | null = null;
+    try { parsed = new URL(pickedVariationUrl); } catch { /* noop */ }
     const expectedSegment = `/${user.id}/brand-scenes/`;
-    if (!pickedVariationUrl.includes(expectedSegment)) {
-      console.warn(`save-brand-scene: URL prefix mismatch for user ${user.id}: ${pickedVariationUrl}`);
+    const hostOk = parsed && (parsed.protocol === "https:") &&
+      (parsed.host === projectHost || parsed.host.endsWith(".supabase.co"));
+    const pathOk = parsed &&
+      parsed.pathname.includes("/storage/v1/object/public/scratch-uploads/") &&
+      parsed.pathname.includes(expectedSegment);
+    if (!hostOk || !pathOk) {
+      console.warn(`save-brand-scene: URL rejected for user ${user.id}: ${pickedVariationUrl}`);
       return new Response(JSON.stringify({ error: "Invalid image URL" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
