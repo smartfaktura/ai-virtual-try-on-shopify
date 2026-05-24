@@ -42,11 +42,28 @@ interface Props {
   onNegativeNoteChange?: (note: string) => void;
   onNameChange?: (name: string) => void;
   onBack?: () => void;
+  cache?: {
+    promptHash: string;
+    variations: GeneratedVariation[];
+    selectedUrl: string | null;
+  } | null;
+  onCacheChange?: (
+    next: { promptHash: string; variations: GeneratedVariation[]; selectedUrl: string | null } | null,
+  ) => void;
+  promptHash?: string;
 }
 
 type Phase = "idle" | "generating" | "picking" | "saving";
 
-export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange, onBack }: Props) {
+export function Step6PreviewAndPick({
+  answers,
+  onNegativeNoteChange,
+  onNameChange,
+  onBack,
+  cache,
+  onCacheChange,
+  promptHash,
+}: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
   const { isAdmin } = useIsAdminSafe();
   const { refreshBalance } = useCredits();
@@ -54,13 +71,21 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   const [showPrompt, setShowPrompt] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
 
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [variations, setVariations] = useState<GeneratedVariation[]>([]);
-  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  // Restore cached variations if returning to step 6 with same prompt.
+  const initialFromCache = cache && cache.promptHash === promptHash ? cache : null;
+  const [phase, setPhase] = useState<Phase>(initialFromCache ? "picking" : "idle");
+  const [variations, setVariations] = useState<GeneratedVariation[]>(
+    initialFromCache?.variations ?? [],
+  );
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(
+    initialFromCache?.selectedUrl ?? null,
+  );
   const [confirmRegenOpen, setConfirmRegenOpen] = useState(false);
   // Idempotency lock — prevents double-deduct on fast double-click before
   // React commits the phase state change.
   const inFlightRef = useRef(false);
+  // Mirror of the ref so the button visibly disables before phase flips.
+  const [submitting, setSubmitting] = useState(false);
 
 
   const trimmedName = answers.name?.trim() ?? "";
