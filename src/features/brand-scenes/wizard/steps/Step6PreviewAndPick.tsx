@@ -203,6 +203,7 @@ export function Step6PreviewAndPick({
         pickedVariationUrl: selectedUrl,
         compiledPrompt: persistedPrompt,
       });
+      onCacheChange?.(null);
       toast.success("Saved to your library");
       navigate("/app/brand-scenes");
     } catch (e) {
