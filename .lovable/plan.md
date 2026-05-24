@@ -1,95 +1,110 @@
+# Sub-family stock products for Brand Scene previews
 
-# Brand Scene Preview — Stock Product Reference
+Add one specific stock product placeholder per sub_family across all 12 modules, so the Step 6 preview shows the *right* kind of product (caps for caps, beanies for beanies, sneakers for sneakers, etc.) instead of the module-level generic.
 
-## Problem
+No schema changes, no code changes — pure data seed into the existing `brand_scene_stock_products` table. Module-level fallbacks already in place stay as the safety net for any unseeded sub_family.
 
-In `/app/brand-scenes/new` Step 6, the live preview generates an empty environment. Users see "a scene" but not how a product would sit inside it. The `[PRODUCT IMAGE]` token only gets injected at *save time* via `injectReferenceTokens`, so the preview never has a stand-in.
+## Seed plan — one row per sub_family
 
-## Goal
+All `image_url` values are pulled from existing canonical `front-view-*` / `ghost-mannequin-*` scene previews in `product_image_scenes`.
 
-For the **preview only**, pass a category-matched stock product image into Gemini alongside the existing reference + model images. The saved `prompt_template` stays token-based and unchanged, so when end users later apply the scene to *their own* product, the existing `generate-workflow` substitution keeps working.
+### Fashion (9 sub_families)
+| sub_family | placeholder | source scene |
+|---|---|---|
+| garments | Ghost Mannequin Garment | `ghost-mannequin-clothing` |
+| hoodies | Ghost Mannequin Hoodie | `ghost-mannequin-hoodies` |
+| dresses | Ghost Mannequin Dress | `ghost-mannequin-dresses` |
+| jeans | Ghost Mannequin Jeans | `ghost-mannequin-jeans` |
+| jackets | Ghost Mannequin Jacket | `ghost-mannequin-jackets` |
+| activewear | Ghost Mannequin Activewear | `ghost-mannequin-activewear` |
+| swimwear | Ghost Mannequin Swimwear | `ghost-mannequin-swimwear` |
+| lingerie | Ghost Mannequin Garment *(reuses clothing)* | `ghost-mannequin-clothing` |
+| streetwear | Ghost Mannequin Hoodie *(reuses hoodie)* | `ghost-mannequin-hoodies` |
 
-## Scope (safe, additive)
+### Footwear (4)
+| shoes | Front View Shoe | `front-view-shoes` |
+| sneakers | Front View Sneaker | `front-view-shoes-sneakers` |
+| boots | Front View Boot | `front-view-shoes-boots` |
+| high-heels | Front View High Heel | `front-view-shoes-highheels` |
 
-Only the preview path is touched. No changes to:
-- The saved scene `prompt_template` format
-- `injectReferenceTokens` behavior
-- Downstream `generate-workflow` substitution
-- Credit costs, RLS, or auth
+### Bags & Accessories (5)
+| bags-accessories | Front View Bag | `front-view-bags` |
+| backpacks | Front View Backpack | `front-view-bags-backpacks` |
+| wallets-cardholders | Front View Wallet | `front-view-bags-wallets` |
+| belts | Front View Belt | `front-view-bags-belts` |
+| scarves | Front View Scarf | `front-view-bags-scarves` |
 
-## Plan
+### Hats, Caps & Beanies (3)
+| caps | Front View Cap | `front-view-hats` |
+| hats | Front View Hat | `front-view-hats-hats` |
+| beanies | Front View Beanie | `front-view-hats-beanies` |
 
-### 1. Stock product registry (DB-backed, admin-swappable)
+### Watches (1)
+| watches | Front View Watch | `front-view-hats-watches` |
 
-New table `brand_scene_stock_products`:
-- `module` (text, matches `BrandSceneModule`)
-- `sub_family` (text, nullable — matches the wizard sub-family key)
-- `image_url` (text)
-- `label` (text — internal name, e.g. "Activewear Ghost Mannequin Tank")
-- `sort_order` (int)
-- `is_active` (bool)
+### Eyewear (1)
+| eyewear | Front View Eyewear | `front-view-hats-eyewear` |
 
-RLS:
-- `anon + authenticated` SELECT where `is_active = true`
-- Admin-only insert/update/delete (via `has_role(auth.uid(), 'admin')`)
+### Jewelry (4)
+| jewellery-rings | Front View Ring | `front-view-bags-jring` |
+| jewellery-necklaces | Front View Necklace | `front-view-bags-jneck` |
+| jewellery-bracelets | Front View Bracelet | `front-view-bags-jbrace` |
+| jewellery-earrings | Front View Ring *(reuses ring — no earring scene yet)* | `front-view-bags-jring` |
 
-Seed ~1-3 rows per active sub-family. Source images from existing `product_image_scenes.preview_image_url` for canonical ghost-mannequin / packshot scenes per category (Activewear → Ghost Mannequin, Footwear → 3/4 hero shot, Eyewear → front packshot, Fragrance → bottle packshot, etc.). Where no good canonical exists yet, leave the sub_family unseeded — code falls back to module-level row, then to no-product (current behavior).
+### Beauty & Fragrance (3)
+| beauty-skincare | Front View Skincare | `front-view-beauty` |
+| makeup-lipsticks | Front View Makeup | `front-view-makeup` |
+| fragrance | Front View Fragrance | `clean-packshot-fragrance` |
 
-### 2. Lookup hook
+### Home (2)
+| home-decor | Front View Home Decor | `front-view-home` |
+| furniture | Front View Home Decor *(reuses decor — no furniture scene yet)* | `front-view-home` |
 
-New `src/features/brand-scenes/wizard/hooks/useStockProductForScene.ts`:
-- Args: `{ module, sub_family }`
-- Returns: `{ url, label } | null`
-- Order: exact `(module, sub_family)` → first `(module, sub_family = null)` → null
-- React Query, 10 min `staleTime`
+### Tech (1)
+| tech-devices | Front View Tech Device | `front-view-tech` |
 
-### 3. Edge function: `generate-brand-scene`
+### Food & Drink (3)
+| food | Front View Food | `front-view-food-only` |
+| beverages | Front View Beverage | `front-view-bev` |
+| snacks-food | Front View Food *(reuses food — no snack scene yet)* | `front-view-food-only` |
 
-Add `productImageUrl?: string` to body. When present:
-- Fetch via existing `urlToInlineData`
-- Push as a *third* `inlineData` part, ordered: model → reference → **product** → text
-- Prepend a small system line to the prompt:
+### Wellness (1)
+| supplements-wellness | Front View Supplements | `front-view-supplements` |
 
-  > `[STOCK PRODUCT] is a placeholder showing how a representative product sits in this scene. Render the scene with a hero product in this position, exact silhouette / materials of the placeholder. End users will swap their own product in later — do not invent labels or branding.`
+**Total: 37 sub_family rows** added on top of the existing 12 module-level fallbacks.
 
-This is preview-only; saved prompt is untouched.
+## How resolution works after the seed
 
-### 4. Frontend wiring
+`useStockProductForScene(module, sub_family)` already does:
 
-`src/features/brand-scenes/api/brandSceneApi.ts`:
-- Add `productImageUrl?: string` to `generateBrandScene` args, pass through.
+1. exact `(module, sub_family)` match — now hits for every sub_family above
+2. module-level fallback (`sub_family IS NULL`) — still covers any new sub_family that gets added later
+3. null — silent fallback to current empty-environment behavior
 
-`src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`:
-- Call `useStockProductForScene(module, sub_family)`
-- Pass `productImageUrl` to `generateBrandScene`
-- Show a small disclosure under the "Ready to generate" card:
-  > "Preview uses a representative `{label}` so you can see scale and placement. When you apply this scene to your products, your actual item replaces it."
-- If lookup returns null, fall back silently to current behavior.
+No edge-function, hook, wizard, or UI changes needed.
 
-### 5. Save path — unchanged
+## Reused placeholders (flagged honestly)
 
-`save-brand-scene` still runs `injectReferenceTokens`, which produces `[PRODUCT IMAGE]` tokens in the stored template. No behavior change for end users applying the scene.
+These five sub_families get a *close-relative* placeholder rather than a perfect match because no canonical scene exists yet:
+
+- `lingerie` → ghost-mannequin garment
+- `streetwear` → ghost-mannequin hoodie
+- `jewellery-earrings` → ring close-up
+- `furniture` → home decor
+- `snacks-food` → food packshot
+
+When admins later upload dedicated previews for those, a single `UPDATE` swaps the row — no code touch.
 
 ## Out of scope
 
-- User-uploaded custom placeholders (future "Advanced" option)
-- Admin UI for the new table (seed via migration; CRUD UI later if needed)
-- Changes to non-wizard generation paths
+- Building an admin UI for `brand_scene_stock_products` (still seed-only)
+- Generating new canonical packshots for the 5 reused slots
+- Any change to the preview pipeline, prompt, or save flow
 
 ## Files touched
 
 ```
-NEW  supabase/migrations/{ts}_brand_scene_stock_products.sql
-NEW  src/features/brand-scenes/wizard/hooks/useStockProductForScene.ts
-EDIT supabase/functions/generate-brand-scene/index.ts
-EDIT src/features/brand-scenes/api/brandSceneApi.ts
-EDIT src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx
+Data only — one INSERT batch into brand_scene_stock_products
 ```
 
-## Risks & mitigations
-
-- **Wrong placeholder picked** → Sub-family granularity + admin-swappable rows + silent fallback to no-product.
-- **Gemini fuses placeholder into the saved look** → Preview-only; saved template never references the stock image. Explicit "placeholder, swap later" wording in the preview prompt.
-- **Extra image cost** → Same Gemini call, +1 inlineData part. No extra credits charged.
-
-Approve and I'll ship the migration + seed first, then the edge function, then the wizard wiring.
+Approve and I'll run the seed in a single insert call.
