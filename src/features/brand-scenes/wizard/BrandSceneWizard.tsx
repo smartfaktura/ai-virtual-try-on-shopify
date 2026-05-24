@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useWizardState, type WizardStep } from "./useWizardState";
 import { WizardLayout } from "./WizardLayout";
 import { Step0ChooseSource } from "./steps/Step0ChooseSource";
@@ -21,6 +21,24 @@ import { FAMILY_ID_TO_NAME, SUB_TYPES_BY_FAMILY } from "@/lib/onboardingTaxonomy
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { assembleSceneDirective } from "../prompt/assembleSceneDirective";
+import type { GeneratedVariation } from "../api/brandSceneApi";
+
+// Persists across Step 6 unmount when user navigates back/forward in the wizard,
+// so a paid generation isn't silently discarded. Tied to the compiled prompt
+// hash — if the user edits a prior step in a way that changes the prompt, the
+// stale variations are cleared automatically.
+export interface BrandSceneCache {
+  promptHash: string;
+  variations: GeneratedVariation[];
+  selectedUrl: string | null;
+}
+
+function hashPrompt(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h.toString(36);
+}
 
 
 
@@ -88,6 +106,19 @@ export function BrandSceneWizard() {
   const { subtitle } = META[step];
 
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Variation cache — survives Step6 unmount during back-navigation.
+  const [variationCache, setVariationCache] = useState<BrandSceneCache | null>(null);
+  const currentPromptHash = useMemo(
+    () => hashPrompt(assembleSceneDirective(answers)),
+    [answers],
+  );
+  // Invalidate the cache when the compiled prompt changes (user edited a prior step).
+  useEffect(() => {
+    if (variationCache && variationCache.promptHash !== currentPromptHash) {
+      setVariationCache(null);
+    }
+  }, [currentPromptHash, variationCache]);
 
   const wizardCastStep = isReference ? 4 : 3;
   const onCastStep = step === wizardCastStep;
@@ -386,6 +417,9 @@ export function BrandSceneWizard() {
             }
             onNameChange={(name) => dispatch({ type: "setName", name })}
             onBack={handleBack}
+            cache={variationCache}
+            onCacheChange={setVariationCache}
+            promptHash={currentPromptHash}
           />
         )}
       </WizardLayout>

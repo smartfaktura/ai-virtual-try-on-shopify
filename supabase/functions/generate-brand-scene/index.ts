@@ -10,6 +10,22 @@ const MAX_PROMPT_CHARS = 8000;
 const BUCKET = "scratch-uploads";
 const GENERATION_COST = 20;
 
+// SSRF guard — only allow URLs on the project's Supabase storage host.
+// Rejects internal hosts (169.254.x, localhost) and arbitrary 3rd-party domains.
+function isAllowedImageUrl(raw: string | undefined, supabaseUrl: string): boolean {
+  if (!raw) return false;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:") return false;
+    const projectHost = new URL(supabaseUrl).host;
+    const hostOk = u.host === projectHost || u.host.endsWith(".supabase.co");
+    const pathOk = u.pathname.includes("/storage/v1/object/public/");
+    return hostOk && pathOk;
+  } catch {
+    return false;
+  }
+}
+
 // ── Detect actual image format from magic bytes ──
 function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
   if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { ext: "jpg", contentType: "image/jpeg" };
@@ -191,30 +207,44 @@ serve(async (req) => {
       }
     };
 
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+
     let referenceInlineData: { mimeType: string; data: string } | undefined;
     if (referenceImageUrl) {
-      try {
-        referenceInlineData = await urlToInlineData(referenceImageUrl);
-      } catch (e) {
-        console.warn("Reference fetch failed, continuing without it:", e);
+      if (!isAllowedImageUrl(referenceImageUrl, SUPABASE_URL)) {
+        console.warn("Rejected referenceImageUrl (SSRF guard):", referenceImageUrl);
+      } else {
+        try {
+          referenceInlineData = await urlToInlineData(referenceImageUrl);
+        } catch (e) {
+          console.warn("Reference fetch failed, continuing without it:", e);
+        }
       }
     }
 
     let modelInlineData: { mimeType: string; data: string } | undefined;
     if (modelImageUrl) {
-      try {
-        modelInlineData = await urlToInlineData(modelImageUrl);
-      } catch (e) {
-        console.warn("Model reference fetch failed, continuing without it:", e);
+      if (!isAllowedImageUrl(modelImageUrl, SUPABASE_URL)) {
+        console.warn("Rejected modelImageUrl (SSRF guard):", modelImageUrl);
+      } else {
+        try {
+          modelInlineData = await urlToInlineData(modelImageUrl);
+        } catch (e) {
+          console.warn("Model reference fetch failed, continuing without it:", e);
+        }
       }
     }
 
     let productInlineData: { mimeType: string; data: string } | undefined;
     if (productImageUrl) {
-      try {
-        productInlineData = await urlToInlineData(productImageUrl);
-      } catch (e) {
-        console.warn("Stock product fetch failed, continuing without it:", e);
+      if (!isAllowedImageUrl(productImageUrl, SUPABASE_URL)) {
+        console.warn("Rejected productImageUrl (SSRF guard):", productImageUrl);
+      } else {
+        try {
+          productInlineData = await urlToInlineData(productImageUrl);
+        } catch (e) {
+          console.warn("Stock product fetch failed, continuing without it:", e);
+        }
       }
     }
 
@@ -274,12 +304,31 @@ serve(async (req) => {
       });
     }
 
+    // Partial success — proportional refund so the user only pays for what they got.
+    let finalBalance = newBalance as number | null | undefined;
+    let refundedAmount = 0;
+    if (failedCount > 0) {
+      refundedAmount = Math.floor((GENERATION_COST * failedCount) / 3);
+      if (refundedAmount > 0) {
+        try {
+          const { data: rb } = await supabaseAdmin.rpc("refund_credits", {
+            p_user_id: user.id, p_amount: refundedAmount,
+          });
+          if (typeof rb === "number") finalBalance = rb;
+        } catch (err) {
+          console.error("Partial refund failed (non-fatal):", err);
+        }
+      }
+    }
+
     return new Response(JSON.stringify({
       runId,
       variations,
       partial: failedCount > 0,
       failed_count: failedCount,
-      new_balance: newBalance,
+      credits_charged: GENERATION_COST - refundedAmount,
+      credits_refunded: refundedAmount,
+      new_balance: finalBalance,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

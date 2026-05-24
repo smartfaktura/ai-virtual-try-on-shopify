@@ -42,11 +42,28 @@ interface Props {
   onNegativeNoteChange?: (note: string) => void;
   onNameChange?: (name: string) => void;
   onBack?: () => void;
+  cache?: {
+    promptHash: string;
+    variations: GeneratedVariation[];
+    selectedUrl: string | null;
+  } | null;
+  onCacheChange?: (
+    next: { promptHash: string; variations: GeneratedVariation[]; selectedUrl: string | null } | null,
+  ) => void;
+  promptHash?: string;
 }
 
 type Phase = "idle" | "generating" | "picking" | "saving";
 
-export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChange, onBack }: Props) {
+export function Step6PreviewAndPick({
+  answers,
+  onNegativeNoteChange,
+  onNameChange,
+  onBack,
+  cache,
+  onCacheChange,
+  promptHash,
+}: Props) {
   const directive = useMemo(() => assembleSceneDirective(answers), [answers]);
   const { isAdmin } = useIsAdminSafe();
   const { refreshBalance } = useCredits();
@@ -54,13 +71,21 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   const [showPrompt, setShowPrompt] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
 
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [variations, setVariations] = useState<GeneratedVariation[]>([]);
-  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  // Restore cached variations if returning to step 6 with same prompt.
+  const initialFromCache = cache && cache.promptHash === promptHash ? cache : null;
+  const [phase, setPhase] = useState<Phase>(initialFromCache ? "picking" : "idle");
+  const [variations, setVariations] = useState<GeneratedVariation[]>(
+    initialFromCache?.variations ?? [],
+  );
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(
+    initialFromCache?.selectedUrl ?? null,
+  );
   const [confirmRegenOpen, setConfirmRegenOpen] = useState(false);
   // Idempotency lock — prevents double-deduct on fast double-click before
   // React commits the phase state change.
   const inFlightRef = useRef(false);
+  // Mirror of the ref so the button visibly disables before phase flips.
+  const [submitting, setSubmitting] = useState(false);
 
 
   const trimmedName = answers.name?.trim() ?? "";
@@ -89,9 +114,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
     }
     if (inFlightRef.current) return;
     inFlightRef.current = true;
+    setSubmitting(true);
     setPhase("generating");
     setVariations([]);
     setSelectedUrl(null);
+    onCacheChange?.(null);
     try {
       const res = await generateBrandScene({
         compiledPrompt: directive,
@@ -101,17 +128,30 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
         name: trimmedName,
       });
       setVariations(res.variations);
-      if (res.variations.length > 0) {
-        setSelectedUrl(res.variations[0].url);
-      }
+      const firstUrl = res.variations[0]?.url ?? null;
+      if (firstUrl) setSelectedUrl(firstUrl);
       setPhase("picking");
+      // Persist into wizard-level cache so back-navigation doesn't discard it.
+      if (promptHash && res.variations.length > 0) {
+        onCacheChange?.({
+          promptHash,
+          variations: res.variations,
+          selectedUrl: firstUrl,
+        });
+      }
+      const charged = typeof res.credits_charged === "number" ? res.credits_charged : BRAND_SCENE_GENERATION_COST;
       if (typeof res.new_balance === "number") {
-        toast.success(`−${BRAND_SCENE_GENERATION_COST} credits · balance ${res.new_balance}`);
+        toast.success(`−${charged} credits · balance ${res.new_balance}`);
       }
       // Sync sidebar credit chip with the server-side balance.
       refreshBalance().catch(() => {});
       if (res.partial) {
-        toast.warning(`Generated ${res.variations.length} of 3 — try again if you want more options`);
+        const refunded = res.credits_refunded ?? 0;
+        toast.warning(
+          refunded > 0
+            ? `Generated ${res.variations.length} of 3 — refunded ${refunded} credits`
+            : `Generated ${res.variations.length} of 3`,
+        );
       }
     } catch (e) {
       setPhase("idle");
@@ -128,6 +168,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       }
     } finally {
       inFlightRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -162,6 +203,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
         pickedVariationUrl: selectedUrl,
         compiledPrompt: persistedPrompt,
       });
+      onCacheChange?.(null);
       toast.success("Saved to your library");
       navigate("/app/brand-scenes");
     } catch (e) {
@@ -234,7 +276,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
             <Button
               size="pill"
               onClick={handleGenerate}
-              disabled={!nameValid}
+              disabled={!nameValid || submitting}
               className="gap-2 w-full sm:w-auto whitespace-normal text-center"
             >
               <Sparkles className="w-4 h-4 flex-shrink-0" />
@@ -274,7 +316,13 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
           <BrandSceneVariationGrid
             variations={variations}
             selectedUrl={selectedUrl}
-            onSelect={(url) => phase === "picking" && setSelectedUrl(url)}
+            onSelect={(url) => {
+              if (phase !== "picking") return;
+              setSelectedUrl(url);
+              if (promptHash) {
+                onCacheChange?.({ promptHash, variations, selectedUrl: url });
+              }
+            }}
           />
 
           <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">

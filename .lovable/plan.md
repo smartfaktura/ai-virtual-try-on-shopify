@@ -1,47 +1,52 @@
-# Brand Scenes — full audit
+# Brand Scenes — Hardening Plan
 
-Holistic review of the brand scenes feature from UX, UI, functionality, data, and backend angles. Below is what works, what's risky, and a small set of recommended fixes.
+Six fixes ordered by impact. All scoped to the brand-scenes feature.
 
-## ✅ What's solid
+## 1. SSRF protection on inbound image URLs (security — high)
+**File:** `supabase/functions/generate-brand-scene/index.ts`
 
-**Data**
-- `brand_scene_stock_products`: 49 rows total — every wizard sub_family (per `SUB_TYPES_BY_FAMILY`) has an exact match, plus one module-level fallback for safety. Resolution order in `useStockProductForScene` (exact → module → null) matches what's seeded.
-- RLS: admin-only writes; `anon + authenticated` can read active rows. Correct since this is a global lookup table.
+`urlToInlineData()` currently fetches whatever URL the client sends for `referenceImageUrl`, `modelImageUrl`, and `productImageUrl`. A malicious caller could point them at `http://169.254.169.254/...` or `http://localhost:...` and exfiltrate the response into Gemini.
 
-**Backend (`generate-brand-scene`)**
-- Balance check + `deduct_credits` BEFORE Gemini call, full `refund_credits` only when all 3 slots fail. Partial success keeps the deduction (user got assets) — correct.
-- Per-slot fallback: `gemini-3-pro-image-preview` → `gemini-3.1-flash-image-preview` matches project fallback memory.
-- Stock product injected as the third inline image with a `[STOCK PRODUCT]` preamble explaining it's a swap-in placeholder. Won't leak into the saved prompt because save uses `injectReferenceTokens(directive)`.
-- `Promise.allSettled` so one bad slot doesn't kill the others.
+Add a `isAllowedImageUrl(url)` guard that requires the URL to:
+- parse as `https://`
+- have a host ending in `.supabase.co` OR match the project's `SUPABASE_URL` host
+- contain `/storage/v1/object/public/` in the path
 
-**Backend (`save-brand-scene`)**
-- Anti-spoof check on `pickedVariationUrl` (must contain `/${user.id}/brand-scenes/`) ✓
-- Save is free; credits already taken at generate time — clearly documented in code.
-- Derives `trigger_blocks` (personDetails / outfit) + `outfit_hint` from cast answers so the saved scene plays correctly inside Product Images model picker + outfit system.
-- `category_collection = sub_family` invariant respected — scene shows up in matching category in Freestyle / Product Visuals.
+Reject (skip the fetch, log a warning) any URL that fails. Apply before each `urlToInlineData()` call.
 
-**UI / UX (`Step6PreviewAndPick`)**
-- Clear two-phase model: generate (paid) → pick (free save).
-- Stock-product hint copy explains the placeholder honestly ("your actual item replaces it").
-- Variation grid + admin debug panel for compiled prompt and raw payload.
-- Sidebar credit chip resync on success.
+## 2. Tighten anti-spoof on save (security — medium)
+**File:** `supabase/functions/save-brand-scene/index.ts`
 
-## ⚠️ Issues worth fixing
+`pickedVariationUrl` is validated only by substring match on `/<user_id>/brand-scenes/`. Add the same host/prefix check as #1 so `https://attacker.com/<uid>/brand-scenes/x.png` is rejected. Must also include `/scratch-uploads/` in the path.
 
-1. **`window.confirm` on regenerate** — uses native browser dialog, breaks premium aesthetic. Should use shadcn `AlertDialog`.
-2. **Stock product preview hidden** — user only sees the label ("Front View Lingerie") in copy. They can't see the thumbnail being passed to Gemini, so they can't tell if it's a sensible reference. Add a small 48px square thumbnail next to the label.
-3. **Double-click race on Generate** — button disables only via `phase` state. A fast double-click before React commits could fire two invocations and double-deduct. Add a `useRef` lock or `pending` ref.
-4. **`auth.getUser(token)` instead of `auth.getClaims()`** — project memory states edge functions verify JWT via `getClaims`. Both work, but `getUser` makes an extra round-trip; `getClaims` is faster + the project standard.
-5. **Orphaned variations** — when user generates 3 and saves 1, the other 2 stay in `scratch-uploads/{user}/brand-scenes/{runId}/` forever. Add cleanup in `save-brand-scene` (delete sibling files in the run folder that don't match the picked URL).
-6. **Stock product table accessed via `as any` cast** — types regenerated but the hook still uses `from("brand_scene_stock_products" as any)`. Remove the cast so TS catches future column changes.
+## 3. Scheduled orphan cleanup (data hygiene — medium)
+**New edge function:** `cleanup-brand-scene-orphans`
 
-## 🔧 Recommended fix order
+Lists every `<user>/brand-scenes/<runId>/` folder in `scratch-uploads`, skips any file that matches a `preview_image_url` on a `product_image_scenes` row, deletes the rest if older than 24h.
 
-1. Stock product thumbnail in Step6 (visibility / trust)
-2. Replace `window.confirm` with `AlertDialog`
-3. Idempotency lock on Generate
-4. Orphan cleanup in `save-brand-scene`
-5. Switch to `auth.getClaims()` in both edge functions
-6. Drop `as any` in `useStockProductForScene`
+Schedule with pg_cron daily at 04:00 UTC via `supabase--insert` (user-specific URL/key per the cron guidance).
 
-All changes are isolated to the brand scenes feature — no schema work, no taxonomy work, no impact on other workflows. Approve and I'll ship them.
+## 4. Proportional refund on partial generation (billing fairness — medium)
+**File:** `supabase/functions/generate-brand-scene/index.ts`
+
+When `failed_count > 0` but `variations.length > 0`, refund `Math.floor(20 * failed_count / 3)` credits via `refund_credits`. Return the adjusted `new_balance`. Update Step6 toast copy to reflect the actual charge.
+
+## 5. Persist variations across back navigation (UX — low)
+**Files:** `src/features/brand-scenes/wizard/useWizardState.ts`, `Step6PreviewAndPick.tsx`
+
+Move `variations` + `selectedUrl` + `runId` into wizard state so a back-and-return on step 6 doesn't discard a paid generation. Clear them only when the user edits any prior step in a way that would invalidate the prompt (use a derived prompt-hash check).
+
+## 6. Visual disable on rapid double-click (UX — low)
+**File:** `Step6PreviewAndPick.tsx`
+
+Add `const [submitting, setSubmitting] = useState(false)` mirroring `inFlightRef`, and bind it to the Generate button's `disabled`. Closes the brief window before `phase` flips.
+
+## Out of scope
+- Refactoring the wizard step model
+- Any change to `product_image_scenes` schema or RLS
+- Stock product taxonomy (already correct after last round)
+
+## Technical notes
+- All edge function changes preserve `getClaims` auth pattern.
+- Cron job SQL goes through `supabase--insert` (not migration) because it contains the project anon key.
+- No new tables, no new RLS policies.
