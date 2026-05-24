@@ -107,6 +107,19 @@ export function BrandSceneWizard() {
 
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Variation cache — survives Step6 unmount during back-navigation.
+  const [variationCache, setVariationCache] = useState<BrandSceneCache | null>(null);
+  const currentPromptHash = useMemo(
+    () => hashPrompt(assembleSceneDirective(answers)),
+    [answers],
+  );
+  // Invalidate the cache when the compiled prompt changes (user edited a prior step).
+  useEffect(() => {
+    if (variationCache && variationCache.promptHash !== currentPromptHash) {
+      setVariationCache(null);
+    }
+  }, [currentPromptHash, variationCache]);
+
   const wizardCastStep = isReference ? 4 : 3;
   const onCastStep = step === wizardCastStep;
   const [step4SubStep, setStep4SubStep] = useState<Step4SubStep>("look");
