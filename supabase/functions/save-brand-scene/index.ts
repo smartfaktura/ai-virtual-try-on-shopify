@@ -98,12 +98,14 @@ serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !user) {
+    const { data: claims, error: claimsErr } = await supabaseAdmin.auth.getClaims(token);
+    const userId = claims?.claims?.sub as string | undefined;
+    if (claimsErr || !userId) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const user = { id: userId };
 
     const body = await req.json();
     const pickedVariationUrl: string = body.pickedVariationUrl ?? "";
