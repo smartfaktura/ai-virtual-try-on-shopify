@@ -114,9 +114,11 @@ export function Step6PreviewAndPick({
     }
     if (inFlightRef.current) return;
     inFlightRef.current = true;
+    setSubmitting(true);
     setPhase("generating");
     setVariations([]);
     setSelectedUrl(null);
+    onCacheChange?.(null);
     try {
       const res = await generateBrandScene({
         compiledPrompt: directive,
@@ -126,17 +128,30 @@ export function Step6PreviewAndPick({
         name: trimmedName,
       });
       setVariations(res.variations);
-      if (res.variations.length > 0) {
-        setSelectedUrl(res.variations[0].url);
-      }
+      const firstUrl = res.variations[0]?.url ?? null;
+      if (firstUrl) setSelectedUrl(firstUrl);
       setPhase("picking");
+      // Persist into wizard-level cache so back-navigation doesn't discard it.
+      if (promptHash && res.variations.length > 0) {
+        onCacheChange?.({
+          promptHash,
+          variations: res.variations,
+          selectedUrl: firstUrl,
+        });
+      }
+      const charged = typeof res.credits_charged === "number" ? res.credits_charged : BRAND_SCENE_GENERATION_COST;
       if (typeof res.new_balance === "number") {
-        toast.success(`−${BRAND_SCENE_GENERATION_COST} credits · balance ${res.new_balance}`);
+        toast.success(`−${charged} credits · balance ${res.new_balance}`);
       }
       // Sync sidebar credit chip with the server-side balance.
       refreshBalance().catch(() => {});
       if (res.partial) {
-        toast.warning(`Generated ${res.variations.length} of 3 — try again if you want more options`);
+        const refunded = res.credits_refunded ?? 0;
+        toast.warning(
+          refunded > 0
+            ? `Generated ${res.variations.length} of 3 — refunded ${refunded} credits`
+            : `Generated ${res.variations.length} of 3`,
+        );
       }
     } catch (e) {
       setPhase("idle");
@@ -153,6 +168,7 @@ export function Step6PreviewAndPick({
       }
     } finally {
       inFlightRef.current = false;
+      setSubmitting(false);
     }
   };
 
