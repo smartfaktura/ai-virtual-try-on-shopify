@@ -10,6 +10,22 @@ const MAX_PROMPT_CHARS = 8000;
 const BUCKET = "scratch-uploads";
 const GENERATION_COST = 20;
 
+// SSRF guard — only allow URLs on the project's Supabase storage host.
+// Rejects internal hosts (169.254.x, localhost) and arbitrary 3rd-party domains.
+function isAllowedImageUrl(raw: string | undefined, supabaseUrl: string): boolean {
+  if (!raw) return false;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:") return false;
+    const projectHost = new URL(supabaseUrl).host;
+    const hostOk = u.host === projectHost || u.host.endsWith(".supabase.co");
+    const pathOk = u.pathname.includes("/storage/v1/object/public/");
+    return hostOk && pathOk;
+  } catch {
+    return false;
+  }
+}
+
 // ── Detect actual image format from magic bytes ──
 function detectImageFormat(bytes: Uint8Array): { ext: string; contentType: string } {
   if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { ext: "jpg", contentType: "image/jpeg" };
