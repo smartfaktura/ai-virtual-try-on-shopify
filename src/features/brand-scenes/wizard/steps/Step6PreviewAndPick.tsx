@@ -217,9 +217,17 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
             Each generation costs {BRAND_SCENE_GENERATION_COST} credits. Saving the variation you like is free.
           </p>
           {stockProduct && (
-            <p className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
-              Preview uses a representative <span className="text-foreground/80">{stockProduct.label}</span> so you can see scale and placement. When you apply this scene to your products later, your actual item replaces it.
-            </p>
+            <div className="mt-3 flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+              <img
+                src={stockProduct.url}
+                alt={stockProduct.label}
+                className="w-12 h-12 rounded-md object-cover bg-background flex-shrink-0"
+                loading="lazy"
+              />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Preview uses a representative <span className="text-foreground/85 font-medium">{stockProduct.label}</span> so you can see scale and placement. Your actual item replaces it when you apply this scene to products.
+              </p>
+            </div>
           )}
 
           <div className="mt-5">
