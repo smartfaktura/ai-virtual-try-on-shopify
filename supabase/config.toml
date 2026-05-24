@@ -89,3 +89,5 @@ project_id = "azwiljtrbtaupofwmpzb"
     verify_jwt = false
   [functions.track-resend-event]
     verify_jwt = false
+  [functions.cleanup-brand-scene-orphans]
+    verify_jwt = false
