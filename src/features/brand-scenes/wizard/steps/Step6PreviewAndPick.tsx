@@ -193,6 +193,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
           <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
             Each generation costs {BRAND_SCENE_GENERATION_COST} credits. Saving the variation you like is free.
           </p>
+          {stockProduct && (
+            <p className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
+              Preview uses a representative <span className="text-foreground/80">{stockProduct.label}</span> so you can see scale and placement. When you apply this scene to your products later, your actual item replaces it.
+            </p>
+          )}
 
           <div className="mt-5">
             <Button
