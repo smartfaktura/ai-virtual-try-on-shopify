@@ -304,12 +304,31 @@ serve(async (req) => {
       });
     }
 
+    // Partial success — proportional refund so the user only pays for what they got.
+    let finalBalance = newBalance as number | null | undefined;
+    let refundedAmount = 0;
+    if (failedCount > 0) {
+      refundedAmount = Math.floor((GENERATION_COST * failedCount) / 3);
+      if (refundedAmount > 0) {
+        try {
+          const { data: rb } = await supabaseAdmin.rpc("refund_credits", {
+            p_user_id: user.id, p_amount: refundedAmount,
+          });
+          if (typeof rb === "number") finalBalance = rb;
+        } catch (err) {
+          console.error("Partial refund failed (non-fatal):", err);
+        }
+      }
+    }
+
     return new Response(JSON.stringify({
       runId,
       variations,
       partial: failedCount > 0,
       failed_count: failedCount,
-      new_balance: newBalance,
+      credits_charged: GENERATION_COST - refundedAmount,
+      credits_refunded: refundedAmount,
+      new_balance: finalBalance,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
