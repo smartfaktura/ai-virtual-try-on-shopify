@@ -20,6 +20,7 @@ import type { BrandSceneAnswers } from "../../types";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 import { injectReferenceTokens } from "../../prompt/injectReferenceTokens";
 import { CAST_PRESETS_WITH_PEOPLE } from "../constants/cast";
+import { useStockProductForScene } from "../hooks/useStockProductForScene";
 import {
   BRAND_SCENE_GENERATION_COST,
   BRAND_SCENE_NAME_MAX,
@@ -60,6 +61,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   const referenceImageUrl =
     answers.source === "reference" ? answers.reference_preview_url : undefined;
   const modelImageUrl = answers.cast?.model_ref?.sourceImageUrl;
+  const { data: stockProduct } = useStockProductForScene(answers.module, answers.sub_family);
 
   const handleGenerate = async () => {
     if (!directive.trim()) {
@@ -78,6 +80,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
         compiledPrompt: directive,
         referenceImageUrl,
         modelImageUrl,
+        productImageUrl: stockProduct?.url,
         name: trimmedName,
       });
       setVariations(res.variations);
