@@ -126,6 +126,8 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       } else {
         toast.error("Generation failed. Please try again.");
       }
+    } finally {
+      inFlightRef.current = false;
     }
   };
 
@@ -134,7 +136,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       toast.error("Name this scene before generating");
       return;
     }
-    if (!confirm(`Generate 3 new variations? This will cost ${BRAND_SCENE_GENERATION_COST} credits.`)) return;
+    setConfirmRegenOpen(true);
+  };
+
+  const handleRegenerateConfirmed = () => {
+    setConfirmRegenOpen(false);
     handleGenerate();
   };
 
