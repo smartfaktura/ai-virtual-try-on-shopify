@@ -276,7 +276,7 @@ export function Step6PreviewAndPick({
             <Button
               size="pill"
               onClick={handleGenerate}
-              disabled={!nameValid}
+              disabled={!nameValid || submitting}
               className="gap-2 w-full sm:w-auto whitespace-normal text-center"
             >
               <Sparkles className="w-4 h-4 flex-shrink-0" />
