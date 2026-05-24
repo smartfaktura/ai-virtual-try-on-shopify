@@ -207,30 +207,44 @@ serve(async (req) => {
       }
     };
 
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+
     let referenceInlineData: { mimeType: string; data: string } | undefined;
     if (referenceImageUrl) {
-      try {
-        referenceInlineData = await urlToInlineData(referenceImageUrl);
-      } catch (e) {
-        console.warn("Reference fetch failed, continuing without it:", e);
+      if (!isAllowedImageUrl(referenceImageUrl, SUPABASE_URL)) {
+        console.warn("Rejected referenceImageUrl (SSRF guard):", referenceImageUrl);
+      } else {
+        try {
+          referenceInlineData = await urlToInlineData(referenceImageUrl);
+        } catch (e) {
+          console.warn("Reference fetch failed, continuing without it:", e);
+        }
       }
     }
 
     let modelInlineData: { mimeType: string; data: string } | undefined;
     if (modelImageUrl) {
-      try {
-        modelInlineData = await urlToInlineData(modelImageUrl);
-      } catch (e) {
-        console.warn("Model reference fetch failed, continuing without it:", e);
+      if (!isAllowedImageUrl(modelImageUrl, SUPABASE_URL)) {
+        console.warn("Rejected modelImageUrl (SSRF guard):", modelImageUrl);
+      } else {
+        try {
+          modelInlineData = await urlToInlineData(modelImageUrl);
+        } catch (e) {
+          console.warn("Model reference fetch failed, continuing without it:", e);
+        }
       }
     }
 
     let productInlineData: { mimeType: string; data: string } | undefined;
     if (productImageUrl) {
-      try {
-        productInlineData = await urlToInlineData(productImageUrl);
-      } catch (e) {
-        console.warn("Stock product fetch failed, continuing without it:", e);
+      if (!isAllowedImageUrl(productImageUrl, SUPABASE_URL)) {
+        console.warn("Rejected productImageUrl (SSRF guard):", productImageUrl);
+      } else {
+        try {
+          productInlineData = await urlToInlineData(productImageUrl);
+        } catch (e) {
+          console.warn("Stock product fetch failed, continuing without it:", e);
+        }
       }
     }
 
