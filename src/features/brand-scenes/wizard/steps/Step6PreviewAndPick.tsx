@@ -316,7 +316,13 @@ export function Step6PreviewAndPick({
           <BrandSceneVariationGrid
             variations={variations}
             selectedUrl={selectedUrl}
-            onSelect={(url) => phase === "picking" && setSelectedUrl(url)}
+            onSelect={(url) => {
+              if (phase !== "picking") return;
+              setSelectedUrl(url);
+              if (promptHash) {
+                onCacheChange?.({ promptHash, variations, selectedUrl: url });
+              }
+            }}
           />
 
           <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
