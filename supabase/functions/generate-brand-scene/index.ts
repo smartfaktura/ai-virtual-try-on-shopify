@@ -36,6 +36,7 @@ async function generateSingleImage(
   prompt: string,
   referenceInlineData: { mimeType: string; data: string } | undefined,
   modelInlineData: { mimeType: string; data: string } | undefined,
+  productInlineData: { mimeType: string; data: string } | undefined,
   apiKey: string,
   model: string,
 ): Promise<string> {
@@ -43,6 +44,8 @@ async function generateSingleImage(
   // Model reference first → Gemini treats it as the primary identity anchor.
   if (modelInlineData) parts.push({ inlineData: modelInlineData });
   if (referenceInlineData) parts.push({ inlineData: referenceInlineData });
+  // Stock product placeholder shows scale/placement; saved prompt swaps it later.
+  if (productInlineData) parts.push({ inlineData: productInlineData });
   parts.push({ text: prompt });
 
   const res = await fetch(

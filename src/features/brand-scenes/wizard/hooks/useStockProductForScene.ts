@@ -38,7 +38,7 @@ export function useStockProductForScene(
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
       if (error || !data) return null;
-      const rows = data as Array<{ image_url: string; label: string; sub_family: string | null }>;
+      const rows = data as unknown as Array<{ image_url: string; label: string; sub_family: string | null }>;
       const exact = sub_family ? rows.find((r) => r.sub_family === sub_family) : undefined;
       const fallback = rows.find((r) => r.sub_family === null);
       const pick = exact ?? fallback;
