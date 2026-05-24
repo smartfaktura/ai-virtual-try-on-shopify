@@ -32,15 +32,14 @@ export function useStockProductForScene(
     queryFn: async () => {
       if (!module) return null;
       const { data, error } = await supabase
-        .from("brand_scene_stock_products" as any)
+        .from("brand_scene_stock_products")
         .select("image_url, label, sub_family")
         .eq("module", module)
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
       if (error || !data) return null;
-      const rows = data as unknown as Array<{ image_url: string; label: string; sub_family: string | null }>;
-      const exact = sub_family ? rows.find((r) => r.sub_family === sub_family) : undefined;
-      const fallback = rows.find((r) => r.sub_family === null);
+      const exact = sub_family ? data.find((r) => r.sub_family === sub_family) : undefined;
+      const fallback = data.find((r) => r.sub_family === null);
       const pick = exact ?? fallback;
       return pick ? { url: pick.image_url, label: pick.label } : null;
     },
