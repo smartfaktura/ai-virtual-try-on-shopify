@@ -340,6 +340,23 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
           </AdminPanel>
         </div>
       )}
+
+      <AlertDialog open={confirmRegenOpen} onOpenChange={setConfirmRegenOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} new variations?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will cost {BRAND_SCENE_GENERATION_COST} credits. Your current variations will be replaced.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRegenerateConfirmed}>
+              Generate · {BRAND_SCENE_GENERATION_COST} credits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
