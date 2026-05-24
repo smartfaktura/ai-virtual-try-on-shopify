@@ -57,6 +57,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   const [phase, setPhase] = useState<Phase>("idle");
   const [variations, setVariations] = useState<GeneratedVariation[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const [confirmRegenOpen, setConfirmRegenOpen] = useState(false);
+  // Idempotency lock — prevents double-deduct on fast double-click before
+  // React commits the phase state change.
+  const inFlightRef = useRef(false);
+
 
   const trimmedName = answers.name?.trim() ?? "";
   const nameValid = trimmedName.length >= 2;
