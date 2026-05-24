@@ -11,6 +11,8 @@ export interface GenerateBrandSceneResult {
   variations: GeneratedVariation[];
   partial: boolean;
   failed_count: number;
+  credits_charged?: number;
+  credits_refunded?: number;
   new_balance?: number;
 }
 
