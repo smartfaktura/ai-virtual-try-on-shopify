@@ -87,6 +87,8 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       toast.error("Name this scene before generating");
       return;
     }
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setPhase("generating");
     setVariations([]);
     setSelectedUrl(null);
