@@ -417,6 +417,9 @@ export function BrandSceneWizard() {
             }
             onNameChange={(name) => dispatch({ type: "setName", name })}
             onBack={handleBack}
+            cache={variationCache}
+            onCacheChange={setVariationCache}
+            promptHash={currentPromptHash}
           />
         )}
       </WizardLayout>
