@@ -36,6 +36,7 @@ async function generateSingleImage(
   prompt: string,
   referenceInlineData: { mimeType: string; data: string } | undefined,
   modelInlineData: { mimeType: string; data: string } | undefined,
+  productInlineData: { mimeType: string; data: string } | undefined,
   apiKey: string,
   model: string,
 ): Promise<string> {
@@ -43,6 +44,8 @@ async function generateSingleImage(
   // Model reference first → Gemini treats it as the primary identity anchor.
   if (modelInlineData) parts.push({ inlineData: modelInlineData });
   if (referenceInlineData) parts.push({ inlineData: referenceInlineData });
+  // Stock product placeholder shows scale/placement; saved prompt swaps it later.
+  if (productInlineData) parts.push({ inlineData: productInlineData });
   parts.push({ text: prompt });
 
   const res = await fetch(
@@ -131,6 +134,7 @@ serve(async (req) => {
     const compiledPrompt: string = (body.compiledPrompt ?? "").toString();
     const referenceImageUrl: string | undefined = body.referenceImageUrl;
     const modelImageUrl: string | undefined = body.modelImageUrl;
+    const productImageUrl: string | undefined = body.productImageUrl;
     const sceneName: string = (body.name ?? "").toString().trim();
 
     if (!compiledPrompt.trim()) {
@@ -203,16 +207,32 @@ serve(async (req) => {
       }
     }
 
+    let productInlineData: { mimeType: string; data: string } | undefined;
+    if (productImageUrl) {
+      try {
+        productInlineData = await urlToInlineData(productImageUrl);
+      } catch (e) {
+        console.warn("Stock product fetch failed, continuing without it:", e);
+      }
+    }
+
+    // Preview-only directive about the stock product placeholder. The saved
+    // prompt template never references this image — it uses [PRODUCT IMAGE]
+    // tokens injected via injectReferenceTokens on save.
+    const previewPreamble = productInlineData
+      ? `[STOCK PRODUCT] is a representative placeholder showing how a hero product sits in this scene — preserve the position, scale, and silhouette role of a product in this composition. Do not invent labels, logos, or branding on it. End users will swap their own product in later.\n\n`
+      : "";
+
     const runId = crypto.randomUUID();
 
     // Per-slot retry: try Gemini 3 Pro, fall back to Gemini 3.1 Flash.
     const generateOneWithRetry = async (slot: number): Promise<string> => {
-      const variantPrompt = `${compiledPrompt}\n\nVARIATION ${slot + 1} of 3 — deliver a distinct interpretation while keeping every constraint above.`;
+      const variantPrompt = `${previewPreamble}${compiledPrompt}\n\nVARIATION ${slot + 1} of 3 — deliver a distinct interpretation while keeping every constraint above.`;
       const models = ["gemini-3-pro-image-preview", "gemini-3.1-flash-image-preview"];
       let lastErr: unknown = null;
       for (const model of models) {
         try {
-          const b64 = await generateSingleImage(variantPrompt, referenceInlineData, modelInlineData, GEMINI_KEY, model);
+          const b64 = await generateSingleImage(variantPrompt, referenceInlineData, modelInlineData, productInlineData, GEMINI_KEY, model);
           return await uploadBase64Image(supabaseAdmin, user.id, runId, slot, b64);
         } catch (e) {
           lastErr = e;

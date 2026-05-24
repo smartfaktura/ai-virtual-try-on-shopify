@@ -20,6 +20,7 @@ import type { BrandSceneAnswers } from "../../types";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 import { injectReferenceTokens } from "../../prompt/injectReferenceTokens";
 import { CAST_PRESETS_WITH_PEOPLE } from "../constants/cast";
+import { useStockProductForScene } from "../hooks/useStockProductForScene";
 import {
   BRAND_SCENE_GENERATION_COST,
   BRAND_SCENE_NAME_MAX,
@@ -60,6 +61,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   const referenceImageUrl =
     answers.source === "reference" ? answers.reference_preview_url : undefined;
   const modelImageUrl = answers.cast?.model_ref?.sourceImageUrl;
+  const { data: stockProduct } = useStockProductForScene(answers.module, answers.sub_family);
 
   const handleGenerate = async () => {
     if (!directive.trim()) {
@@ -78,6 +80,7 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
         compiledPrompt: directive,
         referenceImageUrl,
         modelImageUrl,
+        productImageUrl: stockProduct?.url,
         name: trimmedName,
       });
       setVariations(res.variations);
@@ -190,6 +193,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
           <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
             Each generation costs {BRAND_SCENE_GENERATION_COST} credits. Saving the variation you like is free.
           </p>
+          {stockProduct && (
+            <p className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
+              Preview uses a representative <span className="text-foreground/80">{stockProduct.label}</span> so you can see scale and placement. When you apply this scene to your products later, your actual item replaces it.
+            </p>
+          )}
 
           <div className="mt-5">
             <Button
