@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_scene_stock_products: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          is_active: boolean
+          label: string
+          module: string
+          sort_order: number
+          sub_family: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          label: string
+          module: string
+          sort_order?: number
+          sub_family?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          label?: string
+          module?: string
+          sort_order?: number
+          sub_family?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_sessions: {
         Row: {
           created_at: string
