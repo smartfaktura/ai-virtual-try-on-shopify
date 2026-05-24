@@ -1,10 +1,20 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCredits } from "@/contexts/CreditContext";
 import { useIsAdminSafe } from "../hooks/useIsAdminSafe";
 import { Step5Review } from "./Step5Review";
@@ -47,6 +57,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
   const [phase, setPhase] = useState<Phase>("idle");
   const [variations, setVariations] = useState<GeneratedVariation[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const [confirmRegenOpen, setConfirmRegenOpen] = useState(false);
+  // Idempotency lock — prevents double-deduct on fast double-click before
+  // React commits the phase state change.
+  const inFlightRef = useRef(false);
+
 
   const trimmedName = answers.name?.trim() ?? "";
   const nameValid = trimmedName.length >= 2;
@@ -72,6 +87,8 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       toast.error("Name this scene before generating");
       return;
     }
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setPhase("generating");
     setVariations([]);
     setSelectedUrl(null);
@@ -109,6 +126,8 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       } else {
         toast.error("Generation failed. Please try again.");
       }
+    } finally {
+      inFlightRef.current = false;
     }
   };
 
@@ -117,7 +136,11 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
       toast.error("Name this scene before generating");
       return;
     }
-    if (!confirm(`Generate 3 new variations? This will cost ${BRAND_SCENE_GENERATION_COST} credits.`)) return;
+    setConfirmRegenOpen(true);
+  };
+
+  const handleRegenerateConfirmed = () => {
+    setConfirmRegenOpen(false);
     handleGenerate();
   };
 
@@ -194,9 +217,17 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
             Each generation costs {BRAND_SCENE_GENERATION_COST} credits. Saving the variation you like is free.
           </p>
           {stockProduct && (
-            <p className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
-              Preview uses a representative <span className="text-foreground/80">{stockProduct.label}</span> so you can see scale and placement. When you apply this scene to your products later, your actual item replaces it.
-            </p>
+            <div className="mt-3 flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+              <img
+                src={stockProduct.url}
+                alt={stockProduct.label}
+                className="w-12 h-12 rounded-md object-cover bg-background flex-shrink-0"
+                loading="lazy"
+              />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Preview uses a representative <span className="text-foreground/85 font-medium">{stockProduct.label}</span> so you can see scale and placement. Your actual item replaces it when you apply this scene to products.
+              </p>
+            </div>
           )}
 
           <div className="mt-5">
@@ -309,6 +340,23 @@ export function Step6PreviewAndPick({ answers, onNegativeNoteChange, onNameChang
           </AdminPanel>
         </div>
       )}
+
+      <AlertDialog open={confirmRegenOpen} onOpenChange={setConfirmRegenOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} new variations?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will cost {BRAND_SCENE_GENERATION_COST} credits. Your current variations will be replaced.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRegenerateConfirmed}>
+              Generate · {BRAND_SCENE_GENERATION_COST} credits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

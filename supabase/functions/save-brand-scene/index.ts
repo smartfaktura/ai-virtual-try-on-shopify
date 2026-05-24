@@ -98,12 +98,14 @@ serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !user) {
+    const { data: claims, error: claimsErr } = await supabaseAdmin.auth.getClaims(token);
+    const userId = claims?.claims?.sub as string | undefined;
+    if (claimsErr || !userId) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const user = { id: userId };
 
     const body = await req.json();
     const pickedVariationUrl: string = body.pickedVariationUrl ?? "";
@@ -177,6 +179,31 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Failed to save scene" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Orphan cleanup — delete sibling variations in the same run folder that
+    // were not picked. Best-effort: failures are logged but don't fail the save.
+    try {
+      // pickedVariationUrl looks like .../scratch-uploads/<user>/brand-scenes/<runId>/vN.<ext>
+      const match = pickedVariationUrl.match(/\/scratch-uploads\/(.+)$/);
+      const pickedPath = match?.[1];
+      if (pickedPath) {
+        const folder = pickedPath.substring(0, pickedPath.lastIndexOf("/"));
+        const { data: siblings } = await supabaseAdmin.storage
+          .from("scratch-uploads")
+          .list(folder);
+        if (siblings && siblings.length > 0) {
+          const pickedFile = pickedPath.substring(pickedPath.lastIndexOf("/") + 1);
+          const toDelete = siblings
+            .filter((f) => f.name !== pickedFile)
+            .map((f) => `${folder}/${f.name}`);
+          if (toDelete.length > 0) {
+            await supabaseAdmin.storage.from("scratch-uploads").remove(toDelete);
+          }
+        }
+      }
+    } catch (cleanupErr) {
+      console.warn("Orphan variation cleanup failed (non-fatal):", cleanupErr);
     }
 
     return new Response(JSON.stringify({ scene: row }), {
