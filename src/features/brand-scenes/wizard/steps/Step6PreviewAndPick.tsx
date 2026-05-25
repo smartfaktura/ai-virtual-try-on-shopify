@@ -109,6 +109,36 @@ export function Step6PreviewAndPick({
     answers.cast?.gender?.[0],
   );
 
+  const referenceIntentLabel = (() => {
+    switch (answers.reference_intent) {
+      case "replicate": return "Replicate exactly";
+      case "location": return "Location only";
+      case "composition": return "Composition";
+      case "vibe": return "Vibe / mood board";
+      default: return null;
+    }
+  })();
+
+  const ReferenceThumb = () =>
+    isReferenceFlow && referenceImageUrl ? (
+      <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 p-2.5">
+        <img
+          src={referenceImageUrl}
+          alt="Your reference"
+          className="w-14 h-[70px] rounded-md object-cover bg-background flex-shrink-0"
+          loading="lazy"
+        />
+        <div className="min-w-0">
+          <div className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Reference
+          </div>
+          <div className="text-[11px] text-foreground/85 truncate">
+            {referenceIntentLabel ?? "Your uploaded inspiration"}
+          </div>
+        </div>
+      </div>
+    ) : null;
+
   const handleGenerate = async () => {
     if (!directive.trim()) {
       toast.error("Add at least one detail before generating");
