@@ -3,13 +3,14 @@ import { UpgradePlanModal } from './UpgradePlanModal';
 
 /**
  * Globally mounted upgrade/topup modal controlled by CreditContext.
- * Replaces the legacy BuyCreditsModal. Variant is chosen automatically:
- *  - Pro / Enterprise users (no upgrade path) → topup variant
- *  - All other users → upgrade variant (preselects Growth)
+ * Variant is chosen automatically:
+ *  - Free users → upgrade variant (preselects Growth)
+ *  - All paid plans (Starter/Growth/Pro/Enterprise) → topup variant
+ *    (users who want to change tier use the "Compare plans" footer link)
  */
 export function GlobalUpgradeModal() {
   const { buyModalOpen, closeBuyModal, plan } = useCredits();
-  const isTopupOnly = plan === 'pro' || plan === 'enterprise';
+  const isTopupOnly = plan !== 'free';
   return (
     <UpgradePlanModal
       open={buyModalOpen}
