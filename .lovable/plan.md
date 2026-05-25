@@ -1,37 +1,35 @@
-Add a "Brand Scenes" promo near the scene picker on `/app/generate/product-images` (Shots step). Mirrors the Brand Models pattern: a soft promo card that opens an info dialog with a plan-aware CTA — never navigates away unexpectedly.
+Rework `BrandScenesInfoModal` into a quieter, editorial layout — less crowded, fully VOVV.AI restraint, and properly sized for mobile (390px).
 
-**New component**
+**File:** `src/components/app/product-images/BrandScenesInfoModal.tsx`
 
-`src/components/app/product-images/BrandScenesInfoModal.tsx` — `Dialog` (shadcn), structured like `BrandModelsInfoModal`:
-- Icon (`Wand2` or `Sparkles`) + title: "Design scenes that only belong to your brand"
-- Description: custom AI-generated scenes built from your references and reused across every shoot
-- 3 bullets:
-  - Lock in a signature visual world for your brand
-  - Build from a reference photo or a written brief
-  - Reuse saved scenes across all future generations
-- Plan-aware footer (read `plan` via `useCredits`, check against `canCreateBrandScenes` from `@/features/brand-scenes/access`):
-  - Growth / Pro / Enterprise → primary "Create Brand Scene" → `navigate('/app/brand-scenes')` + close
-  - Free / Starter → primary "Upgrade plan" → `openBuyModal('brand-scenes-gate')` + close
-- Secondary "Maybe later"
-- Small footnote when gated: "Brand Scenes are available on Growth and above"
+**Layout (mobile-first, max-w-sm, p-7)**
 
-**Promo card**
+1. Top row: small icon chip (10×10, `bg-muted` rounded-full, `Wand2` w-4) on the left only — no centered chrome.
+2. Eyebrow label: `BRAND SCENES` — `text-[10px] tracking-[0.2em] uppercase text-muted-foreground` for editorial anchor.
+3. Title: `text-[22px] leading-[1.15] font-medium tracking-tight text-foreground` — no terminal period. Single line target on mobile by tightening copy to "Scenes that belong to your brand".
+4. Subtitle: `text-[13px] leading-relaxed text-muted-foreground font-light` — trimmed to one sentence: "Custom AI scenes built from your references, reused across every shoot".
+5. Generous breathing space (`mt-7`) before features.
+6. Three features as numbered hairline rows — no check icons:
+   - Row = thin top border (`border-t border-border/60`), `py-3.5`, two columns: `01` (`text-[10px] tracking-widest text-muted-foreground/70 w-6`) + label (`text-[13px] text-foreground/85 leading-snug`).
+   - Last row gets a closing bottom border so the block reads as a contained editorial list.
+   - Copy stays as-is.
+7. Action stack (`mt-7 space-y-2`):
+   - Primary: full-width, `h-11`, `rounded-full`, `bg-foreground text-background`, label + `ArrowRight w-4` with subtle hover translate.
+   - Secondary "Maybe later": `h-9` ghost, `text-[13px] text-muted-foreground hover:text-foreground`.
+8. Gated footnote unchanged but `text-[10.5px] tracking-wide text-muted-foreground/80 text-center mt-2`.
 
-`src/components/app/product-images/BrandScenesPromoCard.tsx` — slim horizontal card matching the visual language of the "Create Your Brand Model" dashed card:
-- Dashed primary-tinted border, rounded-xl, `p-3`
-- Left: small `Wand2` icon in a primary-tinted circle
-- Middle: "Want scenes unique to your brand?" / "Generate your own Brand Scenes from a reference or brief"
-- Right: subtle `Learn more →` affordance
-- Clicking anywhere on the card opens `BrandScenesInfoModal`
+**Mobile correctness**
 
-**Wire-up**
+- `DialogContent` keeps shadcn defaults but override to `max-w-sm w-[calc(100%-2rem)] p-7 rounded-3xl` so it never touches viewport edges on 390px.
+- Title sized so it wraps to max two lines at 390px.
+- Remove the centered icon-above-title stack from current version (that was the main "crowded" feel).
 
-`src/components/app/product-images/ProductImagesStep2Scenes.tsx`:
-- Import the promo card and render it once at the very top of the scenes list container (just before the first category section, inside the same wrapper that ends with `<SceneRequestBanner />`).
-- Always visible — for Growth+ users it acts as a quick entry point, for Free/Starter it teases the feature. (Don't gate by "has any brand scene" — the scenes table isn't queried in this step and adding a lookup just for visibility isn't worth the round-trip.)
+**Tokens only**
+
+All colors via semantic tokens (`foreground`, `background`, `muted-foreground`, `border`) — no hex, no `text-white`/`text-black`.
 
 **Out of scope**
 
-- No changes to scene data loading, brand-scenes wizard, or pricing logic.
-- No new query against `product_image_scenes`.
-- Catalog flow untouched.
+- No change to plan-aware CTA logic (`canCreate`, `openBuyModal('brand-scenes-gate')`, `navigate('/app/brand-scenes')`).
+- No change to `BrandScenesPromoCard` trigger.
+- No copy changes beyond the title/subtitle tightening above.
