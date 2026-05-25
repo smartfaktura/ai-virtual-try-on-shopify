@@ -1478,6 +1478,7 @@ export const pricingPlans: PricingPlan[] = [
       '$0.053 per credit',
       'Faster generation queue',
       { text: 'Brand Models', badge: 'NEW' },
+      { text: 'Brand Scenes', badge: 'NEW' },
     ],
     highlighted: true,
     badge: 'Most Popular',
