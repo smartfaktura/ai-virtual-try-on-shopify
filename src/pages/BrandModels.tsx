@@ -69,7 +69,7 @@ function UpgradeHero() {
       </div>
 
       <div className="mt-8 pt-6 border-t border-border">
-        <Button onClick={() => openBuyModal()} className="rounded-full font-semibold gap-2">
+        <Button onClick={() => openBuyModal('brand-models-gate')} className="rounded-full font-semibold gap-2">
           <Crown className="w-4 h-4" />
           Upgrade to Growth
         </Button>
