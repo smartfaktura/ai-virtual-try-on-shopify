@@ -89,7 +89,7 @@ export default function BrandScenes() {
             Your custom signature scenes — use them on any product
           </p>
         </div>
-        {hasScenes && (
+        {hasScenes && canCreate && (
           <Button
             onClick={() => navigate('/app/brand-scenes/new')}
             className="rounded-full font-semibold gap-2 shrink-0"
@@ -99,6 +99,10 @@ export default function BrandScenes() {
           </Button>
         )}
       </div>
+
+      {!canCreate && hasScenes && (
+        <UpgradeBanner onUpgrade={() => openBuyModal('brand-scenes-gate')} />
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -117,8 +121,10 @@ export default function BrandScenes() {
             />
           ))}
         </div>
-      ) : (
+      ) : canCreate ? (
         <EmptyState onCreate={() => navigate('/app/brand-scenes/new')} />
+      ) : (
+        <UpgradeState onUpgrade={() => openBuyModal('brand-scenes-gate')} />
       )}
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
