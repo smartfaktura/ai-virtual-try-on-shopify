@@ -190,7 +190,7 @@ export function Step4Cast({
   // Headline missing flags for the dot indicators.
   const peopleVibeMissing = !cast?.vibe;
   const interactionHeadlineMissing = (() => {
-    if (hasPeople) return !cast?.action;
+    if (hasPeople) return !cast?.action && !cast?.action_note?.trim();
     return !cast?.hands_on_product;
   })();
   const outfitVibeMissing = !hasOutfitVibe(cast?.outfit);
@@ -437,6 +437,7 @@ export function Step4Cast({
           cast={cast}
           onCastChange={onCastChange}
           headlineMissing={interactionHeadlineMissing}
+          isReference={isReference}
         />
       )}
 
