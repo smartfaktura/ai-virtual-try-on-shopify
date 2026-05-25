@@ -265,13 +265,13 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       },
       belts: {
         cast_presets: ["solo", "hands", "none"],
-        interactions: ["wearing", "hero"],
+        interactions: ["wearing", "holding", "beside", "hero"],
         hands_on_product: ["cradle", "pinch"],
       },
       scarves: {
         cast_presets: ["solo", "none"],
-        interactions: ["wearing", "hero"],
-        hands_on_product: [],
+        interactions: ["wearing", "holding", "beside", "hero"],
+        hands_on_product: ["cradle", "pinch"],
       },
     },
   },
