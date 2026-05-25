@@ -11,8 +11,9 @@ describe("buildReferenceDirective", () => {
   });
 
   it("emits a location-keeping prefix for location intent", () => {
-    expect(buildReferenceDirective("location")).toMatch(/keep the reference location/i);
+    expect(buildReferenceDirective("location")).toMatch(/location lock|reference is the environment/i);
   });
+
 
   it("emits a framing-keeping prefix for composition intent", () => {
     expect(buildReferenceDirective("composition")).toMatch(/framing, camera angle/i);
