@@ -47,7 +47,7 @@ export default function BrandScenes() {
     queryFn: async (): Promise<BrandSceneRow[]> => {
       const { data, error } = await supabase
         .from('product_image_scenes')
-        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module')
+        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module, category_collection')
         .eq('is_brand_scene', true)
         .eq('owner_user_id', user!.id)
         .order('created_at', { ascending: false });
