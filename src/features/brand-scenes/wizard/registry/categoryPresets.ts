@@ -400,6 +400,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_cast: "none",
     settings: ["Tabletop surface", "Domestic", "Studio cyclorama", "Architectural interior"],
     surfaces: ["raw_wood", "linen", "polished_stone", "paper"],
+    body_part_focus: ["hands", "face", "detail"],
+    hands_on_product: ["pour", "cradle", "cap"],
     sub: {
       beverages: {
         cast_presets: ["hands", "none", "solo"],
