@@ -79,9 +79,18 @@ export function Step3Reference({
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  const ensureAccepted = (): boolean => {
+    if (!responsibilityAccepted) {
+      onRequestResponsibility();
+      return false;
+    }
+    return true;
+  };
+
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
+    if (!ensureAccepted()) return;
 
     if (!ACCEPTED_MIME.includes(file.type)) {
       toast({
