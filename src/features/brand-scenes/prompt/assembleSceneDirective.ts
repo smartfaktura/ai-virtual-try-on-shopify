@@ -318,7 +318,12 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   );
   out.push("");
 
+  // REFERENCE goes FIRST (right after ROLE) — promoted from the bottom of
+  // the prompt so the model treats the uploaded image as the dominant
+  // constraint rather than a trailing afterthought.
+  push("REFERENCE", reference);
   push("PRODUCT FOCUS", productFocus);
+
   push("SUBJECT", subject);
   push("SCENE", scene);
   push("CAMERA & FRAMING", camera);
