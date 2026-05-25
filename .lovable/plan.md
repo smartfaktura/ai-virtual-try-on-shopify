@@ -1,35 +1,21 @@
-## Goal
+## Why it's missing
 
-Restyle the `/app/models` empty/upgrade screen to match the calmer, editorial vibe of the `/app/brand-scenes` upgrade state (left-aligned panel, soft icon tile, vertical bullet list, divider, single rounded CTA).
+`src/pages/BrandModels.tsx` line 1311 wraps the `PageHeader` in `{isPaid && ...}`, so free/gated users see only the `UpgradeHero` panel — no H1, no subtitle. `BrandScenes.tsx` always renders its title block above the upgrade panel, which is why it looks more complete.
 
-## Scope
+## Fix
 
-- File: `src/pages/BrandModels.tsx` -> component `UpgradeHero` (lines ~36–74) only.
-- No changes to logic, gating, routes, copy meaning, or any other component.
+In `src/pages/BrandModels.tsx` around lines 1309–1331, render the page title block for everyone, matching the Brand Scenes pattern:
 
-## New layout (mirrors `BrandScenes` `UpgradeState`)
+- Remove the `isPaid &&` gate on the header.
+- Keep the "New brand model" action button gated: only show when `isPaid && models.length > 0` (free users shouldn't see a CTA that they can't use).
+- Subtitle stays "Custom AI models that match your brand" (no trailing period, single sentence — matches our copy rule).
 
-Single rounded panel `rounded-2xl border border-border bg-card p-8 sm:p-12 max-w-3xl`, left-aligned:
-
-1. Soft icon tile `w-12 h-12 rounded-xl bg-primary/10` containing `Users` icon.
-2. H2 `text-xl sm:text-2xl font-bold tracking-tight` - "Brand Models is on Growth and Pro".
-3. Subtitle `text-base text-muted-foreground mt-3 leading-relaxed` - "Unlimited custom AI models built to match your brand. Any gender, age, ethnicity, or body type".
-4. Vertical bullet list `mt-8 space-y-3`, each row = small `w-7 h-7 rounded-lg bg-primary/10` icon tile + sentence, using 3 benefits:
-   - `UserCheck` - Brand consistency: same model across every campaign
-   - `Globe` - Any ethnicity and age: represent your diverse audience
-   - `Palette` - Custom looks: upload a reference or describe from scratch
-5. Divider + CTA: `mt-8 pt-6 border-t border-border`, then `<Button>` rounded-full with `Crown` icon -> "Upgrade to Growth" (keeps existing `openBuyModal()` handler).
-
-Remove the "GROWTH & PRO" pill chip and the 2x2 card grid entirely.
-
-## Copy notes
-- No long em dashes (—) in any user-facing copy.
-- No trailing period on single-sentence subtitle.
+Result for the gated view: H1 "Brand Models" + subtitle on top, then the restyled upgrade panel below — visually matching `/app/brand-scenes`.
 
 ## Out of scope
-- `BrandModels` populated state, generator UI, all other pages.
-- Copy in shared brand model marketing.
+- The `UpgradeHero` panel itself (already restyled in the previous turn).
+- Paid state, generator, and locked-models list.
 
 ## Verification
-- Reload `/app/models` while on Starter plan (gated): panel renders left-aligned, single CTA, matches Brand Scenes visually.
-- Sidebar, credits, and Upgrade modal trigger still work.
+- Reload `/app/models` on Starter plan: H1 + subtitle visible, upgrade panel underneath, no "New brand model" button.
+- Switch to Growth: header unchanged, "New brand model" button reappears when models exist.
