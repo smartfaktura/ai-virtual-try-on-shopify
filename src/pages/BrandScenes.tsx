@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, ArrowRight, Mountain, Sparkles, Users, Layers, Trash2, Wand2 } from 'lucide-react';
+import { Plus, ArrowRight, Mountain, Sparkles, Users, Layers, Trash2, Wand2, Lock } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditContext';
+import { canCreateBrandScenes } from '@/features/brand-scenes/access';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -32,6 +34,8 @@ interface BrandSceneRow {
 export default function BrandScenes() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { plan, openBuyModal } = useCredits();
+  const canCreate = canCreateBrandScenes(plan);
   const queryClient = useQueryClient();
   const [pendingDelete, setPendingDelete] = useState<BrandSceneRow | null>(null);
 
@@ -85,7 +89,7 @@ export default function BrandScenes() {
             Your custom signature scenes — use them on any product
           </p>
         </div>
-        {hasScenes && (
+        {hasScenes && canCreate && (
           <Button
             onClick={() => navigate('/app/brand-scenes/new')}
             className="rounded-full font-semibold gap-2 shrink-0"
@@ -95,6 +99,10 @@ export default function BrandScenes() {
           </Button>
         )}
       </div>
+
+      {!canCreate && hasScenes && (
+        <UpgradeBanner onUpgrade={() => openBuyModal('brand-scenes-gate')} />
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -113,8 +121,10 @@ export default function BrandScenes() {
             />
           ))}
         </div>
-      ) : (
+      ) : canCreate ? (
         <EmptyState onCreate={() => navigate('/app/brand-scenes/new')} />
+      ) : (
+        <UpgradeState onUpgrade={() => openBuyModal('brand-scenes-gate')} />
       )}
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
@@ -241,12 +251,70 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
           <Plus className="w-4 h-4" />
           Create your first brand scene
         </Button>
-        <Button
-          variant="ghost"
-          onClick={() => (window.location.href = '/app/workflows')}
-          className="rounded-full font-medium gap-2"
-        >
-          Or explore ready-made scenes
+      </div>
+    </div>
+  );
+}
+
+function UpgradeBanner({ onUpgrade }: { onUpgrade: () => void }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+      <div className="flex items-start gap-3 min-w-0">
+        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <Lock className="w-4 h-4 text-primary" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground tracking-tight">
+            Designing new brand scenes is on Growth and Pro
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Your saved scenes stay available — upgrade to create more
+          </p>
+        </div>
+      </div>
+      <Button onClick={onUpgrade} className="rounded-full font-semibold gap-2 shrink-0">
+        Upgrade plan
+        <ArrowRight className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
+function UpgradeState({ onUpgrade }: { onUpgrade: () => void }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-8 sm:p-12 max-w-3xl">
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+        <Lock className="w-6 h-6 text-primary" />
+      </div>
+
+      <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+        Brand Scenes is on Growth and Pro
+      </h2>
+      <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+        Design signature scenes locked to your brand — generated from your references or a prompt and reused across every product
+      </p>
+
+      <div className="mt-8 space-y-3">
+        {[
+          { icon: Sparkles, text: 'Design from a reference image or a written prompt' },
+          { icon: Layers, text: 'Save and reuse across all your products' },
+          { icon: Users, text: 'Stays private to your account' },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.text} className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <p className="text-sm text-foreground/80 leading-relaxed pt-1">{item.text}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-border">
+        <Button onClick={onUpgrade} className="rounded-full font-semibold gap-2">
+          Upgrade plan
           <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
