@@ -23,13 +23,25 @@ type ImageSource = 'upload' | 'url';
 function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!video.video_url) return;
-    const a = document.createElement('a');
-    a.href = video.video_url;
-    a.download = `video-${video.camera_type || video.id.slice(0, 8)}.mp4`;
-    a.target = '_blank';
-    a.click();
+    const filename = `video-${video.camera_type || video.id.slice(0, 8)}.mp4`;
+    try {
+      const response = await fetch(video.video_url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.warn('[Download] Falling back to new tab', err);
+      window.open(video.video_url, '_blank');
+    }
   };
 
   return (
