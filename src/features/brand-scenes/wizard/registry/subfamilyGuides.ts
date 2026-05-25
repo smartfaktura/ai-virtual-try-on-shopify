@@ -167,12 +167,77 @@ export const SUBFAMILY_GUIDES: Partial<Record<Key, SubfamilyGuide>> = {
     safeguards: [],
     mustWearProduct: true,
   },
+
+  // ── Jewelry — on-body placement is critical so the piece isn't floating.
+  "jewelry/jewellery-rings": {
+    productNoun: "ring",
+    wardrobe:
+      "The brand's ring is worn on the model's ring finger (left hand by default), fully on the finger, band and any stone or setting clearly readable; finger relaxed and lit so the metal renders true to material.",
+    safeguards: [
+      "Do not float, hover or detach the ring from the finger.",
+      "Do not show the ring held in the other hand instead of worn.",
+      "Do not crop out the wearing hand or hide it behind other objects.",
+      "Do not show bare fingers where the ring should be.",
+    ],
+    mustWearProduct: true,
+  },
+  "jewelry/jewellery-necklaces": {
+    productNoun: "necklace",
+    wardrobe:
+      "The brand's necklace is worn at the base of the neck, clasp behind, pendant centered on the décolletage; neckline kept clean so the chain and pendant read.",
+    safeguards: [
+      "Do not show the necklace draped over a hand, table or surface instead of worn.",
+      "Do not hide the pendant with hair, collar or shadow.",
+      "Do not omit the chain or leave the neck bare.",
+    ],
+    mustWearProduct: true,
+  },
+  "jewelry/jewellery-earrings": {
+    productNoun: "earrings",
+    wardrobe:
+      "The brand's earrings are worn on the earlobes as a matched pair; hair styled or tucked so at least one ear is sharply visible — three-quarter or profile angle preferred so the earring reads cleanly.",
+    safeguards: [
+      "Do not leave the ears bare.",
+      "Do not show only one earring unless a deliberate profile shot.",
+      "Do not blur or hide the worn ear with hair or accessories.",
+    ],
+    mustWearProduct: true,
+  },
+  "jewelry/jewellery-bracelets": {
+    productNoun: "bracelet",
+    wardrobe:
+      "The brand's bracelet is wrapped around the model's wrist with the clasp aligned; wrist posed so the full circumference of the bracelet reads.",
+    safeguards: [
+      "Do not float the bracelet beside the wrist.",
+      "Do not crop the wrist out of frame.",
+      "Do not show empty wrists where the bracelet should be worn.",
+    ],
+    mustWearProduct: true,
+  },
+
+  // ── Watches — family-level fallback (no required sub_family).
+  "watches/*": {
+    productNoun: "watch",
+    wardrobe:
+      "The brand's watch is worn on the model's wrist with the dial facing the camera; strap, case and lugs fully readable.",
+    safeguards: [
+      "Do not show empty wrists.",
+      "Do not hide the dial behind cuffs or shadows.",
+      "Do not invent a different watch or alter the dial layout.",
+    ],
+    mustWearProduct: true,
+  },
 };
 
 export function resolveSubfamilyGuide(
   module: BrandSceneModule | string | undefined,
   subFamily: string | undefined,
 ): SubfamilyGuide | null {
-  if (!module || !subFamily) return null;
-  return SUBFAMILY_GUIDES[`${module}/${subFamily}` as Key] ?? null;
+  if (!module) return null;
+  if (subFamily) {
+    const exact = SUBFAMILY_GUIDES[`${module}/${subFamily}` as Key];
+    if (exact) return exact;
+  }
+  // Family-level fallback (e.g. watches/*).
+  return SUBFAMILY_GUIDES[`${module}/*` as Key] ?? null;
 }

@@ -75,8 +75,11 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   const castHasPeople = !!(
     answers.cast && CAST_PRESETS_WITH_PEOPLE.includes(answers.cast.preset as any)
   );
-  if (guide && castHasPeople) {
-    productFocus.push(guide.wardrobe);
+  // Jewelry / watches use the "hands" preset for worn-on-body shots; still emit
+  // the placement guide so the piece doesn't render floating beside the hand.
+  const guideShouldFire = !!guide && (castHasPeople || answers.cast?.preset === "hands");
+  if (guideShouldFire) {
+    productFocus.push(guide!.wardrobe);
   }
 
   // ----- REFERENCE -----
@@ -290,8 +293,8 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
       "Do not invent a new room, studio, or background; reuse the reference scene only.",
     );
   }
-  if (guide && castHasPeople) {
-    for (const s of guide.safeguards) negative.push(s);
+  if (guideShouldFire) {
+    for (const s of guide!.safeguards) negative.push(s);
   }
 
 

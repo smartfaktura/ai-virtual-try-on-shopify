@@ -71,27 +71,32 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     prop_density_max: 2,
     finishes: ["clean_digital", "editorial_matte", "glossy"],
     body_part_focus: ["hands", "wrist", "neck", "face", "detail"],
+    hands_on_product: ["cradle", "pinch"],
     sub: {
       "jewellery-rings": {
         cast_presets: ["hands", "none"],
         default_cast: "hands",
         interactions: ["wearing", "holding", "beside", "hero"],
         body_part_focus: ["hands", "detail"],
+        hands_on_product: ["ring_finger", "pinch", "cradle"],
       },
       "jewellery-earrings": {
         cast_presets: ["solo", "none"],
         default_cast: "solo",
         body_part_focus: ["face", "neck", "detail"],
+        hands_on_product: ["earring_place"],
       },
       "jewellery-necklaces": {
         cast_presets: ["solo", "hands", "none"],
         default_cast: "solo",
         body_part_focus: ["neck", "face", "detail"],
+        hands_on_product: ["necklace_clasp"],
       },
       "jewellery-bracelets": {
         cast_presets: ["hands", "solo", "none"],
         default_cast: "hands",
         body_part_focus: ["wrist", "hands", "detail"],
+        hands_on_product: ["bracelet_wrist", "wrist_show", "pinch"],
       },
     },
   },

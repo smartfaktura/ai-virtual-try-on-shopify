@@ -89,6 +89,8 @@ interface Props {
   scale?: BrandSceneScale;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
   onScaleChange: (patch: Partial<BrandSceneScale>) => void;
+  /** Optional — used by Auto-cast to seed scene defaults (lens, DoF, finish). */
+  onBaseChange?: (patch: Partial<NonNullable<BrandSceneAnswers["base"]>>) => void;
   /** Active sub-step (controlled by the wizard so footer Next can advance it). */
   subStep?: Step4SubStep;
   onSubStepChange?: (s: Step4SubStep) => void;
@@ -105,6 +107,7 @@ export function Step4Cast({
   scale,
   onCastChange,
   onScaleChange,
+  onBaseChange,
   subStep = "essentials",
   onSubStepChange,
   visitedSubSteps,
@@ -177,15 +180,47 @@ export function Step4Cast({
     const nextExtras = { ...(cast?.extras ?? {}) };
     nextExtras.design_specific_look = next;
     if (next === "skip") {
-      const seededPreset = cast?.preset ?? resolved.defaultCast;
-      const seededInteraction =
-        cast?.interaction ?? visibleInteractions[0]?.value;
-      onCastChange({
+      const seededPreset = (cast?.preset ?? resolved.defaultCast) as CastPreset;
+      const seededHasPeople = CAST_PRESETS_WITH_PEOPLE.includes(seededPreset);
+
+      // Prefer "wearing" for on-body categories, else first available interaction.
+      const preferredInteraction: CastInteraction | undefined =
+        resolved.interactions.includes("wearing" as CastInteraction)
+          ? ("wearing" as CastInteraction)
+          : (visibleInteractions[0]?.value as CastInteraction | undefined);
+
+      const patch: Partial<BrandSceneCast> = {
         extras: nextExtras,
         preset: seededPreset,
-        interaction: seededInteraction,
-      });
+        interaction: cast?.interaction ?? preferredInteraction,
+      };
+      if (!cast?.vibe) patch.vibe = "editorial" as CastVibe;
+      if (!cast?.hands_on_product && resolved.handsOnProduct[0]) {
+        patch.hands_on_product = resolved.handsOnProduct[0] as HandsOnProduct;
+      }
+      if (!cast?.body_part_focus && resolved.bodyPartFocus[0]) {
+        patch.body_part_focus = resolved.bodyPartFocus[0] as BodyPartFocus;
+      }
+      if (seededHasPeople) {
+        if (!cast?.action) patch.action = "still" as CastAction;
+        if (!cast?.gaze) patch.gaze = "away" as GazeDirection;
+        if (!cast?.age || cast.age.length === 0) patch.age = ["adult" as CastAge];
+      }
+      onCastChange(patch);
+
       if (!scale?.preset) onScaleChange({ preset: resolved.scale.default });
+
+      // Seed editorial scene defaults so Auto-cast produces a cohesive image.
+      if (onBaseChange) {
+        const base = answers.base ?? {};
+        const basePatch: Partial<NonNullable<BrandSceneAnswers["base"]>> = {};
+        if (!base.lens && resolved.lens[0]) basePatch.lens = resolved.lens[0];
+        if (!base.depth_of_field && resolved.depthOfField[0]) {
+          basePatch.depth_of_field = resolved.depthOfField[0];
+        }
+        if (!base.finish && resolved.finishes[0]) basePatch.finish = resolved.finishes[0];
+        if (Object.keys(basePatch).length) onBaseChange(basePatch);
+      }
     } else {
       onCastChange({ extras: nextExtras });
     }
