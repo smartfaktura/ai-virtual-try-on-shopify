@@ -191,21 +191,27 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
         {/* Left — Video / Image preview */}
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
           {isComplete ? (
-            <video
-              src={video.video_url!}
-              controls
-              autoPlay
-              loop
-              playsInline
-              preload="metadata"
-              onLoadedMetadata={(event) => {
-                const { videoWidth, videoHeight } = event.currentTarget;
-                if (videoWidth && videoHeight) {
-                  setVideoMetadata({ width: videoWidth, height: videoHeight });
-                }
-              }}
-              className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] rounded-lg shadow-2xl"
-            />
+            signedSrc ? (
+              <video
+                src={signedSrc}
+                controls
+                autoPlay
+                loop
+                playsInline
+                preload="metadata"
+                onLoadedMetadata={(event) => {
+                  const { videoWidth, videoHeight } = event.currentTarget;
+                  if (videoWidth && videoHeight) {
+                    setVideoMetadata({ width: videoWidth, height: videoHeight });
+                  }
+                }}
+                className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] rounded-lg shadow-2xl"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            )
           ) : (
             <img
               src={video.source_image_url}
