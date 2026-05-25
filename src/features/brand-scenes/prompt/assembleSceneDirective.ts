@@ -293,8 +293,8 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
       "Do not invent a new room, studio, or background; reuse the reference scene only.",
     );
   }
-  if (guide && castHasPeople) {
-    for (const s of guide.safeguards) negative.push(s);
+  if (guideShouldFire) {
+    for (const s of guide!.safeguards) negative.push(s);
   }
 
 
