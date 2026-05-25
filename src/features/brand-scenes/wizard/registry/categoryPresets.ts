@@ -358,6 +358,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     settings: ["Architectural interior", "Domestic", "Studio cyclorama"],
     surfaces: ["raw_wood", "polished_stone", "concrete"],
     prop_density_max: 4,
+    body_part_focus: ["hands", "full_body", "detail"],
+    hands_on_product: ["cradle", "tap"],
     sub: {
       furniture: {
         scale: ["furniture", "architectural"],
