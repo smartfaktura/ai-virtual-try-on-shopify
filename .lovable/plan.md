@@ -1,16 +1,28 @@
-Fix: feature-gate "Upgrade plan" buttons (Brand Scenes, Brand Models) currently open the top-up packs modal instead of the plan upgrade picker for Starter users — they need to move to Growth/Pro, not buy credit packs.
+Make the "Create Your Brand Model" card on `/app/generate/product-images` (Model Selection step) open an informational dialog instead of navigating away. The dialog explains what Brand Models are and offers a clear next step depending on the user's plan.
 
-**Root cause**
+**New component**
 
-The earlier change made `GlobalUpgradeModal` always show `variant='topup'` for any paid plan. That works for the sidebar "Get credits" CTA, but breaks gated-feature CTAs that share the same `openBuyModal()` trigger.
+`src/components/app/product-images/BrandModelsInfoModal.tsx` — small `Dialog` (shadcn) with:
+- Icon + title: "Bring your brand model to every shot"
+- Short description: unlimited custom AI models matched to your brand identity
+- 3 benefit bullets (reusing the copy from `BrandModels.tsx` `UpgradeHero`):
+  - Brand consistency across every campaign
+  - Any ethnicity, age, gender, body type
+  - Upload a reference or describe from scratch
+- Footer CTA, plan-aware (read `plan` from `useCredits()`):
+  - Growth / Pro / Enterprise → primary "Create Brand Model" → `navigate('/app/models')` + close
+  - Free / Starter → primary "Upgrade plan" → `openBuyModal('brand-models-gate')` + close
+- Secondary "Maybe later" / close button
 
-Affected call sites (already pass distinguishable source strings):
-- `src/pages/BrandScenes.tsx` → `openBuyModal('brand-scenes-gate')` (×2)
-- `src/pages/BrandModels.tsx` `UpgradeHero` → `openBuyModal()` — needs source
+**Wire-up**
 
-**Change**
+`src/components/app/product-images/ProductImagesStep3Refine.tsx`:
+- Add `useState` for `infoOpen` inside `ModelPickerSections`.
+- Replace the card's `onClick` (currently calls `onUpgradeClick` for free or navigates to `/app/models`) with `setInfoOpen(true)`.
+- Render `<BrandModelsInfoModal open={infoOpen} onOpenChange={setInfoOpen} />` next to the card.
+- Remove direct `navigate` / `onUpgradeClick` from that one click path; the modal handles both branches now. Keep `onUpgradeClick` prop intact (still used by other CTAs in the same component, e.g. the "Free plan: 1 model per generation — Upgrade" inline link).
 
-1. `src/components/app/GlobalUpgradeModal.tsx`: read `buyModalSource` from `useCredits()` and treat any source ending with `-gate` as a feature-unlock trigger → force `variant='auto'` (upgrade picker) regardless of current plan. Other sources keep current rule (free → upgrade, paid → top-up).
-2. `src/pages/BrandModels.tsx`: pass `openBuyModal('brand-models-gate')` so the gate matches the rule.
+**Out of scope**
 
-No DB, Stripe, or pricing changes.
+- Catalog flow (`CatalogStepModelsV2.tsx`) — user only asked about Product Images. Leave it.
+- No changes to `BrandModels.tsx`, plan gating logic, or `GlobalUpgradeModal`.
