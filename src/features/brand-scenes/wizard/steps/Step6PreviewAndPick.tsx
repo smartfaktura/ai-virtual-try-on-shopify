@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw } from "lucide-react";
+import { ImageLightbox } from "@/components/app/ImageLightbox";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,7 @@ export function Step6PreviewAndPick({
     initialFromCache?.selectedUrl ?? null,
   );
   const [confirmRegenOpen, setConfirmRegenOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   // Idempotency lock — prevents double-deduct on fast double-click before
   // React commits the phase state change.
   const inFlightRef = useRef(false);
