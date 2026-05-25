@@ -41,6 +41,7 @@ const FEATURE_MATRIX: FeatureGroup[] = [
       { label: 'Lifestyle & editorial scenes', values: { free: true, starter: true, growth: true, pro: true } },
       { label: 'AI Models (on-model imagery)', values: { free: true, starter: true, growth: true, pro: true } },
       { label: 'Brand Models (custom trained)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Brand Scenes (custom environments)', values: { free: false, starter: false, growth: true, pro: true }, badge: 'NEW' },
       { label: 'Bulk generation', values: { free: false, starter: true, growth: true, pro: true } },
       { label: 'Multi-angle / perspectives', values: { free: true, starter: true, growth: true, pro: true } },
       { label: 'Freestyle (text-to-image)', values: { free: true, starter: true, growth: true, pro: true } },
