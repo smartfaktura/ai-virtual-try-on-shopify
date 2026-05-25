@@ -402,7 +402,14 @@ export function LandingPricing() {
                     </tr>
                     {group.rows.map((row) => (
                       <tr key={row.label} className="border-t border-[#f3f1ed]">
-                        <td className="px-5 py-3 text-[13px] text-foreground/85">{row.label}</td>
+                        <td className="px-5 py-3 text-[13px] text-foreground/85">
+                          <span className="inline-flex items-center gap-2">
+                            {row.label}
+                            {row.badge && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-primary/10 text-primary">{row.badge}</span>
+                            )}
+                          </span>
+                        </td>
                         {mainPlans.map((p) => {
                           const isRec = p.planId === 'growth';
                           return (
