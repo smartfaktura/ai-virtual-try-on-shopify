@@ -825,6 +825,7 @@ function InteractionTab({
   cast,
   onCastChange,
   headlineMissing,
+  isReference,
 }: {
   module?: BrandSceneModule;
   subFamily?: string;
@@ -836,6 +837,7 @@ function InteractionTab({
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
   headlineMissing: boolean;
+  isReference?: boolean;
 }) {
   const showHandsOn =
     visibleHandsOnProduct.length > 0 &&
@@ -846,6 +848,25 @@ function InteractionTab({
   const showGroup = preset === "two" || preset === "group";
   const lingerie = isLingerie(module, subFamily) && hasPeople;
 
+  const showReferencePosePill = !!isReference && hasPeople;
+  const referenceActive = cast?.action_note === REFERENCE_POSE_NOTE;
+
+  // Pre-select "As reference image" the first time the user reaches the
+  // interaction sub-step in a reference flow, so the generated variations
+  // follow the reference pose unless the user picks something else.
+  const seededRefPoseRef = useRef(false);
+  useEffect(() => {
+    if (!showReferencePosePill) return;
+    if (seededRefPoseRef.current) return;
+    if (cast?.action || cast?.action_note?.trim()) {
+      seededRefPoseRef.current = true;
+      return;
+    }
+    seededRefPoseRef.current = true;
+    onCastChange({ action: undefined, action_note: REFERENCE_POSE_NOTE });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showReferencePosePill]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
       {hasPeople && (
@@ -854,10 +875,28 @@ function InteractionTab({
             <p className="-mt-2 mb-3 text-[11px] text-muted-foreground">
               Sets the body language and composition
             </p>
+            {showReferencePosePill && (
+              <div className="mb-3">
+                <Chip
+                  active={referenceActive}
+                  onClick={() =>
+                    onCastChange({
+                      action: undefined,
+                      action_note: referenceActive ? undefined : REFERENCE_POSE_NOTE,
+                    })
+                  }
+                >
+                  As reference image
+                </Chip>
+                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                  Follow the pose, framing and gaze from your uploaded image
+                </p>
+              </div>
+            )}
             <ChipRowWithOther
               options={CAST_ACTIONS}
               current={cast?.action_note ? undefined : cast?.action}
-              custom={cast?.action_note}
+              custom={referenceActive ? undefined : cast?.action_note}
               onPick={(v) =>
                 onCastChange({
                   action: v as CastAction | undefined,
