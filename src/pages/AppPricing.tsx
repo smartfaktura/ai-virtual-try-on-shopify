@@ -466,7 +466,14 @@ export default function AppPricing() {
                     </tr>
                     {group.rows.map((row) => (
                       <tr key={row.label} className="border-t border-border/30 hover:bg-muted/10 transition-colors">
-                        <td className="px-5 py-3 text-[13px] text-foreground/90">{row.label}</td>
+                        <td className="px-5 py-3 text-[13px] text-foreground/90">
+                          <span className="inline-flex items-center gap-2">
+                            {row.label}
+                            {row.badge && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-primary/10 text-primary">{row.badge}</span>
+                            )}
+                          </span>
+                        </td>
                         {mainPlans.map((p) => {
                           const isRec = p.planId === 'growth';
                           return (
