@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 type ImageSource = 'upload' | 'url';
 
