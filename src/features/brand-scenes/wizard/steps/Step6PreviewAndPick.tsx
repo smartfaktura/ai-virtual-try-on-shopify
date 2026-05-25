@@ -452,6 +452,36 @@ export function Step6PreviewAndPick({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {variations.length > 0 && (
+        <ImageLightbox
+          images={variations.map((v) => v.url)}
+          currentIndex={previewIndex ?? 0}
+          open={previewIndex !== null}
+          onClose={() => setPreviewIndex(null)}
+          onNavigate={(idx) => setPreviewIndex(idx)}
+          onSelect={
+            phase === "picking"
+              ? (idx) => {
+                  const url = variations[idx]?.url;
+                  if (!url) return;
+                  setSelectedUrl(url);
+                  if (promptHash) {
+                    onCacheChange?.({ promptHash, variations, selectedUrl: url });
+                  }
+                }
+              : undefined
+          }
+          selectedIndices={
+            new Set(
+              variations
+                .map((v, i) => (v.url === selectedUrl ? i : -1))
+                .filter((i) => i >= 0),
+            )
+          }
+          productName={sceneName}
+        />
+      )}
     </div>
   );
 }
