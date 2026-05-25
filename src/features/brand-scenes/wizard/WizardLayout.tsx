@@ -17,6 +17,7 @@ interface Props {
   nextDisabledReason?: string | null;
   nextLabel?: string;
   isLastStep?: boolean;
+  hideSubFamilyStep?: boolean;
   children: ReactNode;
 }
 
