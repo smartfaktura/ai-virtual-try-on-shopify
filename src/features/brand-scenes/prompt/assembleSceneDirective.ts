@@ -328,8 +328,12 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   push("OUTPUT", output);
   push("NEGATIVE", negative);
   push("NOTES", notes);
-  push("REFERENCE", reference);
+  // REFERENCE is intentionally promoted to the TOP of the prompt (right after
+  // ROLE) so Gemini treats it as the dominant constraint. Without this, the
+  // model often ignored the reference and produced a portrait on a generic
+  // background. See buildReferenceDirective for the per-intent wording.
   push("NAME", name);
+
 
   // Trim trailing blank line.
   while (out.length && out[out.length - 1] === "") out.pop();
