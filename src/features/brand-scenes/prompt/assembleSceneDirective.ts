@@ -280,9 +280,20 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   negative.push(
     "Do not render text, captions, logos, watermarks, UI chrome, or extra products.",
   );
+  // Location-lock hardening — prevents the model from collapsing into a
+  // tight headshot with a generic background and losing the reference scene.
+  if (answers.source === "reference" && answers.reference_intent === "location") {
+    negative.push(
+      "Do not output a tight headshot or closeup that hides the reference environment — the reference location MUST be clearly visible around the subject in every variation.",
+    );
+    negative.push(
+      "Do not invent a new room, studio, or background; reuse the reference scene only.",
+    );
+  }
   if (guide && castHasPeople) {
     for (const s of guide.safeguards) negative.push(s);
   }
+
 
   // ----- NOTES -----
   if (base.notes?.trim()) notes.push(`Notes: ${base.notes.trim()}.`);
@@ -307,7 +318,12 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   );
   out.push("");
 
+  // REFERENCE goes FIRST (right after ROLE) — promoted from the bottom of
+  // the prompt so the model treats the uploaded image as the dominant
+  // constraint rather than a trailing afterthought.
+  push("REFERENCE", reference);
   push("PRODUCT FOCUS", productFocus);
+
   push("SUBJECT", subject);
   push("SCENE", scene);
   push("CAMERA & FRAMING", camera);
@@ -317,8 +333,12 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   push("OUTPUT", output);
   push("NEGATIVE", negative);
   push("NOTES", notes);
-  push("REFERENCE", reference);
+  // REFERENCE is intentionally promoted to the TOP of the prompt (right after
+  // ROLE) so Gemini treats it as the dominant constraint. Without this, the
+  // model often ignored the reference and produced a portrait on a generic
+  // background. See buildReferenceDirective for the per-intent wording.
   push("NAME", name);
+
 
   // Trim trailing blank line.
   while (out.length && out[out.length - 1] === "") out.pop();

@@ -273,7 +273,13 @@ export function Step3Reference({
             />
           ))}
         </div>
+        {intent === "location" && (
+          <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+            Upload a clean wide shot of the space — we'll place your cast and product inside it without changing the location
+          </p>
+        )}
       </div>
+
 
       {/* AI outfit direction (only when an image is uploaded) */}
       <ReferenceOutfitCard
