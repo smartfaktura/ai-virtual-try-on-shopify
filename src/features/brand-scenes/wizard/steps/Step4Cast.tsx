@@ -107,6 +107,7 @@ export function Step4Cast({
   scale,
   onCastChange,
   onScaleChange,
+  onBaseChange,
   subStep = "essentials",
   onSubStepChange,
   visitedSubSteps,
