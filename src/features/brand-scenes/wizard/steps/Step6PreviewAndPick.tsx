@@ -109,6 +109,10 @@ export function Step6PreviewAndPick({
     answers.sub_family,
     answers.cast?.gender?.[0],
   );
+  const [customProduct, setCustomProduct] = useState<PickedProduct | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const previewProduct: { url: string; label: string } | null =
+    customProduct ?? (stockProduct ? { url: stockProduct.url, label: stockProduct.label } : null);
 
   const referenceIntentLabel = (() => {
     switch (answers.reference_intent) {
