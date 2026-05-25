@@ -340,6 +340,24 @@ export function Step6PreviewAndPick({
 
       {phase === "generating" && <BrandSceneGenerateLoading />}
 
+      {phase === "picking" && variations.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center space-y-3">
+          <p className="text-sm text-foreground/80">
+            No variations to show — they may have been cleared after an edit
+          </p>
+          <Button
+            size="pill"
+            onClick={handleGenerate}
+            disabled={!nameValid || submitting}
+            className="gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Regenerate · {BRAND_SCENE_GENERATION_COST} credits
+          </Button>
+        </div>
+      )}
+
+
       {(phase === "picking" || phase === "saving") && variations.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
           <div>
