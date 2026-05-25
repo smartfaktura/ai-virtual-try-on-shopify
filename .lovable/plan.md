@@ -1,23 +1,35 @@
 ## Problem
 
-The brand-scene preview generation flow now lets users swap the default stock product with their own product via `UserProductPickerModal`. However, the `generate-brand-scene` edge function's SSRF guard rejects user-product images because they use signed Supabase Storage URLs (`/storage/v1/object/sign/product-uploads/...`) while the guard only allows `/storage/v1/object/public/` paths. The result: `productInlineData` is silently undefined when a user picks their own product, and the preview generates without the product reference at all.
+After generating a video on **Animate Image**, **Start & End Video**, or the legacy **VideoGenerate** page, clicking **Download Video** does nothing and shows "Failed to download video". Users interpret this as "cannot save the video".
+
+The `generated-videos` storage bucket is **private**. Three download handlers call `fetch(video_url)` against the raw stored URL with no signed token, so the request fails. `VideoDetailModal` (opened from Video Hub) already does this correctly via `toSignedUrl()` — that's why ZIP downloads and the lightbox download work, but the inline post-generation button does not.
+
+Videos themselves **are** being saved to the user's library on completion (verified: last 10 `generated_videos` rows are `status='complete'` with `video_url` populated). The issue is purely the download UX.
 
 ## Fix
 
-1. **Broaden `isAllowedImageUrl` in `supabase/functions/generate-brand-scene/index.ts`**
-   - Change the `pathOk` check from a single `includes("/storage/v1/object/public/")` to also accept `/storage/v1/object/sign/`
-   - This keeps the guard strict (still only project Supabase hosts, still HTTPS only) while allowing both public-bucket and signed-bucket URLs
+Use the existing `toSignedUrl()` helper (`src/lib/signedUrl.ts`) before fetching, exactly like `VideoDetailModal.handleDownload` does.
 
-2. **Deploy the edge function**
-   - Deploy `generate-brand-scene` so the change goes live immediately
+### 1. `src/components/app/video/VideoResultsPanel.tsx`
+Replace the `handleDownload` body so it first resolves a signed URL:
+- `import { toSignedUrl } from '@/lib/signedUrl';`
+- `const signed = await toSignedUrl(videoUrl);`
+- `const res = await fetch(signed);`
+- Keep the existing blob → anchor click → `URL.revokeObjectURL` flow.
+- On failure, show the same toast.
 
-3. **Verify**
-   - Use the curl tool to call the function with a signed `product-uploads` URL and confirm it is no longer rejected (no "Rejected productImageUrl (SSRF guard)" in logs)
-   - Regression check: confirm a `/public/` URL still works
+### 2. `src/pages/VideoGenerate.tsx` — `VideoHistoryCard.handleDownload`
+Same change: sign `video.video_url` first, then fetch. Keep the "open in new tab" fallback (it still won't work for private URLs, but it's not regressing anything).
 
-## Files Changed
-- `supabase/functions/generate-brand-scene/index.ts` (1-line `pathOk` change)
+### 3. `src/pages/VideoGenerate.tsx` — main result `handleDownload`
+Same change: sign `videoUrl` first, then fetch.
 
-## Out of Scope
-- No changes to `Step6PreviewAndPick.tsx` or `UserProductPickerModal.tsx` — they already pass the correct signed URLs
-- No changes to saved scene persistence — the custom product is still preview-only
+No backend, DB, RLS, or bucket changes. No new dependencies. Pure 3-file frontend patch.
+
+## Verification
+
+- AnimateVideo: generate a short video → click **Download Video** in the results panel → MP4 saves to disk.
+- StartEndVideo: same flow.
+- Video Hub → open detail modal → **Download Video** still works (already correct).
+- Video Hub → **Download ZIP** still works (already correct).
+- ShortFilm download still works (already correct).
