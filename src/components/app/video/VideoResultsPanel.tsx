@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { CorrectionConfirmModal } from './CorrectionConfirmModal';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 const RESULTS_TEAM = TEAM_MEMBERS.filter(m => ['Sophia', 'Kenji', 'Zara'].includes(m.name));
 
