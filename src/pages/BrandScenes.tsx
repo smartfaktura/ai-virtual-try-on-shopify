@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { BRAND_SCENE_REFERENCE_BUCKET } from '@/features/brand-scenes/constants';
 
 interface BrandSceneRow {
   id: string;
@@ -30,6 +31,18 @@ interface BrandSceneRow {
   created_at: string;
   brand_scene_module: string | null;
   category_collection: string | null;
+  brand_scene_answers: { reference_image_paths?: string[] | null } | null;
+}
+
+/** Split a Supabase public storage URL into (bucket, key). */
+function parsePublicStorageUrl(url: string): { bucket: string; key: string } | null {
+  const marker = '/storage/v1/object/public/';
+  const idx = url.indexOf(marker);
+  if (idx < 0) return null;
+  const rest = url.slice(idx + marker.length).split('?')[0];
+  const slash = rest.indexOf('/');
+  if (slash < 0) return null;
+  return { bucket: rest.slice(0, slash), key: decodeURIComponent(rest.slice(slash + 1)) };
 }
 
 export default function BrandScenes() {
