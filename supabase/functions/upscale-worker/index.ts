@@ -38,24 +38,10 @@ serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const topazApiKey = Deno.env.get("TOPAZ_API_KEY")!;
 
-  // Internal-only: only process-queue can call this
+  // Internal-only: require the real service-role key.
   const authHeader = req.headers.get("authorization");
-  const hasQueueHeader = req.headers.get("x-queue-internal") === "true";
-  let isQueueInternal = hasQueueHeader && authHeader === `Bearer ${serviceRoleKey}`;
-
-  // Fallback for signing-keys rotation: accept any valid service_role JWT
-  if (!isQueueInternal && hasQueueHeader && authHeader?.startsWith("Bearer ")) {
-    try {
-      const payloadB64 = authHeader.slice(7).split(".")[1];
-      if (payloadB64) {
-        const payload = JSON.parse(atob(payloadB64));
-        if (payload.role === "service_role") isQueueInternal = true;
-      }
-    } catch { /* invalid JWT */ }
-  }
-
-  if (!isQueueInternal) {
-    console.warn(`[upscale-worker] Auth REJECTED — headerLen=${authHeader?.length ?? 0}, hasQueueHeader=${hasQueueHeader}`);
+  if (authHeader !== `Bearer ${serviceRoleKey}`) {
+    console.warn(`[upscale-worker] Auth REJECTED — headerLen=${authHeader?.length ?? 0}`);
     return new Response(
       JSON.stringify({ error: "This function is queue-only. Use enqueue-generation instead." }),
       { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
