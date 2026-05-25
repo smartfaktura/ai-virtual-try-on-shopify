@@ -1,51 +1,98 @@
-# Fix video download for generated videos
+# Brand Scenes — full QA sweep
 
-## Problem
+A slow, methodical audit of `/app/brand-scenes` (list) and `/app/brand-scenes/new` (7-step wizard) covering every button, every sub-category, and every option chip — producing a written findings doc first, then targeted fixes.
 
-After generating a video, clicking **Download** opens the video in a new browser tab instead of saving it as an `.mp4` file. Users have to right-click → "Save video as…" to keep it.
+## Scope
 
-## Root cause
+| Surface | Files | LoC |
+|---|---|---|
+| List page `/app/brand-scenes` | `src/pages/BrandScenes.tsx` | 330 |
+| Wizard shell `/app/brand-scenes/new` | `src/pages/BrandSceneWizard.tsx` | 43 |
+| Step 0 — Choose source | `Step0ChooseSource.tsx` | 30 |
+| Step 1 — Module | `Step1ChooseModule.tsx` | 43 |
+| Step 2 — Sub-family | `Step2ChooseSubFamily.tsx` | 52 |
+| Step 3 — Reference | `Step3Reference.tsx` | 340 |
+| Step 4 — Cast / Environment / Module Qs | 3 files | ~1850 |
+| Step 5 — Photography / Review | 2 files | ~580 |
+| Step 6 — Preview & Pick | `Step6PreviewAndPick.tsx` | 515 |
+| Registries | `categoryPresets`, `subfamilyGuides`, `settingsBySubfamily`, `storytellingBySubfamily`, `resolvePresets`, `lingerieCast` | ~1500 |
+| Constants | `cast`, `scale`, `scene`, `extras`, `sceneExtras`, `outfit`, `stockOverrides` | ~600 |
 
-Two download buttons in `src/pages/VideoGenerate.tsx` use a plain anchor with the `download` attribute pointing at the video URL:
+## QA process (phases)
 
-```ts
-const a = document.createElement('a');
-a.href = video.video_url;
-a.download = 'video-xxx.mp4';
-a.target = '_blank';
-a.click();
-```
+### Phase 1 — Inventory & static audit (read-only, no code changes)
 
-Browsers **ignore the `download` attribute when the URL is cross-origin** (Kling CDN, and Supabase Storage on a different origin than the app). Result: the link behaves like a normal navigation and the video streams inline in a new tab.
+Produce `.lovable/brand-scenes-qa.md` with:
 
-The Short Film page already does this correctly by fetching the URL as a blob first — we mirror that pattern.
+1. **List page checklist** — every button/CTA on `/app/brand-scenes`:
+   - "New scene", filters, sort, card actions (open, duplicate, delete), pagination, empty state, loading skeleton.
+   - For each: expected behavior, observed behavior, status (✅ / ⚠️ / ❌).
 
-## Audit of other download paths (no change needed)
+2. **Wizard nav** — Back / Next / Skip / step-jump on every step, plus auto-save / draft restore.
 
-| Surface | Status |
-|---|---|
-| Short Film single download (`src/pages/video/ShortFilm.tsx`) | OK — already uses `fetch → blob` with `window.open` fallback |
-| Video Hub bulk ZIP (`src/pages/VideoHub.tsx` → `downloadVideosAsZip`) | OK — signed URL + JSZip blob |
+3. **Per-step audit**, in order:
+   - **Step 0** — source mode buttons.
+   - **Step 1** — module tiles, recommended badge.
+   - **Step 2** — sub-family list, search/filter, "Other" path.
+   - **Step 3** — reference upload, multi-angle slots, paste URL, remove, replace, validation.
+   - **Step 4 (Cast)** — preset chips, scale chips, interaction chips, gesture chips, pose chips, vibe, action, gaze, body-part-focus, **Skip / Auto-cast**. Verify each is filtered by sub-family (per recent allowlist work).
+   - **Step 4 (Environment)** — setting picker, time-of-day, weather, props, surface, palette, lighting.
+   - **Step 4 (Module Qs)** — per-module question rendering.
+   - **Step 5 (Photography)** — lens, aspect ratio, DoF, finish, framing, camera angle, height.
+   - **Step 5 (Review)** — directive preview, edit-jump links.
+   - **Step 6 (Preview & Pick)** — generate, retry, pick winner, refine, download, save to library, credit cost.
 
-## Changes
+4. **Per sub-family matrix** — for each sub-family declared in `categoryPresets.ts`, list:
+   - Allowed interactions / gestures / poses / body-part-focus.
+   - Any allowed value that is logically impossible for that sub-family (the original bug pattern).
+   - Missing options the user would expect.
 
-### `src/pages/VideoGenerate.tsx`
+   Sub-families to walk through: apparel (tops/bottoms/outerwear/dresses/activewear/swim/lingerie), footwear (sneakers/boots/heels/sandals), bags (totes/backpacks/clutches/crossbody), eyewear (sunglasses/optical), hats, jewelry (rings/necklaces/earrings/bracelets), watches, beauty (fragrance/skincare/makeup), home, electronics, fashion-misc.
 
-Rewrite both `handleDownload` functions (the post-generation Download button at ~line 228, and the History card download at ~line 26) to:
+5. **Cross-cutting checks**:
+   - Forbidden combinations actually enforced (`combinationGuards.ts`).
+   - Empty-array allowlist behavior (recent `resolvePresets` change).
+   - Person-injection on hands-only presets.
+   - Mobile viewport (≤640px) chip wrapping, sticky CTAs.
+   - Loading / error / disabled states on every async button.
+   - Console errors / warnings during a full happy-path run.
 
-1. `fetch(video_url)` → `response.blob()`
-2. `URL.createObjectURL(blob)` → assign to `<a>` → click → `revokeObjectURL`
-3. On any error, `console.warn` and fall back to `window.open(video_url, '_blank')` so the user is never stuck.
-4. Keep existing filename logic (`video-${camera_type||id}.mp4`).
+### Phase 2 — Live browser walkthrough
 
-No other files, no backend, no DB, no new dependency.
+Using the browser tool at viewport 930×809 and 390×844:
+- Walk every step for **3 representative sub-families** (rings, sneakers, fragrance) end-to-end.
+- Capture screenshots of any visual/UX issue and append to the QA doc with severity (Blocker / Major / Minor / Nit).
+- Note any console errors via `read_console_logs`.
 
-## Risk
+### Phase 3 — Findings report
 
-Very low. Worst case is identical to today's behavior (video opens in a new tab via the fallback). The `fetch → blob` pattern is already proven in `ShortFilm.tsx` against the same Kling CDN.
+Final `.lovable/brand-scenes-qa.md` sections:
+- Executive summary (counts by severity).
+- Blocker / Major / Minor / Nit tables, each row: file → line → issue → suggested fix.
+- Per sub-family matrix from Phase 1.
 
-## Verification
+### Phase 4 — Targeted fixes (separate confirmation)
 
-- Generate a video in `/app/video` and click **Download** → browser save dialog appears, file lands as `.mp4`.
-- Click **Download** on a history card → same.
-- Force the fetch to fail (e.g. offline) → falls back to opening in a new tab without throwing.
+After you review the report, we agree which findings to fix and ship them in batched, minimal edits. No code changes happen in Phases 1–3.
+
+## Out of scope
+
+- Backend / edge function changes.
+- Generation prompt rewrites beyond fixing allowlist / placement bugs.
+- Visual redesign — only UX bugs and inconsistencies.
+- Adding new sub-families or new options.
+
+## Deliverables
+
+1. `.lovable/brand-scenes-qa.md` — the full findings doc.
+2. A short summary in chat with severity counts and the top 5 issues.
+3. A follow-up fix plan you approve before any edits.
+
+## Clarifying question (before I start)
+
+Two ways to run this — pick one:
+
+- **A. Full sweep** — every sub-family in the matrix (≈12). Slower, ~30–45 min of tool calls, most thorough.
+- **B. Targeted sweep** — focus on the 3–5 sub-families you care about most (e.g. jewelry, watches, eyewear, footwear, fragrance). Faster, ~10–15 min.
+
+If you don't specify, I'll default to **A (full sweep)** since you asked for "slow but good QA".
