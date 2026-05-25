@@ -265,13 +265,13 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       },
       belts: {
         cast_presets: ["solo", "hands", "none"],
-        interactions: ["wearing", "hero"],
+        interactions: ["wearing", "holding", "beside", "hero"],
         hands_on_product: ["cradle", "pinch"],
       },
       scarves: {
         cast_presets: ["solo", "none"],
-        interactions: ["wearing", "hero"],
-        hands_on_product: [],
+        interactions: ["wearing", "holding", "beside", "hero"],
+        hands_on_product: ["cradle", "pinch"],
       },
     },
   },
@@ -388,6 +388,15 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     surfaces: ["polished_stone", "raw_wood", "paper", "concrete"],
     body_part_focus: ["hands", "detail", "face"],
     hands_on_product: ["tap", "cradle", "pinch"],
+    sub: {
+      "tech-devices": {
+        interactions: ["using", "holding", "beside", "hero"],
+        cast_presets: ["hands", "solo", "none"],
+        default_cast: "hands",
+        body_part_focus: ["hands", "detail", "face"],
+        hands_on_product: ["tap", "cradle", "pinch"],
+      },
+    },
   },
 
   "food-drink": {
@@ -431,5 +440,13 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     surfaces: ["linen", "polished_stone", "raw_wood", "paper"],
     body_part_focus: ["hands", "face", "detail"],
     hands_on_product: ["cradle", "cap", "pinch"],
+    sub: {
+      "supplements-wellness": {
+        interactions: ["holding", "beside", "hero"],
+        cast_presets: ["hands", "none", "solo"],
+        default_cast: "hands",
+        hands_on_product: ["cradle", "cap", "pinch"],
+      },
+    },
   },
 };
