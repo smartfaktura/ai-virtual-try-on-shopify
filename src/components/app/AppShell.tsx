@@ -80,7 +80,7 @@ const navGroups = [
   },
 ];
 
-type NavItem = { label: string; icon: typeof Home; path: string };
+type NavItem = { label: string; icon: typeof Home; path: string; badge?: string };
 
 const STORAGE_KEY = 'sidebar-collapsed';
 
