@@ -280,9 +280,20 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   negative.push(
     "Do not render text, captions, logos, watermarks, UI chrome, or extra products.",
   );
+  // Location-lock hardening — prevents the model from collapsing into a
+  // tight headshot with a generic background and losing the reference scene.
+  if (answers.source === "reference" && answers.reference_intent === "location") {
+    negative.push(
+      "Do not output a tight headshot or closeup that hides the reference environment — the reference location MUST be clearly visible around the subject in every variation.",
+    );
+    negative.push(
+      "Do not invent a new room, studio, or background; reuse the reference scene only.",
+    );
+  }
   if (guide && castHasPeople) {
     for (const s of guide.safeguards) negative.push(s);
   }
+
 
   // ----- NOTES -----
   if (base.notes?.trim()) notes.push(`Notes: ${base.notes.trim()}.`);
