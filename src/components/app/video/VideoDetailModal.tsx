@@ -86,6 +86,19 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
     setVideoMetadata(null);
   }, [open, video?.id]);
 
+  // Resolve a signed URL for private-bucket playback + download.
+  const [signedSrc, setSignedSrc] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setSignedSrc(null);
+    if (open && video?.video_url) {
+      toSignedUrl(video.video_url)
+        .then((url) => { if (!cancelled) setSignedSrc(url); })
+        .catch(() => { if (!cancelled) setSignedSrc(null); });
+    }
+    return () => { cancelled = true; };
+  }, [open, video?.video_url]);
+
   if (!open || !video) return null;
 
   const isComplete = video.status === 'complete' && video.video_url;
