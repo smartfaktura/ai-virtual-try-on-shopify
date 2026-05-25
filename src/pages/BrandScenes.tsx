@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, ArrowRight, Mountain, Sparkles, Users, Layers, Trash2, Wand2 } from 'lucide-react';
+import { Plus, ArrowRight, Mountain, Sparkles, Users, Layers, Trash2, Wand2, Lock } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditContext';
+import { canCreateBrandScenes } from '@/features/brand-scenes/access';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -32,6 +34,8 @@ interface BrandSceneRow {
 export default function BrandScenes() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { plan, openBuyModal } = useCredits();
+  const canCreate = canCreateBrandScenes(plan);
   const queryClient = useQueryClient();
   const [pendingDelete, setPendingDelete] = useState<BrandSceneRow | null>(null);
 
