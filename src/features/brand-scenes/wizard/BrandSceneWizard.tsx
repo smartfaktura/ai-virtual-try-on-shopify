@@ -282,6 +282,16 @@ export function BrandSceneWizard() {
     return nextSubStep ? `Continue to ${SUB_LABEL[nextSubStep]}` : undefined;
   })();
 
+  // Guard step-jump so the user can never land on a hidden Sub-family step
+  // (it's auto-skipped when a family exposes ≤1 sub-family).
+  const handleGoToStep = (s: WizardStep) => {
+    if (s === 2 && subFamilyCount <= 1) {
+      dispatch({ type: "setStep", step: 1 });
+      return;
+    }
+    dispatch({ type: "setStep", step: s });
+  };
+
   return (
     <>
       <WizardLayout
@@ -291,7 +301,7 @@ export function BrandSceneWizard() {
         subtitle={subtitle}
         onBack={handleBack}
         onNext={handleNext}
-        onGoToStep={(s) => dispatch({ type: "setStep", step: s })}
+        onGoToStep={handleGoToStep}
         nextDisabled={nextDisabled}
         nextDisabledReason={nextDisabledReason}
         nextLabel={nextLabel}
