@@ -75,12 +75,12 @@ const navGroups = [
       { label: 'Library', icon: Image, path: '/app/library' },
       { label: 'Products', icon: Package, path: '/app/products' },
       { label: 'Brand Models', icon: Users, path: '/app/models' },
-      { label: 'Brand Scenes', icon: Mountain, path: '/app/brand-scenes' },
+      { label: 'Brand Scenes', icon: Mountain, path: '/app/brand-scenes', badge: 'NEW' },
     ],
   },
 ];
 
-type NavItem = { label: string; icon: typeof Home; path: string };
+type NavItem = { label: string; icon: typeof Home; path: string; badge?: string };
 
 const STORAGE_KEY = 'sidebar-collapsed';
 
@@ -178,6 +178,11 @@ export function AppShell({ children }: AppShellProps) {
             {isComingSoon && (
               <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-white/[0.08] text-white/40">
                 Soon
+              </span>
+            )}
+            {!isComingSoon && item.badge && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-white/[0.12] text-white/80">
+                {item.badge}
               </span>
             )}
           </span>

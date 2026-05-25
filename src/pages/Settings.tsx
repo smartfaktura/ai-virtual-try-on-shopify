@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { gtagViewItem } from '@/lib/gtag';
-import { Building2, Check, ExternalLink, Loader2, RotateCcw } from 'lucide-react';
+import { Building2, Check, ExternalLink, Loader2, Plus, RotateCcw } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from '@/lib/categoryConstants';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
@@ -261,7 +261,7 @@ export default function Settings() {
   const { isAdmin } = useIsAdmin();
 
   useEffect(() => { gtagViewItem('Settings', 'settings_page'); }, []);
-  const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal } = useCredits();
+  const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal, openBuyModal } = useCredits();
 
   const [portalLoading, setPortalLoading] = useState(false);
   const handlePortal = async () => {
@@ -509,10 +509,16 @@ export default function Settings() {
 
             {/* Billing CTA */}
             {plan !== 'free' ? (
-              <Button variant="secondary" size="pill" className="w-full" onClick={handlePortal} disabled={portalLoading}>
-                {portalLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <ExternalLink className="w-4 h-4 mr-1.5" />}
-                {portalLoading ? 'Redirecting…' : 'Manage Billing & Invoices'}
-              </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button size="pill" className="w-full" onClick={() => openBuyModal('settings')}>
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Top up credits
+                </Button>
+                <Button variant="secondary" size="pill" className="w-full" onClick={handlePortal} disabled={portalLoading}>
+                  {portalLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <ExternalLink className="w-4 h-4 mr-1.5" />}
+                  {portalLoading ? 'Redirecting…' : 'Manage Billing & Invoices'}
+                </Button>
+              </div>
             ) : null}
         </div>
         )}

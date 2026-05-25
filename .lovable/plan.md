@@ -1,40 +1,38 @@
-## Problem
+## Changes
 
-Current `/app/video` order is: **In Progress → Workflow Cards → Showcase → Completed Videos**.
+### 1. Add "Brand Scenes" to plan feature matrices
 
-That works for first-time visitors but feels wrong the moment a user has real work — their own videos sit below ten autoplaying showcase clips, and during generation the "waiting" and "completed" states are visually disconnected.
+Insert a new row directly after `Brand Models (custom trained)` in both feature tables, with **NEW** badge. Tier availability: `free: false, starter: false, growth: true, pro: true` (matches Brand Models since Brand Scenes is the same growth+ feature class).
 
-## New layout logic
+Files:
+- `src/components/landing/LandingPricing.tsx` (line 33 area) — add row
+- `src/pages/AppPricing.tsx` (line 43 area) — add row
 
-`VideoHub.tsx` already computes `processingVideos` and `completedVideos`. We use those to switch layouts:
+The existing `FeatureRow` type already supports a `badge` field (used elsewhere). Verify; if not, extend the row type to render a small "NEW" pill next to the label and update the `FeatureRow` rendering to show it.
 
-**New user (no processing, no completed):**
-1. Page header
-2. Workflow Cards (Animate, Start & End, etc.)
-3. Showcase (the 10 autoplay clips — "see what's possible")
+### 2. Add "Brand Scenes" line item to plan cards on `/settings`
 
-**Returning user (has any processing OR completed video):**
-1. Page header
-2. **In Progress** (if any)
-3. **Completed Videos** (with Select / Load More)
-4. Workflow Cards (still accessible for starting a new one)
-5. *Showcase hidden* — they've seen what's possible, they're making their own
+`src/data/mockData.ts` `pricingPlans` — Growth and Pro `features[]` currently end with `{ text: 'Brand Models', badge: 'NEW' }`. Append `{ text: 'Brand Scenes', badge: 'NEW' }` to both Growth and Pro plans so the new feature surfaces in `/settings` and `/pricing` plan cards (they share this data source).
 
-So as soon as the first generation finishes (or even starts), Showcase disappears and Completed jumps directly under In Progress — matching the natural flow: *waiting → done → make another*.
+### 3. Sidebar nav — "NEW" badge on Brand Scenes
 
-## Implementation
+`src/components/app/AppShell.tsx`:
+- Extend the `NavItem` type with an optional `badge?: string`.
+- On the Brand Scenes entry (line 78), add `badge: 'NEW'`.
+- In `NavItemButton` render (line 175-184), render a small uppercase pill next to `{item.label}` when `item.badge` is present, styled like the existing "Soon" pill but in a subtle accent (e.g. `bg-white/[0.12] text-white/80`). Hidden when sidebar is `collapsed`.
 
-Single file: `src/pages/VideoHub.tsx`.
+### 4. Starter users — make "Top up" actually visible from Settings
 
-- Add `const hasOwnVideos = processingVideos.length > 0 || completedVideos.length > 0;`
-- Wrap the Showcase block in `{!hasOwnVideos && (...)}`
-- Reorder the JSX so In Progress + Completed render before Workflow Cards when `hasOwnVideos` is true. For new users, Workflow Cards + Showcase render in their current order.
-- Keep the empty-state card (the dashed "No videos yet…" box) — but it only ever shows for new users now, so it can be removed since Showcase covers that role. Cleaner: drop the empty-state, let Showcase be the empty state.
+Functionality already exists: `BuyCreditsModal` defaults paid users (including Starter) to the **Top Up** tab. The problem is `/settings` only exposes "Manage Billing & Invoices" — there's no button to open the top-up modal. Users assume the only path is to "upgrade".
 
-No changes to data fetching, the realtime tick, select mode, bulk download, or the `RecentVideoCard` component.
+Fix in `src/pages/Settings.tsx` (around lines 510-516, the `Billing CTA` block for paid users):
+- Add a primary `Top up credits` button above (or beside) "Manage Billing & Invoices" that calls `openBuyModal('settings')` from the `useCredits()` hook (already imported on line 264 — just add `openBuyModal` to the destructure).
+- Keep the existing "Manage Billing & Invoices" secondary button unchanged.
+
+No backend, RLS, Stripe price, or edge function changes — top-up checkout already works for Starter via the existing `creditPacks` flow.
 
 ## Out of scope
 
-- No DB / RLS / edge function changes
-- No restyle of cards themselves
-- Showcase clips stay as-is (we just conditionally render them)
+- No new feature tier rules — Brand Scenes inherits Growth+ availability from Brand Models (confirm with user if Starter should also get access; current `access.ts` enforces existing gating).
+- No copy/marketing changes to landing hero, only the comparison tables.
+- No changes to `BuyCreditsModal` itself.

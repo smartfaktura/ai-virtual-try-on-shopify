@@ -20,7 +20,7 @@ const PLAN_ORDER = ['free', 'starter', 'growth', 'pro'];
 
 // ── Feature comparison matrix (mirrors /app/pricing) ──
 type Cell = boolean | string;
-type FeatureRow = { label: string; values: Record<string, Cell> };
+type FeatureRow = { label: string; values: Record<string, Cell>; badge?: string };
 type FeatureGroup = { title: string; rows: FeatureRow[] };
 
 const FEATURE_MATRIX: FeatureGroup[] = [
@@ -31,6 +31,7 @@ const FEATURE_MATRIX: FeatureGroup[] = [
       { label: 'Lifestyle & editorial scenes', values: { free: true, starter: true, growth: true, pro: true } },
       { label: 'AI Models (on-model imagery)', values: { free: true, starter: true, growth: true, pro: true } },
       { label: 'Brand Models (custom trained)', values: { free: false, starter: false, growth: true, pro: true } },
+      { label: 'Brand Scenes (custom environments)', values: { free: false, starter: false, growth: true, pro: true }, badge: 'NEW' },
       { label: 'Bulk generation', values: { free: false, starter: true, growth: true, pro: true } },
       { label: 'Multi-angle / perspectives', values: { free: true, starter: true, growth: true, pro: true } },
       { label: 'Freestyle (text-to-image)', values: { free: true, starter: true, growth: true, pro: true } },
@@ -401,7 +402,14 @@ export function LandingPricing() {
                     </tr>
                     {group.rows.map((row) => (
                       <tr key={row.label} className="border-t border-[#f3f1ed]">
-                        <td className="px-5 py-3 text-[13px] text-foreground/85">{row.label}</td>
+                        <td className="px-5 py-3 text-[13px] text-foreground/85">
+                          <span className="inline-flex items-center gap-2">
+                            {row.label}
+                            {row.badge && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-primary/10 text-primary">{row.badge}</span>
+                            )}
+                          </span>
+                        </td>
                         {mainPlans.map((p) => {
                           const isRec = p.planId === 'growth';
                           return (
@@ -474,6 +482,9 @@ export function LandingPricing() {
                                 )}
                                 <span className={v === false ? 'text-muted-foreground/60' : 'text-foreground/90'}>
                                   {row.label}
+                                  {row.badge && (
+                                    <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-primary/10 text-primary align-middle">{row.badge}</span>
+                                  )}
                                   {typeof v === 'string' && <span className="text-muted-foreground"> · {v}</span>}
                                 </span>
                               </li>
