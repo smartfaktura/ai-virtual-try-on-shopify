@@ -180,6 +180,7 @@ serve(async (req) => {
         trigger_blocks: triggerBlocks,
         outfit_hint: outfitHint || null,
         requires_extra_reference: false,
+        use_scene_reference: true,
       })
       .select()
       .single();
