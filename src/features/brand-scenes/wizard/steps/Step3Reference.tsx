@@ -186,7 +186,7 @@ export function Step3Reference({
                 onClick={handleRemove}
                 className="rounded-full gap-1.5 shrink-0"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Replace
               </Button>
             </div>
