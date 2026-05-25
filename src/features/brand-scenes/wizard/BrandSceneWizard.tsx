@@ -296,6 +296,7 @@ export function BrandSceneWizard() {
         nextDisabledReason={nextDisabledReason}
         nextLabel={nextLabel}
         isLastStep={step === 6}
+        hideSubFamilyStep={subFamilyCount <= 1}
       >
         {step === 0 && (
           <Step0ChooseSource
