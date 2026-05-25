@@ -1,38 +1,16 @@
-Reorganize the app sidebar navigation groups so all creation tools sit under a single **Workspace** section.
+Fix: feature-gate "Upgrade plan" buttons (Brand Scenes, Brand Models) currently open the top-up packs modal instead of the plan upgrade picker for Starter users — they need to move to Growth/Pro, not buy credit packs.
 
-Current structure:
-```text
-Workspace
-  Dashboard
-Create
-  Visual Studio
-  Create with Prompt
-  Video
-  Explore
-Assets
-  Library
-  Products
-  Brand Models
-  Brand Scenes
-```
+**Root cause**
 
-New structure:
-```text
-Workspace
-  Dashboard
-  Visual Studio
-  Create with Prompt
-  Video
-  Explore
-Assets
-  Library
-  Products
-  Brand Models
-  Brand Scenes
-```
+The earlier change made `GlobalUpgradeModal` always show `variant='topup'` for any paid plan. That works for the sidebar "Get credits" CTA, but breaks gated-feature CTAs that share the same `openBuyModal()` trigger.
 
-**Changes:**
-1. In `src/components/app/AppShell.tsx`, merge the `Create` group items into the `Workspace` group and remove the standalone `Create` group entry.
-2. Remove the empty extra blank line inside the old `Create` items array.
+Affected call sites (already pass distinguishable source strings):
+- `src/pages/BrandScenes.tsx` → `openBuyModal('brand-scenes-gate')` (×2)
+- `src/pages/BrandModels.tsx` `UpgradeHero` → `openBuyModal()` — needs source
 
-The `Assets` group stays unchanged. No other UI or logic changes.
+**Change**
+
+1. `src/components/app/GlobalUpgradeModal.tsx`: read `buyModalSource` from `useCredits()` and treat any source ending with `-gate` as a feature-unlock trigger → force `variant='auto'` (upgrade picker) regardless of current plan. Other sources keep current rule (free → upgrade, paid → top-up).
+2. `src/pages/BrandModels.tsx`: pass `openBuyModal('brand-models-gate')` so the gate matches the rule.
+
+No DB, Stripe, or pricing changes.

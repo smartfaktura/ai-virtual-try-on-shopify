@@ -5,12 +5,16 @@ import { UpgradePlanModal } from './UpgradePlanModal';
  * Globally mounted upgrade/topup modal controlled by CreditContext.
  * Variant is chosen automatically:
  *  - Free users → upgrade variant (preselects Growth)
- *  - All paid plans (Starter/Growth/Pro/Enterprise) → topup variant
- *    (users who want to change tier use the "Compare plans" footer link)
+ *  - Feature-gate CTAs (source ends with "-gate") → always upgrade picker,
+ *    regardless of current plan (e.g. Starter user unlocking Brand Scenes
+ *    needs to move to Growth/Pro, not buy a credit pack).
+ *  - All other paid-plan triggers (sidebar "Get credits", etc.) → topup
+ *    variant. Users who want to change tier use the "Compare plans" footer.
  */
 export function GlobalUpgradeModal() {
-  const { buyModalOpen, closeBuyModal, plan } = useCredits();
-  const isTopupOnly = plan !== 'free';
+  const { buyModalOpen, closeBuyModal, plan, buyModalSource } = useCredits();
+  const isFeatureGate = !!buyModalSource && buyModalSource.endsWith('-gate');
+  const isTopupOnly = plan !== 'free' && !isFeatureGate;
   return (
     <UpgradePlanModal
       open={buyModalOpen}
@@ -19,3 +23,4 @@ export function GlobalUpgradeModal() {
     />
   );
 }
+
