@@ -1,21 +1,53 @@
-## Why it's missing
+## Fix: Remove unsigned-JWT auth bypass in queue-internal edge functions
 
-`src/pages/BrandModels.tsx` line 1311 wraps the `PageHeader` in `{isPaid && ...}`, so free/gated users see only the `UpgradeHero` panel — no H1, no subtitle. `BrandScenes.tsx` always renders its title block above the upgrade panel, which is why it looks more complete.
+### The vulnerability
 
-## Fix
+Four edge functions accept any JWT whose base64-decoded payload contains `role: "service_role"` — **without verifying the signature**. An attacker forges `eyJhbGciOiJub25lIn0.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.` plus `x-queue-internal: true` and bypasses auth.
 
-In `src/pages/BrandModels.tsx` around lines 1309–1331, render the page title block for everyone, matching the Brand Scenes pattern:
+### Why the fix is 100% safe (verified)
 
-- Remove the `isPaid &&` gate on the header.
-- Keep the "New brand model" action button gated: only show when `isPaid && models.length > 0` (free users shouldn't see a CTA that they can't use).
-- Subtitle stays "Custom AI models that match your brand" (no trailing period, single sentence — matches our copy rule).
+I audited every internal caller. Each one already sends the real service-role key as the bearer token:
 
-Result for the gated view: H1 "Brand Models" + subtitle on top, then the restyled upgrade panel below — visually matching `/app/brand-scenes`.
+| Caller | Header sent |
+|---|---|
+| `enqueue-generation` → `process-queue` (line 103, 207) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
+| `process-queue` self-dispatch (line 41) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
+| `retry-queue` → `process-queue` (line 46) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
+| `run-scheduled-drops` → `trigger-creative-drop` (line 66) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
 
-## Out of scope
-- The `UpgradeHero` panel itself (already restyled in the previous turn).
-- Paid state, generator, and locked-models list.
+The strict comparison `authHeader === \`Bearer ${serviceRoleKey}\`` already accepts all four. The base64-decode `else if` branch is **dead code** — it can only ever be reached by tokens that DON'T equal the real key, i.e. forgeries.
 
-## Verification
-- Reload `/app/models` on Starter plan: H1 + subtitle visible, upgrade panel underneath, no "New brand model" button.
-- Switch to Growth: header unchanged, "New brand model" button reappears when models exist.
+For reference: `generate-tryon` and `generate-text-product` already implement this correctly today (they require BOTH `x-queue-internal` AND `authHeader === Bearer serviceRoleKey`).
+
+### Changes
+
+In each file below, delete the entire `else if (isQueueInternal && authHeader?.startsWith("Bearer "))` block (the base64 JWT parser). Keep only the strict equality check.
+
+1. `supabase/functions/process-queue/index.ts` — delete lines ~80-93 (the `else if` JWT-payload block); also drop the now-unused `isQueueInternal` local and the "x-queue-internal header" wording in the comment.
+2. `supabase/functions/generate-freestyle/index.ts` — same pattern around lines 1150-1170.
+3. `supabase/functions/generate-workflow/index.ts` — same pattern around lines 1049-1070.
+4. `supabase/functions/upscale-worker/index.ts` — same pattern around lines 43-60.
+
+After the edit, each guard reduces to:
+
+```ts
+const authHeader = req.headers.get("authorization");
+const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+if (authHeader !== `Bearer ${serviceRoleKey}`) {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+```
+
+### Verification after deploy
+
+- Trigger a normal image generation from `/app/workflows` → confirms `enqueue-generation → process-queue → generate-workflow` still completes.
+- Trigger a freestyle generation → confirms `generate-freestyle` path.
+- Trigger an upscale from the library → confirms `upscale-worker`.
+- Re-run security scan; `jwt_bypass_queue_internal` should clear.
+
+### Out of scope
+
+The other findings in the security panel (open redirect in `create-checkout`, image-proxy SSRF, storage bucket policies, leaked-password protection, RLS warnings on checkout_sessions / generation_queue / etc.) — separate plans.
