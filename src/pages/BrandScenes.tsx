@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { BRAND_SCENE_REFERENCE_BUCKET } from '@/features/brand-scenes/constants';
 
 interface BrandSceneRow {
   id: string;
@@ -30,6 +31,18 @@ interface BrandSceneRow {
   created_at: string;
   brand_scene_module: string | null;
   category_collection: string | null;
+  brand_scene_answers: { reference_image_paths?: string[] | null } | null;
+}
+
+/** Split a Supabase public storage URL into (bucket, key). */
+function parsePublicStorageUrl(url: string): { bucket: string; key: string } | null {
+  const marker = '/storage/v1/object/public/';
+  const idx = url.indexOf(marker);
+  if (idx < 0) return null;
+  const rest = url.slice(idx + marker.length).split('?')[0];
+  const slash = rest.indexOf('/');
+  if (slash < 0) return null;
+  return { bucket: rest.slice(0, slash), key: decodeURIComponent(rest.slice(slash + 1)) };
 }
 
 export default function BrandScenes() {
@@ -47,7 +60,7 @@ export default function BrandScenes() {
     queryFn: async (): Promise<BrandSceneRow[]> => {
       const { data, error } = await supabase
         .from('product_image_scenes')
-        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module, category_collection')
+        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module, category_collection, brand_scene_answers')
         .eq('is_brand_scene', true)
         .eq('owner_user_id', user!.id)
         .order('created_at', { ascending: false });
@@ -67,6 +80,27 @@ export default function BrandScenes() {
     if (!pendingDelete) return;
     const target = pendingDelete;
     setPendingDelete(null);
+
+    // Best-effort storage cleanup — never blocks the DB delete.
+    try {
+      if (target.preview_image_url) {
+        const parsed = parsePublicStorageUrl(target.preview_image_url);
+        if (parsed) {
+          const { error: stErr } = await supabase.storage.from(parsed.bucket).remove([parsed.key]);
+          if (stErr) console.warn('Failed to delete preview from storage', stErr);
+        }
+      }
+      const refPaths = target.brand_scene_answers?.reference_image_paths ?? [];
+      if (refPaths.length > 0) {
+        const { error: refErr } = await supabase.storage
+          .from(BRAND_SCENE_REFERENCE_BUCKET)
+          .remove(refPaths);
+        if (refErr) console.warn('Failed to delete reference images from storage', refErr);
+      }
+    } catch (e) {
+      console.warn('Storage cleanup raised', e);
+    }
+
     const { error } = await supabase
       .from('product_image_scenes')
       .delete()
@@ -108,7 +142,14 @@ export default function BrandScenes() {
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="aspect-[4/5] rounded-2xl bg-muted/40 animate-pulse" />
+            <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="aspect-[4/5] bg-muted/50 animate-pulse" />
+              <div className="p-3.5 space-y-3">
+                <div className="h-3.5 w-3/4 rounded bg-muted/60 animate-pulse" />
+                <div className="h-2.5 w-1/2 rounded bg-muted/40 animate-pulse" />
+                <div className="h-8 w-24 rounded-full bg-muted/50 animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       ) : hasScenes ? (
@@ -255,7 +296,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <div className="mt-8 pt-6 border-t border-border flex flex-wrap items-center gap-3">
         <Button onClick={onCreate} className="rounded-full font-semibold gap-2">
           <Plus className="w-4 h-4" />
-          Create your first brand scene
+          New brand scene
         </Button>
       </div>
     </div>
