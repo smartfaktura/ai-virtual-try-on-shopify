@@ -416,7 +416,20 @@ serve(async (req) => {
     const body = await req.json();
 
     // ---- WORKER MODE (called by process-queue) ----
-    const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+    const hasQueueHeader = req.headers.get("x-queue-internal") === "true";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authHeaderRaw = req.headers.get("authorization") || req.headers.get("Authorization");
+    const isQueueInternal = hasQueueHeader && authHeaderRaw === `Bearer ${serviceRoleKey}`;
+
+    // SECURITY: Reject forged internal requests (queue header without valid service role key)
+    if (hasQueueHeader && !isQueueInternal) {
+      console.warn("[generate-video] Auth REJECTED — x-queue-internal set without valid service role key");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (isQueueInternal && body.job_id) {
       const jobType = body.job_type as string;
 
