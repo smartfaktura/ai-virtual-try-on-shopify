@@ -44,6 +44,8 @@ interface Props {
   intent?: ReferenceIntent;
   note?: string;
   referenceOutfit?: ReferenceOutfit;
+  responsibilityAccepted: boolean;
+  onRequestResponsibility: () => void;
   onImageChange: (path: string | null, previewUrl: string | null) => void;
   onNameChange: (name: string) => void;
   onIntentChange: (intent: ReferenceIntent) => void;
@@ -62,6 +64,8 @@ export function Step3Reference({
   intent,
   note = "",
   referenceOutfit,
+  responsibilityAccepted,
+  onRequestResponsibility,
   onImageChange,
   onNameChange,
   onIntentChange,
