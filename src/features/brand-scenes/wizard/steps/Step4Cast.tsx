@@ -76,6 +76,10 @@ import type {
 } from "../../types";
 import type { BrandSceneModule } from "../../constants";
 
+/** Canonical pose note used when the user wants the cast to mirror the reference image. */
+const REFERENCE_POSE_NOTE =
+  "Match the pose, framing, body language and gaze from the reference image";
+
 interface Props {
   module?: BrandSceneModule;
   subFamily?: string;
