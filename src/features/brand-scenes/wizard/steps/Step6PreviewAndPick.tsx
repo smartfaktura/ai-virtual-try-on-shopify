@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw } from "lucide-react";
+import { ImageLightbox } from "@/components/app/ImageLightbox";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,7 @@ export function Step6PreviewAndPick({
     initialFromCache?.selectedUrl ?? null,
   );
   const [confirmRegenOpen, setConfirmRegenOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   // Idempotency lock — prevents double-deduct on fast double-click before
   // React commits the phase state change.
   const inFlightRef = useRef(false);
@@ -106,6 +108,36 @@ export function Step6PreviewAndPick({
     answers.sub_family,
     answers.cast?.gender?.[0],
   );
+
+  const referenceIntentLabel = (() => {
+    switch (answers.reference_intent) {
+      case "replicate": return "Replicate exactly";
+      case "location": return "Location only";
+      case "composition": return "Composition";
+      case "vibe": return "Vibe / mood board";
+      default: return null;
+    }
+  })();
+
+  const ReferenceThumb = () =>
+    isReferenceFlow && referenceImageUrl ? (
+      <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 p-2.5">
+        <img
+          src={referenceImageUrl}
+          alt="Your reference"
+          className="w-14 h-[70px] rounded-md object-cover bg-background flex-shrink-0"
+          loading="lazy"
+        />
+        <div className="min-w-0">
+          <div className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Reference
+          </div>
+          <div className="text-[11px] text-foreground/85 truncate">
+            {referenceIntentLabel ?? "Your uploaded inspiration"}
+          </div>
+        </div>
+      </div>
+    ) : null;
 
   const handleGenerate = async () => {
     if (!directive.trim()) {
@@ -262,6 +294,11 @@ export function Step6PreviewAndPick({
           <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
             Each generation costs {BRAND_SCENE_GENERATION_COST} credits. Saving the variation you like is free.
           </p>
+          {isReferenceFlow && referenceImageUrl && (
+            <div className="mt-3">
+              <ReferenceThumb />
+            </div>
+          )}
           {stockProduct && (
             <div className="mt-3 flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
               <img
@@ -313,8 +350,13 @@ export function Step6PreviewAndPick({
               {sceneName}
             </div>
             <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-              Select the variation that best matches what you want. Saving is free.
+              Select the variation that best matches what you want. Tap the expand icon to preview full-size. Saving is free.
             </p>
+            {isReferenceFlow && referenceImageUrl && (
+              <div className="mt-3">
+                <ReferenceThumb />
+              </div>
+            )}
           </div>
 
           <BrandSceneVariationGrid
@@ -327,6 +369,7 @@ export function Step6PreviewAndPick({
                 onCacheChange?.({ promptHash, variations, selectedUrl: url });
               }
             }}
+            onPreview={(idx) => setPreviewIndex(idx)}
           />
 
           <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
@@ -409,6 +452,36 @@ export function Step6PreviewAndPick({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {variations.length > 0 && (
+        <ImageLightbox
+          images={variations.map((v) => v.url)}
+          currentIndex={previewIndex ?? 0}
+          open={previewIndex !== null}
+          onClose={() => setPreviewIndex(null)}
+          onNavigate={(idx) => setPreviewIndex(idx)}
+          onSelect={
+            phase === "picking"
+              ? (idx) => {
+                  const url = variations[idx]?.url;
+                  if (!url) return;
+                  setSelectedUrl(url);
+                  if (promptHash) {
+                    onCacheChange?.({ promptHash, variations, selectedUrl: url });
+                  }
+                }
+              : undefined
+          }
+          selectedIndices={
+            new Set(
+              variations
+                .map((v, i) => (v.url === selectedUrl ? i : -1))
+                .filter((i) => i >= 0),
+            )
+          }
+          productName={sceneName}
+        />
+      )}
     </div>
   );
 }

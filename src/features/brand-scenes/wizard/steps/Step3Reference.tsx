@@ -44,6 +44,8 @@ interface Props {
   intent?: ReferenceIntent;
   note?: string;
   referenceOutfit?: ReferenceOutfit;
+  responsibilityAccepted: boolean;
+  onRequestResponsibility: () => void;
   onImageChange: (path: string | null, previewUrl: string | null) => void;
   onNameChange: (name: string) => void;
   onIntentChange: (intent: ReferenceIntent) => void;
@@ -62,6 +64,8 @@ export function Step3Reference({
   intent,
   note = "",
   referenceOutfit,
+  responsibilityAccepted,
+  onRequestResponsibility,
   onImageChange,
   onNameChange,
   onIntentChange,
@@ -75,9 +79,18 @@ export function Step3Reference({
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  const ensureAccepted = (): boolean => {
+    if (!responsibilityAccepted) {
+      onRequestResponsibility();
+      return false;
+    }
+    return true;
+  };
+
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
+    if (!ensureAccepted()) return;
 
     if (!ACCEPTED_MIME.includes(file.type)) {
       toast({
@@ -214,7 +227,10 @@ export function Step3Reference({
 
             <Button
               type="button"
-              onClick={() => inputRef.current?.click()}
+              onClick={() => {
+                if (!ensureAccepted()) return;
+                inputRef.current?.click();
+              }}
               disabled={uploading}
               className="rounded-full font-semibold gap-2 mt-4 w-full sm:w-auto"
             >
@@ -224,6 +240,11 @@ export function Step3Reference({
             <p className="text-[11px] text-muted-foreground mt-2.5">
               or drag &amp; drop · paste from clipboard
             </p>
+            {!responsibilityAccepted && (
+              <p className="text-[11px] text-muted-foreground/80 mt-2 max-w-xs mx-auto">
+                We'll ask a quick usage check the first time you upload
+              </p>
+            )}
           </div>
         )}
         <input
