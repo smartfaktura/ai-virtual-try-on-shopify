@@ -440,5 +440,13 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     surfaces: ["linen", "polished_stone", "raw_wood", "paper"],
     body_part_focus: ["hands", "face", "detail"],
     hands_on_product: ["cradle", "cap", "pinch"],
+    sub: {
+      "supplements-wellness": {
+        interactions: ["holding", "beside", "hero"],
+        cast_presets: ["hands", "none", "solo"],
+        default_cast: "hands",
+        hands_on_product: ["cradle", "cap", "pinch"],
+      },
+    },
   },
 };
