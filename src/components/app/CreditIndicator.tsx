@@ -4,7 +4,7 @@ import { UpgradePlanModal } from './UpgradePlanModal';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function CreditIndicator() {
-  const { balance, planConfig, openBuyModal, isLoading } = useCredits();
+  const { balance, plan, planConfig, openBuyModal, isLoading } = useCredits();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   if (isLoading) {
@@ -26,16 +26,15 @@ export function CreditIndicator() {
     ? 100
     : Math.min(100, Math.max(3, (balance / (monthlyCredits || 1)) * 100));
 
-  // 'enterprise' has no Stripe checkout — treat it as no upgrade path so the button isn't dead
-  const canUpgrade = !!planConfig.nextPlanId && planConfig.nextPlanId !== 'enterprise';
-  const ctaLabel = canUpgrade ? 'Upgrade' : 'Top up';
+  // Free → plan picker. Paid (Starter / Growth / Pro / Enterprise) → unified
+  // BuyCreditsModal which defaults to Top Up and exposes the Plans tab too.
+  const isFree = plan === 'free';
+  const ctaLabel = isFree ? 'Upgrade' : 'Get credits';
   const handleCta = () => {
-    // Both upgrade and top-up routes through the unified modal:
-    // canUpgrade → UpgradePlanModal (plan picker)
-    // !canUpgrade (Pro/Enterprise) → openBuyModal which now opens the same modal in topup variant
-    if (canUpgrade) setUpgradeOpen(true);
-    else openBuyModal('header_cta');
+    if (isFree) setUpgradeOpen(true);
+    else openBuyModal('sidebar_cta');
   };
+
 
   const balanceDigits = Math.max(1, Math.floor(Math.abs(balance))).toString().length;
   const balanceSizeClass =
