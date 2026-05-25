@@ -8,6 +8,7 @@ import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import type { GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { buildVideoFileName } from '@/lib/videoFilename';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 const RESOLUTION_MAP: Record<string, string> = {
   '1:1': '1080 × 1080',
@@ -85,6 +86,19 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
     setVideoMetadata(null);
   }, [open, video?.id]);
 
+  // Resolve a signed URL for private-bucket playback + download.
+  const [signedSrc, setSignedSrc] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setSignedSrc(null);
+    if (open && video?.video_url) {
+      toSignedUrl(video.video_url)
+        .then((url) => { if (!cancelled) setSignedSrc(url); })
+        .catch(() => { if (!cancelled) setSignedSrc(null); });
+    }
+    return () => { cancelled = true; };
+  }, [open, video?.video_url]);
+
   if (!open || !video) return null;
 
   const isComplete = video.status === 'complete' && video.video_url;
@@ -121,7 +135,9 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
     if (!video.video_url) return;
     setDownloading(true);
     try {
-      const res = await fetch(video.video_url);
+      const signed = await toSignedUrl(video.video_url);
+      const res = await fetch(signed);
+      if (!res.ok) throw new Error(`download ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -175,21 +191,27 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
         {/* Left — Video / Image preview */}
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
           {isComplete ? (
-            <video
-              src={video.video_url!}
-              controls
-              autoPlay
-              loop
-              playsInline
-              preload="metadata"
-              onLoadedMetadata={(event) => {
-                const { videoWidth, videoHeight } = event.currentTarget;
-                if (videoWidth && videoHeight) {
-                  setVideoMetadata({ width: videoWidth, height: videoHeight });
-                }
-              }}
-              className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] rounded-lg shadow-2xl"
-            />
+            signedSrc ? (
+              <video
+                src={signedSrc}
+                controls
+                autoPlay
+                loop
+                playsInline
+                preload="metadata"
+                onLoadedMetadata={(event) => {
+                  const { videoWidth, videoHeight } = event.currentTarget;
+                  if (videoWidth && videoHeight) {
+                    setVideoMetadata({ width: videoWidth, height: videoHeight });
+                  }
+                }}
+                className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] rounded-lg shadow-2xl"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            )
           ) : (
             <img
               src={video.source_image_url}

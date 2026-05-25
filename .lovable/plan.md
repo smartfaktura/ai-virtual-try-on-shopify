@@ -1,61 +1,63 @@
-## Goal
+## Root cause
 
-Gate Brand Scenes creation behind **Growth, Pro, or Enterprise** plans. Free and Starter users see an upgrade screen instead. Also remove the secondary "Or explore ready-made scenes" CTA from the empty state.
+`generated-videos` is a **private** bucket. The bulk-download path in `VideoHub.tsx:266` correctly signs URLs via `toSignedUrl()`. The single-video Detail Modal does not — it uses the raw public URL in two places, both of which silently fail against a private bucket:
 
-## Plan tiers (recap from `PLAN_CONFIG`)
+- `src/components/app/video/VideoDetailModal.tsx:124` — `fetch(video.video_url)` in `handleDownload` → 400 → corrupt blob saved → user perceives the video as "disappeared"
+- `src/components/app/video/VideoDetailModal.tsx:179` — `<video src={video.video_url!}>` → broken player
 
-`free` · `starter` · **`growth`** · **`pro`** · **`enterprise`** ← allowed three
+Not an admin/RLS issue. Storage policy is correct (`auth.uid() = first folder of path`). Admin works only because they happen to use bulk download.
 
-## Changes
+## Fix
 
-### 1. New helper: `canCreateBrandScenes(plan)`
+### `src/components/app/video/VideoDetailModal.tsx`
 
-Tiny pure helper in `src/features/brand-scenes/access.ts`:
+1. Import the signing helper:
+   ```ts
+   import { toSignedUrl } from '@/lib/signedUrl';
+   ```
 
-```ts
-export const BRAND_SCENE_PLANS = ['growth', 'pro', 'enterprise'] as const;
-export const canCreateBrandScenes = (plan: string) =>
-  BRAND_SCENE_PLANS.includes(plan as any);
-```
+2. Add a small effect that resolves a signed URL whenever the modal opens with a complete video:
+   ```ts
+   const [signedSrc, setSignedSrc] = useState<string | null>(null);
+   useEffect(() => {
+     let cancelled = false;
+     setSignedSrc(null);
+     if (open && video.video_url) {
+       toSignedUrl(video.video_url)
+         .then((url) => { if (!cancelled) setSignedSrc(url); })
+         .catch(() => { if (!cancelled) setSignedSrc(null); });
+     }
+     return () => { cancelled = true; };
+   }, [open, video.video_url]);
+   ```
 
-Centralizes the rule so future tier changes are one edit.
+3. Use `signedSrc` for the in-modal `<video>` (line 179). While it's resolving, show the existing loader/poster so we don't render a broken `<video>`.
 
-### 2. `src/pages/BrandScenes.tsx`
+4. In `handleDownload` (line 120), replace the raw fetch with a signed one:
+   ```ts
+   const signed = await toSignedUrl(video.video_url);
+   const res = await fetch(signed);
+   if (!res.ok) throw new Error(`download ${res.status}`);
+   ```
+   Rest of the blob → anchor → click flow stays the same. The existing toast on failure remains the user-visible safety net.
 
-- Read `plan` from `useCredits()`.
-- If `!canCreateBrandScenes(plan)`:
-  - Hide the top-right "New brand scene" button.
-  - Hide the existing-scenes grid CTA paths to wizard.
-  - Render a new **`BrandScenesUpgradeState`** component (see #4) in place of the empty state and as a header banner if the user already has saved scenes (they keep read access but cannot create more).
-- Existing scenes (if any) remain visible and usable — only **creation** is gated. (Edge case: legacy users who downgraded shouldn't lose their library.)
-- Remove the "Or explore ready-made scenes" ghost button from the `EmptyState` component entirely.
+### Audit
 
-### 3. `src/pages/BrandSceneWizard.tsx` (route guard)
+Confirmed by `rg "video_url" src/components/app/video src/pages` — only the two modal lines above and `ShortFilm.tsx:123` (which uses a local `completedClips[0].url`, not from a private bucket). No other consumer to fix.
 
-Add the same `canCreateBrandScenes(plan)` check at the top of the wizard route. If false, redirect to `/app/brand-scenes` (so the upgrade screen is shown). Prevents direct URL access to `/app/brand-scenes/new`.
+## Out of scope (separate follow-up)
 
-### 4. New component: `BrandScenesUpgradeState`
+Investigation surfaced one more issue worth a later patch — flagging only:
+- `video_projects.status` is never flipped to `'complete'` after Kling finishes. All of syncoo's projects are still `'processing'` 24h+ later. Video Hub queries `generated_videos` directly so cards still appear, but the parent table is silently rotten. Fix would be a small update inside `supabase/functions/generate-video/index.ts` next to where `generated_videos.status = 'complete'` is set.
 
-Lives in `src/pages/BrandScenes.tsx` (private component) or alongside it. Mirrors the visual tone of the existing `EmptyState` card — same `rounded-2xl border bg-card` shell, same Mountain icon — but messaging is upgrade-focused:
+Not touching this in the current patch — the user reported download specifically, and conflating the two fixes risks the queue/credit logic.
 
-- Heading: **"Brand Scenes is on Growth and Pro"**
-- Subtitle: short single sentence (no terminal period per Core memory) — e.g. *"Design signature scenes locked to your brand on Growth or Pro"*
-- 3 value bullets (reuse Sparkles / Layers / Users icons + same copy as EmptyState)
-- Single primary CTA: **"Upgrade plan"** — opens the existing `UpgradePlanModal` via `openBuyModal()` from `CreditContext` (already wired to preselect Growth — see `defaultPlanId` logic in `UpgradePlanModal.tsx:151`).
-- No secondary CTA.
+## Files changed
 
-### 5. Analytics / consistency
+- `src/components/app/video/VideoDetailModal.tsx`
 
-- Pass `source: 'brand-scenes-gate'` when opening the modal so the existing `modal_view` analytics event distinguishes this entry point. (`openBuyModal` already accepts a source — verified during exploration.)
+Two changes, one file. No DB migration, no edge-function change, no storage policy change.
 
-## Out of scope
+## Reassuring the user (info@tsimkus / syncoo)
 
-- Server-side enforcement on the `save-brand-scene` edge function. Recommend adding a plan check there in a follow-up so a crafted API call can't bypass the UI gate, but it's outside this UI-only task as requested.
-- Changing which plans appear in the upgrade modal — it already filters to plans strictly above the user's current tier and preselects Growth.
-- Pricing page copy ("Brand Scenes" feature row) — separate task if needed.
-
-## Files touched
-
-- `src/features/brand-scenes/access.ts` *(new)* — `canCreateBrandScenes` helper
-- `src/pages/BrandScenes.tsx` — gate creation, remove ready-made CTA, add upgrade state
-- `src/pages/BrandSceneWizard.tsx` — route-level redirect for non-eligible plans
+syncoo's 5 videos are all intact in storage and have valid storage paths (4.8–19 MB each, `status='complete'`). After this fix ships they can open any card and download successfully. No data was lost.
