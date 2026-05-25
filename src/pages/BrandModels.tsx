@@ -1308,23 +1308,22 @@ export default function BrandModels() {
 
   return (
     <div className="space-y-6">
-      {isPaid && (
-        <PageHeader
-          title="Brand Models"
-          subtitle="Custom AI models that match your brand"
-          actions={
-            models.length > 0 ? (
-              <Button asChild className="gap-2">
-                <Link to="/app/models/new">
-                  <Plus className="h-4 w-4" /> New brand model
-                </Link>
-              </Button>
-            ) : null
-          }
-        >
-          {null}
-        </PageHeader>
-      )}
+      <PageHeader
+        title="Brand Models"
+        subtitle="Custom AI models that match your brand"
+        actions={
+          isPaid && models.length > 0 ? (
+            <Button asChild className="gap-2">
+              <Link to="/app/models/new">
+                <Plus className="h-4 w-4" /> New brand model
+              </Link>
+            </Button>
+          ) : null
+        }
+      >
+        {null}
+      </PageHeader>
+
 
       {!isPaid ? (
         <>
