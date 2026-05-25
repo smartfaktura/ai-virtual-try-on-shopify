@@ -261,7 +261,7 @@ export default function Settings() {
   const { isAdmin } = useIsAdmin();
 
   useEffect(() => { gtagViewItem('Settings', 'settings_page'); }, []);
-  const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal } = useCredits();
+  const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal, openBuyModal } = useCredits();
 
   const [portalLoading, setPortalLoading] = useState(false);
   const handlePortal = async () => {
