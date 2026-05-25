@@ -69,31 +69,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth guard: only allow internal calls with service role key or x-queue-internal header
+  // Auth guard: only allow internal calls with the real service role key.
   const authHeader = req.headers.get("authorization");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
 
-  let authOk = false;
-  if (authHeader === `Bearer ${serviceRoleKey}`) {
-    authOk = true;
-  } else if (isQueueInternal && authHeader?.startsWith("Bearer ")) {
-    try {
-      const token = authHeader.replace("Bearer ", "");
-      const payloadB64 = token.split(".")[1];
-      if (payloadB64) {
-        const payload = JSON.parse(atob(payloadB64));
-        if (payload.role === "service_role") {
-          authOk = true;
-        }
-      }
-    } catch {
-      // Invalid token format
-    }
-  }
-
-  if (!authOk) {
-    console.warn(`[process-queue] Auth REJECTED — headerLen=${authHeader?.length ?? 0}, expectedLen=${("Bearer " + serviceRoleKey).length}, isQueueInternal=${isQueueInternal}`);
+  if (authHeader !== `Bearer ${serviceRoleKey}`) {
+    console.warn(`[process-queue] Auth REJECTED — headerLen=${authHeader?.length ?? 0}, expectedLen=${("Bearer " + serviceRoleKey).length}`);
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
