@@ -429,6 +429,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_cast: "hands",
     settings: ["Studio cyclorama", "Tabletop surface", "Domestic", "Architectural interior"],
     surfaces: ["linen", "polished_stone", "raw_wood", "paper"],
+    body_part_focus: ["hands", "face", "detail"],
     hands_on_product: ["cradle", "cap", "pinch"],
   },
 };
