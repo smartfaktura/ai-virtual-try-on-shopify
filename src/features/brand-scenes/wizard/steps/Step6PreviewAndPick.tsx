@@ -294,6 +294,11 @@ export function Step6PreviewAndPick({
           <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
             Each generation costs {BRAND_SCENE_GENERATION_COST} credits. Saving the variation you like is free.
           </p>
+          {isReferenceFlow && referenceImageUrl && (
+            <div className="mt-3">
+              <ReferenceThumb />
+            </div>
+          )}
           {stockProduct && (
             <div className="mt-3 flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
               <img
@@ -345,8 +350,13 @@ export function Step6PreviewAndPick({
               {sceneName}
             </div>
             <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-              Select the variation that best matches what you want. Saving is free.
+              Select the variation that best matches what you want. Tap the expand icon to preview full-size. Saving is free.
             </p>
+            {isReferenceFlow && referenceImageUrl && (
+              <div className="mt-3">
+                <ReferenceThumb />
+              </div>
+            )}
           </div>
 
           <BrandSceneVariationGrid
@@ -359,6 +369,7 @@ export function Step6PreviewAndPick({
                 onCacheChange?.({ promptHash, variations, selectedUrl: url });
               }
             }}
+            onPreview={(idx) => setPreviewIndex(idx)}
           />
 
           <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
