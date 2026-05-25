@@ -1,41 +1,40 @@
-# Fix `catalog_auth_bypass` in `generate-catalog`
-
 ## Problem
 
-`supabase/functions/generate-catalog/index.ts` (line 366) decides "internal vs user" purely from the header `x-queue-internal: true`. When that header is present, it skips all auth and proceeds to expensive Gemini calls, storage writes, and credit/queue updates. Any anonymous caller can spoof the header and bypass auth.
+Current `/app/video` order is: **In Progress → Workflow Cards → Showcase → Completed Videos**.
 
-The user path (`!isQueueInternal`) already validates a JWT correctly. Only the internal path is unprotected.
+That works for first-time visitors but feels wrong the moment a user has real work — their own videos sit below ten autoplaying showcase clips, and during generation the "waiting" and "completed" states are visually disconnected.
 
-## Fix
+## New layout logic
 
-In `supabase/functions/generate-catalog/index.ts`, replace the header-only check with the same pattern `process-queue` uses: trust `x-queue-internal` only when paired with a valid service-role bearer token.
+`VideoHub.tsx` already computes `processingVideos` and `completedVideos`. We use those to switch layouts:
 
-```ts
-const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const authHeader = req.headers.get("authorization") ?? "";
-const hasQueueHeader = req.headers.get("x-queue-internal") === "true";
-const isQueueInternal = hasQueueHeader && authHeader === `Bearer ${serviceRoleKey}`;
+**New user (no processing, no completed):**
+1. Page header
+2. Workflow Cards (Animate, Start & End, etc.)
+3. Showcase (the 10 autoplay clips — "see what's possible")
 
-if (hasQueueHeader && !isQueueInternal) {
-  return new Response(JSON.stringify({ error: "Unauthorized" }), {
-    status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-```
+**Returning user (has any processing OR completed video):**
+1. Page header
+2. **In Progress** (if any)
+3. **Completed Videos** (with Select / Load More)
+4. Workflow Cards (still accessible for starting a new one)
+5. *Showcase hidden* — they've seen what's possible, they're making their own
 
-The existing `if (!isQueueInternal) { ...verify user JWT... }` block stays unchanged — non-queue callers still need a valid user JWT.
+So as soon as the first generation finishes (or even starts), Showcase disappears and Completed jumps directly under In Progress — matching the natural flow: *waiting → done → make another*.
 
-## Why safe
+## Implementation
 
-- The legitimate caller of the internal path is `process-queue`, which already sends `Authorization: Bearer <SERVICE_ROLE_KEY>` together with `x-queue-internal: true` (see `dispatchGenerationFunction` in `process-queue/index.ts`). Real queue dispatch keeps working.
-- Repo grep confirms no other caller sets `x-queue-internal` besides `process-queue` and `retry-queue` (which only triggers `process-queue`).
-- User-initiated calls go through `!isQueueInternal` and are unaffected.
-- Anonymous callers spoofing only the header now get 401 before any Gemini/storage/credit work.
-- No DB, RLS, cron, `config.toml`, or frontend changes needed.
+Single file: `src/pages/VideoHub.tsx`.
 
-## Steps
+- Add `const hasOwnVideos = processingVideos.length > 0 || completedVideos.length > 0;`
+- Wrap the Showcase block in `{!hasOwnVideos && (...)}`
+- Reorder the JSX so In Progress + Completed render before Workflow Cards when `hasOwnVideos` is true. For new users, Workflow Cards + Showcase render in their current order.
+- Keep the empty-state card (the dashed "No videos yet…" box) — but it only ever shows for new users now, so it can be removed since Showcase covers that role. Cleaner: drop the empty-state, let Showcase be the empty state.
 
-1. Edit `supabase/functions/generate-catalog/index.ts` — replace the `isQueueInternal` derivation (line 366) and add the service-role check before the existing validation block.
-2. Deploy `generate-catalog`.
-3. Tail `generate-catalog` logs briefly to confirm queue jobs still complete cleanly.
-4. Mark `catalog_auth_bypass` as fixed in the security scanner.
+No changes to data fetching, the realtime tick, select mode, bulk download, or the `RecentVideoCard` component.
+
+## Out of scope
+
+- No DB / RLS / edge function changes
+- No restyle of cards themselves
+- Showcase clips stay as-is (we just conditionally render them)
