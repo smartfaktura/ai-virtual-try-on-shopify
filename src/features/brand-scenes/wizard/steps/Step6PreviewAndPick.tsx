@@ -32,6 +32,7 @@ import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 import { injectReferenceTokens } from "../../prompt/injectReferenceTokens";
 import { CAST_PRESETS_WITH_PEOPLE } from "../constants/cast";
 import { useStockProductForScene } from "../hooks/useStockProductForScene";
+import { UserProductPickerModal, type PickedProduct } from "../components/UserProductPickerModal";
 import {
   BRAND_SCENE_GENERATION_COST,
   BRAND_SCENE_NAME_MAX,
