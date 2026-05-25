@@ -259,13 +259,7 @@ export function BrandSceneWizard() {
     dispatch({ type: "back" });
   };
 
-  const handlePickReference = () => {
-    if (state.responsibilityAccepted) {
-      dispatch({ type: "setSource", source: "reference" });
-    } else {
-      setModalOpen(true);
-    }
-  };
+  const requestResponsibility = () => setModalOpen(true);
 
   const SUB_LABEL: Record<Step4SubStep, string> = {
     look: "Look",
@@ -308,8 +302,6 @@ export function BrandSceneWizard() {
             value={answers.source}
             picked={sourcePicked}
             onChange={(s) => dispatch({ type: "setSource", source: s })}
-            onPickReference={handlePickReference}
-            referenceUnlocked={state.responsibilityAccepted}
           />
         )}
 
@@ -353,6 +345,8 @@ export function BrandSceneWizard() {
             name={answers.name}
             intent={answers.reference_intent}
             note={answers.note}
+            responsibilityAccepted={state.responsibilityAccepted}
+            onRequestResponsibility={requestResponsibility}
             onImageChange={(path, previewUrl) =>
               dispatch({ type: "setReferenceImage", path, previewUrl })
             }
@@ -445,7 +439,6 @@ export function BrandSceneWizard() {
             return;
           }
           dispatch({ type: "acceptResponsibility" });
-          dispatch({ type: "setSource", source: "reference" });
           setModalOpen(false);
         }}
       />
