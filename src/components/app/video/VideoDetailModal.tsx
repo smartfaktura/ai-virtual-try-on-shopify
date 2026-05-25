@@ -135,7 +135,9 @@ export function VideoDetailModal({ video, open, onClose, onDeleted }: VideoDetai
     if (!video.video_url) return;
     setDownloading(true);
     try {
-      const res = await fetch(video.video_url);
+      const signed = await toSignedUrl(video.video_url);
+      const res = await fetch(signed);
+      if (!res.ok) throw new Error(`download ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
