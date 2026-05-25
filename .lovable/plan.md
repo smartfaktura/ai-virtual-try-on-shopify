@@ -1,17 +1,11 @@
 ## Goal
-Ensure every brand scene saved by users automatically has the "use preview as generation reference" flag enabled, so re-generating from the saved scene reproduces the exact same look.
+Polish the Brand Scenes card meta line: uppercase date and show the scene's subcategory instead of the high-level module ("fashion").
 
-## Changes
+## Changes — `src/pages/BrandScenes.tsx`
 
-1. **`supabase/functions/save-brand-scene/index.ts`**
-   - Add `use_scene_reference: true` to the insert payload for `product_image_scenes`.
-   - Applies to both the prompt-only wizard flow and the reference-image flow.
-
-2. **Backfill existing brand scenes** (via insert tool)
-   - `UPDATE product_image_scenes SET use_scene_reference = true WHERE is_brand_scene = true AND preview_image_url IS NOT NULL;`
+1. **Query**: add `category_collection` to the select and to `BrandSceneRow` (alongside existing `brand_scene_module`).
+2. **Meta line** (lines ~194–201): render the date in uppercase (e.g. `MAY 25, 2026`) using `toLocaleDateString(...).toUpperCase()`, with tighter tracking to match our small-caps label style. After the dot separator, show `category_collection` (the wizard's `sub_family`, e.g. "apparel", "shoes") instead of `brand_scene_module`. Fall back to module only if subcategory is missing.
 
 ## Out of scope
-- No schema changes (column already exists).
-- No RLS changes.
-- No UI changes — admin form already exposes the toggle.
-- Admin (non-brand) scenes untouched.
+- No schema, RLS, or wizard changes.
+- Other scene cards (catalog, library) untouched.

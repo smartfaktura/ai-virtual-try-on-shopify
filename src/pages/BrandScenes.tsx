@@ -29,6 +29,7 @@ interface BrandSceneRow {
   preview_image_url: string | null;
   created_at: string;
   brand_scene_module: string | null;
+  category_collection: string | null;
 }
 
 export default function BrandScenes() {
@@ -46,7 +47,7 @@ export default function BrandScenes() {
     queryFn: async (): Promise<BrandSceneRow[]> => {
       const { data, error } = await supabase
         .from('product_image_scenes')
-        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module')
+        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module, category_collection')
         .eq('is_brand_scene', true)
         .eq('owner_user_id', user!.id)
         .order('created_at', { ascending: false });
@@ -191,13 +192,17 @@ function SceneCard({
           <h3 className="text-sm font-semibold text-foreground tracking-tight truncate">
             {scene.title}
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 truncate">
             {new Date(scene.created_at).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
               year: 'numeric',
-            })}
-            {scene.brand_scene_module ? ` · ${scene.brand_scene_module}` : ''}
+            }).toUpperCase()}
+            {scene.category_collection
+              ? ` · ${scene.category_collection}`
+              : scene.brand_scene_module
+                ? ` · ${scene.brand_scene_module}`
+                : ''}
           </p>
         </div>
 
