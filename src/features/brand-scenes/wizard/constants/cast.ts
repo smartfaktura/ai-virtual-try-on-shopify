@@ -73,6 +73,31 @@ export const CAST_ACTION_NOTE_MAX = 80;
 export const CAST_NOTE_MAX = 160;
 
 /**
+ * Pose options filtered by cast preset + scale. Hides whole-body poses
+ * (walking, jumping, mid-motion) when there is no full body in frame
+ * (hands-only, pocket-scale, or product-only).
+ */
+export function posesForCast(
+  preset: CastPreset | undefined,
+  scale: import("./scale").ScalePreset | undefined,
+): readonly (typeof CAST_ACTIONS)[number][] {
+  if (!preset) return CAST_ACTIONS;
+  if (preset === "hands" || preset === "none" || preset === "replicate") {
+    // Only stationary poses make sense.
+    return CAST_ACTIONS.filter((a) =>
+      ["still", "candid", "leaning"].includes(a.value),
+    );
+  }
+  if (scale === "pocket") {
+    // Macro / product-led shots — drop full-body motion poses.
+    return CAST_ACTIONS.filter(
+      (a) => !["walking", "jumping", "motion"].includes(a.value),
+    );
+  }
+  return CAST_ACTIONS;
+}
+
+/**
  * Interaction options filtered to a family. Fragrance hides "Wearing",
  * fashion hides "Using", etc.
  */

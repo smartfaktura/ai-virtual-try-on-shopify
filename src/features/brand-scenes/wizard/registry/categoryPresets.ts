@@ -63,7 +63,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_scale: "pocket",
     lens: ["macro", "portrait", "tele"],
     depth_of_field: ["extreme", "shallow"],
-    interactions: ["wearing", "holding", "beside", "hero"],
+    interactions: ["wearing", "hero"],
     cast_presets: ["solo", "hands", "none"],
     default_cast: "hands",
     settings: ["Studio cyclorama", "Tabletop surface", "Architectural interior", "Domestic"],
@@ -76,25 +76,28 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       "jewellery-rings": {
         cast_presets: ["hands", "none"],
         default_cast: "hands",
-        interactions: ["wearing", "holding", "beside", "hero"],
+        interactions: ["wearing", "hero"],
         body_part_focus: ["hands", "detail"],
         hands_on_product: ["ring_finger", "pinch", "cradle"],
       },
       "jewellery-earrings": {
         cast_presets: ["solo", "none"],
         default_cast: "solo",
+        interactions: ["wearing", "hero"],
         body_part_focus: ["face", "neck", "detail"],
         hands_on_product: ["earring_place"],
       },
       "jewellery-necklaces": {
         cast_presets: ["solo", "hands", "none"],
         default_cast: "solo",
+        interactions: ["wearing", "hero"],
         body_part_focus: ["neck", "face", "detail"],
         hands_on_product: ["necklace_clasp"],
       },
       "jewellery-bracelets": {
         cast_presets: ["hands", "solo", "none"],
         default_cast: "hands",
+        interactions: ["wearing", "hero"],
         body_part_focus: ["wrist", "hands", "detail"],
         hands_on_product: ["bracelet_wrist", "wrist_show", "pinch"],
       },
@@ -106,7 +109,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_scale: "pocket",
     lens: ["macro", "portrait", "tele"],
     depth_of_field: ["extreme", "shallow"],
-    interactions: ["wearing", "holding", "beside", "hero"],
+    interactions: ["wearing", "hero"],
     cast_presets: ["hands", "solo", "none"],
     default_cast: "hands",
     settings: ["Studio cyclorama", "Tabletop surface", "Architectural interior"],
@@ -122,7 +125,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_scale: "pocket",
     lens: ["portrait", "standard", "tele"],
     depth_of_field: ["shallow", "balanced"],
-    interactions: ["wearing", "holding", "beside", "hero"],
+    interactions: ["wearing", "beside", "hero"],
     // Phase 7p — include "hands" so In-hand offering / detail macro shots are valid.
     cast_presets: ["solo", "hands", "none"],
     default_cast: "solo",
@@ -130,6 +133,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     surfaces: ["polished_stone", "linen", "paper"],
     prop_density_max: 3,
     body_part_focus: ["face", "detail"],
+    hands_on_product: ["cradle", "pinch"],
   },
 
 
@@ -143,6 +147,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_cast: "solo",
     settings: ["Urban street", "Architectural interior", "Nature", "Studio cyclorama", "Domestic"],
     prop_density_max: 4,
+    body_part_focus: ["full_body", "face", "detail"],
+    hands_on_product: [],
     sub: {
       activewear: {
         moods: ["Energetic", "Confident", "Cinematic"],
@@ -158,6 +164,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       },
       swimwear: {
         settings: ["Beach / water", "Studio cyclorama", "Outdoor location"],
+        interactions: ["wearing", "hero"],
       },
       // Phase 7o — streetwear leans urban-grit and bold.
       streetwear: {
@@ -196,6 +203,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     settings: ["Urban street", "Studio cyclorama", "Tabletop surface", "Nature", "Architectural interior"],
     surfaces: ["concrete", "polished_stone", "raw_wood", "sand"],
     body_part_focus: ["feet", "full_body", "detail"],
+    hands_on_product: ["cradle", "pinch"],
     sub: {
       "high-heels": {
         settings: ["Studio cyclorama", "Architectural interior", "Urban street"],
@@ -229,6 +237,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     cast_presets: ["solo", "hands", "none"],
     default_cast: "solo",
     settings: ["Urban street", "Architectural interior", "Studio cyclorama", "Tabletop surface"],
+    body_part_focus: ["hands", "full_body", "detail"],
+    hands_on_product: ["cradle", "pinch"],
     sub: {
       // Phase 7o — umbrella "bags" picker leans handheld editorial.
       "bags-accessories": {
@@ -241,6 +251,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
         default_scale: "carry",
         interactions: ["wearing", "holding", "hero"],
         cast_presets: ["solo", "none"],
+        hands_on_product: ["cradle"],
+        body_part_focus: ["full_body", "detail"],
       },
       "wallets-cardholders": {
         scale: ["pocket", "handheld"],
@@ -249,14 +261,17 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
         cast_presets: ["hands", "none"],
         default_cast: "hands",
         body_part_focus: ["hands", "detail"],
+        hands_on_product: ["pinch", "cap", "tap"],
       },
       belts: {
         cast_presets: ["solo", "hands", "none"],
-        interactions: ["wearing", "holding", "hero"],
+        interactions: ["wearing", "hero"],
+        hands_on_product: ["cradle", "pinch"],
       },
       scarves: {
         cast_presets: ["solo", "none"],
         interactions: ["wearing", "hero"],
+        hands_on_product: [],
       },
     },
   },
@@ -266,24 +281,25 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_scale: "handheld",
     lens: ["portrait", "standard"],
     depth_of_field: ["shallow", "balanced"],
-    interactions: ["wearing", "holding", "beside", "hero"],
+    interactions: ["wearing", "hero"],
     cast_presets: ["solo", "hands", "none"],
     default_cast: "solo",
     body_part_focus: ["face", "full_body", "detail"],
+    hands_on_product: ["cradle", "pinch"],
     settings: ["Urban street", "Outdoor location", "Studio cyclorama", "Architectural interior", "Domestic", "Nature"],
     sub: {
       // Phase 7o — sport / skate energy.
       caps: {
         settings: ["Urban street", "Studio cyclorama", "Outdoor location"],
         moods: ["Confident", "Energetic", "Cinematic"],
-        interactions: ["wearing", "holding", "hero"],
+        interactions: ["wearing", "hero"],
         body_part_focus: ["face", "full_body"],
       },
       // Phase 7o — editorial / formal millinery.
       hats: {
         settings: ["Architectural interior", "Nature", "Studio cyclorama", "Domestic"],
         moods: ["Editorial", "Romantic", "Cinematic"],
-        interactions: ["wearing", "holding", "hero"],
+        interactions: ["wearing", "hero"],
         lens: ["portrait", "tele"],
         body_part_focus: ["face", "full_body", "detail"],
       },
@@ -291,7 +307,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       beanies: {
         settings: ["Nature", "Urban street", "Studio cyclorama"],
         moods: ["Cozy", "Cinematic", "Quiet"],
-        interactions: ["wearing", "holding", "hero"],
+        interactions: ["wearing", "hero"],
         body_part_focus: ["face", "full_body"],
       },
     },
@@ -309,6 +325,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     settings: ["Studio cyclorama", "Tabletop surface", "Architectural interior", "Nature"],
     surfaces: ["polished_stone", "linen", "velvet", "water", "paper"],
     prop_density_max: 3,
+    body_part_focus: ["hands", "face", "detail"],
+    hands_on_product: ["cradle", "pinch", "cap"],
     sub: {
       fragrance: {
         cast_presets: ["none", "hands"],
@@ -340,6 +358,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     settings: ["Architectural interior", "Domestic", "Studio cyclorama"],
     surfaces: ["raw_wood", "polished_stone", "concrete"],
     prop_density_max: 4,
+    body_part_focus: ["hands", "full_body", "detail"],
+    hands_on_product: ["cradle", "tap"],
     sub: {
       furniture: {
         scale: ["furniture", "architectural"],
@@ -380,6 +400,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_cast: "none",
     settings: ["Tabletop surface", "Domestic", "Studio cyclorama", "Architectural interior"],
     surfaces: ["raw_wood", "linen", "polished_stone", "paper"],
+    body_part_focus: ["hands", "face", "detail"],
+    hands_on_product: ["pour", "cradle", "cap"],
     sub: {
       beverages: {
         cast_presets: ["hands", "none", "solo"],
@@ -407,6 +429,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     default_cast: "hands",
     settings: ["Studio cyclorama", "Tabletop surface", "Domestic", "Architectural interior"],
     surfaces: ["linen", "polished_stone", "raw_wood", "paper"],
+    body_part_focus: ["hands", "face", "detail"],
     hands_on_product: ["cradle", "cap", "pinch"],
   },
 };

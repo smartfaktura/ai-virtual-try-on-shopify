@@ -1,100 +1,101 @@
 ## Goal
-Brand Scene wizard at `/app/brand-scenes/new`:
-1. Auto-cast picks a *cohesive editorial look* across every category (not just two random tokens).
-2. Rings / necklaces / earrings / bracelets / watches actually render *worn on the right body part in the right position*.
-3. The Interaction step stops offering wrong gestures (e.g. "Wrist showing watch" on Rings — see screenshot).
 
-## Problem
-- `Step4Cast.setMode("skip")` (Auto-cast) only seeds `preset` + `interaction`. No pose, body-part focus, hands-on-product gesture, vibe, gaze, framing — so the model improvises and results look random.
-- `assembleSceneDirective` ignores `module + sub_family` for jewelry/watches/eyewear/hats. `subfamilyGuides` only covers fashion, lingerie, swim, scarves, caps, hats, beanies → no PRODUCT FOCUS line, no NEGATIVE safeguard for "ring must be worn on the ring finger". Result: ring floats beside the hand, necklace nowhere on neck, etc.
-- The `castHasPeople` gate excludes the `"hands"` preset, which is the default for rings/bracelets/watches — so even a future jewelry guide would silently no-op.
-- `categoryPresets.jewelry` doesn't declare `hands_on_product`, so the resolver returns ALL gestures including "Wrist showing watch" + "Pouring" on Rings.
+For every Brand Scene wizard sub-category, only show options that actually make sense for that product. Stop leaking irrelevant chips like "Pouring" / "Earring on ear" on Sneakers, "Holding" / "Placed beside" on Necklaces, or "Jumping" / "Walking" poses on a hands-only ring shot.
+
+## Root causes
+
+After tracing `Step4Cast.tsx` → `resolvePresets.ts` → `categoryPresets.ts` → `combinationGuards.ts`:
+
+1. **`PRESETS.interactions` is treated as a sort hint, not an allowlist.** `Step4Cast.visibleInteractions` shows every `CAST_INTERACTIONS` value that isn't in `forbiddenInteractions(...)`. Only the *family* + cast + scale prune the list. So a sub-family declaring `interactions: ["wearing","hero"]` has no UI effect — the user still sees "Holding", "Placed beside".
+
+2. **`hands_on_product` falls back to ALL gestures when undefined.** `resolveAll` does `b.hands_on_product ?? HANDS_ON_PRODUCT.map(...)`. Families/sub-families without a list show every gesture in the dropdown — so eyewear, hats, footwear, bags all surface "Necklace at neckline", "Earring on ear", "Ring on ring finger", "Pouring", "Wrist showing watch".
+
+3. **`CAST_ACTIONS` (Pose chips) is never filtered.** Hands-only and product-only presets still see "Walking", "Jumping", "Mid-motion", "Standing" — none of which apply when there is no full body.
+
+4. **`body_part_focus` falls back to ALL** when a sub-family doesn't define it; sub-families like `eyewear`, `bags-accessories/wallets-cardholders`, `tech` show every body-part option.
 
 ## Changes
 
-### 1. `src/features/brand-scenes/wizard/constants/sceneExtras.ts`
-Add jewelry-specific gestures to `HANDS_ON_PRODUCT` so each sub-family can map cleanly:
-- `ring_finger` — "ring worn on the model's ring finger, finger gently extended toward camera"
-- `necklace_clasp` — "necklace worn at the base of the neck, clasp behind, pendant centered on the collarbone"
-- `earring_place` — "earring worn on the earlobe, hair tucked behind the ear so the piece reads cleanly"
-- `bracelet_wrist` — "bracelet wrapped around the wrist, clasp aligned naturally"
+### 1. `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — make `resolved.interactions` an allowlist
+Change `visibleInteractions` from "filter by forbidden + sort by resolved" to "filter to resolved ∩ not-forbidden, in resolved order". Same shape, just stricter. Backwards-compatible because families without an override fall back to the full list in `resolveAll`.
 
-### 2. `src/features/brand-scenes/wizard/registry/categoryPresets.ts`
-Per jewelry sub-family, declare correct `hands_on_product` and `body_part_focus` so the wizard stops surfacing wrong gestures and Auto-cast can pick a sensible default:
-- `jewellery-rings`: `hands_on_product: ["ring_finger","pinch","cradle"]`, `body_part_focus: ["hands","detail"]`
-- `jewellery-necklaces`: `hands_on_product: ["necklace_clasp"]`, `body_part_focus: ["neck","face","detail"]`, default cast `"solo"`
-- `jewellery-earrings`: `hands_on_product: ["earring_place"]`, `body_part_focus: ["face","neck","detail"]`, default cast `"solo"`
-- `jewellery-bracelets`: `hands_on_product: ["bracelet_wrist","wrist_show","pinch"]`, `body_part_focus: ["wrist","hands","detail"]`
-- Jewelry family default: `hands_on_product: ["cradle","pinch"]` (so generic jewelry never shows "Pouring" / "Wrist showing watch").
+### 2. `src/features/brand-scenes/wizard/registry/categoryPresets.ts` — per-sub-family allowlists
+Fill the gaps so every sub-family has the right `interactions`, `hands_on_product`, `body_part_focus`. Highlights:
 
-Sanity-check eyewear / hats families have sensible `hands_on_product` too; add minimal defaults if missing (out of immediate scope unless trivially adjacent).
+**jewelry**
+- `jewellery-rings`: interactions `["wearing","hero"]` (already correct hands_on_product/body_part_focus).
+- `jewellery-earrings`: interactions `["wearing","hero"]`.
+- `jewellery-necklaces`: interactions `["wearing","hero"]`.
+- `jewellery-bracelets`: interactions `["wearing","hero"]`.
 
-### 3. `src/features/brand-scenes/wizard/registry/subfamilyGuides.ts`
-Add placement guides keyed `module/sub_family`. Each becomes a PRODUCT FOCUS line + hard NEGATIVE safeguards:
+**watches** (no sub-families)
+- interactions `["wearing","hero"]` (drop "holding"/"beside" — watches don't read worn unless on a wrist).
 
-- `jewelry/jewellery-rings` — "The brand's ring is worn on the model's ring finger (left hand by default), fully on, band and any stone or setting clearly readable; finger relaxed and lit so the metal renders true to material."
-  Safeguards: "Do not float, hover or detach the ring from the finger. Do not show the ring held in the other hand instead of worn. Do not crop out the wearing hand. Do not show bare fingers where the ring should be."
-- `jewelry/jewellery-necklaces` — "The brand's necklace is worn at the base of the neck, clasp behind, pendant centered on the décolletage; neckline kept clean so the chain reads."
-  Safeguards: "Do not show the necklace draped over a hand or surface instead of worn. Do not hide the pendant with hair, collar or shadow. Do not omit the chain."
-- `jewelry/jewellery-earrings` — "The brand's earrings are worn on the earlobes (matched pair); hair styled or tucked so at least one ear is sharply visible — 3/4 or profile angle preferred."
-  Safeguards: "Do not leave the ear bare. Do not show only one earring unless a deliberate profile shot. Do not blur the worn ear."
-- `jewelry/jewellery-bracelets` — "The brand's bracelet is wrapped around the model's wrist (clasp aligned); wrist posed so the full circumference reads."
-  Safeguards: "Do not float the bracelet beside the wrist. Do not crop the wrist out. Do not show empty wrists."
-- `watches/*` (single family-level guide reused for any watch sub-family): "Worn on the wrist with the dial facing camera; strap, case and lugs fully readable."
-  Safeguards: "Do not show empty wrists. Do not hide the dial. Do not invent a different watch."
+**eyewear**
+- family: `hands_on_product: ["cradle","pinch"]`, `body_part_focus: ["face","detail"]`.
+- interactions `["wearing","hero","beside"]` (drop "holding" — eyewear in hand is rare/awkward; leave "beside" for tabletop kits).
 
-Mark each with `mustWearProduct: true`.
+**hats-caps-beanies**
+- family: `hands_on_product: ["cradle","pinch"]`, interactions `["wearing","hero"]`.
+- per sub already constrains interactions to wearing/holding/hero — narrow further: `caps`/`hats`/`beanies` all `interactions: ["wearing","hero"]`.
 
-If `watches` has no sub-families, add a `null` sub_family fallback path (see #4).
+**fashion** (and subs)
+- family: `hands_on_product: []` (empty array → resolver should treat as "none allowed"; alternatively just don't show this field — see step 3 below). Garments aren't a hand-gesture context. interactions `["wearing","hero"]`.
+- sub-families inherit; lingerie/swimwear already restricted via outfit hides.
 
-### 4. `src/features/brand-scenes/prompt/assembleSceneDirective.ts`
-Two narrow edits:
+**footwear**
+- family: `hands_on_product: ["cradle","pinch"]` (for unboxing/in-hand sneakers shots).
+- interactions `["wearing","holding","beside","hero"]` (current) — keep.
+- sub `sneakers`/`boots`/`shoes`/`high-heels`: inherit.
 
-a. Extend the gate so jewelry placement also fires for `cast.preset === "hands"`:
-```ts
-const guideShouldFire = !!guide && (castHasPeople || answers.cast?.preset === "hands");
-if (guideShouldFire) productFocus.push(guide.wardrobe);
-…
-if (guideShouldFire) for (const s of guide.safeguards) negative.push(s);
-```
+**bags-accessories**
+- family: `hands_on_product: ["cradle","pinch"]`.
+- `backpacks`: `hands_on_product: ["cradle"]`, interactions `["wearing","holding","hero"]`.
+- `wallets-cardholders`: `hands_on_product: ["pinch","cap","tap"]` (already constrained interactions).
+- `belts`/`scarves`: `hands_on_product: ["cradle","pinch"]`, interactions `["wearing","hero"]`.
 
-b. Make `resolveSubfamilyGuide` also accept a family-level fallback so a `watches`-only guide fires without a sub_family. Try `${module}/${subFamily}` first, then `${module}/*`.
+**beauty-fragrance** sub-families already declare correct `hands_on_product`. Add `body_part_focus: ["hands","face","detail"]` at family level.
 
-### 5. `src/features/brand-scenes/wizard/registry/subfamilyGuides.ts` — resolver
-Update `resolveSubfamilyGuide` to do the `module/*` fallback used by step 4b.
+**home / tech / food-drink / wellness**
+- Already mostly correct. Add `body_part_focus: ["hands","detail"]` to bags/tech/food-drink where missing.
 
-### 6. `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — smarter Auto-cast (ALL categories)
-In `setMode("skip")` seed a complete editorial look. For each field, only set if the user hasn't already set it. Logic:
+### 3. `src/features/brand-scenes/wizard/registry/resolvePresets.ts` — respect empty arrays
+Currently `b.hands_on_product ?? ALL` collapses `[]` into nothing (good) but still fires `??`. Change to: if the resolved bundle declared the key (even as empty array), keep it as-is; only fall back to ALL when `undefined`. Apply the same rule to `body_part_focus`, `interactions`, `wardrobe_colors`. That lets a sub-family explicitly opt out of an entire field.
 
-- `preset` = `resolved.defaultCast`
-- `interaction` = prefer `"wearing"` if it's in `resolved.interactions`, else first visible
-- `vibe` = `"editorial"`
-- `age` = `["adult"]`
-- `gender` = leave undefined (model picks)
-- `action` = `"still"` if cast has people
-- `gaze` = `"away"` if cast has people
-- `hands_on_product` = `resolved.handsOnProduct[0]` if any (now correctly category-tuned per #2)
-- `body_part_focus` = `resolved.bodyPartFocus[0]` if any
-- `wardrobe_color` = first entry from `resolved.wardrobeColors` if defined and not already set
-- `scale.preset` = `resolved.scale.default` (already seeded — keep)
+### 4. New: per-cast-preset Pose filter
+Add a helper `posesForCast(preset, scale)` in `wizard/constants/cast.ts`:
+- `hands` / `none`: return `[]` (pose section is already hidden for these in the UI because `hasPeople` is false — confirm and leave as-is).
+- `solo` / `two` / `group` + scale `pocket`: drop `walking`, `jumping`, `motion` (you can't capture a jump while holding a 30mm ring on macro).
+- otherwise: return all `CAST_ACTIONS`.
+Wire into `Step4Cast.InteractionTab` `<ChipRowWithOther options={posesForCast(preset, scalePreset)} ... />`.
 
-Also seed minimal scene defaults in the same call if missing (so Auto-cast feels "complete" not "barely started"):
-- `base.lens` = `resolved.lens[0]`
-- `base.depth_of_field` = `resolved.depthOfField[0]`
-- `base.finish` = `resolved.finishes[0]`
+### 5. New: per-sub-family `wardrobe_colors` audit pass
+A quick audit: `jewelry`, `watches`, `eyewear` already inherit ALL colors via the resolver — fine. `fashion/lingerie` and `fashion/swimwear` hide wardrobe entirely (already done). No code changes here unless an obvious mismatch surfaces during testing.
 
-This requires `setMode` to also accept a `base` patch; pass via the existing `onScaleChange`/`onCastChange` siblings — add a thin `onBaseChange` prop if not already wired (check Step4Cast Props; if absent, add it and thread from `BrandSceneWizard`).
+### 6. Tighten `combinationGuards.ts` — sub-family-aware bans
+Add a small `forbiddenInteractionsBySubFamily(family, sub)` returning e.g. `{ "jewelry/jewellery-necklaces": ["holding","beside"] }`. Mostly redundant after step 1 + step 2, but acts as a safety net for any code path that bypasses `resolved.interactions`.
 
 ## Out of scope
-- No new wizard questions or steps.
-- No changes to `Step4ModuleQuestions` (Brand Scene wizard doesn't render it).
+
+- No changes to the scene aesthetic step (Step3) — settings, palettes, surfaces are already category-tuned.
+- No new copy or visual redesign of the wizard.
 - No backend / edge function / DB changes.
-- Other categories' subfamily guides (eyewear, hats, etc.) untouched beyond what #2 implies.
 
 ## Validation
-- Open `/app/brand-scenes/new` → Jewelry → Rings → "Auto-cast" → Continue → Generate. Confirm:
-  - Interaction tab no longer shows "Wrist showing watch" or "Pouring" for Rings.
-  - Final prompt contains a `PRODUCT FOCUS` line "ring is worn on the model's ring finger…" and a `NEGATIVE` clause forbidding floating rings.
-  - `CAST DETAILS` lists pre-seeded body-part-focus = hands, action = still, vibe = editorial, hands-on-product = ring-finger.
-- Repeat for Necklaces, Earrings, Bracelets, Watches.
-- Run a non-jewelry category (e.g. Fashion / Activewear) → Auto-cast → confirm it still seeds a cohesive pose/gaze/wardrobe without regressions.
+
+For each of these sub-families, open `/app/brand-scenes/new`, pick the category, choose **Design the look**, walk through Essentials → People → Interaction, and confirm only the listed chips appear:
+
+| Sub-family | Interactions | Hands-on-product | Pose (when hands preset) |
+|---|---|---|---|
+| jewelry / rings | Wearing, Product only | Ring on ring finger, Fingertip pinch, Both hands cradling | section hidden |
+| jewelry / earrings | Wearing, Product only | Earring on ear | section hidden |
+| jewelry / necklaces | Wearing, Product only | Necklace at neckline | section hidden |
+| jewelry / bracelets | Wearing, Product only | Bracelet on wrist, Wrist showing watch, Fingertip pinch | section hidden |
+| watches | Wearing, Product only | Wrist showing watch, Fingertip pinch | section hidden |
+| eyewear | Wearing, Placed beside, Product only | Both hands cradling, Fingertip pinch | n/a (default solo) |
+| footwear / sneakers | Wearing, Holding, Placed beside, Product only | Both hands cradling, Fingertip pinch | poses with no Walking/Jumping when hands preset |
+| bags-accessories / backpacks | Wearing, Holding, Product only | Both hands cradling | n/a |
+| beauty-fragrance / fragrance | Holding, Placed beside, Product only | Both hands cradling, Fingertip pinch, Pinching cap | n/a |
+| fashion / dresses | Wearing, Product only | section hidden (scale not pocket/handheld) | full pose list (solo) |
+
+Spot-check Auto-cast on Rings, Necklaces, Sneakers, Fragrance — the seeded gesture should pick the first allowlisted value (which is now correct per category).

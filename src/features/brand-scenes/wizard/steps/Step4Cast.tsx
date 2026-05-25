@@ -9,6 +9,7 @@ import { OutfitQuiz } from "../components/OutfitQuiz";
 import { hasOutfitVibe } from "../constants/outfit";
 import {
   CAST_ACTIONS,
+  posesForCast,
   CAST_AGES,
   CAST_GENDERS,
   CAST_INTERACTIONS,
@@ -144,7 +145,10 @@ export function Step4Cast({
     .filter((p) => !forbiddenCast.has(p.value));
 
   const visibleInteractions = (() => {
-    const filtered = CAST_INTERACTIONS.filter((i) => !forbiddenInter.has(i.value));
+    const allowed = new Set(resolved.interactions as string[]);
+    const filtered = CAST_INTERACTIONS.filter(
+      (i) => allowed.has(i.value) && !forbiddenInter.has(i.value),
+    );
     const rank = (v: string) => {
       const idx = resolved.interactions.indexOf(v as CastInteraction);
       return idx === -1 ? 999 : idx;
@@ -933,7 +937,7 @@ function InteractionTab({
               </div>
             )}
             <ChipRowWithOther
-              options={CAST_ACTIONS}
+              options={posesForCast(preset, scalePreset)}
               current={cast?.action_note ? undefined : cast?.action}
               custom={referenceActive ? undefined : cast?.action_note}
               onPick={(v) =>
