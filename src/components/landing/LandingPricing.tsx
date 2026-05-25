@@ -20,7 +20,7 @@ const PLAN_ORDER = ['free', 'starter', 'growth', 'pro'];
 
 // ── Feature comparison matrix (mirrors /app/pricing) ──
 type Cell = boolean | string;
-type FeatureRow = { label: string; values: Record<string, Cell> };
+type FeatureRow = { label: string; values: Record<string, Cell>; badge?: string };
 type FeatureGroup = { title: string; rows: FeatureRow[] };
 
 const FEATURE_MATRIX: FeatureGroup[] = [
