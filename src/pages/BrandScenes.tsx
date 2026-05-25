@@ -86,7 +86,7 @@ export default function BrandScenes() {
         <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Brand Scenes</h1>
           <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
-            Your custom signature scenes — use them on any product
+            Signature scenes saved to your brand — reuse them on any product
           </p>
         </div>
         {hasScenes && canCreate && (
@@ -225,14 +225,15 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         Design your first brand scene
       </h2>
       <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-        Brand scenes are your signature backgrounds, environments, and moods — generated from your references or a prompt and saved to use across every product.
+        Build a scene two ways — walk through a guided wizard that tunes cast, environment, lighting, and camera, or drop in a reference image and let the AI match its mood. Either way, it's saved to your brand and reusable on any product.
       </p>
 
       <div className="mt-8 space-y-3">
         {[
-          { icon: Sparkles, text: 'Design from a reference image or a written prompt' },
-          { icon: Layers, text: 'Save and reuse across all your products' },
-          { icon: Users, text: 'Stays private to your account' },
+          { icon: Wand2, text: 'Guided wizard: pick cast, environment, lighting, and camera' },
+          { icon: Sparkles, text: 'Or start from a reference image and dial in how strictly to follow it' },
+          { icon: Layers, text: 'Saved to your brand and reusable on every product' },
+          { icon: Users, text: 'Private to your account' },
         ].map((item) => {
           const Icon = item.icon;
           return (
@@ -291,14 +292,15 @@ function UpgradeState({ onUpgrade }: { onUpgrade: () => void }) {
         Brand Scenes is on Growth and Pro
       </h2>
       <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-        Design signature scenes locked to your brand — generated from your references or a prompt and reused across every product
+        Design signature scenes locked to your brand — build them with a guided wizard or from a reference image, then reuse on every product
       </p>
 
       <div className="mt-8 space-y-3">
         {[
-          { icon: Sparkles, text: 'Design from a reference image or a written prompt' },
-          { icon: Layers, text: 'Save and reuse across all your products' },
-          { icon: Users, text: 'Stays private to your account' },
+          { icon: Wand2, text: 'Guided wizard: pick cast, environment, lighting, and camera' },
+          { icon: Sparkles, text: 'Or start from a reference image and dial in how strictly to follow it' },
+          { icon: Layers, text: 'Saved to your brand and reusable on every product' },
+          { icon: Users, text: 'Private to your account' },
         ].map((item) => {
           const Icon = item.icon;
           return (
