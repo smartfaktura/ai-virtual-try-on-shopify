@@ -77,6 +77,10 @@ export function resolveAll(
   const allScales = SCALE_PRESETS.map((s) => s.value);
   const scaleValues = (b.scale ?? allScales) as ScalePreset[];
 
+  // Use `in`-checks so an explicitly-declared empty array opts the field out
+  // entirely (vs. `??` which would fall back to ALL values).
+  const has = (k: keyof typeof b) => Object.prototype.hasOwnProperty.call(b, k);
+
   return {
     scale: {
       values: scaleValues,
@@ -90,19 +94,23 @@ export function resolveAll(
       SCENE_PALETTES.map((p) => p.value)) as ScenePalette[],
     finishes: (b.finishes ??
       SCENE_FINISHES.map((f) => f.value)) as SceneFinish[],
-    wardrobeColors: (b.wardrobe_colors ??
-      WARDROBE_COLORS.map((w) => w.value)) as WardrobeColor[],
-    interactions: (b.interactions ??
-      CAST_INTERACTIONS.map((i) => i.value)) as CastInteraction[],
+    wardrobeColors: (has("wardrobe_colors")
+      ? (b.wardrobe_colors as WardrobeColor[])
+      : (WARDROBE_COLORS.map((w) => w.value) as WardrobeColor[])),
+    interactions: (has("interactions")
+      ? (b.interactions as CastInteraction[])
+      : (CAST_INTERACTIONS.map((i) => i.value) as CastInteraction[])),
     castPresets: (b.cast_presets ??
       CAST_PRESETS.filter((c) => c.value !== "replicate").map((c) => c.value)) as CastPreset[],
     defaultCast: (b.default_cast ?? "solo") as CastPreset,
     surfaces: (b.surfaces ?? SURFACES.map((s) => s.value)) as Surface[],
     propDensityMax: (b.prop_density_max ?? 4) as PropDensity,
-    handsOnProduct: (b.hands_on_product ??
-      HANDS_ON_PRODUCT.map((h) => h.value)) as HandsOnProduct[],
-    bodyPartFocus: (b.body_part_focus ??
-      BODY_PART_FOCUS.map((b) => b.value)) as BodyPartFocus[],
+    handsOnProduct: (has("hands_on_product")
+      ? (b.hands_on_product as HandsOnProduct[])
+      : (HANDS_ON_PRODUCT.map((h) => h.value) as HandsOnProduct[])),
+    bodyPartFocus: (has("body_part_focus")
+      ? (b.body_part_focus as BodyPartFocus[])
+      : (BODY_PART_FOCUS.map((b) => b.value) as BodyPartFocus[])),
   };
 }
 
