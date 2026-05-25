@@ -937,7 +937,7 @@ function InteractionTab({
               </div>
             )}
             <ChipRowWithOther
-              options={CAST_ACTIONS}
+              options={posesForCast(preset, scalePreset)}
               current={cast?.action_note ? undefined : cast?.action}
               custom={referenceActive ? undefined : cast?.action_note}
               onPick={(v) =>
