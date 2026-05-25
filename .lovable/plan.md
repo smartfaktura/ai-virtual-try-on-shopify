@@ -1,77 +1,59 @@
-## Problem
+Three independent UX upgrades to the brand-scene creation flow.
 
-When the user uploads a reference and picks **"Location only"** intent (Step 3), the generator often ignores the location and crops to a portrait/headshot with a generic background (see screenshot — Option 1). Root causes:
+## 1) Move the "Before you upload" confirmation modal to the upload click
 
-1. The `REFERENCE` section is rendered **last** in the assembled prompt (after `ROLE`, `SUBJECT`, `SCENE`, `CAMERA`, …, `NEGATIVE`, `NOTES`). Gemini treats the trailing line as a weak afterthought against the strong opening sections.
-2. The "location" directive is short and vague: *"Keep the reference location and environment. Replace the cast and product per the directives below."* — no instruction to (a) preserve geometry/lighting from the reference image, (b) place the cast **inside** the environment, or (c) avoid cropping past the location.
-3. No negative clause prevents the model from collapsing into a tight headshot that hides the backdrop.
-4. The reference image **is** correctly attached as `inlineData` in `generate-brand-scene/index.ts`, so this is purely a prompt-engineering problem.
+Currently `ResponsibilityModal` opens on Step 0 when the user clicks the "Build from a reference" card. The user wants it to open later — when they actually try to upload a reference image on Step 3.
 
-## Fix (3 files)
+**Changes**
+- `Step0ChooseSource.tsx`: drop the lock icon, the "Quick check required" tag, and the gating. Both source cards become a simple `onChange("wizard"|"reference")`. Remove `onPickReference` and `referenceUnlocked` props.
+- `BrandSceneWizard.tsx`: stop opening the modal in `handlePickReference`. Instead, pass a new prop `responsibilityAccepted` and `onRequestResponsibility` callback to `Step3Reference`. The callback is `() => setModalOpen(true)`.
+- `Step3Reference.tsx`: wrap every upload entry point (file-picker button click, drop, paste) in a guard:
+  ```ts
+  const ensureAccepted = () => {
+    if (!responsibilityAccepted) { onRequestResponsibility(); return false; }
+    return true;
+  };
+  ```
+  - Button: `onClick={() => ensureAccepted() && inputRef.current?.click()}`
+  - Drop: bail before `handleFiles` if not accepted (and call `onRequestResponsibility`)
+  - Paste listener: same guard
+  - Also disable the drop zone visual hint and lower the dashed border opacity when not accepted, plus show a one-line helper "We'll ask for a quick usage check the first time you upload" under the dropzone (only when not accepted).
+- The modal's `onAccept` still records the acceptance row + dispatches `acceptResponsibility`, but no longer dispatches `setSource` (source is already set from Step 0).
 
-### 1. `src/features/brand-scenes/prompt/buildReferenceDirective.ts`
-Rewrite the `"location"` branch as a structured multi-line directive:
+## 2) Show a small reference-image thumbnail on "Review & generate"
 
-```
-REFERENCE IMAGE — LOCATION LOCK (highest priority).
-The attached reference IS the environment. Use it as the literal backdrop:
-preserve the architecture, geometry, perspective, surfaces, color palette,
-and the direction and quality of light exactly as in the reference.
-Place the cast and product physically INSIDE this exact location — standing
-on the same floor, lit by the same lights, with the same walls/structures
-visible around and behind them. Match the reference's wide framing so the
-environment reads clearly; do not crop into a tight headshot or paste the
-subject onto a generic background. The product and people are the only
-elements that change — everything else (room, lighting, color, depth)
-comes from the reference image.
-```
-
-Also tighten `"replicate"`, `"composition"`, and `"vibe"` with a one-line "highest priority" marker so the section is taken seriously regardless of intent.
-
-### 2. `src/features/brand-scenes/prompt/assembleSceneDirective.ts`
-**Move the `REFERENCE` section to the top**, immediately after `ROLE` and before `PRODUCT FOCUS`. The current order pushes it to the very end (after `NEGATIVE`). New order:
+In `Step6PreviewAndPick.tsx`, when `isReferenceFlow && answers.reference_preview_url`, render a compact preview row inside the "Pick your favorite" header card:
 
 ```
-ROLE
-REFERENCE          ← promoted
-PRODUCT FOCUS
-SUBJECT
-SCENE
-CAMERA & FRAMING
-COLOR & FINISH
-STYLING DETAILS
-CAST DETAILS
-OUTPUT
-NEGATIVE
-NOTES
-NAME
+┌─[64×80 ref thumb]──┐
+│  REFERENCE          │  Scene name
+│  Your uploaded     │  Pick your favorite — Select the variation…
+│  inspiration       │
+└────────────────────┘
 ```
 
-Additionally, when `answers.source === "reference"` and `answers.reference_intent === "location"`, append a hard negative to the `NEGATIVE` section:
+Implementation: insert a small flex row above (or to the left of) the existing "Pick your favorite" copy: 64×80 rounded-md `<img>` with `object-cover`, label "Reference", filename/intent line `e.g. "Location only"`. Same treatment in the idle "Ready to generate" card so the user sees their reference there too. Stock-product card stays as is.
 
-```
-- Do not output a tight headshot or closeup that hides the reference environment — the reference location MUST be clearly visible around the subject in every variation.
-- Do not invent a new room or background; reuse the reference scene only.
-```
+## 3) Make variation cards open a fullscreen preview
 
-### 3. `src/features/brand-scenes/wizard/steps/Step3Reference.tsx`
-Under the "Location only" intent tile, add a one-line helper when it's selected:
+The three "Option 1/2/3" cards in `BrandSceneVariationGrid.tsx` currently only select. Add a clear way to open a fullscreen lightbox:
 
-> "Upload a clean wide shot of the space — we'll place your cast and product inside it without changing the location."
+- Add a small "expand" icon button (top-left, opposite of the selection check) that calls a new `onPreview(index)` prop. Main card click keeps selecting.
+- In `Step6PreviewAndPick.tsx`, import the existing `ImageLightbox` from `@/components/app/ImageLightbox`. Wire:
+  - `images = variations.map(v => v.url)`
+  - `selectedIndices = new Set([variations.findIndex(v => v.url === selectedUrl)])` (only when one matches)
+  - `onSelect = (i) => setSelectedUrl(variations[i].url)` + update cache
+  - `onClose / onNavigate` standard
+- New local state: `const [previewIndex, setPreviewIndex] = useState<number | null>(null)`. Render `<ImageLightbox open={previewIndex !== null} currentIndex={previewIndex ?? 0} … />`.
 
-(Keeps the wizard self-explanatory so users feed in usable wide shots rather than close crops.)
-
-## Test updates
-Update `src/features/brand-scenes/__tests__/reference-intent.test.ts` to match the new wording — keep the `/keep the reference location/i` matcher relaxed to `/location lock|reference location/i` so the new directive passes.
+## Files touched
+- `src/features/brand-scenes/wizard/BrandSceneWizard.tsx`
+- `src/features/brand-scenes/wizard/steps/Step0ChooseSource.tsx`
+- `src/features/brand-scenes/wizard/steps/Step3Reference.tsx`
+- `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`
+- `src/features/brand-scenes/wizard/components/BrandSceneVariationGrid.tsx`
 
 ## Out of scope
-- No DB schema changes.
-- No edge-function changes (reference inlineData wiring is already correct).
-- No new intent types — the existing four (`replicate`, `location`, `composition`, `vibe`) cover the case; we're sharpening the language behind them.
-- The per-variation "deliver a distinct interpretation" preamble stays — variations are still allowed, but the strengthened directive prevents the location from being dropped.
-
-## Expected outcome
-For the tennis-court example the user uploaded:
-- All 3 variations show the same tennis-court interior (architecture, blue floor, lighting rig).
-- The model is placed on-court with consistent perspective and scale.
-- No headshot-on-blank-background failure case.
+- No DB, edge-function, or RLS changes.
+- Modal copy and the `reference_responsibility_acceptances` insert stay unchanged.
+- No changes to Step 0 visual style other than removing the lock state from the reference card.
