@@ -142,7 +142,14 @@ export default function BrandScenes() {
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="aspect-[4/5] rounded-2xl bg-muted/40 animate-pulse" />
+            <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="aspect-[4/5] bg-muted/50 animate-pulse" />
+              <div className="p-3.5 space-y-3">
+                <div className="h-3.5 w-3/4 rounded bg-muted/60 animate-pulse" />
+                <div className="h-2.5 w-1/2 rounded bg-muted/40 animate-pulse" />
+                <div className="h-8 w-24 rounded-full bg-muted/50 animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       ) : hasScenes ? (
