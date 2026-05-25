@@ -44,6 +44,7 @@ import {
 // AiStylistCard removed — replaced by per-scene outfit direction
 import { ProductSpecsCard } from './ProductSpecsCard';
 import { toast } from '@/lib/brandedToast';
+import { BrandModelsInfoModal } from './BrandModelsInfoModal';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
@@ -190,9 +191,6 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
           </button>
         )}
         <BrandModelsInfoModal open={brandInfoOpen} onOpenChange={setBrandInfoOpen} />
-        {false && (
-          <div />
-        )}
       </div>
 
       {/* Library Models — inline preview */}
