@@ -149,6 +149,10 @@ export const HANDS_ON_PRODUCT = [
   { value: "pour", label: "Pouring", directive: "in the act of pouring" },
   { value: "wrist_show", label: "Wrist showing watch", directive: "wrist turned to camera, showing the watch" },
   { value: "tap", label: "Tapping / using", directive: "fingertip tapping the product" },
+  { value: "ring_finger", label: "Ring on ring finger", directive: "ring worn on the model's ring finger, finger gently extended toward camera so the band and any stone read clearly" },
+  { value: "necklace_clasp", label: "Necklace at neckline", directive: "necklace worn at the base of the neck, clasp behind, pendant centered on the collarbone" },
+  { value: "earring_place", label: "Earring on ear", directive: "earring worn on the earlobe, hair tucked behind the ear so the piece reads cleanly" },
+  { value: "bracelet_wrist", label: "Bracelet on wrist", directive: "bracelet wrapped around the wrist, clasp aligned naturally" },
 ] as const;
 export type HandsOnProduct = (typeof HANDS_ON_PRODUCT)[number]["value"];
 
