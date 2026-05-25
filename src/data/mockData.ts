@@ -1498,6 +1498,7 @@ export const pricingPlans: PricingPlan[] = [
       '$0.040 per credit',
       'Fastest generation queue',
       { text: 'Brand Models', badge: 'NEW' },
+      { text: 'Brand Scenes', badge: 'NEW' },
     ],
     ctaText: 'Choose Pro',
     stripePriceIdMonthly: 'price_1T26psC8WPO5rhKrGbOwmpNy',
