@@ -180,6 +180,11 @@ export function AppShell({ children }: AppShellProps) {
                 Soon
               </span>
             )}
+            {!isComingSoon && item.badge && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-white/[0.12] text-white/80">
+                {item.badge}
+              </span>
+            )}
           </span>
         )}
       </button>
