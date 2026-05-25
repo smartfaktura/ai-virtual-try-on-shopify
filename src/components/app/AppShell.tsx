@@ -75,7 +75,7 @@ const navGroups = [
       { label: 'Library', icon: Image, path: '/app/library' },
       { label: 'Products', icon: Package, path: '/app/products' },
       { label: 'Brand Models', icon: Users, path: '/app/models' },
-      { label: 'Brand Scenes', icon: Mountain, path: '/app/brand-scenes' },
+      { label: 'Brand Scenes', icon: Mountain, path: '/app/brand-scenes', badge: 'NEW' },
     ],
   },
 ];
