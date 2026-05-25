@@ -19,7 +19,9 @@ function isAllowedImageUrl(raw: string | undefined, supabaseUrl: string): boolea
     if (u.protocol !== "https:") return false;
     const projectHost = new URL(supabaseUrl).host;
     const hostOk = u.host === projectHost || u.host.endsWith(".supabase.co");
-    const pathOk = u.pathname.includes("/storage/v1/object/public/");
+    const pathOk =
+      u.pathname.includes("/storage/v1/object/public/") ||
+      u.pathname.includes("/storage/v1/object/sign/");
     return hostOk && pathOk;
   } catch {
     return false;
