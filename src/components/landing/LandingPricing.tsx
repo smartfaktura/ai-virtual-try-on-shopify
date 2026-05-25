@@ -482,6 +482,9 @@ export function LandingPricing() {
                                 )}
                                 <span className={v === false ? 'text-muted-foreground/60' : 'text-foreground/90'}>
                                   {row.label}
+                                  {row.badge && (
+                                    <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-primary/10 text-primary align-middle">{row.badge}</span>
+                                  )}
                                   {typeof v === 'string' && <span className="text-muted-foreground"> · {v}</span>}
                                 </span>
                               </li>
