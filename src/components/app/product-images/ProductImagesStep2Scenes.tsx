@@ -10,6 +10,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { ProductImageScene, UserProduct, CategoryCollection, SubGroup } from './types';
 import { cn } from '@/lib/utils';
 import { SceneRequestBanner } from '@/components/app/SceneRequestBanner';
+import { BrandScenesPromoCard } from './BrandScenesPromoCard';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
@@ -491,6 +492,10 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
           <GridSizeToggle value={gridSize} onChange={setGridSize} />
         </div>
       </div>
+
+      <BrandScenesPromoCard />
+
+
 
       {/* No category detected: show all category collections expanded */}
       {!hasDetectedCategories && ACTIVE_CATEGORY_COLLECTIONS.length > 0 && (
