@@ -19,21 +19,6 @@ export function Step2ChooseSubFamily({ module, value, onChange }: Props) {
     );
   }
 
-  if (subs.length === 1) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 text-center">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Auto-selected
-        </div>
-        <div className="text-base font-semibold tracking-tight mt-1.5">
-          {subs[0].label}
-        </div>
-        <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-          This family has a single sub-family — continue to the next step
-        </p>
-      </div>
-    );
-  }
 
 
   return (

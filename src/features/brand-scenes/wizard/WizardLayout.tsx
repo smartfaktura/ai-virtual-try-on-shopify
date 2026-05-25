@@ -17,6 +17,7 @@ interface Props {
   nextDisabledReason?: string | null;
   nextLabel?: string;
   isLastStep?: boolean;
+  hideSubFamilyStep?: boolean;
   children: ReactNode;
 }
 
@@ -51,9 +52,11 @@ export function WizardLayout({
   nextDisabledReason,
   nextLabel,
   isLastStep,
+  hideSubFamilyStep,
   children,
 }: Props) {
-  const steps = source === "reference" ? STEPS_REFERENCE : STEPS_WIZARD;
+  const baseSteps = source === "reference" ? STEPS_REFERENCE : STEPS_WIZARD;
+  const steps = hideSubFamilyStep ? baseSteps.filter((s) => s.n !== 2) : baseSteps;
   const total = steps.length;
   const currentIdx = steps.findIndex((s) => s.n === step);
   const displayIdx = currentIdx >= 0 ? currentIdx : 0;

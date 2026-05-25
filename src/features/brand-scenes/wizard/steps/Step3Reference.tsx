@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
+import { ImagePlus, Loader2, RefreshCw, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -186,7 +186,7 @@ export function Step3Reference({
                 onClick={handleRemove}
                 className="rounded-full gap-1.5 shrink-0"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Replace
               </Button>
             </div>
