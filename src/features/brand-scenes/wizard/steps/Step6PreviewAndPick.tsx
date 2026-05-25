@@ -101,7 +101,11 @@ export function Step6PreviewAndPick({
   const referenceImageUrl =
     answers.source === "reference" ? answers.reference_preview_url : undefined;
   const modelImageUrl = answers.cast?.model_ref?.sourceImageUrl;
-  const { data: stockProduct } = useStockProductForScene(answers.module, answers.sub_family);
+  const { data: stockProduct } = useStockProductForScene(
+    answers.module,
+    answers.sub_family,
+    answers.cast?.gender?.[0],
+  );
 
   const handleGenerate = async () => {
     if (!directive.trim()) {
