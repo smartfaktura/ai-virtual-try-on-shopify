@@ -363,7 +363,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+  // Trust x-queue-internal only when paired with a valid service-role bearer token.
+  // Without this, any anonymous caller could spoof the header and bypass auth.
+  const _serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const _authHeader = req.headers.get("authorization") ?? "";
+  const _hasQueueHeader = req.headers.get("x-queue-internal") === "true";
+  const isQueueInternal = _hasQueueHeader && _authHeader === `Bearer ${_serviceRoleKey}`;
+  if (_hasQueueHeader && !isQueueInternal) {
+    console.warn("[generate-catalog] x-queue-internal header without valid service-role bearer — rejecting");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   let body: CatalogPayload = {} as CatalogPayload;
 
   try {
