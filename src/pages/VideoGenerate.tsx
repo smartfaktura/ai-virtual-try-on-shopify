@@ -28,7 +28,8 @@ function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
     if (!video.video_url) return;
     const filename = `video-${video.camera_type || video.id.slice(0, 8)}.mp4`;
     try {
-      const response = await fetch(video.video_url);
+      const signed = await toSignedUrl(video.video_url);
+      const response = await fetch(signed);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
@@ -44,6 +45,7 @@ function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
       window.open(video.video_url, '_blank');
     }
   };
+
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden group">
