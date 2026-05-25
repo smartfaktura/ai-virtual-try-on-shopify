@@ -32,6 +32,7 @@ import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 import { injectReferenceTokens } from "../../prompt/injectReferenceTokens";
 import { CAST_PRESETS_WITH_PEOPLE } from "../constants/cast";
 import { useStockProductForScene } from "../hooks/useStockProductForScene";
+import { UserProductPickerModal, type PickedProduct } from "../components/UserProductPickerModal";
 import {
   BRAND_SCENE_GENERATION_COST,
   BRAND_SCENE_NAME_MAX,
@@ -108,6 +109,10 @@ export function Step6PreviewAndPick({
     answers.sub_family,
     answers.cast?.gender?.[0],
   );
+  const [customProduct, setCustomProduct] = useState<PickedProduct | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const previewProduct: { url: string; label: string } | null =
+    customProduct ?? (stockProduct ? { url: stockProduct.url, label: stockProduct.label } : null);
 
   const referenceIntentLabel = (() => {
     switch (answers.reference_intent) {
@@ -160,7 +165,7 @@ export function Step6PreviewAndPick({
         compiledPrompt: directive,
         referenceImageUrl,
         modelImageUrl,
-        productImageUrl: stockProduct?.url,
+        productImageUrl: previewProduct?.url,
         name: trimmedName,
       });
       setVariations(res.variations);
@@ -299,17 +304,45 @@ export function Step6PreviewAndPick({
               <ReferenceThumb />
             </div>
           )}
-          {stockProduct && (
-            <div className="mt-3 flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
-              <img
-                src={stockProduct.url}
-                alt={stockProduct.label}
-                className="w-12 h-12 rounded-md object-cover bg-background flex-shrink-0"
-                loading="lazy"
-              />
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Preview uses a representative <span className="text-foreground/85 font-medium">{stockProduct.label}</span> so you can see scale and placement. Your actual item replaces it when you apply this scene to products.
-              </p>
+          {previewProduct && (
+            <div className="mt-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+              <div className="flex items-start gap-3">
+                <img
+                  src={previewProduct.url}
+                  alt={previewProduct.label}
+                  className="w-14 h-14 rounded-md object-cover bg-background flex-shrink-0"
+                  loading="lazy"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    {customProduct ? "Your product · preview stand-in" : "Preview stand-in"}
+                  </div>
+                  <div className="text-[12px] font-medium text-foreground/90 truncate mt-0.5">
+                    {customProduct ? previewProduct.label : `Sample ${previewProduct.label}`}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                    Used only to preview scale and placement. Your saved scene works with any of your products — they replace this when you apply the scene later.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-3 pl-[68px] text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  className="text-primary hover:underline font-medium"
+                >
+                  {customProduct ? "Choose a different product" : "Use my product instead"}
+                </button>
+                {customProduct && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomProduct(null)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Reset to sample
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -470,6 +503,14 @@ export function Step6PreviewAndPick({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <UserProductPickerModal
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onPick={(p) => setCustomProduct(p)}
+      />
+
+
 
       {variations.length > 0 && (
         <ImageLightbox
