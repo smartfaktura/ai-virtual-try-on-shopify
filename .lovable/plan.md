@@ -1,63 +1,35 @@
-## Root cause
+## Goal
 
-`generated-videos` is a **private** bucket. The bulk-download path in `VideoHub.tsx:266` correctly signs URLs via `toSignedUrl()`. The single-video Detail Modal does not — it uses the raw public URL in two places, both of which silently fail against a private bucket:
+Fix inaccurate copy on `/app/brand-scenes`. The current text says scenes are "generated from your references or a prompt", but the wizard actually offers two distinct paths:
 
-- `src/components/app/video/VideoDetailModal.tsx:124` — `fetch(video.video_url)` in `handleDownload` → 400 → corrupt blob saved → user perceives the video as "disappeared"
-- `src/components/app/video/VideoDetailModal.tsx:179` — `<video src={video.video_url!}>` → broken player
+1. **Guided builder** — step-by-step wizard (product family → cast → environment → photography → review) that composes a precise scene without any reference.
+2. **Reference image** — upload an inspiration image and control how strictly the AI follows it.
 
-Not an admin/RLS issue. Storage policy is correct (`auth.uid() = first folder of path`). Admin works only because they happen to use bulk download.
+Update both the page-header subtitle, the `EmptyState`, and the `UpgradeState` to reflect this precisely.
 
-## Fix
+## Changes (single file: `src/pages/BrandScenes.tsx`)
 
-### `src/components/app/video/VideoDetailModal.tsx`
+### 1. Header subtitle (line 88–90)
+- **Now:** "Your custom signature scenes — use them on any product"
+- **New:** "Signature scenes saved to your brand — reuse them on any product"
 
-1. Import the signing helper:
-   ```ts
-   import { toSignedUrl } from '@/lib/signedUrl';
-   ```
+### 2. `EmptyState` (lines 224–246)
+- **Heading:** keep "Design your first brand scene"
+- **New description:** "Build a scene two ways — walk through a guided wizard that tunes cast, environment, lighting, and camera, or drop in a reference image and let the AI match its mood. Either way, it's saved to your brand and reusable on any product."
+- **Feature bullets — replace with:**
+  - `Wand2` → "Guided wizard: pick cast, environment, lighting, and camera"
+  - `Sparkles` → "Or start from a reference image and dial in how strictly to follow it"
+  - `Layers` → "Saved to your brand and reusable on every product"
+  - `Users` → "Private to your account"
+- Import `Wand2` (already imported) — no new icons needed.
 
-2. Add a small effect that resolves a signed URL whenever the modal opens with a complete video:
-   ```ts
-   const [signedSrc, setSignedSrc] = useState<string | null>(null);
-   useEffect(() => {
-     let cancelled = false;
-     setSignedSrc(null);
-     if (open && video.video_url) {
-       toSignedUrl(video.video_url)
-         .then((url) => { if (!cancelled) setSignedSrc(url); })
-         .catch(() => { if (!cancelled) setSignedSrc(null); });
-     }
-     return () => { cancelled = true; };
-   }, [open, video.video_url]);
-   ```
+### 3. `UpgradeState` (lines 290–312)
+- **Heading:** keep "Brand Scenes is on Growth and Pro"
+- **New description:** "Design signature scenes locked to your brand — build them with a guided wizard or from a reference image, then reuse on every product."
+- Use the same bullet list as `EmptyState` for consistency.
 
-3. Use `signedSrc` for the in-modal `<video>` (line 179). While it's resolving, show the existing loader/poster so we don't render a broken `<video>`.
+### 4. No logic, routing, gating, or component-structure changes.
 
-4. In `handleDownload` (line 120), replace the raw fetch with a signed one:
-   ```ts
-   const signed = await toSignedUrl(video.video_url);
-   const res = await fetch(signed);
-   if (!res.ok) throw new Error(`download ${res.status}`);
-   ```
-   Rest of the blob → anchor → click flow stays the same. The existing toast on failure remains the user-visible safety net.
-
-### Audit
-
-Confirmed by `rg "video_url" src/components/app/video src/pages` — only the two modal lines above and `ShortFilm.tsx:123` (which uses a local `completedClips[0].url`, not from a private bucket). No other consumer to fix.
-
-## Out of scope (separate follow-up)
-
-Investigation surfaced one more issue worth a later patch — flagging only:
-- `video_projects.status` is never flipped to `'complete'` after Kling finishes. All of syncoo's projects are still `'processing'` 24h+ later. Video Hub queries `generated_videos` directly so cards still appear, but the parent table is silently rotten. Fix would be a small update inside `supabase/functions/generate-video/index.ts` next to where `generated_videos.status = 'complete'` is set.
-
-Not touching this in the current patch — the user reported download specifically, and conflating the two fixes risks the queue/credit logic.
-
-## Files changed
-
-- `src/components/app/video/VideoDetailModal.tsx`
-
-Two changes, one file. No DB migration, no edge-function change, no storage policy change.
-
-## Reassuring the user (info@tsimkus / syncoo)
-
-syncoo's 5 videos are all intact in storage and have valid storage paths (4.8–19 MB each, `status='complete'`). After this fix ships they can open any card and download successfully. No data was lost.
+## Out of scope
+- Wizard internals, gating logic, `UpgradeBanner` copy (already accurate).
+- No DB, no edge functions.

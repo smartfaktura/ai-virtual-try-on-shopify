@@ -86,7 +86,7 @@ export default function BrandScenes() {
         <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Brand Scenes</h1>
           <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
-            Your custom signature scenes — use them on any product
+            Signature scenes saved to your brand — reuse them on any product
           </p>
         </div>
         {hasScenes && canCreate && (
