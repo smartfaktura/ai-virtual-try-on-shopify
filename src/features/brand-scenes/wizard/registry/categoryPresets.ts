@@ -388,6 +388,15 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     surfaces: ["polished_stone", "raw_wood", "paper", "concrete"],
     body_part_focus: ["hands", "detail", "face"],
     hands_on_product: ["tap", "cradle", "pinch"],
+    sub: {
+      "tech-devices": {
+        interactions: ["using", "holding", "beside", "hero"],
+        cast_presets: ["hands", "solo", "none"],
+        default_cast: "hands",
+        body_part_focus: ["hands", "detail", "face"],
+        hands_on_product: ["tap", "cradle", "pinch"],
+      },
+    },
   },
 
   "food-drink": {
