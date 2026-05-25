@@ -44,6 +44,7 @@ import {
 // AiStylistCard removed — replaced by per-scene outfit direction
 import { ProductSpecsCard } from './ProductSpecsCard';
 import { toast } from '@/lib/brandedToast';
+import { BrandModelsInfoModal } from './BrandModelsInfoModal';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
@@ -67,6 +68,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
   const [showAllModal, setShowAllModal] = useState(false);
   const [modalGender, setModalGender] = useState<'all' | 'female' | 'male'>('all');
   const [modalSearch, setModalSearch] = useState('');
+  const [brandInfoOpen, setBrandInfoOpen] = useState(false);
 
   // Use multi-select IDs if available, fallback to single
   const activeIds = useMemo(() => {
@@ -174,13 +176,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
           </div>
         ) : (
           <button
-            onClick={() => {
-              if (isFree && onUpgradeClick) {
-                onUpgradeClick();
-              } else {
-                navigate('/app/models');
-              }
-            }}
+            onClick={() => setBrandInfoOpen(true)}
             className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 p-4 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <div className="flex items-center gap-3">
@@ -194,6 +190,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
             </div>
           </button>
         )}
+        <BrandModelsInfoModal open={brandInfoOpen} onOpenChange={setBrandInfoOpen} />
       </div>
 
       {/* Library Models — inline preview */}
