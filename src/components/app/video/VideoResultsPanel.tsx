@@ -79,13 +79,17 @@ export const VideoResultsPanel = React.forwardRef<HTMLDivElement, VideoResultsPa
     const handleDownload = async () => {
       if (!videoUrl) return;
       try {
-        const res = await fetch(videoUrl);
+        const signed = await toSignedUrl(videoUrl);
+        const res = await fetch(signed);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `video-${generationContext?.cameraMotion || Date.now()}.mp4`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch {
         toast.error('Failed to download video');
