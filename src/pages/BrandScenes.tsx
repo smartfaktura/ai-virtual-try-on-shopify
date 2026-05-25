@@ -192,13 +192,17 @@ function SceneCard({
           <h3 className="text-sm font-semibold text-foreground tracking-tight truncate">
             {scene.title}
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 truncate">
             {new Date(scene.created_at).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
               year: 'numeric',
-            })}
-            {scene.brand_scene_module ? ` · ${scene.brand_scene_module}` : ''}
+            }).toUpperCase()}
+            {scene.category_collection
+              ? ` · ${scene.category_collection}`
+              : scene.brand_scene_module
+                ? ` · ${scene.brand_scene_module}`
+                : ''}
           </p>
         </div>
 
