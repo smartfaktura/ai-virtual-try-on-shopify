@@ -8,6 +8,7 @@ import { toast } from '@/lib/brandedToast';
 import { format } from 'date-fns';
 import type { GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { buildVideoFileName } from '@/lib/videoFilename';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 const RESOLUTION_MAP: Record<string, string> = {
   '1:1': '1080 × 1080',
