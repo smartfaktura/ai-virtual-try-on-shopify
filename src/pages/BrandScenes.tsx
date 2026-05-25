@@ -296,7 +296,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <div className="mt-8 pt-6 border-t border-border flex flex-wrap items-center gap-3">
         <Button onClick={onCreate} className="rounded-full font-semibold gap-2">
           <Plus className="w-4 h-4" />
-          Create your first brand scene
+          New brand scene
         </Button>
       </div>
     </div>
