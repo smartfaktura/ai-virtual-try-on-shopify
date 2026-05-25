@@ -1,20 +1,38 @@
-## Fix sidebar "Get credits" to open Top Up
+Reorganize the app sidebar navigation groups so all creation tools sit under a single **Workspace** section.
 
-**File:** `src/components/app/GlobalUpgradeModal.tsx`
-
-Change the variant selection so all paid plans (Starter, Growth, Pro, Enterprise) get the top-up pack view instead of the plan picker:
-
-```ts
-const isTopupOnly = plan !== 'free';
+Current structure:
+```text
+Workspace
+  Dashboard
+Create
+  Visual Studio
+  Create with Prompt
+  Video
+  Explore
+Assets
+  Library
+  Products
+  Brand Models
+  Brand Scenes
 ```
 
-### Result by plan
+New structure:
+```text
+Workspace
+  Dashboard
+  Visual Studio
+  Create with Prompt
+  Video
+  Explore
+Assets
+  Library
+  Products
+  Brand Models
+  Brand Scenes
+```
 
-- **Free** → unchanged. Sidebar "Upgrade" opens `UpgradePlanModal` directly via `setUpgradeOpen` in `CreditIndicator.tsx`.
-- **Starter / Growth / Pro / Enterprise** → sidebar "Get credits" opens `BuyCreditsModal` on the **Top Up** tab, showing instant credit packs. Users who want to change tier still have the "Compare plans" footer link routing to `/app/pricing`.
+**Changes:**
+1. In `src/components/app/AppShell.tsx`, merge the `Create` group items into the `Workspace` group and remove the standalone `Create` group entry.
+2. Remove the empty extra blank line inside the old `Create` items array.
 
-### Out of scope
-
-- No changes to `CreditIndicator.tsx` (already correct).
-- No Stripe, pricing, or `creditPacks` changes.
-- No changes to the no-credits modal flow or `/settings`.
+The `Assets` group stays unchanged. No other UI or logic changes.
