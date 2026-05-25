@@ -60,7 +60,7 @@ export default function BrandScenes() {
     queryFn: async (): Promise<BrandSceneRow[]> => {
       const { data, error } = await supabase
         .from('product_image_scenes')
-        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module, category_collection')
+        .select('id, scene_id, title, description, preview_image_url, created_at, brand_scene_module, category_collection, brand_scene_answers')
         .eq('is_brand_scene', true)
         .eq('owner_user_id', user!.id)
         .order('created_at', { ascending: false });
@@ -80,6 +80,27 @@ export default function BrandScenes() {
     if (!pendingDelete) return;
     const target = pendingDelete;
     setPendingDelete(null);
+
+    // Best-effort storage cleanup — never blocks the DB delete.
+    try {
+      if (target.preview_image_url) {
+        const parsed = parsePublicStorageUrl(target.preview_image_url);
+        if (parsed) {
+          const { error: stErr } = await supabase.storage.from(parsed.bucket).remove([parsed.key]);
+          if (stErr) console.warn('Failed to delete preview from storage', stErr);
+        }
+      }
+      const refPaths = target.brand_scene_answers?.reference_image_paths ?? [];
+      if (refPaths.length > 0) {
+        const { error: refErr } = await supabase.storage
+          .from(BRAND_SCENE_REFERENCE_BUCKET)
+          .remove(refPaths);
+        if (refErr) console.warn('Failed to delete reference images from storage', refErr);
+      }
+    } catch (e) {
+      console.warn('Storage cleanup raised', e);
+    }
+
     const { error } = await supabase
       .from('product_image_scenes')
       .delete()
