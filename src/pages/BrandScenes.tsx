@@ -29,6 +29,7 @@ interface BrandSceneRow {
   preview_image_url: string | null;
   created_at: string;
   brand_scene_module: string | null;
+  category_collection: string | null;
 }
 
 export default function BrandScenes() {
