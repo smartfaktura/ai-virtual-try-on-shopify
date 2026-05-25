@@ -292,6 +292,54 @@ export default function VideoHub() {
     !(v.kling_task_id && completedTaskIds.has(v.kling_task_id))
   );
   const completedVideos = history.filter(v => v.status !== 'processing' && v.status !== 'queued');
+  const hasOwnVideos = processingVideos.length > 0 || completedVideos.length > 0;
+
+  const workflowCards = (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <VideoWorkflowCard
+        icon={Film}
+        title="Animate Image"
+        description="Turn one still image into a polished short video"
+        bestFor={['Product hero', 'Campaign motion', 'Social ads']}
+        to="/app/video/animate"
+      />
+      <VideoWorkflowCard
+        icon={ArrowRightLeft}
+        title="Start & End Video"
+        description="Create a smooth video between a start image and an end image"
+        bestFor={['Product reveals', 'Before / after', 'Smooth transitions']}
+        to="/app/video/start-end"
+        beta
+      />
+      <VideoWorkflowCard
+        icon={Layers}
+        title="Create Ad Sequence"
+        description="Build a cinematic mini ad from several visuals"
+        bestFor={['Product launches', 'Multi-frame ads', 'Brand teasers']}
+        to="/app/video/ad-sequence"
+        disabled
+        comingSoon
+      />
+      <VideoWorkflowCard
+        icon={Users}
+        title="Consistent Model Video"
+        description="Create videos with stronger subject consistency"
+        bestFor={['Spokesmodels', 'Fashion clips', 'Creator content']}
+        to="/app/video/consistent-model"
+        disabled
+        comingSoon
+      />
+      <VideoWorkflowCard
+        icon={Clapperboard}
+        title="Short Film"
+        description="Plan and generate a premium multi-shot brand film"
+        bestFor={['Brand storytelling', 'Multi-shot', 'Campaign films']}
+        to="/app/video/short-film"
+        disabled
+        comingSoon
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -328,128 +376,85 @@ export default function VideoHub() {
         </div>
       )}
 
-      {/* Workflow Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <VideoWorkflowCard
-          icon={Film}
-          title="Animate Image"
-          description="Turn one still image into a polished short video"
-          bestFor={['Product hero', 'Campaign motion', 'Social ads']}
-          to="/app/video/animate"
-        />
-        <VideoWorkflowCard
-          icon={ArrowRightLeft}
-          title="Start & End Video"
-          description="Create a smooth video between a start image and an end image"
-          bestFor={['Product reveals', 'Before / after', 'Smooth transitions']}
-          to="/app/video/start-end"
-          beta
-        />
-        <VideoWorkflowCard
-          icon={Layers}
-          title="Create Ad Sequence"
-          description="Build a cinematic mini ad from several visuals"
-          bestFor={['Product launches', 'Multi-frame ads', 'Brand teasers']}
-          to="/app/video/ad-sequence"
-          disabled
-          comingSoon
-        />
-        <VideoWorkflowCard
-          icon={Users}
-          title="Consistent Model Video"
-          description="Create videos with stronger subject consistency"
-          bestFor={['Spokesmodels', 'Fashion clips', 'Creator content']}
-          to="/app/video/consistent-model"
-          disabled
-          comingSoon
-        />
-        <VideoWorkflowCard
-          icon={Clapperboard}
-          title="Short Film"
-          description="Plan and generate a premium multi-shot brand film"
-          bestFor={['Brand storytelling', 'Multi-shot', 'Campaign films']}
-          to="/app/video/short-film"
-          disabled
-          comingSoon
-        />
-      </div>
-
-      {/* Showcase */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Showcase</h2>
-          <p className="text-base text-muted-foreground mt-1.5">See what's possible</p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {Array.from({ length: 10 }, (_, i) => (
-            <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted">
-              <video
-                src={`/videos/showcase/showcase-${i + 1}.mp4`}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
+      {/* Completed Videos — surface right under In Progress once user has any work */}
+      {hasOwnVideos && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
+              {completedVideos.length > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
+                </Badge>
+              )}
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Completed Videos */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
             {completedVideos.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
-              </Badge>
+              <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
+                {selectMode ? 'Done' : 'Select'}
+              </Button>
             )}
           </div>
-          {completedVideos.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
-              {selectMode ? 'Done' : 'Select'}
-            </Button>
-          )}
-        </div>
-        {isLoadingHistory ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-xl bg-muted/30 animate-pulse" />
-            ))}
-          </div>
-        ) : completedVideos.length > 0 ? (
-          <>
+          {isLoadingHistory ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {completedVideos.map((v) => (
-                <RecentVideoCard
-                  key={v.id}
-                  video={v}
-                  onClick={() => setSelectedVideo(v)}
-                  selectMode={selectMode}
-                  selected={selectedIds.has(v.id)}
-                  onToggleSelect={() => toggleSelection(v.id)}
-                  highlight={recentlyCompleted.has(v.id)}
-                />
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="aspect-[3/4] rounded-xl bg-muted/30 animate-pulse" />
               ))}
             </div>
-            {hasMore && (
-              <div className="flex justify-center pt-2">
-                <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
-                  {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Load More Videos
-                </Button>
+          ) : completedVideos.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {completedVideos.map((v) => (
+                  <RecentVideoCard
+                    key={v.id}
+                    video={v}
+                    onClick={() => setSelectedVideo(v)}
+                    selectMode={selectMode}
+                    selected={selectedIds.has(v.id)}
+                    onToggleSelect={() => toggleSelection(v.id)}
+                    highlight={recentlyCompleted.has(v.id)}
+                  />
+                ))}
               </div>
-            )}
-          </>
-        ) : !isLoadingHistory && processingVideos.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center">
-            <Film className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No videos yet. Create your first one above.</p>
+              {hasMore && (
+                <div className="flex justify-center pt-2">
+                  <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
+                    {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Load More Videos
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+      )}
+
+      {/* Workflow Cards — always available to start a new generation */}
+      {workflowCards}
+
+      {/* Showcase — only for first-time visitors with nothing of their own yet */}
+      {!hasOwnVideos && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Showcase</h2>
+            <p className="text-base text-muted-foreground mt-1.5">See what's possible</p>
           </div>
-        ) : null}
-      </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 10 }, (_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted">
+                <video
+                  src={`/videos/showcase/showcase-${i + 1}.mp4`}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {/* Sticky bulk download bar */}
       {selectedIds.size > 0 && (
