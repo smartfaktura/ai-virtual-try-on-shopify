@@ -138,7 +138,8 @@ export function getSubStepDisabledReason(
   if (sub === "interaction") {
     // Headline = action when people are present, else hands-on-product, else gaze.
     const hasPeople = preset ? CAST_PRESETS_WITH_PEOPLE.includes(preset) : false;
-    if (hasPeople && !cast?.action) return "Pick an action to continue";
+    if (hasPeople && !cast?.action && !cast?.action_note?.trim())
+      return "Pick an action to continue";
     if (!hasPeople && !cast?.hands_on_product) {
       return "Pick a hands-on-product gesture to continue";
     }

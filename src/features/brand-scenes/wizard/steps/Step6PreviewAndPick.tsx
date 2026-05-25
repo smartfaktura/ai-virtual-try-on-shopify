@@ -350,7 +350,7 @@ export function Step6PreviewAndPick({
               {sceneName}
             </div>
             <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-              Select the variation that best matches what you want. Tap the expand icon to preview full-size. Saving is free.
+              Select the variation that best matches what you want. Tap the expand icon to preview full-size.
             </p>
             {isReferenceFlow && referenceImageUrl && (
               <div className="mt-3">
@@ -396,7 +396,7 @@ export function Step6PreviewAndPick({
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  Save to library · free
+                  Save to Brand Scenes
                 </>
               )}
             </Button>
