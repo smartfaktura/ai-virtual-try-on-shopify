@@ -1,53 +1,56 @@
-## Fix: Remove unsigned-JWT auth bypass in queue-internal edge functions
+# Fix `generate-video` Worker Authentication Bypass
 
-### The vulnerability
+## Problem
+`supabase/functions/generate-video/index.ts` (line 419) enters worker mode when `x-queue-internal: true` is present without verifying the `Authorization` header contains the real `SUPABASE_SERVICE_ROLE_KEY`. This allows any unauthenticated caller to forge the header and trigger Kling AI generation or manipulate `generated_videos` rows.
 
-Four edge functions accept any JWT whose base64-decoded payload contains `role: "service_role"` — **without verifying the signature**. An attacker forges `eyJhbGciOiJub25lIn0.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.` plus `x-queue-internal: true` and bypasses auth.
+## Root Cause
+```
+const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+```
+Only the custom header is checked. The `Authorization: Bearer <service_role_key>` header sent by `process-queue` is ignored.
 
-### Why the fix is 100% safe (verified)
+## Fix
 
-I audited every internal caller. Each one already sends the real service-role key as the bearer token:
+### 1. `supabase/functions/generate-video/index.ts` — Add strict service-role verification
 
-| Caller | Header sent |
-|---|---|
-| `enqueue-generation` → `process-queue` (line 103, 207) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
-| `process-queue` self-dispatch (line 41) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
-| `retry-queue` → `process-queue` (line 46) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
-| `run-scheduled-drops` → `trigger-creative-drop` (line 66) | `Bearer ${serviceRoleKey}` + `x-queue-internal: true` |
+**Location:** Lines 418-437 (worker mode entry gate)
 
-The strict comparison `authHeader === \`Bearer ${serviceRoleKey}\`` already accepts all four. The base64-decode `else if` branch is **dead code** — it can only ever be reached by tokens that DON'T equal the real key, i.e. forgeries.
+**Change:** Replace the single `x-queue-internal` check with a two-factor guard that also validates the `Authorization` header:
 
-For reference: `generate-tryon` and `generate-text-product` already implement this correctly today (they require BOTH `x-queue-internal` AND `authHeader === Bearer serviceRoleKey`).
+```text
+Before:
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+  if (isQueueInternal && body.job_id) { ... }
 
-### Changes
+After:
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const authHeader     = req.headers.get("authorization");
+  const isQueueInternal =
+    req.headers.get("x-queue-internal") === "true" &&
+    authHeader === `Bearer ${serviceRoleKey}`;
 
-In each file below, delete the entire `else if (isQueueInternal && authHeader?.startsWith("Bearer "))` block (the base64 JWT parser). Keep only the strict equality check.
+  // Reject forged internal requests
+  if (req.headers.get("x-queue-internal") === "true" && !isQueueInternal) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
-1. `supabase/functions/process-queue/index.ts` — delete lines ~80-93 (the `else if` JWT-payload block); also drop the now-unused `isQueueInternal` local and the "x-queue-internal header" wording in the comment.
-2. `supabase/functions/generate-freestyle/index.ts` — same pattern around lines 1150-1170.
-3. `supabase/functions/generate-workflow/index.ts` — same pattern around lines 1049-1070.
-4. `supabase/functions/upscale-worker/index.ts` — same pattern around lines 43-60.
-
-After the edit, each guard reduces to:
-
-```ts
-const authHeader = req.headers.get("authorization");
-const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-if (authHeader !== `Bearer ${serviceRoleKey}`) {
-  return new Response(JSON.stringify({ error: "Unauthorized" }), {
-    status: 401,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+  if (isQueueInternal && body.job_id) { ... }
 ```
 
-### Verification after deploy
+**Why this is safe:**
+- `process-queue` already dispatches with BOTH headers (confirmed at `process-queue/index.ts` lines 38-47).
+- No client-side UI code ever sends `x-queue-internal`; user-facing video actions use the `getUserId(req)` branch below (line 440), which is untouched.
+- The exact same guard pattern is already deployed and working in `generate-freestyle`, `generate-tryon`, `generate-workflow`, `upscale-worker`, and `process-queue` itself.
 
-- Trigger a normal image generation from `/app/workflows` → confirms `enqueue-generation → process-queue → generate-workflow` still completes.
-- Trigger a freestyle generation → confirms `generate-freestyle` path.
-- Trigger an upscale from the library → confirms `upscale-worker`.
-- Re-run security scan; `jwt_bypass_queue_internal` should clear.
+### 2. Deploy and verify
 
-### Out of scope
+1. Trigger a video generation from `/app` UI.
+2. Confirm `generated_videos` row is created and Kling polling completes normally.
+3. Re-run security scanner → finding `generate_video_no_auth` should clear.
 
-The other findings in the security panel (open redirect in `create-checkout`, image-proxy SSRF, storage bucket policies, leaked-password protection, RLS warnings on checkout_sessions / generation_queue / etc.) — separate plans.
+## Out of scope
+- Other open findings (`poll-stuck-videos` auth, credit checks, image-proxy SSRF, storage policies, etc.) are NOT addressed in this plan.
+- No database or frontend changes required.
