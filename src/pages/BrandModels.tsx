@@ -35,43 +35,49 @@ import {
 /* ── Plan gate upgrade prompt ── */
 function UpgradeHero() {
   const { openBuyModal } = useCredits();
+  const items = [
+    { icon: UserCheck, text: 'Brand consistency: same model across every campaign' },
+    { icon: Globe, text: 'Any ethnicity and age: represent your diverse audience' },
+    { icon: Palette, text: 'Custom looks: upload a reference or describe from scratch' },
+  ];
+
   return (
-    <div className="flex flex-col items-center text-center py-16 px-4 max-w-2xl mx-auto gap-8">
-      <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-widest mb-4">
-          <Crown className="h-3.5 w-3.5" /> Growth & Pro
-        </div>
-        <h2 className="text-3xl font-bold tracking-tight">Brand Models</h2>
-        <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-          Unlimited custom AI models built to match your brand — any gender, age, ethnicity, or body type
-        </p>
+    <div className="rounded-2xl border border-border bg-card p-8 sm:p-12 max-w-3xl">
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+        <Users className="w-6 h-6 text-primary" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
-        {[
-          { icon: UserCheck, label: 'Brand Consistency', desc: 'Same model across every campaign' },
-          { icon: Globe, label: 'Any Ethnicity & Age', desc: 'Represent your diverse audience' },
-          { icon: Baby, label: 'Kids Models', desc: 'Generate child models safely with AI' },
-          { icon: Palette, label: 'Custom Looks', desc: 'Upload a reference or describe from scratch' },
-        ].map((b) => (
-          <Card key={b.label} className="flex items-start gap-3.5 p-5 text-left border-border/60">
-            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-              <b.icon className="h-4 w-4 text-primary" />
+      <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+        Brand Models is on Growth and Pro
+      </h2>
+      <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+        Unlimited custom AI models built to match your brand. Any gender, age, ethnicity, or body type
+      </p>
+
+      <div className="mt-8 space-y-3">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.text} className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <p className="text-sm text-foreground/80 leading-relaxed pt-1">{item.text}</p>
             </div>
-            <div>
-              <p className="font-semibold text-sm">{b.label}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{b.desc}</p>
-            </div>
-          </Card>
-        ))}
+          );
+        })}
       </div>
 
-      <Button size="pill" className="gap-2" onClick={() => openBuyModal()}>
-        <Crown className="h-4 w-4" /> Upgrade to Growth
-      </Button>
+      <div className="mt-8 pt-6 border-t border-border">
+        <Button onClick={() => openBuyModal()} className="rounded-full font-semibold gap-2">
+          <Crown className="w-4 h-4" />
+          Upgrade to Growth
+        </Button>
+      </div>
     </div>
   );
 }
+
 
 /* ── Chip selector ── */
 function ChipSelect({ options, value, onChange, columns }: { options: string[]; value: string; onChange: (v: string) => void; columns?: number }) {
