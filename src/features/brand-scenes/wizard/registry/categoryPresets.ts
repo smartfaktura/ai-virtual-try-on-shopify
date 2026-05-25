@@ -325,6 +325,8 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     settings: ["Studio cyclorama", "Tabletop surface", "Architectural interior", "Nature"],
     surfaces: ["polished_stone", "linen", "velvet", "water", "paper"],
     prop_density_max: 3,
+    body_part_focus: ["hands", "face", "detail"],
+    hands_on_product: ["cradle", "pinch", "cap"],
     sub: {
       fragrance: {
         cast_presets: ["none", "hands"],
