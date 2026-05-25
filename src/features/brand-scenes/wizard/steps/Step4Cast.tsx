@@ -9,6 +9,7 @@ import { OutfitQuiz } from "../components/OutfitQuiz";
 import { hasOutfitVibe } from "../constants/outfit";
 import {
   CAST_ACTIONS,
+  posesForCast,
   CAST_AGES,
   CAST_GENDERS,
   CAST_INTERACTIONS,
