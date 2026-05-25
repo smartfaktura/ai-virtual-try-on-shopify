@@ -165,7 +165,7 @@ export function Step6PreviewAndPick({
         compiledPrompt: directive,
         referenceImageUrl,
         modelImageUrl,
-        productImageUrl: stockProduct?.url,
+        productImageUrl: previewProduct?.url,
         name: trimmedName,
       });
       setVariations(res.variations);
