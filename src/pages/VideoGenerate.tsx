@@ -237,13 +237,25 @@ function VideoGenerateInner() {
     });
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!videoUrl) return;
-    const a = document.createElement('a');
-    a.href = videoUrl;
-    a.download = `video-${cameraPreset !== 'none' ? cameraPreset : Date.now()}.mp4`;
-    a.target = '_blank';
-    a.click();
+    const filename = `video-${cameraPreset !== 'none' ? cameraPreset : Date.now()}.mp4`;
+    try {
+      const response = await fetch(videoUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.warn('[Download] Falling back to new tab', err);
+      window.open(videoUrl, '_blank');
+    }
   };
 
   const handleReset = () => {
