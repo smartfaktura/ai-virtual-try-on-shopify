@@ -321,6 +321,3 @@ function UpgradeState({ onUpgrade }: { onUpgrade: () => void }) {
     </div>
   );
 }
-    </div>
-  );
-}
