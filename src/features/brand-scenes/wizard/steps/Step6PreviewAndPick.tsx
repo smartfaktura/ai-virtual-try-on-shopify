@@ -504,6 +504,14 @@ export function Step6PreviewAndPick({
         </AlertDialogContent>
       </AlertDialog>
 
+      <UserProductPickerModal
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onPick={(p) => setCustomProduct(p)}
+      />
+
+
+
       {variations.length > 0 && (
         <ImageLightbox
           images={variations.map((v) => v.url)}
