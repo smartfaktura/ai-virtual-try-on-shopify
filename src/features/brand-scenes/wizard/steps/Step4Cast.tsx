@@ -89,6 +89,8 @@ interface Props {
   scale?: BrandSceneScale;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
   onScaleChange: (patch: Partial<BrandSceneScale>) => void;
+  /** Optional — used by Auto-cast to seed scene defaults (lens, DoF, finish). */
+  onBaseChange?: (patch: Partial<NonNullable<BrandSceneAnswers["base"]>>) => void;
   /** Active sub-step (controlled by the wizard so footer Next can advance it). */
   subStep?: Step4SubStep;
   onSubStepChange?: (s: Step4SubStep) => void;
