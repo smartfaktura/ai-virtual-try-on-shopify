@@ -1258,7 +1258,7 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
         >
           <Link to={`/app/workflows?model=${model.id}`}>
             <Wand2 className="w-3.5 h-3.5" />
-            Use in Visual Studio
+            Use model
           </Link>
         </Button>
       </div>
@@ -1385,7 +1385,7 @@ export default function BrandModels() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
 
           {models.map((m) => (
             <ModelCard key={m.id} model={m} onDelete={handleDelete} onRename={handleRename} />
