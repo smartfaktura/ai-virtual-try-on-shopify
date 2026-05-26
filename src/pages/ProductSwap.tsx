@@ -948,7 +948,7 @@ export default function ProductSwap() {
                     Get more credits
                   </Button>
                 )}
-                <p className="text-[11px] text-muted-foreground text-center">~{Math.round(totalImages * 8 / 60) || 1} min · Credits refunded if a generation fails</p>
+                
                 {isGenerating && progress > 0 && <Progress value={progress} className="h-1.5 rounded-full" />}
               </div>
             </div>
