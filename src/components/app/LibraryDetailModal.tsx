@@ -447,7 +447,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   variant="ghost"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="w-full font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  className="w-full font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
                 >
                   <Trash2 className="w-4 h-4 mr-1.5" />
                   {deleting ? 'Deleting…' : 'Delete'}

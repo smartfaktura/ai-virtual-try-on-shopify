@@ -1,11 +1,14 @@
-Match the library modal's "How was this result?" feedback card to the product-images modal: blend it into the panel instead of standing out as a white card.
+Tone down the Delete button in the library modal — replace red destructive styling with a minimal muted look.
 
-**Change** in `src/components/app/LibraryDetailModal.tsx` (line 458 block):
+**Change** in `src/components/app/LibraryDetailModal.tsx` (line 446-454):
 
-Add the same `className` override already used in `ResultDetailModal.tsx`:
-
+Replace:
 ```tsx
-className="[&>div]:bg-transparent [&>div]:border-border/40"
+className="w-full font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
+```
+with:
+```tsx
+className="w-full font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
 ```
 
-This makes the inner `bg-card` transparent and softens the border, so the feedback section reads as part of the side panel instead of a separate white block.
+Trash icon inherits the muted tone. No copy or behavior changes.
