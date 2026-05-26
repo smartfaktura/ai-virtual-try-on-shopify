@@ -10,7 +10,7 @@ import { Step3Reference } from "./steps/Step3Reference";
 import { Step4Cast } from "./steps/Step4Cast";
 import { Step5Review } from "./steps/Step5Review";
 import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
-import { ResponsibilityModal } from "./components/ResponsibilityModal";
+
 import {
   computeStep4Flow,
   getStep4Mode,
