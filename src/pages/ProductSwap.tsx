@@ -435,6 +435,28 @@ export default function ProductSwap() {
                 }}>
                   <Sparkles className="w-4 h-4 mr-2" />Swap more products
                 </Button>
+                {resultEntries.length >= 2 && (
+                  <Button
+                    variant="outline"
+                    size="pill"
+                    onClick={async () => {
+                      for (let i = 0; i < resultEntries.length; i++) {
+                        const entry = resultEntries[i];
+                        const url = entry.url;
+                        const a = document.createElement('a');
+                        a.href = url.includes('?') ? `${url}&download=` : `${url}?download=`;
+                        a.download = `${entry.job.productTitle.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'swap'}-${entry.job.ratio.replace(':', 'x')}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        if (i < resultEntries.length - 1) await new Promise(r => setTimeout(r, 150));
+                      }
+                      toast.success(`Downloading ${resultEntries.length} images`);
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />Download all ({resultEntries.length})
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => { setIsGeneratingView(false); navigate('/app/library'); }}>
                   View in Library
                 </Button>
