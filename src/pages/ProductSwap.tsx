@@ -694,10 +694,11 @@ export default function ProductSwap() {
 
         {/* ═══════════ STEP 2: PRODUCTS ═══════════ */}
         {currentStep === 2 && (
-          <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="space-y-3 animate-in fade-in duration-200">
             <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
 
-            <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border space-y-3">
+            <div className="sticky top-0 z-10 pt-2 pb-3 space-y-2 bg-background">
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Search products..." value={productSearch}
