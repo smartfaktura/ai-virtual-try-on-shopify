@@ -343,10 +343,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">{selectedProducts.length} Product{selectedProducts.length !== 1 ? 's' : ''}</span>
-              </div>
+              <h3 className="text-base font-semibold tracking-tight">{selectedProducts.length} Product{selectedProducts.length !== 1 ? 's' : ''}</h3>
               {onEditStep && (
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(1)}>
                   <Pencil className="w-3 h-3" />Edit
@@ -384,10 +381,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">{selectedScenes.length} Scene{selectedScenes.length !== 1 ? 's' : ''}</span>
-              </div>
+              <h3 className="text-base font-semibold tracking-tight">{selectedScenes.length} Scene{selectedScenes.length !== 1 ? 's' : ''}</h3>
               {onEditStep && (
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(2)}>
                   <Pencil className="w-3 h-3" />Edit
@@ -430,10 +424,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         {/* Credits */}
         <Card className={!canAfford ? 'border-destructive/50' : 'border-primary/30'}>
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Coins className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Credits</span>
-            </div>
+            <h3 className="text-base font-semibold tracking-tight">Credits</h3>
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Format{selectedRatios.length > 1 ? 's' : ''}</span>
