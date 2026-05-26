@@ -1,25 +1,47 @@
-## Bug
+## Changes
 
-In `step4Flow.ts`:
+### 1. Remove "selected" look on Suggested model card
+`src/features/brand-scenes/wizard/components/FeaturedModelPicker.tsx` (line 237-239)
 
-```ts
-if (!preset) {
-  return { order: ["look"], visibleTabs: ["look"], showBranchCard: true };
-}
+Use the same neutral border/hover classes for suggested and unsuggested cards. The "SUGGESTED" badge alone communicates the recommendation — no border ring needed.
+
+```tsx
+className={cn(
+  "group relative flex flex-col items-stretch overflow-hidden rounded-xl border border-border bg-background text-left transition-all",
+  "hover:border-foreground/40 hover:-translate-y-0.5 hover:shadow-sm",
+)}
 ```
 
-When the user is on Look and picks "Design the look" (mode = "yes"), no cast preset is set yet, so `order` is `["look"]`. In `BrandSceneWizard.handleNext` the Step-4 sub-step block sees `idx === order.length - 1` and falls through to `dispatch({ type: "next" })`, advancing the whole wizard. Essentials (where the user actually picks how many people + interaction), People, Interaction, and Styling are silently skipped.
+### 2. Hide Energy/Vibe section and Custom settings on People sub-step
+`src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
 
-## Fix
+- Delete the `Energy / vibe` Section block (lines 694-712).
+- Delete the `Custom settings` collapsible button + collapsed-state hint (lines 714-729) AND the `{customOpen && (...) }` block (lines 731-790) — gender / age / build / ethnicity inputs go away with it. Keep the `useState(customOpen)` removal too.
+- Keep the lingerie mood block and everything below untouched (still gated by `lingerie`, doesn't depend on customOpen).
+- Remove the now-unused `peopleVibeMissing` calc, `vibeMissing` prop on `PeopleTab`, and the `defaultStep4People` patch that sets `vibe = "editorial"` (line ~202). Drop the `hasCustomValues` / `customOpen` state.
 
-**`src/features/brand-scenes/wizard/step4Flow.ts`** — when no preset is set yet, branch on `mode`:
+`src/features/brand-scenes/wizard/step4Flow.ts`
 
-- `mode === undefined` → only Look in order/visibleTabs, branch card shown (unchanged — user must pick a branch first).
-- `mode === "skip"` (Auto-cast) → only Look (handled by the wizard's "Continue" shortcut that jumps past all sub-steps — unchanged).
-- `mode === "yes"` (Design the look, no preset yet) → `order: ["look", "essentials"]`, `visibleTabs: ["look", "essentials"]`, `showBranchCard: true`. This makes Next go to Essentials where the user picks cast preset + interaction; once a preset is chosen the existing branch (line 75-103) takes over and adds People / Interaction / Styling tabs.
+- In `getSubStepDisabledReason` for `sub === "people"`, drop the vibe check and return `null` (People tab becomes informational only; Next is gated by other tabs).
 
-No other files change. The disabled-reason for `essentials` already returns "Choose who's in the shot" when no preset is set, which is the correct Next-button tooltip on the Look step once they pick "Design the look".
+### 3. Mark Styling slots as optional
+`src/features/brand-scenes/wizard/components/OutfitQuiz.tsx`
+
+Update the Section labels:
+- `Top` → `Top · optional`
+- `Bottom` → `Bottom · optional`
+- `Footwear` → `Footwear · optional`
+- Outfit vibe already shows "· optional" when not required — leave as is.
+
+The Wardrobe color anchor in StylingTab already says "· optional"; the dynamic `extraFields` from `ExtrasPillField` inherit their own optional labelling — no change there.
 
 ## Result
+- Suggested model card looks identical to siblings (only the badge differentiates it).
+- People sub-step shows only the Featured Model picker — no vibe/custom settings clutter, and Next isn't blocked there.
+- Styling tab clearly marks every wardrobe slot as optional.
 
-Look → (pick "Design the look") → Next → Essentials (pick people count + interaction) → Next → People → Next → Interaction → Next → Styling → Next → step 5.
+## Files touched
+1. `src/features/brand-scenes/wizard/components/FeaturedModelPicker.tsx`
+2. `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`
+3. `src/features/brand-scenes/wizard/step4Flow.ts`
+4. `src/features/brand-scenes/wizard/components/OutfitQuiz.tsx`
