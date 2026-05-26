@@ -414,71 +414,72 @@ export function Step6PreviewAndPick({
 
 
       {(phase === "picking" || phase === "saving") && variations.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
-          <div>
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Pick your favorite
-            </div>
-            <div className="mt-1 text-base font-semibold tracking-tight">
-              {sceneName}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-              Select the variation that best matches what you want. Tap the expand icon to preview full-size.
-            </p>
-            {isReferenceFlow && referenceImageUrl && (
-              <div className="mt-3">
-                <ReferenceThumb />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Pick your favorite
               </div>
-            )}
+              <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                Select the variation that best matches what you want. Tap the expand icon to preview full-size.
+              </p>
+            </div>
+
+            <BrandSceneVariationGrid
+              variations={variations}
+              selectedUrl={selectedUrl}
+              onSelect={(url) => {
+                if (phase !== "picking") return;
+                setSelectedUrl(url);
+                if (promptHash) {
+                  onCacheChange?.({ promptHash, variations, selectedUrl: url });
+                }
+              }}
+              onPreview={(idx) => setPreviewIndex(idx)}
+            />
+
+            <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={handleRegenerate}
+                disabled={phase === "saving"}
+                className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 disabled:opacity-40"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Regenerate · {BRAND_SCENE_GENERATION_COST} credits
+              </button>
+              <Button
+                size="pill"
+                onClick={handleSave}
+                disabled={!selectedUrl || phase === "saving"}
+                className="gap-2 w-full sm:w-auto"
+              >
+                {phase === "saving" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Save to Brand Scenes
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
-          <BrandSceneVariationGrid
-            variations={variations}
-            selectedUrl={selectedUrl}
-            onSelect={(url) => {
-              if (phase !== "picking") return;
-              setSelectedUrl(url);
-              if (promptHash) {
-                onCacheChange?.({ promptHash, variations, selectedUrl: url });
-              }
-            }}
-            onPreview={(idx) => setPreviewIndex(idx)}
-          />
-
-          <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              onClick={handleRegenerate}
-              disabled={phase === "saving"}
-              className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 disabled:opacity-40"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Regenerate · {BRAND_SCENE_GENERATION_COST} credits
-            </button>
-            <Button
-              size="pill"
-              onClick={handleSave}
-              disabled={!selectedUrl || phase === "saving"}
-              className="gap-2 w-full sm:w-auto"
-            >
-              {phase === "saving" ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Save to Brand Scenes
-                </>
-              )}
-            </Button>
+          <div className="lg:col-span-1 space-y-3">
+            {isReferenceFlow && referenceImageUrl && <ReferenceThumb />}
+            <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
           </div>
         </div>
       )}
 
-      {/* Full structured summary (ported from Step5Review) */}
-      <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
+      {/* Full structured summary — only shown outside the picking/saving phases */}
+      {phase !== "picking" && phase !== "saving" && (
+        <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
+      )}
 
       {/* Admin debug — single instance */}
       {isAdmin && (
