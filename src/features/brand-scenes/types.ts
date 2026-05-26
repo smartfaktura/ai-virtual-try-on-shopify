@@ -107,7 +107,7 @@ export interface BrandSceneBaseAnswers {
 }
 
 export interface BrandSceneCast {
-  preset: CastPreset;
+  preset?: CastPreset;
   gender?: CastGender[];
   age?: CastAge[];
   vibe?: CastVibe;
