@@ -282,21 +282,32 @@ export function Step6PreviewAndPick({
       {/* Scene name — mandatory in wizard flow. Reference flow already collected
           it in Step 3 but we let the user edit it here too. */}
       {!isReferenceFlow && (
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+        <div className={`rounded-2xl border bg-card p-4 sm:p-6 transition-colors ${showNameError ? "border-destructive/60" : "border-border"}`}>
           <Label htmlFor="brand-scene-name" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Scene name
+            Scene name <span className="text-destructive ml-0.5">*</span>
           </Label>
           <Input
             id="brand-scene-name"
+            ref={nameInputRef}
             value={answers.name ?? ""}
             onChange={(e) => onNameChange?.(e.target.value.slice(0, BRAND_SCENE_NAME_MAX))}
+            onBlur={() => setNameTouched(true)}
             placeholder="e.g. Lingerie morning bedroom"
             maxLength={BRAND_SCENE_NAME_MAX}
-            className="mt-2"
+            aria-required="true"
+            aria-invalid={showNameError}
+            className={`mt-2 ${showNameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
           />
-          <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-            Required — this is how the scene appears in your library.
-          </p>
+          {showNameError ? (
+            <p className="mt-2 text-[11px] text-destructive leading-relaxed flex items-center gap-1.5">
+              <AlertCircle className="w-3 h-3 flex-shrink-0" />
+              Required — give your scene a name
+            </p>
+          ) : (
+            <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+              Required — this is how the scene appears in your library.
+            </p>
+          )}
         </div>
       )}
 
