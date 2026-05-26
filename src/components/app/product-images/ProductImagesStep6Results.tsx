@@ -208,6 +208,16 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
           onDownload={(idx) => handleSingleDownload(lightboxImages[idx], lightboxProductName, lightboxSceneNames[idx] || `image_${idx + 1}`)}
+          onEdit={(idx) => {
+            const url = lightboxImages[idx];
+            setLightboxOpen(false);
+            navigate(`/app/freestyle?editImage=${encodeURIComponent(url)}&imageRole=edit`);
+          }}
+          onGenerateAngles={(idx) => {
+            const url = lightboxImages[idx];
+            setLightboxOpen(false);
+            navigate(`/app/perspectives?source=${encodeURIComponent(url)}`);
+          }}
         />
       )}
     </div>
