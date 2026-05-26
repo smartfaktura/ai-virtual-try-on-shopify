@@ -1,47 +1,36 @@
-## Upgrade Product Images results page modal to match Library detail
+## Add "Swap Product" action + per-image feedback to image preview modals
 
-Currently the results page in `/app/generate/product-images` opens images in a basic `ImageLightbox` (image + arrows + 3 inline action icons). Replace it with a full split-screen detail modal modeled on `LibraryDetailModal`, trimmed to only the actions you asked for.
+### 1. New "Swap Product" button — both modals
+Adds a button that reuses the opened image as the **scene** in the Product Swap flow.
 
-### New component: `ResultDetailModal`
-File: `src/components/app/product-images/ResultDetailModal.tsx`
+- **`src/components/app/LibraryDetailModal.tsx`** — insert between "Generate More Angles" and "Generate Video":
+  ```tsx
+  <Button variant="outline" onClick={() => { navigate(`/app/product-swap?scene=${encodeURIComponent(activeItem.imageUrl)}`); onClose(); }}>
+    <ArrowLeftRight className="w-4 h-4 mr-2" /> Swap Product
+  </Button>
+  ```
+- **`src/components/app/product-images/ResultDetailModal.tsx`** — same button in same position.
 
-Layout mirrors `LibraryDetailModal`:
-- Portal-mounted full-screen overlay, 60/40 split (image left, info right) on desktop, stacked on mobile
-- Close on backdrop click / Escape, body scroll lock
-- Multi-image navigation (prev/next arrows, ←/→ keys)
-- Image rendered with correct aspectRatio via `ShimmerImage`
+ProductSwap already supports `?scene=<url>` (verified in `src/pages/ProductSwap.tsx` L63–66) — it auto-selects the scene and only requires the user to pick products to swap in.
 
-Right panel — **only**:
-- Small label: `PRODUCT VISUALS`
-- Heading: `{productName}` + small `· {sceneName}` subline
-- Action buttons (stacked, same styling as Library modal):
-  1. **Download Image** (primary) → `saveOrShareImage`
-  2. **Edit Image** → navigate to `/app/freestyle?editImage=…&imageRole=edit`
-  3. **Enhance to 2K / 4K** → opens `UpscaleModal` with `{ imageUrl, sourceType: 'generation', sourceId: jobId }`
-  4. **Generate More Angles** → navigate to `/app/perspectives?source=…`
-  5. **Generate Video** → navigate to `/app/video/animate?imageUrl=…`
+### 2. Feedback card inside Product Images result modal
+Add the existing `ContextualFeedbackCard` to `ResultDetailModal.tsx`, scoped per image:
 
-**Explicitly excluded** (per request):
-- No date
-- No Delete button
-- No "Share to Explore" card
-- No "Tag Us · Win a Free Year" card
-- No admin actions
-
-### Wiring changes
-
-1. **`src/pages/ProductImages.tsx`** — `finishWithResults` (L1124): include `jobId: job.id` on every image object so the modal can pass it to `UpscaleModal`.
-2. **`src/pages/ProductImages.tsx`** — extend the `results` state type and `ProductImagesStep6Results` `results` prop type to include `jobId?: string` per image.
-3. **`src/components/app/product-images/ProductImagesStep6Results.tsx`**:
-   - Replace the `ImageLightbox` usage with the new `ResultDetailModal`
-   - Pass an array of `{ url, productName, sceneName, aspectRatio, jobId }` items + `initialIndex`
-   - Keep the existing per-image download button + grid behavior
-
-### Notes
-- Keep `ContextualFeedbackCard` on the page itself (already there); no feedback survey inside the new modal — keeps it focused, matches your "no extra cards" intent.
-- Reuse styling tokens; no new colors. Follows project rules (rounded-xl, semantic tokens).
+```tsx
+<ContextualFeedbackCard
+  workflow="product-visuals"
+  questionText="Are these visuals ready to use?"
+  buttonLabels={{ yes: 'Yes, ready', almost: 'Almost', no: 'No' }}
+  reasonChips={['Need better background', 'Wrong angle / shot', 'Product details off', 'Lighting / shadows', 'Not consistent enough', 'Missing shot type', 'Needs higher realism', 'Other']}
+  textPlaceholder="What is missing? e.g. cleaner background, sharper details"
+  resultId={active.jobId}
+  imageUrl={active.url}
+  triggerType="result_ready"
+/>
+```
+Placed below the action buttons inside the right info panel.
 
 ### Verification
-- Open a result image → split modal appears with image left, 5 action buttons right, no date/delete/share/tag cards.
-- Arrow keys + nav buttons cycle through the product group.
-- Download saves the image; Edit/Angles/Video navigate correctly; Enhance opens UpscaleModal preselected with the result.
+- Library detail modal shows a new "Swap Product" button → opens `/app/product-swap` with the image preloaded as the scene.
+- Product Images result modal shows the same button + a "Help us improve" feedback card under the actions.
+- No other modal behavior changes.
