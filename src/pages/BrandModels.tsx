@@ -361,6 +361,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
+      setFinalRightsAck(false);
       setReferenceNotes('');
       setMakePublic(false);
       onSuccess();
@@ -393,15 +394,13 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
-    // Reference mode requires a second confirmation step (skippable per-session).
     if (isReferenceMode && uploadedUrl) {
-      const skip = typeof window !== 'undefined' && sessionStorage.getItem(SKIP_KEY) === '1';
-      if (!skip) { setConfirmOpen(true); return; }
       const ok = await logResponsibilityAcceptance();
       if (!ok) return;
     }
     await runGenerate();
   };
+
 
 
   const handleRegenerateMissing = async () => {
