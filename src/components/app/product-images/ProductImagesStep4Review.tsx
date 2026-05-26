@@ -243,17 +243,6 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <ChipSelector label="" value={details.imageCount || '1'} onChange={v => update({ imageCount: v })} options={IMAGE_COUNT_OPTIONS} />
               </div>
 
-              {/* Quality — fixed at Pro */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold">Quality</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary">
-                  <Sparkles className="w-3 h-3" />
-                  Pro (6 cr)
-                </div>
-              </div>
             </div>
 
             {/* Per-scene overrides */}
@@ -426,10 +415,6 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Format{selectedRatios.length > 1 ? 's' : ''}</span>
                 <span className="font-medium">{selectedRatios.join(', ')}{selectedRatios.length > 1 ? ` (×${selectedRatios.length})` : ''}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Quality</span>
-                <span className="font-medium">Pro</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Images per scene</span>

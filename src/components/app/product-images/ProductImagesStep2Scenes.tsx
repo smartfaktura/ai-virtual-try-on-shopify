@@ -281,8 +281,7 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
           )}
           {hasAestheticColor && !hasBackground && (
             <>
-              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/70" />
-              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Accent</span>
+              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Accent Color Selected</span>
               {scene.suggestedColors && scene.suggestedColors.length > 0
                 ? scene.suggestedColors.slice(0, 3).map((c, i) => (
                     <div key={i} className="w-2 h-2 rounded-full border border-border/60" style={{ backgroundColor: c.hex }} />
@@ -294,9 +293,6 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
                   </>
               }
             </>
-          )}
-          {!hasBackground && !hasAestheticColor && (
-            <Camera className="w-3 h-3 text-muted-foreground/30" />
           )}
         </div>
       </div>
