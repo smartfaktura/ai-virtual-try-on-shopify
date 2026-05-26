@@ -240,10 +240,7 @@ export function Step3Reference({
 
             <Button
               type="button"
-              onClick={() => {
-                if (!ensureAccepted()) return;
-                inputRef.current?.click();
-              }}
+              onClick={() => inputRef.current?.click()}
               disabled={uploading}
               className="rounded-full font-semibold gap-2 mt-4 w-full sm:w-auto"
             >
@@ -253,11 +250,6 @@ export function Step3Reference({
             <p className="text-[11px] text-muted-foreground mt-2.5">
               or drag &amp; drop · paste from clipboard
             </p>
-            {!responsibilityAccepted && (
-              <p className="text-[11px] text-muted-foreground/80 mt-2 max-w-xs mx-auto">
-                We'll ask a quick usage check the first time you upload
-              </p>
-            )}
           </div>
         )}
         <input
