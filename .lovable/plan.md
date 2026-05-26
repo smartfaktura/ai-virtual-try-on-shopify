@@ -1,55 +1,25 @@
-# Product Swap wizard — match Product Images aesthetic
+## Product Swap polish
 
-All changes in `src/pages/ProductSwap.tsx`. No backend, hook, or generation-pipeline changes.
+All changes are in `src/pages/ProductSwap.tsx` only. No backend, no hook, no generation changes.
 
-## 1. Shared stepper (visual parity with /app/generate/product-images)
+### 1. Don't pre-open Library in Step 1
+- Change initial `sceneSource` state from `'library'` to `null` (type becomes `SceneSource | null`).
+- The two source cards (From Library / Upload Image) are always shown when `!sceneUrl`. Neither is highlighted by default.
+- Library picker only renders when `sceneSource === 'library'`; upload only when `sceneSource === 'scratch'`. User must click a card to proceed.
+- Keep auto-set to `'scratch'` when an `?scene=` URL param is present (existing behavior for deep links).
 
-- Import and use `CatalogStepper` from `@/components/app/catalog/CatalogStepper` with three steps:
-  - `Scene` (Image icon)
-  - `Products` (Package icon)
-  - `Review` (Sparkles icon)
-- Remove the bespoke stepper markup (custom circles, connectors, `stepDefs`).
-- Header keeps the small "← Visual Studio" back link and title block.
+### 2. Replace "Scene ready" label with actual content
+- In the selected scene preview (line 588): show `sceneTitle` as the primary line; secondary line shows source ("From library" or "Uploaded image"). No more generic "Scene ready" string.
+- In Review summary (line 828): show `sceneTitle` directly, drop the "Scene ready" fallback (use "Selected scene" only if truly empty).
 
-## 2. Floating sticky bar (replaces edge-to-edge fixed footer)
+### 3. Redesign Step 2 "Selected" tray to match floating bar
+- Replace the bottom-sticky tray (lines 775–800) with a compact pill bar styled exactly like the floating sticky bar: `rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg`, same paddings.
+- Layout: small uppercase "Selected (N)" label on the left, then a horizontal row of square thumbnails (28–32px) with rounded corners and a small ✕ hover-remove.
+- Compute how many thumbnails fit visible width (use a fixed cap, e.g. 8 on desktop, 5 on mobile, via responsive classes — no JS measurement needed). Any overflow collapses into a single `+N` chip at the end (same size/shape as a thumb, `bg-muted text-muted-foreground text-xs font-semibold`).
+- Position this tray just above the existing floating sticky bar (so they stack as two pills with a small gap), not as a separate full-width bar.
 
-- Drop the current `fixed bottom-0 inset-x-0 border-t bg-background/95` footer.
-- Add a local `ProductSwapStickyBar` component (same file, no new file) that mirrors `ProductImagesStickyBar` 1:1:
-  - `sticky bottom-4` rounded-xl card, backdrop-blur, shadow-lg
-  - Left: 3 dots + current step label + counts (`N products · M images`)
-  - Middle: credit chip (`Coins` icon, total cost, "Not enough" hint when balance is short)
-  - Right: Back + Continue / Generate pill buttons
-  - Responsive: stacked layout on mobile, single row on `sm+`
-- Centered inside `max-w-4xl mx-auto`, not full-width.
+### 4. Remove the "~1 min · Credits refunded if a generation fails" line
+- Delete line 910 entirely from the Review step cost panel.
 
-## 3. Remove aspect-ratio selector
-
-- Delete the "Aspect ratios" block in Step 1 and the `ASPECT_RATIOS` toggle UI.
-- Replace `selectedRatios: Set<string>` with `detectedRatio: RatioOption` (single value).
-- Keep the auto-detect `useEffect`: load the scene image, compute natural aspect, snap to closest of `1:1 / 3:4 / 4:5 / 9:16`, store in `detectedRatio`.
-- Pass `ratios: [detectedRatio]` to `generate(...)`.
-- Show the detected ratio as a small read-only badge on the scene preview card (Step 1) and on the Review summary card.
-- Update guards: `canAdvanceFrom1 = !!sceneUrl` (no ratio check).
-- Cost summary: drop the "Ratios" row; `totalImages = selectedProductIds.size`.
-- SessionStorage: drop the `selectedRatios` field (old shape ignored safely).
-
-## 4. Raise product cap 10 → 50
-
-- `toggleProduct`: `next.size < MAX_PRODUCTS` (50).
-- Update copy: `Max 10` → `Max 50`; `N / 10 selected` → `N / 50 selected`.
-- Bump `productVisibleCount` default 12 → 24 and "Load more" step 12 → 24.
-- "Select visible" caps at 50.
-
-## 5. Aesthetic polish
-
-- Match Product Images header pattern: compact icon next to title, identical typography weights.
-- Keep all existing fade-in animations and rounded-2xl card tokens.
-
-## Out of scope
-
-- `useProductSwap` hook, generation polling, generating view, results grid, download-all, lightbox — all untouched.
-- No DB / RLS / edge function changes.
-
-## Files touched
-
-- `src/pages/ProductSwap.tsx` (only)
+### Out of scope
+- Generation pipeline, polling, results view, lightbox, download-all, useProductSwap hook, RLS, edge functions — all untouched.

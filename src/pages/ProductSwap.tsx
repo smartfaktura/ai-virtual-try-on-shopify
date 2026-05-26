@@ -29,7 +29,7 @@ import { CatalogStepper, type StepDef } from '@/components/app/catalog/CatalogSt
 import { cn } from '@/lib/utils';
 
 type UserProduct = Tables<'user_products'>;
-type SceneSource = 'library' | 'scratch';
+type SceneSource = 'library' | 'scratch' | null;
 
 const RATIO_OPTIONS = ['1:1', '3:4', '4:5', '9:16'] as const;
 type RatioOption = typeof RATIO_OPTIONS[number];
@@ -59,7 +59,7 @@ export default function ProductSwap() {
 
   // ── Scene state ───────────────────────────────────────────────────────
   const initialScene = searchParams.get('scene');
-  const [sceneSource, setSceneSource] = useState<SceneSource>(initialScene ? 'scratch' : 'library');
+  const [sceneSource, setSceneSource] = useState<SceneSource>(initialScene ? 'scratch' : null);
   const [sceneUrl, setSceneUrl] = useState<string | null>(initialScene);
   const [sceneTitle, setSceneTitle] = useState<string>(initialScene ? 'Uploaded scene' : '');
   const [librarySearch, setLibrarySearch] = useState('');
@@ -98,7 +98,7 @@ export default function ProductSwap() {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const s = JSON.parse(raw);
-      if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || 'library'); }
+      if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || null); }
       if (Array.isArray(s.selectedProductIds)) setSelectedProductIds(new Set(s.selectedProductIds));
       if (s.currentStep === 1 || s.currentStep === 2 || s.currentStep === 3) setCurrentStep(s.currentStep);
     } catch { /* ignore */ }
@@ -585,8 +585,10 @@ export default function ProductSwap() {
               <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
                 <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">Scene ready</p>
-                  <p className="text-xs text-muted-foreground truncate">{sceneTitle}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Selected scene'}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {sceneSource === 'scratch' ? 'Uploaded image' : 'From library'}
+                  </p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => { setSceneUrl(null); setSceneTitle(''); }}>
                   <X className="w-4 h-4 mr-1" />Change
@@ -771,33 +773,72 @@ export default function ProductSwap() {
               </p>
             )}
 
-            {/* Selected tray */}
-            {selectedProducts.length > 0 && (
-              <div className="sticky bottom-20 sm:bottom-24 z-20 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-t border-border">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Selected ({selectedProducts.length})</p>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {selectedProducts.map(p => (
-                    <div key={p.id} className="relative shrink-0 group">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary/40 bg-muted">
-                        {p.image_url ? (
-                          <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Package className="w-4 h-4" /></div>
+            {/* Selected tray — matches floating bar aesthetic */}
+            {selectedProducts.length > 0 && (() => {
+              const MOBILE_CAP = 5;
+              const DESKTOP_CAP = 8;
+              const overflowMobile = Math.max(0, selectedProducts.length - MOBILE_CAP);
+              const overflowDesktop = Math.max(0, selectedProducts.length - DESKTOP_CAP);
+              return (
+                <div className="sticky bottom-24 z-20">
+                  <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg px-3 py-2 flex items-center gap-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
+                      Selected ({selectedProducts.length})
+                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      {/* Mobile */}
+                      <div className="flex sm:hidden items-center gap-1.5">
+                        {selectedProducts.slice(0, MOBILE_CAP).map(p => (
+                          <div key={p.id} className="relative group shrink-0">
+                            <div className="w-8 h-8 rounded-md overflow-hidden border border-border bg-muted">
+                              {p.image_url ? (
+                                <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-muted-foreground" /></div>
+                              )}
+                            </div>
+                            <button type="button" onClick={() => toggleProduct(p.id)}
+                              className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-background border border-border shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground transition-all"
+                              aria-label={`Remove ${p.title}`}>
+                              <X className="w-2 h-2" />
+                            </button>
+                          </div>
+                        ))}
+                        {overflowMobile > 0 && (
+                          <div className="w-8 h-8 rounded-md bg-muted border border-border flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
+                            +{overflowMobile}
+                          </div>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => toggleProduct(p.id)}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-background border border-border shadow-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors"
-                        aria-label={`Remove ${p.title}`}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
+                      {/* Desktop */}
+                      <div className="hidden sm:flex items-center gap-1.5">
+                        {selectedProducts.slice(0, DESKTOP_CAP).map(p => (
+                          <div key={p.id} className="relative group shrink-0">
+                            <div className="w-8 h-8 rounded-md overflow-hidden border border-border bg-muted">
+                              {p.image_url ? (
+                                <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-muted-foreground" /></div>
+                              )}
+                            </div>
+                            <button type="button" onClick={() => toggleProduct(p.id)}
+                              className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-background border border-border shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground transition-all"
+                              aria-label={`Remove ${p.title}`}>
+                              <X className="w-2 h-2" />
+                            </button>
+                          </div>
+                        ))}
+                        {overflowDesktop > 0 && (
+                          <div className="w-8 h-8 rounded-md bg-muted border border-border flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
+                            +{overflowDesktop}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
@@ -825,7 +866,7 @@ export default function ProductSwap() {
                       <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover border border-border" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Scene ready'}</p>
+                      <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Selected scene'}</p>
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
                         <Badge variant="secondary" className="text-[10px] h-5">{detectedRatio}</Badge>
                       </div>
@@ -907,7 +948,7 @@ export default function ProductSwap() {
                     Get more credits
                   </Button>
                 )}
-                <p className="text-[11px] text-muted-foreground text-center">~{Math.round(totalImages * 8 / 60) || 1} min · Credits refunded if a generation fails</p>
+                
                 {isGenerating && progress > 0 && <Progress value={progress} className="h-1.5 rounded-full" />}
               </div>
             </div>
