@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Wand2, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 
 const ELIGIBLE_PLANS = new Set(['growth', 'pro', 'enterprise']);
@@ -35,10 +35,7 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm w-[calc(100%-2rem)] p-6 sm:p-7 rounded-3xl">
-        {/* Icon chip — matches trigger banner */}
-        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
-          <Wand2 className="w-4 h-4 text-primary" />
-        </div>
+
 
         {/* Eyebrow */}
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-5">
