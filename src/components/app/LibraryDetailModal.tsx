@@ -389,26 +389,6 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   </Button>
                 )}
 
-                {isUpscaling ? (
-                  <Button
-                    variant="outline"
-                    disabled
-                    className="w-full font-medium"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
-                    Enhancing in progress…
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => setUpscaleModalOpen(true)}
-                    className="w-full font-medium"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
-                  </Button>
-                )}
-
                 <Button
                   variant="outline"
                   onClick={() => navigate(`/app/perspectives?source=${encodeURIComponent(activeItem.imageUrl)}`)}
@@ -441,6 +421,26 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   <Video className="w-4 h-4 mr-2" />
                   Generate Video
                 </Button>
+
+                {isUpscaling ? (
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="w-full font-medium"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
+                    Enhancing in progress…
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setUpscaleModalOpen(true)}
+                    className="w-full font-medium"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 4K'}
+                  </Button>
+                )}
 
                 <Separator className="my-1" />
                 <Button
