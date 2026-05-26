@@ -198,15 +198,6 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
-            {isFree && (
-              <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-primary" />
-                Free plan: 1 model per generation
-                {onUpgradeClick && (
-                  <button type="button" onClick={onUpgradeClick} className="text-primary font-medium hover:underline">Upgrade</button>
-                )}
-              </span>
-            )}
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
             {inlineModels.map(m => (
@@ -2533,15 +2524,8 @@ export function ProductImagesStep3Refine({
             <p className="text-sm text-muted-foreground mt-1">Only a few choices are needed for selected shots</p>
           </div>
 
-          {/* Product specifications — shown before model selection */}
-          <ProductSpecsCard
-            allProducts={allProducts}
-            selectedProductIds={selectedProductIds}
-            analyses={analyses}
-            productSpecs={details.productSpecs || {}}
-            onProductSpecsChange={(specs) => update({ productSpecs: specs })}
-            onCategoryOverride={onCategoryOverride}
-          />
+
+
 
           {/* Choose model card — shown first */}
           {scenesNeedingModel.length > 0 && (
@@ -2611,15 +2595,6 @@ export function ProductImagesStep3Refine({
                   onFreeLimitHit={flashModelLimit}
                   onUpgradeClick={onUpgradeClick}
                 />
-                {isFree && modelLimitHintAt != null && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
-                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Free plan limit — 1 model per generation.</span>
-                    {onUpgradeClick && (
-                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
-                    )}
-                  </div>
-                )}
               </CardContent>
             </Card>
           )}
@@ -3716,6 +3691,16 @@ export function ProductImagesStep3Refine({
         });
       })()}
 
+      {/* Product specifications — optional, last card before additional note */}
+      <ProductSpecsCard
+        allProducts={allProducts}
+        selectedProductIds={selectedProductIds}
+        analyses={analyses}
+        productSpecs={details.productSpecs || {}}
+        onProductSpecsChange={(specs) => update({ productSpecs: specs })}
+        onCategoryOverride={onCategoryOverride}
+      />
+
       {/* ── ADDITIONAL NOTE ── */}
       <div className="space-y-3">
 
@@ -3734,9 +3719,17 @@ export function ProductImagesStep3Refine({
           </CardContent>
         </Card>
       </div>
+
+      {/* Free plan model limit toast — shots-style floating notification */}
+      {isFree && modelLimitHintAt != null && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in">
+          1 model on Free — upgrade for multi-model shoots
+        </div>
+      )}
     </div>
   );
 }
+
 
 export { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS };
 export default ProductImagesStep3Refine;
