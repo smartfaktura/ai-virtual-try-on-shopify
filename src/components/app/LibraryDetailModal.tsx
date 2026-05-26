@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { buildLibraryFileName } from '@/lib/downloadFileName';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers, Video, AtSign, Copy, Check, ClipboardCopy, Pencil, ChevronLeft, ChevronRight, ArrowLeftRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
@@ -416,6 +416,18 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 >
                   <Layers className="w-4 h-4 mr-2" />
                   Generate More Angles
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    navigate(`/app/product-swap?scene=${encodeURIComponent(activeItem.imageUrl)}`);
+                    onClose();
+                  }}
+                  className="w-full font-medium"
+                >
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Swap Product
                 </Button>
 
                 <Button

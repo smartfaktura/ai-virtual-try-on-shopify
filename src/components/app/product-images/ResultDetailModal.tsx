@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Download, X, Sparkles, Layers, Video, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, X, Sparkles, Layers, Video, Pencil, ChevronLeft, ChevronRight, ArrowLeftRight } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { UpscaleModal } from '@/components/app/UpscaleModal';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 
 export interface ResultDetailItem {
   url: string;
@@ -184,6 +185,18 @@ export function ResultDetailModal({ open, onClose, items, initialIndex }: Result
                 <Button
                   variant="outline"
                   onClick={() => {
+                    navigate(`/app/product-swap?scene=${encodeURIComponent(active.url)}`);
+                    onClose();
+                  }}
+                  className="w-full font-medium"
+                >
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Swap Product
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
                     navigate(`/app/video/animate?imageUrl=${encodeURIComponent(active.url)}`);
                     onClose();
                   }}
@@ -193,6 +206,17 @@ export function ResultDetailModal({ open, onClose, items, initialIndex }: Result
                   Generate Video
                 </Button>
               </div>
+
+              <ContextualFeedbackCard
+                workflow="product-visuals"
+                questionText="Are these visuals ready to use?"
+                buttonLabels={{ yes: 'Yes, ready', almost: 'Almost', no: 'No' }}
+                reasonChips={['Need better background', 'Wrong angle / shot', 'Product details off', 'Lighting / shadows', 'Not consistent enough', 'Missing shot type', 'Needs higher realism', 'Other']}
+                textPlaceholder="What is missing? e.g. cleaner background, sharper details"
+                resultId={active.jobId}
+                imageUrl={active.url}
+                triggerType="result_ready"
+              />
             </div>
           </div>
         </div>
