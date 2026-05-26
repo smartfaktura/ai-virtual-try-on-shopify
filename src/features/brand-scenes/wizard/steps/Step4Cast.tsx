@@ -429,7 +429,6 @@ export function Step4Cast({
           preset={preset}
           cast={cast}
           onCastChange={onCastChange}
-          vibeMissing={peopleVibeMissing}
         />
       )}
 
