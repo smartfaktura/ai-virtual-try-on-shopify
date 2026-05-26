@@ -780,7 +780,7 @@ export default function ProductSwap() {
               const overflowMobile = Math.max(0, selectedProducts.length - MOBILE_CAP);
               const overflowDesktop = Math.max(0, selectedProducts.length - DESKTOP_CAP);
               return (
-                <div className="sticky bottom-24 z-20">
+                <div className="hidden sm:block sticky bottom-24 z-20">
                   <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg px-3 py-2 flex items-center gap-3">
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
                       Selected ({selectedProducts.length})
