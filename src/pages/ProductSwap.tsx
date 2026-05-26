@@ -69,7 +69,7 @@ export default function ProductSwap() {
   // ── Product state ─────────────────────────────────────────────────────
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [productSearch, setProductSearch] = useState('');
-  const [productVisibleCount, setProductVisibleCount] = useState(24);
+  const [productVisibleCount, setProductVisibleCount] = useState(10);
 
   // ── Ratio (auto-detected from scene; not user-selectable) ─────────────
   const [detectedRatio, setDetectedRatio] = useState<RatioOption>('4:5');
@@ -703,12 +703,12 @@ export default function ProductSwap() {
           <div className="space-y-3 animate-in fade-in duration-200">
             <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
 
-            <div className="sticky top-0 z-10 pt-2 pb-3 space-y-2 bg-background">
+            <div className="sticky top-0 z-10 -mx-1 px-1 pt-2 pb-3 space-y-2 bg-background">
 
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Search products..." value={productSearch}
-                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(24); }} className="pl-9" />
+                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }} className="pl-9" />
               </div>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -776,7 +776,7 @@ export default function ProductSwap() {
             </div>
             {filteredProducts.length > productVisibleCount && (
               <div className="text-center pt-2">
-                <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 24)}>
+                <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 10)}>
                   Load more ({filteredProducts.length - productVisibleCount} remaining)
                 </Button>
               </div>
