@@ -50,7 +50,7 @@ export function OutfitQuiz({ value, onChange, vibeRequired, hideGarments }: Prop
 
       {!hideGarments && (
         <>
-          <Section label="Top">
+          <Section label="Top · optional">
             <SlotChips
               options={OUTFIT_TOPS}
               value={v.top}
@@ -58,7 +58,7 @@ export function OutfitQuiz({ value, onChange, vibeRequired, hideGarments }: Prop
             />
           </Section>
 
-          <Section label="Bottom">
+          <Section label="Bottom · optional">
             <SlotChips
               options={OUTFIT_BOTTOMS}
               value={v.bottom}
@@ -69,7 +69,7 @@ export function OutfitQuiz({ value, onChange, vibeRequired, hideGarments }: Prop
       )}
 
       <div className={hideGarments ? "md:col-span-2" : ""}>
-        <Section label="Footwear">
+        <Section label="Footwear · optional">
           <SlotChips
             options={OUTFIT_FOOTWEAR}
             value={v.footwear}
