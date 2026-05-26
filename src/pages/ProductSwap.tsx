@@ -1090,7 +1090,9 @@ export default function ProductSwap() {
                 )}
               </div>
             </div>
+          </div>
         </div>
+
 
 
       <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
