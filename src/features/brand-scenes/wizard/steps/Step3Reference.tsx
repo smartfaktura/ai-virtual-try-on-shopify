@@ -371,3 +371,24 @@ export function Step3Reference({
     </div>
   );
 }
+
+function ConsentRow({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (b: boolean) => void;
+  label: string;
+}) {
+  return (
+    <label className="flex items-start gap-2.5 cursor-pointer text-[12px] leading-relaxed rounded-xl border border-border/60 bg-background/60 hover:bg-background transition-colors px-3 py-2.5">
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(v) => onChange(v === true)}
+        className="mt-0.5"
+      />
+      <span className="text-foreground/85">{label}</span>
+    </label>
+  );
+}
