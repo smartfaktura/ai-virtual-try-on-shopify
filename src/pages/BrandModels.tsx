@@ -936,13 +936,13 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     const stepLabel = currentStep === 1 ? 'Mode' : 'Details';
     const stepTitle =
       currentStep === 1
-        ? 'How do you want to build this model?'
+        ? 'Start your model'
         : isReferenceMode
           ? 'Upload a reference photo'
           : 'Configure your model';
     const stepSubtitle =
       currentStep === 1
-        ? 'Pick a starting point'
+        ? 'From scratch or from a reference photo'
         : isReferenceMode
           ? "Add a face — we'll build the model from it"
           : 'Essentials, appearance, and a summary before we generate';
@@ -955,19 +955,25 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       setReferenceNotes('');
     };
 
+    const handleNext = () => {
+      if (pendingMode) setCreationMode(pendingMode);
+    };
+
     const chooserContent = (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <WizardCard
-          onClick={() => setCreationMode('manual')}
+          active={pendingMode === 'manual'}
+          onClick={() => setPendingMode('manual')}
           icon={<Wand2 className="w-5 h-5" />}
-          title="Create a new model from scratch"
-          body="Pick gender, age, and look — we generate it for you"
+          title="Start from scratch"
+          body="Pick gender, age, and look — we'll generate it"
         />
         <WizardCard
-          onClick={() => setCreationMode('reference')}
+          active={pendingMode === 'reference'}
+          onClick={() => setPendingMode('reference')}
           icon={<UserCheck className="w-5 h-5" />}
-          title="Generate from a reference photo"
-          body="Upload a face — we build the model from it"
+          title="Use a reference photo"
+          body="Upload a face — we'll build the model from it"
         />
       </div>
     );
