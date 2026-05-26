@@ -147,10 +147,13 @@ export default function ProductSwap() {
           if (!url || url.startsWith('data:')) continue;
           const workflowName = (job.workflows as { name?: string } | null)?.name || '';
           const productTitle = (job.user_products as { title?: string } | null)?.title || '';
+          const dateLabel = new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          const rawTitle = productTitle || workflowName || '';
+          const title = (!rawTitle || rawTitle === 'Product Visuals') ? `Library · ${dateLabel}` : rawTitle;
           items.push({
             id: `job-${job.id}-${i}`,
             imageUrl: url,
-            title: workflowName || productTitle || 'Generated',
+            title,
             createdAt: job.created_at,
           });
         }
@@ -557,9 +560,11 @@ export default function ProductSwap() {
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
-              <p className="text-sm text-muted-foreground">
-                Same scene, different product
-              </p>
+              {currentStep === 1 && (
+                <p className="text-sm text-muted-foreground">
+                  Same scene, different product
+                </p>
+              )}
             </div>
           </div>
 
@@ -575,20 +580,19 @@ export default function ProductSwap() {
         {/* ═══════════ STEP 1: SCENE ═══════════ */}
         {currentStep === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">We'll recreate this exact shot — same camera, lighting and background — with the products you choose next.</p>
-            </div>
+            <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
 
             {/* Selected scene preview */}
             {sceneUrl && (
               <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
                 <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Selected scene'}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {sceneSource === 'scratch' ? 'Uploaded image' : 'From library'}
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {sceneSource === 'scratch' ? 'Uploaded image' : 'Library scene'}
                   </p>
+                  {sceneTitle && sceneSource !== 'scratch' && (
+                    <p className="text-xs text-muted-foreground truncate">{sceneTitle}</p>
+                  )}
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => { setSceneUrl(null); setSceneTitle(''); }}>
                   <X className="w-4 h-4 mr-1" />Change
@@ -685,10 +689,7 @@ export default function ProductSwap() {
         {/* ═══════════ STEP 2: PRODUCTS ═══════════ */}
         {currentStep === 2 && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Each product becomes its own image in the same scene. Max {MAX_PRODUCTS}.</p>
-            </div>
+            <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
 
             <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border space-y-3">
               <div className="relative">
@@ -697,26 +698,42 @@ export default function ProductSwap() {
                   onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(24); }} className="pl-9" />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
-                  {selectedProductIds.size} / {MAX_PRODUCTS} selected
-                </Badge>
-                {filteredProducts.length > 0 && selectedProductIds.size < MAX_PRODUCTS && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => {
-                      const next = new Set(selectedProductIds);
-                      for (const p of filteredProducts.slice(0, productVisibleCount)) {
-                        if (next.size >= MAX_PRODUCTS) break;
-                        next.add(p.id);
-                      }
-                      setSelectedProductIds(next);
-                    }}
-                  >
-                    Select visible
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
+                    {selectedProductIds.size} / {MAX_PRODUCTS} selected
+                  </Badge>
+                  {selectedProductIds.size > 0 && (
+                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2"
+                      onClick={() => setSelectedProductIds(new Set())}>
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                {filteredProducts.length > 0 && (() => {
+                  const visible = filteredProducts.slice(0, productVisibleCount);
+                  const allVisibleSelected = visible.length > 0 && visible.every(p => selectedProductIds.has(p.id));
+                  return (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => {
+                        const next = new Set(selectedProductIds);
+                        if (allVisibleSelected) {
+                          for (const p of visible) next.delete(p.id);
+                        } else {
+                          for (const p of visible) {
+                            if (next.size >= MAX_PRODUCTS) break;
+                            next.add(p.id);
+                          }
+                        }
+                        setSelectedProductIds(next);
+                      }}
+                    >
+                      {allVisibleSelected ? 'Unselect visible' : 'Select visible'}
+                    </Button>
+                  );
+                })()}
               </div>
             </div>
 
@@ -829,10 +846,7 @@ export default function ProductSwap() {
         {/* ═══════════ STEP 3: REVIEW ═══════════ */}
         {currentStep === 3 && (
           <div className="space-y-5 animate-in fade-in duration-200">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Review and generate</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Everything looks right? Hit generate. Credits are refunded on failure.</p>
-            </div>
+            <h2 className="text-lg font-semibold text-foreground">Review and generate</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 md:gap-5 items-start">
               {/* Left: summary */}
@@ -850,7 +864,9 @@ export default function ProductSwap() {
                       <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover border border-border" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Selected scene'}</p>
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {sceneSource === 'scratch' ? 'Uploaded image' : 'Library scene'}
+                      </p>
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
                         <Badge variant="secondary" className="text-[10px] h-5">{detectedRatio}</Badge>
                       </div>
