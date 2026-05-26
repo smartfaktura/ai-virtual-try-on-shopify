@@ -147,10 +147,13 @@ export default function ProductSwap() {
           if (!url || url.startsWith('data:')) continue;
           const workflowName = (job.workflows as { name?: string } | null)?.name || '';
           const productTitle = (job.user_products as { title?: string } | null)?.title || '';
+          const dateLabel = new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          const rawTitle = productTitle || workflowName || '';
+          const title = (!rawTitle || rawTitle === 'Product Visuals') ? `Library · ${dateLabel}` : rawTitle;
           items.push({
             id: `job-${job.id}-${i}`,
             imageUrl: url,
-            title: workflowName || productTitle || 'Generated',
+            title,
             createdAt: job.created_at,
           });
         }
