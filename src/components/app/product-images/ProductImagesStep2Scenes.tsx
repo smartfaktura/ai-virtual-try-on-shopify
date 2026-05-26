@@ -490,6 +490,8 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
   return (
     <div className="space-y-6 pb-28 overflow-x-clip max-w-full min-w-0 w-full">
+      <BrandScenesPromoCard thumbnails={promoThumbnails} />
+
       <div className="flex items-center justify-between gap-2 flex-wrap min-w-0 max-w-full">
         <div>
           <h2 className="text-lg font-semibold tracking-tight truncate min-w-0">Select shots</h2>
@@ -502,11 +504,12 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
             </>
           )}
-          <GridSizeToggle value={gridSize} onChange={setGridSize} />
+          <span className="hidden sm:inline-flex">
+            <GridSizeToggle value={gridSize} onChange={setGridSize} />
+          </span>
         </div>
       </div>
 
-      <BrandScenesPromoCard thumbnails={promoThumbnails} />
 
 
 
