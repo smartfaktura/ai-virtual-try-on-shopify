@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Crown, Mountain, Sparkles, Users, Layers, Trash2, Wand2, Lock } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
+import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
@@ -114,26 +116,27 @@ export default function BrandScenes() {
   };
 
   return (
-    <div className="space-y-8 sm:space-y-10">
+    <div className="space-y-6">
       <SEOHead title="Brand Scenes — VOVV.AI" description="Your custom brand scenes" noindex />
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Brand Scenes</h1>
-          <p className="text-base text-muted-foreground mt-1.5 max-w-xl">
-            Signature scenes saved to your brand — reuse them on any product
-          </p>
-        </div>
-        {hasScenes && canCreate && (
-          <Button
-            onClick={() => navigate('/app/brand-scenes/new')}
-            className="rounded-full font-semibold gap-2 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            New brand scene
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Brand Scenes"
+        subtitle="Signature scenes saved to your brand — reuse them on any product"
+        actions={
+          hasScenes && canCreate ? (
+            <Button
+              onClick={() => navigate('/app/brand-scenes/new')}
+              className="rounded-full font-semibold gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New brand scene
+            </Button>
+          ) : null
+        }
+      >
+        {null}
+      </PageHeader>
+
 
       {!canCreate && hasScenes && (
         <UpgradeBanner onUpgrade={() => openBuyModal('brand-scenes-gate')} />

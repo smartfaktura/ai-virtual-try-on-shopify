@@ -1,12 +1,15 @@
 import { useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
+import { Button } from "@/components/ui/button";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useCredits } from "@/contexts/CreditContext";
 import { canCreateBrandScenes } from "@/features/brand-scenes/access";
 import { BrandSceneWizard as Wizard } from "@/features/brand-scenes/wizard/BrandSceneWizard";
 
 export default function BrandSceneWizardPage() {
+  const navigate = useNavigate();
   const { isRealAdmin, isLoading } = useIsAdmin();
   const { plan, isLoading: creditsLoading } = useCredits();
 
@@ -34,10 +37,29 @@ export default function BrandSceneWizardPage() {
     <>
       <SEOHead
         title="Brand Scene Wizard — VOVV.AI"
-        description="Admin preview of the Brand Scenes wizard"
+        description="Design a signature scene saved to your brand"
         noindex
       />
-      <Wizard />
+      <div className="max-w-2xl mx-auto w-full">
+        <div className="mb-4 sm:mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/app/brand-scenes")}
+            className="gap-1.5 -ml-2 mb-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Brand Scenes
+          </Button>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            New brand scene
+          </h1>
+          <p className="text-base text-muted-foreground mt-1.5">
+            Design a signature scene saved to your brand library
+          </p>
+        </div>
+        <Wizard />
+      </div>
     </>
   );
 }
