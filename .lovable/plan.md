@@ -1,9 +1,28 @@
-Replace dynamic random thumbnails with the 3 fixed Brand Scene preview URLs the user provided.
+## Brand Scenes copy refresh
 
-**Changes:**
+Tighten the wording on the promo card and the info modal so every line is action-led and parallel. No layout, color, or component changes — text only.
 
-1. `BrandScenesPromoCard.tsx` — Remove `thumbnails` prop. Define a local `BRAND_SCENE_THUMBNAILS` constant with the 3 provided URLs and use them directly.
-2. `BrandScenesInfoModal.tsx` — Remove `thumbnails` prop. Use the same `BRAND_SCENE_THUMBNAILS` constant (imported from PromoCard or duplicated locally).
-3. `ProductImagesStep2Scenes.tsx` — Remove `promoThumbnails` memo and stop passing `thumbnails` to `<BrandScenesPromoCard />`.
+### 1. `BrandScenesPromoCard.tsx`
 
-Will export `BRAND_SCENE_THUMBNAILS` from a small shared constant at the top of `BrandScenesPromoCard.tsx` and import into the modal to avoid duplication.
+- Eyebrow: `BRAND SCENES` (unchanged)
+- Title: **"Your brand's own scene library"** (replaces "Want scenes unique to your brand?")
+- Subtitle: **"Built from your references. Reused across every shoot."** (replaces "Generate your own Brand Scenes from a reference or brief.")
+- CTA button: **"Learn more"** → keep, or upgrade to **"See how it works"** (pick one — defaulting to "See how it works" for stronger intent)
+
+### 2. `BrandScenesInfoModal.tsx`
+
+- Eyebrow: `BRAND SCENES` (unchanged)
+- Title: **"Your brand's own scene library"**
+- Subtitle: **"Built from your references. Reused across every shoot."**
+- Feature list (parallel imperatives, verb-led):
+  - 01 — **Lock in your brand's signature look**
+  - 02 — **Start from a reference photo or a short brief**
+  - 03 — **Reuse them on every future shoot**
+- Primary CTA: **"Unlock Brand Scenes →"**
+- Secondary: **"Not now"** (replaces "Maybe later")
+- Footer hint: **"Included on Growth and above"**
+
+### Out of scope
+
+- No changes to layout, spacing, thumbnails, colors, or component structure.
+- No changes to gating logic or routing behind the CTAs.

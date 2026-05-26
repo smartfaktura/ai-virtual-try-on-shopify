@@ -15,9 +15,9 @@ interface Props {
 }
 
 const FEATURES = [
-  'Lock in a signature visual world for your brand',
-  'Build from a reference photo or a written brief',
-  'Reuse saved scenes across all future generations',
+  "Lock in your brand's signature look",
+  'Start from a reference photo or a short brief',
+  'Reuse them on every future shoot',
 ];
 
 export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
@@ -64,12 +64,12 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
 
         {/* Title — bold app aesthetic */}
         <DialogTitle className="text-2xl font-bold tracking-tight text-foreground mt-1.5 text-center">
-          Scenes that belong to your brand
+          Your brand's own scene library
         </DialogTitle>
 
         {/* Subtitle */}
         <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
-          Custom AI scenes built from your references, reused across every shoot
+          Built from your references. Reused across every shoot.
         </DialogDescription>
 
         {/* Feature list */}
@@ -95,7 +95,7 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
             onClick={handlePrimary}
             className="w-full h-11 rounded-full text-sm font-semibold gap-1.5 group"
           >
-            {canCreate ? 'Create Brand Scene' : 'Upgrade plan'}
+            {canCreate ? 'Create Brand Scene' : 'Unlock Brand Scenes'}
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
           <Button
@@ -103,13 +103,13 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
             onClick={() => onOpenChange(false)}
             className="w-full h-9 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent"
           >
-            Maybe later
+            Not now
           </Button>
         </div>
 
         {!canCreate && (
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Brand Scenes are available on Growth and above
+            Included on Growth and above
           </p>
         )}
       </DialogContent>

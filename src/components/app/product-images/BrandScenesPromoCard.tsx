@@ -35,10 +35,10 @@ export function BrandScenesPromoCard() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-foreground leading-snug">
-                Want scenes unique to your brand?
+                Your brand's own scene library
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Generate your own Brand Scenes from a reference or brief
+                Built from your references. Reused across every shoot.
               </p>
             </div>
           </div>
@@ -47,7 +47,7 @@ export function BrandScenesPromoCard() {
             variant="outline"
             className="rounded-full text-sm font-semibold px-5 h-10 w-full sm:w-auto gap-1.5 shrink-0 group bg-background text-foreground border-border hover:bg-background hover:text-foreground"
           >
-            <span>Learn more</span>
+            <span>See how it works</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
         </div>
