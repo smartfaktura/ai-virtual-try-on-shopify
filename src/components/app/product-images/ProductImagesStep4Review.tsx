@@ -282,7 +282,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             <div className="flex flex-wrap gap-1.5">
               {selectedProducts.slice(0, 24).map(p => (
                 <span key={p.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground max-w-full">
-                  <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} width={20} height={20} loading="eager" decoding="async" className="w-5 h-5 rounded-full object-contain bg-muted flex-shrink-0" />
+                  <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} width={20} height={20} loading="eager" decoding="async" className="w-5 h-5 rounded-full object-cover bg-muted flex-shrink-0" />
                   <span className="truncate max-w-[120px]">{p.title}</span>
                 </span>
               ))}
