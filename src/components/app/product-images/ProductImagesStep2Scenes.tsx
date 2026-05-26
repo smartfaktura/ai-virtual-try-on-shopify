@@ -690,7 +690,7 @@ function CategoryExpandedContent({ catId, catTitle, essentialScenes, categorySce
   };
 
   return (
-    <div className="mt-1.5 rounded-lg border border-border bg-muted/10 p-2">
+    <div className="mt-1.5 rounded-xl border border-border bg-muted/10 p-2">
       {essentialSubGroups.map((sg, i) => {
         const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
         return (
