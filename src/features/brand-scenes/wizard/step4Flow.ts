@@ -54,12 +54,21 @@ export function computeStep4Flow(
   const isNone = preset === "none";
   const hasPeople = preset ? CAST_PRESETS_WITH_PEOPLE.includes(preset) : false;
 
-  // No branch card / no optional tabs when cast is fully locked or empty.
-  if (isReplicate || isNone || !preset) {
+  // Fully locked casts: no branching, only Essentials.
+  if (isReplicate || isNone) {
     return {
       order: ["essentials"],
       visibleTabs: ["essentials"],
       showBranchCard: false,
+    };
+  }
+
+  // No preset yet — show only the Look branch card as the first step.
+  if (!preset) {
+    return {
+      order: ["look"],
+      visibleTabs: ["look"],
+      showBranchCard: true,
     };
   }
 
@@ -93,6 +102,7 @@ export function computeStep4Flow(
     showBranchCard: true,
   };
 }
+
 
 /**
  * Returns null if the sub-step's headline is answered, else a short reason.
