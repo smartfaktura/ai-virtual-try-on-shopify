@@ -185,8 +185,8 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
                 <Plus className="w-4 h-4 text-primary" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-foreground">Train your own brand model</p>
-                <p className="text-[11px] text-muted-foreground">From your own references — reuse on every shoot</p>
+                <p className="text-sm font-medium text-foreground">Create your own brand model</p>
+                <p className="text-[11px] text-muted-foreground">Generate via wizard or from your reference image</p>
               </div>
             </div>
           </button>
