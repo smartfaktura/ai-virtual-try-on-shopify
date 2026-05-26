@@ -1,25 +1,29 @@
-## Problem
+## Fix mini thumbnail load experience
 
-In the Add Props / Accessories modal (`ProductImagesStep3Refine.tsx`, `PropPickerModal`), the grid uses `flex-1 min-h-[320px]` inside the dialog's flex column. With few items (e.g. one), the single grid row stretches to fill the entire flex-1 area, making each tile absurdly tall — image sits at top, caption in middle, huge empty space below. Result matches the screenshot the user attached.
+Pill chip thumbnails in `ProductImagesStep4Review.tsx` (lines 284, 320, 339) currently fetch the full-size image with only `quality: 40` and lazy default loading. On slow connections users see the original large image cropped into the 20px circle while it streams in.
 
-The Step 1 product picker doesn't have this problem because its grid lives in a normal page flow (no `flex-1` stretch).
+Per project memory ("Image Optimization No-Crop — width only for fixed thumbnails"), fixed tiny circles are exactly when `width` is appropriate.
 
-## Fix (one file: `src/components/app/product-images/ProductImagesStep3Refine.tsx`, ~lines 469)
+### Changes (single file: `src/components/app/product-images/ProductImagesStep4Review.tsx`)
 
-Replace the stretched grid with a scroll container that holds an auto-rows grid, so tiles size to content (aspect-square image + 52px caption) regardless of item count.
+For all three pill `<img>` tags (products at L284, per-category scenes at L320, flat scenes at L339):
+- Add `width: 64` to `getOptimizedUrl` (3× the 20px render = sharp on retina, tiny payload)
+- Add `loading="eager"`, `decoding="async"`, `width={20} height={20}` HTML attrs so the browser reserves the box before bytes arrive (eliminates the half-loaded crop artifact)
 
-Change:
+Example:
 ```tsx
-<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 flex-1 min-h-[320px] max-h-[60vh] overflow-y-auto p-1">
+<img
+  src={getOptimizedUrl(p.image_url, { width: 64, quality: 60 })}
+  alt={p.title}
+  width={20}
+  height={20}
+  loading="eager"
+  decoding="async"
+  className="w-5 h-5 rounded-full object-cover bg-muted flex-shrink-0"
+/>
 ```
-to:
-```tsx
-<div className="flex-1 min-h-[320px] max-h-[60vh] overflow-y-auto p-1 -mx-1">
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 auto-rows-min content-start">
-```
-(close the extra wrapper before the "0 selected" footer).
 
-That's it — same tile markup as Step 1, no logic changes. Tiles render as clean square thumbnail + caption, identical aesthetic to the products step.
+`bg-background` → `bg-muted` so the placeholder ring matches the chip while loading.
 
-## Out of scope
-No changes to selection state, search, confirm/cancel, or callers.
+### Out of scope
+No other files, no layout changes, no logic changes.

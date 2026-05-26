@@ -281,7 +281,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             <div className="flex flex-wrap gap-1.5">
               {selectedProducts.slice(0, 24).map(p => (
                 <span key={p.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground max-w-full">
-                  <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt={p.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+                  <img src={getOptimizedUrl(p.image_url, { width: 64, quality: 60 })} alt={p.title} width={20} height={20} loading="eager" decoding="async" className="w-5 h-5 rounded-full object-cover bg-muted flex-shrink-0" />
                   <span className="truncate max-w-[120px]">{p.title}</span>
                 </span>
               ))}
@@ -317,7 +317,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                         {catScenes.slice(0, 8).map(s => (
                           <span key={s.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground">
                             {s.previewUrl ? (
-                              <img src={getOptimizedUrl(s.previewUrl, { quality: 40 })} alt={s.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+                              <img src={getOptimizedUrl(s.previewUrl, { width: 64, quality: 60 })} alt={s.title} width={20} height={20} loading="eager" decoding="async" className="w-5 h-5 rounded-full object-cover bg-muted flex-shrink-0" />
                             ) : (
                               <span className="w-5 h-5 rounded-full bg-muted-foreground/15 flex-shrink-0" />
                             )}
@@ -336,7 +336,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                   {selectedScenes.slice(0, 12).map(s => (
                     <span key={s.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground">
                       {s.previewUrl ? (
-                        <img src={getOptimizedUrl(s.previewUrl, { quality: 40 })} alt={s.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+                        <img src={getOptimizedUrl(s.previewUrl, { width: 64, quality: 60 })} alt={s.title} width={20} height={20} loading="eager" decoding="async" className="w-5 h-5 rounded-full object-cover bg-muted flex-shrink-0" />
                       ) : (
                         <span className="w-5 h-5 rounded-full bg-muted-foreground/15 flex-shrink-0" />
                       )}
