@@ -12,7 +12,7 @@ import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
 import { saveOrShareImage } from '@/lib/mobileImageSave';
 import { useProductImageScenes } from '@/hooks/useProductImageScenes';
-import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
+
 
 interface ResultImage {
   url: string;
