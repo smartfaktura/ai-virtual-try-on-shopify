@@ -928,59 +928,50 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     </div>
   );
 
-  // ── Sections layout (premium wizard) ──
+  // ── Sections layout (premium wizard) — matches /app/brand-scenes/new chrome ──
   if (layout === 'sections') {
-    // Step 0 — mode chooser. Two side-by-side cards so the two paths are visibly
-    // distinct and we never mix reference photos with manual chip inputs.
-    if (creationMode === 'chooser') {
-      return (
-        <div className="pb-32">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <WizardCard
-              onClick={() => setCreationMode('manual')}
-              icon={<Wand2 className="w-5 h-5" />}
-              title="Create a new model from scratch"
-              body="Pick gender, age, and look — we generate it for you"
-            />
-            <WizardCard
-              onClick={() => setCreationMode('reference')}
-              icon={<UserCheck className="w-5 h-5" />}
-              title="Generate from a reference photo"
-              body="Upload a face — we build the model from it"
-            />
-          </div>
-        </div>
-      );
-    }
+    const currentStep = creationMode === 'chooser' ? 1 : 2;
+    const stepLabel = currentStep === 1 ? 'Mode' : 'Details';
+    const stepTitle =
+      currentStep === 1
+        ? 'How do you want to build this model?'
+        : isReferenceMode
+          ? 'Upload a reference photo'
+          : 'Configure your model';
+    const stepSubtitle =
+      currentStep === 1
+        ? 'Pick a starting point'
+        : isReferenceMode
+          ? "Add a face — we'll build the model from it"
+          : 'Essentials, appearance, and a summary before we generate';
 
+    const handleStepBack = () => {
+      setCreationMode('chooser');
+      setPreviewUrl(null);
+      setUploadedUrl(null);
+      setTermsAccepted(false);
+      setReferenceNotes('');
+    };
 
-
-    // Switch-mode link
-    const switchModeLink = (
-      <button
-        type="button"
-        onClick={() => {
-          setCreationMode('chooser');
-          setPreviewUrl(null);
-          setUploadedUrl(null);
-          setTermsAccepted(false);
-          setReferenceNotes('');
-        }}
-        className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
-      >
-        ← Switch mode
-      </button>
+    const chooserContent = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <WizardCard
+          onClick={() => setCreationMode('manual')}
+          icon={<Wand2 className="w-5 h-5" />}
+          title="Create a new model from scratch"
+          body="Pick gender, age, and look — we generate it for you"
+        />
+        <WizardCard
+          onClick={() => setCreationMode('reference')}
+          icon={<UserCheck className="w-5 h-5" />}
+          title="Generate from a reference photo"
+          body="Upload a face — we build the model from it"
+        />
+      </div>
     );
 
-    return (
-      <div className="space-y-5 pb-32">
-        <div className="flex items-center justify-between">
-          {switchModeLink}
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
-            {isReferenceMode ? 'From reference photo' : 'Manual configuration'}
-          </span>
-        </div>
-
+    const detailsContent = (
+      <div className="space-y-5">
         {isReferenceMode ? (
           <>
             <Section title="Model name">
@@ -1026,7 +1017,6 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           </>
         )}
 
-
         <Section title="Summary">
           <div>
             <p className="text-sm font-medium">
@@ -1059,57 +1049,92 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
             <span className="font-medium text-foreground">3 variations</span>
             <span className="text-muted-foreground"> · {makePublic ? 'Free' : '20 credits'}</span>
           </div>
-
-          {validationError && (
-            isLowCreditsError ? (
-              <button
-                type="button"
-                onClick={() => setNoCreditsOpen(true)}
-                className="mt-2 text-[11px] text-destructive hover:underline cursor-pointer block"
-              >
-                {validationError} →
-              </button>
-            ) : (
-              <p className="mt-2 text-[11px] text-destructive">{validationError}</p>
-            )
-          )}
         </Section>
 
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
+      </div>
+    );
 
-
-        {/* Sticky footer — floating pill (matches /app/generate/product-images) */}
-        <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
-          <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
-            <Button variant="outline" onClick={onSuccess}>Back</Button>
-            {validationError ? (
-              isLowCreditsError ? (
-                <button
-                  type="button"
-                  onClick={() => setNoCreditsOpen(true)}
-                  className="text-xs text-destructive text-center flex-1 hover:underline cursor-pointer"
-                >
-                  {validationError} →
-                </button>
-              ) : (
-                <span className="text-xs text-muted-foreground text-center flex-1">{validationError}</span>
-              )
-            ) : (
-              <span className="flex-1" />
-            )}
-            <Button
-              disabled={!canGenerate}
-              onClick={handleGenerate}
-              title={validationError || undefined}
-            >
-              {makePublic ? 'Generate · free' : 'Generate'}
-            </Button>
+    return (
+      <div className="max-w-2xl mx-auto w-full">
+        {/* Quiet progress track — matches brand-scenes WizardLayout */}
+        <div className="space-y-2 pt-1">
+          <div className="block w-full h-0.5 bg-border rounded-full overflow-hidden">
+            <div
+              className="h-full bg-foreground transition-all duration-500 ease-out"
+              style={{ width: `${(currentStep / 2) * 100}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="tabular-nums flex-shrink-0">
+              {String(currentStep).padStart(2, '0')}{' '}
+              <span className="text-muted-foreground/50">/ 02</span>
+            </span>
+            <span className="truncate text-right">{stepLabel}</span>
           </div>
         </div>
+
+        {/* Question block */}
+        <div
+          key={creationMode}
+          className={`animate-fade-in pt-12 ${currentStep === 1 ? 'pb-10' : 'pb-28 sm:pb-10'}`}
+        >
+          <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight leading-[1.15]">
+            {stepTitle}
+          </h1>
+          <p className="text-base text-muted-foreground mt-3 leading-relaxed max-w-xl">
+            {stepSubtitle}
+          </p>
+
+          <div className="mt-10">
+            {currentStep === 1 ? chooserContent : detailsContent}
+          </div>
+        </div>
+
+        {/* Sticky pill footer — only on step 2 */}
+        {currentStep === 2 && (
+          <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
+            <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+              <div className="flex items-center justify-between gap-2 p-2.5 sm:p-4">
+                <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
+                  {validationError ? (
+                    isLowCreditsError ? (
+                      <button
+                        type="button"
+                        onClick={() => setNoCreditsOpen(true)}
+                        className="text-destructive hover:underline"
+                      >
+                        {validationError} →
+                      </button>
+                    ) : (
+                      validationError
+                    )
+                  ) : ''}
+                </span>
+                <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                  <Button variant="outline" size="pill" onClick={handleStepBack}>
+                    Back
+                  </Button>
+                  <Button
+                    size="pill"
+                    disabled={!canGenerate}
+                    onClick={handleGenerate}
+                    title={validationError || undefined}
+                    className={!canGenerate ? 'opacity-50 hover:opacity-50' : ''}
+                  >
+                    {makePublic ? 'Generate · free' : 'Generate'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
       </div>
     );
   }
+
 
 
   // ── Default single-card layout (legacy) ──
