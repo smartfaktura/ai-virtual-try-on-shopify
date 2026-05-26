@@ -117,7 +117,7 @@ export function ResultDetailModal({ open, onClose, items, initialIndex }: Result
           </div>
 
           {/* Info panel */}
-          <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+          <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-card border-l border-border/20">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 z-20 text-foreground/70 hover:text-foreground transition-colors"
