@@ -1,20 +1,16 @@
-## Two small fixes to `src/pages/ProductSwap.tsx`
+## Fix `Rendered fewer hooks than expected` crash on Generate
 
-### 1. Search input edges get clipped when focused
-The page root uses `overflow-x-clip` (line 555). The Step 2 sticky search bar sits flush against that edge, so the 2px focus ring on `<Input>` is clipped on the left/right.
+### Root cause
+`src/pages/ProductSwap.tsx` has an early `return` at line 326 when `isGeneratingView` is true, but a `useEffect` for auto-detecting scene aspect ratio sits **below** that return at line 518. Clicking Generate flips `isGeneratingView` to `true`, the component returns before reaching the effect, React sees fewer hooks than the previous render, and the error boundary swaps the page out.
 
-**Fix:** Give the sticky container a tiny horizontal breathing room so the focus ring renders fully.
-- Line 706: change `className="sticky top-0 z-10 pt-2 pb-3 space-y-2 bg-background"` to add `-mx-1 px-1` (sticky container expands by 4px on each side, content unchanged).
+Backend is fine — edge function logs show all generation jobs enqueued and dispatched successfully. This is purely a client hooks-order bug.
 
-This matches behavior of the Step 1 library search (which is not sticky and not at the page edge).
+### Fix
+Move the ratio-detection `useEffect` (lines 517-533) so it runs **before** the `if (isGeneratingView) return (...)` block at line 326. Keep its dependencies and behavior exactly the same — it only watches `sceneUrl` and calls `setDetectedRatio`, so its position has no functional impact.
 
-### 2. Products step should load 10 at a time (match scene pattern)
-Current: initial 24, "Load more" adds 24.
-Target: initial 10, "Load more" adds 10 — same as `libraryVisibleCount` for scenes.
+That's the only change needed. No backend, RLS, or edge-function changes.
 
-**Fix:**
-- Line 72: `useState(24)` → `useState(10)`
-- Line 711: `setProductVisibleCount(24)` → `setProductVisibleCount(10)`
-- Line 779: `c => c + 24` → `c => c + 10`
-
-No other behavior, business logic, or backend changes.
+### Verification
+- Reload `/app/product-swap`, complete steps 1–3, click Generate.
+- Confirm the page transitions into the "Swapping Products…" view without the red error boundary.
+- Confirm the console no longer logs the "Rendered fewer hooks than expected" error.
