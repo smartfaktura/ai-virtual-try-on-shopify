@@ -15,9 +15,9 @@ interface Props {
 }
 
 const FEATURES = [
-  'Lock in a signature visual world for your brand',
-  'Build from a reference photo or a written brief',
-  'Reuse saved scenes across all future generations',
+  "Lock in your brand's signature look",
+  'Start from a reference photo or a short brief',
+  'Reuse them on every future shoot',
 ];
 
 export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
