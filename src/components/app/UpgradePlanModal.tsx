@@ -353,6 +353,20 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                             <p className="text-xs text-muted-foreground mt-1">
                               {credits.toLocaleString()} credits · ~{approxImages} images/mo
                             </p>
+                            {p.planId === 'starter' ? (
+                              <p className="text-[10px] text-muted-foreground/70 mt-1">
+                                Brand Models &amp; Brand Scenes not included
+                              </p>
+                            ) : (p.planId === 'growth' || p.planId === 'pro') ? (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                                  Brand Models
+                                </span>
+                                <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                                  Brand Scenes
+                                </span>
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
