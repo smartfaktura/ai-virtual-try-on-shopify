@@ -59,7 +59,7 @@ export default function ProductSwap() {
 
   // ── Scene state ───────────────────────────────────────────────────────
   const initialScene = searchParams.get('scene');
-  const [sceneSource, setSceneSource] = useState<SceneSource>(initialScene ? 'scratch' : 'library');
+  const [sceneSource, setSceneSource] = useState<SceneSource>(initialScene ? 'scratch' : null);
   const [sceneUrl, setSceneUrl] = useState<string | null>(initialScene);
   const [sceneTitle, setSceneTitle] = useState<string>(initialScene ? 'Uploaded scene' : '');
   const [librarySearch, setLibrarySearch] = useState('');
