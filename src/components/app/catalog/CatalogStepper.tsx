@@ -62,7 +62,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
 
       {/* Mobile stepper */}
       <div className="sm:hidden overflow-hidden">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           {steps.map((s, i) => {
             const isActive = currentStep === s.number;
             const isDone = currentStep > s.number;
@@ -70,7 +70,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
             const Icon = s.icon;
 
             return (
-              <div key={s.number} className="flex items-center flex-1 last:flex-none">
+              <div key={s.number} className="flex items-start flex-1 last:flex-none">
                 <button
                   onClick={() => canClick && onStepClick(s.number)}
                   disabled={!canClick}
@@ -99,7 +99,7 @@ export function CatalogStepper({ steps, currentStep, canNavigateTo, onStepClick 
                 </button>
                 {i < steps.length - 1 && (
                   <div className={cn(
-                    'flex-1 h-px mx-0.5 transition-colors',
+                    'flex-1 h-px mx-0.5 mt-5 transition-colors',
                     isDone ? 'bg-primary/30' : 'bg-border',
                   )} />
                 )}
