@@ -67,10 +67,10 @@ export default function ProductSwap() {
   // ── Product state ─────────────────────────────────────────────────────
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [productSearch, setProductSearch] = useState('');
-  const [productVisibleCount, setProductVisibleCount] = useState(12);
+  const [productVisibleCount, setProductVisibleCount] = useState(24);
 
-  // ── Ratios ────────────────────────────────────────────────────────────
-  const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['4:5']));
+  // ── Ratio (auto-detected from scene; not user-selectable) ─────────────
+  const [detectedRatio, setDetectedRatio] = useState<RatioOption>('4:5');
 
   // ── Wizard step ───────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
