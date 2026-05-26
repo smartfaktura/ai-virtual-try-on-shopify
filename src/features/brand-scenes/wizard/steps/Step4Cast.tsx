@@ -414,10 +414,10 @@ export function Step4Cast({
           {/* Product interaction (required unless replicate) */}
           {!isReplicate && (
             <Section
-              label="How the product appears"
+              label={sectionLabels.interaction}
               required
               missing={!cast?.interaction}
-              helper="Defines how any product placed into this scene will be staged"
+              helper={sectionLabels.interactionHelper}
             >
               <div className="flex flex-wrap gap-x-2 gap-y-2.5">
                 {visibleInteractions.map((i) => (
