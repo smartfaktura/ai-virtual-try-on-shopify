@@ -28,6 +28,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   'mirror-selfie-set': 'Mirror Selfie Visuals',
   'interior-exterior-staging': 'Interior Staging Visuals',
   'picture-perspectives': 'Generate More Angles',
+  'product-swap': 'Product Swap',
   'image-upscaling': 'Image Upscaling Tool',
 };
 
@@ -463,6 +464,10 @@ export default function Workflows() {
       navigate('/app/perspectives');
       return;
     }
+    if (workflow.slug === 'product-swap') {
+      navigate('/app/product-swap');
+      return;
+    }
     if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio') {
       navigate('/app/catalog');
       return;
@@ -492,10 +497,12 @@ export default function Workflows() {
         const featuredWorkflow = workflows.find(w => w.slug === 'product-images');
         const otherWorkflows = (() => {
           const rest = workflows.filter(w => w.slug !== 'product-images');
+          const productSwap = rest.find(w => w.slug === 'product-swap');
           const perspectives = rest.find(w => w.slug === 'picture-perspectives');
           const flatlay = rest.find(w => w.slug === 'flat-lay-set');
-          const middle = rest.filter(w => w.slug !== 'picture-perspectives' && w.slug !== 'flat-lay-set');
+          const middle = rest.filter(w => !['product-swap', 'picture-perspectives', 'flat-lay-set'].includes(w.slug));
           return [
+            ...(productSwap ? [productSwap] : []),
             ...(perspectives ? [perspectives] : []),
             ...middle,
             ...(flatlay ? [flatlay] : []),
