@@ -121,17 +121,22 @@ export function posesForCast(
 export function interactionsForFamily(
   module: BrandSceneModule | undefined,
 ): readonly (typeof CAST_INTERACTIONS)[number][] {
-  if (!module) return CAST_INTERACTIONS;
+  if (!module) return CAST_INTERACTIONS.filter((c) => !FOOD_ONLY_INTERACTIONS.has(c.value));
   switch (module) {
     case "fashion":
     case "footwear":
     case "hats-caps-beanies":
-      return CAST_INTERACTIONS.filter((c) => c.value !== "using");
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "using" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
     case "eyewear":
     case "watches":
     case "jewelry":
       return CAST_INTERACTIONS.filter(
-        (c) => c.value !== "using" && c.value !== "holding",
+        (c) =>
+          c.value !== "using" &&
+          c.value !== "holding" &&
+          !FOOD_ONLY_INTERACTIONS.has(c.value),
       );
     case "beauty-fragrance":
       return CAST_INTERACTIONS.filter(
