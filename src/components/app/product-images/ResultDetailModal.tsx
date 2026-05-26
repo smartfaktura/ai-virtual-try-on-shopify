@@ -216,6 +216,7 @@ export function ResultDetailModal({ open, onClose, items, initialIndex }: Result
                 resultId={active.jobId}
                 imageUrl={active.url}
                 triggerType="result_ready"
+                className="[&>div]:bg-transparent [&>div]:border-border/40"
               />
             </div>
           </div>
