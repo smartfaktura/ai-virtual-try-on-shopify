@@ -689,10 +689,7 @@ export default function ProductSwap() {
         {/* ═══════════ STEP 2: PRODUCTS ═══════════ */}
         {currentStep === 2 && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Each product becomes its own image in the same scene. Max {MAX_PRODUCTS}.</p>
-            </div>
+            <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
 
             <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border space-y-3">
               <div className="relative">
