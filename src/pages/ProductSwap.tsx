@@ -26,6 +26,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { CatalogStepper, type StepDef } from '@/components/app/catalog/CatalogStepper';
+import { cn } from '@/lib/utils';
 
 type UserProduct = Tables<'user_products'>;
 type SceneSource = 'library' | 'scratch';
