@@ -1,49 +1,22 @@
-## Stop pre-highlighting Product Scale + expand options
+## Remove Product Scale from Brand Scene wizard
 
-### Root cause of the visible preselect
-`Step4Cast.tsx` line 432 marks a chip active using the fallback constant:
-
-```tsx
-active={scalePreset === s.value}        // scalePreset = scale?.preset ?? resolved.scale.default
-```
-
-So even with no user selection, the resolved default ("handheld" for food/tech/wellness) lights up. The reducer in `useWizardState.ts` (line 183) also seeds `{ preset: "handheld" }` whenever a scale patch (e.g. exact size) is dispatched without a preset.
+The "Product scale" section (Mini / Pocket / Handheld / Tabletop / Other + Exact size) will be removed from the Step 4 Cast UI. The wizard will no longer ask the user to pick a product scale; defaults from the category registry continue to drive the prompt under the hood, but nothing in the UI is gated on it.
 
 ### Changes
 
-**1. `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`**
-- Line 432: `active={scale?.preset === s.value}` — never highlight unless the user actually picked one.
+1. **`src/features/brand-scenes/wizard/steps/Step4Cast.tsx`**
+   - Delete the `{/* Product scale */}` block (lines ~424–471) including the chips, the "Other" note input, and the "Exact size" toggle/inputs.
+   - Remove the now-unused local state `showExact`, helpers `visibleScales`, and the related imports (`SCALE_PRESETS`, `AddChip`, `ExactDimensions`, `Input` if unused elsewhere in the file).
+   - Remove the `showScaleSection` branch around the deleted block.
+   - Keep `scalePreset` derivation (still needed to filter forbidden interactions and the people/interaction sub-tabs); it will simply use `resolved.scale.default` whenever the user hasn't set one (which is now always).
+   - Remove the Essentials summary chip for scale (around line 612, `scaleLabel`) so the summary no longer shows a Scale chip.
 
-**2. `src/features/brand-scenes/wizard/useWizardState.ts`**
-- Line 177 (`setCast`): drop the `{ preset: "solo" }` fallback → `(prev ?? {})`.
-- Line 183 (`setScale`): drop the `{ preset: "handheld" }` fallback → `(prev ?? {})`.
-Patches that only set e.g. dimensions or interaction will no longer silently seed a preset.
+2. **`src/features/brand-scenes/wizard/step4Flow.ts` (and any step-validation helper)**
+   - Drop `scale?.preset` from the required-fields check for Step 4 so the step can complete without picking a scale.
 
-**3. `src/features/brand-scenes/wizard/constants/scale.ts` — add more options + "Other"**
-New preset list, in this order:
-- `mini` — "Mini" — <5 cm — rings, earbuds, USB sticks
-- `pocket` — Pocket — ≤15 cm (existing)
-- `handheld` — Handheld — 15–35 cm (existing)
-- `tabletop` — "Tabletop" — 35–80 cm — small appliances, lamps, decor
-- `carry` — Carry — 35–80 cm (existing, retitled hint to "carried at torso" so it doesn't overlap with tabletop)
-- `furniture` — Furniture (existing)
-- `architectural` — Architectural (existing)
-- `on_body` — Wearable on body (existing)
-- `other` — "Other" — user-supplied size descriptor
-
-Each new entry includes `directive` and `CAST_VS_PRODUCT` mapping in `buildScaleDirective.ts`:
-- mini → "product is dwarfed by a fingertip" / directive "miniature scale ~3 cm, smaller than a finger"
-- tabletop → "person leans over the product on a surface" / directive "tabletop scale ~50 cm, sized to a countertop"
-- other → no directive; uses the user's free-text label
-
-**4. Add `scale.note` free text for "Other"**
-- Extend `BrandSceneScale` schema in `src/features/brand-scenes/schema.ts` (or `types.ts` — whichever holds it) with optional `note?: string`.
-- In `Step4Cast.tsx`, when `scale?.preset === "other"`, render a small `Input` under the chips bound to `scale.note` (placeholder: "Describe the size — e.g. wall-mounted, 1.2 m wide").
-- In `buildScaleDirective.ts`, when preset is `other`, emit `Product scale: ${scale.note || "scaled naturally to the product"}.` and skip the cast-vs-product line.
-
-**5. Registry exposure**
-- `categoryPresets.ts` — add `mini`, `tabletop`, `other` to the default `scale` values list for every family so they appear in the picker (subfamily restrictions like rings → `pocket` only stay as-is; `other` is appended universally).
-- `resolvePresets.ts` — no change needed; it already maps from registry values.
+3. **No schema/prompt changes**
+   - `BrandSceneScale`, `buildScaleDirective`, and registry presets stay intact. The directive will use the category default scale silently. This keeps prompt quality without exposing the control.
 
 ### Out of scope
-Prompt-side semantics for "Other" beyond inserting the user's note verbatim. Translation files / tests for new presets are not in the registry tests today.
+- No changes to other wizard steps.
+- No changes to backend, schema, or prompt assembly logic.

@@ -106,7 +106,6 @@ export function getSubStepDisabledReason(
   ctx: Step4Context,
 ): string | null {
   const cast = answers.cast;
-  const scale = answers.scale;
   const preset = cast?.preset;
 
   if (sub === "look") {
@@ -126,7 +125,6 @@ export function getSubStepDisabledReason(
     if (preset !== "replicate" && !cast?.interaction) {
       return "Pick how the cast holds, wears, or stands next to the product";
     }
-    if (!scale?.preset) return "Pick a product scale";
     return null;
   }
 

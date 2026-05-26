@@ -131,10 +131,6 @@ export function Step4Cast({
   const forbiddenInter = forbiddenInteractions(preset, module, scalePreset);
   const forbiddenCast = forbiddenCastPresets(scalePreset, module);
 
-  const visibleScales = SCALE_PRESETS.filter((s) =>
-    resolved.scale.values.includes(s.value),
-  );
-  const showScaleSection = visibleScales.length > 1;
 
   const allowedCastSet = new Set<string>(resolved.castPresets);
   const visibleCastPresets = CAST_PRESETS
@@ -168,7 +164,7 @@ export function Step4Cast({
   const wardrobes =
     WARDROBE_COLORS.filter((w) => resolved.wardrobeColors.includes(w.value));
 
-  const [showExact, setShowExact] = useState(!!scale?.dimensions);
+  
 
   const flow = useMemo(
     () => computeStep4Flow(answers, { module, subFamily, isReference }),
@@ -421,54 +417,6 @@ export function Step4Cast({
             </Section>
           )}
 
-          {/* Product scale */}
-          {showScaleSection && (
-            <Section label="Product scale" required missing={!scale?.preset}>
-              <>
-                <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                  {visibleScales.map((s) => (
-                    <Chip
-                      key={s.value}
-                      active={scale?.preset === s.value}
-                      onClick={() => onScaleChange({ preset: s.value })}
-                    >
-                      {s.label}
-                    </Chip>
-                  ))}
-                </div>
-                {scale?.preset === "other" && (
-                  <div className="mt-3">
-                    <Input
-                      maxLength={160}
-                      value={scale?.note ?? ""}
-                      onChange={(e) => onScaleChange({ note: e.target.value })}
-                      placeholder="Describe the size — e.g. wall-mounted, 1.2 m wide"
-                    />
-                  </div>
-                )}
-                <div className="mt-3">
-                  {showExact ? (
-                    <Chip
-                      onClick={() => {
-                        setShowExact(false);
-                        onScaleChange({ dimensions: undefined });
-                      }}
-                    >
-                      Hide exact size
-                    </Chip>
-                  ) : (
-                    <AddChip onClick={() => setShowExact(true)} label="Exact size" />
-                  )}
-                </div>
-                {showExact && (
-                  <ExactDimensions
-                    value={scale?.dimensions}
-                    onChange={(d) => onScaleChange({ dimensions: d })}
-                  />
-                )}
-              </>
-            </Section>
-          )}
         </div>
       )}
 
@@ -609,7 +557,6 @@ function AutoCastSummary({
   const interactionLabel = CAST_INTERACTIONS.find(
     (i) => i.value === cast?.interaction,
   )?.label;
-  const scaleLabel = SCALE_PRESETS.find((s) => s.value === scale?.preset)?.label;
   const poseLabel =
     cast?.action_note ??
     CAST_ACTIONS.find((a) => a.value === cast?.action)?.label;
@@ -619,7 +566,6 @@ function AutoCastSummary({
     chips.push({ label: interactionLabel, onClick: onJumpToEssentials });
   if (hasPeople && poseLabel && onJumpToInteraction)
     chips.push({ label: `Pose: ${poseLabel}`, onClick: onJumpToInteraction, emphasize: true });
-  if (scaleLabel) chips.push({ label: scaleLabel, onClick: onJumpToEssentials });
   if (!chips.length) return null;
   return (
     <div className="mx-auto max-w-2xl mt-5 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
