@@ -10,7 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search, Upload, X, Sparkles, Replace, ArrowLeft, Image as ImageLucide,
   Check, Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
-  ChevronRight, ChevronLeft, Pencil,
+  ChevronRight, ChevronLeft, Pencil, Download,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
