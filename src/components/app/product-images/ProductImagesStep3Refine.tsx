@@ -482,8 +482,8 @@ function PropPickerModal({ open, onOpenChange, products, excludeIds, alreadySele
                       : 'border-transparent hover:border-foreground/20',
                   )}
                 >
-                  <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
-                    <ShimmerImage src={p.image_url} alt={p.title} className="max-w-full max-h-full object-contain" />
+                  <div className="aspect-square bg-muted overflow-hidden">
+                    <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
                   </div>
                   <div className="h-[52px] flex flex-col justify-center px-2.5">
                     <p className="text-xs font-medium truncate leading-tight">{p.title}</p>
