@@ -64,6 +64,8 @@ export function ImageLightbox({
   const handleCopyPrompt = useCallback(() => onCopyPrompt?.(currentIndex), [onCopyPrompt, currentIndex]);
   const handleDelete = useCallback(() => onDelete?.(currentIndex), [onDelete, currentIndex]);
   const handleShare = useCallback(() => onShare?.(currentIndex), [onShare, currentIndex]);
+  const handleEdit = useCallback(() => onEdit?.(currentIndex), [onEdit, currentIndex]);
+  const handleGenerateAngles = useCallback(() => onGenerateAngles?.(currentIndex), [onGenerateAngles, currentIndex]);
 
   // Track image load so we can crossfade between slides instead of blanking.
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
