@@ -126,7 +126,7 @@ export function ProductSpecsCard({
   if (productsNeedingSpecs.length === 0) return null;
 
   return (
-    <Card className="border-amber-500/20 bg-amber-500/[0.03]">
+    <Card className="border-border/60 bg-card">
       <CardContent className="p-5 space-y-4">
         {/* Header row: title on left, Optional + collapse chevron on right */}
         <div className="flex items-start gap-2.5">
@@ -137,8 +137,8 @@ export function ProductSpecsCard({
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCollapsed(v => !v); } }}
             className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
           >
-            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-amber-500/10 flex-shrink-0">
-              <Ruler className="w-3.5 h-3.5 text-amber-500" />
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-muted flex-shrink-0">
+              <Ruler className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
               <h3 className="text-sm font-semibold tracking-tight">Product Details</h3>
@@ -152,7 +152,7 @@ export function ProductSpecsCard({
 
           {/* Optional label + chevron — unit toggle moved to per-product area */}
           <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
-            <span className="text-[10px] font-medium text-amber-500/80 uppercase tracking-wider hidden sm:inline">Optional</span>
+            <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider hidden sm:inline">Optional</span>
             <button
               type="button"
               onClick={() => setCollapsed(v => !v)}
@@ -321,7 +321,7 @@ export function ProductSpecsCard({
                                               onClick={(e) => { e.stopPropagation(); setUnitSystem('metric'); }}
                                               className={`px-2 py-0.5 text-[11px] font-medium transition-colors min-h-[26px] ${
                                                 unitSystem === 'metric'
-                                                  ? 'bg-amber-500/15 text-amber-600'
+                                                  ? 'bg-foreground/10 text-foreground'
                                                   : 'text-muted-foreground hover:text-foreground'
                                               }`}
                                             >
@@ -332,7 +332,7 @@ export function ProductSpecsCard({
                                               onClick={(e) => { e.stopPropagation(); setUnitSystem('imperial'); }}
                                               className={`px-2 py-0.5 text-[11px] font-medium transition-colors min-h-[26px] ${
                                                 unitSystem === 'imperial'
-                                                  ? 'bg-amber-500/15 text-amber-600'
+                                                  ? 'bg-foreground/10 text-foreground'
                                                   : 'text-muted-foreground hover:text-foreground'
                                               }`}
                                             >
