@@ -740,7 +740,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "skin_finish",
     scope: "cast",
-    label: "Skin finish",
+    label: "Skin finish · optional",
     prefix: "Skin",
     presets: SKIN_FINISHES,
     castOnly: ["solo", "two", "group"],
@@ -748,7 +748,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "hair",
     scope: "cast",
-    label: "Hair styling",
+    label: "Hair styling · optional",
     prefix: "Hair",
     presets: HAIR_STYLES,
     castOnly: ["solo", "two", "group"],
@@ -757,7 +757,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "makeup",
     scope: "cast",
-    label: "Makeup",
+    label: "Makeup · optional",
     prefix: "Makeup",
     presets: MAKEUP_LOOKS,
     castOnly: ["solo", "two", "group"],
@@ -803,7 +803,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "storytelling_moment",
     scope: "cast",
-    label: "Storytelling moment",
+    label: "Storytelling moment · optional",
     prefix: "Moment",
     // Step4Cast overrides via getStorytellingMoments(module, subFamily).
     presets: STORYTELLING_MOMENT,
