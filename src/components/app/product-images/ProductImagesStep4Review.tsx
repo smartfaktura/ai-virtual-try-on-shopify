@@ -10,7 +10,8 @@ import { useProductImageScenes } from '@/hooks/useProductImageScenes';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
-import { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './ProductImagesStep3Refine';
+import { RatioShape, MiniRatioChips, PropPickerModal } from './ProductImagesStep3Refine';
+import { ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './constants';
 import { computeTotalImages, computeTotalImagesPerCategory } from '@/lib/sceneVariations';
 import type { UserProduct, DetailSettings, ProductImageScene } from './types';
 
