@@ -90,6 +90,12 @@ export default function ProductSwap() {
   const pollVersionRef = useRef(0);
 
   // ── SessionStorage persistence (survives Vite HMR reloads) ────────────
+  // Hide floating support chat on this route
+  useEffect(() => {
+    document.body.setAttribute('data-hide-studio-chat', 'true');
+    return () => document.body.removeAttribute('data-hide-studio-chat');
+  }, []);
+
   const STORAGE_KEY = 'product-swap-wizard';
   const didHydrateRef = useRef(false);
   useEffect(() => {
