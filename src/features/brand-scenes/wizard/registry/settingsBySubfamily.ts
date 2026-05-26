@@ -271,17 +271,21 @@ const POOLS: Record<string, Pool> = {
 
   // ---------------- Food & Drink ----------------
   "food-drink/beverages": {
-    indoor_lifestyle: ["Café counter", "Sunlit kitchen", "Bar interior", "Marble bar top", "Wood plank table"],
-    outdoor_nature: ["Garden bench", "Picnic blanket"],
+    indoor_lifestyle: ["Café counter", "Sunlit kitchen", "Bar interior", "Marble bar top", "Wood plank table", "Hotel lounge", "Co-working café"],
+    outdoor_location: ["Rooftop bar", "Beach club", "Street café terrace", "Park bench", "Festival field", "City sidewalk"],
+    outdoor_nature: ["Garden bench", "Picnic blanket", "Lakeside dock", "Mountain ridge", "Forest clearing", "Riverside rock"],
     studio: ["Wet glass surface", "Painted gradient"],
   },
   "food-drink/food": {
-    indoor_lifestyle: ["Sunlit kitchen", "Café table", "Family table", "Linen-set table", "Wood board on counter"],
-    outdoor_nature: ["Picnic blanket", "Garden bench"],
+    indoor_lifestyle: ["Sunlit kitchen", "Café table", "Family table", "Linen-set table", "Wood board on counter", "Restaurant booth"],
+    outdoor_location: ["Backyard table", "Restaurant patio", "Market stall", "Food truck window"],
+    outdoor_nature: ["Picnic blanket", "Garden bench", "Beach picnic", "Forest table"],
     studio: ["Marble slab", "Stone slab"],
   },
   "food-drink/snacks-food": {
-    indoor_lifestyle: ["Sunlit kitchen", "Café table", "Wood board on counter"],
+    indoor_lifestyle: ["Sunlit kitchen", "Café table", "Wood board on counter", "Couch & coffee table", "Office desk", "Dorm bed"],
+    outdoor_location: ["Stadium seat", "Skate park bench", "Convenience-store front", "Road-trip car", "Festival field"],
+    outdoor_nature: ["Hiking trail rock", "Beach blanket", "Mountain overlook"],
     studio: ["Painted gradient", "High-key cyclorama", "Marble slab", "Paper backdrop"],
   },
 

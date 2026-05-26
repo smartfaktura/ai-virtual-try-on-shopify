@@ -400,7 +400,7 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
   },
 
   "food-drink": {
-    scale: ["handheld"],
+    scale: ["pocket", "handheld", "carry"],
     default_scale: "handheld",
     lens: ["macro", "standard", "portrait"],
     depth_of_field: ["shallow", "balanced"],
@@ -416,9 +416,9 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
       "dipping",
       "steaming",
     ],
-    cast_presets: ["none", "hands", "solo"],
+    cast_presets: ["none", "hands", "solo", "two", "group"],
     default_cast: "none",
-    settings: ["Tabletop surface", "Domestic", "Studio cyclorama", "Architectural interior"],
+    settings: ["Tabletop surface", "Domestic", "Studio cyclorama", "Architectural interior", "Urban street", "Nature", "Beach / water"],
     surfaces: [
       "raw_wood",
       "linen",
@@ -434,20 +434,18 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
     hands_on_product: ["pour", "cradle", "cap"],
     sub: {
       beverages: {
-        cast_presets: ["hands", "none", "solo"],
         default_cast: "hands",
-        interactions: ["pouring", "holding", "beside", "hero"],
+        interactions: ["pouring", "holding", "using", "beside", "hero", "steaming"],
         hands_on_product: ["pour", "cradle", "cap"],
       },
       food: {
-        cast_presets: ["none", "hands"],
         default_cast: "none",
-        interactions: ["plating", "garnishing", "cutting", "steaming", "beside", "hero"],
+        interactions: ["plating", "garnishing", "cutting", "steaming", "holding", "using", "beside", "hero"],
       },
       "snacks-food": {
-        cast_presets: ["none", "hands"],
         default_cast: "none",
-        interactions: ["dipping", "holding", "beside", "hero"],
+        scale: ["pocket", "handheld", "carry"],
+        interactions: ["holding", "dipping", "pouring", "using", "beside", "hero"],
       },
     },
   },
