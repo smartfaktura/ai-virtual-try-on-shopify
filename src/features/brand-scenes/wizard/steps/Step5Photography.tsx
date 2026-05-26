@@ -93,7 +93,7 @@ export function Step5Photography({
         <ChapterHeading>Lens & focus</ChapterHeading>
         <div className="space-y-10">
           <Section
-            label="Lens"
+            label="Lens · optional"
             tooltip="Wide = roomy and dramatic. Long = compressed and flattering."
             expandable
           >
@@ -110,7 +110,7 @@ export function Step5Photography({
           </Section>
 
           <Section
-            label="Background blur"
+            label="Background blur · optional"
             tooltip="Shallow = creamy bokeh behind the product. Deep = everything in focus."
             expandable
           >
@@ -128,7 +128,7 @@ export function Step5Photography({
             )}
           </Section>
 
-          <Section label="Focus">
+          <Section label="Focus · optional">
             <ChipRowWithOther
               options={SUBJECT_FOCUSES}
               current={value.subject_focus}
@@ -139,7 +139,7 @@ export function Step5Photography({
             />
           </Section>
 
-          <Section label="Shadows">
+          <Section label="Shadows · optional">
             <ChipRowWithOther
               options={SHADOWS}
               current={value.shadows}
@@ -155,7 +155,7 @@ export function Step5Photography({
       <div>
         <ChapterHeading>Composition</ChapterHeading>
         <div className="space-y-10">
-          <Section label="Composition">
+          <Section label="Composition · optional">
             <ChipRowWithOther
               options={COMPOSITIONS}
               current={value.composition}
@@ -166,7 +166,7 @@ export function Step5Photography({
             />
           </Section>
 
-          <Section label="Negative space">
+          <Section label="Negative space · optional">
             <ChipRowWithOther
               options={NEG_SPACE_INTENTS}
               current={value.negative_space_intent}
@@ -179,7 +179,7 @@ export function Step5Photography({
             />
           </Section>
 
-          <Section label="Realism">
+          <Section label="Realism · optional">
             <ChipRowWithOther
               options={REALISM_LEVELS}
               current={value.realism}
@@ -246,7 +246,7 @@ export function Step5Photography({
       <div>
         <ChapterHeading>Color & finish</ChapterHeading>
         <div className="space-y-10">
-          <Section label="Color palette" expandable>
+          <Section label="Color palette · optional" expandable>
             {(expanded) => (
               <PaletteBlock
                 presets={palettes(expanded)}
@@ -262,7 +262,7 @@ export function Step5Photography({
             )}
           </Section>
 
-          <Section label="Contrast">
+          <Section label="Contrast · optional">
             <ChipRowWithOther
               options={COLOR_CONTRASTS}
               current={value.color_contrast}
@@ -273,7 +273,7 @@ export function Step5Photography({
             />
           </Section>
 
-          <Section label="Saturation">
+          <Section label="Saturation · optional">
             <ChipRowWithOther
               options={SATURATIONS}
               current={value.saturation}
@@ -285,7 +285,7 @@ export function Step5Photography({
           </Section>
 
           <Section
-            label="Finish"
+            label="Finish · optional"
             tooltip="The final grade — clean digital, filmic, glossy magazine, etc."
             expandable
           >

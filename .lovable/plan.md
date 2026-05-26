@@ -1,15 +1,32 @@
-### Goal
-Append " · optional" to the label of 4 extras fields in the brand-scenes wizard so users understand these settings are not required.
+## Summary
+Append " · optional" to field labels in the Brand Scenes wizard:
+1. **Pose energy** label in the Cast step (Step 4)
+2. **All field labels** in the "How is the photo taken?" step (Step 5)
 
-### Files changed
-- `src/features/brand-scenes/wizard/constants/extras.ts`
+## Changes
 
-### Changes
-Update the `label` property for these 4 entries in `CAST_EXTRAS_FIELDS`:
+### File: `src/features/brand-scenes/wizard/constants/extras.ts`
+- `pose_energy` label: `"Pose energy"` → `"Pose energy · optional"`
+- All SCENE_EXTRAS_FIELDS rendered in Step 5 via `PHOTO_EXTRAS_KEYS`:
+  - `"Motion / energy"` → `"Motion / energy · optional"`
+  - `"Composition energy"` → `"Composition energy · optional"`
+  - `"Crop-safe zones (for copy)"` → `"Crop-safe zones (for copy) · optional"`
+  - `"Camera angle"` → `"Camera angle · optional"`
+  - `"Apparel-specific angle"` → `"Apparel-specific angle · optional"`
+  - `"Footwear-specific angle"` → `"Footwear-specific angle · optional"`
+  - `"Eyewear-specific angle"` → `"Eyewear-specific angle · optional"`
+  - `"Jewelry-specific angle"` → `"Jewelry-specific angle · optional"`
 
-1. `skin_finish`: `"Skin finish"` → `"Skin finish · optional"`
-2. `hair`: `"Hair styling"` → `"Hair styling · optional"`
-3. `makeup`: `"Makeup"` → `"Makeup · optional"`
-4. `storytelling_moment`: `"Storytelling moment"` → `"Storytelling moment · optional"`
-
-These labels are rendered by `ExtrasPillField` via the `Section` component. No other logic changes are needed.
+### File: `src/features/brand-scenes/wizard/steps/Step5Photography.tsx`
+- All hardcoded `<Section label="...">` labels in Step 5:
+  - `"Lens"` → `"Lens · optional"`
+  - `"Background blur"` → `"Background blur · optional"`
+  - `"Focus"` → `"Focus · optional"`
+  - `"Shadows"` → `"Shadows · optional"`
+  - `"Composition"` → `"Composition · optional"`
+  - `"Negative space"` → `"Negative space · optional"`
+  - `"Realism"` → `"Realism · optional"`
+  - `"Color palette"` → `"Color palette · optional"`
+  - `"Contrast"` → `"Contrast · optional"`
+  - `"Saturation"` → `"Saturation · optional"`
+  - `"Finish"` → `"Finish · optional"`
