@@ -131,10 +131,6 @@ export function Step4Cast({
   const forbiddenInter = forbiddenInteractions(preset, module, scalePreset);
   const forbiddenCast = forbiddenCastPresets(scalePreset, module);
 
-  const visibleScales = SCALE_PRESETS.filter((s) =>
-    resolved.scale.values.includes(s.value),
-  );
-  const showScaleSection = visibleScales.length > 1;
 
   const allowedCastSet = new Set<string>(resolved.castPresets);
   const visibleCastPresets = CAST_PRESETS
