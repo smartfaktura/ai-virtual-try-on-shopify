@@ -255,7 +255,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
                       )}>
-                      {o.icon}{o.label}
+                        {o.label}
+
                     </button>
                   );
                 })}
