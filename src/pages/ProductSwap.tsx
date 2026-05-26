@@ -545,35 +545,24 @@ export default function ProductSwap() {
 
   // ── Setup view ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen">
+    <div className="space-y-6 pb-36 overflow-x-clip max-w-full min-w-0">
       <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
 
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 pb-36 space-y-6">
-        {/* Header */}
-        <div className="space-y-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/app/workflows')} className="gap-1.5 -ml-2">
-            <ArrowLeft className="w-4 h-4" />Visual Studio
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
-              <p className="mt-1 pl-2.5 border-l-2 border-primary/40 text-[13px] font-light tracking-wide text-muted-foreground/90">
-                Same scene, different product
-              </p>
-            </div>
-          </div>
+      <PageHeader
+        title="Product Swap"
+        subtitle="Same scene, different product"
+        backAction={{ content: 'Visual Studio', onAction: () => navigate('/app/workflows') }}
+      >
+        <span />
+      </PageHeader>
 
-          {/* Stepper */}
-          <CatalogStepper
-            steps={STEP_DEFS}
-            currentStep={currentStep}
-            canNavigateTo={canNavigateTo}
-            onStepClick={(s) => goToStep(s as 1 | 2 | 3)}
-          />
-        </div>
+      <CatalogStepper
+        steps={STEP_DEFS}
+        currentStep={currentStep}
+        canNavigateTo={canNavigateTo}
+        onStepClick={(s) => goToStep(s as 1 | 2 | 3)}
+      />
+
 
         {/* ═══════════ STEP 1: SCENE ═══════════ */}
         {currentStep === 1 && (
