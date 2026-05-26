@@ -321,7 +321,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       '/images/product-swap/scene-4.jpg',
       '/images/product-swap/scene-5.jpg',
     ],
-    slideLabels: ['1', '2', '3', '4', '5'],
+    
     elements: [
       {
         type: 'badge', label: 'Same Scene', icon: <Layers className="w-3 h-3" />,
