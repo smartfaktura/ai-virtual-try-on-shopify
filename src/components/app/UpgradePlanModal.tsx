@@ -358,24 +358,20 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                               const chipClass = locked
                                 ? 'inline-flex items-center gap-1 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground/70 font-semibold'
                                 : 'inline-flex items-center gap-1 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold';
-                              const NewBadge = () => (
-                                <span className="text-[8px] px-1 py-px rounded-sm bg-primary text-primary-foreground font-semibold leading-none">NEW</span>
-                              );
                               return (
                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                   <span className={chipClass}>
-                                    {locked && <Lock className="w-2.5 h-2.5" />}
-                                    Custom Brand Models
-                                    {!locked && <NewBadge />}
-                                  </span>
-                                  <span className={chipClass}>
-                                    {locked && <Lock className="w-2.5 h-2.5" />}
-                                    Custom Brand Scenes
-                                    {!locked && <NewBadge />}
+                                    {locked ? 'Default VOVV Models & Scenes' : (
+                                      <>
+                                        Custom Brand Models & Scenes
+                                        <span className="text-[8px] px-1 py-px rounded-sm bg-primary text-primary-foreground font-semibold leading-none">NEW</span>
+                                      </>
+                                    )}
                                   </span>
                                 </div>
                               );
                             })()}
+
                           </div>
                         </div>
                         <div className="flex flex-col items-end shrink-0">

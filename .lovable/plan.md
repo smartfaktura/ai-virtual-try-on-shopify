@@ -1,14 +1,11 @@
-Remove the dashed "New brand model" placeholder tile from the model grid on `/app/models` (BrandModels page).
-
-**Context**
-- The Brand Models page (`src/pages/BrandModels.tsx`) currently shows a dashed-border tile as the first item in the model grid with a "+" icon and "New brand model" label (lines ~1360–1369).
-- There is already a primary "New brand model" button in the top-right page header action area (lines ~1285–1291).
-- The duplicate tile adds clutter since the primary CTA is already visible.
+Simplify the per-plan feature chips in the upgrade modal (`src/components/app/UpgradePlanModal.tsx`, lines 356–378) so each plan row shows just one chip instead of two.
 
 **Change**
-- In `src/pages/BrandModels.tsx`, remove the dashed `<Link>` tile that renders before the `models.map()` list inside the grid.
-- Keep the top-right header button and all other UI unchanged.
+- **Starter:** single neutral/grey chip `DEFAULT VOVV MODELS & SCENES` — no Lock icon, no NEW badge. Styled with `bg-muted/60 text-muted-foreground/70`.
+- **Growth & Pro:** single primary chip `CUSTOM BRAND MODELS & SCENES` with the `NEW` pill appended. Styled with `bg-primary/10 text-primary`.
+- Remove the separate "Custom Brand Models" + "Custom Brand Scenes" chip pair and the `Lock` icon usage in this block.
+- Keep the same `text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full` chip shape and the `mt-1.5` wrapper for visual consistency with the rest of the modal.
 
 **Scope**
-- One file: `src/pages/BrandModels.tsx`
-- No backend, no other pages touched.
+- One file: `src/components/app/UpgradePlanModal.tsx`
+- No copy/labels changed elsewhere, no backend.
