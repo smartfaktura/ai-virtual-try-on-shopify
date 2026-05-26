@@ -1,12 +1,9 @@
-**1. ProductImagesStep2Scenes.tsx**
-- Move the "Select shots" header block (`<h2>`, subtitle, badge/clear + GridSizeToggle) to render **after** `<BrandScenesPromoCard />`.
-- Hide `<GridSizeToggle />` on mobile by wrapping it in `<span className="hidden sm:inline-flex">`.
+Replace dynamic random thumbnails with the 3 fixed Brand Scene preview URLs the user provided.
 
-**2. BrandScenesPromoCard.tsx**
-- Replace the `Learn more` button styling. Current `variant="secondary"` is invisible on the tinted background. Use a clearly visible non-primary style: `variant="outline"` with `bg-background hover:bg-background border-border text-foreground` (solid white pill on the tinted card). Keep rounded-full and arrow icon.
-- Pass `thumbnails` prop through to `<BrandScenesInfoModal thumbnails={thumbnails} />`.
+**Changes:**
 
-**3. BrandScenesInfoModal.tsx**
-- Accept optional `thumbnails?: string[]` prop.
-- Widen on desktop: `max-w-md sm:max-w-lg` instead of `max-w-sm`.
-- Add a row of 3 overlapping mini thumbnails (same style as promo card: rounded-lg, ring-2 ring-background, slight rotation, `-ml-3` overlap, ~`w-12 h-14`) above the eyebrow, centered. Use `ShimmerImage` + `getOptimizedUrl`. Skip rendering if no thumbnails.
+1. `BrandScenesPromoCard.tsx` — Remove `thumbnails` prop. Define a local `BRAND_SCENE_THUMBNAILS` constant with the 3 provided URLs and use them directly.
+2. `BrandScenesInfoModal.tsx` — Remove `thumbnails` prop. Use the same `BRAND_SCENE_THUMBNAILS` constant (imported from PromoCard or duplicated locally).
+3. `ProductImagesStep2Scenes.tsx` — Remove `promoThumbnails` memo and stop passing `thumbnails` to `<BrandScenesPromoCard />`.
+
+Will export `BRAND_SCENE_THUMBNAILS` from a small shared constant at the top of `BrandScenesPromoCard.tsx` and import into the modal to avoid duplication.
