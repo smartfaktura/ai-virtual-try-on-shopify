@@ -22,6 +22,7 @@ export interface SwapJobInfo {
   jobId: string;
   productId: string;
   productTitle: string;
+  productImageUrl?: string;
   ratio: string;
 }
 
