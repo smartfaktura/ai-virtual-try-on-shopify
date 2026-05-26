@@ -16,13 +16,11 @@ import {
   CAST_NOTE_MAX,
   CAST_PRESETS,
   CAST_PRESETS_WITH_PEOPLE,
-  CAST_VIBES,
   type CastAction,
   type CastAge,
   type CastGender,
   type CastInteraction,
   type CastPreset,
-  type CastVibe,
 } from "../constants/cast";
 import {
   SCALE_PRESETS,
