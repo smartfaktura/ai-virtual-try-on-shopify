@@ -318,7 +318,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                         {catScenes.slice(0, 8).map(s => (
                           <span key={s.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground">
                             {s.previewUrl ? (
-                              <img src={getOptimizedUrl(s.previewUrl, { quality: 60 })} alt={s.title} width={20} height={20} loading="eager" decoding="async" className="w-5 h-5 rounded-full object-contain bg-muted flex-shrink-0" />
+                              <img src={getOptimizedUrl(s.previewUrl, { quality: 60 })} alt={s.title} width={20} height={20} loading="eager" decoding="async" className="w-5 h-5 rounded-full object-cover bg-muted flex-shrink-0" />
                             ) : (
                               <span className="w-5 h-5 rounded-full bg-muted-foreground/15 flex-shrink-0" />
                             )}
