@@ -251,7 +251,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
                       )}>
-                        {o.label}
+                        <span className="sm:hidden">{o.value}</span>
+                        <span className="hidden sm:inline">{o.label}</span>
                     </button>
                   );
                 })}
