@@ -46,7 +46,7 @@ interface Props {
   note?: string;
   referenceOutfit?: ReferenceOutfit;
   responsibilityAccepted: boolean;
-  onRequestResponsibility: () => void;
+  onAcceptResponsibility: () => void;
   onImageChange: (path: string | null, previewUrl: string | null) => void;
   onNameChange: (name: string) => void;
   onIntentChange: (intent: ReferenceIntent) => void;
@@ -66,7 +66,7 @@ export function Step3Reference({
   note = "",
   referenceOutfit,
   responsibilityAccepted,
-  onRequestResponsibility,
+  onAcceptResponsibility,
   onImageChange,
   onNameChange,
   onIntentChange,
@@ -80,18 +80,30 @@ export function Step3Reference({
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  const ensureAccepted = (): boolean => {
-    if (!responsibilityAccepted) {
-      onRequestResponsibility();
-      return false;
+  // Local checkbox state for the inline rights confirmation. Stays in sync
+  // with `responsibilityAccepted` — once accepted, the parent persists it.
+  const [c1, setC1] = useState(responsibilityAccepted);
+  const [c2, setC2] = useState(responsibilityAccepted);
+  const [c3, setC3] = useState(responsibilityAccepted);
+
+  useEffect(() => {
+    if (responsibilityAccepted) {
+      setC1(true);
+      setC2(true);
+      setC3(true);
     }
-    return true;
-  };
+  }, [responsibilityAccepted]);
+
+  useEffect(() => {
+    if (c1 && c2 && c3 && !responsibilityAccepted) {
+      onAcceptResponsibility();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c1, c2, c3]);
 
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-    if (!ensureAccepted()) return;
 
     if (!ACCEPTED_MIME.includes(file.type)) {
       toast({
