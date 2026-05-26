@@ -864,7 +864,9 @@ export default function ProductSwap() {
                       <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover border border-border" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Selected scene'}</p>
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {sceneSource === 'scratch' ? 'Uploaded image' : 'Library scene'}
+                      </p>
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
                         <Badge variant="secondary" className="text-[10px] h-5">{detectedRatio}</Badge>
                       </div>
