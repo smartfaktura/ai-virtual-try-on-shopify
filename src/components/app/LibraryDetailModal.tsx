@@ -464,6 +464,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 resultId={activeItem?.id}
                 imageUrl={activeItem?.imageUrl}
                 triggerType="result_ready"
+                className="[&>div]:bg-transparent [&>div]:border-border/40"
               />
 
 
