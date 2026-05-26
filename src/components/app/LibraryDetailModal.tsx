@@ -421,6 +421,18 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                 <Button
                   variant="outline"
                   onClick={() => {
+                    navigate(`/app/product-swap?scene=${encodeURIComponent(activeItem.imageUrl)}`);
+                    onClose();
+                  }}
+                  className="w-full font-medium"
+                >
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Swap Product
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
                     navigate(`/app/video/animate?imageUrl=${encodeURIComponent(activeItem.imageUrl)}`);
                     onClose();
                   }}
