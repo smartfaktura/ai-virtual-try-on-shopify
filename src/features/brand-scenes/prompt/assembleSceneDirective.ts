@@ -90,10 +90,14 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   if (refLine) reference.push(refLine);
 
   // ----- SUBJECT (cast + scale) -----
-  if (answers.cast) subject.push(buildCastDirective(answers.cast));
-  if (answers.scale) {
+  if (answers.cast?.preset) {
+    subject.push(buildCastDirective(answers.cast as Parameters<typeof buildCastDirective>[0]));
+  }
+  if (answers.scale?.preset) {
     subject.push(
-      buildScaleDirective(answers.scale, { castPreset: answers.cast?.preset }),
+      buildScaleDirective(answers.scale as Parameters<typeof buildScaleDirective>[0], {
+        castPreset: answers.cast?.preset,
+      }),
     );
   }
 
