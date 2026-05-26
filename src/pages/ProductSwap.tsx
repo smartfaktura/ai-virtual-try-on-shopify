@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search, Upload, X, Sparkles, Replace, ArrowLeft, Image as ImageLucide,
-  Check, Loader2, Package, Info, ClipboardPaste, CheckCircle, XCircle, Clock,
+  Check, Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
+  ChevronRight, ChevronLeft, Pencil,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
