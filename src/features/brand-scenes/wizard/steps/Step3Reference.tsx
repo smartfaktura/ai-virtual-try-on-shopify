@@ -181,29 +181,57 @@ export function Step3Reference({
           Reference image
         </Label>
         {previewUrl ? (
-          <div className="mt-2 rounded-2xl border border-border bg-card overflow-hidden">
-            <div className="aspect-[4/5] bg-muted relative">
-              <img
-                src={previewUrl}
-                alt="Scene reference"
-                className="w-full h-full object-cover"
+          <>
+            <div className="mt-2 rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="aspect-[4/5] bg-muted relative">
+                <img
+                  src={previewUrl}
+                  alt="Scene reference"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 gap-2">
+                <span className="text-xs text-muted-foreground truncate">
+                  Uploaded — used as the scene preview and generation guide
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemove}
+                  className="rounded-full gap-1.5 shrink-0"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Replace
+                </Button>
+              </div>
+            </div>
+
+            {/* Inline rights confirmation — replaces the old popup */}
+            <div className="mt-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-destructive/90">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Confirm before continuing
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Your image guides framing, lighting and mood — your product replaces the original. Tick all three to continue.
+              </p>
+              <ConsentRow
+                checked={c1}
+                onChange={setC1}
+                label="I own this image or have permission to use it"
+              />
+              <ConsentRow
+                checked={c2}
+                onChange={setC2}
+                label="No copyrighted logos or recognizable people"
+              />
+              <ConsentRow
+                checked={c3}
+                onChange={setC3}
+                label="It's used only as a composition guide"
               />
             </div>
-            <div className="flex items-center justify-between p-3 gap-2">
-              <span className="text-xs text-muted-foreground truncate">
-                Uploaded — used as the scene preview and generation guide
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemove}
-                className="rounded-full gap-1.5 shrink-0"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Replace
-              </Button>
-            </div>
-          </div>
+          </>
         ) : (
           <div
             onDragOver={(e) => {
