@@ -209,7 +209,7 @@ export function ResultDetailModal({ open, onClose, items, initialIndex }: Result
 
               <ContextualFeedbackCard
                 workflow="product-visuals"
-                questionText="Are these visuals ready to use?"
+                questionText="Is this visual ready to use?"
                 buttonLabels={{ yes: 'Yes, ready', almost: 'Almost', no: 'No' }}
                 reasonChips={['Need better background', 'Wrong angle / shot', 'Product details off', 'Lighting / shadows', 'Not consistent enough', 'Missing shot type', 'Needs higher realism', 'Other']}
                 textPlaceholder="What is missing? e.g. cleaner background, sharper details"
