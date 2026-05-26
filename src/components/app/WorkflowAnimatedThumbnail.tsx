@@ -299,6 +299,13 @@ function CarouselThumbnail({ scene, isActive, mobileCompact, modalCompact }: { s
         </div>
       )}
 
+      {/* Slide number/label chip */}
+      {scene.slideLabels && scene.slideLabels[current] && !modalCompact && (
+        <div className="absolute top-2.5 right-2.5 z-20 px-2 py-0.5 rounded-full bg-black/55 backdrop-blur-md text-white text-[10px] font-semibold tracking-wide">
+          {scene.slideLabels[current]}
+        </div>
+      )}
+
       {/* Shimmer placeholder */}
       {!initialLoaded && (
         <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
