@@ -159,17 +159,6 @@ export function ResultDetailModal({ open, onClose, items, initialIndex }: Result
                   Edit Image
                 </Button>
 
-                {active.jobId && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setUpscaleOpen(true)}
-                    className="w-full font-medium"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Enhance to 2K / 4K
-                  </Button>
-                )}
-
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -205,6 +194,17 @@ export function ResultDetailModal({ open, onClose, items, initialIndex }: Result
                   <Video className="w-4 h-4 mr-2" />
                   Generate Video
                 </Button>
+
+                {active.jobId && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setUpscaleOpen(true)}
+                    className="w-full font-medium"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Enhance to 4K
+                  </Button>
+                )}
               </div>
 
               <ContextualFeedbackCard
