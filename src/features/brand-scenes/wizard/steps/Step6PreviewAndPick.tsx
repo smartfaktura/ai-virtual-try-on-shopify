@@ -349,10 +349,25 @@ export function Step6PreviewAndPick({
           )}
 
           <div className="mt-5">
+            {isReferenceFlow && referenceImageUrl && (
+              <label
+                className="flex items-start gap-2.5 cursor-pointer text-[12px] leading-relaxed rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 mb-3"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Checkbox
+                  checked={finalRightsAck}
+                  onCheckedChange={(v) => setFinalRightsAck(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-foreground/85">
+                  Second check — I confirm I have rights to this reference and accept responsibility for every generated image.
+                </span>
+              </label>
+            )}
             <Button
               size="pill"
               onClick={handleGenerate}
-              disabled={!nameValid || submitting}
+              disabled={!nameValid || submitting || (isReferenceFlow && !!referenceImageUrl && !finalRightsAck)}
               className="gap-2 w-full sm:w-auto whitespace-normal text-center"
             >
               <Sparkles className="w-4 h-4 flex-shrink-0" />
@@ -366,6 +381,11 @@ export function Step6PreviewAndPick({
             {!nameValid && (
               <p className="mt-2 text-[11px] text-muted-foreground">
                 Name this scene to enable generation.
+              </p>
+            )}
+            {nameValid && isReferenceFlow && referenceImageUrl && !finalRightsAck && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Tick the confirmation above to enable generation.
               </p>
             )}
           </div>
