@@ -376,7 +376,7 @@ export function BrandSceneWizard() {
             intent={answers.reference_intent}
             note={answers.note}
             responsibilityAccepted={state.responsibilityAccepted}
-            onRequestResponsibility={requestResponsibility}
+            onAcceptResponsibility={handleAcceptResponsibility}
             onImageChange={(path, previewUrl) =>
               dispatch({ type: "setReferenceImage", path, previewUrl })
             }
