@@ -56,7 +56,6 @@ interface Step2Props {
 }
 
 import { CATEGORY_KEYWORDS } from './constants';
-export { CATEGORY_KEYWORDS } from './constants';
 
 type GridSize = '6col' | '5col' | '4col' | '3col';
 

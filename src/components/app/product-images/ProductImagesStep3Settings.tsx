@@ -185,13 +185,7 @@ function PropPickerModal({
 
 /* ── Constants ── */
 
-const ASPECT_RATIOS = [
-  { value: '1:1', label: 'Square 1:1' },
-  { value: '4:5', label: 'Portrait 4:5' },
-  { value: '3:4', label: 'Tall 3:4' },
-  { value: '9:16', label: 'Story 9:16' },
-  { value: '16:9', label: 'Landscape 16:9' },
-];
+import { ASPECT_RATIOS } from './constants';
 
 const IMAGE_COUNT_OPTIONS = [
   { value: '1', label: '1 image' },
