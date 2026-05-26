@@ -138,8 +138,8 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
                 onClick={() => toggleProduct(p.id)}
                 className={`relative rounded-xl border-2 overflow-hidden transition-all text-left cursor-pointer ${
                   selected
-                    ? 'border-primary ring-2 ring-primary/20 shadow-sm'
-                    : 'border-border hover:border-primary/30'
+                    ? 'border-foreground ring-2 ring-foreground/15 shadow-md'
+                    : 'border-transparent hover:border-foreground/20'
                 }`}
               >
                 <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">

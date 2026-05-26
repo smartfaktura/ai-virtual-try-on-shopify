@@ -1,22 +1,10 @@
-## Outfit Styling — cleanup
+## Product card — clearer selected state
 
-File: `src/components/app/product-images/ProductImagesStep3Refine.tsx` (AI mode block around lines 2811–2848). Presentation only.
+File: `src/components/app/product-images/ProductImagesStep1Products.tsx`, lines 139–143.
 
-### 1. Remove the AI confirmation banner
-Delete the entire block (lines 2811–2823) that renders:
-- "AI will style … with outfits that complement your product"
-- "X shot(s) will keep their curated look"
+The card currently uses `border-primary ring-2 ring-primary/20` when selected, which reads as a faint grey outline against the white card — indistinguishable from unselected. Replace with a strong, unambiguous frame:
 
-The "AI styling — Complements your product" card already conveys this, so the banner is redundant.
+- Selected: `border-foreground ring-2 ring-foreground/15 shadow-md`
+- Unselected: `border-transparent hover:border-foreground/20`
 
-### 2. Fix the "Add styling direction" control
-Currently the `CollapsibleTrigger` is a bare button that shows a heavy default focus ring (the blue rectangle in screenshot 2) and the expanded `Textarea` sits indented with `pl-7`, so it visually escapes the card.
-
-Rewrite as a single self-contained, rounded card:
-
-- Wrap the `Collapsible` in a `rounded-lg border border-border/60 bg-muted/20` container.
-- Trigger row: full width, `px-3 py-2.5`, left-aligned, `Plus` (or `Pencil`) icon + label, chevron on the right that rotates when open. Use `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40` so there's no harsh blue border.
-- Truncated preview of `customOutfitNote` stays inline on the right of the label (current behavior, just inside the new container).
-- `CollapsibleContent`: drop the `pl-7` indent, render the `Textarea` with `px-3 pb-3 pt-0` so it lines up with the trigger and stays inside the rounded card.
-
-No state, prop, or logic changes — purely markup/classNames in that one block.
+Keep border width at `border-2` so the card doesn't shift on selection. `CheckCircle` badge stays as-is. No logic changes.
