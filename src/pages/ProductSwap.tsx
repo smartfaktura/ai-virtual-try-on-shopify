@@ -560,11 +560,9 @@ export default function ProductSwap() {
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
-              {currentStep === 1 && (
-                <p className="text-sm text-muted-foreground">
-                  Same scene, different product
-                </p>
-              )}
+              <p className="mt-1 pl-2.5 border-l-2 border-primary/40 text-[13px] font-light tracking-wide text-muted-foreground/90">
+                Same scene, different product
+              </p>
             </div>
           </div>
 
@@ -581,6 +579,21 @@ export default function ProductSwap() {
         {currentStep === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
+
+            {products.length === 0 && (
+              <div className="flex items-start gap-3 p-3 rounded-xl border border-dashed border-border bg-muted/30">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Package className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">No products yet</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">You'll need at least one product to swap into your scene</p>
+                </div>
+                <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate('/app/products/new')}>
+                  Add product<ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
+            )}
 
             {/* Selected scene preview */}
             {sceneUrl && (
@@ -768,10 +781,31 @@ export default function ProductSwap() {
                 </Button>
               </div>
             )}
-            {filteredProducts.length === 0 && (
+            {filteredProducts.length === 0 && products.length > 0 && (
               <p className="text-center text-muted-foreground py-4 text-sm">
-                No products found. <button className="text-primary underline" onClick={() => navigate('/app/products/new')}>Add one</button>
+                No products match your search
               </p>
+            )}
+            {products.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-10 text-center space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                  <Package className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-base font-semibold text-foreground">No products in your library yet</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Upload a product photo (PNG or JPG, ideally on a clean background). It becomes the reference we swap into your scene.
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <Button size="sm" onClick={() => navigate('/app/products/new')}>
+                    Add your first product
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/app/learn')}>
+                    Learn how it works
+                  </Button>
+                </div>
+              </div>
             )}
 
             {/* Selected tray — matches floating bar aesthetic */}
