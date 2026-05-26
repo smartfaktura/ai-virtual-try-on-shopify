@@ -397,7 +397,7 @@ export function Step4Cast({
                     });
                   }}
                 >
-                  {p.label}
+                  {labelForCastPreset(p.value, p.label)}
                 </Chip>
               ))}
             </div>
