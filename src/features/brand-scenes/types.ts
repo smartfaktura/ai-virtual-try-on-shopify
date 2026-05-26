@@ -107,7 +107,7 @@ export interface BrandSceneBaseAnswers {
 }
 
 export interface BrandSceneCast {
-  preset: CastPreset;
+  preset?: CastPreset;
   gender?: CastGender[];
   age?: CastAge[];
   vibe?: CastVibe;
@@ -169,7 +169,8 @@ export interface BrandSceneCast {
 }
 
 export interface BrandSceneScale {
-  preset: ScalePreset;
+  preset?: ScalePreset;
+  note?: string;
   dimensions?: {
     w: number;
     h: number;

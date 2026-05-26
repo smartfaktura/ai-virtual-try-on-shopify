@@ -7,6 +7,7 @@ import type { CastPreset } from "../wizard/constants/cast";
 
 export interface ScaleInput {
   preset: ScalePreset;
+  note?: string;
   dimensions?: {
     w: number;
     h: number;
@@ -16,8 +17,10 @@ export interface ScaleInput {
 }
 
 const CAST_VS_PRODUCT: Partial<Record<ScalePreset, string>> = {
+  mini: "product is dwarfed by a fingertip",
   pocket: "product sits in the palm of a hand",
   handheld: "product is held comfortably in one or two hands",
+  tabletop: "person leans over the product on a surface",
   carry: "product sits at torso scale, carried by the person",
   furniture: "person stands beside the product for size reference",
   architectural: "person is visibly dwarfed by the product",
@@ -40,13 +43,16 @@ export function buildScaleDirective(
     const dims = [w, h, d].filter((n): n is number => typeof n === "number");
     const dimStr = dims.join("×");
     base = `Product scale: exactly ${dimStr} ${units}. Scale all surrounding props and people accordingly.`;
+  } else if (scale.preset === "other") {
+    const note = scale.note?.trim();
+    base = `Product scale: ${note || "scaled naturally to the product"}.`;
   } else {
     base = `Product scale: ${scalePresetMeta(scale.preset).directive}.`;
   }
 
   const cast = opts?.castPreset;
   const hasPeople = cast && cast !== "none" && cast !== "replicate";
-  if (hasPeople) {
+  if (hasPeople && scale.preset !== "other") {
     const rel = CAST_VS_PRODUCT[scale.preset];
     if (rel) base += ` Cast-vs-product: ${rel}.`;
   }

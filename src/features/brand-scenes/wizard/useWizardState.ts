@@ -174,13 +174,13 @@ function reducer(state: WizardState, action: Action): WizardState {
       };
     case "setCast": {
       const prev = state.answers.cast;
-      const next = { ...(prev ?? { preset: "solo" as const }), ...action.patch };
+      const next = { ...(prev ?? {}), ...action.patch };
       return { ...state, answers: { ...state.answers, cast: next } };
     }
     case "setScale": {
       const prev = state.answers.scale;
       const next = {
-        ...(prev ?? { preset: "handheld" as const }),
+        ...(prev ?? {}),
         ...action.patch,
       };
       return { ...state, answers: { ...state.answers, scale: next } };

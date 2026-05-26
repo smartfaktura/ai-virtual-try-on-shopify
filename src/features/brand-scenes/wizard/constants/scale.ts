@@ -7,6 +7,12 @@ import type { BrandSceneModule } from "../../constants";
 
 export const SCALE_PRESETS = [
   {
+    value: "mini",
+    label: "Mini",
+    hint: "<5 cm — rings, earbuds, USB sticks",
+    directive: "miniature scale ~3 cm, smaller than a finger",
+  },
+  {
     value: "pocket",
     label: "Pocket",
     hint: "≤15 cm — perfume, jewelry, headphones",
@@ -19,9 +25,15 @@ export const SCALE_PRESETS = [
     directive: "handheld scale ~25 cm, sized to a human hand",
   },
   {
+    value: "tabletop",
+    label: "Tabletop",
+    hint: "35–80 cm — small appliances, lamps, decor",
+    directive: "tabletop scale ~50 cm, sized to a countertop",
+  },
+  {
     value: "carry",
     label: "Carry",
-    hint: "35–80 cm — backpacks, small appliances",
+    hint: "35–80 cm — backpacks, carried at torso",
     directive: "carry-sized ~60 cm, scaled to torso",
   },
   {
@@ -41,6 +53,12 @@ export const SCALE_PRESETS = [
     label: "Wearable on body",
     hint: "Scaled to the wearer's body",
     directive: "scaled to the wearer's body, naturally proportioned",
+  },
+  {
+    value: "other",
+    label: "Other",
+    hint: "Describe the size yourself",
+    directive: "scaled naturally to the product",
   },
 ] as const;
 export type ScalePreset = (typeof SCALE_PRESETS)[number]["value"];
