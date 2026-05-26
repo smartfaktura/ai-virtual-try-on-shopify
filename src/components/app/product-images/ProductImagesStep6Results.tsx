@@ -66,13 +66,14 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     return ratios.size > 1;
   }, [allImages]);
 
-  const [lightboxProductName, setLightboxProductName] = useState('');
-  const [lightboxSceneNames, setLightboxSceneNames] = useState<string[]>([]);
-
   const openLightbox = (images: ResultImage[], idx: number, productName: string) => {
-    setLightboxImages(images.map(i => i.url));
-    setLightboxSceneNames(images.map(i => i.sceneName));
-    setLightboxProductName(productName);
+    setLightboxItems(images.map(i => ({
+      url: i.url,
+      productName,
+      sceneName: i.sceneName,
+      aspectRatio: i.aspectRatio,
+      jobId: i.jobId,
+    })));
     setLightboxIndex(idx);
     setLightboxOpen(true);
   };
