@@ -549,17 +549,12 @@ export default function Perspectives() {
           {/* Header */}
           <div className="text-center space-y-3">
             {generatingSource?.imageUrl ? (
-              <div className="relative w-16 h-16 mx-auto">
-                {!genAllDone && (
-                  <span className="absolute -inset-1 rounded-2xl ring-2 ring-primary/40 animate-ping" aria-hidden />
-                )}
-                <div className={`relative w-16 h-16 rounded-2xl overflow-hidden border border-border bg-muted ${!genAllDone ? 'ring-2 ring-primary/30' : ''}`}>
-                  <img
-                    src={getOptimizedUrl(generatingSource.imageUrl, { quality: 70 })}
-                    alt={generatingSource.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              <div className="w-16 h-16 mx-auto rounded-2xl overflow-hidden border border-border bg-muted">
+                <img
+                  src={getOptimizedUrl(generatingSource.imageUrl, { quality: 70 })}
+                  alt={generatingSource.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
             ) : (
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">

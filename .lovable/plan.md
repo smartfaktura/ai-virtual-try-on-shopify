@@ -1,18 +1,17 @@
-## Fix awkward thumbnail + pulsing Layers badge stack in `/app/perspectives` generating view
+## Minimalist source thumbnail in `/app/perspectives` generating view
 
-The current header puts a 16×16 thumbnail of the source image with a 6×6 `Layers` badge clipped into its bottom-right corner. The badge overlaps the photo's face and competes with the title's own "Creating More Angles…" affordance — visually noisy.
+Remove the pulsing ring/halo entirely. Just show a clean 64×64 rounded thumbnail of the source image — nothing else.
 
-### Fix
+### Change
 
-In `src/pages/Perspectives.tsx` (the generating-view header, ~lines 550–566):
+In `src/pages/Perspectives.tsx` (header block, ~lines 551–568):
 
-- Drop the overlay badge entirely.
-- Keep a single clean source thumbnail: 64×64 rounded square, soft border, `object-cover`.
-- While generation is in flight, wrap it in an animated focus ring (a `ring-2 ring-primary/30` plus a separate pulsing halo via `absolute inset-0 rounded-2xl ring-2 ring-primary/40 animate-ping`) so the "working" signal lives around the image instead of stamped on top of it. Halo disappears once `genAllDone`.
-- Fallback (no source URL) keeps the existing `Layers` icon tile — unchanged.
+- Drop the `animate-ping` halo span and the conditional `ring-2 ring-primary/30`.
+- Render a single static `64×64` rounded square: `rounded-2xl`, `border border-border`, `object-cover`.
+- Keep the fallback `Layers` icon tile unchanged for the no-source case.
 
-No copy changes, no changes to results grid, polling, or any other section. Pure presentational tweak to one block (~15 lines).
+The progress bar and "Creating More Angles…" copy already communicate that work is in progress — no extra animation on the thumbnail needed.
 
 ### Files touched
 
-- `src/pages/Perspectives.tsx` — replace the thumbnail+badge block with the cleaner ring-halo version.
+- `src/pages/Perspectives.tsx` — one block, ~12 lines simplified.
