@@ -544,10 +544,7 @@ export default function ProductSwap() {
     <div className="min-h-screen">
       <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
 
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 pb-32 space-y-6">__REMOVE_NEXT_LINE__
-      <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
-
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 pb-36 space-y-6">
         {/* Header */}
         <div className="space-y-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/app/workflows')} className="gap-1.5 -ml-2">
