@@ -700,20 +700,20 @@ export default function ProductSwap() {
           <div className="space-y-4 animate-in fade-in duration-200">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Each product becomes its own image in the same scene. Max 10.</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Each product becomes its own image in the same scene. Max {MAX_PRODUCTS}.</p>
             </div>
 
             <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border space-y-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Search products..." value={productSearch}
-                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(12); }} className="pl-9" />
+                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(24); }} className="pl-9" />
               </div>
               <div className="flex items-center justify-between gap-2">
                 <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
-                  {selectedProductIds.size} / 10 selected
+                  {selectedProductIds.size} / {MAX_PRODUCTS} selected
                 </Badge>
-                {filteredProducts.length > 0 && selectedProductIds.size < 10 && (
+                {filteredProducts.length > 0 && selectedProductIds.size < MAX_PRODUCTS && (
                   <Button
                     variant="ghost"
                     size="sm"
