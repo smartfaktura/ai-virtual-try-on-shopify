@@ -98,7 +98,7 @@ export default function ProductSwap() {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const s = JSON.parse(raw);
-      if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || 'library'); }
+      if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || null); }
       if (Array.isArray(s.selectedProductIds)) setSelectedProductIds(new Set(s.selectedProductIds));
       if (s.currentStep === 1 || s.currentStep === 2 || s.currentStep === 3) setCurrentStep(s.currentStep);
     } catch { /* ignore */ }
