@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, ArrowRight, Mountain, Sparkles, Users, Layers, Trash2, Wand2, Lock } from 'lucide-react';
+import { Plus, Crown, Mountain, Sparkles, Users, Layers, Trash2, Wand2, Lock } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -320,8 +320,8 @@ function UpgradeBanner({ onUpgrade }: { onUpgrade: () => void }) {
         </div>
       </div>
       <Button onClick={onUpgrade} className="rounded-full font-semibold gap-2 shrink-0">
-        Upgrade plan
-        <ArrowRight className="w-4 h-4" />
+        <Crown className="w-4 h-4" />
+        Upgrade to Growth
       </Button>
     </div>
   );
@@ -362,8 +362,8 @@ function UpgradeState({ onUpgrade }: { onUpgrade: () => void }) {
 
       <div className="mt-8 pt-6 border-t border-border">
         <Button onClick={onUpgrade} className="rounded-full font-semibold gap-2">
-          Upgrade plan
-          <ArrowRight className="w-4 h-4" />
+          <Crown className="w-4 h-4" />
+          Upgrade to Growth
         </Button>
       </div>
     </div>

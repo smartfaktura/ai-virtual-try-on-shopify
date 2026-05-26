@@ -1,11 +1,17 @@
-Simplify the per-plan feature chips in the upgrade modal (`src/components/app/UpgradePlanModal.tsx`, lines 356–378) so each plan row shows just one chip instead of two.
+Unify the upgrade CTA on `/app/brand-scenes` to match `/app/brand-models`.
+
+**Current state**
+- Brand Models (`src/pages/BrandModels.tsx`, `UpgradeHero`) uses: `Upgrade to Growth` with a `Crown` icon on the left.
+- Brand Scenes (`src/pages/BrandScenes.tsx`, `UpgradeBanner` and `UpgradeState`) uses: `Upgrade plan` with an `ArrowRight` icon on the right.
 
 **Change**
-- **Starter:** single neutral/grey chip `DEFAULT VOVV MODELS & SCENES` — no Lock icon, no NEW badge. Styled with `bg-muted/60 text-muted-foreground/70`.
-- **Growth & Pro:** single primary chip `CUSTOM BRAND MODELS & SCENES` with the `NEW` pill appended. Styled with `bg-primary/10 text-primary`.
-- Remove the separate "Custom Brand Models" + "Custom Brand Scenes" chip pair and the `Lock` icon usage in this block.
-- Keep the same `text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full` chip shape and the `mt-1.5` wrapper for visual consistency with the rest of the modal.
+In `src/pages/BrandScenes.tsx`, update both upgrade buttons to match Brand Models:
+- Label: `Upgrade to Growth`
+- Icon: `Crown` on the left (`w-4 h-4`)
+- Keep existing `rounded-full font-semibold gap-2` classes
+- Remove the trailing `ArrowRight` icon
+- Add `Crown` to the lucide-react import; remove `ArrowRight` if no longer used elsewhere in the file (it is — keep it).
 
 **Scope**
-- One file: `src/components/app/UpgradePlanModal.tsx`
-- No copy/labels changed elsewhere, no backend.
+- One file: `src/pages/BrandScenes.tsx`
+- Affects `UpgradeBanner` and `UpgradeState` button visuals only. No behavior change.
