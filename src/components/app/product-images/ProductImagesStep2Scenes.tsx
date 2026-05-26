@@ -455,6 +455,19 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
   const gridClass = GRID_CLASSES[gridSize];
 
+  // Pick 3 random scene previews for the Brand Scenes promo card
+  const promoThumbnails = useMemo(() => {
+    const urls: string[] = [];
+    for (const c of ACTIVE_CATEGORY_COLLECTIONS) {
+      for (const s of c.scenes) {
+        if (s.previewUrl) urls.push(s.previewUrl);
+      }
+    }
+    if (urls.length === 0) return [];
+    const shuffled = [...urls].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  }, [ACTIVE_CATEGORY_COLLECTIONS]);
+
   const toggleScene = (id: string) => {
     const next = new Set(selectedSceneIds);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -493,7 +506,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
         </div>
       </div>
 
-      <BrandScenesPromoCard />
+      <BrandScenesPromoCard thumbnails={promoThumbnails} />
 
 
 
