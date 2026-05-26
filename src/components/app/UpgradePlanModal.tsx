@@ -356,14 +356,14 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                             {(p.planId === 'starter' || p.planId === 'growth' || p.planId === 'pro') && (() => {
                               const locked = p.planId === 'starter';
                               const chipClass = locked
-                                ? 'inline-flex items-center gap-1 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground/70 font-semibold'
-                                : 'inline-flex items-center gap-1 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold';
+                                ? 'inline-flex items-center gap-1 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground/70 font-semibold whitespace-nowrap'
+                                : 'inline-flex items-center gap-1 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold whitespace-nowrap';
                               return (
                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                   <span className={chipClass}>
-                                    {locked ? 'Default VOVV Models & Scenes' : (
+                                    {locked ? 'Default Models & Scenes' : (
                                       <>
-                                        Custom Brand Models & Scenes
+                                        Brand Models & Scenes
                                         <span className="text-[8px] px-1 py-px rounded-sm bg-primary text-primary-foreground font-semibold leading-none">NEW</span>
                                       </>
                                     )}
