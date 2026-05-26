@@ -12,7 +12,7 @@ import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
   Package, Image as ImageLucide, Info, ClipboardPaste, CheckCircle, XCircle,
-  Clock, Focus, CornerUpLeft, CornerUpRight, ArrowDown,
+  Clock, Focus, CornerUpLeft, CornerUpRight, ArrowDown, Square, ArrowUp,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,6 +57,8 @@ const FALLBACK_VARIATIONS: VariationType[] = [
   { id: 'front-left-45', label: '45° Front-Left', instruction: 'Classic three-quarter angle from the front-left...', category: 'angle', referenceUpload: null },
   { id: 'front-right-45', label: '45° Front-Right', instruction: 'Three-quarter angle from the front-right...', category: 'angle', referenceUpload: null },
   { id: 'topdown', label: 'Top-Down / Flat Lay', instruction: 'Direct overhead bird\'s-eye view...', category: 'top_down', referenceUpload: null },
+  { id: 'front', label: 'Front View', instruction: 'Straight-on front-facing view of the product, camera perfectly perpendicular at lens height. Symmetrical composition centered on the product\'s primary face. Same environment and lighting as the source. Classic catalog hero with zero perspective distortion.', category: 'angle', referenceUpload: null },
+  { id: 'hero-low', label: 'Low Angle / Hero View', instruction: 'Dramatic low-angle shot with the camera positioned slightly below the product looking upward (10-20 degrees below horizontal). Conveys scale, power, and presence — the hero treatment. Product looms confidently in frame. Same environment, lighting, and material fidelity as the source.', category: 'angle', referenceUpload: null },
 ];
 
 const VARIATION_ICONS: Record<string, typeof ZoomIn> = {
@@ -69,6 +71,8 @@ const VARIATION_ICONS: Record<string, typeof ZoomIn> = {
   '45° Front-Left': CornerUpLeft,
   '45° Front-Right': CornerUpRight,
   'Top-Down / Flat Lay': ArrowDown,
+  'Front View': Square,
+  'Low Angle / Hero View': ArrowUp,
 };
 
 const ASPECT_RATIOS = ['1:1', '3:4', '4:5', '9:16'] as const;
