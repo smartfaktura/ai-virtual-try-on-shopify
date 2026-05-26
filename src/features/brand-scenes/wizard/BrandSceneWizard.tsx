@@ -98,19 +98,13 @@ export function BrandSceneWizard() {
     return subs.find((s) => s.slug === answers.sub_family)?.label ?? null;
   })();
   const stepShowsSubFamily = (step === 3 && !isReference) || (step === 4 && isReference);
-  const onCastStepForTitle = step === (isReference ? 4 : 3);
-  const isFoodModule = answers.module === "food-drink";
-  const baseTitle =
-    onCastStepForTitle && isFoodModule ? "Who's at the table?" : META[step].title;
+  const baseTitle = META[step].title;
   const title =
     stepShowsSubFamily && subFamilyLabel
       ? `${baseTitle} · ${subFamilyLabel}`
       : baseTitle;
-  const rawSubtitle = META[step].subtitle;
-  const subtitle =
-    onCastStepForTitle && isFoodModule
-      ? "How the dish is served and who's around it"
-      : rawSubtitle;
+  const subtitle = META[step].subtitle;
+
 
   const handleAcceptResponsibility = async () => {
     if (!user) {
