@@ -1609,23 +1609,10 @@ function getAppearanceSummary(d: DetailSettings): string {
 }
 
 /* ══════════════════════════════════════════════
-   Constants
+   Constants (moved to ./constants for Fast Refresh)
    ══════════════════════════════════════════════ */
 
-const ASPECT_RATIOS = [
-  { value: '1:1', label: 'Square 1:1' },
-  { value: '4:5', label: 'Portrait 4:5' },
-  { value: '3:4', label: 'Tall 3:4' },
-  { value: '9:16', label: 'Story 9:16' },
-  { value: '16:9', label: 'Landscape 16:9' },
-];
-
-const IMAGE_COUNT_OPTIONS = [
-  { value: '1', label: '1 image' },
-  { value: '2', label: '2 images' },
-  { value: '3', label: '3 images' },
-  { value: '4', label: '4 images' },
-];
+import { ASPECT_RATIOS, IMAGE_COUNT_OPTIONS } from './constants';
 
 /* ══════════════════════════════════════════════
    Main Props
@@ -3730,5 +3717,5 @@ export function ProductImagesStep3Refine({
 }
 
 
-export { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS };
+export { RatioShape, MiniRatioChips, PropPickerModal };
 export default ProductImagesStep3Refine;
