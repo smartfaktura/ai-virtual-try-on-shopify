@@ -63,6 +63,9 @@ export default function ProductSwap() {
   // ── Ratios ────────────────────────────────────────────────────────────
   const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['4:5']));
 
+  // ── Wizard step ───────────────────────────────────────────────────────
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+
   // ── Generation view state ─────────────────────────────────────────────
   const [isGeneratingView, setIsGeneratingView] = useState(false);
   const [generatingJobs, setGeneratingJobs] = useState<SwapJobInfo[]>([]);
@@ -74,6 +77,34 @@ export default function ProductSwap() {
   const genStartRef = useRef(0);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollVersionRef = useRef(0);
+
+  // ── SessionStorage persistence (survives Vite HMR reloads) ────────────
+  const STORAGE_KEY = 'product-swap-wizard';
+  const didHydrateRef = useRef(false);
+  useEffect(() => {
+    if (didHydrateRef.current) return;
+    didHydrateRef.current = true;
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || 'library'); }
+      if (Array.isArray(s.selectedProductIds)) setSelectedProductIds(new Set(s.selectedProductIds));
+      if (Array.isArray(s.selectedRatios) && s.selectedRatios.length) setSelectedRatios(new Set(s.selectedRatios));
+      if (s.currentStep === 1 || s.currentStep === 2 || s.currentStep === 3) setCurrentStep(s.currentStep);
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    if (!didHydrateRef.current) return;
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        sceneUrl, sceneTitle, sceneSource,
+        selectedProductIds: Array.from(selectedProductIds),
+        selectedRatios: Array.from(selectedRatios),
+        currentStep,
+      }));
+    } catch { /* ignore */ }
+  }, [sceneUrl, sceneTitle, sceneSource, selectedProductIds, selectedRatios, currentStep]);
 
   // ── Data ──────────────────────────────────────────────────────────────
   const { data: products = [] } = useQuery({
