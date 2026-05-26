@@ -576,8 +576,8 @@ export default function ProductSwap() {
         {currentStep === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Choose the scene to keep</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Pick from your library or upload any image</p>
+              <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">We'll recreate this exact shot — same camera, lighting and background — with the products you choose next.</p>
             </div>
 
             {/* Selected scene preview */}
