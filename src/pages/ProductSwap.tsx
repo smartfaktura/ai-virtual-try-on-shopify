@@ -823,9 +823,7 @@ export default function ProductSwap() {
 
             {/* Selected tray — matches floating bar aesthetic */}
             {selectedProducts.length > 0 && (() => {
-              const MOBILE_CAP = 5;
               const DESKTOP_CAP = 8;
-              const overflowMobile = Math.max(0, selectedProducts.length - MOBILE_CAP);
               const overflowDesktop = Math.max(0, selectedProducts.length - DESKTOP_CAP);
               return (
                 <div className="hidden sm:block sticky bottom-24 z-20">
