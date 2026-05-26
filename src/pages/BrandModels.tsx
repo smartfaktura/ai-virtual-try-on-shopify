@@ -1258,7 +1258,7 @@ function ModelCard({ model, onDelete, onRename }: { model: any; onDelete: (id: s
         >
           <Link to={`/app/workflows?model=${model.id}`}>
             <Wand2 className="w-3.5 h-3.5" />
-            Use in Visual Studio
+            Use model
           </Link>
         </Button>
       </div>
