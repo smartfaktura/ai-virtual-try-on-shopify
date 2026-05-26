@@ -429,15 +429,21 @@ export function Step6PreviewAndPick({
           <p className="text-sm text-foreground/80">
             No variations to show — they may have been cleared after an edit
           </p>
-          <Button
-            size="pill"
-            onClick={handleGenerate}
-            disabled={!nameValid || submitting}
-            className="gap-2"
+          <span
+            onClick={() => { if (!nameValid) revealNameValidation(); }}
+            className="inline-block"
           >
-            <RefreshCw className="w-4 h-4" />
-            Regenerate · {BRAND_SCENE_GENERATION_COST} credits
-          </Button>
+            <Button
+              size="pill"
+              onClick={handleGenerate}
+              disabled={!nameValid || submitting}
+              title={!nameValid ? "Name this scene first" : undefined}
+              className={`gap-2 ${!nameValid ? "pointer-events-none" : ""}`}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Regenerate · {BRAND_SCENE_GENERATION_COST} credits
+            </Button>
+          </span>
         </div>
       )}
 
