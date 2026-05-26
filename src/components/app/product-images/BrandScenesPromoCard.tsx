@@ -25,6 +25,7 @@ export function BrandScenesPromoCard() {
           </div>
           <Button
             onClick={() => setOpen(true)}
+            variant="secondary"
             className="rounded-full text-sm font-semibold px-5 h-10 w-full sm:w-auto gap-1.5 shrink-0 group"
           >
             <span>Learn more</span>
