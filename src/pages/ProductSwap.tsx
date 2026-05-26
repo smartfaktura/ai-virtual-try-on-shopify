@@ -63,7 +63,7 @@ export default function ProductSwap() {
   const [sceneUrl, setSceneUrl] = useState<string | null>(initialScene);
   const [sceneTitle, setSceneTitle] = useState<string>(initialScene ? 'Uploaded scene' : '');
   const [librarySearch, setLibrarySearch] = useState('');
-  const [libraryVisibleCount, setLibraryVisibleCount] = useState(30);
+  const [libraryVisibleCount, setLibraryVisibleCount] = useState(10);
 
   // ── Product state ─────────────────────────────────────────────────────
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
@@ -596,41 +596,19 @@ export default function ProductSwap() {
               </div>
             )}
 
-            {/* Source toggle */}
-            {!sceneUrl && (
-              <div className="grid grid-cols-2 gap-3">
-                {([
-                  { id: 'library', title: 'From Library', description: 'Pick a previous generation', icon: ImageLucide },
-                  { id: 'scratch', title: 'Upload Image', description: 'Use any image as the scene', icon: Upload },
-                ] as const).map(opt => (
-                  <button key={opt.id} type="button"
-                    onClick={() => { setSceneSource(opt.id); setSceneUrl(null); setSceneTitle(''); }}
-                    className={`p-4 rounded-xl border-2 transition-all text-left cursor-pointer ${
-                      sceneSource === opt.id ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-primary/50 hover:bg-muted'
-                    }`}>
-                    <div className="space-y-2">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        sceneSource === opt.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        <opt.icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{opt.title}</p>
-                        <p className="text-xs text-muted-foreground">{opt.description}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Library picker */}
-            {sceneSource === 'library' && !sceneUrl && (
-              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Search generated images..." value={librarySearch}
-                    onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(30); }} className="pl-9" />
+            {/* Default view: library grid + small upload entry */}
+            {!sceneUrl && sceneSource !== 'scratch' && (
+              <div className="space-y-3 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input placeholder="Search generated images..." value={librarySearch}
+                      onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }} className="pl-9" />
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0"
+                    onClick={() => { setSceneSource('scratch'); setSceneUrl(null); setSceneTitle(''); }}>
+                    <Upload className="w-3.5 h-3.5" />Upload
+                  </Button>
                 </div>
                 {libraryLoading ? (
                   <div className="flex items-center justify-center py-8">
@@ -651,7 +629,7 @@ export default function ProductSwap() {
                 )}
                 {!libraryLoading && filteredLibrary.length > libraryVisibleCount && (
                   <div className="text-center pt-2">
-                    <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 30)}>
+                    <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 10)}>
                       Load more ({filteredLibrary.length - libraryVisibleCount} remaining)
                     </Button>
                   </div>
@@ -666,25 +644,31 @@ export default function ProductSwap() {
 
             {/* Scratch upload */}
             {sceneSource === 'scratch' && !sceneUrl && (
-              <label
-                onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file?.type.startsWith('image/')) handleSceneFile(file); }}
-                onDragOver={(e) => e.preventDefault()}
-                className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
-                {isUploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : (
-                  <>
-                    <Upload className="w-8 h-8 text-muted-foreground" />
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-foreground">Upload the scene image</p>
-                      <p className="text-xs text-muted-foreground">Drag & drop, paste, or click to browse</p>
-                      <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60 mt-1.5">
-                        <ClipboardPaste className="w-3 h-3" />⌘V / Ctrl+V to paste from clipboard
-                      </p>
-                    </div>
-                  </>
-                )}
-                <input type="file" accept="image/*" className="hidden" disabled={isUploading}
-                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleSceneFile(file); }} />
-              </label>
+              <div className="space-y-3 animate-in fade-in duration-200">
+                <button type="button" onClick={() => setSceneSource(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                  <ArrowLeft className="w-3 h-3" />Back to library
+                </button>
+                <label
+                  onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file?.type.startsWith('image/')) handleSceneFile(file); }}
+                  onDragOver={(e) => e.preventDefault()}
+                  className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                  {isUploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : (
+                    <>
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-foreground">Upload the scene image</p>
+                        <p className="text-xs text-muted-foreground">Drag & drop, paste, or click to browse</p>
+                        <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60 mt-1.5">
+                          <ClipboardPaste className="w-3 h-3" />⌘V / Ctrl+V to paste from clipboard
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" disabled={isUploading}
+                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleSceneFile(file); }} />
+                </label>
+              </div>
             )}
 
             {/* Detected ratio (read-only — strictly mirrors uploaded scene) */}
