@@ -3507,8 +3507,6 @@ export function ProductImagesStep3Refine({
               </CardContent>
             </Card>
           )}
-
-          <Separator />
         </div>
       )}
 
