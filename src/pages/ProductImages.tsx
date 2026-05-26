@@ -1416,7 +1416,7 @@ export default function ProductImages() {
           <>
             <div className="space-y-3">
               {/* Toolbar */}
-              {userProducts.length > 0 && (
+              {userProducts.length >= 5 && (
               <div className="flex flex-col sm:flex-row gap-3 sm:items-center min-w-0">
                 {userProducts.length >= 5 && (
                   <div className="relative flex-1 min-w-0">
@@ -1636,8 +1636,8 @@ export default function ProductImages() {
                 );
               })()
               )}
-              {isFree && userProducts.length > 0 && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-muted/40 border border-border text-xs">
+              {isFree && userProducts.length >= 2 && (
+                <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-muted/40 border border-border text-xs">
                   <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground">
                     Free plan: select 1 product at a time. Upgrade to generate visuals for multiple products in one batch
