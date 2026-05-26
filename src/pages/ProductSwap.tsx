@@ -99,7 +99,6 @@ export default function ProductSwap() {
       const s = JSON.parse(raw);
       if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || 'library'); }
       if (Array.isArray(s.selectedProductIds)) setSelectedProductIds(new Set(s.selectedProductIds));
-      if (Array.isArray(s.selectedRatios) && s.selectedRatios.length) setSelectedRatios(new Set(s.selectedRatios));
       if (s.currentStep === 1 || s.currentStep === 2 || s.currentStep === 3) setCurrentStep(s.currentStep);
     } catch { /* ignore */ }
   }, []);
@@ -109,11 +108,10 @@ export default function ProductSwap() {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         sceneUrl, sceneTitle, sceneSource,
         selectedProductIds: Array.from(selectedProductIds),
-        selectedRatios: Array.from(selectedRatios),
         currentStep,
       }));
     } catch { /* ignore */ }
-  }, [sceneUrl, sceneTitle, sceneSource, selectedProductIds, selectedRatios, currentStep]);
+  }, [sceneUrl, sceneTitle, sceneSource, selectedProductIds, currentStep]);
 
   // ── Data ──────────────────────────────────────────────────────────────
   const { data: products = [] } = useQuery({
