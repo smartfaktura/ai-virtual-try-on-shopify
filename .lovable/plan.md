@@ -1,29 +1,39 @@
-# Fix overlapping Back / Generate buttons in /app/n sticky footer (mobile)
+# Fix Brand Scenes wizard mobile footer overlap + cast tabs overflow
 
-## Problem
-On mobile (~390px), the sticky pill footer in `UnifiedGenerator` (Step 2 — "Configure your model") renders the **Back** outline button visually under the **Generate** pill. Cause: the row uses `flex items-center justify-between gap-2` with a `hidden sm:block` left-side text span and `flex-shrink-0` on the button group — on mobile the left span collapses to zero, the right group keeps natural width, and on narrow screens the inner padding + two pill buttons + gap can exceed the card's inner width, producing the overlap shown in the screenshot.
+Two presentation fixes scoped to `/app/brand-scenes/new` on mobile (≤640px).
 
-## File
-- `src/pages/BrandModels.tsx` — sticky footer block around lines 1103–1155.
+## 1. Sticky footer — Back / Continue overlap
+**File:** `src/features/brand-scenes/wizard/WizardLayout.tsx` (lines 143–164)
 
-## Change (mobile-first layout fix)
-Update the inner footer row so the two buttons share the row evenly on mobile and only sit right-aligned with the helper text on `sm+`:
+Same pattern as the model wizard fix: on narrow viewports the right-aligned `flex-shrink-0` button group can overlap when CTA labels are long ("Continue to Essentials", "Continue to Interaction", etc.).
 
-1. Replace `flex items-center justify-between gap-2 p-2.5 sm:p-4` with `flex items-center gap-2 p-2 sm:p-4`.
-2. On the button group, drop `flex-shrink-0 ml-auto` and use `flex items-center gap-2 w-full sm:w-auto sm:ml-auto`.
-3. On each `<Button size="pill">` in that group, add `flex-1 sm:flex-none` so on mobile the two pills split the available width evenly and never overlap. Keep `whitespace-nowrap` on the Generate label.
-4. Keep the desktop hint span as-is but add `min-w-0` so it never forces the button group to overflow.
+Change:
+- Inner row: `flex items-center gap-2 p-2 sm:p-4` (drop `justify-between`, tighten mobile padding).
+- Button group: replace `flex items-center gap-2 flex-shrink-0 ml-auto` with `flex items-center gap-2 w-full sm:w-auto sm:ml-auto`.
+- Add `flex-1 sm:flex-none` to both the Back button and the `NextButton` so on mobile they share the row evenly and the Continue label can truncate cleanly (the inner spans already use `truncate`).
 
-This results in:
-- **Mobile:** `[ Back ][ Generate ]` two equal-width pills filling the card, no overlap, safe-area-inset padding preserved.
-- **Desktop (≥ sm):** unchanged — left hint text + right-aligned pills at natural width.
+Result on mobile: `[ Back ][ Continue → ]` two equal-width pills filling the card, no overlap. Desktop layout unchanged.
 
-Apply the same `flex-1 sm:flex-none` treatment to the Step 1 footer branch (Back / Next, lines 1122–1135) so both steps behave consistently on mobile.
+## 2. Cast sub-step tabs don't fit on screen
+**File:** `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (lines 257–300)
+
+Five tabs (Look · Essentials · People · Interaction · Styling · optional) currently scroll horizontally on mobile but the user wants them to **fit** the 390px viewport.
+
+Changes:
+- Tighten the mobile gap from `gap-5` to `gap-3` (keep `sm:gap-6` for desktop).
+- On mobile, drop the "· optional" suffix on Styling — render just `Styling` below `sm`, keep the full label on `sm+`. Implement by splitting the label map into a `mobileLabel` shown via `sm:hidden` and the full label via `hidden sm:inline`.
+- Keep the existing horizontal scroll fallback in place as a safety net in case a future locale makes a label wider.
+- Reduce the tab row's bottom padding slightly (`pb-2.5` on mobile, keep `sm:pb-3`) so the underline still reads but uses less vertical space.
+
+Result: all 5 tabs fit within 390px with no horizontal scroll, while desktop keeps the richer "Styling · optional" wording.
+
+## Out of scope
+- No copy/business-logic changes.
+- No edits to other wizard steps, sub-step flow logic, or `BrandSceneWizard.tsx`.
 
 ## Verification
-After the edit, reload `/app/n` at 390×844 in the preview, scroll to Step 2, and confirm:
-- Back and Generate are side-by-side, equal width, no overlap.
-- Labels remain readable; Generate stays disabled-styled when invalid.
-- Desktop layout at ≥ 640px is unchanged (hint left, pills right at natural size).
-
-No business logic, no validation, no copy changes — purely a presentation fix in `src/pages/BrandModels.tsx`.
+Reload `/app/brand-scenes/new` at 390×844, walk through Step 3 → Cast → click Design the look → confirm:
+- All 5 tabs visible without horizontal scroll.
+- Footer shows Back + Continue side-by-side, equal width, no overlap.
+- Continue label truncates if needed, never overlaps Back.
+- Desktop (≥640px) layout is unchanged.
