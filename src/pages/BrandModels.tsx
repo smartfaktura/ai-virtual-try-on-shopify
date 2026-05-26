@@ -242,6 +242,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [finalRightsAck, setFinalRightsAck] = useState(false);
   const [referenceNotes, setReferenceNotes] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
@@ -250,7 +251,6 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [creationMode, setCreationMode] = useState<'chooser' | 'reference' | 'manual'>(
     layout === 'sections' ? 'chooser' : 'manual'
   );
-  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
