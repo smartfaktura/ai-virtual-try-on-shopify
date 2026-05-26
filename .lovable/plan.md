@@ -1,8 +1,6 @@
-Shorten the Free-plan notice on the Product step at `src/pages/ProductImages.tsx` line 1643.
+Rewrite the Free-plan notice in plain language at `src/pages/ProductImages.tsx` lines 1642–1645.
 
-Replace the long sentence with a concise version, and use a responsive shorter label on mobile:
+- Mobile: `Free plan: pick 1 product. Upgrade to pick several.`
+- Desktop: `Free plan: pick 1 product at a time. Upgrade to pick several products in one go.`
 
-- Mobile (`sm:hidden`): `Free plan — 1 product per batch`
-- Desktop (`hidden sm:inline`): `Free plan: 1 product per batch. Upgrade for multi-product batches`
-
-Keep the Sparkles icon and Upgrade button as-is.
+Keeps the Sparkles icon and Upgrade button unchanged.
