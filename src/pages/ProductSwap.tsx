@@ -541,7 +541,10 @@ export default function ProductSwap() {
 
   // ── Setup view ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen pb-28">
+    <div className="min-h-screen">
+      <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
+
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 pb-32 space-y-6">__REMOVE_NEXT_LINE__
       <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
 
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-6">
