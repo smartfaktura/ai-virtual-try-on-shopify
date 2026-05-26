@@ -558,7 +558,7 @@ export default function ProductSwap() {
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
               <p className="text-sm text-muted-foreground">
-                Keep the exact scene — camera, lighting, background — and only swap in a different product
+                Same scene, different product
               </p>
             </div>
           </div>
@@ -576,8 +576,8 @@ export default function ProductSwap() {
         {currentStep === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Choose the scene to keep</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Pick from your library or upload any image</p>
+              <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">We'll recreate this exact shot — same camera, lighting and background — with the products you choose next.</p>
             </div>
 
             {/* Selected scene preview */}
@@ -780,7 +780,7 @@ export default function ProductSwap() {
               const overflowMobile = Math.max(0, selectedProducts.length - MOBILE_CAP);
               const overflowDesktop = Math.max(0, selectedProducts.length - DESKTOP_CAP);
               return (
-                <div className="sticky bottom-24 z-20">
+                <div className="hidden sm:block sticky bottom-24 z-20">
                   <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg px-3 py-2 flex items-center gap-3">
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
                       Selected ({selectedProducts.length})
