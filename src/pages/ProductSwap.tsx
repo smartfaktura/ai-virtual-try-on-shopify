@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useProductSwap, type SwapJobInfo } from '@/hooks/useProductSwap';
 import { toSignedUrls } from '@/lib/signedUrl';
+import { downloadDropAsZip } from '@/lib/dropDownload';
 import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
