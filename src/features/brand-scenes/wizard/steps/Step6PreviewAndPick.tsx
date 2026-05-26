@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import { ImageLightbox } from "@/components/app/ImageLightbox";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
