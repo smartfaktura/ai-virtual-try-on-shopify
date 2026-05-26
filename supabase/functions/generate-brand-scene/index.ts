@@ -88,13 +88,61 @@ async function generateSingleImage(
   }
 
   const data = await res.json();
-  const parts2 = data.candidates?.[0]?.content?.parts || [];
+  const blockReason = data?.promptFeedback?.blockReason;
+  if (blockReason) throw new Error(`SAFETY_BLOCKED:${blockReason}`);
+  const candidate = data.candidates?.[0];
+  const parts2 = candidate?.content?.parts || [];
   const imagePart = parts2.find((p: any) => p.inlineData?.data);
-  if (!imagePart) throw new Error("No image was generated");
+  if (!imagePart) {
+    const finishReason = candidate?.finishReason || "UNKNOWN";
+    throw new Error(`No image was generated (finishReason=${finishReason})`);
+  }
 
   const mime = imagePart.inlineData.mimeType || "image/png";
   return `data:${mime};base64,${imagePart.inlineData.data}`;
 }
+
+// ── Fallback via Lovable AI Gateway (different routing than native Gemini) ──
+async function generateViaGateway(
+  prompt: string,
+  referenceInlineData: { mimeType: string; data: string } | undefined,
+  modelInlineData: { mimeType: string; data: string } | undefined,
+  productInlineData: { mimeType: string; data: string } | undefined,
+  apiKey: string,
+): Promise<string> {
+  const userContent: any[] = [];
+  for (const ref of [modelInlineData, referenceInlineData, productInlineData]) {
+    if (ref) {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: `data:${ref.mimeType};base64,${ref.data}` },
+      });
+    }
+  }
+  userContent.push({ type: "text", text: prompt });
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-3.1-flash-image-preview",
+      messages: [{ role: "user", content: userContent }],
+      modalities: ["image", "text"],
+    }),
+  });
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 429) throw new Error("RATE_LIMIT");
+    if (status === 402) throw new Error("AI_CREDITS_EXHAUSTED");
+    throw new Error(`Gateway failed (${status})`);
+  }
+  const data = await res.json();
+  const images = data?.choices?.[0]?.message?.images;
+  const url = images?.[0]?.image_url?.url;
+  if (!url || !url.startsWith("data:")) throw new Error("No image was generated (gateway)");
+  return url;
+}
+
 
 async function uploadBase64Image(
   supabaseAdmin: any,
@@ -259,12 +307,14 @@ serve(async (req) => {
 
     const runId = crypto.randomUUID();
 
-    // Per-slot retry: try Gemini 3 Pro, fall back to Gemini 3.1 Flash.
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
+    // Per-slot retry: Gemini 3 Pro → Gemini 3.1 Flash (native) → Lovable AI Gateway.
     const generateOneWithRetry = async (slot: number): Promise<string> => {
       const variantPrompt = `${previewPreamble}${compiledPrompt}\n\nVARIATION ${slot + 1} of 3 — deliver a distinct interpretation while keeping every constraint above.`;
-      const models = ["gemini-3-pro-image-preview", "gemini-3.1-flash-image-preview"];
+      const nativeModels = ["gemini-3-pro-image-preview", "gemini-3.1-flash-image-preview"];
       let lastErr: unknown = null;
-      for (const model of models) {
+      for (const model of nativeModels) {
         try {
           const b64 = await generateSingleImage(variantPrompt, referenceInlineData, modelInlineData, productInlineData, GEMINI_KEY, model);
           return await uploadBase64Image(supabaseAdmin, user.id, runId, slot, b64);
@@ -273,6 +323,18 @@ serve(async (req) => {
           const msg = e instanceof Error ? e.message : String(e);
           console.error(`Slot ${slot} model ${model} failed:`, msg);
           if (msg === "AI_CREDITS_EXHAUSTED" || msg === "RATE_LIMIT") throw e;
+          if (msg.startsWith("SAFETY_BLOCKED:")) throw e; // safety blocks won't pass via fallback either
+        }
+      }
+      // Tier 3 — Lovable AI Gateway
+      if (LOVABLE_API_KEY) {
+        try {
+          const b64 = await generateViaGateway(variantPrompt, referenceInlineData, modelInlineData, productInlineData, LOVABLE_API_KEY);
+          return await uploadBase64Image(supabaseAdmin, user.id, runId, slot, b64);
+        } catch (e) {
+          lastErr = e;
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error(`Slot ${slot} gateway fallback failed:`, msg);
         }
       }
       throw lastErr instanceof Error ? lastErr : new Error("Generation failed");
@@ -292,19 +354,30 @@ serve(async (req) => {
       const firstFailure = results.find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
       const msg = firstFailure?.reason instanceof Error ? firstFailure.reason.message : "All generation attempts failed";
       if (msg === "RATE_LIMIT") {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again in a moment." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again in a moment.", fallback: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (msg === "AI_CREDITS_EXHAUSTED") {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later.", fallback: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "All generation attempts failed. Please try again." }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (msg.startsWith("SAFETY_BLOCKED:")) {
+        return new Response(JSON.stringify({
+          error: "Your prompt or reference image was blocked by the safety filter. Try simplifying the prompt or using a different reference.",
+          code: "SAFETY_BLOCKED",
+          fallback: true,
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({
+        error: "Generation failed — the model returned no image. Credits were refunded. Please try again or tweak the prompt.",
+        code: "NO_IMAGE",
+        details: msg,
+        fallback: true,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
 
     // Partial success — proportional refund so the user only pays for what they got.
     let finalBalance = newBalance as number | null | undefined;
