@@ -38,7 +38,7 @@ export function CreditIndicator() {
 
   const balanceDigits = Math.max(1, Math.floor(Math.abs(balance))).toString().length;
   const balanceSizeClass =
-    balanceDigits <= 3 ? 'text-2xl' : balanceDigits === 4 ? 'text-xl' : 'text-lg';
+    balanceDigits <= 3 ? 'text-2xl' : balanceDigits === 4 ? 'text-lg' : 'text-base';
 
   const formatMax = (n: number) =>
     n >= 10000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K` : n.toLocaleString();
@@ -48,19 +48,20 @@ export function CreditIndicator() {
       {/* Balance + CTA */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-baseline gap-1 min-w-0 flex-1">
-          <span className={`${balanceSizeClass} font-semibold tracking-tight text-sidebar-foreground whitespace-nowrap`}>{balance.toLocaleString()}</span>
-          <span className="text-[11px] text-sidebar-foreground/50 shrink-0">
+          <span className={`${balanceSizeClass} font-semibold tracking-tight text-sidebar-foreground whitespace-nowrap tabular-nums leading-none`}>{balance.toLocaleString()}</span>
+          <span className="text-[11px] text-sidebar-foreground/50 shrink-0 tabular-nums truncate">
             / {isInfinite ? '∞' : formatMax(monthlyCredits)}
           </span>
         </div>
         <button
           onClick={handleCta}
-          className="relative overflow-hidden shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold bg-white text-[hsl(var(--sidebar-background))] hover:brightness-105 transition-[filter] shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]"
+          className="relative overflow-hidden shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold bg-white text-[hsl(var(--sidebar-background))] hover:brightness-105 transition-[filter] shadow-[0_2px_8px_-2px_hsl(0_0%_0%/0.4)]"
         >
           <span className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent)] bg-[length:200%_100%] animate-shimmer mix-blend-overlay pointer-events-none" />
           <span className="relative">{ctaLabel}</span>
         </button>
       </div>
+
 
       {/* Progress bar */}
       <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
