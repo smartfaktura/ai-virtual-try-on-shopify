@@ -4,12 +4,15 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const ELIGIBLE_PLANS = new Set(['growth', 'pro', 'enterprise']);
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  thumbnails?: string[];
 }
 
 const FEATURES = [
@@ -18,7 +21,7 @@ const FEATURES = [
   'Reuse saved scenes across all future generations',
 ];
 
-export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
+export function BrandScenesInfoModal({ open, onOpenChange, thumbnails = [] }: Props) {
   const navigate = useNavigate();
   const { plan, openBuyModal } = useCredits();
   const canCreate = ELIGIBLE_PLANS.has(plan);
@@ -34,21 +37,39 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm w-[calc(100%-2rem)] p-6 sm:p-7 rounded-3xl">
+      <DialogContent className="max-w-md sm:max-w-lg w-[calc(100%-2rem)] p-6 sm:p-8 rounded-3xl">
 
+        {/* Mini thumbnails */}
+        {thumbnails.length > 0 && (
+          <div className="flex items-center justify-center mt-4">
+            {thumbnails.slice(0, 3).map((url, i) => (
+              <div
+                key={i}
+                className={`w-12 h-14 rounded-xl overflow-hidden ring-2 ring-background bg-muted shadow-sm ${i > 0 ? '-ml-3' : ''}`}
+                style={{ transform: `rotate(${(i - 1) * 5}deg)`, zIndex: 3 - i }}
+              >
+                <ShimmerImage
+                  src={getOptimizedUrl(url, { quality: 60 })}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Eyebrow */}
-        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-5">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-5 text-center">
           Brand Scenes
         </p>
 
         {/* Title — bold app aesthetic */}
-        <DialogTitle className="text-2xl font-bold tracking-tight text-foreground mt-1.5">
+        <DialogTitle className="text-2xl font-bold tracking-tight text-foreground mt-1.5 text-center">
           Scenes that belong to your brand
         </DialogTitle>
 
         {/* Subtitle */}
-        <DialogDescription className="text-sm text-muted-foreground mt-2">
+        <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
           Custom AI scenes built from your references, reused across every shoot
         </DialogDescription>
 

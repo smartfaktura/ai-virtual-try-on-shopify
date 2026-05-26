@@ -50,15 +50,16 @@ export function BrandScenesPromoCard({ thumbnails = [] }: BrandScenesPromoCardPr
           </div>
           <Button
             onClick={() => setOpen(true)}
-            variant="secondary"
-            className="rounded-full text-sm font-semibold px-5 h-10 w-full sm:w-auto gap-1.5 shrink-0 group"
+            variant="outline"
+            className="rounded-full text-sm font-semibold px-5 h-10 w-full sm:w-auto gap-1.5 shrink-0 group bg-background text-foreground border-border hover:bg-background hover:text-foreground"
           >
             <span>Learn more</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
+
         </div>
       </div>
-      <BrandScenesInfoModal open={open} onOpenChange={setOpen} />
+      <BrandScenesInfoModal open={open} onOpenChange={setOpen} thumbnails={thumbnails} />
     </>
   );
 }
