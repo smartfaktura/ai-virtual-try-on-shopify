@@ -3691,6 +3691,16 @@ export function ProductImagesStep3Refine({
         });
       })()}
 
+      {/* Product specifications — optional, last card before additional note */}
+      <ProductSpecsCard
+        allProducts={allProducts}
+        selectedProductIds={selectedProductIds}
+        analyses={analyses}
+        productSpecs={details.productSpecs || {}}
+        onProductSpecsChange={(specs) => update({ productSpecs: specs })}
+        onCategoryOverride={onCategoryOverride}
+      />
+
       {/* ── ADDITIONAL NOTE ── */}
       <div className="space-y-3">
 
@@ -3709,9 +3719,17 @@ export function ProductImagesStep3Refine({
           </CardContent>
         </Card>
       </div>
+
+      {/* Free plan model limit toast — shots-style floating notification */}
+      {isFree && modelLimitHintAt != null && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in">
+          1 model on Free — upgrade for multi-model shoots
+        </div>
+      )}
     </div>
   );
 }
+
 
 export { RatioShape, MiniRatioChips, PropPickerModal, ASPECT_RATIOS, IMAGE_COUNT_OPTIONS };
 export default ProductImagesStep3Refine;
