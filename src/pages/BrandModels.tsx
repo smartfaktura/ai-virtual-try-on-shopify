@@ -1102,7 +1102,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         {/* Sticky pill footer */}
         <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
           <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
-            <div className="flex items-center justify-between gap-2 p-2.5 sm:p-4">
+            <div className="flex items-center gap-2 p-2 sm:p-4">
               <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
                 {currentStep === 2 && validationError ? (
                   isLowCreditsError ? (
@@ -1118,24 +1118,24 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
                   )
                 ) : ''}
               </span>
-              <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+              <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
                 {currentStep === 1 ? (
                   <>
-                    <Button variant="outline" size="pill" onClick={() => navigate('/app/models')}>
+                    <Button variant="outline" size="pill" onClick={() => navigate('/app/models')} className="flex-1 sm:flex-none">
                       Back
                     </Button>
                     <Button
                       size="pill"
                       disabled={!pendingMode}
                       onClick={handleNext}
-                      className={!pendingMode ? 'opacity-50 hover:opacity-50' : ''}
+                      className={`flex-1 sm:flex-none ${!pendingMode ? 'opacity-50 hover:opacity-50' : ''}`}
                     >
                       Next
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" size="pill" onClick={handleStepBack}>
+                    <Button variant="outline" size="pill" onClick={handleStepBack} className="flex-1 sm:flex-none">
                       Back
                     </Button>
                     <Button
@@ -1143,13 +1143,14 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
                       disabled={!canGenerate}
                       onClick={handleGenerate}
                       title={validationError || undefined}
-                      className={!canGenerate ? 'opacity-50 hover:opacity-50' : ''}
+                      className={`flex-1 sm:flex-none whitespace-nowrap ${!canGenerate ? 'opacity-50 hover:opacity-50' : ''}`}
                     >
                       {makePublic ? 'Generate · free' : 'Generate'}
                     </Button>
                   </>
                 )}
               </div>
+
             </div>
           </div>
         </div>
