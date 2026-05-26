@@ -60,7 +60,7 @@ function SceneThumbnail({ sceneId }: { sceneId: string }) {
         )}
       </div>
       {hovered && (
-        <div className="absolute z-50 left-0 top-full mt-1 w-[120px] h-[120px] rounded-lg bg-muted border border-border shadow-lg overflow-hidden">
+        <div className="absolute z-50 left-0 top-full mt-1 w-[120px] h-[120px] rounded-xl bg-muted border border-border shadow-lg overflow-hidden">
           {scene?.previewUrl ? (
             <img src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene?.title} className="w-full h-full object-cover" />
           ) : (
@@ -182,11 +182,11 @@ function BlockFields({ blockKey, details, update, sceneIds }: { blockKey: string
             <p className="text-[10px] text-muted-foreground">Upload a photo of your packaging so we match it accurately.</p>
             {details.packagingReferenceUrl ? (
               <div className="flex items-center gap-3">
-                <img src={details.packagingReferenceUrl} alt="Packaging ref" className="w-16 h-16 rounded-lg object-cover border border-border" />
+                <img src={details.packagingReferenceUrl} alt="Packaging ref" className="w-16 h-16 rounded-xl object-cover border border-border" />
                 <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => update({ packagingReferenceUrl: undefined })}>Remove</Button>
               </div>
             ) : (
-              <label className="flex items-center justify-center w-full h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-muted/30">
+              <label className="flex items-center justify-center w-full h-16 rounded-xl border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-muted/30">
                 <span className="text-xs text-muted-foreground">Click to upload</span>
                 <input type="file" accept="image/*" className="hidden" onChange={e => {
                   const file = e.target.files?.[0];
@@ -242,7 +242,7 @@ function ModelPickerSection({
   const hasModels = allModels.length > 0;
 
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+    <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
       <div className="flex items-center gap-2">
         <User className="w-3.5 h-3.5 text-primary" />
         <span className="text-xs font-semibold text-muted-foreground">Person / Model</span>
@@ -370,7 +370,7 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
             return (
               <Collapsible key={group.sceneId} open={isOpen} onOpenChange={() => toggleBlock(blockId)}>
                 <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/30 transition-colors cursor-pointer">
                     <div className="flex items-center gap-2 min-w-0">
                       <SceneThumbnail sceneId={group.sceneId} />
                       <span className="text-sm font-semibold truncate">"{group.sceneTitle}" options</span>
@@ -391,7 +391,7 @@ export function ProductImagesStep3Details({ selectedSceneIds, productCount, deta
                         const meta = BLOCK_LABELS[blockKey];
                         if (!meta) return null;
                         return (
-                          <div key={blockKey} className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+                          <div key={blockKey} className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
                             <span className="text-xs font-semibold text-muted-foreground">{meta.title}</span>
                             <BlockFields blockKey={blockKey} details={details} update={update} sceneIds={allSceneIds} />
                           </div>

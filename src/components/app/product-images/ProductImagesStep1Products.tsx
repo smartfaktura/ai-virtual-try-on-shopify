@@ -120,7 +120,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
             className="group flex flex-col rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors cursor-pointer overflow-hidden"
           >
             <div className="aspect-square flex flex-col items-center justify-center bg-muted/30">
-              <div className="flex flex-col items-center justify-center w-3/4 h-3/4 rounded-lg border-2 border-dashed border-muted-foreground/30 group-hover:border-primary/40 transition-colors">
+              <div className="flex flex-col items-center justify-center w-3/4 h-3/4 rounded-xl border-2 border-dashed border-muted-foreground/30 group-hover:border-primary/40 transition-colors">
                 <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
             </div>
