@@ -213,49 +213,48 @@ function Bucket({ title, rows }: { title: string; rows: Row[] }) {
 
 function ReferenceSummary({ answers }: { answers: BrandSceneAnswers }) {
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      {answers.reference_preview_url && (
-        <div className="aspect-[4/5] bg-muted">
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+      <div className="flex items-center gap-3">
+        {answers.reference_preview_url && (
           <img
             src={answers.reference_preview_url}
             alt={answers.name ?? "Reference"}
-            className="w-full h-full object-cover"
+            className="w-16 h-20 rounded-md object-cover bg-muted flex-shrink-0"
+            loading="lazy"
           />
-        </div>
-      )}
-      <div className="p-5 space-y-3">
-        <div>
+        )}
+        <div className="min-w-0 flex-1">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Scene name
           </div>
-          <div className="mt-1 text-base font-semibold tracking-tight">
+          <div className="mt-0.5 text-sm font-medium text-foreground/90 truncate">
             {answers.name || (
               <span className="text-muted-foreground">(missing)</span>
             )}
           </div>
         </div>
-        {answers.note && (
-          <div>
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Extra direction
-            </div>
-            <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
-              {answers.note}
-            </p>
-          </div>
-        )}
-        {answers.reference_outfit?.description && (
-          <div>
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Outfit direction
-              {answers.reference_outfit.edited_by_user ? " · edited" : " · AI"}
-            </div>
-            <p className="mt-1 text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
-              {answers.reference_outfit.description}
-            </p>
-          </div>
-        )}
       </div>
+      {answers.note && (
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Extra direction
+          </div>
+          <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
+            {answers.note}
+          </p>
+        </div>
+      )}
+      {answers.reference_outfit?.description && (
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Outfit direction
+            {answers.reference_outfit.edited_by_user ? " · edited" : " · AI"}
+          </div>
+          <p className="mt-1 text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
+            {answers.reference_outfit.description}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
