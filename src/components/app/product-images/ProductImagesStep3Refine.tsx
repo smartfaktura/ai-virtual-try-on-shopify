@@ -662,11 +662,10 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
       />
 
       {isFree && (
-        <div className="flex items-center justify-end gap-1.5 -mb-1">
-          <Sparkles className="w-3 h-3 text-primary" />
-          <span className="text-[10px] text-muted-foreground">Free plan: 1 background per generation</span>
+        <div className="flex items-center justify-end gap-2 -mb-1">
+          <span className="text-xs text-muted-foreground">Free plan: 1 background per generation</span>
           {onUpgradeClick && (
-            <button type="button" onClick={onUpgradeClick} className="text-[10px] text-primary font-medium hover:underline">Upgrade</button>
+            <button type="button" onClick={onUpgradeClick} className="text-xs text-primary font-medium hover:underline">Upgrade</button>
           )}
         </div>
       )}
@@ -2610,7 +2609,7 @@ export function ProductImagesStep3Refine({
                     <span className="text-sm font-semibold">Background style</span>
                     {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 0 && (
                       <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
-                        \u00d7{details.backgroundTone.split(',').filter(Boolean).length} selected
+                        ×{details.backgroundTone.split(',').filter(Boolean).length} selected
                       </Badge>
                     )}
                   </div>
@@ -2681,9 +2680,9 @@ export function ProductImagesStep3Refine({
                   onUpgradeClick={onUpgradeClick}
                 />
                 {isFree && bgLimitHintAt != null && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
-                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Free plan limit \u2014 1 background per generation.</span>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/40 border border-border text-xs animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Free plan limit — 1 background per generation</span>
                     {onUpgradeClick && (
                       <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
                     )}
