@@ -684,21 +684,12 @@ export default function ProductSwap() {
               </label>
             )}
 
-            {/* Aspect ratios (lives with scene) */}
+            {/* Detected ratio (read-only — strictly mirrors uploaded scene) */}
             {sceneUrl && (
-              <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">Aspect ratios</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Auto-matched to your source. Add more if you want extra crops.</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {ASPECT_RATIOS.map(r => (
-                    <button key={r} onClick={() => toggleRatio(r)}
-                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
-                        selectedRatios.has(r) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40'
-                      }`}>{r}</button>
-                  ))}
-                </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground animate-in fade-in slide-in-from-top-2 duration-200">
+                <span>Aspect ratio</span>
+                <Badge variant="secondary" className="h-5 text-[10px] font-medium">{detectedRatio}</Badge>
+                <span className="opacity-60">· matched to your scene</span>
               </div>
             )}
           </div>
