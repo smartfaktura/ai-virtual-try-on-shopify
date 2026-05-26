@@ -1224,7 +1224,7 @@ function StylingTab({
         </div>
       )}
 
-      <Section label="Note">
+      <Section label="Note · optional">
         <Textarea
           value={cast?.note ?? ""}
           maxLength={CAST_NOTE_MAX}
