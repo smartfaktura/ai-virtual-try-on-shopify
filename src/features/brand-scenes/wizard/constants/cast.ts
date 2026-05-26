@@ -51,8 +51,25 @@ export const CAST_INTERACTIONS = [
   { value: "using", label: "Using" },
   { value: "beside", label: "Placed beside" },
   { value: "hero", label: "Product only" },
+  // Food-native verbs — surfaced for food-drink only via interactionsForFamily.
+  { value: "pouring", label: "Pouring" },
+  { value: "plating", label: "Plating / serving" },
+  { value: "cutting", label: "Cutting / slicing" },
+  { value: "garnishing", label: "Garnishing" },
+  { value: "dipping", label: "Dipping" },
+  { value: "steaming", label: "Steaming / fresh out of oven" },
 ] as const;
 export type CastInteraction = (typeof CAST_INTERACTIONS)[number]["value"];
+
+/** Food-only interaction values — hidden from every non-food family. */
+const FOOD_ONLY_INTERACTIONS: ReadonlySet<CastInteraction> = new Set([
+  "pouring",
+  "plating",
+  "cutting",
+  "garnishing",
+  "dipping",
+  "steaming",
+]);
 
 export const CAST_ACTIONS = [
   { value: "standing", label: "Standing" },
