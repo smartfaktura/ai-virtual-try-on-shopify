@@ -490,7 +490,17 @@ export default function Workflows() {
       {/* ── Featured hero card ── */}
       {(() => {
         const featuredWorkflow = workflows.find(w => w.slug === 'product-images');
-        const otherWorkflows = workflows.filter(w => w.slug !== 'product-images');
+        const otherWorkflows = (() => {
+          const rest = workflows.filter(w => w.slug !== 'product-images');
+          const perspectives = rest.find(w => w.slug === 'picture-perspectives');
+          const flatlay = rest.find(w => w.slug === 'flat-lay-set');
+          const middle = rest.filter(w => w.slug !== 'picture-perspectives' && w.slug !== 'flat-lay-set');
+          return [
+            ...(perspectives ? [perspectives] : []),
+            ...middle,
+            ...(flatlay ? [flatlay] : []),
+          ];
+        })();
 
         return (
           <>

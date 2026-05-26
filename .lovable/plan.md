@@ -1,17 +1,32 @@
-## Minimalist source thumbnail in `/app/perspectives` generating view
+## Reorder Visual Type cards in `/app/workflows`
 
-Remove the pulsing ring/halo entirely. Just show a clean 64×64 rounded thumbnail of the source image — nothing else.
+In the "Explore More Visual Types" grid, two slugs need to move:
+
+- `picture-perspectives` ("Generate More Angles") → first card (just before "Selfie / UGC Visuals")
+- `flat-lay-set` ("Flatlay Visuals") → last card (before the Freestyle prompt card)
+
+All other cards keep their existing `sort_order` from the DB.
 
 ### Change
 
-In `src/pages/Perspectives.tsx` (header block, ~lines 551–568):
+`src/pages/Workflows.tsx` (~line 493): after computing `otherWorkflows`, derive a stable re-ordered array:
 
-- Drop the `animate-ping` halo span and the conditional `ring-2 ring-primary/30`.
-- Render a single static `64×64` rounded square: `rounded-2xl`, `border border-border`, `object-cover`.
-- Keep the fallback `Layers` icon tile unchanged for the no-source case.
+```ts
+const otherWorkflows = (() => {
+  const rest = workflows.filter(w => w.slug !== 'product-images');
+  const perspectives = rest.find(w => w.slug === 'picture-perspectives');
+  const flatlay = rest.find(w => w.slug === 'flat-lay-set');
+  const middle = rest.filter(w => w.slug !== 'picture-perspectives' && w.slug !== 'flat-lay-set');
+  return [
+    ...(perspectives ? [perspectives] : []),
+    ...middle,
+    ...(flatlay ? [flatlay] : []),
+  ];
+})();
+```
 
-The progress bar and "Creating More Angles…" copy already communicate that work is in progress — no extra animation on the thumbnail needed.
+No DB migration, no copy changes, no other components touched. Freestyle prompt card still renders last after the map, as today.
 
 ### Files touched
 
-- `src/pages/Perspectives.tsx` — one block, ~12 lines simplified.
+- `src/pages/Workflows.tsx` — replace the one-line `filter` with the sorted derivation.
