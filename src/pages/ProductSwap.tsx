@@ -862,7 +862,7 @@ export default function ProductSwap() {
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cost summary</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">Products</span><span className="text-foreground font-medium">{selectedProducts.length}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Ratios</span><span className="text-foreground font-medium">{selectedRatios.size}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Aspect ratio</span><span className="text-foreground font-medium">{detectedRatio}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Images</span><span className="text-foreground font-medium">{totalImages}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Cost per image</span><span className="text-foreground font-medium">{PER_IMAGE_COST} credits</span></div>
                 </div>
