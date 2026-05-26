@@ -228,8 +228,10 @@ export function Step4Cast({
       }
     } else {
       onCastChange({ extras: nextExtras });
+      onSubStepChange?.("essentials");
     }
   };
+
 
   // Headline missing flags for the dot indicators.
   const peopleVibeMissing = !cast?.vibe;
