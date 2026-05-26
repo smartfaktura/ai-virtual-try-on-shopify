@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { BrandSceneWizard as Wizard } from "@/features/brand-scenes/wizard/Brand
 
 export default function BrandSceneWizardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isRealAdmin, isLoading } = useIsAdmin();
   const { plan, isLoading: creditsLoading } = useCredits();
 
@@ -52,7 +53,7 @@ export default function BrandSceneWizardPage() {
             Brand Scenes
           </Button>
         </div>
-        <Wizard />
+        <Wizard key={location.key} />
       </div>
     </>
   );
