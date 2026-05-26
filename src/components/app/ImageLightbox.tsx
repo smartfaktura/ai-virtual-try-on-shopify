@@ -37,6 +37,8 @@ export function ImageLightbox({
   onDelete,
   onCopyPrompt,
   onShare,
+  onEdit,
+  onGenerateAngles,
   selectedIndices = new Set(),
   productName,
 }: ImageLightboxProps) {
