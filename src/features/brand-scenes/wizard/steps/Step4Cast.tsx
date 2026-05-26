@@ -456,7 +456,7 @@ export function Step4Cast({
           wardrobes={wardrobes}
           cast={cast}
           onCastChange={onCastChange}
-          
+          outfitVibeMissing={outfitVibeMissing}
         />
       )}
 
