@@ -1,20 +1,19 @@
-## Cleaner header on Product Images results step
+## Tighten upgrade-modal feature chips: "Custom Brand Models" / "Scenes" with NEW + clearer lock state
 
-On `/app/generate/product-images` the generic page header ("Create Product Visuals — Choose one or more products to start generating visuals") stays visible even after generation finishes, duplicating space above the real result headline ("Your visuals are ready").
+Three tweaks to the plan cards inside `src/components/app/UpgradePlanModal.tsx` (replacing the row added previously around line 357–369):
 
-### Change
+1. **Unify the chip set across all three plans.** Same two chips on Starter, Growth, Pro — only the styling changes by plan. No more long "Brand Models & Brand Scenes not included" sentence on Starter.
 
-**`src/pages/ProductImages.tsx` (line 1396):** wrap `PageHeader` in `{step !== 6 && (...)}` so it renders during the wizard but disappears on the results step. No new components, no copy edits, no behavior change.
+2. **Rename the chips** to make it clear this is the custom-brand feature (the built-in models stay available on every plan):
+   - `Custom Brand Models`
+   - `Custom Brand Scenes`
 
-**`src/components/app/product-images/ProductImagesStep6Results.tsx` (lines 106–114):** lift the results headline so it acts as the page header on this step:
-- Wrapper: change top-level `space-y-8` to keep, but switch the headline block from `text-center` to left-aligned and bump sizing.
-- `h2` → `text-2xl sm:text-3xl font-semibold tracking-tight` (matches `PageHeader` scale).
-- Remove the centered `CheckCircle` icon row; instead render headline left-aligned with the subtitle directly below: `{totalImages} image{...} generated successfully`.
-- Keep the small primary `CheckCircle` inline before the headline at `w-5 h-5` for a subtle success cue.
+3. **Add NEW marker + lock state:**
+   - Growth + Pro: chips in `bg-primary/10 text-primary` with a tiny `NEW` pill (`bg-primary text-primary-foreground text-[8px] px-1 rounded-sm ml-1`) appended inside each chip.
+   - Starter: same chips but rendered in a locked style — `bg-muted/60 text-muted-foreground/70` with a small `Lock` icon (`w-2.5 h-2.5`) before the label, no `NEW` pill. Conveys "feature exists, not in this tier" without a separate sentence.
 
-Result: results page opens with just the success headline + subtitle in the same slot the page title used to occupy — less stacked text, more clarity.
+Chip row keeps `flex flex-wrap gap-1 mt-1.5`. Markup stays compact (~12 lines, no new components, no copy elsewhere).
 
 ### Files
 
-- `src/pages/ProductImages.tsx`
-- `src/components/app/product-images/ProductImagesStep6Results.tsx`
+- `src/components/app/UpgradePlanModal.tsx` — replace the Starter `<p>…not included</p>` + Growth/Pro chip block with a single chip renderer that switches style by `p.planId`.
