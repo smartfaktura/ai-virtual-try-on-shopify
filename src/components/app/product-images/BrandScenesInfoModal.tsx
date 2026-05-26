@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Wand2, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 
 const ELIGIBLE_PLANS = new Set(['growth', 'pro', 'enterprise']);
