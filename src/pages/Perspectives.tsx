@@ -28,6 +28,7 @@ import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
+import { ImageLightbox } from '@/components/app/ImageLightbox';
 
 type UserProduct = Tables<'user_products'>;
 type SourceType = 'library' | 'product' | 'scratch';
@@ -118,6 +119,9 @@ export default function Perspectives() {
   const [isGeneratingView, setIsGeneratingView] = useState(false);
   const [generatingJobs, setGeneratingJobs] = useState<PerspectiveJobInfo[]>([]);
   const [jobStatuses, setJobStatuses] = useState<Record<string, { status: string; error?: string }>>({});
+  const [jobResults, setJobResults] = useState<Record<string, string>>({});
+  const [generatingSource, setGeneratingSource] = useState<{ imageUrl: string; title: string } | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [genElapsed, setGenElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
   const genStartRef = useRef<number>(0);
@@ -286,15 +290,18 @@ export default function Perspectives() {
       const idsFilter = jobIds.map(id => `"${id}"`).join(',');
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,error_message`,
+          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,error_message,result`,
           { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
         );
         if (!res.ok || pollVersionRef.current !== version) return;
         const rows = await res.json();
 
         const statuses: Record<string, { status: string; error?: string }> = {};
+        const results: Record<string, string> = {};
         for (const row of rows) {
           statuses[row.id] = { status: row.status, error: row.error_message || undefined };
+          const imgs = row?.result?.images;
+          if (Array.isArray(imgs) && imgs[0]) results[row.id] = imgs[0];
         }
         // Fill missing as queued
         for (const id of jobIds) {
@@ -303,6 +310,9 @@ export default function Perspectives() {
 
         if (pollVersionRef.current !== version) return;
         setJobStatuses(statuses);
+        if (Object.keys(results).length > 0) {
+          setJobResults(prev => ({ ...prev, ...results }));
+        }
 
         const allDone = jobIds.every(id => {
           const s = statuses[id]?.status;
@@ -484,8 +494,11 @@ export default function Perspectives() {
       if (result.newBalance !== null) {
         setBalanceFromServer(result.newBalance);
       }
+      const firstSource = selectedSources[0];
+      setGeneratingSource(firstSource ? { imageUrl: firstSource.image_url, title: firstSource.title } : null);
       setGeneratingJobs(result.jobs);
       setJobStatuses(Object.fromEntries(result.jobs.map(j => [j.jobId, { status: 'queued' }])));
+      setJobResults({});
       genStartRef.current = Date.now();
       setGenElapsed(0);
       setTeamIndex(0);
@@ -520,102 +533,131 @@ export default function Perspectives() {
 
   // ── Generating progress view ──────────────────────────────────────────
   if (isGeneratingView) {
+    // Ordered list of completed result URLs paired with their job labels
+    const resultEntries = generatingJobs
+      .map(job => ({ job, url: jobResults[job.jobId] }))
+      .filter(e => !!e.url) as Array<{ job: PerspectiveJobInfo; url: string }>;
+    const resultUrls = resultEntries.map(e => e.url);
+
     return (
       <div className="min-h-screen">
-        <SEOHead title="Generating More Angles…" description="Your product angles are being created." />
-        <div className="max-w-2xl mx-auto px-4 py-12 space-y-6">
+        <SEOHead
+          title={genAllDone && genCompletedCount > 0 ? 'Your new angles' : 'Generating More Angles…'}
+          description="Your product angles are being created."
+        />
+        <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-              <Layers className="w-7 h-7 text-primary animate-pulse" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground">Creating More Angles…</h1>
-            <p className="text-sm text-muted-foreground">
-              Generating {genTotalCount} angle{genTotalCount !== 1 ? 's' : ''}
-              {generatingJobs[0] ? ` of ${generatingJobs[0].productTitle}` : ''}
-            </p>
-          </div>
-
-          {/* Progress card */}
-          <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
-            {/* Progress bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {genCompletedCount} of {genTotalCount} complete
-                  {genFailedCount > 0 && <span className="text-destructive ml-1">({genFailedCount} failed)</span>}
-                </span>
-                <span className="font-mono text-muted-foreground">{formatTime(genElapsed)}</span>
+          <div className="text-center space-y-3">
+            {generatingSource?.imageUrl ? (
+              <div className="relative w-16 h-16 mx-auto rounded-2xl overflow-hidden border border-border bg-muted">
+                <img
+                  src={getOptimizedUrl(generatingSource.imageUrl, { quality: 70 })}
+                  alt={generatingSource.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow ring-2 ring-background">
+                  <Layers className={`w-3.5 h-3.5 text-primary-foreground ${!genAllDone ? 'animate-pulse' : ''}`} />
+                </div>
               </div>
-              <Progress
-                value={genAllDone ? 100 : Math.max(genProgressPercent, 5)}
-                className="h-2 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
-              />
-              <p className="text-xs text-muted-foreground">
-                Est. {formatTime(Math.round(estimatedTotal * 0.8))} – {formatTime(Math.round(estimatedTotal * 1.2))} total
-              </p>
-            </div>
-
-            {/* Per-variation chips */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Angles</p>
-              <div className="flex flex-wrap gap-2">
-                {generatingJobs.map(job => {
-                  const s = jobStatuses[job.jobId];
-                  const status = s?.status || 'queued';
-                  const Icon = VARIATION_ICONS[job.variationLabel] || ImageIcon;
-
-                  return (
-                    <div
-                      key={job.jobId}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all ${
-                        status === 'completed'
-                          ? 'border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400'
-                          : status === 'failed'
-                            ? 'border-destructive/30 bg-destructive/5 text-destructive'
-                            : status === 'processing'
-                              ? 'border-primary/30 bg-primary/5 text-primary'
-                              : 'border-border bg-muted/30 text-muted-foreground'
-                      }`}
-                    >
-                      {status === 'completed' ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : status === 'failed' ? (
-                        <XCircle className="w-4 h-4" />
-                      ) : status === 'processing' ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Clock className="w-4 h-4" />
-                      )}
-                      <Icon className="w-3.5 h-3.5" />
-                      <span className="font-medium">{job.variationLabel}</span>
-                      {job.ratio !== '1:1' && (
-                        <span className="text-xs opacity-60">{job.ratio}</span>
-                      )}
-                    </div>
-                  );
-                })}
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                <Layers className="w-7 h-7 text-primary animate-pulse" />
               </div>
-            </div>
-
-            {/* Team avatar rotation */}
-            <div className="flex items-center gap-3 pt-2 border-t border-border">
-              <Avatar className="w-8 h-8 border border-border">
-                <AvatarImage src={getOptimizedUrl(currentMember.avatar, { quality: 60 })} alt={currentMember.name} />
-                <AvatarFallback className="text-xs">{currentMember.name[0]}</AvatarFallback>
-              </Avatar>
-              <p className="text-sm text-muted-foreground italic">
-                {currentMember.name} is {getStableStatusMessage(currentMember, teamIndex).toLowerCase()}
-              </p>
-            </div>
-
-            {/* Overtime message */}
-            {genElapsed > estimatedTotal && !genAllDone && (
-              <p className="text-xs text-muted-foreground text-center">
-                Taking a bit longer than usual — high-quality Pro model results are worth the wait…
-              </p>
             )}
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold text-foreground">
+                {genAllDone && genCompletedCount > 0 ? 'Your new angles' : 'Creating More Angles…'}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {genAllDone && genCompletedCount > 0
+                  ? `${genCompletedCount} angle${genCompletedCount !== 1 ? 's' : ''} ready${generatingSource ? ` from ${generatingSource.title}` : ''}`
+                  : `Generating ${genTotalCount} angle${genTotalCount !== 1 ? 's' : ''}${generatingSource ? ` from ${generatingSource.title}` : ''}`}
+              </p>
+            </div>
           </div>
+
+          {/* Progress card (hidden once complete) */}
+          {!genAllDone && (
+            <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
+              {/* Progress bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {genCompletedCount} of {genTotalCount} complete
+                    {genFailedCount > 0 && <span className="text-destructive ml-1">({genFailedCount} failed)</span>}
+                  </span>
+                  <span className="font-mono text-muted-foreground">{formatTime(genElapsed)}</span>
+                </div>
+                <Progress
+                  value={Math.max(genProgressPercent, 5)}
+                  className="h-2 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Est. {formatTime(Math.round(estimatedTotal * 0.8))} – {formatTime(Math.round(estimatedTotal * 1.2))} total
+                </p>
+              </div>
+
+              {/* Per-variation chips */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Angles</p>
+                <div className="flex flex-wrap gap-2">
+                  {generatingJobs.map(job => {
+                    const s = jobStatuses[job.jobId];
+                    const status = s?.status || 'queued';
+                    const Icon = VARIATION_ICONS[job.variationLabel] || ImageIcon;
+
+                    return (
+                      <div
+                        key={job.jobId}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all ${
+                          status === 'completed'
+                            ? 'border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400'
+                            : status === 'failed'
+                              ? 'border-destructive/30 bg-destructive/5 text-destructive'
+                              : status === 'processing'
+                                ? 'border-primary/30 bg-primary/5 text-primary'
+                                : 'border-border bg-muted/30 text-muted-foreground'
+                        }`}
+                      >
+                        {status === 'completed' ? (
+                          <CheckCircle className="w-4 h-4" />
+                        ) : status === 'failed' ? (
+                          <XCircle className="w-4 h-4" />
+                        ) : status === 'processing' ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Clock className="w-4 h-4" />
+                        )}
+                        <Icon className="w-3.5 h-3.5" />
+                        <span className="font-medium">{job.variationLabel}</span>
+                        {job.ratio !== '1:1' && (
+                          <span className="text-xs opacity-60">{job.ratio}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Team avatar rotation */}
+              <div className="flex items-center gap-3 pt-2 border-t border-border">
+                <Avatar className="w-8 h-8 border border-border">
+                  <AvatarImage src={getOptimizedUrl(currentMember.avatar, { quality: 60 })} alt={currentMember.name} />
+                  <AvatarFallback className="text-xs">{currentMember.name[0]}</AvatarFallback>
+                </Avatar>
+                <p className="text-sm text-muted-foreground italic">
+                  {currentMember.name} is {getStableStatusMessage(currentMember, teamIndex).toLowerCase()}
+                </p>
+              </div>
+
+              {/* Overtime message */}
+              {genElapsed > estimatedTotal && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Taking a bit longer than usual — high-quality Pro model results are worth the wait…
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Cancel button */}
           {!genAllDone && (
@@ -635,9 +677,47 @@ export default function Perspectives() {
             </div>
           )}
 
-          {/* All done — manual nav */}
+          {/* All done — results grid */}
           {genAllDone && genCompletedCount > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {resultUrls.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {resultEntries.map((entry, idx) => {
+                    const Icon = VARIATION_ICONS[entry.job.variationLabel] || ImageIcon;
+                    return (
+                      <button
+                        key={entry.job.jobId}
+                        type="button"
+                        onClick={() => setLightboxIndex(idx)}
+                        className="group relative rounded-xl overflow-hidden border border-border bg-muted text-left transition-all hover:border-primary/50 hover:shadow-md"
+                      >
+                        <div className="aspect-square overflow-hidden">
+                          <img
+                            src={getOptimizedUrl(entry.url, { quality: 75 })}
+                            alt={entry.job.variationLabel}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 flex items-center gap-1.5 text-xs text-white">
+                          <Icon className="w-3.5 h-3.5" />
+                          <span className="font-medium truncate">{entry.job.variationLabel}</span>
+                          {entry.job.ratio !== '1:1' && (
+                            <span className="opacity-70 ml-auto">{entry.job.ratio}</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {genFailedCount > 0 && (
+                <p className="text-xs text-center text-muted-foreground">
+                  {genFailedCount} angle{genFailedCount !== 1 ? 's' : ''} failed and credits were refunded
+                </p>
+              )}
+
               <ContextualFeedbackCard
                 workflow="perspectives"
                 questionText="Are these angles useful for your product?"
@@ -647,15 +727,29 @@ export default function Perspectives() {
                 resultId={generatingJobs[0]?.jobId}
                 triggerType="result_ready"
               />
-              <div className="text-center">
+
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button
                   size="pill"
+                  onClick={() => {
+                    setIsGeneratingView(false);
+                    setGeneratingJobs([]);
+                    setJobStatuses({});
+                    setJobResults({});
+                    setGeneratingSource(null);
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate more
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setIsGeneratingView(false);
                     navigate('/app/library');
                   }}
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
                   View in Library
                 </Button>
               </div>
@@ -672,6 +766,40 @@ export default function Perspectives() {
             </div>
           )}
         </div>
+
+        {/* Lightbox for results */}
+        {lightboxIndex !== null && resultUrls.length > 0 && (
+          <ImageLightbox
+            images={resultUrls}
+            currentIndex={lightboxIndex}
+            open={lightboxIndex !== null}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={setLightboxIndex}
+            onDownload={(idx) => {
+              const url = resultUrls[idx];
+              if (!url) return;
+              const a = document.createElement('a');
+              a.href = url.includes('?') ? `${url}&download=` : `${url}?download=`;
+              a.download = '';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+            }}
+            onEdit={(idx) => {
+              const url = resultUrls[idx];
+              if (!url) return;
+              setLightboxIndex(null);
+              navigate(`/app/freestyle?editImage=${encodeURIComponent(url)}&imageRole=edit`);
+            }}
+            onGenerateAngles={(idx) => {
+              const url = resultUrls[idx];
+              if (!url) return;
+              setLightboxIndex(null);
+              navigate(`/app/perspectives?source=${encodeURIComponent(url)}`);
+            }}
+            productName={generatingSource?.title}
+          />
+        )}
       </div>
     );
   }
