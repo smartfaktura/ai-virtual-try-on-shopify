@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search, Upload, X, Sparkles, Replace, ArrowLeft, Image as ImageLucide,
-  Check, Loader2, Package, Info, ClipboardPaste, CheckCircle, XCircle, Clock,
+  Check, Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
+  ChevronRight, ChevronLeft, Pencil,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,6 +63,9 @@ export default function ProductSwap() {
   // ── Ratios ────────────────────────────────────────────────────────────
   const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['4:5']));
 
+  // ── Wizard step ───────────────────────────────────────────────────────
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+
   // ── Generation view state ─────────────────────────────────────────────
   const [isGeneratingView, setIsGeneratingView] = useState(false);
   const [generatingJobs, setGeneratingJobs] = useState<SwapJobInfo[]>([]);
@@ -73,6 +77,34 @@ export default function ProductSwap() {
   const genStartRef = useRef(0);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollVersionRef = useRef(0);
+
+  // ── SessionStorage persistence (survives Vite HMR reloads) ────────────
+  const STORAGE_KEY = 'product-swap-wizard';
+  const didHydrateRef = useRef(false);
+  useEffect(() => {
+    if (didHydrateRef.current) return;
+    didHydrateRef.current = true;
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || 'library'); }
+      if (Array.isArray(s.selectedProductIds)) setSelectedProductIds(new Set(s.selectedProductIds));
+      if (Array.isArray(s.selectedRatios) && s.selectedRatios.length) setSelectedRatios(new Set(s.selectedRatios));
+      if (s.currentStep === 1 || s.currentStep === 2 || s.currentStep === 3) setCurrentStep(s.currentStep);
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    if (!didHydrateRef.current) return;
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        sceneUrl, sceneTitle, sceneSource,
+        selectedProductIds: Array.from(selectedProductIds),
+        selectedRatios: Array.from(selectedRatios),
+        currentStep,
+      }));
+    } catch { /* ignore */ }
+  }, [sceneUrl, sceneTitle, sceneSource, selectedProductIds, selectedRatios, currentStep]);
 
   // ── Data ──────────────────────────────────────────────────────────────
   const { data: products = [] } = useQuery({
@@ -264,6 +296,7 @@ export default function ProductSwap() {
       setGenElapsed(0);
       setTeamIndex(0);
       setIsGeneratingView(true);
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
       startPolling(result.jobs);
     }
   };
@@ -390,9 +423,12 @@ export default function ProductSwap() {
 
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button size="pill" onClick={() => {
+                  // Keep scene + ratios, drop product selection, jump to Step 2 for fast iteration
+                  setSelectedProductIds(new Set());
+                  setCurrentStep(2);
                   setIsGeneratingView(false); setGeneratingJobs([]); setJobStatuses({}); setJobResults({});
                 }}>
-                  <Sparkles className="w-4 h-4 mr-2" />Generate more
+                  <Sparkles className="w-4 h-4 mr-2" />Swap more products
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => { setIsGeneratingView(false); navigate('/app/library'); }}>
                   View in Library
@@ -440,250 +476,495 @@ export default function ProductSwap() {
     );
   }
 
+  // ── Auto-detect closest ratio when scene changes ──────────────────────
+  useEffect(() => {
+    if (!sceneUrl) return;
+    const img = new Image();
+    img.onload = () => {
+      const r = img.naturalWidth / img.naturalHeight;
+      const ratioMap: Record<typeof ASPECT_RATIOS[number], number> = { '1:1': 1, '3:4': 3/4, '4:5': 4/5, '9:16': 9/16 };
+      let best: typeof ASPECT_RATIOS[number] = '4:5';
+      let bestDiff = Infinity;
+      for (const [k, v] of Object.entries(ratioMap) as [typeof ASPECT_RATIOS[number], number][]) {
+        const diff = Math.abs(Math.log(r / v));
+        if (diff < bestDiff) { bestDiff = diff; best = k; }
+      }
+      setSelectedRatios(prev => prev.size > 0 ? prev : new Set([best]));
+      // If user only has the default 4:5 selected, swap to detected
+      setSelectedRatios(prev => (prev.size === 1 && prev.has('4:5') && best !== '4:5') ? new Set([best]) : prev);
+    };
+    img.src = sceneUrl;
+  }, [sceneUrl]);
+
+  // ── Step guards ───────────────────────────────────────────────────────
+  const canAdvanceFrom1 = !!sceneUrl && selectedRatios.size > 0;
+  const canAdvanceFrom2 = selectedProductIds.size > 0;
+  const goToStep = (s: 1 | 2 | 3) => {
+    if (s === 2 && !canAdvanceFrom1) return;
+    if (s === 3 && (!canAdvanceFrom1 || !canAdvanceFrom2)) return;
+    setCurrentStep(s);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
+  const creditsShort = Math.max(0, totalCost - credits);
+
+  const stepDefs = [
+    { n: 1 as const, label: 'Scene', done: canAdvanceFrom1 },
+    { n: 2 as const, label: 'Products', done: canAdvanceFrom2 },
+    { n: 3 as const, label: 'Review', done: false },
+  ];
+
   // ── Setup view ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-28">
       <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
 
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-6">
         {/* Header */}
-        <div className="space-y-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/app/workflows')} className="gap-1.5 -ml-2 mb-1">
+        <div className="space-y-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/app/workflows')} className="gap-1.5 -ml-2">
             <ArrowLeft className="w-4 h-4" />Visual Studio
           </Button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <Replace className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Product Swap</h1>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
               <p className="text-sm text-muted-foreground">
                 Keep the exact scene — camera, lighting, background — and only swap in a different product
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Step 1: Scene */}
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">1</span>
-            Choose the scene to keep
-          </h2>
-
-          {/* Source toggle */}
-          <div className="grid grid-cols-2 gap-3">
-            {([
-              { id: 'library', title: 'From Library', description: 'Pick a previous generation', icon: ImageLucide },
-              { id: 'scratch', title: 'Upload Image', description: 'Use any image as the scene', icon: Upload },
-            ] as const).map(opt => (
-              <button key={opt.id} type="button"
-                onClick={() => { setSceneSource(opt.id); setSceneUrl(null); setSceneTitle(''); }}
-                className={`p-4 rounded-xl border-2 transition-all text-left cursor-pointer ${
-                  sceneSource === opt.id ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-primary/50 hover:bg-muted'
-                }`}>
-                <div className="space-y-2">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    sceneSource === opt.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                  }`}>
-                    <opt.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">{opt.title}</p>
-                    <p className="text-xs text-muted-foreground">{opt.description}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Selected scene preview */}
-          {sceneUrl && (
-            <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
-              <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">Scene ready ✓</p>
-                <p className="text-xs text-muted-foreground truncate">{sceneTitle}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => { setSceneUrl(null); setSceneTitle(''); }}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
-          {/* Library picker */}
-          {sceneSource === 'library' && !sceneUrl && (
-            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search generated images..." value={librarySearch}
-                  onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(30); }} className="pl-9" />
-              </div>
-              {libraryLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
-                  {filteredLibrary.slice(0, libraryVisibleCount).map(item => (
-                    <div key={item.id} onClick={() => pickLibrary(item)}
-                      className="relative rounded-xl border-2 p-1.5 cursor-pointer transition-all border-border hover:border-primary/50">
-                      <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                        <img src={getOptimizedUrl(item.imageUrl, { quality: 60 })} alt={item.title} className="w-full h-full object-cover" />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground truncate mt-1 px-0.5">{item.title}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {!libraryLoading && filteredLibrary.length > libraryVisibleCount && (
-                <div className="text-center pt-2">
-                  <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 30)}>
-                    Load more ({filteredLibrary.length - libraryVisibleCount} remaining)
-                  </Button>
-                </div>
-              )}
-              {!libraryLoading && filteredLibrary.length === 0 && (
-                <p className="text-center text-muted-foreground py-4 text-sm">
-                  No generated images found yet.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Scratch upload */}
-          {sceneSource === 'scratch' && !sceneUrl && (
-            <label
-              onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file?.type.startsWith('image/')) handleSceneFile(file); }}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
-              {isUploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : (
-                <>
-                  <Upload className="w-8 h-8 text-muted-foreground" />
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground">Upload the scene image</p>
-                    <p className="text-xs text-muted-foreground">Drag & drop, paste, or click to browse</p>
-                    <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60 mt-1.5">
-                      <ClipboardPaste className="w-3 h-3" />⌘V / Ctrl+V to paste from clipboard
-                    </p>
-                  </div>
-                </>
-              )}
-              <input type="file" accept="image/*" className="hidden" disabled={isUploading}
-                onChange={(e) => { const file = e.target.files?.[0]; if (file) handleSceneFile(file); }} />
-            </label>
-          )}
-        </section>
-
-        {/* Step 2: Products */}
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">2</span>
-            Choose products to swap in
-          </h2>
-
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
-            <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              Each selected product becomes its own image, placed into the exact same scene above. The <span className="font-medium text-foreground">primary product image</span> is used as the visual reference.
-            </p>
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search products..." value={productSearch}
-              onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(12); }} className="pl-9" />
-          </div>
-          <div className="flex gap-2 items-center">
-            <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
-              {selectedProductIds.size} selected
-            </Badge>
-            <span className="text-xs text-muted-foreground">(max 10)</span>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
-            {filteredProducts.slice(0, productVisibleCount).map(product => {
-              const isSelected = selectedProductIds.has(product.id);
+          {/* Stepper */}
+          <div className="flex items-center gap-2 sm:gap-3 pt-2">
+            {stepDefs.map((s, idx) => {
+              const isActive = currentStep === s.n;
+              const isComplete = s.done && currentStep > s.n;
+              const isClickable = s.n < currentStep || (s.n === 2 && canAdvanceFrom1) || (s.n === 3 && canAdvanceFrom1 && canAdvanceFrom2);
               return (
-                <div key={product.id} onClick={() => toggleProduct(product.id)}
-                  className={`relative rounded-xl border-2 p-1.5 cursor-pointer transition-all ${
-                    isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                  }`}>
-                  <div className="absolute top-1.5 left-1.5 z-10 bg-background/90 rounded shadow-sm p-0.5">
-                    <Checkbox checked={isSelected} onCheckedChange={() => toggleProduct(product.id)} />
-                  </div>
-                  <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                    {product.image_url ? (
-                      <img src={getOptimizedUrl(product.image_url, { quality: 60 })} alt={product.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
-                    )}
-                  </div>
-                  <p className="text-[10px] font-medium truncate mt-1">{product.title}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{product.product_type}</p>
+                <div key={s.n} className="flex items-center gap-2 sm:gap-3 flex-1">
+                  <button
+                    type="button"
+                    disabled={!isClickable}
+                    onClick={() => goToStep(s.n)}
+                    className={`flex items-center gap-2 min-w-0 transition-opacity ${isClickable ? 'cursor-pointer hover:opacity-80' : 'cursor-default opacity-60'}`}
+                  >
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
+                      isActive ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                      : isComplete ? 'bg-primary/15 text-primary border border-primary/30'
+                      : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {isComplete ? <Check className="w-3.5 h-3.5" /> : s.n}
+                    </span>
+                    <span className={`text-sm font-medium truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {s.label}
+                    </span>
+                  </button>
+                  {idx < stepDefs.length - 1 && (
+                    <div className={`h-px flex-1 min-w-[12px] ${currentStep > s.n ? 'bg-primary/40' : 'bg-border'}`} />
+                  )}
                 </div>
               );
             })}
           </div>
-          {filteredProducts.length > productVisibleCount && (
-            <div className="text-center pt-2">
-              <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 12)}>
-                Load more ({filteredProducts.length - productVisibleCount} remaining)
-              </Button>
-            </div>
-          )}
-          {filteredProducts.length === 0 && (
-            <p className="text-center text-muted-foreground py-4 text-sm">
-              No products found. <button className="text-primary underline" onClick={() => navigate('/app/products/new')}>Add one</button>
-            </p>
-          )}
-        </section>
-
-        {/* Step 3: Ratios */}
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">3</span>
-            Aspect ratios
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {ASPECT_RATIOS.map(r => (
-              <button key={r} onClick={() => toggleRatio(r)}
-                className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
-                  selectedRatios.has(r) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40'
-                }`}>{r}</button>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            For maximum scene fidelity, pick the ratio closest to your source scene.
-          </p>
-        </section>
-
-        {/* Quality note */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
-          <Sparkles className="w-4 h-4 text-primary shrink-0" />
-          <p className="text-xs text-muted-foreground">
-            Every swap runs on <span className="font-semibold text-foreground">High Quality</span> ({PER_IMAGE_COST} credits/image) so the scene composition holds tight.
-          </p>
         </div>
 
-        {/* Generate bar */}
-        <div className="sticky bottom-2 sm:bottom-4 z-50 max-w-3xl mx-auto">
-          <div className="bg-background/95 backdrop-blur-xl border border-border rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-            <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4">
-              <div className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">{totalImages}</span> images ·{' '}
-                <span className="font-semibold text-foreground">{totalCost}</span> credits
-              </div>
-              {selectedProductIds.size > 0 && (
-                <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
-                  {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} × {selectedRatios.size} ratio{selectedRatios.size !== 1 ? 's' : ''}
-                </Badge>
-              )}
+        {/* ═══════════ STEP 1: SCENE ═══════════ */}
+        {currentStep === 1 && (
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Choose the scene to keep</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Pick from your library or upload any image</p>
             </div>
-            <Button size="pill" onClick={handleGenerate} disabled={!canGenerate || totalCost > credits} className="shadow-lg shadow-primary/10 w-full sm:w-auto">
-              {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate {totalImages} image{totalImages !== 1 ? 's' : ''}</>}
-            </Button>
+
+            {/* Selected scene preview */}
+            {sceneUrl && (
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
+                <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">Scene ready</p>
+                  <p className="text-xs text-muted-foreground truncate">{sceneTitle}</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => { setSceneUrl(null); setSceneTitle(''); }}>
+                  <X className="w-4 h-4 mr-1" />Change
+                </Button>
+              </div>
+            )}
+
+            {/* Source toggle */}
+            {!sceneUrl && (
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { id: 'library', title: 'From Library', description: 'Pick a previous generation', icon: ImageLucide },
+                  { id: 'scratch', title: 'Upload Image', description: 'Use any image as the scene', icon: Upload },
+                ] as const).map(opt => (
+                  <button key={opt.id} type="button"
+                    onClick={() => { setSceneSource(opt.id); setSceneUrl(null); setSceneTitle(''); }}
+                    className={`p-4 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                      sceneSource === opt.id ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-primary/50 hover:bg-muted'
+                    }`}>
+                    <div className="space-y-2">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        sceneSource === opt.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        <opt.icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{opt.title}</p>
+                        <p className="text-xs text-muted-foreground">{opt.description}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Library picker */}
+            {sceneSource === 'library' && !sceneUrl && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input placeholder="Search generated images..." value={librarySearch}
+                    onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(30); }} className="pl-9" />
+                </div>
+                {libraryLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+                    {filteredLibrary.slice(0, libraryVisibleCount).map(item => (
+                      <div key={item.id} onClick={() => pickLibrary(item)}
+                        className="relative rounded-xl border-2 p-1.5 cursor-pointer transition-all border-border hover:border-primary/50">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                          <img src={getOptimizedUrl(item.imageUrl, { quality: 60 })} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground truncate mt-1 px-0.5">{item.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!libraryLoading && filteredLibrary.length > libraryVisibleCount && (
+                  <div className="text-center pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 30)}>
+                      Load more ({filteredLibrary.length - libraryVisibleCount} remaining)
+                    </Button>
+                  </div>
+                )}
+                {!libraryLoading && filteredLibrary.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4 text-sm">
+                    No generated images found yet
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Scratch upload */}
+            {sceneSource === 'scratch' && !sceneUrl && (
+              <label
+                onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file?.type.startsWith('image/')) handleSceneFile(file); }}
+                onDragOver={(e) => e.preventDefault()}
+                className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                {isUploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : (
+                  <>
+                    <Upload className="w-8 h-8 text-muted-foreground" />
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-foreground">Upload the scene image</p>
+                      <p className="text-xs text-muted-foreground">Drag & drop, paste, or click to browse</p>
+                      <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60 mt-1.5">
+                        <ClipboardPaste className="w-3 h-3" />⌘V / Ctrl+V to paste from clipboard
+                      </p>
+                    </div>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="hidden" disabled={isUploading}
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleSceneFile(file); }} />
+              </label>
+            )}
+
+            {/* Aspect ratios (lives with scene) */}
+            {sceneUrl && (
+              <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Aspect ratios</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Auto-matched to your source. Add more if you want extra crops.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {ASPECT_RATIOS.map(r => (
+                    <button key={r} onClick={() => toggleRatio(r)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                        selectedRatios.has(r) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40'
+                      }`}>{r}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          {isGenerating && progress > 0 && <Progress value={progress} className="mt-2 h-1.5 rounded-full" />}
+        )}
+
+        {/* ═══════════ STEP 2: PRODUCTS ═══════════ */}
+        {currentStep === 2 && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Each product becomes its own image in the same scene. Max 10.</p>
+            </div>
+
+            <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Search products..." value={productSearch}
+                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(12); }} className="pl-9" />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
+                  {selectedProductIds.size} / 10 selected
+                </Badge>
+                {filteredProducts.length > 0 && selectedProductIds.size < 10 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => {
+                      const next = new Set(selectedProductIds);
+                      for (const p of filteredProducts.slice(0, productVisibleCount)) {
+                        if (next.size >= 10) break;
+                        next.add(p.id);
+                      }
+                      setSelectedProductIds(next);
+                    }}
+                  >
+                    Select visible
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+              {filteredProducts.slice(0, productVisibleCount).map(product => {
+                const isSelected = selectedProductIds.has(product.id);
+                return (
+                  <div key={product.id} onClick={() => toggleProduct(product.id)}
+                    className={`relative rounded-xl border-2 p-1.5 cursor-pointer transition-all ${
+                      isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                    }`}>
+                    <div className="absolute top-1.5 left-1.5 z-10 bg-background/90 rounded shadow-sm p-0.5">
+                      <Checkbox checked={isSelected} onCheckedChange={() => toggleProduct(product.id)} />
+                    </div>
+                    <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                      {product.image_url ? (
+                        <img src={getOptimizedUrl(product.image_url, { quality: 60 })} alt={product.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
+                      )}
+                    </div>
+                    <p className="text-[10px] font-medium truncate mt-1">{product.title}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{product.product_type}</p>
+                  </div>
+                );
+              })}
+            </div>
+            {filteredProducts.length > productVisibleCount && (
+              <div className="text-center pt-2">
+                <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 12)}>
+                  Load more ({filteredProducts.length - productVisibleCount} remaining)
+                </Button>
+              </div>
+            )}
+            {filteredProducts.length === 0 && (
+              <p className="text-center text-muted-foreground py-4 text-sm">
+                No products found. <button className="text-primary underline" onClick={() => navigate('/app/products/new')}>Add one</button>
+              </p>
+            )}
+
+            {/* Selected tray */}
+            {selectedProducts.length > 0 && (
+              <div className="sticky bottom-20 sm:bottom-24 z-20 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-t border-border">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Selected ({selectedProducts.length})</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {selectedProducts.map(p => (
+                    <div key={p.id} className="relative shrink-0 group">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary/40 bg-muted">
+                        {p.image_url ? (
+                          <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Package className="w-4 h-4" /></div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggleProduct(p.id)}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-background border border-border shadow-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors"
+                        aria-label={`Remove ${p.title}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════ STEP 3: REVIEW ═══════════ */}
+        {currentStep === 3 && (
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Review and generate</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Everything looks right? Hit generate. Credits are refunded on failure.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 md:gap-5 items-start">
+              {/* Left: summary */}
+              <div className="space-y-4">
+                {/* Scene card */}
+                <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Scene</h3>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => goToStep(1)}>
+                      <Pencil className="w-3 h-3 mr-1" />Edit
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {sceneUrl && (
+                      <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover border border-border" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Scene ready'}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {Array.from(selectedRatios).map(r => (
+                          <Badge key={r} variant="secondary" className="text-[10px] h-5">{r}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Products card */}
+                <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Products ({selectedProducts.length})</h3>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => goToStep(2)}>
+                      <Pencil className="w-3 h-3 mr-1" />Edit
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProducts.map(p => (
+                      <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-muted/50 border border-border">
+                        <div className="w-8 h-8 rounded overflow-hidden bg-muted shrink-0">
+                          {p.image_url ? (
+                            <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-muted-foreground" /></div>
+                          )}
+                        </div>
+                        <span className="text-xs font-medium text-foreground truncate max-w-[140px]">{p.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: cost summary */}
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4 md:sticky md:top-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cost summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Products</span><span className="text-foreground font-medium">{selectedProducts.length}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Ratios</span><span className="text-foreground font-medium">{selectedRatios.size}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Images</span><span className="text-foreground font-medium">{totalImages}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Cost per image</span><span className="text-foreground font-medium">{PER_IMAGE_COST} credits</span></div>
+                </div>
+                <div className="border-t border-border pt-3 space-y-2 text-sm">
+                  <div className="flex justify-between text-base">
+                    <span className="font-semibold text-foreground">Total</span>
+                    <span className="font-bold text-foreground">{totalCost} credits</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Your balance</span>
+                    <span className="text-muted-foreground">{credits} credits</span>
+                  </div>
+                  {totalCost <= credits ? (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">After generation</span>
+                      <span className="text-muted-foreground">{credits - totalCost} credits</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-xs text-destructive">
+                      <span>You need {creditsShort} more credit{creditsShort !== 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                </div>
+
+                {totalCost <= credits ? (
+                  <Button
+                    size="pill"
+                    onClick={handleGenerate}
+                    disabled={!canGenerate || isGenerating}
+                    className="w-full shadow-lg shadow-primary/10"
+                  >
+                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate {totalImages} image{totalImages !== 1 ? 's' : ''}</>}
+                  </Button>
+                ) : (
+                  <Button
+                    size="pill"
+                    onClick={() => setNoCreditsOpen(true)}
+                    className="w-full"
+                    variant="default"
+                  >
+                    Get more credits
+                  </Button>
+                )}
+                <p className="text-[11px] text-muted-foreground text-center">~{Math.round(totalImages * 8 / 60) || 1} min · Credits refunded if a generation fails</p>
+                {isGenerating && progress > 0 && <Progress value={progress} className="h-1.5 rounded-full" />}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════ PERSISTENT FOOTER ═══════════ */}
+      <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => currentStep === 1 ? navigate('/app/workflows') : goToStep((currentStep - 1) as 1 | 2)}
+            className="gap-1"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            {currentStep === 1 ? 'Exit' : 'Back'}
+          </Button>
+
+          <div className="hidden sm:flex flex-col items-center text-[11px] text-muted-foreground">
+            <span>Step {currentStep} of 3</span>
+            {currentStep === 1 && sceneUrl && <span className="text-foreground/70">{selectedRatios.size} ratio{selectedRatios.size !== 1 ? 's' : ''} selected</span>}
+            {currentStep === 2 && <span className="text-foreground/70">{selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} selected</span>}
+            {currentStep === 3 && <span className="text-foreground/70">{totalImages} image{totalImages !== 1 ? 's' : ''} · {totalCost} credits</span>}
+          </div>
+
+          {currentStep < 3 ? (
+            <Button
+              size="sm"
+              onClick={() => goToStep((currentStep + 1) as 2 | 3)}
+              disabled={(currentStep === 1 && !canAdvanceFrom1) || (currentStep === 2 && !canAdvanceFrom2)}
+              className="gap-1"
+            >
+              Continue
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
+              disabled={!canGenerate || isGenerating}
+              className="gap-1 shadow-md shadow-primary/10"
+            >
+              {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4" /> Generate · {totalCost} cr</>}
+            </Button>
+          )}
         </div>
       </div>
 

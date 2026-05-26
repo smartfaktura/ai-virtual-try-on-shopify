@@ -1,59 +1,100 @@
-# Product Swap Workflow
 
-A new workflow at `/app/product-swap` that lets users keep a reference scene exactly as-is and only replace the hero product with one or more products from their library.
+# Product Swap — 3-Step Wizard Redesign (v2)
 
-## User flow
+Convert the current long-scroll page into a true stepper: one step visible at a time, persistent progress header, persistent footer with Back / Continue / Generate.
+
+## Step structure
 
 ```text
-Step 1  Pick scene reference
-        ├── Upload image, OR
-        └── Select from Library
-Step 2  Pick one or many products from /app/products
-Step 3  Review + Generate
-Step 4  Results grid (reuses Product Images results)
+┌─────────────────────────────────────────────────────────┐
+│  ← Back to Visual Studio                                │
+│                                                         │
+│   ●━━━━━━━━━━○━━━━━━━━━━○                              │
+│   1 Scene    2 Products  3 Review                      │
+└─────────────────────────────────────────────────────────┘
 ```
 
-One job per selected product (fan-out via `enqueue_generation`). Output count = number of products picked.
+- One active step at a time, no long scroll.
+- Stepper chips clickable only for completed steps (no jumping ahead).
+- Smooth fade/slide between steps.
 
-## What gets built
+### Step 1 — Scene
+- Source toggle (Library / Upload) on top, picker below.
+- Once a scene is picked, a clear preview card with "Change scene" sits at the top of the step.
+- **Aspect ratios live HERE**, directly under the scene preview — because ratio is a property of the scene, not the review. Default selection = ratio closest to the source image's natural dimensions.
+- Continue disabled until scene + at least one ratio are set.
 
-**Frontend**
-- New page `src/pages/ProductSwap.tsx` — 3-step wizard
-- Thin hook `src/hooks/useProductSwap.ts` — handles upload, enqueue loop, polling
-- Route added in `src/App.tsx` at `/app/product-swap`
-- Sidebar entry under Visual Studio (alphabetically near Perspectives)
-- Reuses: `LibraryDetailModal` picker pattern, Product Images Step 2 product picker, `ProductImagesStep6Results` grid
+### Step 2 — Products
+- Sticky search + "X / 10 selected" chip at the top.
+- "Select all visible (up to 10)" quick action.
+- Horizontal **selected tray** pinned at the bottom of the step showing chosen product thumbs with a ✕ to deselect — no need to scroll back up.
+- Drop the redundant info box; replace with a single subtle helper line.
+- Continue disabled until ≥1 product selected.
 
-**Backend**
-- ~15 lines added to `supabase/functions/generate-freestyle/index.ts`: when `mode === 'product_swap'`, prepend a hardened directive:
-  - "Replicate the source image pixel-for-pixel: identical camera angle, focal length, framing, lighting, background, props, and composition."
-  - "Fully remove the original product. Replace with the provided product reference. No drift, no re-interpretation, no added elements."
-  - Lock aspect ratio to source image's ratio (detect from upload/library asset metadata)
-  - Force model to Gemini 3 Pro (only model that holds composition reliably)
+### Step 3 — Review & Generate
+Pure summary + cost. **No editable controls here** — every change goes back to its owning step via "Edit".
 
-**Database**
-- One workflow row insert (slug `product-swap`, sort order positioned to appear in `/app/workflows` grid)
-- One workflow preview tile image uploaded to `workflow-previews` bucket
+```text
+┌──────────────────────────┬──────────────────────────────┐
+│  Scene                   │  Cost summary                │
+│  [thumb] title           │  ──────────────────────────  │
+│  4:5 · 1:1     [Edit]    │  Products       3            │
+│                          │  Ratios         2            │
+│  Products (3)            │  Images         6            │
+│  [t][t][t]     [Edit]    │  Cost / image   6 credits    │
+│                          │  ──────────────────────────  │
+│                          │  Total          36 credits   │
+│                          │  Balance        128 credits  │
+│                          │  After          92 credits   │
+│                          │                              │
+│                          │  [ Generate 6 images ]       │
+│                          │  ~50s · refunded on failure  │
+└──────────────────────────┴──────────────────────────────┘
+```
 
-**Sync per memory rule**
-- Update `studio-chat` SYSTEM_PROMPT and `StudioChat` PAGE_CHIPS to include Product Swap as a Visual Type
+- No "High Quality" label — Product Swap is single-tier, calling it out is noise.
+- No ratio picker on this screen (it's on Step 1 with the scene).
+- If `totalCost > credits`: button swaps to "Get more credits" with inline "You need 12 more credits" message.
+- Free users with zero credits still get the existing `NoCreditsModal`.
+- Sub-line under CTA: estimated time + "Credits are refunded if a generation fails."
 
-## Cost / credits
+## Persistent footer (all steps)
 
-Same per-image cost as Perspectives / Freestyle (Gemini 3 Pro tier). Total credits = per-image × number of selected products. Standard `enqueue_generation` reservation + refund-on-fail flow.
+```text
+[ ← Back ]      Step 2 of 3 · 3 products selected      [ Continue → ]
+```
+
+- On Step 3, "Continue" becomes the primary "Generate N images · X credits" CTA.
+- Mobile: footer collapses into a single full-width sticky bar.
+
+## State & navigation
+
+- New `currentStep: 1 | 2 | 3` with `canAdvanceFrom(step)` guards.
+- Wizard state persists to `sessionStorage` (`product-swap-wizard`) so HMR reloads (the "random refresh" we discussed) don't wipe selections. Cleared on successful generate.
+- Browser Back inside the wizard goes to the previous step; on Step 1 it exits to Visual Studio.
+- Deep-link via `?scene=` still lands on Step 1 with the scene preselected. No `?step=` param (avoids back-button confusion).
+
+## Generating + Results view
+
+- Same polling, same team-member rotation, same lightbox.
+- Replace the tiny 16×16 scene chip with a 64×64 thumb + product-count badge so users instantly recognize the scene they swapped into.
+- "Swap more" button on the Done state returns to a fresh Step 2 with the **same scene + ratios** preserved, so iterating with new products takes 2 clicks.
 
 ## Out of scope
 
-- No new model integration
-- No new edge function (extends existing `generate-freestyle`)
-- No editing of the scene itself (that's already handled by Image Editing workflow)
+- No change to generation pipeline, edge function, model, or pricing.
+- No change to library/products data fetching.
+- No new design tokens — reuse existing card/border/primary/muted.
+
+## Technical sketch
+
+- Refactor `src/pages/ProductSwap.tsx`:
+  - Extract co-located `<Step1Scene />`, `<Step2Products />`, `<Step3Review />` components in the same file.
+  - Shared `<WizardHeader />` and `<WizardFooter />` shells.
+  - Tiny `useSessionStorageState('product-swap-wizard', …)` helper (~15 lines).
+- `useProductSwap` hook untouched.
+- Results view branch untouched except the small visual tweaks above.
 
 ## Effort
 
-~half a day end-to-end (wizard + edge tweak + DB row + sidebar/chat sync + QA).
-
-## Risks
-
-- **Composition drift** — Gemini 3 Pro is good but not perfect; some scenes (extreme close-ups, complex hands-holding-product shots) may still drift slightly. Mitigation: explicit directive + locked aspect ratio.
-- **Ghost product** — if original product isn't fully masked, traces can remain. Mitigation: explicit "fully remove" language in directive.
-- **Aspect ratio mismatch** — must read source image dimensions and pass exact ratio, not default 4:5.
+~1.5–2 hours: ~70% UI restructure, ~15% sessionStorage + step guards, ~15% QA across desktop + mobile.
