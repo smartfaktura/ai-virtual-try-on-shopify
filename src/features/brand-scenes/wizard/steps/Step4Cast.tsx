@@ -1186,7 +1186,7 @@ function StylingTab({
       {(showWardrobe || extraFields.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
           {showWardrobe && (
-            <Section label="Wardrobe color anchor">
+            <Section label="Wardrobe color anchor · optional">
               <div className="flex flex-wrap gap-x-2 gap-y-2.5">
                 {wardrobes.map((w) => (
                   <Chip
