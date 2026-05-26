@@ -1,14 +1,22 @@
-## Changes to `src/pages/ProductImages.tsx`
+## Edits to `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-**1. Hide "Select All" button when products < 5** (lines 1419-1447)
-The whole toolbar row currently shows whenever `userProducts.length > 0`. Change the outer guard from `> 0` to `>= 5` so the search input AND the Select All / Clear buttons all hide when there are fewer than 5 products (search and select-all aren't needed for a tiny grid that's fully visible).
+**1. Remove empty "double line / white space" on cards without background/accent (lines 269-298)**
+The footer currently renders a fixed `min-h-[44px]` wrapper with an always-present `h-4` inner row, even when neither `hasBackground` nor `hasAestheticColor` is true → produces an empty band beneath the title.
+Fix: only render the chips row when `hasBackground || hasAestheticColor`. Drop `min-h-[44px]` and the always-on `h-4` div; let the footer shrink to just the title when there's nothing else.
 
-The `selectedProductIds.size > 0` badge row right below (lines 1449-1454) remains, so users still see "N selected" + Clear via the badge area — actually Clear lives inside the toolbar. To preserve a way to clear selections, keep the small `Clear` button visible by moving it next to the selected badge (or leave selection clearing to per-card tap). Simpler: leave it — with <5 products, users can just tap to deselect. So the entire toolbar hides under 5.
+**2. Rename "Background" → "Custom Background", remove the Paintbrush icon (lines 272-280)**
+- Remove the `<Paintbrush ... />` icon before the label.
+- Change text from `Background` to `Custom Background`.
+- On mobile show only 1 swatch (the white one); hide the other 3 with `hidden sm:block` so the row fits in narrow cards.
 
-**2. Hide Free-plan banner when products < 2** (line 1639)
-Change condition from `isFree && userProducts.length > 0` to `isFree && userProducts.length >= 2`. With only 1 product there's nothing to batch-select anyway.
+**3. Rename "Accent Color Selected" → "Accent Color"; mobile shows 1 swatch only (lines 282-296)**
+- Change label to `Accent Color`.
+- Row already uses `justify-center` so it stays centered on mobile.
+- On mobile, show only the first suggested color (or first fallback swatch). Use `slice(0, isMobile ? 1 : 3)` via a `hidden sm:block` pattern on the 2nd & 3rd swatches so SSR/responsive stays CSS-driven.
 
-**3. Make Free-plan banner fully rounded** (line 1640)
-Change `rounded-2xl` → `rounded-full`, and adjust padding to `px-5 py-2.5` so the pill shape looks balanced.
+**4. Update legend copy + remove icon (lines 930-935)**
+- Remove the `<Paintbrush ... />` icon.
+- Change text from `Backgrounds shown are editable in the next step` to `Dynamic backgrounds — fully editable in the next step`.
+- Tighten styling: keep `text-[11px] text-muted-foreground/80 mb-2` (no flex needed without the icon).
 
-No logic/state changes.
+No logic changes. Pure presentation.
