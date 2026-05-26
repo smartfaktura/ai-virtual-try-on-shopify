@@ -1,34 +1,50 @@
 ## Goal
 
-Rework `ModelCard` in `/app/models` to use the same visual language as `SceneCard` in `/app/brand-scenes`: rounded-2xl card, taller 4:5 image with hover zoom, always-visible top-right delete pill, and a footer block with title + uppercase meta line + a single primary "Use in Visual Studio" pill button at the bottom — instead of today's hover-overlay CTA and tiny chips.
+On `/app/models/new` step 1, replace the auto-advance card click with a **select-then-Next** pattern matching brand-scenes — selection highlights the card via `WizardCard active`, and a sticky pill footer holds **Back** + **Next**. Also tighten the step 1 heading + subtitle copy.
 
-## Reference
+## Changes — `src/pages/BrandModels.tsx` (`layout === 'sections'` block, lines 932–1135)
 
-`SceneCard` in `src/pages/BrandScenes.tsx` (lines 195–264) — the target aesthetic.
+1. **Pending selection state** (inside the `if (layout === 'sections')` branch, before `chooserContent`):
+   ```ts
+   const [pendingMode, setPendingMode] = useState<'manual' | 'reference' | null>(null);
+   ```
+   *(Hoist with the other component-level state at the top of the component, not inside the branch — branches can't host hooks. Place it next to `creationMode`.)*
 
-## Changes — `src/pages/BrandModels.tsx` (`ModelCard`, lines 1155–1227)
+2. **Chooser cards become selectable, not auto-advancing**:
+   ```tsx
+   <WizardCard
+     active={pendingMode === 'manual'}
+     onClick={() => setPendingMode('manual')}
+     icon={<Wand2 className="w-5 h-5" />}
+     title="Start from scratch"
+     body="Pick gender, age, and look — we'll generate it"
+   />
+   <WizardCard
+     active={pendingMode === 'reference'}
+     onClick={() => setPendingMode('reference')}
+     icon={<UserCheck className="w-5 h-5" />}
+     title="Use a reference photo"
+     body="Upload a face — we'll build the model from it"
+   />
+   ```
 
-Rewrite the card markup; keep all rename + delete logic intact.
+3. **Shortened copy** (step 1 only):
+   - Title: `"Start your model"` (was `"How do you want to build this model?"`)
+   - Subtitle: `"From scratch or from a reference photo"` (was `"Pick a starting point"`)
+   - Step 2 copy unchanged.
 
-- Container: `<div className="group relative rounded-2xl overflow-hidden border border-border bg-card flex flex-col">` (drop shadcn `Card` wrapper to match brand-scenes exactly).
-- Image well: `<div className="relative aspect-[4/5] bg-muted overflow-hidden">` with `<img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />`. Aspect goes 3:4 → 4:5 to mirror scenes.
-- Delete button: always visible, top-right pill matching scenes — `absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-background transition-colors`, icon `Trash2 w-3.5 h-3.5`.
-- Remove the hover-only "Use in Visual Studio" overlay on the image.
-- Footer: `<div className="p-3.5 flex flex-col gap-3">`
-  - Title row preserves rename: `<div className="min-w-0 group/name flex items-center gap-1">` containing either the existing inline `<input>` (when `isEditing`) or `<h3 className="text-sm font-semibold tracking-tight truncate flex-1">{model.name}</h3>` + hover pencil button (`opacity-0 group-hover/name:opacity-100 ...`). The input keeps current styling but bumps to `text-sm`.
-  - Meta line directly under title: `<p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 truncate">` rendering `model.gender` and `model.ethnicity` joined with ` · ` (uppercased via CSS), falls back to `"BRAND MODEL"` when both are missing. Drop the existing chip pills.
-  - Primary CTA — full-width on mobile, auto-width left-aligned on ≥sm, matching scenes:
-    ```tsx
-    <Button asChild size="sm" className="rounded-full gap-1.5 h-8 px-3 text-xs w-full sm:w-auto sm:self-start">
-      <Link to={`/app/workflows?model=${model.id}`}>
-        <Wand2 className="w-3.5 h-3.5" />
-        Use in Visual Studio
-      </Link>
-    </Button>
-    ```
-- Imports: add `Wand2` to the lucide import (already imported elsewhere in file — verify and dedupe).
+4. **Sticky footer on BOTH steps** — change `{currentStep === 2 && (…)}` to always render. Footer content branches by step:
+   - **Step 1:** Back button routes to `/app/models` (use existing `navigate` from `useNavigate`, or call an `onCancel`-style prop if the wizard already takes one — check parent `BrandModelNew.tsx`). Primary button = **Next**, disabled until `pendingMode`. On click: `setCreationMode(pendingMode!)`. No validation/credits row on step 1.
+   - **Step 2:** Existing Back (`handleStepBack` — also clears `pendingMode`) + Generate behavior unchanged.
+
+5. **Bottom padding consistency**: change line 1080 to always use `pb-28 sm:pb-10` so step 1 has room for the now-present sticky footer.
+
+## Step 1 Back behavior
+
+Check `BrandModelNew.tsx` to see if it already exposes a parent back button → if yes, step 1 Back simply navigates to `/app/models` via `useNavigate`. (No prop plumbing needed — `useNavigate` is already imported in this file.)
 
 ## Out of scope
 
-- Brand Models page layout, grid breakpoints, upgrade hero, locked-state list — unchanged.
-- No backend, no data shape change.
+- Step 2 layout, validation, Generate logic — unchanged.
+- Card grid breakpoints — unchanged.
+- No backend, no data changes.
