@@ -1045,7 +1045,7 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
 
   return (
     <div className="space-y-4">
-      <FreeSceneBanner isFree={isFree} onUpgradeClick={onUpgradeClick} limit={freeSceneLimit} current={selectedSceneIds.size} />
+      
       <FreeLimitToast active={limitHintActive} message={`${freeSceneLimit} shot limit on Free — upgrade for unlimited`} />
       {/* Category group tabs */}
       {/* Category group tabs — vertical on mobile, flex-wrap on desktop */}
