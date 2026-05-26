@@ -2657,7 +2657,7 @@ export function ProductImagesStep3Refine({
                 </div>
 
                 {!details.backgroundTone && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-primary/5 border border-primary/10">
                     <Paintbrush className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
                     <span className="text-[11px] text-primary/60 font-medium">Pick a color to set the backdrop for the shots above</span>
                   </div>
