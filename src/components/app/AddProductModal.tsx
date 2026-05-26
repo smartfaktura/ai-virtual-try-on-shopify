@@ -65,12 +65,14 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
   const [activeTab, setActiveTab] = useState<AddProductTab>(initialTab ?? 'manual');
   const [pendingFiles, setPendingFiles] = useState<File[] | undefined>(initialFiles);
+  const [methodExpanded, setMethodExpanded] = useState(false);
 
   // Sync tab + files whenever the drawer (re)opens with new initial values
   useEffect(() => {
     if (open) {
       if (initialTab) setActiveTab(initialTab);
       setPendingFiles(initialFiles && initialFiles.length ? initialFiles : undefined);
+      setMethodExpanded(false);
     }
   }, [open, initialTab, initialFiles]);
 
@@ -169,39 +171,74 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         </div>
       ) : (
         <div className="shrink-0">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2 px-1">Method</p>
-          <div className="rounded-xl border bg-background/50 divide-y">
-            {METHOD_ORDER.map((id) => {
-              const { label, sub, icon: Icon } = METHOD_META[id];
-              const active = activeTab === id;
+          <div className="flex items-center justify-between mb-2 px-1">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Method</p>
+            {methodExpanded && (
+              <button
+                type="button"
+                onClick={() => setMethodExpanded(false)}
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Done
+              </button>
+            )}
+          </div>
+          {!methodExpanded ? (
+            (() => {
+              const { label, sub, icon: Icon } = METHOD_META[activeTab];
               return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setActiveTab(id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors first:rounded-t-xl last:rounded-b-xl group',
-                    active ? 'bg-muted/70' : 'hover:bg-muted/50',
-                  )}
-                >
-                  <div className={cn(
-                    'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
-                    active ? 'bg-primary/10' : 'bg-muted',
-                  )}>
-                    <Icon className={cn('w-4 h-4', active ? 'text-primary' : 'text-foreground/70')} />
+                <div className="rounded-xl border bg-background/50 flex items-center gap-3 px-3.5 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-tight">{label}</p>
                     <p className="text-[11px] text-muted-foreground truncate">{sub}</p>
                   </div>
-                  <ChevronRight className={cn(
-                    'w-4 h-4 shrink-0 transition-colors',
-                    active ? 'text-primary' : 'text-muted-foreground/50 group-hover:text-foreground',
-                  )} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setMethodExpanded(true)}
+                    className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                  >
+                    Change
+                  </button>
+                </div>
               );
-            })}
-          </div>
+            })()
+          ) : (
+            <div className="rounded-xl border bg-background/50 divide-y">
+              {METHOD_ORDER.map((id) => {
+                const { label, sub, icon: Icon } = METHOD_META[id];
+                const active = activeTab === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => { setActiveTab(id); setMethodExpanded(false); }}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors first:rounded-t-xl last:rounded-b-xl group',
+                      active ? 'bg-muted/70' : 'hover:bg-muted/50',
+                    )}
+                  >
+                    <div className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                      active ? 'bg-primary/10' : 'bg-muted',
+                    )}>
+                      <Icon className={cn('w-4 h-4', active ? 'text-primary' : 'text-foreground/70')} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-tight">{label}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{sub}</p>
+                    </div>
+                    <ChevronRight className={cn(
+                      'w-4 h-4 shrink-0 transition-colors',
+                      active ? 'text-primary' : 'text-muted-foreground/50 group-hover:text-foreground',
+                    )} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
