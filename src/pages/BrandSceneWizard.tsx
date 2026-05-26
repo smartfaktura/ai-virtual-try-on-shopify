@@ -10,6 +10,7 @@ import { BrandSceneWizard as Wizard } from "@/features/brand-scenes/wizard/Brand
 
 export default function BrandSceneWizardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isRealAdmin, isLoading } = useIsAdmin();
   const { plan, isLoading: creditsLoading } = useCredits();
 
