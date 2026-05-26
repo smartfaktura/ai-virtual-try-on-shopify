@@ -2524,15 +2524,8 @@ export function ProductImagesStep3Refine({
             <p className="text-sm text-muted-foreground mt-1">Only a few choices are needed for selected shots</p>
           </div>
 
-          {/* Product specifications — shown before model selection */}
-          <ProductSpecsCard
-            allProducts={allProducts}
-            selectedProductIds={selectedProductIds}
-            analyses={analyses}
-            productSpecs={details.productSpecs || {}}
-            onProductSpecsChange={(specs) => update({ productSpecs: specs })}
-            onCategoryOverride={onCategoryOverride}
-          />
+
+
 
           {/* Choose model card — shown first */}
           {scenesNeedingModel.length > 0 && (
