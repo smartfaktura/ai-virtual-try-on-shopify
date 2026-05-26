@@ -182,7 +182,8 @@ export function BrandSceneWizard() {
   const referenceStepValid =
     !!answers.reference_image_paths?.length &&
     !!answers.name?.trim() &&
-    !!answers.reference_intent;
+    !!answers.reference_intent &&
+    state.responsibilityAccepted;
 
   const step4SubReason = onCastStep
     ? getSubStepDisabledReason(step4SubStep, answers, step4Ctx)
@@ -207,6 +208,8 @@ export function BrandSceneWizard() {
         nextDisabledReason = "Name this scene";
       else if (!answers.reference_intent)
         nextDisabledReason = "Choose how strictly to follow the reference";
+      else if (!state.responsibilityAccepted)
+        nextDisabledReason = "Tick all three rights checkboxes";
     } else if (onCastStep) {
       nextDisabledReason = step4SubReason;
     }
