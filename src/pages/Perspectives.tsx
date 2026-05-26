@@ -494,8 +494,11 @@ export default function Perspectives() {
       if (result.newBalance !== null) {
         setBalanceFromServer(result.newBalance);
       }
+      const firstSource = selectedSources[0];
+      setGeneratingSource(firstSource ? { imageUrl: firstSource.image_url, title: firstSource.title } : null);
       setGeneratingJobs(result.jobs);
       setJobStatuses(Object.fromEntries(result.jobs.map(j => [j.jobId, { status: 'queued' }])));
+      setJobResults({});
       genStartRef.current = Date.now();
       setGenElapsed(0);
       setTeamIndex(0);
