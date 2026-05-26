@@ -956,25 +956,6 @@ export default function ProductSwap() {
                   )}
                 </div>
 
-                {totalCost <= credits ? (
-                  <Button
-                    size="pill"
-                    onClick={handleGenerate}
-                    disabled={!canGenerate || isGenerating}
-                    className="w-full shadow-lg shadow-primary/10"
-                  >
-                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate {totalImages} image{totalImages !== 1 ? 's' : ''}</>}
-                  </Button>
-                ) : (
-                  <Button
-                    size="pill"
-                    onClick={() => setNoCreditsOpen(true)}
-                    className="w-full"
-                    variant="default"
-                  >
-                    Get more credits
-                  </Button>
-                )}
                 
                 {isGenerating && progress > 0 && <Progress value={progress} className="h-1.5 rounded-full" />}
               </div>
