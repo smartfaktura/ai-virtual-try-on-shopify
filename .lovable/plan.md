@@ -1,49 +1,31 @@
 ## Goal
 
-Help users who haven't uploaded any products complete Product Swap, and refine the subtitle styling under the main header without touching the "Product Swap" title itself.
+Align `/app/product-swap` page chrome with `/app/generate/product-images` so both share the same aesthetic.
 
-## 1. Guide users with no products
+## Diff today
 
-Detect empty product state once products query resolves: `products.length === 0` (only when `!isLoading` so we don't flash empty UI).
+| Element | Product Images (target) | Product Swap (now) |
+| --- | --- | --- |
+| Container | `space-y-6 pb-36 overflow-x-clip max-w-full min-w-0` (full width) | `max-w-4xl mx-auto px-4 py-6 sm:py-8 pb-36 space-y-6` (narrow, padded) |
+| Header | `<PageHeader title subtitle>` — bold H1 `text-2xl sm:text-3xl tracking-tight`, plain `text-base text-muted-foreground` subtitle, no icon, no accent bar | Custom block with `Sparkles` icon tile + H1 + accent-bar styled subtitle |
+| Back link | Provided via `PageHeader backAction` prop, sits inline with H1 | Standalone `Visual Studio` ghost button above the row |
+| Stepper | Direct child below `PageHeader` | Nested inside the header block |
 
-**A. Subtle hint on Step 1 (Scene)** — under the page header area, when products are empty, show a small inline note:
-> "Heads up: you haven't added any products yet. You'll need at least one to swap. **Add product →**"
-Styled as a muted soft card (border-dashed, `bg-muted/30`), with a Package icon and a primary link button to `/app/products/new`. Dismissable is not needed — disappears as soon as a product exists.
+## Changes (only `src/pages/ProductSwap.tsx`)
 
-**B. Empty state on Step 2 (Products)** — replace the current one-liner ("No products found. Add one") with a richer empty state shown only when `products.length === 0` (vs. only filtered-out by search):
-- Centered card with Package icon
-- Title: "No products in your library yet"
-- Body: "Upload a product photo (PNG/JPG, ideally on white). It becomes the reference we swap into your scene."
-- Primary CTA: "Add your first product" → `/app/products/new`
-- Secondary ghost CTA: "Learn how it works" → `/app/learn` (or relevant guide)
+1. Import `PageHeader` from `@/components/app/PageHeader`.
+2. Replace the outer container's classes from `max-w-4xl mx-auto px-4 py-6 sm:py-8 pb-36 space-y-6` to `space-y-6 pb-36 overflow-x-clip max-w-full min-w-0` (matches ProductImages).
+3. Replace the entire custom header block (back button + icon tile + H1 + accent-bar subtitle wrapper) with:
+   ```tsx
+   <PageHeader
+     title="Product Swap"
+     subtitle="Same scene, different product"
+     backAction={{ content: 'Visual Studio', onAction: () => navigate('/app/workflows') }}
+   >
+     <span />
+   </PageHeader>
+   ```
+4. Move the `<CatalogStepper>` out of the header wrapper so it sits as a sibling below `PageHeader`, exactly like ProductImages does.
+5. Remove the now-unused `Sparkles` icon usage in the header (keep the import — it's still used elsewhere for generate CTA / step icons).
 
-Keep the existing "No products match your search" message for the search-empty case (products exist but filter is empty).
-
-**C. Step 3 / generation guard** — already blocked by `canAdvanceFrom2` requiring a selection; no change needed there beyond the upstream guidance.
-
-## 2. Refine the subtitle design
-
-Keep `<h1>Product Swap</h1>` exactly as-is. Only restyle the line below it and show it across all steps (not just step 1) so the page identity is consistent.
-
-Changes in the header block (lines ~557–569):
-- Show subtitle on every step (drop the `currentStep === 1` gate).
-- Replace the plain `<p>` with a small refined caption: `text-[13px] text-muted-foreground/90 tracking-wide font-light mt-0.5`, with a thin vertical accent bar (`before:` 2px primary/40, rounded) and tighter rhythm. No period at the end (per memory rule).
-- On Step 2/3 the subtitle reads the same line — single source of identity, removing any duplicate step subtitles below.
-
-Visual idea:
-
-```text
-[icon]  Product Swap
-        │ Same scene, different product
-```
-
-The "│" is a 2px primary-tinted bar to add quiet structure without competing with the H1.
-
-## Files
-
-- `src/pages/ProductSwap.tsx`
-  - Header subtitle block (lines ~561–568): restyle, always-visible.
-  - Step 1 body (after the H2 around line 583): inject inline "no products yet" hint when `products.length === 0`.
-  - Step 2 empty state (around lines 771–775): split into "no products at all" vs "no search matches" branches.
-
-No backend, hook, or routing changes.
+No behavioural changes — only layout/visual tokens. Stepper, scene picker, product selector, review and generation flow remain identical. The earlier empty-products guidance (Step 1 hint + Step 2 empty state) stays in place.
