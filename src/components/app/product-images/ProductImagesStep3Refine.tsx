@@ -3159,9 +3159,8 @@ export function ProductImagesStep3Refine({
                   {/* Styling direction — after bulk edit */}
                   <Collapsible>
                     <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note2">
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/note2:rotate-90 flex-shrink-0" />
-                      <Pencil className="w-3.5 h-3.5 text-muted-foreground group-hover/note2:text-foreground transition-colors flex-shrink-0" />
                       <span className="text-xs font-semibold text-muted-foreground group-hover/note2:text-foreground transition-colors">
+
                         {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
                       </span>
                       {details.customOutfitNote && (
