@@ -134,15 +134,23 @@ export function interactionsForFamily(
         (c) => c.value !== "using" && c.value !== "holding",
       );
     case "beauty-fragrance":
-      return CAST_INTERACTIONS.filter((c) => c.value !== "wearing");
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "wearing" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
     case "bags-accessories":
-      return CAST_INTERACTIONS.filter((c) => c.value !== "using");
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "using" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
     case "tech":
     case "home":
-    case "food-drink":
     case "wellness":
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "wearing" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
+    case "food-drink":
+      // Food keeps food-native verbs + the non-wearing generic ones.
       return CAST_INTERACTIONS.filter((c) => c.value !== "wearing");
     default:
-      return CAST_INTERACTIONS;
+      return CAST_INTERACTIONS.filter((c) => !FOOD_ONLY_INTERACTIONS.has(c.value));
   }
 }
