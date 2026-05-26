@@ -29,7 +29,7 @@ import { CatalogStepper, type StepDef } from '@/components/app/catalog/CatalogSt
 import { cn } from '@/lib/utils';
 
 type UserProduct = Tables<'user_products'>;
-type SceneSource = 'library' | 'scratch';
+type SceneSource = 'library' | 'scratch' | null;
 
 const RATIO_OPTIONS = ['1:1', '3:4', '4:5', '9:16'] as const;
 type RatioOption = typeof RATIO_OPTIONS[number];
