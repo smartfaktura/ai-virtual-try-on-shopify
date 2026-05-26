@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useProductSwap, type SwapJobInfo } from '@/hooks/useProductSwap';
 import { toSignedUrls } from '@/lib/signedUrl';
+import { downloadDropAsZip } from '@/lib/dropDownload';
 import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -471,18 +472,23 @@ export default function ProductSwap() {
                     variant="outline"
                     size="pill"
                     onClick={async () => {
-                      for (let i = 0; i < resultEntries.length; i++) {
-                        const entry = resultEntries[i];
-                        const url = entry.url;
-                        const a = document.createElement('a');
-                        a.href = url.includes('?') ? `${url}&download=` : `${url}?download=`;
-                        a.download = `${entry.job.productTitle.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'swap'}-${entry.job.ratio.replace(':', 'x')}.png`;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        if (i < resultEntries.length - 1) await new Promise(r => setTimeout(r, 150));
+                      const t = toast.loading(`Packaging ${resultEntries.length} images…`);
+                      try {
+                        await downloadDropAsZip(
+                          resultEntries.map((e) => ({
+                            url: e.url,
+                            workflow_name: 'Product Swap',
+                            product_title: e.job.productTitle,
+                            scene_name: sceneTitle || 'Scene',
+                          })),
+                          `product-swap-${new Date().toISOString().slice(0, 10)}`,
+                        );
+                        toast.dismiss(t);
+                        toast.success(`Downloaded ${resultEntries.length} images`);
+                      } catch {
+                        toast.dismiss(t);
+                        toast.error('Download failed');
                       }
-                      toast.success(`Downloading ${resultEntries.length} images`);
                     }}
                   >
                     <Download className="w-4 h-4 mr-2" />Download all ({resultEntries.length})
