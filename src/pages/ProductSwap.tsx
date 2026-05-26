@@ -1061,11 +1061,12 @@ export default function ProductSwap() {
                   </Button>
                 ) : (
                   <Button size="pill"
-                    disabled={!canGenerate || isGenerating}
-                    onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
-                    className="gap-1.5">
-                    {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                    {isGenerating ? 'Generating…' : `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`}
+                    variant={!canAfford ? 'outline' : 'default'}
+                    disabled={isGenerating || (canAfford && !canGenerate)}
+                    onClick={!canAfford ? () => setNoCreditsOpen(true) : handleGenerate}
+                    className={cn('gap-1.5', !canAfford && 'border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive')}>
+                    {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : !canAfford ? <Coins className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {isGenerating ? 'Generating…' : !canAfford ? 'Upgrade for more credits' : `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`}
                   </Button>
                 )}
               </div>
