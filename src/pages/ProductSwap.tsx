@@ -339,7 +339,7 @@ export default function ProductSwap() {
   const genTotalCount = generatingJobs.length;
   const genAllDone = genTotalCount > 0 && Object.values(jobStatuses).every(s => ['completed', 'failed', 'cancelled'].includes(s.status));
   const genProgressPercent = genTotalCount > 0 ? (genCompletedCount / genTotalCount) * 100 : 0;
-  const estimatedTotal = genTotalCount * 8;
+  const estimatedTotal = genTotalCount * 30;
   const formatTime = (s: number) => { const m = Math.floor(s / 60); const sec = s % 60; return m > 0 ? `${m}m ${sec}s` : `${sec}s`; };
   const currentMember = TEAM_MEMBERS[teamIndex % TEAM_MEMBERS.length];
 
