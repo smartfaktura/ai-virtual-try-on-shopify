@@ -201,118 +201,141 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
       {/* ── FORMAT & OUTPUT (editable) ── */}
       {onDetailsChange && (
         <Card className="border-primary/20">
-          <CardContent className="p-5 space-y-5">
-            <div className="flex items-center gap-2">
-              <Settings2 className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Format & Output</span>
+          <CardContent className="p-6 space-y-6">
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold tracking-tight">Format & Output</h3>
+              <p className="text-xs text-muted-foreground">Pick the formats and how many images per scene</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Aspect Ratio — multi-select */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <RatioShape ratio={globalRatio} />
-                  <span className="text-xs font-semibold">Format</span>
-                  <span className="text-[10px] text-muted-foreground">Select one or more</span>
-                  {selectedRatios.length > 1 && (
-                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">×{selectedRatios.length}</Badge>
-                  )}
+            {/* Aspect Ratio — multi-select */}
+            <div className="space-y-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="space-y-0.5">
+                  <span className="text-sm font-semibold">Format</span>
+                  <p className="text-xs text-muted-foreground">Choose one or more aspect ratios</p>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {ratioOptions.map(o => (
-                    <button key={o.value} type="button" onClick={() => toggleRatio(o.value)}
-                      className={cn(
-                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
-                        selectedRatios.includes(o.value) ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40',
-                      )}>
-                      {o.icon}{o.label}
-                    </button>
-                  ))}
-                </div>
-                {selectedRatios.length === 0 && (
-                  <p className="text-[11px] text-destructive font-medium">Pick at least 1 format to continue</p>
+                {selectedRatios.length > 1 && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">×{selectedRatios.length}</Badge>
                 )}
               </div>
-
-              {/* Images per scene */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold">Images per scene</span>
-                </div>
-                <ChipSelector label="" value={details.imageCount || '1'} onChange={v => update({ imageCount: v })} options={IMAGE_COUNT_OPTIONS} />
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {ratioOptions.map(o => (
+                  <button key={o.value} type="button" onClick={() => toggleRatio(o.value)}
+                    className={cn(
+                      'flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border cursor-pointer',
+                      selectedRatios.includes(o.value)
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
+                    )}>
+                    {o.icon}{o.label}
+                  </button>
+                ))}
               </div>
-
+              {selectedRatios.length === 0 && (
+                <p className="text-[11px] text-destructive font-medium">Pick at least 1 format to continue</p>
+              )}
             </div>
 
-            {/* Per-scene overrides */}
-            {selectedScenes.length > 0 && (
-              <Collapsible open={overridesOpen} onOpenChange={setOverridesOpen}>
-                <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer group w-full">
-                  <ChevronRight className={cn('w-4 h-4 transition-transform', overridesOpen && 'rotate-90')} />
-                  <span>Advanced Scene Controls</span>
-                  <span className="text-xs text-muted-foreground/70">Fine-tune format and props for individual scenes</span>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <Card className="mt-3">
-                    <CardContent className="p-3 space-y-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={() => openPropModal(null)}>
-                          <Plus className="w-3 h-3" />Add prop to all scenes
-                        </Button>
-                        {hasAnyProps && (
-                          <button type="button" onClick={() => update({ sceneProps: {} })} className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1">
-                            <RotateCcw className="w-3 h-3" />Clear all props
-                          </button>
-                        )}
-                      </div>
-                      {selectedScenes.map(scene => {
-                        const sceneRatios = overrides[scene.id] || selectedRatios;
-                        const isCustomRatio = !!overrides[scene.id];
-                        const props = sceneProps[scene.id] || [];
-                        return (
-                          <div key={scene.id} className={cn('flex flex-col gap-2 p-2 rounded-lg transition-colors', (isCustomRatio || props.length > 0) ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30')}>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                              <div className="flex items-center gap-2 min-w-0 sm:w-44">
-                                <span className={cn('text-xs font-medium truncate', (isCustomRatio || props.length > 0) ? 'text-foreground' : 'text-muted-foreground')}>{scene.title}</span>
-                                {isCustomRatio && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">custom</span>}
-                              </div>
-                              <MiniRatioChips activeRatios={sceneRatios} globalRatios={selectedRatios} onChange={(r) => handleSceneRatioChange(scene.id, r)} />
-                              <button type="button" onClick={() => openPropModal(scene.id)} className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium text-muted-foreground border border-border/60 hover:border-primary/40 hover:text-foreground transition-all cursor-pointer ml-auto">
-                                <Plus className="w-3 h-3" />Add Prop
-                              </button>
-                            </div>
-                            {props.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 pl-1">
-                                {props.map(propId => {
-                                  const product = getProductById(propId);
-                                  if (!product) return null;
-                                  return (
-                                    <span key={propId} className="flex items-center gap-1 pl-1 pr-1.5 py-0.5 rounded-full bg-muted border border-border text-[10px] font-medium text-foreground">
-                                      <img src={getOptimizedUrl(product.image_url, { width: 32, quality: 40 })} alt={product.title} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
-                                      <span className="truncate max-w-[80px]">{product.title}</span>
-                                      <button type="button" onClick={() => removeProp(scene.id, propId)} className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"><X className="w-3 h-3" /></button>
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                      {hasOverrides && (
-                        <button type="button" onClick={() => update({ sceneAspectOverrides: {} })} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1 ml-auto cursor-pointer">
-                          <RotateCcw className="w-3 h-3" />Reset all ratios
-                        </button>
-                      )}
-                    </CardContent>
-                  </Card>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
+            <Separator />
+
+            {/* Images per scene */}
+            <div className="space-y-3">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold">Images per scene</span>
+                <p className="text-xs text-muted-foreground">Select how many images to generate per scene</p>
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 max-w-md">
+                {IMAGE_COUNT_OPTIONS.map(o => {
+                  const active = (details.imageCount || '1') === o.value;
+                  return (
+                    <button key={o.value} type="button" onClick={() => update({ imageCount: o.value })}
+                      className={cn(
+                        'flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border cursor-pointer',
+                        active
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
+                      )}>
+                        {o.label}
+
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
+
+      {/* ── ADVANCED SCENE CONTROLS (separate section) ── */}
+      {onDetailsChange && selectedScenes.length > 0 && (
+        <Card>
+          <CardContent className="p-6">
+            <Collapsible open={overridesOpen} onOpenChange={setOverridesOpen}>
+              <CollapsibleTrigger className="flex items-start justify-between gap-3 w-full text-left cursor-pointer group">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold tracking-tight">Advanced Scene Controls</h3>
+                  <p className="text-xs text-muted-foreground">Fine-tune format and props for individual scenes</p>
+                </div>
+                <ChevronRight className={cn('w-5 h-5 text-muted-foreground transition-transform mt-1', overridesOpen && 'rotate-90')} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={() => openPropModal(null)}>
+                      <Plus className="w-3 h-3" />Add prop to all scenes
+                    </Button>
+                    {hasAnyProps && (
+                      <button type="button" onClick={() => update({ sceneProps: {} })} className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1">
+                        <RotateCcw className="w-3 h-3" />Clear all props
+                      </button>
+                    )}
+                  </div>
+                  {selectedScenes.map(scene => {
+                    const sceneRatios = overrides[scene.id] || selectedRatios;
+                    const isCustomRatio = !!overrides[scene.id];
+                    const props = sceneProps[scene.id] || [];
+                    return (
+                      <div key={scene.id} className={cn('flex flex-col gap-2 p-2 rounded-lg transition-colors', (isCustomRatio || props.length > 0) ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30')}>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0 sm:w-44">
+                            <span className={cn('text-xs font-medium truncate', (isCustomRatio || props.length > 0) ? 'text-foreground' : 'text-muted-foreground')}>{scene.title}</span>
+                            {isCustomRatio && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">custom</span>}
+                          </div>
+                          <MiniRatioChips activeRatios={sceneRatios} globalRatios={selectedRatios} onChange={(r) => handleSceneRatioChange(scene.id, r)} />
+                          <button type="button" onClick={() => openPropModal(scene.id)} className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium text-muted-foreground border border-border/60 hover:border-primary/40 hover:text-foreground transition-all cursor-pointer ml-auto">
+                            <Plus className="w-3 h-3" />Add Prop
+                          </button>
+                        </div>
+                        {props.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pl-1">
+                            {props.map(propId => {
+                              const product = getProductById(propId);
+                              if (!product) return null;
+                              return (
+                                <span key={propId} className="flex items-center gap-1 pl-1 pr-1.5 py-0.5 rounded-full bg-muted border border-border text-[10px] font-medium text-foreground">
+                                  <img src={getOptimizedUrl(product.image_url, { width: 32, quality: 40 })} alt={product.title} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+                                  <span className="truncate max-w-[80px]">{product.title}</span>
+                                  <button type="button" onClick={() => removeProp(scene.id, propId)} className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"><X className="w-3 h-3" /></button>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {hasOverrides && (
+                    <button type="button" onClick={() => update({ sceneAspectOverrides: {} })} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1 ml-auto cursor-pointer">
+                      <RotateCcw className="w-3 h-3" />Reset all ratios
+                    </button>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* ── SUMMARY CARDS ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -320,10 +343,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">{selectedProducts.length} Product{selectedProducts.length !== 1 ? 's' : ''}</span>
-              </div>
+              <h3 className="text-base font-semibold tracking-tight">{selectedProducts.length} Product{selectedProducts.length !== 1 ? 's' : ''}</h3>
               {onEditStep && (
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(1)}>
                   <Pencil className="w-3 h-3" />Edit
@@ -361,10 +381,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">{selectedScenes.length} Scene{selectedScenes.length !== 1 ? 's' : ''}</span>
-              </div>
+              <h3 className="text-base font-semibold tracking-tight">{selectedScenes.length} Scene{selectedScenes.length !== 1 ? 's' : ''}</h3>
               {onEditStep && (
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(2)}>
                   <Pencil className="w-3 h-3" />Edit
@@ -407,10 +424,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         {/* Credits */}
         <Card className={!canAfford ? 'border-destructive/50' : 'border-primary/30'}>
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Coins className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Credits</span>
-            </div>
+            <h3 className="text-base font-semibold tracking-tight">Credits</h3>
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Format{selectedRatios.length > 1 ? 's' : ''}</span>
