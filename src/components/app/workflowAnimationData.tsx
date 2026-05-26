@@ -309,6 +309,31 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     ],
   },
 
+  'Product Swap': {
+    mode: 'carousel',
+    background: '/images/product-swap/scene-1.jpg',
+    objectPosition: 'center 20%',
+    interval: 1800,
+    backgrounds: [
+      '/images/product-swap/scene-1.jpg',
+      '/images/product-swap/scene-2.jpg',
+      '/images/product-swap/scene-3.jpg',
+      '/images/product-swap/scene-4.jpg',
+      '/images/product-swap/scene-5.jpg',
+    ],
+    slideLabels: ['1', '2', '3', '4', '5'],
+    elements: [
+      {
+        type: 'badge', label: 'Same Scene', icon: <Layers className="w-3 h-3" />,
+        position: { bottom: '14%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+      },
+      {
+        type: 'badge', label: 'Any Product', icon: <Sparkles className="w-3 h-3" />,
+        position: { bottom: '4%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+      },
+    ],
+  },
+
 };
 
 // Aliases for renamed DB workflows (dropped " Set" suffix)
