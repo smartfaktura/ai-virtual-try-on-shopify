@@ -1,14 +1,14 @@
-Tone down the Delete button in the library modal — replace red destructive styling with a minimal muted look.
+Match the feedback card's button/chip hovers to the outline CTA aesthetic (visible darkening like Edit Image / Enhance to 4K).
 
-**Change** in `src/components/app/LibraryDetailModal.tsx` (line 446-454):
+**Edits in `src/components/app/ContextualFeedbackCard.tsx`:**
 
-Replace:
-```tsx
-className="w-full font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
-```
-with:
-```tsx
-className="w-full font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
-```
+1. **Answer buttons (Nailed it / Almost / Not quite) — line 178**  
+   Replace `hover:bg-accent hover:text-accent-foreground` → `hover:bg-foreground/[0.06] hover:border-foreground/30`.
 
-Trash icon inherits the muted tone. No copy or behavior changes.
+2. **Submit button — line 239**  
+   Same replacement: `hover:bg-accent hover:text-accent-foreground` → `hover:bg-foreground/[0.06] hover:border-foreground/30`.
+
+3. **Reason chips — line 214**  
+   `hover:bg-accent` → `hover:bg-foreground/[0.06] hover:border-foreground/30`.
+
+No copy or layout changes.
