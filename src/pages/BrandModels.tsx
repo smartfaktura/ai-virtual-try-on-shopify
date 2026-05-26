@@ -216,6 +216,8 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const { user: currentUser } = useAuth();
   // Model name
   const [modelName, setModelName] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   // Essentials
   const [gender, setGender] = useState('Female');
