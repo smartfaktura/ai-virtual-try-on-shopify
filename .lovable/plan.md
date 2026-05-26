@@ -1,21 +1,25 @@
-## Fix confusing "Who's at the table" copy for Food & Drink
+## Stop preselecting cast & scale in the Brand Scene wizard
 
-The previous pass over-indexed on plated-meal photography and renamed cast/interaction copy to table/dish vocabulary. That breaks for beverages (can outdoors), snacks (pack of chips), ingredients, and packaged goods — none of which involve a table.
+### Where it happens
+`src/features/brand-scenes/wizard/steps/Step4Cast.tsx` (lines 128–133) runs a mount effect that seeds both fields on entry:
 
-### Changes (copy only, no logic)
+```ts
+useEffect(() => {
+  if (!scale?.preset) onScaleChange({ preset: scalePreset }); // → "handheld" etc.
+  if (!cast?.preset)  onCastChange({ preset: resolved.defaultCast }); // → "solo" etc.
+}, [module, subFamily]);
+```
 
-**`src/features/brand-scenes/wizard/steps/Step4Cast.tsx`**
-- Remove the `isFood` rename branch (lines ~149–163). Food now uses the same neutral labels as other categories:
-  - Cast title: "Who's in the shot"
-  - Interaction title: "How the product appears"
-  - Interaction help: default
-- Keep the chip labels generic: `hands` → "Hands holding" (instead of "Hands & cutlery"), `solo` → "Person with product" (instead of "Person at table"). These work for a barista pouring, someone holding a chip bag, or plating a dish.
+That's why "Handheld" and a cast chip appear pre-active before the user clicks.
 
-**`src/features/brand-scenes/wizard/step4Flow.ts`**
-- Drop the `isFood` validation-message branch (lines ~125–129). Use the default "Choose who's in the shot" / "Pick how the product appears".
+### Change
+Remove that effect entirely. The user picks both manually. Validation in `step4Flow.ts` already blocks Continue with `"Choose who's in the shot"` and `"Pick a product scale"`, so nothing else needs to change.
 
-**`src/features/brand-scenes/wizard/BrandSceneWizard.tsx`**
-- Drop the food-specific step title/subtitle override (lines ~102–112). Cast step uses the default "Who's in the shot?" title and standard subtitle for every module, including Food & Drink.
+Keep `resolved.scale.default` / `resolved.defaultCast` available as fallbacks for downstream computations (the `scalePreset` const at line 126 stays; it only feeds forbidden-rule math, not the UI selection state).
 
-### Out of scope
-Interaction options (Pouring / Holding / Using / Steaming / Placed beside / Product only) and surface/setting pools stay — those additions are correct and not tied to a "table" assumption.
+The Auto-cast / "skip" branch (lines 192–240) keeps its seeding behavior — that path is explicitly opt-in when the user chooses "Skip and auto-cast", so seeding there is intended.
+
+### Files
+- `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — delete the mount seed effect (lines 128–133).
+
+No other steps preselect values.

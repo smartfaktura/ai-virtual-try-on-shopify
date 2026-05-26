@@ -125,12 +125,8 @@ export function Step4Cast({
   const isReplicate = preset === "replicate";
   const scalePreset: ScalePreset = scale?.preset ?? resolved.scale.default;
 
-  // Seed defaults exactly once.
-  useEffect(() => {
-    if (!scale?.preset) onScaleChange({ preset: scalePreset });
-    if (!cast?.preset) onCastChange({ preset: resolved.defaultCast });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [module, subFamily]);
+  // No auto-seed: the user must explicitly pick cast & scale.
+
 
   const forbiddenInter = forbiddenInteractions(preset, module, scalePreset);
   const forbiddenCast = forbiddenCastPresets(scalePreset, module);
