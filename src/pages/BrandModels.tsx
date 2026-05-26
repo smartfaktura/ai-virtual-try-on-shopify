@@ -305,12 +305,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     isReferenceMode && !uploadedUrl ? 'Upload a reference photo to continue' :
     isUploading ? 'Waiting for upload to finish…' :
     isReferenceMode && uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
+    isReferenceMode && uploadedUrl && termsAccepted && !finalRightsAck ? 'Second check — tick the final confirmation to continue' :
     !makePublic && balance < 20 ? 'Not enough credits — top up to continue' :
     null;
-  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted));
+  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted && finalRightsAck));
   const canGenerate = !generating && !validationError;
 
-  const SKIP_KEY = 'vovv:brand-model-confirm-skip';
 
   const buildGenerateBody = () => {
     const finalName = modelName.trim() || `${gender} Model`;
