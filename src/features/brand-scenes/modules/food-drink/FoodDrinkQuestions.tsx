@@ -5,6 +5,7 @@ import {
   FOOD_MAX_CAMERA_FEELS,
   FOOD_PRESENTATIONS,
   FOOD_PRODUCT_TYPES,
+  FOOD_SURFACE_CHIPS,
   FOOD_TEXT_MAX,
   type FoodDrinkArchetype,
   type FoodDrinkPresentation,
