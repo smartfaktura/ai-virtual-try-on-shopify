@@ -561,7 +561,7 @@ function AutoCastSummary({
   const interactionLabel = CAST_INTERACTIONS.find(
     (i) => i.value === cast?.interaction,
   )?.label;
-  const scaleLabel = SCALE_PRESETS.find((s) => s.value === scale?.preset)?.label;
+  const scaleLabel: string | undefined = undefined;
   const poseLabel =
     cast?.action_note ??
     CAST_ACTIONS.find((a) => a.value === cast?.action)?.label;
