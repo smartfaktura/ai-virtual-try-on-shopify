@@ -277,7 +277,7 @@ export function BrandSceneWizard() {
     dispatch({ type: "back" });
   };
 
-  const requestResponsibility = () => setModalOpen(true);
+  
 
   const SUB_LABEL: Record<Step4SubStep, string> = {
     look: "Look",
