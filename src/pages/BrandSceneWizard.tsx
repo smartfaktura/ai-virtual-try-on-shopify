@@ -53,7 +53,7 @@ export default function BrandSceneWizardPage() {
             Brand Scenes
           </Button>
         </div>
-        <Wizard />
+        <Wizard key={location.key} />
       </div>
     </>
   );
