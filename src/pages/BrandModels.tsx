@@ -315,6 +315,16 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     null;
   const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted));
   const canGenerate = !generating && !validationError;
+  const nameInvalid = trimmedName.length < 2;
+  const showNameError = nameTouched && nameInvalid;
+
+  const revealValidation = () => {
+    setNameTouched(true);
+    if (nameInvalid) {
+      nameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => nameInputRef.current?.focus(), 300);
+    }
+  };
 
 
   const buildGenerateBody = () => {
