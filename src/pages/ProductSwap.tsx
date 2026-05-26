@@ -296,6 +296,7 @@ export default function ProductSwap() {
       setGenElapsed(0);
       setTeamIndex(0);
       setIsGeneratingView(true);
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
       startPolling(result.jobs);
     }
   };
