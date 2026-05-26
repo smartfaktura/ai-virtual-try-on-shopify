@@ -1191,15 +1191,20 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
                     <Button variant="outline" size="pill" onClick={handleStepBack} className="flex-1 sm:flex-none">
                       Back
                     </Button>
-                    <Button
-                      size="pill"
-                      disabled={!canGenerate}
-                      onClick={handleGenerate}
-                      title={validationError || undefined}
-                      className={`flex-1 sm:flex-none whitespace-nowrap ${!canGenerate ? 'opacity-50 hover:opacity-50' : ''}`}
+                    <span
+                      onClick={() => { if (!canGenerate) revealValidation(); }}
+                      className="flex-1 sm:flex-none"
                     >
-                      {makePublic ? 'Generate · free' : 'Generate'}
-                    </Button>
+                      <Button
+                        size="pill"
+                        disabled={!canGenerate}
+                        onClick={handleGenerate}
+                        title={validationError || undefined}
+                        className={`w-full whitespace-nowrap ${!canGenerate ? 'opacity-50 hover:opacity-50 pointer-events-none' : ''}`}
+                      >
+                        {makePublic ? 'Generate · free' : 'Generate'}
+                      </Button>
+                    </span>
                   </>
                 )}
               </div>
