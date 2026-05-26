@@ -34,41 +34,38 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[400px] w-[calc(100%-2rem)] p-8 rounded-3xl">
-        {/* Icon chip — soft ring */}
-        <div className="w-11 h-11 rounded-full border border-border/70 bg-gradient-to-b from-muted/40 to-transparent flex items-center justify-center">
-          <Wand2 className="w-[15px] h-[15px] text-foreground/80" strokeWidth={1.25} />
+      <DialogContent className="max-w-sm w-[calc(100%-2rem)] p-6 sm:p-7 rounded-3xl">
+        {/* Icon chip — matches trigger banner */}
+        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
+          <Wand2 className="w-4 h-4 text-primary" />
         </div>
 
-        {/* Eyebrow + hairline */}
-        <div className="mt-6">
-          <p className="text-[9.5px] tracking-[0.24em] uppercase text-muted-foreground/80">
-            Brand Scenes
-          </p>
-          <div className="w-6 h-px bg-border mt-2.5" />
-        </div>
+        {/* Eyebrow */}
+        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-5">
+          Brand Scenes
+        </p>
 
-        {/* Title */}
-        <DialogTitle className="text-[24px] leading-[1.1] font-light tracking-[-0.01em] text-foreground mt-4">
+        {/* Title — bold app aesthetic */}
+        <DialogTitle className="text-2xl font-bold tracking-tight text-foreground mt-1.5">
           Scenes that belong to your brand
         </DialogTitle>
 
         {/* Subtitle */}
-        <DialogDescription className="text-[12.5px] leading-relaxed text-muted-foreground/90 font-light mt-2.5">
+        <DialogDescription className="text-sm text-muted-foreground mt-2">
           Custom AI scenes built from your references, reused across every shoot
         </DialogDescription>
 
-        {/* Editorial feature list */}
-        <ul className="mt-7 border-t border-border/40">
+        {/* Feature list */}
+        <ul className="mt-6 border-t border-border/50">
           {FEATURES.map((label, i) => (
             <li
               key={label}
-              className="flex items-start gap-5 py-4 border-b border-border/40"
+              className="flex items-start gap-4 py-3.5 border-b border-border/50"
             >
-              <span className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground/60 w-5 pt-1 tabular-nums">
+              <span className="text-xs font-medium text-primary/70 w-5 pt-0.5 tabular-nums">
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <span className="text-[13px] text-foreground/90 leading-snug font-light flex-1">
+              <span className="text-sm text-foreground/90 leading-snug flex-1">
                 {label}
               </span>
             </li>
@@ -76,26 +73,26 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
         </ul>
 
         {/* Actions */}
-        <div className="mt-7 space-y-1.5">
+        <div className="mt-6 space-y-1.5">
           <Button
             onClick={handlePrimary}
-            className="w-full h-11 rounded-full bg-foreground text-background hover:bg-foreground/90 gap-1.5 text-[13px] font-medium tracking-tight group"
+            className="w-full h-11 rounded-full text-sm font-semibold gap-1.5 group"
           >
             {canCreate ? 'Create Brand Scene' : 'Upgrade plan'}
-            <ArrowRight className="w-4 h-4 transition-transform duration-300 ease-out group-hover:translate-x-0.5" />
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full h-9 text-[11px] tracking-[0.15em] uppercase text-muted-foreground/70 hover:text-foreground hover:bg-transparent"
+            className="w-full h-9 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent"
           >
             Maybe later
           </Button>
         </div>
 
         {!canCreate && (
-          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/60 text-center mt-3">
-            Available on Growth and above
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Brand Scenes are available on Growth and above
           </p>
         )}
       </DialogContent>
