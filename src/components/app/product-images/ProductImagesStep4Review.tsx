@@ -201,66 +201,64 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
 
       {/* ── FORMAT & OUTPUT (editable) ── */}
       {onDetailsChange && (
-        <Card className="border-primary/20">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Aspect Ratio — multi-select */}
-              <div className="space-y-3">
-                <div className="flex items-baseline justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <span className="text-sm font-semibold">Format</span>
-                    <p className="text-xs text-muted-foreground">Choose one or more aspect ratios</p>
-                  </div>
-                  {selectedRatios.length > 1 && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">×{selectedRatios.length}</Badge>
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Aspect Ratio — multi-select */}
+          <Card>
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="space-y-0.5">
+                  <span className="text-sm font-semibold">Format</span>
+                  <p className="text-xs text-muted-foreground">Choose one or more aspect ratios</p>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {ratioOptions.map(o => (
-                    <button key={o.value} type="button" onClick={() => toggleRatio(o.value)}
+                {selectedRatios.length > 1 && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">×{selectedRatios.length}</Badge>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {ratioOptions.map(o => (
+                  <button key={o.value} type="button" onClick={() => toggleRatio(o.value)}
+                    className={cn(
+                      'flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all border cursor-pointer',
+                      selectedRatios.includes(o.value)
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
+                    )}>
+                    {o.icon}{o.label}
+                  </button>
+                ))}
+              </div>
+              {selectedRatios.length === 0 && (
+                <p className="text-[11px] text-destructive font-medium">Pick at least 1 format to continue</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Images per scene */}
+          <Card>
+            <CardContent className="p-6 space-y-3">
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold">Images per scene</span>
+                <p className="text-xs text-muted-foreground">Select how many images to generate per scene</p>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {IMAGE_COUNT_OPTIONS.map(o => {
+                  const active = (details.imageCount || '1') === o.value;
+                  return (
+                    <button key={o.value} type="button" onClick={() => update({ imageCount: o.value })}
                       className={cn(
-                        'flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border cursor-pointer',
-                        selectedRatios.includes(o.value)
+                        'flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all border cursor-pointer',
+                        active
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
                       )}>
-                      {o.icon}{o.label}
+                        {o.label}
                     </button>
-                  ))}
-                </div>
-                {selectedRatios.length === 0 && (
-                  <p className="text-[11px] text-destructive font-medium">Pick at least 1 format to continue</p>
-                )}
+                  );
+                })}
               </div>
-
-              {/* Images per scene */}
-              <div className="space-y-3">
-                <div className="space-y-0.5">
-                  <span className="text-sm font-semibold">Images per scene</span>
-                  <p className="text-xs text-muted-foreground">Select how many images to generate per scene</p>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {IMAGE_COUNT_OPTIONS.map(o => {
-                    const active = (details.imageCount || '1') === o.value;
-                    return (
-                      <button key={o.value} type="button" onClick={() => update({ imageCount: o.value })}
-                        className={cn(
-                          'flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border cursor-pointer',
-                          active
-                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                            : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
-                        )}>
-                          {o.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-
-
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* ── ADVANCED SCENE CONTROLS (separate section) ── */}
