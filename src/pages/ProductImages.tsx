@@ -1640,7 +1640,8 @@ export default function ProductImages() {
                 <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-muted/40 border border-border text-xs">
                   <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground">
-                    Free plan: select 1 product at a time. Upgrade to generate visuals for multiple products in one batch
+                    <span className="sm:hidden">Free plan — 1 product per batch</span>
+                    <span className="hidden sm:inline">Free plan: 1 product per batch. Upgrade for multi-product batches</span>
                   </span>
                   <button
                     onClick={() => setUpgradeModalOpen(true)}
