@@ -1,52 +1,57 @@
-## Problem
+## What's happening
 
-When entering Step 4 ("Who's in the scene?") the wizard jumps straight to **Essentials** (the "Who's in the shot / How the product appears" cast picker). The **Auto-cast vs Design the look** branch card only appears *after* a cast preset has been picked — so the user has to make detailed choices first, then is asked whether they wanted Auto-cast or to design it themselves. The expected order is the opposite.
+Two separate bugs combine on the Look step:
 
-## Root cause
+1. **The flash / "skipped" feeling** — In `Step4Cast.tsx`, `setMode("yes")` (Design the look) immediately calls `onSubStepChange?.("essentials")`. So the moment the user clicks "Design the look", the wizard auto-jumps from Look → Essentials. There is no acknowledgement that the choice was registered, no chance to click Next — it looks like the Look step was skipped.
 
-In `src/features/brand-scenes/wizard/step4Flow.ts`, `computeStep4Flow` short-circuits when there is no `cast.preset` yet:
-
-```ts
-if (isReplicate || isNone || !preset) {
-  return { order: ["essentials"], visibleTabs: ["essentials"], showBranchCard: false };
-}
-```
-
-Because there's no preset on first entry, the `look` tab (which renders the Auto-cast / Design the look branch card) is hidden until the user already filled out Essentials.
+2. **Maximum update depth exceeded** — `BrandSceneWizard.tsx` line 166-173 has:
+   ```ts
+   useEffect(() => {
+     if (!onCastStep || step4Mode !== "skip") return;
+     setVisitedSubSteps((prev) => {
+       const next = new Set(prev);
+       for (const t of step4Flow.visibleTabs) next.add(t);
+       return next;  // always returns a new Set ref, even when nothing changed
+     });
+   }, [onCastStep, step4Mode, step4Flow.visibleTabs]);
+   ```
+   `computeStep4Flow` is called every render and returns a fresh `visibleTabs` array, so the effect re-runs forever, each time committing a new `Set` reference → React bails out with "Maximum update depth exceeded". This fires whenever Auto-cast is selected (and likely contributes to the flash visible in the replay).
 
 ## Fix
 
-Make the **Look** branch card the *first* sub-step of Step 4, shown before any cast preset is picked. The user chooses how they want to configure the scene, and only then proceeds.
+**File 1 — `src/features/brand-scenes/wizard/steps/Step4Cast.tsx`** (`setMode`, ~line 229-232)
 
-### 1. `src/features/brand-scenes/wizard/step4Flow.ts`
+Remove the auto-advance for "Design the look". The Look step should stay active after the user picks a branch; the wizard's footer Next button advances to Essentials. Auto-cast already seeds defaults and can stay where it is (showing the AutoCastSummary on the same Look pane).
 
-- Remove the early-return for `!preset`. Keep the early-return for `replicate` / `none` (those are fully locked casts with no branching).
-- When `!preset` (fresh entry):
-  - `visibleTabs`: just `["look"]` (we don't know yet which optional tabs apply).
-  - `order`: `["look"]` until a mode is chosen.
-  - `showBranchCard: true`.
-- When `preset` is set, behavior stays as today (compute People/Interaction/Styling tabs from the resolved registry, gate by `mode`).
-- `getSubStepDisabledReason("look", …)`: require a mode to be chosen whenever `preset !== "replicate" && preset !== "none"` — including the empty-preset case. Message stays: *"Pick whether to design a specific look"*.
-- `getSubStepDisabledReason("essentials", …)` unchanged (still requires preset + interaction once visited).
+```ts
+} else {
+  onCastChange({ extras: nextExtras });
+  // (no auto-advance — let the user confirm by hitting Next)
+}
+```
 
-### 2. `src/features/brand-scenes/wizard/steps/Step4Cast.tsx` — `setMode`
+Also stop calling `onSubStepChange?.("essentials")` for "skip" if any similar branch exists — currently only "yes" does so; "skip" stays on Look (correct, since AutoCastSummary renders there).
 
-- `setMode("skip")` already seeds `seededPreset = cast?.preset ?? resolved.defaultCast` plus interaction/scale/base defaults — keep as is. After it runs, the `essentials` tab becomes valid and the user can hit **Next** straight from Look (Auto-cast summary already renders inline on the Look tab).
-- `setMode("yes")` currently only writes `extras.design_specific_look = "yes"`. Add: after the patch, advance to the Essentials sub-step by calling `onSubStepChange?.("essentials")` so the user is moved into the cast picker. (`Step4Cast` already receives `onSubStepChange`.)
+**File 2 — `src/features/brand-scenes/wizard/BrandSceneWizard.tsx`** (visited effect, ~line 166-173)
 
-### 3. `src/features/brand-scenes/wizard/BrandSceneWizard.tsx`
+Make the Set update a true no-op when nothing changes, so the effect doesn't re-render forever:
 
-- Initial `step4SubStep` already defaults to `"look"` and `visitedSubSteps` already seeds `["look"]` — no change needed.
-- The existing "snap to first sub-step if current disappears" effect handles re-entry correctly because `look` is now always in `order` on first entry.
+```ts
+useEffect(() => {
+  if (!onCastStep || step4Mode !== "skip") return;
+  setVisitedSubSteps((prev) => {
+    let changed = false;
+    const next = new Set(prev);
+    for (const t of step4Flow.visibleTabs) {
+      if (!next.has(t)) { next.add(t); changed = true; }
+    }
+    return changed ? next : prev;
+  });
+}, [onCastStep, step4Mode, step4Flow.visibleTabs]);
+```
 
-## What the user will see
+## Result
 
-1. Enter Step 4 → only the **Look** tab is visible, showing the two branch cards (Auto-cast / Design the look). **Next** is disabled with the existing reason *"Pick whether to design a specific look"*.
-2. Pick **Auto-cast** → the inline Auto-cast summary appears, defaults are seeded, **Next** enables.
-3. Pick **Design the look** → wizard auto-advances to **Essentials**; the remaining tabs (People / Interaction / Styling · optional) become visible based on the cast preset they choose.
-
-## Out of scope
-
-- No copy changes to the branch cards or the Essentials picker.
-- No changes to Styling-optional logic, prompt assembly, or registry data.
-- No changes to persistence reset behavior (already always-blank on `/app/brand-scenes/new`).
+- Clicking "Design the look" highlights the card and enables Next; no flash, no jump.
+- Clicking "Auto-cast" highlights the card, shows the AutoCastSummary inline, enables Next; no infinite-loop warning.
+- Next behaviour for Step 4 is unchanged (Look → Essentials → optional tabs).

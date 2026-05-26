@@ -228,7 +228,7 @@ export function Step4Cast({
       }
     } else {
       onCastChange({ extras: nextExtras });
-      onSubStepChange?.("essentials");
+      // No auto-advance — let the user confirm by clicking Next.
     }
   };
 
