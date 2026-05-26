@@ -490,7 +490,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
   return (
     <div className="space-y-6 pb-28 overflow-x-clip max-w-full min-w-0 w-full">
-      <BrandScenesPromoCard thumbnails={promoThumbnails} />
+      <BrandScenesPromoCard />
 
       <div className="flex items-center justify-between gap-2 flex-wrap min-w-0 max-w-full">
         <div>
