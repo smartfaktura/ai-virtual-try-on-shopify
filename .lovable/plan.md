@@ -1,36 +1,45 @@
-# Polish Product Details + Props modal
+# Match product + scene cards as thumbnail pills
 
-## 1. Neutralize "Product Details" yellow accents
+File: `src/components/app/product-images/ProductImagesStep4Review.tsx` — summary cards row (lines 340–421).
 
-File: `src/components/app/product-images/ProductSpecsCard.tsx`
+Both cards become wrap-grids of small pill chips with mini thumbnails so the layout reads as one consistent rhythm and fits many items.
 
-Match the white/neutral aesthetic used by other Step 3 sections:
+## Products card (lines 342–377)
 
-- Line 129 — `Card className="border-amber-500/20 bg-amber-500/[0.03]"` → `Card className="border-border/60 bg-card"` (default white card).
-- Line 140 — `bg-amber-500/10` icon chip → `bg-muted` (neutral).
-- Line 141 — `text-amber-500` ruler icon → `text-muted-foreground`.
-- Line 155 — `text-amber-500/80` OPTIONAL label → `text-muted-foreground/70`.
-- Lines 324 & 335 — active cm/in toggle `bg-amber-500/15 text-amber-600` → `bg-foreground/10 text-foreground`.
+Replace the current "single big tile / multi-grid" branching with a single wrap of pill chips. No more dedicated 16×16 big tile when one product is selected — keep it visually identical to scenes.
 
-Pure color swap — no layout, no logic.
+```tsx
+<div className="flex flex-wrap gap-1.5">
+  {selectedProducts.slice(0, 24).map(p => (
+    <span key={p.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground max-w-full">
+      <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt={p.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+      <span className="truncate max-w-[120px]">{p.title}</span>
+    </span>
+  ))}
+  {selectedProducts.length > 24 && (
+    <span className="flex items-center px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-muted-foreground">+{selectedProducts.length - 24}</span>
+  )}
+</div>
+```
 
-## 2. Rebuild "Add Props / Accessories" modal to match Step 1 product picker
+## Scenes card (lines 379–421)
 
-File: `src/components/app/product-images/ProductImagesStep3Refine.tsx` — `PropPickerModal` (lines ~463–491).
+Swap the `<Badge variant="outline">` chips for the same pill structure as products, using `scene.previewUrl` for the mini thumbnail (fall back to a neutral dot if missing). Keep the per-category grouping when `perCategoryScenes` is active — just replace the inner Badge with the pill.
 
-Adopt the same tile grammar as Step 1 (`ProductImagesStep1Products.tsx` lines 117–166):
+```tsx
+<span className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground">
+  {scene.previewUrl ? (
+    <img src={getOptimizedUrl(scene.previewUrl, { quality: 40 })} alt={scene.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+  ) : (
+    <span className="w-5 h-5 rounded-full bg-muted-foreground/15 flex-shrink-0" />
+  )}
+  <span className="truncate max-w-[140px]">{scene.title}</span>
+</span>
+```
 
-- Grid: `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3`.
-- Tile: `relative rounded-xl border-2 overflow-hidden transition-all text-left cursor-pointer` with the same selected/unselected states:
-  - selected → `border-foreground ring-2 ring-foreground/15 shadow-md`
-  - unselected → `border-transparent hover:border-foreground/20`
-- Image container: `aspect-square bg-muted overflow-hidden flex items-center justify-center p-2` with `<ShimmerImage … className="max-w-full max-h-full object-contain" />`.
-- Caption block: `h-[52px] flex flex-col justify-center px-2.5` with title (`text-xs font-medium truncate leading-tight`) + subtitle `product_type` (`text-[10px] text-muted-foreground truncate mt-0.5`).
-- Selected indicator: top-right `CheckCircle` (import from `lucide-react`) matching Step 1 (`w-5 h-5 text-primary fill-primary/20`).
-- Keep modal shell `max-w-3xl w-[92vw] max-h-[85vh] flex flex-col`, search input, "X selected" footer, Cancel/Confirm.
-- Grid scroll container: `flex-1 min-h-[320px] max-h-[60vh] overflow-y-auto p-1`.
-
-No behavior change — same toggle/confirm logic, same product source.
+Apply the same chip in both the per-category branch (line ~402) and the flat branch (line ~411). Keep the existing `+N more` overflow as a chip with the same pill shape but no thumbnail.
 
 ## Out of scope
-No state, prompt, or data changes.
+- No data/state changes.
+- Credits card and Edit buttons untouched.
+- Card padding stays `p-4`.
