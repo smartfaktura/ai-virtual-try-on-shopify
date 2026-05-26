@@ -557,7 +557,6 @@ function AutoCastSummary({
   const interactionLabel = CAST_INTERACTIONS.find(
     (i) => i.value === cast?.interaction,
   )?.label;
-  const scaleLabel: string | undefined = undefined;
   const poseLabel =
     cast?.action_note ??
     CAST_ACTIONS.find((a) => a.value === cast?.action)?.label;
@@ -567,7 +566,6 @@ function AutoCastSummary({
     chips.push({ label: interactionLabel, onClick: onJumpToEssentials });
   if (hasPeople && poseLabel && onJumpToInteraction)
     chips.push({ label: `Pose: ${poseLabel}`, onClick: onJumpToInteraction, emphasize: true });
-  if (scaleLabel) chips.push({ label: scaleLabel, onClick: onJumpToEssentials });
   if (!chips.length) return null;
   return (
     <div className="mx-auto max-w-2xl mt-5 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
