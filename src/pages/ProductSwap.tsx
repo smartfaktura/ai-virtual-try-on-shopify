@@ -629,15 +629,16 @@ export default function ProductSwap() {
             {/* Default view: library grid + small upload entry */}
             {!sceneUrl && sceneSource !== 'scratch' && (
               <div className="space-y-3 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 py-1">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input placeholder="Search generated images..." value={librarySearch}
-                      onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }} className="pl-9" />
+                      onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }}
+                      className="pl-10 pr-4 h-11 rounded-full text-sm" />
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0"
+                  <Button variant="outline" size="pill" className="gap-1.5 shrink-0 h-11"
                     onClick={() => { setSceneSource('scratch'); setSceneUrl(null); setSceneTitle(''); }}>
-                    <Upload className="w-3.5 h-3.5" />Upload
+                    <Upload className="w-4 h-4" />Upload
                   </Button>
                 </div>
                 {libraryLoading ? (
@@ -719,10 +720,11 @@ export default function ProductSwap() {
 
             <div className="sticky top-0 z-10 -mx-1 px-1 pt-2 pb-3 space-y-2 bg-background">
 
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <div className="relative py-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Search products..." value={productSearch}
-                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }} className="pl-9" />
+                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }}
+                  className="pl-10 pr-4 h-11 rounded-full text-sm" />
               </div>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
