@@ -166,7 +166,7 @@ const App = () => {
     <AuthProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <Suspense fallback={<BrandLoaderProgressGlyph fullScreen />}>
+          <Suspense fallback={<DelayedFallback />}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
