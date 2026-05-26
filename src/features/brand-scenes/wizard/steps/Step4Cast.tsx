@@ -308,18 +308,18 @@ export function Step4Cast({
         <div className="animate-fade-in space-y-6 pt-6">
           <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
             <BranchCard
-              active={mode === "skip"}
-              title="Auto-cast"
-              body="We pick cast, interaction and scale"
-              secondary
-              onClick={() => setMode("skip")}
-            />
-            <BranchCard
               active={mode === "yes"}
               title="Design the look"
               body="Choose cast, interaction and styling yourself"
               recommended
               onClick={() => setMode("yes")}
+            />
+            <BranchCard
+              active={mode === "skip"}
+              title="Auto-cast"
+              body="We pick cast, interaction and scale"
+              secondary
+              onClick={() => setMode("skip")}
             />
           </div>
           {mode === "skip" && (
