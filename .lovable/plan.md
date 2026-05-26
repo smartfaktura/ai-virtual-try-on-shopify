@@ -1,45 +1,25 @@
-# Match product + scene cards as thumbnail pills
+## Problem
 
-File: `src/components/app/product-images/ProductImagesStep4Review.tsx` — summary cards row (lines 340–421).
+In the Add Props / Accessories modal (`ProductImagesStep3Refine.tsx`, `PropPickerModal`), the grid uses `flex-1 min-h-[320px]` inside the dialog's flex column. With few items (e.g. one), the single grid row stretches to fill the entire flex-1 area, making each tile absurdly tall — image sits at top, caption in middle, huge empty space below. Result matches the screenshot the user attached.
 
-Both cards become wrap-grids of small pill chips with mini thumbnails so the layout reads as one consistent rhythm and fits many items.
+The Step 1 product picker doesn't have this problem because its grid lives in a normal page flow (no `flex-1` stretch).
 
-## Products card (lines 342–377)
+## Fix (one file: `src/components/app/product-images/ProductImagesStep3Refine.tsx`, ~lines 469)
 
-Replace the current "single big tile / multi-grid" branching with a single wrap of pill chips. No more dedicated 16×16 big tile when one product is selected — keep it visually identical to scenes.
+Replace the stretched grid with a scroll container that holds an auto-rows grid, so tiles size to content (aspect-square image + 52px caption) regardless of item count.
 
+Change:
 ```tsx
-<div className="flex flex-wrap gap-1.5">
-  {selectedProducts.slice(0, 24).map(p => (
-    <span key={p.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground max-w-full">
-      <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt={p.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
-      <span className="truncate max-w-[120px]">{p.title}</span>
-    </span>
-  ))}
-  {selectedProducts.length > 24 && (
-    <span className="flex items-center px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-muted-foreground">+{selectedProducts.length - 24}</span>
-  )}
-</div>
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 flex-1 min-h-[320px] max-h-[60vh] overflow-y-auto p-1">
 ```
-
-## Scenes card (lines 379–421)
-
-Swap the `<Badge variant="outline">` chips for the same pill structure as products, using `scene.previewUrl` for the mini thumbnail (fall back to a neutral dot if missing). Keep the per-category grouping when `perCategoryScenes` is active — just replace the inner Badge with the pill.
-
+to:
 ```tsx
-<span className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground">
-  {scene.previewUrl ? (
-    <img src={getOptimizedUrl(scene.previewUrl, { quality: 40 })} alt={scene.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
-  ) : (
-    <span className="w-5 h-5 rounded-full bg-muted-foreground/15 flex-shrink-0" />
-  )}
-  <span className="truncate max-w-[140px]">{scene.title}</span>
-</span>
+<div className="flex-1 min-h-[320px] max-h-[60vh] overflow-y-auto p-1 -mx-1">
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 auto-rows-min content-start">
 ```
+(close the extra wrapper before the "0 selected" footer).
 
-Apply the same chip in both the per-category branch (line ~402) and the flat branch (line ~411). Keep the existing `+N more` overflow as a chip with the same pill shape but no thumbnail.
+That's it — same tile markup as Step 1, no logic changes. Tiles render as clean square thumbnail + caption, identical aesthetic to the products step.
 
 ## Out of scope
-- No data/state changes.
-- Credits card and Edit buttons untouched.
-- Card padding stays `p-4`.
+No changes to selection state, search, confirm/cancel, or callers.
