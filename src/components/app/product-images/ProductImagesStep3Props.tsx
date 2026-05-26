@@ -113,7 +113,7 @@ export function ProductImagesStep3Props({ allProducts, heroProductIds, propProdu
                     </div>
                   )}
                   <div className="w-full aspect-square bg-white flex items-center justify-center p-2">
-                    <ShimmerImage src={getOptimizedUrl(p.image_url, { width: 160, quality: 60 })} alt={p.title} className="w-full h-full object-contain" />
+                    <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-contain" />
                   </div>
                   <div className="px-2 py-1.5">
                     <p className="text-[10px] font-medium text-foreground line-clamp-2 leading-tight">{p.title}</p>

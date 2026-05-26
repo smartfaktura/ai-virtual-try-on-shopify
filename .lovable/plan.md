@@ -1,17 +1,16 @@
-## Fix prop pill image zoom-crop
+## QA Fix & Deploy Readiness
 
-The selected-prop pill in Advanced Scene Controls currently builds its avatar with `getOptimizedUrl(url, { width: 32, quality: 40 })`. Per our project rule, passing `width` without `height` to Supabase's render endpoint crops server-side and produces a zoomed-in result. The PropPickerModal popup already uses quality-only correctly — only this pill is wrong.
+### Problem
+During the design-renewal QA sweep one residual image-optimization violation remains in `ProductImagesStep3Props.tsx` line 116: the prop-picker tile still calls `getOptimizedUrl(p.image_url, { width: 160, quality: 60 })`. The container uses `object-contain`, so the crop is visually masked, but the fetched bitmap is still server-side cropped — breaking our project-wide quality-only rule for user-facing thumbnails.
 
-### Change
+### Fix
+- **File:** `src/components/app/product-images/ProductImagesStep3Props.tsx`
+- **Change:** Remove the `width: 160` parameter from `getOptimizedUrl()` so it becomes `getOptimizedUrl(p.image_url, { quality: 60 })`. Keep `object-contain` behavior on the image element.
 
-`src/components/app/product-images/ProductImagesStep4Review.tsx` L504 — drop the `width` param so the image is compressed but not cropped, and let `object-cover` on the 16×16 round avatar fill the placeholder cleanly:
+### Verification
+- Check the prop-picker grid renders correctly with compressed (not cropped) images.
+- Confirm no console errors.
+- Confirm build passes.
 
-```tsx
-<img
-  src={getOptimizedUrl(product.image_url, { quality: 50 })}
-  alt={product.title}
-  className="w-4 h-4 rounded-full object-cover flex-shrink-0"
-/>
-```
-
-No other files affected — the PropPickerModal pop-up already uses `getOptimizedUrl(p.image_url, { quality: 60 })` with `object-cover` and is correct.
+### Deployment readiness
+Once verified, the app is cleared for publish — all other rounding, optimization, and visual QA items from the brand-scenes, brand-models, and product-images renewals are already clean.
