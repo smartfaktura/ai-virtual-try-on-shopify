@@ -1179,7 +1179,6 @@ function StylingTab({
         <OutfitQuiz
           value={cast?.outfit}
           onChange={(next) => onCastChange({ outfit: next })}
-          vibeRequired
           hideGarments={hideGarments}
         />
       )}
