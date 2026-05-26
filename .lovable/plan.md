@@ -1,11 +1,11 @@
-## Cause
+Revert the info panel back to the original light grey background and make the feedback card transparent so the entire right side reads as one uniform color (matching the Library preview).
 
-The right info panel in `ResultDetailModal.tsx` uses `bg-background/95 backdrop-blur-xl` (warm off-white token `40 10% 98%` + 5% transparency over a black backdrop). The `ContextualFeedbackCard` inside uses `bg-card` (pure white `0 0% 100%`). The card therefore looks visibly whiter than the panel, and the empty panel area below the card reads as a faint grey/warm tint — most noticeable at the bottom where the empty panel space is largest.
+## Changes
 
-## Fix
+**`src/components/app/product-images/ResultDetailModal.tsx`** (line 120)
+- Restore: `bg-card` → `bg-background/95 backdrop-blur-xl`
 
-In `src/components/app/product-images/ResultDetailModal.tsx` (line 120), change the info panel background to match the card token and drop the 95% transparency so the backdrop tint doesn't leak through:
+**`src/components/app/product-images/ResultDetailModal.tsx`** (ContextualFeedbackCard at line 210)
+- Pass `className="[&>div]:bg-transparent [&>div]:border-border/40"` so the feedback banner's inner `bg-card` becomes transparent and blends into the panel.
 
-- `bg-background/95 backdrop-blur-xl` → `bg-card`
-
-No other changes. The feedback card now sits flush against an identically-white panel, eliminating the perceived grey strip.
+Result: panel keeps its light grey tint and the feedback card no longer creates a brighter white block inside it.
