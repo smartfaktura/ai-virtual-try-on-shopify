@@ -36,7 +36,7 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-lg w-[calc(100%-2rem)] p-6 sm:p-8 rounded-3xl">
+      <DialogContent className="max-w-md sm:max-w-lg w-[calc(100%-2rem)] p-6 sm:p-8 rounded-xl">
 
         {/* Mini thumbnails */}
         <div className="flex items-center justify-center mt-4">

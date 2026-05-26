@@ -21,7 +21,7 @@ export function ProductThumbnail({ imageUrl, alt, size = 'md', fit = 'cover', cl
   const fitClass = fit === 'contain' ? 'object-contain' : 'object-cover';
 
   return (
-    <div className={cn(sizeClass, 'rounded-lg overflow-hidden bg-muted/30 border border-border/40 flex-shrink-0', className)}>
+    <div className={cn(sizeClass, 'rounded-xl overflow-hidden bg-muted/30 border border-border/40 flex-shrink-0', className)}>
       <ShimmerImage
         src={getOptimizedUrl(imageUrl, { quality: 70 })}
         alt={alt}

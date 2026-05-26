@@ -160,7 +160,7 @@ function PropPickerModal({
                 type="button"
                 onClick={() => toggle(p.id)}
                 className={cn(
-                  'relative rounded-lg border-2 p-1.5 transition-all text-left',
+                  'relative rounded-xl border-2 p-1.5 transition-all text-left',
                   isSel ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40',
                 )}
               >
@@ -352,7 +352,7 @@ export function ProductImagesStep3Settings({
 
                   return (
                     <div key={scene.id} className={cn(
-                      'flex flex-col gap-2 p-2 rounded-lg transition-colors',
+                      'flex flex-col gap-2 p-2 rounded-xl transition-colors',
                       (isCustomRatio || props.length > 0) ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30'
                     )}>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -434,7 +434,7 @@ export function ProductImagesStep3Settings({
       )}
 
       {productCount > 0 && sceneCount > 0 && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2.5 border border-border/60">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-2.5 border border-border/60">
           <Coins className="w-4 h-4 text-primary flex-shrink-0" />
           <span>
             <span className="font-medium text-foreground">{productCount}</span> product{productCount !== 1 ? 's' : ''}{' '}

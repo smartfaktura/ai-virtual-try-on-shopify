@@ -439,7 +439,7 @@ function SceneThumbnail({ sceneId }: { sceneId: string }) {
         {scene?.previewUrl ? <img src={getOptimizedUrl(scene.previewUrl, { quality: 40 })} alt={scene.title} className="w-full h-full object-cover" /> : <Camera className="w-3 h-3 text-muted-foreground/40" />}
       </div>
       {hovered && (
-        <div className="absolute z-50 left-0 top-full mt-1 w-[120px] h-[120px] rounded-lg bg-muted border border-border shadow-lg overflow-hidden">
+        <div className="absolute z-50 left-0 top-full mt-1 w-[120px] h-[120px] rounded-xl bg-muted border border-border shadow-lg overflow-hidden">
           {scene?.previewUrl ? <img src={getOptimizedUrl(scene.previewUrl, { quality: 60 })} alt={scene?.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Camera className="w-8 h-8 text-muted-foreground/30" /></div>}
         </div>
       )}
@@ -1431,7 +1431,7 @@ function OutfitPresetsOnly({ details, update, primaryCategory, modelGender }: {
           return (
             <div key={preset.id} className="flex items-center gap-0.5 flex-shrink-0 group">
               <button type="button" onClick={() => loadPreset(preset)}
-                className={cn('w-[130px] text-left rounded-lg border transition-colors duration-150 cursor-pointer',
+                className={cn('w-[130px] text-left rounded-xl border transition-colors duration-150 cursor-pointer',
                   active
                     ? 'border-primary/30 bg-primary/8 ring-1 ring-primary/40'
                     : 'border-border/40 bg-muted/30 hover:bg-muted/50 hover:border-border/60')}>
@@ -1521,7 +1521,7 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender, anal
 
     if (allConflict) {
       return (
-        <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-muted/50 border border-border/50">
+        <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-muted/50 border border-border/50">
           <Lock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
           <span className="text-xs text-muted-foreground/70 ml-auto">Filled by your {typeLabel}</span>
@@ -1544,7 +1544,7 @@ function OutfitPieceFields({ details, update, primaryCategory, modelGender, anal
   return (
     <>
       {isFullBodyMode && (
-        <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-primary/5 border border-primary/10 mb-1">
+        <div className="flex items-center gap-2 py-1.5 px-3 rounded-xl bg-primary/5 border border-primary/10 mb-1">
           <Shirt className="h-3.5 w-3.5 text-primary/60" />
           <span className="text-xs text-primary/80 font-medium">Full-body garment — only shoes &amp; accessories apply</span>
         </div>
@@ -1817,7 +1817,7 @@ function ZaraOutfitPanel({
 
       {accessorySlots.length > 0 && (
         <Collapsible open={accessoriesOpen} onOpenChange={setAccessoriesOpen}>
-          <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/acc">
+          <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer group/acc">
             <ChevronRight className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform flex-shrink-0', accessoriesOpen && 'rotate-90')} />
             <span className="text-xs font-semibold text-muted-foreground group-hover/acc:text-foreground transition-colors">Accessories</span>
             <span className="text-[11px] text-muted-foreground/60 truncate ml-1">
@@ -2401,7 +2401,7 @@ export function ProductImagesStep3Refine({
           type="button"
           onClick={() => hasAction ? toggleSceneExpand(scene.id) : undefined}
           className={cn(
-            'w-full rounded-lg overflow-hidden border transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary',
+            'w-full rounded-xl overflow-hidden border transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary',
             isExpanded
               ? 'border-primary shadow-sm'
               : sceneNeedsModel && needsModel
@@ -2623,7 +2623,7 @@ export function ProductImagesStep3Refine({
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
                   {bgScenes.slice(0, 4).map(scene => (
                     <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
-                      <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
+                      <div className="relative w-[52px] h-[65px] rounded-xl overflow-hidden border border-border/40 bg-muted">
                         {scene.previewUrl ? (
                           <ShimmerImage
                             src={getOptimizedUrl(scene.previewUrl, { quality: 55 })}
@@ -2648,7 +2648,7 @@ export function ProductImagesStep3Refine({
                   ))}
                   {bgScenes.length > 4 && (
                     <div className="flex-shrink-0 w-[52px] space-y-1">
-                      <div className="w-[52px] h-[65px] rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+                      <div className="w-[52px] h-[65px] rounded-xl border border-border/40 bg-muted/50 flex items-center justify-center">
                         <span className="text-[11px] font-semibold text-muted-foreground">+{bgScenes.length - 4}</span>
                       </div>
                       <p className="text-[8px] text-muted-foreground leading-tight text-center">more</p>
@@ -2733,7 +2733,7 @@ export function ProductImagesStep3Refine({
                       const hasBuiltIn = src?.source === 'scene';
                       return (
                         <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
-                          <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
+                          <div className="relative w-[52px] h-[65px] rounded-xl overflow-hidden border border-border/40 bg-muted">
                             {scene.previewUrl ? (
                               <ShimmerImage
                                 src={getOptimizedUrl(scene.previewUrl, { quality: 55 })}
@@ -2758,7 +2758,7 @@ export function ProductImagesStep3Refine({
                     })}
                     {modelShots.length > 4 && (
                       <div className="flex-shrink-0 w-[52px] space-y-1">
-                        <div className="w-[52px] h-[65px] rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+                        <div className="w-[52px] h-[65px] rounded-xl border border-border/40 bg-muted/50 flex items-center justify-center">
                           <span className="text-[11px] font-semibold text-muted-foreground">+{modelShots.length - 4}</span>
                         </div>
                         <p className="text-[8px] text-muted-foreground leading-tight text-center">more</p>
@@ -2780,7 +2780,7 @@ export function ProductImagesStep3Refine({
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5">
                         <div className={cn(
-                          'w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          'w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0',
                           effectiveMode === 'ai' ? 'bg-primary/10' : 'bg-muted',
                         )}>
                           <Sparkles className={cn('w-3.5 h-3.5 sm:w-4 sm:h-4', effectiveMode === 'ai' ? 'text-primary' : 'text-muted-foreground')} />
@@ -2810,7 +2810,7 @@ export function ProductImagesStep3Refine({
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5">
                         <div className={cn(
-                          'w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          'w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0',
                           effectiveMode === 'manual' ? 'bg-primary/10' : 'bg-muted',
                         )}>
                           <Settings2 className={cn('w-3.5 h-3.5 sm:w-4 sm:h-4', effectiveMode === 'manual' ? 'text-primary' : 'text-muted-foreground')} />
@@ -2860,7 +2860,7 @@ export function ProductImagesStep3Refine({
                   {effectiveMode === 'manual' && (<>
 
                   {/* Guidance hint */}
-                  <div className="rounded-lg bg-muted/30 border border-border/40 px-3 py-2.5 flex items-center gap-2.5">
+                  <div className="rounded-xl bg-muted/30 border border-border/40 px-3 py-2.5 flex items-center gap-2.5">
                     <Pencil className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                     <p className="text-xs text-muted-foreground">
                       Tap any shot below to customize its outfit around your product
@@ -2903,7 +2903,7 @@ export function ProductImagesStep3Refine({
                        <div key={product.id} className="rounded-xl border border-border/60 overflow-hidden">
                          {/* Product header */}
                          <div className="flex items-center gap-3 px-3 py-2.5 bg-muted/20 border-b border-border/40">
-                           <div className="w-10 h-10 rounded-lg overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
+                           <div className="w-10 h-10 rounded-xl overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
                              {product.image_url ? (
                                <ShimmerImage
                                  src={getOptimizedUrl(product.image_url, { quality: 65 })}
@@ -3068,7 +3068,7 @@ export function ProductImagesStep3Refine({
 
                   {/* Bulk edit — apply presets to all shots at once */}
                   <Collapsible open={applyToAllOpen} onOpenChange={setApplyToAllOpen}>
-                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/bulk">
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer group/bulk">
                       <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/bulk:rotate-90 flex-shrink-0" />
                       <Layers className="w-3.5 h-3.5 text-muted-foreground group-hover/bulk:text-foreground transition-colors flex-shrink-0" />
                       <span className="text-xs font-semibold text-muted-foreground group-hover/bulk:text-foreground transition-colors">Edit all shots in bulk</span>
@@ -3154,7 +3154,7 @@ export function ProductImagesStep3Refine({
 
                   {/* Styling direction — after bulk edit */}
                   <Collapsible>
-                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note2">
+                    <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer group/note2">
                       <span className="text-xs font-semibold text-muted-foreground group-hover/note2:text-foreground transition-colors">
 
                         {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
@@ -3176,7 +3176,7 @@ export function ProductImagesStep3Refine({
                   </Collapsible>
 
                  <Collapsible>
-                   <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/appear">
+                   <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer group/appear">
                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/appear:rotate-90 flex-shrink-0" />
                      <span className="text-xs font-semibold text-muted-foreground group-hover/appear:text-foreground transition-colors">Appearance</span>
                      <span className="text-[11px] text-muted-foreground/60 truncate ml-1">{getAppearanceSummary(details)}</span>
@@ -3211,7 +3211,7 @@ export function ProductImagesStep3Refine({
                         <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 max-h-[90dvh] sm:max-h-[85vh] flex flex-col overflow-hidden">
                           {/* Header */}
                           <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 border-b border-border/40 flex-shrink-0">
-                            <div className="w-12 h-[60px] rounded-lg overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
+                            <div className="w-12 h-[60px] rounded-xl overflow-hidden border border-border/40 flex-shrink-0 bg-muted">
                               {dialogScene.previewUrl ? (
                                 <ShimmerImage
                                   src={getOptimizedUrl(dialogScene.previewUrl, { quality: 65 })}
@@ -3246,7 +3246,7 @@ export function ProductImagesStep3Refine({
                           {/* Scrollable content */}
                           <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
                             {dialogSource === 'scene' && !dialogPerSceneCfg && (
-                              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 px-3 py-2.5 space-y-1.5">
+                              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 px-3 py-2.5 space-y-1.5">
                                 <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
                                   This shot has a curated look. Fill in any slot below to override it with your own styling
                                 </p>
@@ -3356,7 +3356,7 @@ export function ProductImagesStep3Refine({
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
                   {aestheticColorScenes.slice(0, 4).map(scene => (
                     <div key={scene.id} className="flex-shrink-0 w-[52px] space-y-1">
-                      <div className="relative w-[52px] h-[65px] rounded-lg overflow-hidden border border-border/40 bg-muted">
+                      <div className="relative w-[52px] h-[65px] rounded-xl overflow-hidden border border-border/40 bg-muted">
                         {scene.previewUrl ? (
                           <ShimmerImage
                             src={getOptimizedUrl(scene.previewUrl, { quality: 55 })}
@@ -3381,7 +3381,7 @@ export function ProductImagesStep3Refine({
                   ))}
                   {aestheticColorScenes.length > 4 && (
                     <div className="flex-shrink-0 w-[52px] space-y-1">
-                      <div className="w-[52px] h-[65px] rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+                      <div className="w-[52px] h-[65px] rounded-xl border border-border/40 bg-muted/50 flex items-center justify-center">
                         <span className="text-[11px] font-semibold text-muted-foreground">+{aestheticColorScenes.length - 4}</span>
                       </div>
                       <p className="text-[8px] text-muted-foreground leading-tight text-center">more</p>
@@ -3556,7 +3556,7 @@ export function ProductImagesStep3Refine({
                 <Card>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">{trigger.icon}</div>
+                      <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">{trigger.icon}</div>
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-semibold">{trigger.label}</span>
                         <p className="text-xs text-muted-foreground mt-0.5">{trigger.description}</p>
@@ -3593,12 +3593,12 @@ export function ProductImagesStep3Refine({
                       );
                     })()}
                     {refUrl ? (
-                      <div className="relative group w-24 aspect-[3/4] rounded-lg overflow-hidden border border-border bg-muted/30">
+                      <div className="relative group w-24 aspect-[3/4] rounded-xl overflow-hidden border border-border bg-muted/30">
                         <img src={getOptimizedUrl(refUrl, { quality: 70 })} alt={trigger.label} className="w-full h-full object-contain" />
                         <button type="button" onClick={() => { if (trigger.key === 'packagingDetails') update({ packagingReferenceUrl: undefined }); else if (trigger.key === 'backView') update({ backReferenceUrl: undefined }); removeRefTrigger(trigger.key); }} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"><X className="w-3 h-3 text-white" /></button>
                       </div>
                     ) : (
-                      <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: selectedProductsList[0]?.id || '' }; perProductInputRef.current?.click(); }} disabled={isUploading} className="flex flex-col items-center justify-center gap-1.5 px-4 py-5 rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer w-full">
+                      <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: selectedProductsList[0]?.id || '' }; perProductInputRef.current?.click(); }} disabled={isUploading} className="flex flex-col items-center justify-center gap-1.5 px-4 py-5 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer w-full">
                         {isUploading ? <span className="text-xs text-primary font-medium animate-pulse">Uploading…</span> : <><Upload className="w-5 h-5 text-primary/60" /><span className="text-xs text-primary/80 font-medium">Upload {trigger.label}</span><span className="text-[10px] text-muted-foreground">or drag & drop</span></>}
                       </button>
                     )}
@@ -3621,7 +3621,7 @@ export function ProductImagesStep3Refine({
               <Card>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">{trigger.icon}</div>
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">{trigger.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">{trigger.label}</span>
@@ -3636,18 +3636,18 @@ export function ProductImagesStep3Refine({
                       const refKey = `trigger:${trigger.key}:${product.id}`;
                       const isUploading = uploadingRefTrigger === refKey;
                       return (
-                        <div key={product.id} className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border/60 bg-card">
-                          <div className="w-12 aspect-[3/4] rounded-lg overflow-hidden border border-border/40 bg-muted/30 flex-shrink-0">
+                        <div key={product.id} className="flex flex-col items-center gap-1.5 p-2 rounded-xl border border-border/60 bg-card">
+                          <div className="w-12 aspect-[3/4] rounded-xl overflow-hidden border border-border/40 bg-muted/30 flex-shrink-0">
                             <img src={getOptimizedUrl(product.image_url, { quality: 60 })} alt={product.title} loading="lazy" className="w-full h-full object-contain object-center" />
                           </div>
                           <span className="text-[10px] font-medium text-foreground truncate w-full text-center max-w-[80px]">{product.title}</span>
                           {productRefUrl ? (
-                            <div className="relative group w-16 aspect-[3/4] rounded-lg overflow-hidden border border-border bg-muted/30">
+                            <div className="relative group w-16 aspect-[3/4] rounded-xl overflow-hidden border border-border bg-muted/30">
                               <img src={getOptimizedUrl(productRefUrl, { quality: 70 })} alt={`${trigger.label} for ${product.title}`} loading="lazy" className="w-full h-full object-contain" />
                               <button type="button" onClick={() => removeRefTrigger(trigger.key, product.id)} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 hover:bg-destructive flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"><X className="w-2.5 h-2.5 text-white" /></button>
                             </div>
                           ) : (
-                            <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: product.id }; perProductInputRef.current?.click(); }} disabled={isUploading} className="w-16 aspect-[3/4] rounded-lg border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer flex flex-col items-center justify-center gap-0.5">
+                            <button type="button" onClick={() => { pendingPerProductRef.current = { triggerKey: trigger.key, productId: product.id }; perProductInputRef.current?.click(); }} disabled={isUploading} className="w-16 aspect-[3/4] rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors cursor-pointer flex flex-col items-center justify-center gap-0.5">
                               {isUploading ? <span className="text-[9px] text-primary font-medium animate-pulse">…</span> : <><Upload className="w-3.5 h-3.5 text-primary/50" /><span className="text-[8px] text-primary/60 font-medium">Upload</span></>}
                             </button>
                           )}

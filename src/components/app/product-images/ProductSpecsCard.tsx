@@ -178,7 +178,7 @@ export function ProductSpecsCard({
                 const hasFilled = (productSpecs[product.id] || '').trim().length > 0;
 
                 return (
-                  <div key={product.id} className="rounded-lg border border-border/50 bg-card/50 overflow-hidden">
+                  <div key={product.id} className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
                     {/* Accordion header */}
                     <div className="flex items-center gap-2.5 w-full p-3">
                       <div

@@ -130,7 +130,7 @@ export function ProductImagesStep5Generating({
 
   return (
     <div className="flex items-center justify-center px-4 py-10 sm:py-16 lg:py-20">
-      <div className="w-full max-w-md sm:max-w-lg rounded-2xl border border-border bg-background p-6 sm:p-10 lg:p-12 space-y-6 sm:space-y-8">
+      <div className="w-full max-w-md sm:max-w-lg rounded-xl border border-border bg-background p-6 sm:p-10 lg:p-12 space-y-6 sm:space-y-8">
 
         {/* Scene thumbnails — shown across all phases */}
         <div className="flex justify-center">
@@ -221,7 +221,7 @@ export function ProductImagesStep5Generating({
             {productStatuses.map((ps, i) => {
               const productPct = ps.total > 0 ? Math.round((ps.done / ps.total) * 100) : 0;
               return (
-                <div key={i} className="bg-muted/30 rounded-lg px-3.5 py-2.5 space-y-1.5">
+                <div key={i} className="bg-muted/30 rounded-xl px-3.5 py-2.5 space-y-1.5">
                   <div className="flex items-center gap-2 text-xs">
                     {ps.done >= ps.total ? (
                       ps.failed > 0
@@ -242,7 +242,7 @@ export function ProductImagesStep5Generating({
 
         {/* Slow warning */}
         {showSlowWarning && (
-          <div className="flex items-center gap-2 text-xs font-medium rounded-lg px-3 py-2 text-[hsl(38,92%,50%)] bg-[hsl(38,92%,50%,0.05)]">
+          <div className="flex items-center gap-2 text-xs font-medium rounded-xl px-3 py-2 text-[hsl(38,92%,50%)] bg-[hsl(38,92%,50%,0.05)]">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Taking longer than expected — still working on it</span>
           </div>

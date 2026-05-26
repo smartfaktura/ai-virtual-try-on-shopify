@@ -483,7 +483,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                     const isCustomRatio = !!overrides[scene.id];
                     const props = sceneProps[scene.id] || [];
                     return (
-                      <div key={scene.id} className={cn('flex flex-col gap-2 p-2 rounded-lg transition-colors', (isCustomRatio || props.length > 0) ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30')}>
+                      <div key={scene.id} className={cn('flex flex-col gap-2 p-2 rounded-xl transition-colors', (isCustomRatio || props.length > 0) ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30')}>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <div className="flex items-center gap-2 min-w-0 sm:w-44">
                             <span className={cn('text-xs font-medium truncate', (isCustomRatio || props.length > 0) ? 'text-foreground' : 'text-muted-foreground')}>{scene.title}</span>

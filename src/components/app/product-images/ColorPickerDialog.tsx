@@ -217,7 +217,7 @@ export function ColorPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden rounded-2xl max-h-[85vh]">
+      <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden rounded-xl max-h-[85vh]">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-base font-semibold">Custom Color</DialogTitle>
         </DialogHeader>
@@ -225,8 +225,8 @@ export function ColorPickerDialog({
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <div className="px-5">
             <TabsList className="w-full grid grid-cols-2 h-9 rounded-xl">
-              <TabsTrigger value="solid" className="text-xs rounded-lg">Solid</TabsTrigger>
-              <TabsTrigger value="gradient" className="text-xs rounded-lg">Gradient</TabsTrigger>
+              <TabsTrigger value="solid" className="text-xs rounded-md">Solid</TabsTrigger>
+              <TabsTrigger value="gradient" className="text-xs rounded-md">Gradient</TabsTrigger>
             </TabsList>
           </div>
 
@@ -321,7 +321,7 @@ export function ColorPickerDialog({
                       className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <div
-                        className={`w-full h-8 rounded-lg border-2 transition-all duration-150 ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}`}
+                        className={`w-full h-8 rounded-md border-2 transition-all duration-150 ${selected ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground/40'}`}
                         style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
                       />
                     </button>

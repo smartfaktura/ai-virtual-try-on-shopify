@@ -15,14 +15,14 @@ export function BrandScenesPromoCard() {
 
   return (
     <>
-      <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6">
+      <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             <div className="flex items-center shrink-0">
               {BRAND_SCENE_THUMBNAILS.map((url, i) => (
                 <div
                   key={i}
-                  className={`w-9 h-11 rounded-lg overflow-hidden ring-2 ring-background bg-muted ${i > 0 ? '-ml-3' : ''}`}
+                  className={`w-9 h-11 rounded-xl overflow-hidden ring-2 ring-background bg-muted ${i > 0 ? '-ml-3' : ''}`}
                   style={{ transform: `rotate(${(i - 1) * 4}deg)`, zIndex: 3 - i }}
                 >
                   <ShimmerImage
