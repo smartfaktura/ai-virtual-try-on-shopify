@@ -834,31 +834,7 @@ export default function ProductSwap() {
                       Selected ({selectedProducts.length})
                     </span>
                     <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                      {/* Mobile */}
-                      <div className="flex sm:hidden items-center gap-1.5">
-                        {selectedProducts.slice(0, MOBILE_CAP).map(p => (
-                          <div key={p.id} className="relative group shrink-0">
-                            <div className="w-8 h-8 rounded-md overflow-hidden border border-border bg-muted">
-                              {p.image_url ? (
-                                <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt={p.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-muted-foreground" /></div>
-                              )}
-                            </div>
-                            <button type="button" onClick={() => toggleProduct(p.id)}
-                              className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-background border border-border shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground transition-all"
-                              aria-label={`Remove ${p.title}`}>
-                              <X className="w-2 h-2" />
-                            </button>
-                          </div>
-                        ))}
-                        {overflowMobile > 0 && (
-                          <div className="w-8 h-8 rounded-md bg-muted border border-border flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
-                            +{overflowMobile}
-                          </div>
-                        )}
-                      </div>
-                      {/* Desktop */}
+                      {/* Desktop only — outer wrapper hides on mobile */}
                       <div className="hidden sm:flex items-center gap-1.5">
                         {selectedProducts.slice(0, DESKTOP_CAP).map(p => (
                           <div key={p.id} className="relative group shrink-0">
