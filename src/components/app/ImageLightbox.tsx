@@ -19,6 +19,8 @@ interface ImageLightboxProps {
   onDelete?: (index: number) => void;
   onCopyPrompt?: (index: number) => void;
   onShare?: (index: number) => void;
+  onEdit?: (index: number) => void;
+  onGenerateAngles?: (index: number) => void;
   selectedIndices?: Set<number>;
   productName?: string;
 }
