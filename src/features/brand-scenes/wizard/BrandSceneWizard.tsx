@@ -166,9 +166,15 @@ export function BrandSceneWizard() {
   useEffect(() => {
     if (!onCastStep || step4Mode !== "skip") return;
     setVisitedSubSteps((prev) => {
+      let changed = false;
       const next = new Set(prev);
-      for (const t of step4Flow.visibleTabs) next.add(t);
-      return next;
+      for (const t of step4Flow.visibleTabs) {
+        if (!next.has(t)) {
+          next.add(t);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
     });
   }, [onCastStep, step4Mode, step4Flow.visibleTabs]);
 
