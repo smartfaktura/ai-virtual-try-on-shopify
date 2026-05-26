@@ -580,10 +580,7 @@ export default function ProductSwap() {
         {/* ═══════════ STEP 1: SCENE ═══════════ */}
         {currentStep === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">We'll recreate this exact shot — same camera, lighting and background — with the products you choose next.</p>
-            </div>
+            <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
 
             {/* Selected scene preview */}
             {sceneUrl && (
