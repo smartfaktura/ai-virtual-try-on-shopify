@@ -386,25 +386,32 @@ export function Step6PreviewAndPick({
                 </span>
               </label>
             )}
-            <Button
-              size="pill"
-              onClick={handleGenerate}
-              disabled={!nameValid || submitting || (isReferenceFlow && !!referenceImageUrl && !finalRightsAck)}
-              className="gap-2 w-full sm:w-auto whitespace-normal text-center"
-            >
-              <Sparkles className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">
-                Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
-              </span>
-              <span className="sm:hidden">
-                Generate · {BRAND_SCENE_GENERATION_COST} credits
-              </span>
-            </Button>
             {!nameValid && (
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Name this scene to enable generation.
+              <p className="mb-2 text-[12px] text-destructive leading-relaxed flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                Name this scene above to enable generation
               </p>
             )}
+            <span
+              onClick={() => { if (!nameValid) revealNameValidation(); }}
+              className="inline-block w-full sm:w-auto"
+            >
+              <Button
+                size="pill"
+                onClick={handleGenerate}
+                disabled={!nameValid || submitting || (isReferenceFlow && !!referenceImageUrl && !finalRightsAck)}
+                title={!nameValid ? "Name this scene first" : undefined}
+                className={`gap-2 w-full sm:w-auto whitespace-normal text-center ${!nameValid ? "pointer-events-none" : ""}`}
+              >
+                <Sparkles className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">
+                  Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
+                </span>
+                <span className="sm:hidden">
+                  Generate · {BRAND_SCENE_GENERATION_COST} credits
+                </span>
+              </Button>
+            </span>
             {nameValid && isReferenceFlow && referenceImageUrl && !finalRightsAck && (
               <p className="mt-2 text-[11px] text-muted-foreground">
                 Tick the confirmation above to enable generation.
