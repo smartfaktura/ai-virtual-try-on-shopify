@@ -199,7 +199,7 @@ export function Step4Cast({
         preset: seededPreset,
         interaction: cast?.interaction ?? preferredInteraction,
       };
-      if (!cast?.vibe) patch.vibe = "editorial" as CastVibe;
+      
       if (!cast?.hands_on_product && resolved.handsOnProduct[0]) {
         patch.hands_on_product = resolved.handsOnProduct[0] as HandsOnProduct;
       }
