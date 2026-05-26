@@ -549,10 +549,13 @@ export default function ProductSwap() {
     <div className="space-y-6 pb-36 overflow-x-clip max-w-full min-w-0">
       <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
 
+      <Button variant="ghost" size="sm" onClick={() => navigate('/app/workflows')} className="gap-1.5 -ml-2 self-start">
+        <ArrowLeft className="w-4 h-4" />Visual Studio
+      </Button>
+
       <PageHeader
         title="Product Swap"
         subtitle="Same scene, different product"
-        backAction={{ content: 'Visual Studio', onAction: () => navigate('/app/workflows') }}
       >
         <span />
       </PageHeader>
