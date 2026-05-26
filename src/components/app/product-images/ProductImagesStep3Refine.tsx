@@ -198,15 +198,6 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
-            {isFree && (
-              <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-primary" />
-                Free plan: 1 model per generation
-                {onUpgradeClick && (
-                  <button type="button" onClick={onUpgradeClick} className="text-primary font-medium hover:underline">Upgrade</button>
-                )}
-              </span>
-            )}
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
             {inlineModels.map(m => (
