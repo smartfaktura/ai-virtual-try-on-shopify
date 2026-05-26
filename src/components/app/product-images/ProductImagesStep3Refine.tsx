@@ -2832,7 +2832,7 @@ export function ProductImagesStep3Refine({
 
                   {/* AI mode — styling direction after confirmation */}
                   {effectiveMode === 'ai' && (
-                  <Collapsible className="rounded-lg border border-border/60 bg-muted/20 overflow-hidden">
+                  <Collapsible className="rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
                     <CollapsibleTrigger className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors cursor-pointer group/note focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&[data-state=open]>svg:last-child]:rotate-180">
                       <Pencil className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                       <span className="text-xs font-semibold text-foreground">
