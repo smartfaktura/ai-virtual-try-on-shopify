@@ -3461,10 +3461,8 @@ export function ProductImagesStep3Refine({
                             <Sparkles className="w-3 h-3 text-primary/70" />
                             <span className="text-[11px] font-semibold text-primary/80">Recommended for your shots</span>
                           </div>
-                          <div className="p-2 rounded-lg bg-primary/5 border border-primary/10">
-                            <div className="grid grid-cols-4 sm:grid-cols-9 gap-1.5">
-                              {curatorPicks.map(renderSwatch)}
-                            </div>
+                          <div className="grid grid-cols-4 sm:grid-cols-9 gap-1.5">
+                            {curatorPicks.map(renderSwatch)}
                           </div>
                         </div>
                       )}
