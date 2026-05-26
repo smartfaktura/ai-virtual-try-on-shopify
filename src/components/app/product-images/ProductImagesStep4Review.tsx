@@ -182,9 +182,9 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   return (
     <div className="space-y-6 pb-20">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Review & configure output</h2>
-        <p className="text-sm text-muted-foreground mt-1">Set format, quality, and confirm your selections before generating.</p>
+        <h2 className="text-xl font-semibold tracking-tight">Review & generate</h2>
       </div>
+
 
       {isLargeBatch && (
         <Card className="border-destructive/30 bg-destructive/5">
@@ -202,11 +202,6 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
       {onDetailsChange && (
         <Card className="border-primary/20">
           <CardContent className="p-6 space-y-6">
-            <div className="space-y-1">
-              <h3 className="text-base font-semibold tracking-tight">Format & Output</h3>
-              <p className="text-xs text-muted-foreground">Pick the formats and how many images per scene</p>
-            </div>
-
             {/* Aspect Ratio — multi-select */}
             <div className="space-y-3">
               <div className="flex items-baseline justify-between gap-3">
@@ -222,7 +217,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 {ratioOptions.map(o => (
                   <button key={o.value} type="button" onClick={() => toggleRatio(o.value)}
                     className={cn(
-                      'flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border cursor-pointer',
+                      'flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all border cursor-pointer',
                       selectedRatios.includes(o.value)
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
@@ -244,13 +239,13 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 <span className="text-sm font-semibold">Images per scene</span>
                 <p className="text-xs text-muted-foreground">Select how many images to generate per scene</p>
               </div>
-              <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 max-w-md">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {IMAGE_COUNT_OPTIONS.map(o => {
                   const active = (details.imageCount || '1') === o.value;
                   return (
                     <button key={o.value} type="button" onClick={() => update({ imageCount: o.value })}
                       className={cn(
-                        'flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border cursor-pointer',
+                        'flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all border cursor-pointer',
                         active
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-muted/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground',
@@ -263,6 +258,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               </div>
             </div>
           </CardContent>
+
         </Card>
       )}
 
@@ -472,57 +468,8 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
         </Card>
       </div>
 
-      {/* Aesthetic summary */}
-      {aestheticEntries.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Paintbrush className="w-3.5 h-3.5 text-primary" />
-                <p className="text-xs font-semibold">Aesthetic settings</p>
-              </div>
-              {onEditStep && (
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
-                  <Pencil className="w-3 h-3" />Edit
-                </Button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {aestheticEntries.map(e => (
-                <Badge key={e.label} variant="secondary" className="text-[10px]">
-                  {e.label}: {e.value}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Person styling summary */}
-      {personEntries.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <User className="w-3.5 h-3.5 text-primary" />
-                <p className="text-xs font-semibold">Person styling</p>
-              </div>
-              {onEditStep && (
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-foreground" onClick={() => onEditStep(3)}>
-                  <Pencil className="w-3 h-3" />Edit
-                </Button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {personEntries.map(e => (
-                <Badge key={e.label} variant="secondary" className="text-[10px]">
-                  {e.label}: {e.value}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Outfit summary */}
       {outfitEntries.length > 0 && (
