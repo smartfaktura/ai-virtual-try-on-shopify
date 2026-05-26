@@ -63,8 +63,17 @@ export function computeStep4Flow(
     };
   }
 
-  // No preset yet — show only the Look branch card as the first step.
+  // No preset yet — show Look first. Once the user picks "Design the look",
+  // add Essentials so Next can advance to the cast/interaction picker.
   if (!preset) {
+    const mode = getStep4Mode(cast);
+    if (mode === "yes") {
+      return {
+        order: ["look", "essentials"],
+        visibleTabs: ["look", "essentials"],
+        showBranchCard: true,
+      };
+    }
     return {
       order: ["look"],
       visibleTabs: ["look"],
