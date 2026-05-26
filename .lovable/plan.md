@@ -1,29 +1,21 @@
-## Fix mini thumbnail load experience
+## Fix container rounding inconsistencies on /app/generate/product-images
 
-Pill chip thumbnails in `ProductImagesStep4Review.tsx` (lines 284, 320, 339) currently fetch the full-size image with only `quality: 40` and lazy default loading. On slow connections users see the original large image cropped into the 20px circle while it streams in.
+All affected sections currently use `rounded-lg` (8px) while the surrounding cards / Eyewear category header use `rounded-xl` (12px). Unify to `rounded-xl`. Remove the extra grey wrapper around the "Recommended for your shots" swatch row.
 
-Per project memory ("Image Optimization No-Crop — width only for fixed thumbnails"), fixed tiny circles are exactly when `width` is appropriate.
+### Edits
 
-### Changes (single file: `src/components/app/product-images/ProductImagesStep4Review.tsx`)
+1. **`src/components/app/product-images/ProductContextStrip.tsx`** (L18) — the "Products [n] … Change" strip
+   - `rounded-lg` → `rounded-xl`
 
-For all three pill `<img>` tags (products at L284, per-category scenes at L320, flat scenes at L339):
-- Add `width: 64` to `getOptimizedUrl` (3× the 20px render = sharp on retina, tiny payload)
-- Add `loading="eager"`, `decoding="async"`, `width={20} height={20}` HTML attrs so the browser reserves the box before bytes arrive (eliminates the half-loaded crop artifact)
+2. **`src/components/app/product-images/ProductImagesStep2Scenes.tsx`** (L693) — expanded category content wrapper inside the "Select shots" categories
+   - `rounded-lg` → `rounded-xl`
 
-Example:
-```tsx
-<img
-  src={getOptimizedUrl(p.image_url, { width: 64, quality: 60 })}
-  alt={p.title}
-  width={20}
-  height={20}
-  loading="eager"
-  decoding="async"
-  className="w-5 h-5 rounded-full object-cover bg-muted flex-shrink-0"
-/>
-```
-
-`bg-background` → `bg-muted` so the placeholder ring matches the chip while loading.
+3. **`src/components/app/product-images/ProductImagesStep3Refine.tsx`**
+   - L2660 (backdrop hint banner "Pick a color to set the backdrop…"): `rounded-lg` → `rounded-xl`
+   - L2835 (Collapsible "Add styling direction" — AI mode): `rounded-lg` → `rounded-xl`
+   - L3157 (Collapsible "Add styling direction" — bulk-edit, lighter variant): leave as `rounded-lg` if it's a borderless hover trigger only; otherwise also `rounded-xl`. Verify — if it has no border (current line is just hover bg), keep as-is.
+   - L3393 (hint banner "Pick a color to unify…"): `rounded-lg` → `rounded-xl`
+   - L3462–3469 ("Recommended for your shots"): drop the grey wrapper `<div className="p-2 rounded-lg bg-primary/5 border border-primary/10">…</div>` so the swatch grid sits flush in the column, directly under the label.
 
 ### Out of scope
-No other files, no layout changes, no logic changes.
+No logic changes, no spacing changes beyond removing the one grey wrapper, no other roundings touched.
