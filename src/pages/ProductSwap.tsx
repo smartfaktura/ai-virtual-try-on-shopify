@@ -585,8 +585,10 @@ export default function ProductSwap() {
               <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
                 <img src={getOptimizedUrl(sceneUrl, { quality: 70 })} alt={sceneTitle} className="w-20 h-20 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">Scene ready</p>
-                  <p className="text-xs text-muted-foreground truncate">{sceneTitle}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Selected scene'}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {sceneSource === 'scratch' ? 'Uploaded image' : 'From library'}
+                  </p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => { setSceneUrl(null); setSceneTitle(''); }}>
                   <X className="w-4 h-4 mr-1" />Change
