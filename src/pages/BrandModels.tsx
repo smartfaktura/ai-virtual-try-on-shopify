@@ -253,6 +253,8 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [creationMode, setCreationMode] = useState<'chooser' | 'reference' | 'manual'>(
     layout === 'sections' ? 'chooser' : 'manual'
   );
+  const [pendingMode, setPendingMode] = useState<'manual' | 'reference' | null>(null);
+  const navigate = useNavigate();
 
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
