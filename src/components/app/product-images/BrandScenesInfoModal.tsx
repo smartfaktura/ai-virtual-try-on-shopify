@@ -64,12 +64,12 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
 
         {/* Title — bold app aesthetic */}
         <DialogTitle className="text-2xl font-bold tracking-tight text-foreground mt-1.5 text-center">
-          Scenes that belong to your brand
+          Your brand's own scene library
         </DialogTitle>
 
         {/* Subtitle */}
         <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
-          Custom AI scenes built from your references, reused across every shoot
+          Built from your references. Reused across every shoot.
         </DialogDescription>
 
         {/* Feature list */}
