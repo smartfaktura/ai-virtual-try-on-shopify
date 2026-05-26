@@ -318,7 +318,7 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   // Role header — stronger directive for Gemini / Nano Banana image models.
   out.push("ROLE");
   out.push(
-    "You are a commercial product-photography art director. Generate ONE photoreal hero image for an e-commerce brand scene. Editorial quality, natural materials and lighting, true-to-life proportions. Aspect ratio 4:5 portrait — REQUIRED. No text, captions, logos, watermarks, or UI chrome.",
+    "You are a commercial product-photography art director. Generate ONE photoreal hero image for an e-commerce brand scene. Editorial quality, natural materials and lighting, true-to-life proportions. Aspect ratio 4:5 portrait — REQUIRED. Clean, unbranded composition with a single hero product.",
   );
   out.push("");
 
