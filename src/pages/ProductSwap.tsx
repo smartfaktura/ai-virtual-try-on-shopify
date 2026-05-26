@@ -759,7 +759,7 @@ export default function ProductSwap() {
             </div>
             {filteredProducts.length > productVisibleCount && (
               <div className="text-center pt-2">
-                <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 12)}>
+                <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 24)}>
                   Load more ({filteredProducts.length - productVisibleCount} remaining)
                 </Button>
               </div>
