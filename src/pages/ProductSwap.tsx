@@ -63,7 +63,7 @@ export default function ProductSwap() {
   const [sceneUrl, setSceneUrl] = useState<string | null>(initialScene);
   const [sceneTitle, setSceneTitle] = useState<string>(initialScene ? 'Uploaded scene' : '');
   const [librarySearch, setLibrarySearch] = useState('');
-  const [libraryVisibleCount, setLibraryVisibleCount] = useState(30);
+  const [libraryVisibleCount, setLibraryVisibleCount] = useState(10);
 
   // ── Product state ─────────────────────────────────────────────────────
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
