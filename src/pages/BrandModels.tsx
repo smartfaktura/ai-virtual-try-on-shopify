@@ -1009,19 +1009,31 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
             <Section title="Model name">
               <div className="space-y-1.5">
                 <div className="flex items-baseline justify-between">
-                  <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Name this model</Label>
+                  <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Name this model <span className="text-destructive ml-0.5">*</span>
+                  </Label>
                   <span className={cn(
                     "text-[10px] tabular-nums",
                     modelName.length >= 28 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50"
                   )}>{modelName.length}/32</span>
                 </div>
                 <Input
+                  ref={nameInputRef}
                   placeholder="e.g. Sarah, Alex, Brand Ambassador"
                   value={modelName}
                   onChange={(e) => setModelName(e.target.value)}
+                  onBlur={() => setNameTouched(true)}
                   maxLength={32}
-                  className="h-9"
+                  aria-required="true"
+                  aria-invalid={showNameError}
+                  className={cn("h-9", showNameError && "border-destructive focus-visible:ring-destructive")}
                 />
+                {showNameError && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Required — give your model a name
+                  </p>
+                )}
               </div>
             </Section>
             <Section title="Reference">{referenceBlock}</Section>
