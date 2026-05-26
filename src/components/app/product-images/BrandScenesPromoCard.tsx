@@ -59,7 +59,7 @@ export function BrandScenesPromoCard({ thumbnails = [] }: BrandScenesPromoCardPr
 
         </div>
       </div>
-      <BrandScenesInfoModal open={open} onOpenChange={setOpen} />
+      <BrandScenesInfoModal open={open} onOpenChange={setOpen} thumbnails={thumbnails} />
     </>
   );
 }
