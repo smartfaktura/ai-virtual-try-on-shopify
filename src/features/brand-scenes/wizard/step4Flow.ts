@@ -146,7 +146,6 @@ export function getSubStepDisabledReason(
 
 
   if (sub === "people") {
-    if (!cast?.vibe) return "Pick an energy / vibe to continue";
     return null;
   }
 

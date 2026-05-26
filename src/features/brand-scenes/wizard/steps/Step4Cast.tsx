@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,13 +16,11 @@ import {
   CAST_NOTE_MAX,
   CAST_PRESETS,
   CAST_PRESETS_WITH_PEOPLE,
-  CAST_VIBES,
   type CastAction,
   type CastAge,
   type CastGender,
   type CastInteraction,
   type CastPreset,
-  type CastVibe,
 } from "../constants/cast";
 import {
   SCALE_PRESETS,
@@ -45,7 +43,6 @@ import { ChipRowWithOther } from "./_baseHelpers";
 import { FeaturedModelPicker } from "../components/FeaturedModelPicker";
 import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
-import { EthnicityChips } from "../components/EthnicityChips";
 import {
   getStorytellingMoments,
   hasExplicitMoments,
@@ -199,7 +196,7 @@ export function Step4Cast({
         preset: seededPreset,
         interaction: cast?.interaction ?? preferredInteraction,
       };
-      if (!cast?.vibe) patch.vibe = "editorial" as CastVibe;
+      
       if (!cast?.hands_on_product && resolved.handsOnProduct[0]) {
         patch.hands_on_product = resolved.handsOnProduct[0] as HandsOnProduct;
       }
@@ -234,7 +231,7 @@ export function Step4Cast({
 
 
   // Headline missing flags for the dot indicators.
-  const peopleVibeMissing = !cast?.vibe;
+
   const interactionHeadlineMissing = (() => {
     if (hasPeople) return !cast?.action && !cast?.action_note?.trim();
     return !cast?.hands_on_product;
@@ -429,7 +426,6 @@ export function Step4Cast({
           preset={preset}
           cast={cast}
           onCastChange={onCastChange}
-          vibeMissing={peopleVibeMissing}
         />
       )}
 
@@ -616,14 +612,12 @@ function PeopleTab({
   preset,
   cast,
   onCastChange,
-  vibeMissing,
 }: {
   module?: BrandSceneModule;
   subFamily?: string;
   preset?: CastPreset;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
-  vibeMissing: boolean;
 }) {
   const isSingle = preset === "solo" || preset === "hands";
   const genderOpts = isSingle
@@ -663,14 +657,8 @@ function PeopleTab({
       : [];
   const hasAnyModel = refs.length > 0;
 
-  // "Custom settings" collapsible — auto-open if any of the fields are already set.
-  const hasCustomValues =
-    (cast?.gender?.length ?? 0) > 0 ||
-    (cast?.age?.length ?? 0) > 0 ||
-    !!cast?.extras?.build ||
-    !!cast?.extras?.ethnicity;
-  const [customOpen, setCustomOpen] = useState(hasCustomValues);
-  const customLabel = hasAnyModel ? "Override casting hints" : "Custom settings";
+  void hasAnyModel;
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
@@ -690,104 +678,6 @@ function PeopleTab({
           />
         </Section>
       </div>
-
-      <div className="md:col-span-2">
-        <Section label="Energy / vibe" required missing={vibeMissing}>
-          <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-            {CAST_VIBES.map((v) => (
-              <Chip
-                key={v.value}
-                active={cast?.vibe === v.value}
-                onClick={() =>
-                  onCastChange({
-                    vibe: cast?.vibe === v.value ? undefined : (v.value as CastVibe),
-                  })
-                }
-              >
-                {v.label}
-              </Chip>
-            ))}
-          </div>
-        </Section>
-      </div>
-
-      {/* Custom settings pill — collapses Gender / Age / Build / Ethnicity */}
-      <div className="md:col-span-2 -mt-2">
-        <button
-          type="button"
-          onClick={() => setCustomOpen((o) => !o)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-medium hover:border-foreground/40 hover:bg-muted"
-        >
-          <span>{customOpen ? "−" : "+"}</span>
-          {customLabel}
-        </button>
-        {hasAnyModel && !customOpen && (
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            Gender, age, build and ethnicity are locked to your featured model
-          </p>
-        )}
-      </div>
-
-      {customOpen && (
-        <>
-          <Section label={genderLabel}>
-            <MultiSelect
-              options={genderOpts}
-              current={cast?.gender ?? []}
-              onToggle={handleGender}
-            />
-          </Section>
-
-          <Section label={ageLabel}>
-            <MultiSelect
-              options={ageOpts}
-              current={cast?.age ?? []}
-              onToggle={handleAge}
-            />
-          </Section>
-
-          {builds.length > 0 && (
-            <Section label="Build">
-              <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                {builds.map((b) => {
-                  const current = cast?.extras?.build;
-                  return (
-                    <Chip
-                      key={b}
-                      active={current === b}
-                      onClick={() => {
-                        const nextExtras = { ...(cast?.extras ?? {}) };
-                        if (current === b) delete nextExtras.build;
-                        else nextExtras.build = b;
-                        onCastChange({ extras: nextExtras });
-                      }}
-                    >
-                      {b}
-                    </Chip>
-                  );
-                })}
-              </div>
-            </Section>
-          )}
-
-          <div className="md:col-span-2">
-            <Section
-              label="Ethnicity / casting hint"
-              tooltip="A styling hint, not a hard cast. The AI uses it to guide features when no brand model is attached."
-            >
-              <EthnicityChips
-                value={cast?.extras?.ethnicity}
-                onChange={(next) => {
-                  const nextExtras = { ...(cast?.extras ?? {}) };
-                  if (next === undefined) delete nextExtras.ethnicity;
-                  else nextExtras.ethnicity = next;
-                  onCastChange({ extras: nextExtras });
-                }}
-              />
-            </Section>
-          </div>
-        </>
-      )}
 
       {lingerie && (
         <div className="md:col-span-2">

@@ -233,10 +233,8 @@ function SlotBlock({
               type="button"
               onClick={() => onPick(profileToRef(m))}
               className={cn(
-                "group relative flex flex-col items-stretch overflow-hidden rounded-xl border bg-background text-left transition-all",
-                isSuggested
-                  ? "border-foreground/60 ring-1 ring-foreground/20"
-                  : "border-border hover:border-foreground/40 hover:-translate-y-0.5 hover:shadow-sm",
+                "group relative flex flex-col items-stretch overflow-hidden rounded-xl border border-border bg-background text-left transition-all",
+                "hover:border-foreground/40 hover:-translate-y-0.5 hover:shadow-sm",
               )}
             >
               <div className="relative aspect-square overflow-hidden bg-muted">
