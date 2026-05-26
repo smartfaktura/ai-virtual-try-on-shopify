@@ -552,7 +552,7 @@ export default function ProductSwap() {
           </Button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Replace className="w-5 h-5 text-primary" />
+              <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
@@ -563,37 +563,12 @@ export default function ProductSwap() {
           </div>
 
           {/* Stepper */}
-          <div className="flex items-center gap-2 sm:gap-3 pt-2">
-            {stepDefs.map((s, idx) => {
-              const isActive = currentStep === s.n;
-              const isComplete = s.done && currentStep > s.n;
-              const isClickable = s.n < currentStep || (s.n === 2 && canAdvanceFrom1) || (s.n === 3 && canAdvanceFrom1 && canAdvanceFrom2);
-              return (
-                <div key={s.n} className="flex items-center gap-2 sm:gap-3 flex-1">
-                  <button
-                    type="button"
-                    disabled={!isClickable}
-                    onClick={() => goToStep(s.n)}
-                    className={`flex items-center gap-2 min-w-0 transition-opacity ${isClickable ? 'cursor-pointer hover:opacity-80' : 'cursor-default opacity-60'}`}
-                  >
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
-                      isActive ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                      : isComplete ? 'bg-primary/15 text-primary border border-primary/30'
-                      : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {isComplete ? <Check className="w-3.5 h-3.5" /> : s.n}
-                    </span>
-                    <span className={`text-sm font-medium truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {s.label}
-                    </span>
-                  </button>
-                  {idx < stepDefs.length - 1 && (
-                    <div className={`h-px flex-1 min-w-[12px] ${currentStep > s.n ? 'bg-primary/40' : 'bg-border'}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <CatalogStepper
+            steps={STEP_DEFS}
+            currentStep={currentStep}
+            canNavigateTo={canNavigateTo}
+            onStepClick={(s) => goToStep(s as 1 | 2 | 3)}
+          />
         </div>
 
         {/* ═══════════ STEP 1: SCENE ═══════════ */}
