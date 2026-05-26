@@ -290,15 +290,18 @@ export default function Perspectives() {
       const idsFilter = jobIds.map(id => `"${id}"`).join(',');
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,error_message`,
+          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,error_message,result`,
           { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
         );
         if (!res.ok || pollVersionRef.current !== version) return;
         const rows = await res.json();
 
         const statuses: Record<string, { status: string; error?: string }> = {};
+        const results: Record<string, string> = {};
         for (const row of rows) {
           statuses[row.id] = { status: row.status, error: row.error_message || undefined };
+          const imgs = row?.result?.images;
+          if (Array.isArray(imgs) && imgs[0]) results[row.id] = imgs[0];
         }
         // Fill missing as queued
         for (const id of jobIds) {
@@ -307,6 +310,9 @@ export default function Perspectives() {
 
         if (pollVersionRef.current !== version) return;
         setJobStatuses(statuses);
+        if (Object.keys(results).length > 0) {
+          setJobResults(prev => ({ ...prev, ...results }));
+        }
 
         const allDone = jobIds.every(id => {
           const s = statuses[id]?.status;
