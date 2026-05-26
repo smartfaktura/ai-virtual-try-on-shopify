@@ -1,14 +1,15 @@
-## Change
+### Goal
+Append " · optional" to the label of 4 extras fields in the brand-scenes wizard so users understand these settings are not required.
 
-`src/features/brand-scenes/wizard/steps/Step4Environment.tsx` (line 133)
+### Files changed
+- `src/features/brand-scenes/wizard/constants/extras.ts`
 
-Remove the redundant `<ChapterHeading>Scene</ChapterHeading>` that sits directly above the `Scene type` Section. Keep only the `Scene type` Section label so the page reads cleanly:
+### Changes
+Update the `label` property for these 4 entries in `CAST_EXTRAS_FIELDS`:
 
-- Where does it happen?
-- Scene type (single label)
-- [picker cards]
+1. `skin_finish`: `"Skin finish"` → `"Skin finish · optional"`
+2. `hair`: `"Hair styling"` → `"Hair styling · optional"`
+3. `makeup`: `"Makeup"` → `"Makeup · optional"`
+4. `storytelling_moment`: `"Storytelling moment"` → `"Storytelling moment · optional"`
 
-The wrapper `<div>` stays so layout/spacing is unchanged.
-
-## Result
-No more duplicate "SCENE / SCENE TYPE" stack — just one "SCENE TYPE" label above the picker.
+These labels are rendered by `ExtrasPillField` via the `Section` component. No other logic changes are needed.
