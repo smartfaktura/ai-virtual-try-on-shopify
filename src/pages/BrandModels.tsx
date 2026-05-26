@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditContext';
@@ -253,6 +253,8 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [creationMode, setCreationMode] = useState<'chooser' | 'reference' | 'manual'>(
     layout === 'sections' ? 'chooser' : 'manual'
   );
+  const [pendingMode, setPendingMode] = useState<'manual' | 'reference' | null>(null);
+  const navigate = useNavigate();
 
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
@@ -934,13 +936,13 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     const stepLabel = currentStep === 1 ? 'Mode' : 'Details';
     const stepTitle =
       currentStep === 1
-        ? 'How do you want to build this model?'
+        ? 'Start your model'
         : isReferenceMode
           ? 'Upload a reference photo'
           : 'Configure your model';
     const stepSubtitle =
       currentStep === 1
-        ? 'Pick a starting point'
+        ? 'From scratch or from a reference photo'
         : isReferenceMode
           ? "Add a face — we'll build the model from it"
           : 'Essentials, appearance, and a summary before we generate';
@@ -953,19 +955,25 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       setReferenceNotes('');
     };
 
+    const handleNext = () => {
+      if (pendingMode) setCreationMode(pendingMode);
+    };
+
     const chooserContent = (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <WizardCard
-          onClick={() => setCreationMode('manual')}
+          active={pendingMode === 'manual'}
+          onClick={() => setPendingMode('manual')}
           icon={<Wand2 className="w-5 h-5" />}
-          title="Create a new model from scratch"
-          body="Pick gender, age, and look — we generate it for you"
+          title="Start from scratch"
+          body="Pick gender, age, and look — we'll generate it"
         />
         <WizardCard
-          onClick={() => setCreationMode('reference')}
+          active={pendingMode === 'reference'}
+          onClick={() => setPendingMode('reference')}
           icon={<UserCheck className="w-5 h-5" />}
-          title="Generate from a reference photo"
-          body="Upload a face — we build the model from it"
+          title="Use a reference photo"
+          body="Upload a face — we'll build the model from it"
         />
       </div>
     );
@@ -1077,7 +1085,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         {/* Question block */}
         <div
           key={creationMode}
-          className={`animate-fade-in pt-12 ${currentStep === 1 ? 'pb-10' : 'pb-28 sm:pb-10'}`}
+          className="animate-fade-in pt-12 pb-28 sm:pb-10"
         >
           <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight leading-[1.15]">
             {stepTitle}
@@ -1091,44 +1099,61 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           </div>
         </div>
 
-        {/* Sticky pill footer — only on step 2 */}
-        {currentStep === 2 && (
-          <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
-            <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
-              <div className="flex items-center justify-between gap-2 p-2.5 sm:p-4">
-                <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
-                  {validationError ? (
-                    isLowCreditsError ? (
-                      <button
-                        type="button"
-                        onClick={() => setNoCreditsOpen(true)}
-                        className="text-destructive hover:underline"
-                      >
-                        {validationError} →
-                      </button>
-                    ) : (
-                      validationError
-                    )
-                  ) : ''}
-                </span>
-                <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                  <Button variant="outline" size="pill" onClick={handleStepBack}>
-                    Back
-                  </Button>
-                  <Button
-                    size="pill"
-                    disabled={!canGenerate}
-                    onClick={handleGenerate}
-                    title={validationError || undefined}
-                    className={!canGenerate ? 'opacity-50 hover:opacity-50' : ''}
-                  >
-                    {makePublic ? 'Generate · free' : 'Generate'}
-                  </Button>
-                </div>
+        {/* Sticky pill footer */}
+        <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
+          <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+            <div className="flex items-center justify-between gap-2 p-2.5 sm:p-4">
+              <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
+                {currentStep === 2 && validationError ? (
+                  isLowCreditsError ? (
+                    <button
+                      type="button"
+                      onClick={() => setNoCreditsOpen(true)}
+                      className="text-destructive hover:underline"
+                    >
+                      {validationError} →
+                    </button>
+                  ) : (
+                    validationError
+                  )
+                ) : ''}
+              </span>
+              <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                {currentStep === 1 ? (
+                  <>
+                    <Button variant="outline" size="pill" onClick={() => navigate('/app/models')}>
+                      Back
+                    </Button>
+                    <Button
+                      size="pill"
+                      disabled={!pendingMode}
+                      onClick={handleNext}
+                      className={!pendingMode ? 'opacity-50 hover:opacity-50' : ''}
+                    >
+                      Next
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" size="pill" onClick={handleStepBack}>
+                      Back
+                    </Button>
+                    <Button
+                      size="pill"
+                      disabled={!canGenerate}
+                      onClick={handleGenerate}
+                      title={validationError || undefined}
+                      className={!canGenerate ? 'opacity-50 hover:opacity-50' : ''}
+                    >
+                      {makePublic ? 'Generate · free' : 'Generate'}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
-        )}
+        </div>
+
 
         <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
       </div>
