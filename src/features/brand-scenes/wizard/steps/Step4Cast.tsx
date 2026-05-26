@@ -41,7 +41,7 @@ import {
 } from "../constants/sceneExtras";
 import { ChipRowWithOther } from "./_baseHelpers";
 import { FeaturedModelPicker } from "../components/FeaturedModelPicker";
-import { CAST_EXTRAS_FIELDS, applicableFields, buildsForCast } from "../constants/extras";
+import { CAST_EXTRAS_FIELDS, applicableFields } from "../constants/extras";
 import { ExtrasPillField } from "../components/ExtrasPillField";
 import { EthnicityChips } from "../components/EthnicityChips";
 import {
