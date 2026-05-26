@@ -16,11 +16,23 @@ export const FOOD_PRODUCT_TYPES = [
 ] as const;
 
 export const FOOD_PRESENTATIONS = [
-  { value: "top_down", label: "Top-down", hasPerson: false },
-  { value: "editorial_45", label: "45° editorial", hasPerson: false },
-  { value: "in_pour_motion", label: "In-pour / motion", hasPerson: false },
-  { value: "macro", label: "Macro detail", hasPerson: false },
-  { value: "paired_with_hands", label: "Paired with hands", hasPerson: true },
+  { value: "top_down", label: "Top-down flat-lay", hasPerson: false },
+  { value: "editorial_45", label: "Three-quarter editorial", hasPerson: false },
+  { value: "in_pour_motion", label: "Pour / steam / drip", hasPerson: false },
+  { value: "macro", label: "Macro detail (texture)", hasPerson: false },
+  { value: "paired_with_hands", label: "Hands plating / serving", hasPerson: true },
+] as const;
+
+/** Curated food-photography surfaces surfaced as chips on the module step. */
+export const FOOD_SURFACE_CHIPS = [
+  { value: "marble_slab", label: "Marble slab" },
+  { value: "butcher_block", label: "Butcher block" },
+  { value: "slate", label: "Slate" },
+  { value: "ceramic_glaze", label: "Ceramic plate" },
+  { value: "parchment", label: "Parchment" },
+  { value: "raw_wood", label: "Raw wood" },
+  { value: "linen", label: "Linen drape" },
+  { value: "polished_stone", label: "Polished stone" },
 ] as const;
 
 export const FOOD_CAMERA_FEELS = [

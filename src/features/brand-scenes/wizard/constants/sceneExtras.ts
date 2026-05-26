@@ -13,6 +13,12 @@ export const SURFACES = [
   { value: "water", label: "Water", directive: "shallow water surface" },
   { value: "paper", label: "Paper", directive: "matte paper backdrop" },
   { value: "velvet", label: "Velvet", directive: "deep velvet drape" },
+  // Food-photography staples.
+  { value: "marble_slab", label: "Marble slab", directive: "polished marble slab" },
+  { value: "butcher_block", label: "Butcher block", directive: "thick butcher-block wood" },
+  { value: "slate", label: "Slate", directive: "dark slate slab" },
+  { value: "ceramic_glaze", label: "Ceramic plate", directive: "glazed ceramic plate" },
+  { value: "parchment", label: "Parchment", directive: "crumpled parchment paper" },
 ] as const;
 export type Surface = (typeof SURFACES)[number]["value"];
 

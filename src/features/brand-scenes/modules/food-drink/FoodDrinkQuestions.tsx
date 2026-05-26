@@ -5,6 +5,7 @@ import {
   FOOD_MAX_CAMERA_FEELS,
   FOOD_PRESENTATIONS,
   FOOD_PRODUCT_TYPES,
+  FOOD_SURFACE_CHIPS,
   FOOD_TEXT_MAX,
   type FoodDrinkArchetype,
   type FoodDrinkPresentation,
@@ -98,14 +99,41 @@ export function FoodDrinkQuestions({ value, onChange }: Props) {
       <Block label="Scene">
         <div className="space-y-3">
           <SmallField label="Surface">
-            <Input
-              maxLength={FOOD_TEXT_MAX}
-              value={v.scene?.surface ?? ""}
-              onChange={(e) =>
-                onChange({ scene: { ...v.scene, surface: e.target.value } })
-              }
-              placeholder="e.g. travertine, brushed concrete, linen"
-            />
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {FOOD_SURFACE_CHIPS.map((s) => (
+                  <ModuleChip
+                    key={s.value}
+                    active={
+                      (v.scene?.surface ?? "").trim().toLowerCase() ===
+                      s.label.toLowerCase()
+                    }
+                    onClick={() =>
+                      onChange({
+                        scene: {
+                          ...v.scene,
+                          surface:
+                            (v.scene?.surface ?? "").trim().toLowerCase() ===
+                            s.label.toLowerCase()
+                              ? ""
+                              : s.label,
+                        },
+                      })
+                    }
+                  >
+                    {s.label}
+                  </ModuleChip>
+                ))}
+              </div>
+              <Input
+                maxLength={FOOD_TEXT_MAX}
+                value={v.scene?.surface ?? ""}
+                onChange={(e) =>
+                  onChange({ scene: { ...v.scene, surface: e.target.value } })
+                }
+                placeholder="Or type your own — e.g. travertine, brushed steel, banana leaf"
+              />
+            </div>
           </SmallField>
           <SmallField label="Location">
             <Input
@@ -114,7 +142,7 @@ export function FoodDrinkQuestions({ value, onChange }: Props) {
               onChange={(e) =>
                 onChange({ scene: { ...v.scene, location: e.target.value } })
               }
-              placeholder="e.g. sunlit loft, gallery wall, beach at dawn"
+              placeholder="e.g. sunlit kitchen, café counter, picnic blanket"
             />
           </SmallField>
           <SmallField label="Mood">
@@ -124,7 +152,7 @@ export function FoodDrinkQuestions({ value, onChange }: Props) {
               onChange={(e) =>
                 onChange({ scene: { ...v.scene, mood: e.target.value } })
               }
-              placeholder="e.g. quiet luxury, sun-drenched calm"
+              placeholder="e.g. fresh-from-the-oven, slow-Sunday brunch"
             />
           </SmallField>
         </div>

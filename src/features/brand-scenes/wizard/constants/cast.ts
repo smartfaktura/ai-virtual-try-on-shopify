@@ -51,8 +51,25 @@ export const CAST_INTERACTIONS = [
   { value: "using", label: "Using" },
   { value: "beside", label: "Placed beside" },
   { value: "hero", label: "Product only" },
+  // Food-native verbs — surfaced for food-drink only via interactionsForFamily.
+  { value: "pouring", label: "Pouring" },
+  { value: "plating", label: "Plating / serving" },
+  { value: "cutting", label: "Cutting / slicing" },
+  { value: "garnishing", label: "Garnishing" },
+  { value: "dipping", label: "Dipping" },
+  { value: "steaming", label: "Steaming / fresh out of oven" },
 ] as const;
 export type CastInteraction = (typeof CAST_INTERACTIONS)[number]["value"];
+
+/** Food-only interaction values — hidden from every non-food family. */
+const FOOD_ONLY_INTERACTIONS: ReadonlySet<CastInteraction> = new Set([
+  "pouring",
+  "plating",
+  "cutting",
+  "garnishing",
+  "dipping",
+  "steaming",
+]);
 
 export const CAST_ACTIONS = [
   { value: "standing", label: "Standing" },
@@ -104,28 +121,41 @@ export function posesForCast(
 export function interactionsForFamily(
   module: BrandSceneModule | undefined,
 ): readonly (typeof CAST_INTERACTIONS)[number][] {
-  if (!module) return CAST_INTERACTIONS;
+  if (!module) return CAST_INTERACTIONS.filter((c) => !FOOD_ONLY_INTERACTIONS.has(c.value));
   switch (module) {
     case "fashion":
     case "footwear":
     case "hats-caps-beanies":
-      return CAST_INTERACTIONS.filter((c) => c.value !== "using");
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "using" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
     case "eyewear":
     case "watches":
     case "jewelry":
       return CAST_INTERACTIONS.filter(
-        (c) => c.value !== "using" && c.value !== "holding",
+        (c) =>
+          c.value !== "using" &&
+          c.value !== "holding" &&
+          !FOOD_ONLY_INTERACTIONS.has(c.value),
       );
     case "beauty-fragrance":
-      return CAST_INTERACTIONS.filter((c) => c.value !== "wearing");
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "wearing" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
     case "bags-accessories":
-      return CAST_INTERACTIONS.filter((c) => c.value !== "using");
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "using" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
     case "tech":
     case "home":
-    case "food-drink":
     case "wellness":
+      return CAST_INTERACTIONS.filter(
+        (c) => c.value !== "wearing" && !FOOD_ONLY_INTERACTIONS.has(c.value),
+      );
+    case "food-drink":
+      // Food keeps food-native verbs + the non-wearing generic ones.
       return CAST_INTERACTIONS.filter((c) => c.value !== "wearing");
     default:
-      return CAST_INTERACTIONS;
+      return CAST_INTERACTIONS.filter((c) => !FOOD_ONLY_INTERACTIONS.has(c.value));
   }
 }

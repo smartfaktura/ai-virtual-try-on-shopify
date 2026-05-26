@@ -55,6 +55,12 @@ const INTERACTION: Record<CastInteraction, string> = {
   using: "actively using the product",
   beside: "placed naturally beside the product",
   hero: "product as the sole hero — no contact required",
+  pouring: "captured mid-pour — liquid streaming from the product",
+  plating: "plating or serving the dish onto the surface",
+  cutting: "cutting or slicing the dish, knife mid-motion",
+  garnishing: "garnishing the dish with fresh herbs or finishing touches",
+  dipping: "dipping the product, motion frozen at the edge of the dip",
+  steaming: "freshly served, gentle steam rising from the dish",
 };
 
 const ACTION: Record<CastAction, string> = {

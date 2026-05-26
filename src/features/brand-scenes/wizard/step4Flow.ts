@@ -122,9 +122,12 @@ export function getSubStepDisabledReason(
   }
 
   if (sub === "essentials") {
-    if (!preset) return "Choose who's in the shot";
+    const isFood = ctx.module === "food-drink";
+    if (!preset) return isFood ? "Choose who's at the table" : "Choose who's in the shot";
     if (preset !== "replicate" && !cast?.interaction) {
-      return "Pick how the cast holds, wears, or stands next to the product";
+      return isFood
+        ? "Pick how the dish is plated, poured or served"
+        : "Pick how the cast holds, wears, or stands next to the product";
     }
     if (!scale?.preset) return "Pick a product scale";
     return null;

@@ -140,9 +140,28 @@ export function Step4Cast({
   );
   const showScaleSection = visibleScales.length > 1;
 
+  const allowedCastSet = new Set<string>(resolved.castPresets);
   const visibleCastPresets = CAST_PRESETS
     .filter((p) => p.value !== "replicate" || isReference)
-    .filter((p) => !forbiddenCast.has(p.value));
+    .filter((p) => !forbiddenCast.has(p.value))
+    .filter((p) => p.value === "replicate" || allowedCastSet.has(p.value));
+
+  // Food re-labels cast presets so the dish (not the body) leads the copy.
+  const isFood = module === "food-drink";
+  const labelForCastPreset = (value: CastPreset, fallback: string): string => {
+    if (!isFood) return fallback;
+    if (value === "none") return "Food alone";
+    if (value === "hands") return "Hands & cutlery";
+    if (value === "solo") return "Person at table";
+    return fallback;
+  };
+  const sectionLabels = {
+    cast: isFood ? "Who's at the table" : "Who's in the shot",
+    interaction: isFood ? "How the dish is served" : "How the product appears",
+    interactionHelper: isFood
+      ? "Defines how the dish is plated, poured, or served"
+      : "Defines how any product placed into this scene will be staged",
+  };
 
   const visibleInteractions = (() => {
     const allowed = new Set(resolved.interactions as string[]);
@@ -340,7 +359,7 @@ export function Step4Cast({
       {subStep === "essentials" && (
         <div className="space-y-10 animate-fade-in">
           {/* Cast preset */}
-          <Section label="Who's in the shot" required missing={!preset}>
+          <Section label={sectionLabels.cast} required missing={!preset}>
             <div className="flex flex-wrap gap-x-2 gap-y-2.5">
               {visibleCastPresets.map((p) => (
                 <Chip
@@ -378,7 +397,7 @@ export function Step4Cast({
                     });
                   }}
                 >
-                  {p.label}
+                  {labelForCastPreset(p.value, p.label)}
                 </Chip>
               ))}
             </div>
@@ -395,10 +414,10 @@ export function Step4Cast({
           {/* Product interaction (required unless replicate) */}
           {!isReplicate && (
             <Section
-              label="How the product appears"
+              label={sectionLabels.interaction}
               required
               missing={!cast?.interaction}
-              helper="Defines how any product placed into this scene will be staged"
+              helper={sectionLabels.interactionHelper}
             >
               <div className="flex flex-wrap gap-x-2 gap-y-2.5">
                 {visibleInteractions.map((i) => (
