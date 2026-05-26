@@ -89,13 +89,14 @@ export function WizardLayout({
       onClick={handleNextClick}
       aria-disabled={nextDisabled || undefined}
       disabled={isLastStep}
-      className={["gap-1.5 max-w-full", nextDisabled ? "opacity-50 hover:opacity-50" : ""].join(" ")}
+      className={["gap-1.5 max-w-full flex-1 sm:flex-none", nextDisabled ? "opacity-50 hover:opacity-50" : ""].join(" ")}
     >
       <span className="hidden sm:inline truncate">{ctaLabel}</span>
       <span className="sm:hidden truncate">{ctaLabelShort}</span>
       {!isLastStep && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0" />}
     </Button>
   );
+
 
   return (
     <div ref={rootRef} className="max-w-2xl mx-auto w-full">
