@@ -119,6 +119,9 @@ export default function Perspectives() {
   const [isGeneratingView, setIsGeneratingView] = useState(false);
   const [generatingJobs, setGeneratingJobs] = useState<PerspectiveJobInfo[]>([]);
   const [jobStatuses, setJobStatuses] = useState<Record<string, { status: string; error?: string }>>({});
+  const [jobResults, setJobResults] = useState<Record<string, string>>({});
+  const [generatingSource, setGeneratingSource] = useState<{ imageUrl: string; title: string } | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [genElapsed, setGenElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
   const genStartRef = useRef<number>(0);
