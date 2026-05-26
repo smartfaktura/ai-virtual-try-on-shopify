@@ -130,7 +130,6 @@ export function Step4Environment({
   return (
     <div className="space-y-12">
       <div>
-        <ChapterHeading>Scene</ChapterHeading>
         <div className="space-y-10">
           <Section label="Scene type">
             <SceneTypePicker value={sceneType} onChange={handleSceneType} />
