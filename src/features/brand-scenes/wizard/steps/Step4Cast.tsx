@@ -237,7 +237,7 @@ export function Step4Cast({
     if (hasPeople) return !cast?.action && !cast?.action_note?.trim();
     return !cast?.hands_on_product;
   })();
-  const outfitVibeMissing = !hasOutfitVibe(cast?.outfit);
+  const outfitVibeMissing = false;
 
   const activeTabRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
