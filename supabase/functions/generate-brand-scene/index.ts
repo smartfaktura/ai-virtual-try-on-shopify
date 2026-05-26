@@ -88,13 +88,61 @@ async function generateSingleImage(
   }
 
   const data = await res.json();
-  const parts2 = data.candidates?.[0]?.content?.parts || [];
+  const blockReason = data?.promptFeedback?.blockReason;
+  if (blockReason) throw new Error(`SAFETY_BLOCKED:${blockReason}`);
+  const candidate = data.candidates?.[0];
+  const parts2 = candidate?.content?.parts || [];
   const imagePart = parts2.find((p: any) => p.inlineData?.data);
-  if (!imagePart) throw new Error("No image was generated");
+  if (!imagePart) {
+    const finishReason = candidate?.finishReason || "UNKNOWN";
+    throw new Error(`No image was generated (finishReason=${finishReason})`);
+  }
 
   const mime = imagePart.inlineData.mimeType || "image/png";
   return `data:${mime};base64,${imagePart.inlineData.data}`;
 }
+
+// ── Fallback via Lovable AI Gateway (different routing than native Gemini) ──
+async function generateViaGateway(
+  prompt: string,
+  referenceInlineData: { mimeType: string; data: string } | undefined,
+  modelInlineData: { mimeType: string; data: string } | undefined,
+  productInlineData: { mimeType: string; data: string } | undefined,
+  apiKey: string,
+): Promise<string> {
+  const userContent: any[] = [];
+  for (const ref of [modelInlineData, referenceInlineData, productInlineData]) {
+    if (ref) {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: `data:${ref.mimeType};base64,${ref.data}` },
+      });
+    }
+  }
+  userContent.push({ type: "text", text: prompt });
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-3.1-flash-image-preview",
+      messages: [{ role: "user", content: userContent }],
+      modalities: ["image", "text"],
+    }),
+  });
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 429) throw new Error("RATE_LIMIT");
+    if (status === 402) throw new Error("AI_CREDITS_EXHAUSTED");
+    throw new Error(`Gateway failed (${status})`);
+  }
+  const data = await res.json();
+  const images = data?.choices?.[0]?.message?.images;
+  const url = images?.[0]?.image_url?.url;
+  if (!url || !url.startsWith("data:")) throw new Error("No image was generated (gateway)");
+  return url;
+}
+
 
 async function uploadBase64Image(
   supabaseAdmin: any,
