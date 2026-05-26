@@ -460,9 +460,12 @@ export default function ProductSwap() {
 
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button size="pill" onClick={() => {
-                  // Keep scene + ratios, drop product selection, jump to Step 2 for fast iteration
+                  // Full reset: back to scene selection to pick new scenes
+                  setSceneUrl(null);
+                  setSceneTitle('');
+                  setSceneSource(null);
                   setSelectedProductIds(new Set());
-                  setCurrentStep(2);
+                  setCurrentStep(1);
                   setIsGeneratingView(false); setGeneratingJobs([]); setJobStatuses({}); setJobResults({});
                 }}>
                   <Sparkles className="w-4 h-4 mr-2" />Swap more products
