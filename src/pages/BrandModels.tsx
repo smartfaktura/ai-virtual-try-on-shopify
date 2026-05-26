@@ -242,7 +242,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [finalRightsAck, setFinalRightsAck] = useState(false);
+  
   const [referenceNotes, setReferenceNotes] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
@@ -305,10 +305,9 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     isReferenceMode && !uploadedUrl ? 'Upload a reference photo to continue' :
     isUploading ? 'Waiting for upload to finish…' :
     isReferenceMode && uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
-    isReferenceMode && uploadedUrl && termsAccepted && !finalRightsAck ? 'Second check — tick the final confirmation to continue' :
     !makePublic && balance < 20 ? 'Not enough credits — top up to continue' :
     null;
-  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted && finalRightsAck));
+  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted));
   const canGenerate = !generating && !validationError;
 
 
@@ -361,7 +360,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
-      setFinalRightsAck(false);
+      
       setReferenceNotes('');
       setMakePublic(false);
       onSuccess();
@@ -1114,31 +1113,6 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
-        {/* Second-check rights confirmation — inline, replaces the old popup */}
-        {isReferenceMode && uploadedUrl && termsAccepted && (
-          <Section title="Final check">
-            <div
-              role="button"
-              onClick={() => setFinalRightsAck((v) => !v)}
-              className={cn(
-                "flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
-                finalRightsAck
-                  ? "bg-primary/5 border-primary/30 hover:bg-primary/10"
-                  : "bg-destructive/5 border-destructive/30 hover:bg-destructive/10"
-              )}
-            >
-              <Checkbox
-                checked={finalRightsAck}
-                onCheckedChange={(checked) => setFinalRightsAck(checked === true)}
-                onClick={(e) => e.stopPropagation()}
-                className="mt-0.5"
-              />
-              <span className="text-[11px] leading-relaxed text-muted-foreground">
-                Second check — I confirm I have rights to this reference and accept full responsibility for every image generated from it. VOVV.AI stores the reference and the generated images under my account.
-              </span>
-            </div>
-          </Section>
-        )}
 
         {/* Sticky footer — floating pill (matches /app/generate/product-images) */}
         <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
