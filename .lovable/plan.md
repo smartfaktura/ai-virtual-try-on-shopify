@@ -1,63 +1,55 @@
+# Product Swap wizard — match Product Images aesthetic
 
-# Generating + Results polish (Product Swap)
+All changes in `src/pages/ProductSwap.tsx`. No backend, hook, or generation-pipeline changes.
 
-Four small, scoped changes — all inside the generating/results view of `src/pages/ProductSwap.tsx`. No backend, no hook changes.
+## 1. Shared stepper (visual parity with /app/generate/product-images)
 
-## 1. Real product thumbnails on the generating screen
+- Import and use `CatalogStepper` from `@/components/app/catalog/CatalogStepper` with three steps:
+  - `Scene` (Image icon)
+  - `Products` (Package icon)
+  - `Review` (Sparkles icon)
+- Remove the bespoke stepper markup (custom circles, connectors, `stepDefs`).
+- Header keeps the small "← Visual Studio" back link and title block.
 
-Today each product chip shows the generic `<Package>` icon. Swap it for the actual product image (32×32 rounded, object-cover) sitting at the left of the chip. The status icon (✓ / spinner / clock) stays at the right edge so users still see progress at a glance.
+## 2. Floating sticky bar (replaces edge-to-edge fixed footer)
 
-```text
-[ img ]  Red Cat-Eye Glasses    4:5   ⟳
-```
+- Drop the current `fixed bottom-0 inset-x-0 border-t bg-background/95` footer.
+- Add a local `ProductSwapStickyBar` component (same file, no new file) that mirrors `ProductImagesStickyBar` 1:1:
+  - `sticky bottom-4` rounded-xl card, backdrop-blur, shadow-lg
+  - Left: 3 dots + current step label + counts (`N products · M images`)
+  - Middle: credit chip (`Coins` icon, total cost, "Not enough" hint when balance is short)
+  - Right: Back + Continue / Generate pill buttons
+  - Responsive: stacked layout on mobile, single row on `sm+`
+- Centered inside `max-w-4xl mx-auto`, not full-width.
 
-Requires the product's `image_url` at chip render time. Plumb it through:
-- `SwapJobInfo` in `src/hooks/useProductSwap.ts` gains a `productImageUrl?: string`.
-- Hook fills it from the `products[]` it already iterates.
-- Generating view reads `job.productImageUrl` and renders an `<img>` (with `getOptimizedUrl` quality-only); fall back to `<Package>` only if the URL is missing.
+## 3. Remove aspect-ratio selector
 
-## 2. Generating screen — light visual tidy
+- Delete the "Aspect ratios" block in Step 1 and the `ASPECT_RATIOS` toggle UI.
+- Replace `selectedRatios: Set<string>` with `detectedRatio: RatioOption` (single value).
+- Keep the auto-detect `useEffect`: load the scene image, compute natural aspect, snap to closest of `1:1 / 3:4 / 4:5 / 9:16`, store in `detectedRatio`.
+- Pass `ratios: [detectedRatio]` to `generate(...)`.
+- Show the detected ratio as a small read-only badge on the scene preview card (Step 1) and on the Review summary card.
+- Update guards: `canAdvanceFrom1 = !!sceneUrl` (no ratio check).
+- Cost summary: drop the "Ratios" row; `totalImages = selectedProductIds.size`.
+- SessionStorage: drop the `selectedRatios` field (old shape ignored safely).
 
-Small refinements (no redesign):
-- Bump chip padding slightly and align the thumbnail/text/status on a clean baseline.
-- Replace the standalone `<Package>` glyph inside each chip with the new thumbnail.
-- Tighten the status pill: status icon moves to the **right** of the row, ratio badge sits beside it.
-- Make the ratio label show only when ≠ default (already done) and use a subtle muted chip instead of inline text.
-- Active (processing) chip gets a thin animated ring on the thumbnail to make progress feel alive.
+## 4. Raise product cap 10 → 50
 
-That's it — no layout reshuffle, same Sophia/team line, same progress bar, same "Continue in background" link.
+- `toggleProduct`: `next.size < MAX_PRODUCTS` (50).
+- Update copy: `Max 10` → `Max 50`; `N / 10 selected` → `N / 50 selected`.
+- Bump `productVisibleCount` default 12 → 24 and "Load more" step 12 → 24.
+- "Select visible" caps at 50.
 
-## 3. Results grid — drop the product icon overlay
+## 5. Aesthetic polish
 
-The bottom gradient overlay on each result tile currently shows `<Package> productTitle  ratio`. Remove the Package glyph entirely so the image breathes. Keep the product title (truncated) and ratio chip; the title alone is enough context, and the icon was visual noise on top of the actual photo.
-
-## 4. "Download all" button when there are 2+ results
-
-When `resultUrls.length >= 2`, render a secondary button next to the existing "Swap more products" / "View in Library" CTAs:
-
-```text
-[ Sparkles  Swap more products ]   [ ⬇  Download all ]   [ View in Library ]
-```
-
-Behavior: triggers each download sequentially (small 150 ms stagger so the browser doesn't drop concurrent downloads). Reuses the same `?download=` trick already used in the lightbox handler — no new dependency, no ZIP bundling for v1 (keeps it instant; per existing project pattern bulk ZIP export is a heavier feature reserved for the asset-export flow).
-
-If there is only 1 result, the button is hidden (the lightbox already has single-image download).
+- Match Product Images header pattern: compact icon next to title, identical typography weights.
+- Keep all existing fade-in animations and rounded-2xl card tokens.
 
 ## Out of scope
 
-- No change to the wizard (Steps 1–3) or any generation logic.
-- No new design tokens.
-- No ZIP packaging (download-all is parallel browser downloads, matching existing patterns).
+- `useProductSwap` hook, generation polling, generating view, results grid, download-all, lightbox — all untouched.
+- No DB / RLS / edge function changes.
 
 ## Files touched
 
-- `src/pages/ProductSwap.tsx` — generating chips, results overlay, new "Download all" button.
-- `src/hooks/useProductSwap.ts` — add `productImageUrl` to `SwapJobInfo` + populate it.
-
-## Effort
-
-~20–30 minutes.
-
----
-
-One thing I want to confirm before building: by **"also improve"** do you mean only the small visual tidies listed in §2 above, or is there something specific on the generating screen you'd like changed (e.g. team-member line, progress copy, "Continue in background" placement)? If the §2 tidies cover it, I'll proceed.
+- `src/pages/ProductSwap.tsx` (only)

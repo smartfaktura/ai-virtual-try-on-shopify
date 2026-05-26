@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Search, Upload, X, Sparkles, Replace, ArrowLeft, Image as ImageLucide,
-  Check, Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
-  ChevronRight, ChevronLeft, Pencil, Download,
+  Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
+  Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
+  Pencil, Download, Coins, ArrowRight,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,12 +25,22 @@ import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { CatalogStepper, type StepDef } from '@/components/app/catalog/CatalogStepper';
+import { cn } from '@/lib/utils';
 
 type UserProduct = Tables<'user_products'>;
 type SceneSource = 'library' | 'scratch';
 
-const ASPECT_RATIOS = ['1:1', '3:4', '4:5', '9:16'] as const;
+const RATIO_OPTIONS = ['1:1', '3:4', '4:5', '9:16'] as const;
+type RatioOption = typeof RATIO_OPTIONS[number];
 const PER_IMAGE_COST = 6;
+const MAX_PRODUCTS = 50;
+
+const STEP_DEFS: StepDef[] = [
+  { number: 1, label: 'Scene', icon: ImageLucide },
+  { number: 2, label: 'Products', icon: Package },
+  { number: 3, label: 'Review', icon: Sparkles },
+];
 
 interface LibraryPickerItem {
   id: string;
@@ -58,10 +68,10 @@ export default function ProductSwap() {
   // ── Product state ─────────────────────────────────────────────────────
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [productSearch, setProductSearch] = useState('');
-  const [productVisibleCount, setProductVisibleCount] = useState(12);
+  const [productVisibleCount, setProductVisibleCount] = useState(24);
 
-  // ── Ratios ────────────────────────────────────────────────────────────
-  const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['4:5']));
+  // ── Ratio (auto-detected from scene; not user-selectable) ─────────────
+  const [detectedRatio, setDetectedRatio] = useState<RatioOption>('4:5');
 
   // ── Wizard step ───────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -90,7 +100,6 @@ export default function ProductSwap() {
       const s = JSON.parse(raw);
       if (s.sceneUrl) { setSceneUrl(s.sceneUrl); setSceneTitle(s.sceneTitle || ''); setSceneSource(s.sceneSource || 'library'); }
       if (Array.isArray(s.selectedProductIds)) setSelectedProductIds(new Set(s.selectedProductIds));
-      if (Array.isArray(s.selectedRatios) && s.selectedRatios.length) setSelectedRatios(new Set(s.selectedRatios));
       if (s.currentStep === 1 || s.currentStep === 2 || s.currentStep === 3) setCurrentStep(s.currentStep);
     } catch { /* ignore */ }
   }, []);
@@ -100,11 +109,10 @@ export default function ProductSwap() {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         sceneUrl, sceneTitle, sceneSource,
         selectedProductIds: Array.from(selectedProductIds),
-        selectedRatios: Array.from(selectedRatios),
         currentStep,
       }));
     } catch { /* ignore */ }
-  }, [sceneUrl, sceneTitle, sceneSource, selectedProductIds, selectedRatios, currentStep]);
+  }, [sceneUrl, sceneTitle, sceneSource, selectedProductIds, currentStep]);
 
   // ── Data ──────────────────────────────────────────────────────────────
   const { data: products = [] } = useQuery({
@@ -227,23 +235,16 @@ export default function ProductSwap() {
   }, [refreshCredits, stopPolling]);
 
   // ── Derived ───────────────────────────────────────────────────────────
-  const totalImages = selectedProductIds.size * selectedRatios.size;
+  const totalImages = selectedProductIds.size;
   const totalCost = totalImages * PER_IMAGE_COST;
-  const canGenerate = !!sceneUrl && selectedProductIds.size > 0 && selectedRatios.size > 0 && !isGenerating;
+  const canGenerate = !!sceneUrl && selectedProductIds.size > 0 && !isGenerating;
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const toggleProduct = (id: string) => {
     const next = new Set(selectedProductIds);
     if (next.has(id)) next.delete(id);
-    else if (next.size < 10) next.add(id);
+    else if (next.size < MAX_PRODUCTS) next.add(id);
     setSelectedProductIds(next);
-  };
-
-  const toggleRatio = (r: string) => {
-    const next = new Set(selectedRatios);
-    if (next.has(r)) next.delete(r);
-    else next.add(r);
-    setSelectedRatios(next);
   };
 
   const pickLibrary = (item: LibraryPickerItem) => {
@@ -284,7 +285,7 @@ export default function ProductSwap() {
       sceneImageUrl: sceneUrl,
       sceneTitle: sceneTitle || 'scene',
       products: selected.map(p => ({ id: p.id, imageUrl: p.image_url || '', title: p.title })),
-      ratios: Array.from(selectedRatios),
+      ratios: [detectedRatio],
     });
 
     if (result && result.jobs.length > 0) {
@@ -509,22 +510,20 @@ export default function ProductSwap() {
     const img = new Image();
     img.onload = () => {
       const r = img.naturalWidth / img.naturalHeight;
-      const ratioMap: Record<typeof ASPECT_RATIOS[number], number> = { '1:1': 1, '3:4': 3/4, '4:5': 4/5, '9:16': 9/16 };
-      let best: typeof ASPECT_RATIOS[number] = '4:5';
+      const ratioMap: Record<RatioOption, number> = { '1:1': 1, '3:4': 3 / 4, '4:5': 4 / 5, '9:16': 9 / 16 };
+      let best: RatioOption = '4:5';
       let bestDiff = Infinity;
-      for (const [k, v] of Object.entries(ratioMap) as [typeof ASPECT_RATIOS[number], number][]) {
+      for (const [k, v] of Object.entries(ratioMap) as [RatioOption, number][]) {
         const diff = Math.abs(Math.log(r / v));
         if (diff < bestDiff) { bestDiff = diff; best = k; }
       }
-      setSelectedRatios(prev => prev.size > 0 ? prev : new Set([best]));
-      // If user only has the default 4:5 selected, swap to detected
-      setSelectedRatios(prev => (prev.size === 1 && prev.has('4:5') && best !== '4:5') ? new Set([best]) : prev);
+      setDetectedRatio(best);
     };
     img.src = sceneUrl;
   }, [sceneUrl]);
 
   // ── Step guards ───────────────────────────────────────────────────────
-  const canAdvanceFrom1 = !!sceneUrl && selectedRatios.size > 0;
+  const canAdvanceFrom1 = !!sceneUrl;
   const canAdvanceFrom2 = selectedProductIds.size > 0;
   const goToStep = (s: 1 | 2 | 3) => {
     if (s === 2 && !canAdvanceFrom1) return;
@@ -534,19 +533,19 @@ export default function ProductSwap() {
   };
   const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
   const creditsShort = Math.max(0, totalCost - credits);
+  const canAfford = credits >= totalCost;
 
-  const stepDefs = [
-    { n: 1 as const, label: 'Scene', done: canAdvanceFrom1 },
-    { n: 2 as const, label: 'Products', done: canAdvanceFrom2 },
-    { n: 3 as const, label: 'Review', done: false },
-  ];
+  const canNavigateTo = (n: number) =>
+    n === 1 ||
+    (n === 2 && canAdvanceFrom1) ||
+    (n === 3 && canAdvanceFrom1 && canAdvanceFrom2);
 
   // ── Setup view ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen pb-28">
+    <div className="min-h-screen">
       <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
 
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 pb-36 space-y-6">
         {/* Header */}
         <div className="space-y-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/app/workflows')} className="gap-1.5 -ml-2">
@@ -554,7 +553,7 @@ export default function ProductSwap() {
           </Button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Replace className="w-5 h-5 text-primary" />
+              <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
@@ -565,37 +564,12 @@ export default function ProductSwap() {
           </div>
 
           {/* Stepper */}
-          <div className="flex items-center gap-2 sm:gap-3 pt-2">
-            {stepDefs.map((s, idx) => {
-              const isActive = currentStep === s.n;
-              const isComplete = s.done && currentStep > s.n;
-              const isClickable = s.n < currentStep || (s.n === 2 && canAdvanceFrom1) || (s.n === 3 && canAdvanceFrom1 && canAdvanceFrom2);
-              return (
-                <div key={s.n} className="flex items-center gap-2 sm:gap-3 flex-1">
-                  <button
-                    type="button"
-                    disabled={!isClickable}
-                    onClick={() => goToStep(s.n)}
-                    className={`flex items-center gap-2 min-w-0 transition-opacity ${isClickable ? 'cursor-pointer hover:opacity-80' : 'cursor-default opacity-60'}`}
-                  >
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
-                      isActive ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                      : isComplete ? 'bg-primary/15 text-primary border border-primary/30'
-                      : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {isComplete ? <Check className="w-3.5 h-3.5" /> : s.n}
-                    </span>
-                    <span className={`text-sm font-medium truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {s.label}
-                    </span>
-                  </button>
-                  {idx < stepDefs.length - 1 && (
-                    <div className={`h-px flex-1 min-w-[12px] ${currentStep > s.n ? 'bg-primary/40' : 'bg-border'}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <CatalogStepper
+            steps={STEP_DEFS}
+            currentStep={currentStep}
+            canNavigateTo={canNavigateTo}
+            onStepClick={(s) => goToStep(s as 1 | 2 | 3)}
+          />
         </div>
 
         {/* ═══════════ STEP 1: SCENE ═══════════ */}
@@ -711,21 +685,12 @@ export default function ProductSwap() {
               </label>
             )}
 
-            {/* Aspect ratios (lives with scene) */}
+            {/* Detected ratio (read-only — strictly mirrors uploaded scene) */}
             {sceneUrl && (
-              <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">Aspect ratios</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Auto-matched to your source. Add more if you want extra crops.</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {ASPECT_RATIOS.map(r => (
-                    <button key={r} onClick={() => toggleRatio(r)}
-                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
-                        selectedRatios.has(r) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40'
-                      }`}>{r}</button>
-                  ))}
-                </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground animate-in fade-in slide-in-from-top-2 duration-200">
+                <span>Aspect ratio</span>
+                <Badge variant="secondary" className="h-5 text-[10px] font-medium">{detectedRatio}</Badge>
+                <span className="opacity-60">· matched to your scene</span>
               </div>
             )}
           </div>
@@ -736,20 +701,20 @@ export default function ProductSwap() {
           <div className="space-y-4 animate-in fade-in duration-200">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Choose products to swap in</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Each product becomes its own image in the same scene. Max 10.</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Each product becomes its own image in the same scene. Max {MAX_PRODUCTS}.</p>
             </div>
 
             <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border space-y-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Search products..." value={productSearch}
-                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(12); }} className="pl-9" />
+                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(24); }} className="pl-9" />
               </div>
               <div className="flex items-center justify-between gap-2">
                 <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
-                  {selectedProductIds.size} / 10 selected
+                  {selectedProductIds.size} / {MAX_PRODUCTS} selected
                 </Badge>
-                {filteredProducts.length > 0 && selectedProductIds.size < 10 && (
+                {filteredProducts.length > 0 && selectedProductIds.size < MAX_PRODUCTS && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -757,7 +722,7 @@ export default function ProductSwap() {
                     onClick={() => {
                       const next = new Set(selectedProductIds);
                       for (const p of filteredProducts.slice(0, productVisibleCount)) {
-                        if (next.size >= 10) break;
+                        if (next.size >= MAX_PRODUCTS) break;
                         next.add(p.id);
                       }
                       setSelectedProductIds(next);
@@ -795,7 +760,7 @@ export default function ProductSwap() {
             </div>
             {filteredProducts.length > productVisibleCount && (
               <div className="text-center pt-2">
-                <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 12)}>
+                <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 24)}>
                   Load more ({filteredProducts.length - productVisibleCount} remaining)
                 </Button>
               </div>
@@ -862,9 +827,7 @@ export default function ProductSwap() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Scene ready'}</p>
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {Array.from(selectedRatios).map(r => (
-                          <Badge key={r} variant="secondary" className="text-[10px] h-5">{r}</Badge>
-                        ))}
+                        <Badge variant="secondary" className="text-[10px] h-5">{detectedRatio}</Badge>
                       </div>
                     </div>
                   </div>
@@ -900,7 +863,7 @@ export default function ProductSwap() {
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cost summary</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">Products</span><span className="text-foreground font-medium">{selectedProducts.length}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Ratios</span><span className="text-foreground font-medium">{selectedRatios.size}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Aspect ratio</span><span className="text-foreground font-medium">{detectedRatio}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Images</span><span className="text-foreground font-medium">{totalImages}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Cost per image</span><span className="text-foreground font-medium">{PER_IMAGE_COST} credits</span></div>
                 </div>
@@ -950,48 +913,120 @@ export default function ProductSwap() {
             </div>
           </div>
         )}
-      </div>
 
-      {/* ═══════════ PERSISTENT FOOTER ═══════════ */}
-      <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => currentStep === 1 ? navigate('/app/workflows') : goToStep((currentStep - 1) as 1 | 2)}
-            className="gap-1"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            {currentStep === 1 ? 'Exit' : 'Back'}
-          </Button>
+        {/* ═══════════ FLOATING STICKY BAR (matches Product Images aesthetic) ═══════════ */}
+        <div className="sticky bottom-4 z-30 pb-[env(safe-area-inset-bottom)]">
+          <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg overflow-hidden">
+            {/* Mobile: stacked */}
+            <div className="flex flex-col gap-2 p-3 sm:hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3].map(s => (
+                      <div key={s} className={cn(
+                        'w-1.5 h-1.5 rounded-full transition-colors',
+                        s === currentStep ? 'bg-primary scale-125' : s < currentStep ? 'bg-primary/40' : 'bg-border'
+                      )} />
+                    ))}
+                  </div>
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {STEP_DEFS.find(s => s.number === currentStep)?.label}
+                  </span>
+                </div>
+                {totalCost > 0 && (
+                  <div className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-muted border border-border">
+                    <Coins className="w-3 h-3 text-primary" />
+                    <span className={cn('font-bold', canAfford ? 'text-foreground' : 'text-destructive')}>{totalCost}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {currentStep > 1 && (
+                  <Button variant="outline" size="pill" className="flex-shrink-0"
+                    onClick={() => goToStep((currentStep - 1) as 1 | 2)}>Back</Button>
+                )}
+                {currentStep < 3 ? (
+                  <Button size="pill"
+                    disabled={(currentStep === 1 && !canAdvanceFrom1) || (currentStep === 2 && !canAdvanceFrom2)}
+                    onClick={() => goToStep((currentStep + 1) as 2 | 3)}
+                    className="gap-1.5 flex-1">
+                    Continue<ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                ) : (
+                  <Button size="pill"
+                    disabled={!canGenerate || isGenerating}
+                    onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
+                    className="gap-1.5 flex-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {isGenerating ? 'Generating…' : `Generate ${totalImages || ''}`.trim()}
+                  </Button>
+                )}
+              </div>
+            </div>
 
-          <div className="hidden sm:flex flex-col items-center text-[11px] text-muted-foreground">
-            <span>Step {currentStep} of 3</span>
-            {currentStep === 1 && sceneUrl && <span className="text-foreground/70">{selectedRatios.size} ratio{selectedRatios.size !== 1 ? 's' : ''} selected</span>}
-            {currentStep === 2 && <span className="text-foreground/70">{selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} selected</span>}
-            {currentStep === 3 && <span className="text-foreground/70">{totalImages} image{totalImages !== 1 ? 's' : ''} · {totalCost} credits</span>}
+            {/* Desktop: single row */}
+            <div className="hidden sm:flex items-center justify-between gap-3 p-3 sm:p-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3].map(s => (
+                    <div key={s} className={cn(
+                      'w-2 h-2 rounded-full transition-colors',
+                      s === currentStep ? 'bg-primary scale-125' : s < currentStep ? 'bg-primary/40' : 'bg-border'
+                    )} />
+                  ))}
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  {STEP_DEFS.find(s => s.number === currentStep)?.label}
+                </span>
+                <div className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                  {selectedProductIds.size > 0 && (
+                    <span className="font-medium text-foreground">
+                      {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {totalImages > 0 && (
+                    <>
+                      <span>·</span>
+                      <span className="font-bold text-foreground">{totalImages} img{totalImages !== 1 ? 's' : ''}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {totalCost > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted border border-border">
+                    <Coins className="w-3.5 h-3.5 text-primary" />
+                    <span className={cn('font-bold', canAfford ? 'text-foreground' : 'text-destructive')}>{totalCost}</span>
+                    <span className="text-muted-foreground">cr</span>
+                  </div>
+                  {!canAfford && <span className="text-xs text-destructive font-medium">Not enough credits</span>}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {currentStep > 1 && (
+                  <Button variant="outline" size="pill" onClick={() => goToStep((currentStep - 1) as 1 | 2)}>Back</Button>
+                )}
+                {currentStep < 3 ? (
+                  <Button size="pill"
+                    disabled={(currentStep === 1 && !canAdvanceFrom1) || (currentStep === 2 && !canAdvanceFrom2)}
+                    onClick={() => goToStep((currentStep + 1) as 2 | 3)}
+                    className="gap-1.5">
+                    Continue<ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                ) : (
+                  <Button size="pill"
+                    disabled={!canGenerate || isGenerating}
+                    onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
+                    className="gap-1.5">
+                    {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {isGenerating ? 'Generating…' : `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`}
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-
-          {currentStep < 3 ? (
-            <Button
-              size="sm"
-              onClick={() => goToStep((currentStep + 1) as 2 | 3)}
-              disabled={(currentStep === 1 && !canAdvanceFrom1) || (currentStep === 2 && !canAdvanceFrom2)}
-              className="gap-1"
-            >
-              Continue
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
-              disabled={!canGenerate || isGenerating}
-              className="gap-1 shadow-md shadow-primary/10"
-            >
-              {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4" /> Generate · {totalCost} cr</>}
-            </Button>
-          )}
         </div>
       </div>
 
