@@ -164,7 +164,7 @@ export function Step4Cast({
   const wardrobes =
     WARDROBE_COLORS.filter((w) => resolved.wardrobeColors.includes(w.value));
 
-  const [showExact, setShowExact] = useState(!!scale?.dimensions);
+  
 
   const flow = useMemo(
     () => computeStep4Flow(answers, { module, subFamily, isReference }),
