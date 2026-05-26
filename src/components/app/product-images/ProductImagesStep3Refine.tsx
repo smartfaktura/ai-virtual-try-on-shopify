@@ -3667,7 +3667,6 @@ export function ProductImagesStep3Refine({
         <Card>
           <CardContent className="p-4 space-y-2">
             <span className="text-sm font-semibold">Additional note <span className="text-muted-foreground font-normal">(optional)</span></span>
-            <p className="text-xs text-muted-foreground">Anything important to keep in mind?</p>
             <Textarea
               placeholder="Special instructions, unusual product details, styling preferences..."
               value={details.customNote || ''}
