@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Search, Upload, X, Sparkles, Replace, ArrowLeft, Image as ImageLucide,
-  Check, Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
-  ChevronRight, ChevronLeft, Pencil, Download,
+  Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
+  Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
+  Pencil, Download, Coins, ArrowRight,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,12 +25,21 @@ import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { CatalogStepper, type StepDef } from '@/components/app/catalog/CatalogStepper';
 
 type UserProduct = Tables<'user_products'>;
 type SceneSource = 'library' | 'scratch';
 
-const ASPECT_RATIOS = ['1:1', '3:4', '4:5', '9:16'] as const;
+const RATIO_OPTIONS = ['1:1', '3:4', '4:5', '9:16'] as const;
+type RatioOption = typeof RATIO_OPTIONS[number];
 const PER_IMAGE_COST = 6;
+const MAX_PRODUCTS = 50;
+
+const STEP_DEFS: StepDef[] = [
+  { number: 1, label: 'Scene', icon: ImageLucide },
+  { number: 2, label: 'Products', icon: Package },
+  { number: 3, label: 'Review', icon: Sparkles },
+];
 
 interface LibraryPickerItem {
   id: string;
