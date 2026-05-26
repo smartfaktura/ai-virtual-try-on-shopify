@@ -85,15 +85,9 @@ function getCopy(args: {
         subtitle: 'Pick a plan to keep your visuals flowing',
       };
     }
-    if (isMobile) {
-      return {
-        title: 'Keep creating with VOVV',
-        subtitle: 'Pick a plan — better value as you scale',
-      };
-    }
     return {
-      title: 'Choose a plan to keep creating with VOVV',
-      subtitle: 'Create more visuals, faster — with better value on larger plans',
+      title: 'Keep creating with VOVV',
+      subtitle: 'Pick a plan — better value as you scale',
     };
   }
 
