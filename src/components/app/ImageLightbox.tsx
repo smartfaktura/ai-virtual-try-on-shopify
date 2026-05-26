@@ -233,8 +233,18 @@ export function ImageLightbox({
               </button>
             )}
             {onDownload && (
-              <button onClick={handleDownload} className={iconBtnClass}>
+              <button onClick={handleDownload} className={iconBtnClass} title="Download">
                 <Download className="w-4 h-4" />
+              </button>
+            )}
+            {onEdit && (
+              <button onClick={handleEdit} className={iconBtnClass} title="Edit Image">
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+            {onGenerateAngles && (
+              <button onClick={handleGenerateAngles} className={iconBtnClass} title="Generate More Angles">
+                <Layers className="w-4 h-4" />
               </button>
             )}
             {onCopyPrompt && (
