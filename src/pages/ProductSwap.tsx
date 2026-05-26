@@ -509,22 +509,20 @@ export default function ProductSwap() {
     const img = new Image();
     img.onload = () => {
       const r = img.naturalWidth / img.naturalHeight;
-      const ratioMap: Record<typeof ASPECT_RATIOS[number], number> = { '1:1': 1, '3:4': 3/4, '4:5': 4/5, '9:16': 9/16 };
-      let best: typeof ASPECT_RATIOS[number] = '4:5';
+      const ratioMap: Record<RatioOption, number> = { '1:1': 1, '3:4': 3 / 4, '4:5': 4 / 5, '9:16': 9 / 16 };
+      let best: RatioOption = '4:5';
       let bestDiff = Infinity;
-      for (const [k, v] of Object.entries(ratioMap) as [typeof ASPECT_RATIOS[number], number][]) {
+      for (const [k, v] of Object.entries(ratioMap) as [RatioOption, number][]) {
         const diff = Math.abs(Math.log(r / v));
         if (diff < bestDiff) { bestDiff = diff; best = k; }
       }
-      setSelectedRatios(prev => prev.size > 0 ? prev : new Set([best]));
-      // If user only has the default 4:5 selected, swap to detected
-      setSelectedRatios(prev => (prev.size === 1 && prev.has('4:5') && best !== '4:5') ? new Set([best]) : prev);
+      setDetectedRatio(best);
     };
     img.src = sceneUrl;
   }, [sceneUrl]);
 
   // ── Step guards ───────────────────────────────────────────────────────
-  const canAdvanceFrom1 = !!sceneUrl && selectedRatios.size > 0;
+  const canAdvanceFrom1 = !!sceneUrl;
   const canAdvanceFrom2 = selectedProductIds.size > 0;
   const goToStep = (s: 1 | 2 | 3) => {
     if (s === 2 && !canAdvanceFrom1) return;
@@ -534,12 +532,12 @@ export default function ProductSwap() {
   };
   const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
   const creditsShort = Math.max(0, totalCost - credits);
+  const canAfford = credits >= totalCost;
 
-  const stepDefs = [
-    { n: 1 as const, label: 'Scene', done: canAdvanceFrom1 },
-    { n: 2 as const, label: 'Products', done: canAdvanceFrom2 },
-    { n: 3 as const, label: 'Review', done: false },
-  ];
+  const canNavigateTo = (n: number) =>
+    n === 1 ||
+    (n === 2 && canAdvanceFrom1) ||
+    (n === 3 && canAdvanceFrom1 && canAdvanceFrom2);
 
   // ── Setup view ────────────────────────────────────────────────────────
   return (
