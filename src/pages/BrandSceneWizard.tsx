@@ -46,17 +46,11 @@ export default function BrandSceneWizardPage() {
             variant="ghost"
             size="sm"
             onClick={() => navigate("/app/brand-scenes")}
-            className="gap-1.5 -ml-2 mb-2"
+            className="gap-1.5 -ml-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Brand Scenes
           </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            New brand scene
-          </h1>
-          <p className="text-base text-muted-foreground mt-1.5">
-            Design a signature scene saved to your brand library
-          </p>
         </div>
         <Wizard />
       </div>

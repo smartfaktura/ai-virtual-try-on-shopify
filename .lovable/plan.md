@@ -1,25 +1,44 @@
 ## Goal
 
-Make /app/models cards visually match /app/brand-scenes — larger cards via the same grid breakpoints — and shorten the card CTA.
+Drop the duplicate page-level `<h1>` + subtitle from both `/new` wizard pages — the wizard already shows a per-step title/subtitle, so the outer header is redundant. Keep the small back button.
 
 ## Changes
 
-### `src/pages/BrandModels.tsx`
+### `src/pages/BrandSceneWizard.tsx` (lines 44–60)
+Remove the `<h1>` and `<p>` block. Keep the back button.
 
-1. **Grid (line 1388)** — replace the dense 6-up grid with the brand-scenes breakpoints:
-   ```diff
-   - <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-   + <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-   ```
+```tsx
+<div className="mb-4 sm:mb-6">
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={() => navigate("/app/brand-scenes")}
+    className="gap-1.5 -ml-2"
+  >
+    <ArrowLeft className="w-4 h-4" />
+    Brand Scenes
+  </Button>
+</div>
+```
 
-2. **CTA copy (ModelCard)** — shorten the primary action label:
-   ```diff
-   - Use in Visual Studio
-   + Use model
-   ```
-   (Mirrors brand-scenes' `Use scene` voice.)
+### `src/pages/BrandModelNew.tsx` (lines 13–27)
+Same treatment — remove the `<h1>New brand model</h1>` and the subtitle, keep the back button.
+
+```tsx
+<div className="mb-4 sm:mb-6">
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={() => navigate('/app/models')}
+    className="gap-1.5 -ml-2"
+  >
+    <ArrowLeft className="w-4 h-4" />
+    Brand Models
+  </Button>
+</div>
+```
 
 ## Out of scope
 
-- Card internals/aesthetic — already matched in previous turn.
-- Other dense grids inside the wizard (line 1339 model picker grid) — unrelated, stays.
+- Wizard-internal titles/subtitles — already correct.
+- `SEOHead` tags — keep.
