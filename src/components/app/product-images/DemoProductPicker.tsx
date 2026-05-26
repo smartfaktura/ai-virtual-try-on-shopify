@@ -42,7 +42,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelectDemo }: DemoProd
             'disabled:opacity-50 disabled:pointer-events-none',
           )}
         >
-          <div className="relative w-full overflow-hidden rounded-lg bg-muted/40 mb-1.5" style={{ aspectRatio: '1/1' }}>
+          <div className="relative w-full overflow-hidden rounded-xl bg-muted/40 mb-1.5" style={{ aspectRatio: '1/1' }}>
             <ShimmerImage
               src={product.previewSrc}
               alt={product.title}
@@ -50,7 +50,7 @@ export function DemoProductPicker({ open, onOpenChange, onSelectDemo }: DemoProd
               aspectRatio="1/1"
             />
             {loadingId === product.id && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
               </div>
             )}

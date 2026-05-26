@@ -1542,14 +1542,14 @@ export default function ProductImages() {
                     >
                       {/* Drag-and-drop overlay */}
                       {isDragOver && (
-                        <div className="absolute inset-0 z-20 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex flex-col items-center justify-center gap-2 backdrop-blur-sm pointer-events-none">
+                        <div className="absolute inset-0 z-20 bg-primary/10 border-2 border-dashed border-primary rounded-xl flex flex-col items-center justify-center gap-2 backdrop-blur-sm pointer-events-none">
                           <Upload className="w-8 h-8 text-primary animate-bounce" />
                           <p className="text-sm font-medium text-primary">Drop image to add product</p>
                         </div>
                       )}
 
                       {/* Upload Image Card — quick-saves immediately */}
-                      <div className="group relative flex flex-col rounded-lg border-2 border-dashed border-border hover:border-primary/40 transition-all overflow-hidden">
+                      <div className="group relative flex flex-col rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-all overflow-hidden">
                         <div
                           role="button"
                           tabIndex={quickUploading ? -1 : 0}
@@ -1612,7 +1612,7 @@ export default function ProductImages() {
                           <div key={up.id} role="button" tabIndex={0} onClick={handleToggle} onKeyDown={(e) => {
                              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggle(); }
                            }} className={cn(
-                             'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left cursor-pointer',
+                             'group relative flex flex-col rounded-xl overflow-hidden border-2 transition-all text-left cursor-pointer',
                              isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
                              isDisabled && 'opacity-40 cursor-not-allowed'
                            )}>
@@ -1622,7 +1622,7 @@ export default function ProductImages() {
                             )}>
                               {isSelected && <Check className="w-3 h-3" />}
                             </div>
-                            <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                            <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-xl" />
                             <div className="h-[44px] px-1.5 py-1 bg-card flex flex-col justify-center">
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-1">{up.title}</p>
                               <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type || '\u00A0'}</p>
@@ -1684,7 +1684,7 @@ export default function ProductImages() {
                         {selectedProducts.map(p => {
                           const done = !!analyses[p.id] && !pendingIds.has(p.id);
                           return (
-                            <div key={p.id} className="relative w-10 h-10 rounded-lg bg-muted/30 border border-border/40 overflow-hidden flex-shrink-0">
+                            <div key={p.id} className="relative w-10 h-10 rounded-xl bg-muted/30 border border-border/40 overflow-hidden flex-shrink-0">
                               {p.image_url && (
                                 <img src={getOptimizedUrl(p.image_url, { quality: 60 })} alt="" loading="lazy" className={`w-full h-full object-cover transition-opacity ${done ? 'opacity-100' : 'opacity-50'}`} />
                               )}

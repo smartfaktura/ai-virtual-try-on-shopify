@@ -524,7 +524,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
           {isLoadingRest && unifiedOther.length === 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />
+                <div key={i} className="h-10 rounded-xl bg-muted animate-pulse" />
               ))}
             </div>
           )}
@@ -901,7 +901,7 @@ function FreeSceneBanner({ isFree, onUpgradeClick, limit, current }: { isFree?: 
   const atLimit = current >= limit;
   return (
     <div className={cn(
-      'flex items-center gap-2 px-3 py-2 rounded-lg border text-xs',
+      'flex items-center gap-2 px-3 py-2 rounded-xl border text-xs',
       atLimit ? 'bg-primary/[0.04] border-primary/20' : 'bg-muted/40 border-border'
     )}>
       <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
