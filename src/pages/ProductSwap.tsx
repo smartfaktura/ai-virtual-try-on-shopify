@@ -698,26 +698,42 @@ export default function ProductSwap() {
                   onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(24); }} className="pl-9" />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
-                  {selectedProductIds.size} / {MAX_PRODUCTS} selected
-                </Badge>
-                {filteredProducts.length > 0 && selectedProductIds.size < MAX_PRODUCTS && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => {
-                      const next = new Set(selectedProductIds);
-                      for (const p of filteredProducts.slice(0, productVisibleCount)) {
-                        if (next.size >= MAX_PRODUCTS) break;
-                        next.add(p.id);
-                      }
-                      setSelectedProductIds(next);
-                    }}
-                  >
-                    Select visible
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
+                    {selectedProductIds.size} / {MAX_PRODUCTS} selected
+                  </Badge>
+                  {selectedProductIds.size > 0 && (
+                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2"
+                      onClick={() => setSelectedProductIds(new Set())}>
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                {filteredProducts.length > 0 && (() => {
+                  const visible = filteredProducts.slice(0, productVisibleCount);
+                  const allVisibleSelected = visible.length > 0 && visible.every(p => selectedProductIds.has(p.id));
+                  return (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => {
+                        const next = new Set(selectedProductIds);
+                        if (allVisibleSelected) {
+                          for (const p of visible) next.delete(p.id);
+                        } else {
+                          for (const p of visible) {
+                            if (next.size >= MAX_PRODUCTS) break;
+                            next.add(p.id);
+                          }
+                        }
+                        setSelectedProductIds(next);
+                      }}
+                    >
+                      {allVisibleSelected ? 'Unselect visible' : 'Select visible'}
+                    </Button>
+                  );
+                })()}
               </div>
             </div>
 
