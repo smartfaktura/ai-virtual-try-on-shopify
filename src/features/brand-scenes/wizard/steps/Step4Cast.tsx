@@ -359,7 +359,7 @@ export function Step4Cast({
       {subStep === "essentials" && (
         <div className="space-y-10 animate-fade-in">
           {/* Cast preset */}
-          <Section label="Who's in the shot" required missing={!preset}>
+          <Section label={sectionLabels.cast} required missing={!preset}>
             <div className="flex flex-wrap gap-x-2 gap-y-2.5">
               {visibleCastPresets.map((p) => (
                 <Chip
