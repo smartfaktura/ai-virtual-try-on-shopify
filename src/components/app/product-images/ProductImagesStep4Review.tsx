@@ -182,9 +182,9 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
   return (
     <div className="space-y-6 pb-20">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Review & configure output</h2>
-        <p className="text-sm text-muted-foreground mt-1">Set format, quality, and confirm your selections before generating.</p>
+        <h2 className="text-xl font-semibold tracking-tight">Review & generate</h2>
       </div>
+
 
       {isLargeBatch && (
         <Card className="border-destructive/30 bg-destructive/5">
