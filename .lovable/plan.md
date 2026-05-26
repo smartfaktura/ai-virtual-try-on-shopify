@@ -1,17 +1,17 @@
-Unify the upgrade CTA on `/app/brand-scenes` to match `/app/brand-models`.
+Fix the sidebar credit indicator overflow without abbreviating numbers — keep full `1,000 / 1,000` formatting.
 
-**Current state**
-- Brand Models (`src/pages/BrandModels.tsx`, `UpgradeHero`) uses: `Upgrade to Growth` with a `Crown` icon on the left.
-- Brand Scenes (`src/pages/BrandScenes.tsx`, `UpgradeBanner` and `UpgradeState`) uses: `Upgrade plan` with an `ArrowRight` icon on the right.
+**File:** `src/components/app/CreditIndicator.tsx`
 
 **Change**
-In `src/pages/BrandScenes.tsx`, update both upgrade buttons to match Brand Models:
-- Label: `Upgrade to Growth`
-- Icon: `Crown` on the left (`w-4 h-4`)
-- Keep existing `rounded-full font-semibold gap-2` classes
-- Remove the trailing `ArrowRight` icon
-- Add `Crown` to the lucide-react import; remove `ArrowRight` if no longer used elsewhere in the file (it is — keep it).
+- Tighten balance font sizing so 4–5 digit balances fit alongside the pill:
+  - 1–3 digits → `text-2xl`
+  - 4 digits → `text-lg` (down from `text-xl`)
+  - 5+ digits → `text-base`
+- Add `tabular-nums leading-none` to the balance span for stable width.
+- Shrink the divider/max text slightly: keep `text-[11px]`, but add `tabular-nums` and `truncate`.
+- Reduce the CTA pill width: `h-8 px-3` (was `px-3.5`) and `text-[11px]` (was `text-xs`) — saves ~6–8px without losing legibility.
+- Add `min-w-0` to the balance flex group so the pill always wins layout priority and never gets clipped off-row.
 
-**Scope**
-- One file: `src/pages/BrandScenes.tsx`
-- Affects `UpgradeBanner` and `UpgradeState` button visuals only. No behavior change.
+No abbreviation, no layout restructure, no behavior change. Pill and progress bar stay where they are.
+
+**Scope:** one file.
