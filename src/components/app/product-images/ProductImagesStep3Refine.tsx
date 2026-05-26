@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ColorPickerDialog } from '@/components/app/product-images/ColorPickerDialog';
 import { ProductThumbnail } from '@/components/app/product-images/ProductThumbnail';
@@ -1947,7 +1948,7 @@ export function ProductImagesStep3Refine({
   const [bgLimitHintAt, setBgLimitHintAt] = useState<number | null>(null);
   useEffect(() => {
     if (modelLimitHintAt == null) return;
-    const t = setTimeout(() => setModelLimitHintAt(null), 3500);
+    const t = setTimeout(() => setModelLimitHintAt(null), 4500);
     return () => clearTimeout(t);
   }, [modelLimitHintAt]);
   useEffect(() => {
@@ -3720,11 +3721,23 @@ export function ProductImagesStep3Refine({
         </Card>
       </div>
 
-      {/* Free plan model limit toast — shots-style floating notification */}
-      {isFree && modelLimitHintAt != null && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in">
-          1 model on Free — upgrade for multi-model shoots
-        </div>
+      {/* Free plan model limit toast — portal so fixed positioning escapes transformed ancestors */}
+      {isFree && modelLimitHintAt != null && typeof document !== 'undefined' && createPortal(
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in">
+          <span>1 model on Free</span>
+          <span className="text-background/40">·</span>
+          {onUpgradeClick ? (
+            <button
+              onClick={onUpgradeClick}
+              className="font-semibold underline underline-offset-2 hover:opacity-80"
+            >
+              Upgrade for multi-model shoots
+            </button>
+          ) : (
+            <span>Upgrade for multi-model shoots</span>
+          )}
+        </div>,
+        document.body
       )}
     </div>
   );

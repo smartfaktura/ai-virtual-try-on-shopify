@@ -1,14 +1,16 @@
-Refresh Brand Models messaging to emphasize the unique value proposition: users can train AI models from their own references / real brand models.
+Fix three issues with the Free-plan model-limit toast on `/app/generate/product-images` setup step:
 
-1. **BrandModelsInfoModal.tsx** — copy-only refresh:
-   - Subtitle: `Custom AI models. Reused across every visual you create.` → `Trained from your own references. Reused across every visual you create.`
-   - Feature 01: `Lock in your brand's signature face` → `Train from your own references — even your real brand models`
-   - Features 02 and 03 remain unchanged.
-   - Title, CTAs, footer hint, layout stay as-is.
+1. **Toast disappears too quickly** — extend visible duration from 3500ms to 4500ms so the user has time to read and click Upgrade.
+2. **"Upgrade" not actionable** — the toast is currently passive text. Add an inline `Upgrade` link inside the toast that calls the existing `onUpgradeClick` (already wired through to `openBuyModal`). Visual: pill toast with body copy + a separator dot + bold underlined `Upgrade` button.
+3. **Toast drifts off-center (jumps left)** — caused by `position: fixed` resolving relative to a transformed ancestor (animation/framer wrapper) instead of the viewport. Fix by rendering the toast through a React portal to `document.body` so `fixed left-1/2 -translate-x-1/2` truly centers it horizontally over the viewport.
 
-2. **ProductImagesStep3Refine.tsx** (inline upsell card, ~line 187) — copy-only refresh:
-   - Title: `Create Your Brand Model` → `Train your own brand model`
-   - Subtitle: `Generate a unique AI model for your brand` → `From your own references — reuse on every shoot`
-   - Section label, icon, button structure, modal trigger stay as-is.
+Implementation in `src/components/app/product-images/ProductImagesStep3Refine.tsx`:
 
-No layout, color, logic, or backend changes.
+- Replace the inline toast block (lines 3723–3728) with a small `FreeLimitToast` helper rendered via `createPortal(..., document.body)`.
+- New helper signature: `<FreeLimitToast active message onUpgradeClick />`. Pill keeps current classes (`fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in flex items-center gap-2`).
+- Inside: `<span>1 model on Free</span>` · `<button onClick={onUpgradeClick} className="font-semibold underline-offset-2 hover:underline">Upgrade for multi-model shoots</button>`.
+- Bump `setTimeout` in the existing auto-dismiss effect (line 1950) from 3500 → 4500.
+- Also apply the same portal fix + Upgrade link to the background-color limit toast (`bgLimitHintAt`) for consistency, since it shares the same positioning bug.
+- Apply the same portal wrapper to `FreeLimitToast` in `ProductImagesStep2Scenes.tsx` (lines 970–977) so the shots-step toast doesn't drift either.
+
+No logic, no state, no layout changes outside the toast itself.
