@@ -15,7 +15,7 @@ const BRAND_MODEL_THUMBNAILS = [
 ];
 
 const FEATURES = [
-  'Train from your own references — even your real brand models',
+  'Create via guided wizard or upload your own reference images',
   'Any ethnicity, age, gender, or body type',
   'Reuse them across every campaign',
 ];
@@ -72,7 +72,7 @@ export function BrandModelsInfoModal({ open, onOpenChange }: Props) {
 
         {/* Subtitle */}
         <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
-          Trained from your own references. Reused across every visual you create.
+          Build one with the guided wizard or from your own reference image — reuse across every visual you create.
         </DialogDescription>
 
         {/* Feature list */}
