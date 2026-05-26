@@ -270,17 +270,21 @@ export const brandSceneCastSchema = z
   );
 
 const scalePresetSchema = z.enum([
+  "mini",
   "pocket",
   "handheld",
+  "tabletop",
   "carry",
   "furniture",
   "architectural",
   "on_body",
+  "other",
 ]);
 
 export const brandSceneScaleSchema = z
   .object({
     preset: scalePresetSchema,
+    note: z.string().trim().max(160).optional(),
     dimensions: z
       .object({
         w: z.number().positive(),
