@@ -968,11 +968,12 @@ function FreeSceneBanner({ isFree, onUpgradeClick, limit, current }: { isFree?: 
 }
 
 function FreeLimitToast({ active, message }: { active?: boolean; message: string }) {
-  if (!active) return null;
-  return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in">
+  if (!active || typeof document === 'undefined') return null;
+  return createPortal(
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-medium shadow-lg animate-fade-in">
       {message}
-    </div>
+    </div>,
+    document.body
   );
 }
 
