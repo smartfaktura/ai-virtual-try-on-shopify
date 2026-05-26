@@ -303,7 +303,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 </Button>
               )}
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {perCategoryScenes && perCategoryScenes.size > 0 && categoryGroups ? (
                 Array.from(categoryGroups.entries()).map(([catId, productIds]) => {
                   const catSceneIds = perCategoryScenes.get(catId);
@@ -313,11 +313,20 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                   return (
                     <div key={catId} className="w-full space-y-1">
                       <span className="text-[10px] font-medium text-muted-foreground">{catLabel} ({productIds.length} product{productIds.length !== 1 ? 's' : ''})</span>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {catScenes.slice(0, 8).map(s => (
-                          <Badge key={s.id} variant="outline" className="text-[10px]">{s.title}</Badge>
+                          <span key={s.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground">
+                            {s.previewUrl ? (
+                              <img src={getOptimizedUrl(s.previewUrl, { quality: 40 })} alt={s.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+                            ) : (
+                              <span className="w-5 h-5 rounded-full bg-muted-foreground/15 flex-shrink-0" />
+                            )}
+                            <span className="truncate max-w-[140px]">{s.title}</span>
+                          </span>
                         ))}
-                        {catScenes.length > 8 && <Badge variant="secondary" className="text-[10px]">+{catScenes.length - 8}</Badge>}
+                        {catScenes.length > 8 && (
+                          <span className="flex items-center px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-muted-foreground">+{catScenes.length - 8}</span>
+                        )}
                       </div>
                     </div>
                   );
@@ -325,10 +334,17 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
               ) : (
                 <>
                   {selectedScenes.slice(0, 12).map(s => (
-                    <Badge key={s.id} variant="outline" className="text-[10px]">{s.title}</Badge>
+                    <span key={s.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground">
+                      {s.previewUrl ? (
+                        <img src={getOptimizedUrl(s.previewUrl, { quality: 40 })} alt={s.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+                      ) : (
+                        <span className="w-5 h-5 rounded-full bg-muted-foreground/15 flex-shrink-0" />
+                      )}
+                      <span className="truncate max-w-[140px]">{s.title}</span>
+                    </span>
                   ))}
                   {selectedScenes.length > 12 && (
-                    <Badge variant="secondary" className="text-[10px]">+{selectedScenes.length - 12} more</Badge>
+                    <span className="flex items-center px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-muted-foreground">+{selectedScenes.length - 12}</span>
                   )}
                 </>
               )}
