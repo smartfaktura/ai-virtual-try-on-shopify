@@ -560,11 +560,9 @@ export default function ProductSwap() {
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
-              {currentStep === 1 && (
-                <p className="text-sm text-muted-foreground">
-                  Same scene, different product
-                </p>
-              )}
+              <p className="mt-1 pl-2.5 border-l-2 border-primary/40 text-[13px] font-light tracking-wide text-muted-foreground/90">
+                Same scene, different product
+              </p>
             </div>
           </div>
 
