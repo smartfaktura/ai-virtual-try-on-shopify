@@ -415,7 +415,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                   className="w-full font-medium"
                 >
                   <Layers className="w-4 h-4 mr-2" />
-                  Generate Perspectives
+                  Generate More Angles
                 </Button>
 
                 <Button

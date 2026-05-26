@@ -46,7 +46,7 @@ const recentlyShipped = [
   'Brand Models system for repeatable on-model visuals',
   'Category-aware shot selection in Product Images wizard',
   'Learn hub with in-app guides at /app/learn',
-  'Picture Perspectives — 1 photo, endless angles',
+  'Generate More Angles — 1 photo, endless angles',
   'Image Editing in Freestyle Studio',
   'Catalog Studio (BETA) for ecommerce hero photography',
   'Resilience layer with Gemini → Seedream → Gemini Flash fallback chain',

@@ -14,7 +14,7 @@ export const faqCategories: FaqCategory[] = [
     questions: [
       {
         q: 'How do I create my first product image?',
-        a: 'Upload your product photo in the Products section, then head to Visual Studio. Choose from seven Visual Types — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, or Picture Perspectives — select your product, and hit Generate. Your images will be ready in about 60 seconds at 2K resolution in PNG format.',
+        a: 'Upload your product photo in the Products section, then head to Visual Studio. Choose from seven Visual Types — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, or Generate More Angles — select your product, and hit Generate. Your images will be ready in about 60 seconds at 2K resolution in PNG format.',
       },
       {
         q: 'What image formats are supported for uploads?',
@@ -64,15 +64,15 @@ export const faqCategories: FaqCategory[] = [
     questions: [
       {
         q: 'What Visual Types are available?',
-        a: 'VOVV.AI offers seven core Visual Types, each pre-configured with the right prompts, aspect ratios, and model settings: Virtual Try-On (clothing on AI models), Product Listing (clean e-commerce shots), Selfie / UGC (user-generated-style content), Flat Lay (top-down product arrangements), Mirror Selfie (casual mirror-style shots), Interior / Exterior Staging (room and environment staging), and Picture Perspectives (multi-angle product sets).',
+        a: 'VOVV.AI offers seven core Visual Types, each pre-configured with the right prompts, aspect ratios, and model settings: Virtual Try-On (clothing on AI models), Product Listing (clean e-commerce shots), Selfie / UGC (user-generated-style content), Flat Lay (top-down product arrangements), Mirror Selfie (casual mirror-style shots), Interior / Exterior Staging (room and environment staging), and Generate More Angles (multi-angle product sets).',
       },
       {
         q: 'How does Virtual Try-On work?',
         a: 'Upload a clothing item and choose from our library of 40+ diverse AI models across different ethnicities, body types, and ages. Select a pose, framing, and scene, and the AI generates realistic photos of the model wearing your product. Works best with tops, dresses, and outerwear. Costs 6 credits per image.',
       },
       {
-        q: 'What is Picture Perspectives?',
-        a: 'Picture Perspectives generates a cohesive set of branded angles — front, back, sides, and close-ups — from a single source image. The AI detects the environment and lighting from your source photo and ensures all angles match. Costs 6 credits per angle. You select which perspectives you want before generating.',
+        q: 'What is Generate More Angles?',
+        a: 'Generate More Angles creates a cohesive set of branded angles — front, back, sides, and close-ups — from a single source image. The AI detects the environment and lighting from your source photo and ensures all angles match. Costs 6 credits per angle. You select which angles you want before generating.',
       },
       {
         q: 'Can I generate images in bulk?',

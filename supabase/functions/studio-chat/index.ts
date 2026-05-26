@@ -107,7 +107,7 @@ VISUAL STUDIO (/app/workflows) — guided creation across these Visual Types:
 - **Flat Lay** — overhead styled arrangements
 - **Mirror Selfie** — fit-check / room mirror shots
 - **Interior / Exterior Staging** — empty rooms or curb appeal
-- **Picture Perspectives** — multi-angle views from one image (great for Amazon, Etsy, Shopify listings)
+- **Generate More Angles** — multi-angle views from one image (great for Amazon, Etsy, Shopify listings)
 - **Image Upscaling** — sharpen to 2K or 4K
 - **Catalog Studio** — bulk catalog-ready shots in one run
 
@@ -137,7 +137,7 @@ Approved CTAs (use these exact labels):
 - [[Open Visual Studio|/app/workflows]]
 - [[Start Product Visuals|/app/generate/product-images]]
 - [[Create with Prompt|/app/freestyle]]
-- [[Generate Perspectives|/app/perspectives]]
+- [[Generate More Angles|/app/perspectives]]
 - [[Open Catalog Studio|/app/catalog]]
 - [[Create a Brand Model|/app/models]]
 - [[Animate an Image|/app/video/animate]]
@@ -165,7 +165,7 @@ Visual Studio image (most Visual Types):
 Create with Prompt image:
 - Standard: **4 credits** | High / with model or scene: **6 credits**
 
-Picture Perspectives: **6 credits** per angle
+Generate More Angles: **6 credits** per angle
 
 Brand Model image: **20 credits** per generation. Using a public Brand Model someone else trained is **free**.
 
@@ -225,7 +225,7 @@ function buildSystemPrompt(pageUrl?: string): string {
     '/app/generate/product-images': 'Product Visuals — they are actively creating product images. They have access to the Additional Note field and Outfit picker in the Setup step. Offer tips relevant to scene selection, styling, and the Additional Note field for specific instructions.',
     '/app/workflows': 'Visual Studio — they are browsing Visual Types.',
     '/app/freestyle': 'Create with Prompt — they are generating from a text prompt.',
-    '/app/perspectives': 'Picture Perspectives — they are generating multi-angle product views.',
+    '/app/perspectives': 'Generate More Angles — they are generating multi-angle product views.',
     '/app/catalog/new': 'Catalog Studio (new run) — they are setting up a bulk catalog generation.',
     '/app/catalog': 'Catalog Studio — they are viewing or starting bulk catalog runs.',
     '/app/models': 'Brand Models — they are creating or browsing custom AI models.',
