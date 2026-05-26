@@ -1,40 +1,18 @@
-# Improve /app/perspectives generation + results UX
+## Fix awkward thumbnail + pulsing Layers badge stack in `/app/perspectives` generating view
 
-Two frontend-only enhancements to `src/pages/Perspectives.tsx` (no backend changes).
+The current header puts a 16×16 thumbnail of the source image with a 6×6 `Layers` badge clipped into its bottom-right corner. The badge overlaps the photo's face and competes with the title's own "Creating More Angles…" affordance — visually noisy.
 
-## 1. Source thumbnail during "Creating More Angles…"
+### Fix
 
-Right now the generating view only shows a `Layers` icon and text like *"Generating 2 angles of Uploaded Image"*. Users can't see *which* image they're generating angles from.
+In `src/pages/Perspectives.tsx` (the generating-view header, ~lines 550–566):
 
-- Track the source image URL when generation starts. Add state `generatingSource: { imageUrl: string; title: string } | null`.
-- Populate it inside `handleGenerate` from whichever source is active (scratch / first product / first library item).
-- In the generating-view header, replace the standalone `Layers` icon tile with a small thumbnail (56×56 rounded square) of the source image, with a tiny `Layers` badge overlay in the bottom-right corner to keep visual identity. Falls back to the current icon tile if no URL is available.
+- Drop the overlay badge entirely.
+- Keep a single clean source thumbnail: 64×64 rounded square, soft border, `object-cover`.
+- While generation is in flight, wrap it in an animated focus ring (a `ring-2 ring-primary/30` plus a separate pulsing halo via `absolute inset-0 rounded-2xl ring-2 ring-primary/40 animate-ping`) so the "working" signal lives around the image instead of stamped on top of it. Halo disappears once `genAllDone`.
+- Fallback (no source URL) keeps the existing `Layers` icon tile — unchanged.
 
-## 2. Results screen after completion (not just a "View in Library" button)
+No copy changes, no changes to results grid, polling, or any other section. Pure presentational tweak to one block (~15 lines).
 
-Today, when all jobs complete, the user only sees a feedback card and a "View in Library" button. We'll render the generated images inline.
+### Files touched
 
-- Extend the polling fetch to also select the `result` column from `generation_queue` (column already exists, RLS already allows users to read their own rows). Result shape for perspectives is `{ images: [url] }`.
-- Store per-job result URLs in new state `jobResults: Record<string, string>` (first image per job).
-- When `genAllDone && genCompletedCount > 0`, replace the lone CTA with a **Results** section:
-  - Heading: `Your new angles` + count chip.
-  - Responsive grid (`grid-cols-2 sm:grid-cols-3 md:grid-cols-4`), each card shows the image (using `getOptimizedUrl`, quality-only per the no-crop memory rule), the angle label as a small caption, and clicking opens `ImageLightbox`.
-  - `ImageLightbox` wired with `onEdit` → `/app/freestyle?editImage=…&imageRole=edit` and `onGenerateAngles` → `/app/perspectives?source=…` (mirrors the Step 6 results pattern already in the codebase).
-  - Keep the existing `ContextualFeedbackCard` above the grid.
-  - Demote "View in Library" to a secondary ghost button below the grid; primary CTA becomes "Generate more" which resets the generating view.
-
-## Out of scope
-
-- No changes to `useGeneratePerspectives`, edge functions, DB schema, RLS, or the variation list.
-- No changes to the step 1–4 builder UI.
-- No changes to other pages.
-
-## Files touched
-
-- `src/pages/Perspectives.tsx` — state additions, polling tweak (select `result`), header thumbnail, results grid block.
-
-## Technical notes
-
-- Result URLs from `workflow-previews` bucket are public — render directly via `getOptimizedUrl` without re-signing.
-- Reuse existing `ImageLightbox` component (already supports `onEdit` / `onGenerateAngles`).
-- Brand-mark + no-terminal-period rules preserved in all new copy.
+- `src/pages/Perspectives.tsx` — replace the thumbnail+badge block with the cleaner ring-halo version.
