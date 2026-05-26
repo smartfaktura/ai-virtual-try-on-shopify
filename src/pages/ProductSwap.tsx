@@ -412,9 +412,8 @@ export default function ProductSwap() {
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
                       </div>
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 flex items-center gap-1.5 text-xs text-white">
-                        <Package className="w-3.5 h-3.5" />
                         <span className="font-medium truncate">{entry.job.productTitle}</span>
-                        {entry.job.ratio !== '1:1' && <span className="opacity-70 ml-auto">{entry.job.ratio}</span>}
+                        {entry.job.ratio !== '1:1' && <span className="opacity-70 ml-auto text-[10px] px-1.5 py-0.5 rounded bg-white/15">{entry.job.ratio}</span>}
                       </div>
                     </button>
                   ))}
