@@ -506,7 +506,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
         </div>
       </div>
 
-      <BrandScenesPromoCard />
+      <BrandScenesPromoCard thumbnails={promoThumbnails} />
 
 
 
