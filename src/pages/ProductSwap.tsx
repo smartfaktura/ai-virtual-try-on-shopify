@@ -846,10 +846,7 @@ export default function ProductSwap() {
         {/* ═══════════ STEP 3: REVIEW ═══════════ */}
         {currentStep === 3 && (
           <div className="space-y-5 animate-in fade-in duration-200">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Review and generate</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Everything looks right? Hit generate. Credits are refunded on failure.</p>
-            </div>
+            <h2 className="text-lg font-semibold text-foreground">Review and generate</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 md:gap-5 items-start">
               {/* Left: summary */}
