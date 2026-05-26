@@ -197,26 +197,13 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
         triggerType="result_ready"
       />
 
-      {lightboxOpen && (
-        <ImageLightbox
-          images={lightboxImages}
-          currentIndex={lightboxIndex}
-          open={lightboxOpen}
-          onClose={() => setLightboxOpen(false)}
-          onNavigate={setLightboxIndex}
-          onDownload={(idx) => handleSingleDownload(lightboxImages[idx], lightboxProductName, lightboxSceneNames[idx] || `image_${idx + 1}`)}
-          onEdit={(idx) => {
-            const url = lightboxImages[idx];
-            setLightboxOpen(false);
-            navigate(`/app/freestyle?editImage=${encodeURIComponent(url)}&imageRole=edit`);
-          }}
-          onGenerateAngles={(idx) => {
-            const url = lightboxImages[idx];
-            setLightboxOpen(false);
-            navigate(`/app/perspectives?source=${encodeURIComponent(url)}`);
-          }}
-        />
-      )}
+      <ResultDetailModal
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        items={lightboxItems}
+        initialIndex={lightboxIndex}
+      />
+
     </div>
   );
 }
