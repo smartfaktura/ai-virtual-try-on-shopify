@@ -826,9 +826,7 @@ export default function ProductSwap() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{sceneTitle || 'Scene ready'}</p>
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {Array.from(selectedRatios).map(r => (
-                          <Badge key={r} variant="secondary" className="text-[10px] h-5">{r}</Badge>
-                        ))}
+                        <Badge variant="secondary" className="text-[10px] h-5">{detectedRatio}</Badge>
                       </div>
                     </div>
                   </div>
