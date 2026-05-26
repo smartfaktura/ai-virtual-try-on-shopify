@@ -501,7 +501,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                               if (!product) return null;
                               return (
                                 <span key={propId} className="flex items-center gap-1 pl-1 pr-1.5 py-0.5 rounded-full bg-muted border border-border text-[10px] font-medium text-foreground">
-                                  <img src={getOptimizedUrl(product.image_url, { width: 32, quality: 40 })} alt={product.title} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+                                  <img src={getOptimizedUrl(product.image_url, { quality: 50 })} alt={product.title} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
                                   <span className="truncate max-w-[80px]">{product.title}</span>
                                   <button type="button" onClick={() => removeProp(scene.id, propId)} className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"><X className="w-3 h-3" /></button>
                                 </span>
