@@ -1385,7 +1385,7 @@ export default function BrandModels() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
 
           {models.map((m) => (
             <ModelCard key={m.id} model={m} onDelete={handleDelete} onRename={handleRename} />
