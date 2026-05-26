@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Loader2, RefreshCw, UploadCloud } from "lucide-react";
+import { ImagePlus, Loader2, RefreshCw, ShieldCheck, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -45,7 +46,7 @@ interface Props {
   note?: string;
   referenceOutfit?: ReferenceOutfit;
   responsibilityAccepted: boolean;
-  onRequestResponsibility: () => void;
+  onAcceptResponsibility: () => void;
   onImageChange: (path: string | null, previewUrl: string | null) => void;
   onNameChange: (name: string) => void;
   onIntentChange: (intent: ReferenceIntent) => void;
@@ -65,7 +66,7 @@ export function Step3Reference({
   note = "",
   referenceOutfit,
   responsibilityAccepted,
-  onRequestResponsibility,
+  onAcceptResponsibility,
   onImageChange,
   onNameChange,
   onIntentChange,
@@ -79,18 +80,30 @@ export function Step3Reference({
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  const ensureAccepted = (): boolean => {
-    if (!responsibilityAccepted) {
-      onRequestResponsibility();
-      return false;
+  // Local checkbox state for the inline rights confirmation. Stays in sync
+  // with `responsibilityAccepted` — once accepted, the parent persists it.
+  const [c1, setC1] = useState(responsibilityAccepted);
+  const [c2, setC2] = useState(responsibilityAccepted);
+  const [c3, setC3] = useState(responsibilityAccepted);
+
+  useEffect(() => {
+    if (responsibilityAccepted) {
+      setC1(true);
+      setC2(true);
+      setC3(true);
     }
-    return true;
-  };
+  }, [responsibilityAccepted]);
+
+  useEffect(() => {
+    if (c1 && c2 && c3 && !responsibilityAccepted) {
+      onAcceptResponsibility();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c1, c2, c3]);
 
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-    if (!ensureAccepted()) return;
 
     if (!ACCEPTED_MIME.includes(file.type)) {
       toast({
@@ -168,29 +181,57 @@ export function Step3Reference({
           Reference image
         </Label>
         {previewUrl ? (
-          <div className="mt-2 rounded-2xl border border-border bg-card overflow-hidden">
-            <div className="aspect-[4/5] bg-muted relative">
-              <img
-                src={previewUrl}
-                alt="Scene reference"
-                className="w-full h-full object-cover"
+          <>
+            <div className="mt-2 rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="aspect-[4/5] bg-muted relative">
+                <img
+                  src={previewUrl}
+                  alt="Scene reference"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 gap-2">
+                <span className="text-xs text-muted-foreground truncate">
+                  Uploaded — used as the scene preview and generation guide
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemove}
+                  className="rounded-full gap-1.5 shrink-0"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Replace
+                </Button>
+              </div>
+            </div>
+
+            {/* Inline rights confirmation — replaces the old popup */}
+            <div className="mt-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-destructive/90">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Confirm before continuing
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Your image guides framing, lighting and mood — your product replaces the original. Tick all three to continue.
+              </p>
+              <ConsentRow
+                checked={c1}
+                onChange={setC1}
+                label="I own this image or have permission to use it"
+              />
+              <ConsentRow
+                checked={c2}
+                onChange={setC2}
+                label="No copyrighted logos or recognizable people"
+              />
+              <ConsentRow
+                checked={c3}
+                onChange={setC3}
+                label="It's used only as a composition guide"
               />
             </div>
-            <div className="flex items-center justify-between p-3 gap-2">
-              <span className="text-xs text-muted-foreground truncate">
-                Uploaded — used as the scene preview and generation guide
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemove}
-                className="rounded-full gap-1.5 shrink-0"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Replace
-              </Button>
-            </div>
-          </div>
+          </>
         ) : (
           <div
             onDragOver={(e) => {
@@ -227,10 +268,7 @@ export function Step3Reference({
 
             <Button
               type="button"
-              onClick={() => {
-                if (!ensureAccepted()) return;
-                inputRef.current?.click();
-              }}
+              onClick={() => inputRef.current?.click()}
               disabled={uploading}
               className="rounded-full font-semibold gap-2 mt-4 w-full sm:w-auto"
             >
@@ -240,11 +278,6 @@ export function Step3Reference({
             <p className="text-[11px] text-muted-foreground mt-2.5">
               or drag &amp; drop · paste from clipboard
             </p>
-            {!responsibilityAccepted && (
-              <p className="text-[11px] text-muted-foreground/80 mt-2 max-w-xs mx-auto">
-                We'll ask a quick usage check the first time you upload
-              </p>
-            )}
           </div>
         )}
         <input
@@ -336,5 +369,26 @@ export function Step3Reference({
         </p>
       </div>
     </div>
+  );
+}
+
+function ConsentRow({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (b: boolean) => void;
+  label: string;
+}) {
+  return (
+    <label className="flex items-start gap-2.5 cursor-pointer text-[12px] leading-relaxed rounded-xl border border-border/60 bg-background/60 hover:bg-background transition-colors px-3 py-2.5">
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(v) => onChange(v === true)}
+        className="mt-0.5"
+      />
+      <span className="text-foreground/85">{label}</span>
+    </label>
   );
 }

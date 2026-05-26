@@ -20,7 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from '@/components/ui/select';
 import { toast } from '@/lib/brandedToast';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -242,6 +242,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [finalRightsAck, setFinalRightsAck] = useState(false);
   const [referenceNotes, setReferenceNotes] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
@@ -250,7 +251,6 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const [creationMode, setCreationMode] = useState<'chooser' | 'reference' | 'manual'>(
     layout === 'sections' ? 'chooser' : 'manual'
   );
-  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [makePublic, setMakePublic] = useState(false);
@@ -305,12 +305,12 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     isReferenceMode && !uploadedUrl ? 'Upload a reference photo to continue' :
     isUploading ? 'Waiting for upload to finish…' :
     isReferenceMode && uploadedUrl && !termsAccepted ? 'Confirm the content & rights policy to continue' :
+    isReferenceMode && uploadedUrl && termsAccepted && !finalRightsAck ? 'Second check — tick the final confirmation to continue' :
     !makePublic && balance < 20 ? 'Not enough credits — top up to continue' :
     null;
-  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted));
+  const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted && finalRightsAck));
   const canGenerate = !generating && !validationError;
 
-  const SKIP_KEY = 'vovv:brand-model-confirm-skip';
 
   const buildGenerateBody = () => {
     const finalName = modelName.trim() || `${gender} Model`;
@@ -361,6 +361,7 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
       setPreviewUrl(null);
       setUploadedUrl(null);
       setTermsAccepted(false);
+      setFinalRightsAck(false);
       setReferenceNotes('');
       setMakePublic(false);
       onSuccess();
@@ -393,15 +394,13 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
-    // Reference mode requires a second confirmation step (skippable per-session).
     if (isReferenceMode && uploadedUrl) {
-      const skip = typeof window !== 'undefined' && sessionStorage.getItem(SKIP_KEY) === '1';
-      if (!skip) { setConfirmOpen(true); return; }
       const ok = await logResponsibilityAcceptance();
       if (!ok) return;
     }
     await runGenerate();
   };
+
 
 
   const handleRegenerateMissing = async () => {
@@ -1115,6 +1114,32 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
 
         {adminBlock && <Section title="Admin">{adminBlock}</Section>}
 
+        {/* Second-check rights confirmation — inline, replaces the old popup */}
+        {isReferenceMode && uploadedUrl && termsAccepted && (
+          <Section title="Final check">
+            <div
+              role="button"
+              onClick={() => setFinalRightsAck((v) => !v)}
+              className={cn(
+                "flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+                finalRightsAck
+                  ? "bg-primary/5 border-primary/30 hover:bg-primary/10"
+                  : "bg-destructive/5 border-destructive/30 hover:bg-destructive/10"
+              )}
+            >
+              <Checkbox
+                checked={finalRightsAck}
+                onCheckedChange={(checked) => setFinalRightsAck(checked === true)}
+                onClick={(e) => e.stopPropagation()}
+                className="mt-0.5"
+              />
+              <span className="text-[11px] leading-relaxed text-muted-foreground">
+                Second check — I confirm I have rights to this reference and accept full responsibility for every image generated from it. VOVV.AI stores the reference and the generated images under my account.
+              </span>
+            </div>
+          </Section>
+        )}
+
         {/* Sticky footer — floating pill (matches /app/generate/product-images) */}
         <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
           <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
@@ -1144,39 +1169,10 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
           </div>
         </div>
         <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} category="fallback" />
-        <ConfirmDialog
-          open={confirmOpen}
-          onOpenChange={setConfirmOpen}
-          title="Generate from this reference photo?"
-          description={
-            <span className="text-sm leading-relaxed">
-              You confirm you have the right to use this photo, and you take full responsibility for every image generated from it — including misuse, impersonation, or rights claims. VOVV.AI stores the reference and the generated images under your account.
-              <br /><br />
-              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer mt-2">
-                <input
-                  type="checkbox"
-                  className="h-3.5 w-3.5"
-                  onChange={(e) => {
-                    if (e.target.checked) sessionStorage.setItem(SKIP_KEY, '1');
-                    else sessionStorage.removeItem(SKIP_KEY);
-                  }}
-                />
-                Don't ask again this session
-              </label>
-            </span>
-          }
-          confirmLabel="Yes, generate"
-          cancelLabel="Cancel"
-          onConfirm={async () => {
-            setConfirmOpen(false);
-            const ok = await logResponsibilityAcceptance();
-            if (!ok) return;
-            await runGenerate();
-          }}
-        />
       </div>
     );
   }
+
 
   // ── Default single-card layout (legacy) ──
   return (

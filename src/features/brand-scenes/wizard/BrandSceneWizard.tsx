@@ -10,7 +10,7 @@ import { Step3Reference } from "./steps/Step3Reference";
 import { Step4Cast } from "./steps/Step4Cast";
 import { Step5Review } from "./steps/Step5Review";
 import { Step6PreviewAndPick } from "./steps/Step6PreviewAndPick";
-import { ResponsibilityModal } from "./components/ResponsibilityModal";
+
 import {
   computeStep4Flow,
   getStep4Mode,
@@ -105,7 +105,25 @@ export function BrandSceneWizard() {
       : baseTitle;
   const { subtitle } = META[step];
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const handleAcceptResponsibility = async () => {
+    if (!user) {
+      toast.error("You must be signed in to continue");
+      return;
+    }
+    const { error } = await supabase
+      .from("reference_responsibility_acceptances")
+      .insert({
+        user_id: user.id,
+        user_email: user.email ?? null,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        context: "brand_scene_wizard",
+      });
+    if (error) {
+      toast.error("Could not record your confirmation. Please try again.");
+      return;
+    }
+    dispatch({ type: "acceptResponsibility" });
+  };
 
   // Variation cache — survives Step6 unmount during back-navigation.
   const [variationCache, setVariationCache] = useState<BrandSceneCache | null>(null);
@@ -164,7 +182,8 @@ export function BrandSceneWizard() {
   const referenceStepValid =
     !!answers.reference_image_paths?.length &&
     !!answers.name?.trim() &&
-    !!answers.reference_intent;
+    !!answers.reference_intent &&
+    state.responsibilityAccepted;
 
   const step4SubReason = onCastStep
     ? getSubStepDisabledReason(step4SubStep, answers, step4Ctx)
@@ -189,6 +208,8 @@ export function BrandSceneWizard() {
         nextDisabledReason = "Name this scene";
       else if (!answers.reference_intent)
         nextDisabledReason = "Choose how strictly to follow the reference";
+      else if (!state.responsibilityAccepted)
+        nextDisabledReason = "Tick all three rights checkboxes";
     } else if (onCastStep) {
       nextDisabledReason = step4SubReason;
     }
@@ -259,7 +280,7 @@ export function BrandSceneWizard() {
     dispatch({ type: "back" });
   };
 
-  const requestResponsibility = () => setModalOpen(true);
+  
 
   const SUB_LABEL: Record<Step4SubStep, string> = {
     look: "Look",
@@ -358,7 +379,7 @@ export function BrandSceneWizard() {
             intent={answers.reference_intent}
             note={answers.note}
             responsibilityAccepted={state.responsibilityAccepted}
-            onRequestResponsibility={requestResponsibility}
+            onAcceptResponsibility={handleAcceptResponsibility}
             onImageChange={(path, previewUrl) =>
               dispatch({ type: "setReferenceImage", path, previewUrl })
             }
@@ -430,31 +451,6 @@ export function BrandSceneWizard() {
           />
         )}
       </WizardLayout>
-
-      <ResponsibilityModal
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        onAccept={async () => {
-          if (!user) {
-            toast.error("You must be signed in to continue");
-            return;
-          }
-          const { error } = await supabase
-            .from("reference_responsibility_acceptances")
-            .insert({
-              user_id: user.id,
-              user_email: user.email ?? null,
-              user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-              context: "brand_scene_wizard",
-            });
-          if (error) {
-            toast.error("Could not record your confirmation. Please try again.");
-            return;
-          }
-          dispatch({ type: "acceptResponsibility" });
-          setModalOpen(false);
-        }}
-      />
     </>
   );
 }
