@@ -96,6 +96,22 @@ export function AppShell({ children }: AppShellProps) {
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); } catch {}
   }, [collapsed]);
 
+  // Warm the most-clicked app chunks on idle so sidebar navigations
+  // resolve from cache and never trigger a Suspense fallback flash.
+  useEffect(() => {
+    const warm = () => {
+      ['/app', '/app/workflows', '/app/freestyle', '/app/library', '/app/video', '/app/discover']
+        .forEach(prefetchRoute);
+    };
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
+    if (typeof w.requestIdleCallback === 'function') {
+      w.requestIdleCallback(warm);
+    } else {
+      const t = setTimeout(warm, 1200);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   // Reset scroll on route change. Skip only intra-Discover navigation (item modal open/close).
   const prevPathRef = useRef<string>(location.pathname);
   useEffect(() => {

@@ -22,35 +22,11 @@ export function ScrollToTop() {
     // Hash anchor navigation — let the browser jump to the anchor.
     if (hash) return;
 
-    const toTop = () => window.scrollTo(0, 0);
-
-    // Fast path: immediate, next frame, and a short timeout.
-    toTop();
-    const raf = requestAnimationFrame(toTop);
-    const t1 = setTimeout(toTop, 80);
-    const t2 = setTimeout(toTop, 250);
-
-    // Robust path for lazy-loaded routes: re-assert as soon as the new
-    // page actually mounts under <main>. We watch for any DOM mutation
-    // for a short window and force scrollTop=0 on each one, then stop.
-    let mutationCount = 0;
-    const observer = new MutationObserver(() => {
-      toTop();
-      mutationCount++;
-      // Cap work — after enough mutations the page has rendered.
-      if (mutationCount > 20) observer.disconnect();
-    });
-    const root = document.body;
-    if (root) observer.observe(root, { childList: true, subtree: true });
-    const stopObserving = setTimeout(() => observer.disconnect(), 600);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(stopObserving);
-      observer.disconnect();
-    };
+    // Single scroll reset. The previous rAF + timeout + MutationObserver
+    // cascade was needed when lazy routes unmounted via a Suspense
+    // fallback; with `fallback={null}` the page stays mounted during
+    // chunk fetch, so one scrollTo is enough.
+    window.scrollTo(0, 0);
   }, [pathname, hash, navType]);
 
   return null;

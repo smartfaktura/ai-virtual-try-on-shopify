@@ -238,7 +238,7 @@ const App = () => {
                   <AdminViewProvider>
                   <CreditProvider>
                     <AppShell>
-                      <Suspense fallback={<AppShellLoading />}>
+                      <Suspense fallback={null}>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/products" element={<Products />} />

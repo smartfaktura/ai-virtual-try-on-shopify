@@ -1,35 +1,56 @@
-Rework `BrandScenesInfoModal` into a quieter, editorial layout — less crowded, fully VOVV.AI restraint, and properly sized for mobile (390px).
+## Goal
 
-**File:** `src/components/app/product-images/BrandScenesInfoModal.tsx`
+Stop the visible flash after almost every click inside `/app`. Verified root cause: the inner `<Suspense fallback={<AppShellLoading />}>` at `src/App.tsx:241` unmounts the current page and renders a skeleton grid while the next lazy route chunk downloads. The outer `BrandLoaderProgressGlyph fullScreen` at `src/App.tsx:158` is only used for top-level public routes and is not the in-app flash.
 
-**Layout (mobile-first, max-w-sm, p-7)**
+Secondary contributor: `ScrollToTop` runs `scrollTo(0,0)` at mount + rAF + 80ms + 250ms + a 600ms `MutationObserver`, amplifying the "page jumped" feeling on every nav.
 
-1. Top row: small icon chip (10×10, `bg-muted` rounded-full, `Wand2` w-4) on the left only — no centered chrome.
-2. Eyebrow label: `BRAND SCENES` — `text-[10px] tracking-[0.2em] uppercase text-muted-foreground` for editorial anchor.
-3. Title: `text-[22px] leading-[1.15] font-medium tracking-tight text-foreground` — no terminal period. Single line target on mobile by tightening copy to "Scenes that belong to your brand".
-4. Subtitle: `text-[13px] leading-relaxed text-muted-foreground font-light` — trimmed to one sentence: "Custom AI scenes built from your references, reused across every shoot".
-5. Generous breathing space (`mt-7`) before features.
-6. Three features as numbered hairline rows — no check icons:
-   - Row = thin top border (`border-t border-border/60`), `py-3.5`, two columns: `01` (`text-[10px] tracking-widest text-muted-foreground/70 w-6`) + label (`text-[13px] text-foreground/85 leading-snug`).
-   - Last row gets a closing bottom border so the block reads as a contained editorial list.
-   - Copy stays as-is.
-7. Action stack (`mt-7 space-y-2`):
-   - Primary: full-width, `h-11`, `rounded-full`, `bg-foreground text-background`, label + `ArrowRight w-4` with subtle hover translate.
-   - Secondary "Maybe later": `h-9` ghost, `text-[13px] text-muted-foreground hover:text-foreground`.
-8. Gated footnote unchanged but `text-[10.5px] tracking-wide text-muted-foreground/80 text-center mt-2`.
+Not contributors (verified, leave alone):
+- `checkAppVersion` runs once on mount and skips catalog/product-images/video.
+- `ProtectedRoute` uses a `sessionStorage` cache and only shows a loader on first navigation per session.
+- Lovable preview iframe HMR — only re-mounts on file edits, not on clicks.
 
-**Mobile correctness**
+## Changes
 
-- `DialogContent` keeps shadcn defaults but override to `max-w-sm w-[calc(100%-2rem)] p-7 rounded-3xl` so it never touches viewport edges on 390px.
-- Title sized so it wraps to max two lines at 390px.
-- Remove the centered icon-above-title stack from current version (that was the main "crowded" feel).
+### 1. Replace the in-app Suspense fallback (`src/App.tsx:241`)
 
-**Tokens only**
+Today:
+```tsx
+<Suspense fallback={<AppShellLoading />}>
+  <Routes> {/* all /app/* routes */} </Routes>
+</Suspense>
+```
 
-All colors via semantic tokens (`foreground`, `background`, `muted-foreground`, `border`) — no hex, no `text-white`/`text-black`.
+Switch to `fallback={null}`. Combined with React Router 6's behavior, the previous page stays mounted until the new chunk resolves — no skeleton flash for cached chunks, and only a brief blank for uncached ones (mitigated by #3).
 
-**Out of scope**
+Keep the outer `BrandLoaderProgressGlyph fullScreen` (App.tsx:158) untouched — it's only used for first-time public page loads, which is the right moment for a full loader.
 
-- No change to plan-aware CTA logic (`canCreate`, `openBuyModal('brand-scenes-gate')`, `navigate('/app/brand-scenes')`).
-- No change to `BrandScenesPromoCard` trigger.
-- No copy changes beyond the title/subtitle tightening above.
+### 2. Soften `ScrollToTop` (`src/components/ScrollToTop.tsx`)
+
+Drop the rAF + 80ms + 250ms + 600ms `MutationObserver` cascade. Replace with a single `window.scrollTo(0, 0)` on pathname change. Keep the page-view tracking and the `POP`/hash early-exits. The cascade existed to fight late-mounting lazy routes — once #1 lands the page no longer remounts, so the cascade has no purpose.
+
+### 3. Eager-prefetch top app chunks on idle (`src/components/app/AppShell.tsx`)
+
+`AppShell` already defines `prefetchMap` (line 29) but only triggers on hover. Add a `useEffect` that on mount calls `requestIdleCallback` (with `setTimeout` fallback) and warms the 6 most-used routes: Dashboard, Visual Studio (Workflows), Freestyle, Library (Jobs), VideoHub, Discover. This makes every sidebar click resolve from cache — instant, no fallback render at all.
+
+### 4. Optional polish: in-app top progress bar
+
+If after #1 there is any noticeable blank on slow connections for uncached chunks, add a 2px fixed top progress bar driven by a `useNavigation`-like delayed indicator (only shows after 200 ms). Skip for now unless QA still shows a flash post-#1.
+
+## Files touched
+
+- `src/App.tsx` — one-line fallback change at L241
+- `src/components/ScrollToTop.tsx` — simplify effect body
+- `src/components/app/AppShell.tsx` — add idle-prefetch effect using existing `prefetchMap`
+
+## Out of scope
+
+- Removing code splitting (would inflate initial bundle).
+- Touching backend, RLS, billing, generation pipelines, or any wizard state.
+- Changing `BrandLoaderProgressGlyph` itself.
+- Any change to `checkAppVersion`, `ProtectedRoute`, or auth flow.
+
+## Risk
+
+Low. All edits are presentation/perf only. The biggest functional change is `fallback={null}` — React 18 + react-router-dom 6 handles this correctly (previous route stays mounted during chunk fetch); this is the same pattern used by AppShell's own `<Suspense fallback={null}>` wrappers at lines 527 and 530.
+
+Safe to approve.
