@@ -580,6 +580,21 @@ export default function ProductSwap() {
           <div className="space-y-5 animate-in fade-in duration-200">
             <h2 className="text-lg font-semibold text-foreground">Pick the scene you want to reuse</h2>
 
+            {products.length === 0 && (
+              <div className="flex items-start gap-3 p-3 rounded-xl border border-dashed border-border bg-muted/30">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Package className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">No products yet</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">You'll need at least one product to swap into your scene</p>
+                </div>
+                <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate('/app/products/new')}>
+                  Add product<ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
+            )}
+
             {/* Selected scene preview */}
             {sceneUrl && (
               <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
