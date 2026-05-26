@@ -95,7 +95,7 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
             onClick={handlePrimary}
             className="w-full h-11 rounded-full text-sm font-semibold gap-1.5 group"
           >
-            {canCreate ? 'Create Brand Scene' : 'Upgrade plan'}
+            {canCreate ? 'Create Brand Scene' : 'Unlock Brand Scenes'}
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
           <Button
@@ -103,13 +103,13 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
             onClick={() => onOpenChange(false)}
             className="w-full h-9 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent"
           >
-            Maybe later
+            Not now
           </Button>
         </div>
 
         {!canCreate && (
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Brand Scenes are available on Growth and above
+            Included on Growth and above
           </p>
         )}
       </DialogContent>
