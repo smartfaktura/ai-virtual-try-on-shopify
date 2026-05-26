@@ -122,16 +122,14 @@ export function getSubStepDisabledReason(
   }
 
   if (sub === "essentials") {
-    const isFood = ctx.module === "food-drink";
-    if (!preset) return isFood ? "Choose who's at the table" : "Choose who's in the shot";
+    if (!preset) return "Choose who's in the shot";
     if (preset !== "replicate" && !cast?.interaction) {
-      return isFood
-        ? "Pick how the dish is plated, poured or served"
-        : "Pick how the cast holds, wears, or stands next to the product";
+      return "Pick how the cast holds, wears, or stands next to the product";
     }
     if (!scale?.preset) return "Pick a product scale";
     return null;
   }
+
 
   if (sub === "people") {
     if (!cast?.vibe) return "Pick an energy / vibe to continue";
