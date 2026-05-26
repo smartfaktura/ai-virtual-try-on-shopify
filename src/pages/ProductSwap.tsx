@@ -912,48 +912,120 @@ export default function ProductSwap() {
             </div>
           </div>
         )}
-      </div>
 
-      {/* ═══════════ PERSISTENT FOOTER ═══════════ */}
-      <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => currentStep === 1 ? navigate('/app/workflows') : goToStep((currentStep - 1) as 1 | 2)}
-            className="gap-1"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            {currentStep === 1 ? 'Exit' : 'Back'}
-          </Button>
+        {/* ═══════════ FLOATING STICKY BAR (matches Product Images aesthetic) ═══════════ */}
+        <div className="sticky bottom-4 z-30 pb-[env(safe-area-inset-bottom)]">
+          <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg overflow-hidden">
+            {/* Mobile: stacked */}
+            <div className="flex flex-col gap-2 p-3 sm:hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3].map(s => (
+                      <div key={s} className={cn(
+                        'w-1.5 h-1.5 rounded-full transition-colors',
+                        s === currentStep ? 'bg-primary scale-125' : s < currentStep ? 'bg-primary/40' : 'bg-border'
+                      )} />
+                    ))}
+                  </div>
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {STEP_DEFS.find(s => s.number === currentStep)?.label}
+                  </span>
+                </div>
+                {totalCost > 0 && (
+                  <div className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-muted border border-border">
+                    <Coins className="w-3 h-3 text-primary" />
+                    <span className={cn('font-bold', canAfford ? 'text-foreground' : 'text-destructive')}>{totalCost}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {currentStep > 1 && (
+                  <Button variant="outline" size="pill" className="flex-shrink-0"
+                    onClick={() => goToStep((currentStep - 1) as 1 | 2)}>Back</Button>
+                )}
+                {currentStep < 3 ? (
+                  <Button size="pill"
+                    disabled={(currentStep === 1 && !canAdvanceFrom1) || (currentStep === 2 && !canAdvanceFrom2)}
+                    onClick={() => goToStep((currentStep + 1) as 2 | 3)}
+                    className="gap-1.5 flex-1">
+                    Continue<ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                ) : (
+                  <Button size="pill"
+                    disabled={!canGenerate || isGenerating}
+                    onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
+                    className="gap-1.5 flex-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {isGenerating ? 'Generating…' : `Generate ${totalImages || ''}`.trim()}
+                  </Button>
+                )}
+              </div>
+            </div>
 
-          <div className="hidden sm:flex flex-col items-center text-[11px] text-muted-foreground">
-            <span>Step {currentStep} of 3</span>
-            {currentStep === 1 && sceneUrl && <span className="text-foreground/70">{selectedRatios.size} ratio{selectedRatios.size !== 1 ? 's' : ''} selected</span>}
-            {currentStep === 2 && <span className="text-foreground/70">{selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''} selected</span>}
-            {currentStep === 3 && <span className="text-foreground/70">{totalImages} image{totalImages !== 1 ? 's' : ''} · {totalCost} credits</span>}
+            {/* Desktop: single row */}
+            <div className="hidden sm:flex items-center justify-between gap-3 p-3 sm:p-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3].map(s => (
+                    <div key={s} className={cn(
+                      'w-2 h-2 rounded-full transition-colors',
+                      s === currentStep ? 'bg-primary scale-125' : s < currentStep ? 'bg-primary/40' : 'bg-border'
+                    )} />
+                  ))}
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  {STEP_DEFS.find(s => s.number === currentStep)?.label}
+                </span>
+                <div className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                  {selectedProductIds.size > 0 && (
+                    <span className="font-medium text-foreground">
+                      {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {totalImages > 0 && (
+                    <>
+                      <span>·</span>
+                      <span className="font-bold text-foreground">{totalImages} img{totalImages !== 1 ? 's' : ''}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {totalCost > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted border border-border">
+                    <Coins className="w-3.5 h-3.5 text-primary" />
+                    <span className={cn('font-bold', canAfford ? 'text-foreground' : 'text-destructive')}>{totalCost}</span>
+                    <span className="text-muted-foreground">cr</span>
+                  </div>
+                  {!canAfford && <span className="text-xs text-destructive font-medium">Not enough credits</span>}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {currentStep > 1 && (
+                  <Button variant="outline" size="pill" onClick={() => goToStep((currentStep - 1) as 1 | 2)}>Back</Button>
+                )}
+                {currentStep < 3 ? (
+                  <Button size="pill"
+                    disabled={(currentStep === 1 && !canAdvanceFrom1) || (currentStep === 2 && !canAdvanceFrom2)}
+                    onClick={() => goToStep((currentStep + 1) as 2 | 3)}
+                    className="gap-1.5">
+                    Continue<ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                ) : (
+                  <Button size="pill"
+                    disabled={!canGenerate || isGenerating}
+                    onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
+                    className="gap-1.5">
+                    {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {isGenerating ? 'Generating…' : `Generate ${totalImages} image${totalImages !== 1 ? 's' : ''}`}
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-
-          {currentStep < 3 ? (
-            <Button
-              size="sm"
-              onClick={() => goToStep((currentStep + 1) as 2 | 3)}
-              disabled={(currentStep === 1 && !canAdvanceFrom1) || (currentStep === 2 && !canAdvanceFrom2)}
-              className="gap-1"
-            >
-              Continue
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={totalCost > credits ? () => setNoCreditsOpen(true) : handleGenerate}
-              disabled={!canGenerate || isGenerating}
-              className="gap-1 shadow-md shadow-primary/10"
-            >
-              {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4" /> Generate · {totalCost} cr</>}
-            </Button>
-          )}
         </div>
       </div>
 
