@@ -15,7 +15,7 @@ const BRAND_MODEL_THUMBNAILS = [
 ];
 
 const FEATURES = [
-  "Lock in your brand's signature face",
+  'Train from your own references — even your real brand models',
   'Any ethnicity, age, gender, or body type',
   'Reuse them across every campaign',
 ];
@@ -72,7 +72,7 @@ export function BrandModelsInfoModal({ open, onOpenChange }: Props) {
 
         {/* Subtitle */}
         <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
-          Custom AI models. Reused across every visual you create.
+          Trained from your own references. Reused across every visual you create.
         </DialogDescription>
 
         {/* Feature list */}

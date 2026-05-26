@@ -184,8 +184,8 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
                 <Plus className="w-4 h-4 text-primary" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-foreground">Create Your Brand Model</p>
-                <p className="text-[11px] text-muted-foreground">Generate a unique AI model for your brand</p>
+                <p className="text-sm font-medium text-foreground">Train your own brand model</p>
+                <p className="text-[11px] text-muted-foreground">From your own references — reuse on every shoot</p>
               </div>
             </div>
           </button>
