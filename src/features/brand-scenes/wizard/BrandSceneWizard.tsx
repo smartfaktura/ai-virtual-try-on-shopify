@@ -105,7 +105,25 @@ export function BrandSceneWizard() {
       : baseTitle;
   const { subtitle } = META[step];
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const handleAcceptResponsibility = async () => {
+    if (!user) {
+      toast.error("You must be signed in to continue");
+      return;
+    }
+    const { error } = await supabase
+      .from("reference_responsibility_acceptances")
+      .insert({
+        user_id: user.id,
+        user_email: user.email ?? null,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        context: "brand_scene_wizard",
+      });
+    if (error) {
+      toast.error("Could not record your confirmation. Please try again.");
+      return;
+    }
+    dispatch({ type: "acceptResponsibility" });
+  };
 
   // Variation cache — survives Step6 unmount during back-navigation.
   const [variationCache, setVariationCache] = useState<BrandSceneCache | null>(null);
