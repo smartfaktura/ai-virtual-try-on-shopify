@@ -89,6 +89,7 @@ export function Step6PreviewAndPick({
   const inFlightRef = useRef(false);
   // Mirror of the ref so the button visibly disables before phase flips.
   const [submitting, setSubmitting] = useState(false);
+  const [finalRightsAck, setFinalRightsAck] = useState(false);
 
 
   const trimmedName = answers.name?.trim() ?? "";
