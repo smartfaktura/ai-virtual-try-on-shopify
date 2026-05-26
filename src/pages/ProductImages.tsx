@@ -499,7 +499,7 @@ export default function ProductImages() {
   // Generation state
   const [jobMap, setJobMap] = useState<Map<string, string>>(new Map());
   const [completedJobs, setCompletedJobs] = useState(0);
-  const [results, setResults] = useState<Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string }>; productName: string }>>(new Map());
+  const [results, setResults] = useState<Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string; jobId?: string }>; productName: string }>>(new Map());
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expectedJobCount, setExpectedJobCount] = useState(0);
   const [enqueuedCount, setEnqueuedCount] = useState(0);
@@ -1122,17 +1122,17 @@ export default function ProductImages() {
   }, [selectedProducts, selectedScenes, canAfford, details, setBalanceFromServer, queryClient, analyses, userProducts, userModelProfiles, globalModelProfiles, selectedModelGender]);
 
   const finishWithResults = useCallback((jobs: any[], productMap: Map<string, { productId: string; sceneName: string; sceneId?: string; aspectRatio?: string }>) => {
-    const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>();
+    const resultMap = new Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string; jobId?: string }>; productName: string }>();
     for (const job of jobs) {
       if (job.status !== 'completed' || !job.result) continue;
       const meta = productMap.get(job.id) || { productId: 'unknown', sceneName: 'Scene' };
       const product = selectedProducts.find(p => p.id === meta.productId);
       const r = job.result as any;
-      const images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }> = [];
+      const images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string; jobId?: string }> = [];
       if (Array.isArray(r.images)) {
         for (const img of r.images) {
           const url = typeof img === 'string' ? img : img?.url || img?.image_url;
-          if (url) images.push({ url, sceneName: meta.sceneName, sceneId: meta.sceneId, aspectRatio: meta.aspectRatio });
+          if (url) images.push({ url, sceneName: meta.sceneName, sceneId: meta.sceneId, aspectRatio: meta.aspectRatio, jobId: job.id });
         }
       }
       if (images.length > 0) {

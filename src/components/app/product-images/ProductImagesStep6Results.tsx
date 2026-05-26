@@ -7,8 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { ResultDetailModal, type ResultDetailItem } from '@/components/app/product-images/ResultDetailModal';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
 import { saveOrShareImage } from '@/lib/mobileImageSave';
@@ -20,19 +19,19 @@ interface ResultImage {
   sceneName: string;
   sceneId?: string;
   aspectRatio?: string;
+  jobId?: string;
 }
 
 interface Step6Props {
-  results: Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>;
+  results: Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string; jobId?: string }>; productName: string }>;
   onGenerateMore: () => void;
   onGoToLibrary: () => void;
   onStartNew?: () => void;
 }
 
 export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary, onStartNew }: Step6Props) {
-  const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxItems, setLightboxItems] = useState<ResultDetailItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const { rawScenes } = useProductImageScenes();
@@ -67,13 +66,14 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
     return ratios.size > 1;
   }, [allImages]);
 
-  const [lightboxProductName, setLightboxProductName] = useState('');
-  const [lightboxSceneNames, setLightboxSceneNames] = useState<string[]>([]);
-
   const openLightbox = (images: ResultImage[], idx: number, productName: string) => {
-    setLightboxImages(images.map(i => i.url));
-    setLightboxSceneNames(images.map(i => i.sceneName));
-    setLightboxProductName(productName);
+    setLightboxItems(images.map(i => ({
+      url: i.url,
+      productName,
+      sceneName: i.sceneName,
+      aspectRatio: i.aspectRatio,
+      jobId: i.jobId,
+    })));
     setLightboxIndex(idx);
     setLightboxOpen(true);
   };
@@ -197,26 +197,13 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
         triggerType="result_ready"
       />
 
-      {lightboxOpen && (
-        <ImageLightbox
-          images={lightboxImages}
-          currentIndex={lightboxIndex}
-          open={lightboxOpen}
-          onClose={() => setLightboxOpen(false)}
-          onNavigate={setLightboxIndex}
-          onDownload={(idx) => handleSingleDownload(lightboxImages[idx], lightboxProductName, lightboxSceneNames[idx] || `image_${idx + 1}`)}
-          onEdit={(idx) => {
-            const url = lightboxImages[idx];
-            setLightboxOpen(false);
-            navigate(`/app/freestyle?editImage=${encodeURIComponent(url)}&imageRole=edit`);
-          }}
-          onGenerateAngles={(idx) => {
-            const url = lightboxImages[idx];
-            setLightboxOpen(false);
-            navigate(`/app/perspectives?source=${encodeURIComponent(url)}`);
-          }}
-        />
-      )}
+      <ResultDetailModal
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        items={lightboxItems}
+        initialIndex={lightboxIndex}
+      />
+
     </div>
   );
 }
