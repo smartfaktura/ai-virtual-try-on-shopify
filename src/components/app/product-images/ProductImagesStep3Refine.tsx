@@ -2595,15 +2595,6 @@ export function ProductImagesStep3Refine({
                   onFreeLimitHit={flashModelLimit}
                   onUpgradeClick={onUpgradeClick}
                 />
-                {isFree && modelLimitHintAt != null && (
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[11px] animate-in fade-in slide-in-from-top-1 duration-200">
-                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Free plan limit — 1 model per generation.</span>
-                    {onUpgradeClick && (
-                      <button onClick={onUpgradeClick} className="ml-auto text-primary font-semibold hover:underline">Upgrade</button>
-                    )}
-                  </div>
-                )}
               </CardContent>
             </Card>
           )}
