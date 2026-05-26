@@ -278,30 +278,17 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
                 </Button>
               )}
             </div>
-            {selectedProducts.length === 1 ? (
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white border border-border/40 flex-shrink-0">
-                  <ShimmerImage src={getOptimizedUrl(selectedProducts[0].image_url, { quality: 70 })} alt={selectedProducts[0].title} className="w-full h-full object-cover" />
-                </div>
-                <p className="text-xs text-muted-foreground truncate">{selectedProducts[0].title}</p>
-              </div>
-            ) : (
-              <div className={`grid gap-2 ${selectedProducts.length <= 3 ? `grid-cols-${selectedProducts.length}` : 'grid-cols-4 sm:grid-cols-6'}`}>
-                {selectedProducts.slice(0, 12).map(p => (
-                  <div key={p.id} className="space-y-1">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-white border border-border/40">
-                      <ShimmerImage src={getOptimizedUrl(p.image_url, { quality: 70 })} alt={p.title} className="w-full h-full object-cover" />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground truncate">{p.title}</p>
-                  </div>
-                ))}
-                {selectedProducts.length > 12 && (
-                  <div className="aspect-square rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-                    +{selectedProducts.length - 12}
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-1.5">
+              {selectedProducts.slice(0, 24).map(p => (
+                <span key={p.id} className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium text-foreground max-w-full">
+                  <img src={getOptimizedUrl(p.image_url, { quality: 40 })} alt={p.title} className="w-5 h-5 rounded-full object-cover bg-background flex-shrink-0" />
+                  <span className="truncate max-w-[120px]">{p.title}</span>
+                </span>
+              ))}
+              {selectedProducts.length > 24 && (
+                <span className="flex items-center px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-muted-foreground">+{selectedProducts.length - 24}</span>
+              )}
+            </div>
           </CardContent>
         </Card>
 
