@@ -549,10 +549,13 @@ export default function ProductSwap() {
     <div className="space-y-6 pb-36 overflow-x-clip max-w-full min-w-0">
       <SEOHead title="Product Swap" description="Keep the exact scene and swap in any product from your library." />
 
+      <Button variant="ghost" size="sm" onClick={() => navigate('/app/workflows')} className="gap-1.5 -ml-2 self-start">
+        <ArrowLeft className="w-4 h-4" />Visual Studio
+      </Button>
+
       <PageHeader
         title="Product Swap"
         subtitle="Same scene, different product"
-        backAction={{ content: 'Visual Studio', onAction: () => navigate('/app/workflows') }}
       >
         <span />
       </PageHeader>
@@ -953,25 +956,6 @@ export default function ProductSwap() {
                   )}
                 </div>
 
-                {totalCost <= credits ? (
-                  <Button
-                    size="pill"
-                    onClick={handleGenerate}
-                    disabled={!canGenerate || isGenerating}
-                    className="w-full shadow-lg shadow-primary/10"
-                  >
-                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate {totalImages} image{totalImages !== 1 ? 's' : ''}</>}
-                  </Button>
-                ) : (
-                  <Button
-                    size="pill"
-                    onClick={() => setNoCreditsOpen(true)}
-                    className="w-full"
-                    variant="default"
-                  >
-                    Get more credits
-                  </Button>
-                )}
                 
                 {isGenerating && progress > 0 && <Progress value={progress} className="h-1.5 rounded-full" />}
               </div>
