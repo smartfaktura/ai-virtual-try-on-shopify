@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Download, X, Sparkles, Layers, Video, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, X, Sparkles, Layers, Video, Pencil, ChevronLeft, ChevronRight, ArrowLeftRight } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { saveOrShareImage, isMobileDevice } from '@/lib/mobileImageSave';
 import { UpscaleModal } from '@/components/app/UpscaleModal';
+import { ContextualFeedbackCard } from '@/components/app/ContextualFeedbackCard';
 
 export interface ResultDetailItem {
   url: string;
