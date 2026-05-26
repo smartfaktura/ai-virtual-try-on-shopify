@@ -140,9 +140,28 @@ export function Step4Cast({
   );
   const showScaleSection = visibleScales.length > 1;
 
+  const allowedCastSet = new Set<string>(resolved.castPresets);
   const visibleCastPresets = CAST_PRESETS
     .filter((p) => p.value !== "replicate" || isReference)
-    .filter((p) => !forbiddenCast.has(p.value));
+    .filter((p) => !forbiddenCast.has(p.value))
+    .filter((p) => p.value === "replicate" || allowedCastSet.has(p.value));
+
+  // Food re-labels cast presets so the dish (not the body) leads the copy.
+  const isFood = module === "food-drink";
+  const labelForCastPreset = (value: CastPreset, fallback: string): string => {
+    if (!isFood) return fallback;
+    if (value === "none") return "Food alone";
+    if (value === "hands") return "Hands & cutlery";
+    if (value === "solo") return "Person at table";
+    return fallback;
+  };
+  const sectionLabels = {
+    cast: isFood ? "Who's at the table" : "Who's in the shot",
+    interaction: isFood ? "How the dish is served" : "How the product appears",
+    interactionHelper: isFood
+      ? "Defines how the dish is plated, poured, or served"
+      : "Defines how any product placed into this scene will be staged",
+  };
 
   const visibleInteractions = (() => {
     const allowed = new Set(resolved.interactions as string[]);
