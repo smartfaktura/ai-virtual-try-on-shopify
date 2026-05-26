@@ -295,6 +295,24 @@ export function ImageLightbox({
                   Download
                 </button>
               )}
+              {onEdit && (
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit Image
+                </button>
+              )}
+              {onGenerateAngles && (
+                <button
+                  onClick={handleGenerateAngles}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                >
+                  <Layers className="w-4 h-4" />
+                  Generate More Angles
+                </button>
+              )}
               {onRegenerate && (
                 <button
                   onClick={handleRegenerate}
