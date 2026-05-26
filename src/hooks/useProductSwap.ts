@@ -22,6 +22,7 @@ export interface SwapJobInfo {
   jobId: string;
   productId: string;
   productTitle: string;
+  productImageUrl?: string;
   ratio: string;
 }
 
@@ -195,6 +196,7 @@ export function useProductSwap() {
               jobId: result.jobId,
               productId: product.id,
               productTitle: product.title,
+              productImageUrl: product.imageUrl,
               ratio,
             });
             enqueuedCount++;

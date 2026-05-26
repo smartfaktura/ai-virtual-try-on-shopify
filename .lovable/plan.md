@@ -1,100 +1,63 @@
 
-# Product Swap — 3-Step Wizard Redesign (v2)
+# Generating + Results polish (Product Swap)
 
-Convert the current long-scroll page into a true stepper: one step visible at a time, persistent progress header, persistent footer with Back / Continue / Generate.
+Four small, scoped changes — all inside the generating/results view of `src/pages/ProductSwap.tsx`. No backend, no hook changes.
 
-## Step structure
+## 1. Real product thumbnails on the generating screen
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│  ← Back to Visual Studio                                │
-│                                                         │
-│   ●━━━━━━━━━━○━━━━━━━━━━○                              │
-│   1 Scene    2 Products  3 Review                      │
-└─────────────────────────────────────────────────────────┘
-```
-
-- One active step at a time, no long scroll.
-- Stepper chips clickable only for completed steps (no jumping ahead).
-- Smooth fade/slide between steps.
-
-### Step 1 — Scene
-- Source toggle (Library / Upload) on top, picker below.
-- Once a scene is picked, a clear preview card with "Change scene" sits at the top of the step.
-- **Aspect ratios live HERE**, directly under the scene preview — because ratio is a property of the scene, not the review. Default selection = ratio closest to the source image's natural dimensions.
-- Continue disabled until scene + at least one ratio are set.
-
-### Step 2 — Products
-- Sticky search + "X / 10 selected" chip at the top.
-- "Select all visible (up to 10)" quick action.
-- Horizontal **selected tray** pinned at the bottom of the step showing chosen product thumbs with a ✕ to deselect — no need to scroll back up.
-- Drop the redundant info box; replace with a single subtle helper line.
-- Continue disabled until ≥1 product selected.
-
-### Step 3 — Review & Generate
-Pure summary + cost. **No editable controls here** — every change goes back to its owning step via "Edit".
+Today each product chip shows the generic `<Package>` icon. Swap it for the actual product image (32×32 rounded, object-cover) sitting at the left of the chip. The status icon (✓ / spinner / clock) stays at the right edge so users still see progress at a glance.
 
 ```text
-┌──────────────────────────┬──────────────────────────────┐
-│  Scene                   │  Cost summary                │
-│  [thumb] title           │  ──────────────────────────  │
-│  4:5 · 1:1     [Edit]    │  Products       3            │
-│                          │  Ratios         2            │
-│  Products (3)            │  Images         6            │
-│  [t][t][t]     [Edit]    │  Cost / image   6 credits    │
-│                          │  ──────────────────────────  │
-│                          │  Total          36 credits   │
-│                          │  Balance        128 credits  │
-│                          │  After          92 credits   │
-│                          │                              │
-│                          │  [ Generate 6 images ]       │
-│                          │  ~50s · refunded on failure  │
-└──────────────────────────┴──────────────────────────────┘
+[ img ]  Red Cat-Eye Glasses    4:5   ⟳
 ```
 
-- No "High Quality" label — Product Swap is single-tier, calling it out is noise.
-- No ratio picker on this screen (it's on Step 1 with the scene).
-- If `totalCost > credits`: button swaps to "Get more credits" with inline "You need 12 more credits" message.
-- Free users with zero credits still get the existing `NoCreditsModal`.
-- Sub-line under CTA: estimated time + "Credits are refunded if a generation fails."
+Requires the product's `image_url` at chip render time. Plumb it through:
+- `SwapJobInfo` in `src/hooks/useProductSwap.ts` gains a `productImageUrl?: string`.
+- Hook fills it from the `products[]` it already iterates.
+- Generating view reads `job.productImageUrl` and renders an `<img>` (with `getOptimizedUrl` quality-only); fall back to `<Package>` only if the URL is missing.
 
-## Persistent footer (all steps)
+## 2. Generating screen — light visual tidy
+
+Small refinements (no redesign):
+- Bump chip padding slightly and align the thumbnail/text/status on a clean baseline.
+- Replace the standalone `<Package>` glyph inside each chip with the new thumbnail.
+- Tighten the status pill: status icon moves to the **right** of the row, ratio badge sits beside it.
+- Make the ratio label show only when ≠ default (already done) and use a subtle muted chip instead of inline text.
+- Active (processing) chip gets a thin animated ring on the thumbnail to make progress feel alive.
+
+That's it — no layout reshuffle, same Sophia/team line, same progress bar, same "Continue in background" link.
+
+## 3. Results grid — drop the product icon overlay
+
+The bottom gradient overlay on each result tile currently shows `<Package> productTitle  ratio`. Remove the Package glyph entirely so the image breathes. Keep the product title (truncated) and ratio chip; the title alone is enough context, and the icon was visual noise on top of the actual photo.
+
+## 4. "Download all" button when there are 2+ results
+
+When `resultUrls.length >= 2`, render a secondary button next to the existing "Swap more products" / "View in Library" CTAs:
 
 ```text
-[ ← Back ]      Step 2 of 3 · 3 products selected      [ Continue → ]
+[ Sparkles  Swap more products ]   [ ⬇  Download all ]   [ View in Library ]
 ```
 
-- On Step 3, "Continue" becomes the primary "Generate N images · X credits" CTA.
-- Mobile: footer collapses into a single full-width sticky bar.
+Behavior: triggers each download sequentially (small 150 ms stagger so the browser doesn't drop concurrent downloads). Reuses the same `?download=` trick already used in the lightbox handler — no new dependency, no ZIP bundling for v1 (keeps it instant; per existing project pattern bulk ZIP export is a heavier feature reserved for the asset-export flow).
 
-## State & navigation
-
-- New `currentStep: 1 | 2 | 3` with `canAdvanceFrom(step)` guards.
-- Wizard state persists to `sessionStorage` (`product-swap-wizard`) so HMR reloads (the "random refresh" we discussed) don't wipe selections. Cleared on successful generate.
-- Browser Back inside the wizard goes to the previous step; on Step 1 it exits to Visual Studio.
-- Deep-link via `?scene=` still lands on Step 1 with the scene preselected. No `?step=` param (avoids back-button confusion).
-
-## Generating + Results view
-
-- Same polling, same team-member rotation, same lightbox.
-- Replace the tiny 16×16 scene chip with a 64×64 thumb + product-count badge so users instantly recognize the scene they swapped into.
-- "Swap more" button on the Done state returns to a fresh Step 2 with the **same scene + ratios** preserved, so iterating with new products takes 2 clicks.
+If there is only 1 result, the button is hidden (the lightbox already has single-image download).
 
 ## Out of scope
 
-- No change to generation pipeline, edge function, model, or pricing.
-- No change to library/products data fetching.
-- No new design tokens — reuse existing card/border/primary/muted.
+- No change to the wizard (Steps 1–3) or any generation logic.
+- No new design tokens.
+- No ZIP packaging (download-all is parallel browser downloads, matching existing patterns).
 
-## Technical sketch
+## Files touched
 
-- Refactor `src/pages/ProductSwap.tsx`:
-  - Extract co-located `<Step1Scene />`, `<Step2Products />`, `<Step3Review />` components in the same file.
-  - Shared `<WizardHeader />` and `<WizardFooter />` shells.
-  - Tiny `useSessionStorageState('product-swap-wizard', …)` helper (~15 lines).
-- `useProductSwap` hook untouched.
-- Results view branch untouched except the small visual tweaks above.
+- `src/pages/ProductSwap.tsx` — generating chips, results overlay, new "Download all" button.
+- `src/hooks/useProductSwap.ts` — add `productImageUrl` to `SwapJobInfo` + populate it.
 
 ## Effort
 
-~1.5–2 hours: ~70% UI restructure, ~15% sessionStorage + step guards, ~15% QA across desktop + mobile.
+~20–30 minutes.
+
+---
+
+One thing I want to confirm before building: by **"also improve"** do you mean only the small visual tidies listed in §2 above, or is there something specific on the generating screen you'd like changed (e.g. team-member line, progress copy, "Continue in background" placement)? If the §2 tidies cover it, I'll proceed.

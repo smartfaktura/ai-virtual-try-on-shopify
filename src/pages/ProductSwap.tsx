@@ -10,7 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search, Upload, X, Sparkles, Replace, ArrowLeft, Image as ImageLucide,
   Check, Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
-  ChevronRight, ChevronLeft, Pencil,
+  ChevronRight, ChevronLeft, Pencil, Download,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
@@ -359,15 +359,21 @@ export default function ProductSwap() {
                     const s = jobStatuses[job.jobId];
                     const status = s?.status || 'queued';
                     return (
-                      <div key={job.jobId} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all ${
+                      <div key={job.jobId} className={`flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-xl border text-sm transition-all ${
                         status === 'completed' ? 'border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400'
                         : status === 'failed' ? 'border-destructive/30 bg-destructive/5 text-destructive'
                         : status === 'processing' ? 'border-primary/30 bg-primary/5 text-primary'
                         : 'border-border bg-muted/30 text-muted-foreground'}`}>
-                        {status === 'completed' ? <CheckCircle className="w-4 h-4" /> : status === 'failed' ? <XCircle className="w-4 h-4" /> : status === 'processing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
-                        <Package className="w-3.5 h-3.5" />
+                        <div className={`w-8 h-8 rounded-lg overflow-hidden bg-muted/60 shrink-0 ${status === 'processing' ? 'ring-2 ring-primary/40 ring-offset-1 ring-offset-background animate-pulse' : ''}`}>
+                          {job.productImageUrl ? (
+                            <img src={getOptimizedUrl(job.productImageUrl, { quality: 60 })} alt={job.productTitle} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center"><Package className="w-3.5 h-3.5 opacity-60" /></div>
+                          )}
+                        </div>
                         <span className="font-medium truncate max-w-[160px]">{job.productTitle}</span>
-                        {job.ratio !== '1:1' && <span className="text-xs opacity-60">{job.ratio}</span>}
+                        {job.ratio !== '1:1' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 opacity-70">{job.ratio}</span>}
+                        {status === 'completed' ? <CheckCircle className="w-4 h-4 ml-auto" /> : status === 'failed' ? <XCircle className="w-4 h-4 ml-auto" /> : status === 'processing' ? <Loader2 className="w-4 h-4 animate-spin ml-auto" /> : <Clock className="w-4 h-4 ml-auto opacity-60" />}
                       </div>
                     );
                   })}
@@ -406,9 +412,8 @@ export default function ProductSwap() {
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
                       </div>
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 flex items-center gap-1.5 text-xs text-white">
-                        <Package className="w-3.5 h-3.5" />
                         <span className="font-medium truncate">{entry.job.productTitle}</span>
-                        {entry.job.ratio !== '1:1' && <span className="opacity-70 ml-auto">{entry.job.ratio}</span>}
+                        {entry.job.ratio !== '1:1' && <span className="opacity-70 ml-auto text-[10px] px-1.5 py-0.5 rounded bg-white/15">{entry.job.ratio}</span>}
                       </div>
                     </button>
                   ))}
@@ -430,6 +435,28 @@ export default function ProductSwap() {
                 }}>
                   <Sparkles className="w-4 h-4 mr-2" />Swap more products
                 </Button>
+                {resultEntries.length >= 2 && (
+                  <Button
+                    variant="outline"
+                    size="pill"
+                    onClick={async () => {
+                      for (let i = 0; i < resultEntries.length; i++) {
+                        const entry = resultEntries[i];
+                        const url = entry.url;
+                        const a = document.createElement('a');
+                        a.href = url.includes('?') ? `${url}&download=` : `${url}?download=`;
+                        a.download = `${entry.job.productTitle.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'swap'}-${entry.job.ratio.replace(':', 'x')}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        if (i < resultEntries.length - 1) await new Promise(r => setTimeout(r, 150));
+                      }
+                      toast.success(`Downloading ${resultEntries.length} images`);
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />Download all ({resultEntries.length})
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => { setIsGeneratingView(false); navigate('/app/library'); }}>
                   View in Library
                 </Button>
