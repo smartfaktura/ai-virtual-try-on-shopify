@@ -39,7 +39,7 @@ export function OutfitQuiz({ value, onChange, vibeRequired, hideGarments }: Prop
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
       <div className="md:col-span-2">
-        <Section label="Outfit vibe" required={vibeRequired} missing={vibeMissing}>
+        <Section label={vibeRequired ? "Outfit vibe" : "Outfit vibe · optional"} required={vibeRequired} missing={vibeMissing}>
           <SlotChips
             options={OUTFIT_VIBES}
             value={v.vibe}

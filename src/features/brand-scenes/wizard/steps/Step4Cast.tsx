@@ -237,7 +237,7 @@ export function Step4Cast({
     if (hasPeople) return !cast?.action && !cast?.action_note?.trim();
     return !cast?.hands_on_product;
   })();
-  const outfitVibeMissing = !hasOutfitVibe(cast?.outfit);
+  const outfitVibeMissing = false;
 
   const activeTabRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -264,7 +264,7 @@ export function Step4Cast({
                   essentials: "Essentials",
                   people: "People",
                   interaction: "Interaction",
-                  styling: "Styling",
+                  styling: "Styling · optional",
                 };
                 const headlineAnswered =
                   getSubStepDisabledReason(t, answers, { module, subFamily, isReference }) === null;
@@ -1179,7 +1179,6 @@ function StylingTab({
         <OutfitQuiz
           value={cast?.outfit}
           onChange={(next) => onCastChange({ outfit: next })}
-          vibeRequired
           hideGarments={hideGarments}
         />
       )}
@@ -1187,7 +1186,7 @@ function StylingTab({
       {(showWardrobe || extraFields.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
           {showWardrobe && (
-            <Section label="Wardrobe color anchor">
+            <Section label="Wardrobe color anchor · optional">
               <div className="flex flex-wrap gap-x-2 gap-y-2.5">
                 {wardrobes.map((w) => (
                   <Chip
@@ -1225,7 +1224,7 @@ function StylingTab({
         </div>
       )}
 
-      <Section label="Note">
+      <Section label="Note · optional">
         <Textarea
           value={cast?.note ?? ""}
           maxLength={CAST_NOTE_MAX}

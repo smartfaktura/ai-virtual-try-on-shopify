@@ -1,18 +1,20 @@
-## Always start the Brand Scene wizard blank
+## Make Styling sub-step optional in Step 4
 
-Right now `useWizardState` initializes from `initial`, but the wizard component instance can be re-used across in-app navigations (browser back, "New scene" after a generation), so prior answers can still appear pre-selected. We'll guarantee a clean slate every time the user lands on `/app/brand-scenes/new`.
+The Styling tab currently blocks Next with "Pick an outfit vibe to continue" — even when the Outfit Quiz is hidden (e.g. Rings, where `preset === "hands"` removes OutfitQuiz from the UI). Result: the user can complete every visible field and still be stuck. Fix by making the entire Styling sub-step optional and surfacing that in the UI.
 
 ### Changes
 
-1. **`src/pages/BrandSceneWizard.tsx`**
-   - Read `useLocation()` and render `<Wizard key={location.key} />`. Any navigation to `/app/brand-scenes/new` (even from inside the app) produces a new React key, forcing a full remount and discarding all prior state.
+1. **`src/features/brand-scenes/wizard/step4Flow.ts`**
+   - In `getSubStepDisabledReason`, change the `if (sub === "styling")` branch to `return null;` — Styling no longer gates Next.
 
-2. **`src/features/brand-scenes/wizard/BrandSceneWizard.tsx`**
-   - Add a mount-time `useEffect(() => { dispatch({ type: "reset" }); }, [])` as a belt-and-suspenders reset. Even if the key strategy fails (HMR, edge cases), the wizard always boots into the `initial` state.
+2. **`src/features/brand-scenes/wizard/steps/Step4Cast.tsx`**
+   - Tab label: change `styling: "Styling"` → `styling: "Styling · optional"` in the `labelMap` so the tab itself reads as optional.
+   - Drop the `outfitVibeMissing` red-dot pipeline: stop computing it, stop passing it into `StylingTab`, remove the prop from `StylingTab`'s signature, and remove the `vibeRequired` flag passed to `<OutfitQuiz>`.
+   - Inside `StylingTab`, append " · optional" to the Section labels that aren't visually required anymore: `"Wardrobe color anchor"`, `"Note"`, and any other Section without a `required` prop in this tab.
 
-3. **No schema/registry changes**
-   - Category defaults shown in chips are not "saved settings" — they're presentation defaults from the registry. We're not touching those. Only actual wizard state (cast, scale, scene, base, references, note, responsibility flag) gets reset.
+3. **`src/features/brand-scenes/wizard/components/OutfitQuiz.tsx`**
+   - When `vibeRequired` is false/undefined, render the "Outfit vibe" Section label as `"Outfit vibe · optional"` (keep current behavior when `vibeRequired` is true so other call sites don't change).
 
 ### Out of scope
-- No localStorage/DB draft (none exists today).
-- No changes to generation, prompt assembly, or other steps.
+- No changes to People, Essentials, Interaction validation (those stay required as they are today).
+- No prompt/registry changes — empty styling fields already fall back to sensible defaults in `assembleSceneDirective`.
