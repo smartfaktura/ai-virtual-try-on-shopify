@@ -119,16 +119,13 @@ export function getSubStepDisabledReason(
   const preset = cast?.preset;
 
   if (sub === "look") {
-    if (
-      preset &&
-      preset !== "replicate" &&
-      preset !== "none" &&
-      !getStep4Mode(cast)
-    ) {
+    if (preset === "replicate" || preset === "none") return null;
+    if (!getStep4Mode(cast)) {
       return "Pick whether to design a specific look";
     }
     return null;
   }
+
 
   if (sub === "essentials") {
     if (!preset) return "Choose who's in the shot";
