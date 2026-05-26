@@ -1,19 +1,14 @@
-## Tighten upgrade-modal feature chips: "Custom Brand Models" / "Scenes" with NEW + clearer lock state
+Remove the dashed "New brand model" placeholder tile from the model grid on `/app/models` (BrandModels page).
 
-Three tweaks to the plan cards inside `src/components/app/UpgradePlanModal.tsx` (replacing the row added previously around line 357–369):
+**Context**
+- The Brand Models page (`src/pages/BrandModels.tsx`) currently shows a dashed-border tile as the first item in the model grid with a "+" icon and "New brand model" label (lines ~1360–1369).
+- There is already a primary "New brand model" button in the top-right page header action area (lines ~1285–1291).
+- The duplicate tile adds clutter since the primary CTA is already visible.
 
-1. **Unify the chip set across all three plans.** Same two chips on Starter, Growth, Pro — only the styling changes by plan. No more long "Brand Models & Brand Scenes not included" sentence on Starter.
+**Change**
+- In `src/pages/BrandModels.tsx`, remove the dashed `<Link>` tile that renders before the `models.map()` list inside the grid.
+- Keep the top-right header button and all other UI unchanged.
 
-2. **Rename the chips** to make it clear this is the custom-brand feature (the built-in models stay available on every plan):
-   - `Custom Brand Models`
-   - `Custom Brand Scenes`
-
-3. **Add NEW marker + lock state:**
-   - Growth + Pro: chips in `bg-primary/10 text-primary` with a tiny `NEW` pill (`bg-primary text-primary-foreground text-[8px] px-1 rounded-sm ml-1`) appended inside each chip.
-   - Starter: same chips but rendered in a locked style — `bg-muted/60 text-muted-foreground/70` with a small `Lock` icon (`w-2.5 h-2.5`) before the label, no `NEW` pill. Conveys "feature exists, not in this tier" without a separate sentence.
-
-Chip row keeps `flex flex-wrap gap-1 mt-1.5`. Markup stays compact (~12 lines, no new components, no copy elsewhere).
-
-### Files
-
-- `src/components/app/UpgradePlanModal.tsx` — replace the Starter `<p>…not included</p>` + Growth/Pro chip block with a single chip renderer that switches style by `p.planId`.
+**Scope**
+- One file: `src/pages/BrandModels.tsx`
+- No backend, no other pages touched.
