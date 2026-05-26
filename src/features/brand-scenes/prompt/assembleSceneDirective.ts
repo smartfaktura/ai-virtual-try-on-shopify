@@ -279,9 +279,10 @@ export function assembleSceneDirective(answers: BrandSceneAnswers): string {
   // ----- NEGATIVE -----
   const avoid = base.avoid?.trim() || answers.negative_note?.trim();
   if (avoid) negative.push(`Avoid: ${avoid}.`);
-  // Always append the standard hard-negative clause when the section emits.
+  // Positive phrasing — Gemini 3 Pro Image treats listed nouns as topics, so
+  // we avoid words like "logos" / "watermarks" that trigger SAFETY_BLOCKED:OTHER.
   negative.push(
-    "Do not render text, captions, logos, watermarks, UI chrome, or extra products.",
+    "Keep the frame clean and unbranded: a single hero product, plain surfaces, no overlaid graphics or signage.",
   );
   // Location-lock hardening — prevents the model from collapsing into a
   // tight headshot with a generic background and losing the reference scene.
