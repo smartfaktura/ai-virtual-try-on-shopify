@@ -234,23 +234,16 @@ export default function ProductSwap() {
   }, [refreshCredits, stopPolling]);
 
   // ── Derived ───────────────────────────────────────────────────────────
-  const totalImages = selectedProductIds.size * selectedRatios.size;
+  const totalImages = selectedProductIds.size;
   const totalCost = totalImages * PER_IMAGE_COST;
-  const canGenerate = !!sceneUrl && selectedProductIds.size > 0 && selectedRatios.size > 0 && !isGenerating;
+  const canGenerate = !!sceneUrl && selectedProductIds.size > 0 && !isGenerating;
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const toggleProduct = (id: string) => {
     const next = new Set(selectedProductIds);
     if (next.has(id)) next.delete(id);
-    else if (next.size < 10) next.add(id);
+    else if (next.size < MAX_PRODUCTS) next.add(id);
     setSelectedProductIds(next);
-  };
-
-  const toggleRatio = (r: string) => {
-    const next = new Set(selectedRatios);
-    if (next.has(r)) next.delete(r);
-    else next.add(r);
-    setSelectedRatios(next);
   };
 
   const pickLibrary = (item: LibraryPickerItem) => {
