@@ -269,9 +269,13 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
             <Collapsible open={overridesOpen} onOpenChange={setOverridesOpen}>
               <CollapsibleTrigger className="flex items-start justify-between gap-3 w-full text-left cursor-pointer group">
                 <div className="space-y-1">
-                  <h3 className="text-base font-semibold tracking-tight">Advanced Scene Controls</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold tracking-tight">Advanced Scene Controls</h3>
+                    <Badge variant="outline" className="text-[9px] tracking-wider px-1.5 py-0 h-4 border-primary/40 text-primary bg-primary/5 uppercase">Beta</Badge>
+                  </div>
                   <p className="text-xs text-muted-foreground">Fine-tune format and props for individual scenes</p>
                 </div>
+
                 <ChevronRight className={cn('w-5 h-5 text-muted-foreground transition-transform mt-1', overridesOpen && 'rotate-90')} />
               </CollapsibleTrigger>
               <CollapsibleContent>
