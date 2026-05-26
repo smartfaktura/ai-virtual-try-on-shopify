@@ -466,37 +466,39 @@ function PropPickerModal({ open, onOpenChange, products, excludeIds, alreadySele
         <DialogHeader><DialogTitle className="flex items-center gap-2 text-base"><PackagePlus className="w-4 h-4 text-primary" />Add Props / Accessories</DialogTitle></DialogHeader>
         <p className="text-xs text-muted-foreground -mt-2">Pick products from your catalog to add as styling props in this scene.</p>
         <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 text-sm" /></div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 flex-1 min-h-[320px] max-h-[60vh] overflow-y-auto p-1">
-          {available.map(p => {
-            const isSel = selected.has(p.id);
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => toggle(p.id)}
-                className={cn(
-                  'relative rounded-xl border-2 overflow-hidden transition-all text-left cursor-pointer',
-                  isSel
-                    ? 'border-foreground ring-2 ring-foreground/15 shadow-md'
-                    : 'border-transparent hover:border-foreground/20',
-                )}
-              >
-                <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
-                  <ShimmerImage src={p.image_url} alt={p.title} className="max-w-full max-h-full object-contain" />
-                </div>
-                <div className="h-[52px] flex flex-col justify-center px-2.5">
-                  <p className="text-xs font-medium truncate leading-tight">{p.title}</p>
-                  <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{p.product_type || '\u00A0'}</p>
-                </div>
-                {isSel && (
-                  <div className="absolute top-2 right-2">
-                    <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" />
+        <div className="flex-1 min-h-[320px] max-h-[60vh] overflow-y-auto p-1 -mx-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 auto-rows-min content-start">
+            {available.map(p => {
+              const isSel = selected.has(p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => toggle(p.id)}
+                  className={cn(
+                    'relative rounded-xl border-2 overflow-hidden transition-all text-left cursor-pointer',
+                    isSel
+                      ? 'border-foreground ring-2 ring-foreground/15 shadow-md'
+                      : 'border-transparent hover:border-foreground/20',
+                  )}
+                >
+                  <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
+                    <ShimmerImage src={p.image_url} alt={p.title} className="max-w-full max-h-full object-contain" />
                   </div>
-                )}
-              </button>
-            );
-          })}
-          {available.length === 0 && <p className="col-span-full text-center text-xs text-muted-foreground py-6">No products available</p>}
+                  <div className="h-[52px] flex flex-col justify-center px-2.5">
+                    <p className="text-xs font-medium truncate leading-tight">{p.title}</p>
+                    <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{p.product_type || '\u00A0'}</p>
+                  </div>
+                  {isSel && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+            {available.length === 0 && <p className="col-span-full text-center text-xs text-muted-foreground py-6">No products available</p>}
+          </div>
         </div>
         <div className="flex justify-between items-center pt-2 border-t border-border">
           <span className="text-xs text-muted-foreground">{selected.size} selected</span>
