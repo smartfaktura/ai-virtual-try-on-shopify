@@ -2610,7 +2610,7 @@ export function ProductImagesStep3Refine({
                     <span className="text-sm font-semibold">Background style</span>
                     {details.backgroundTone && details.backgroundTone.split(',').filter(Boolean).length > 0 && (
                       <Badge className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">
-                        \u00d7{details.backgroundTone.split(',').filter(Boolean).length} selected
+                        ×{details.backgroundTone.split(',').filter(Boolean).length} selected
                       </Badge>
                     )}
                   </div>
