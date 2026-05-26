@@ -1,1 +1,1 @@
-Remove the wand icon chip from `BrandScenesInfoModal` (`src/components/app/product-images/BrandScenesInfoModal.tsx`). Drop the leading `<div>` containing the `Wand2` icon, and remove the now-unused `Wand2` import. Eyebrow "BRAND SCENES" becomes the first element. Trigger card icon stays.
+Change the "Learn more" CTA button in `BrandScenesPromoCard.tsx` from `variant="default"` (primary dark) to `variant="secondary"` so it uses the secondary token color instead of primary.
