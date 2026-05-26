@@ -615,14 +615,12 @@ function PeopleTab({
   preset,
   cast,
   onCastChange,
-  vibeMissing,
 }: {
   module?: BrandSceneModule;
   subFamily?: string;
   preset?: CastPreset;
   cast?: BrandSceneCast;
   onCastChange: (patch: Partial<BrandSceneCast>) => void;
-  vibeMissing: boolean;
 }) {
   const isSingle = preset === "solo" || preset === "hands";
   const genderOpts = isSingle
