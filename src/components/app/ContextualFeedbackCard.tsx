@@ -175,7 +175,7 @@ export function ContextualFeedbackCard({
               <button
                 key={key}
                 onClick={() => handleAnswer(key)}
-                className="flex-1 inline-flex items-center justify-center rounded-full border border-input bg-background px-4 min-h-[36px] text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground active:scale-[0.97] transition-all"
+                className="flex-1 inline-flex items-center justify-center rounded-full border border-input bg-background px-4 min-h-[36px] text-xs font-semibold text-foreground hover:bg-foreground/[0.06] hover:border-foreground/30 active:scale-[0.97] transition-all"
               >
                 {buttonLabels[key]}
               </button>
@@ -211,7 +211,7 @@ export function ContextualFeedbackCard({
                 'text-[11px] cursor-pointer transition-colors select-none min-h-[32px] px-3 py-1',
                 selectedReasons.has(chip)
                   ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-accent',
+                  : 'hover:bg-foreground/[0.06] hover:border-foreground/30',
               )}
               onClick={() => toggleReason(chip)}
             >
@@ -236,7 +236,7 @@ export function ContextualFeedbackCard({
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="inline-flex items-center justify-center rounded-full border border-input bg-background px-5 h-8 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-full border border-input bg-background px-5 h-8 text-xs font-semibold text-foreground hover:bg-foreground/[0.06] hover:border-foreground/30 transition-colors disabled:opacity-50"
           >
             Send feedback
           </button>
