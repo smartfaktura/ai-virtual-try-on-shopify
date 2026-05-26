@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Trophy, Pencil, Layers } from 'lucide-react';
 
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,8 @@ interface ImageLightboxProps {
   onDelete?: (index: number) => void;
   onCopyPrompt?: (index: number) => void;
   onShare?: (index: number) => void;
+  onEdit?: (index: number) => void;
+  onGenerateAngles?: (index: number) => void;
   selectedIndices?: Set<number>;
   productName?: string;
 }
@@ -35,6 +37,8 @@ export function ImageLightbox({
   onDelete,
   onCopyPrompt,
   onShare,
+  onEdit,
+  onGenerateAngles,
   selectedIndices = new Set(),
   productName,
 }: ImageLightboxProps) {
@@ -60,6 +64,8 @@ export function ImageLightbox({
   const handleCopyPrompt = useCallback(() => onCopyPrompt?.(currentIndex), [onCopyPrompt, currentIndex]);
   const handleDelete = useCallback(() => onDelete?.(currentIndex), [onDelete, currentIndex]);
   const handleShare = useCallback(() => onShare?.(currentIndex), [onShare, currentIndex]);
+  const handleEdit = useCallback(() => onEdit?.(currentIndex), [onEdit, currentIndex]);
+  const handleGenerateAngles = useCallback(() => onGenerateAngles?.(currentIndex), [onGenerateAngles, currentIndex]);
 
   // Track image load so we can crossfade between slides instead of blanking.
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
@@ -227,8 +233,18 @@ export function ImageLightbox({
               </button>
             )}
             {onDownload && (
-              <button onClick={handleDownload} className={iconBtnClass}>
+              <button onClick={handleDownload} className={iconBtnClass} title="Download">
                 <Download className="w-4 h-4" />
+              </button>
+            )}
+            {onEdit && (
+              <button onClick={handleEdit} className={iconBtnClass} title="Edit Image">
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+            {onGenerateAngles && (
+              <button onClick={handleGenerateAngles} className={iconBtnClass} title="Generate More Angles">
+                <Layers className="w-4 h-4" />
               </button>
             )}
             {onCopyPrompt && (
@@ -277,6 +293,24 @@ export function ImageLightbox({
                 >
                   <Download className="w-4 h-4" />
                   Download
+                </button>
+              )}
+              {onEdit && (
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit Image
+                </button>
+              )}
+              {onGenerateAngles && (
+                <button
+                  onClick={handleGenerateAngles}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                >
+                  <Layers className="w-4 h-4" />
+                  Generate More Angles
                 </button>
               )}
               {onRegenerate && (

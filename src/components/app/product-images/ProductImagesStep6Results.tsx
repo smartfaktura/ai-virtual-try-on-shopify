@@ -7,6 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
@@ -29,6 +30,7 @@ interface Step6Props {
 }
 
 export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary, onStartNew }: Step6Props) {
+  const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -206,6 +208,16 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
           onDownload={(idx) => handleSingleDownload(lightboxImages[idx], lightboxProductName, lightboxSceneNames[idx] || `image_${idx + 1}`)}
+          onEdit={(idx) => {
+            const url = lightboxImages[idx];
+            setLightboxOpen(false);
+            navigate(`/app/freestyle?editImage=${encodeURIComponent(url)}&imageRole=edit`);
+          }}
+          onGenerateAngles={(idx) => {
+            const url = lightboxImages[idx];
+            setLightboxOpen(false);
+            navigate(`/app/perspectives?source=${encodeURIComponent(url)}`);
+          }}
         />
       )}
     </div>

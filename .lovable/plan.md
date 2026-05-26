@@ -1,26 +1,25 @@
-## Add two new perspectives to /app/perspectives
+## Add Edit + Generate More Angles to the Product Images results lightbox
 
-Add **Front View** and **Low Angle / Hero View** to the Picture Perspectives variation catalog. Variations are loaded from `workflows.generation_config.variation_strategy.variations` (DB) with a hardcoded fallback in `src/pages/Perspectives.tsx`. Both must be updated to stay in sync.
+The results-page preview is `ImageLightbox` opened from `ProductImagesStep6Results`. It currently exposes only Download. On mobile, the icon row already exists but lacks the new actions; there is no kebab/overflow menu.
 
-### 1. Database migration
-Update the `Picture Perspectives` row in `workflows`, appending two variations to `generation_config.variation_strategy.variations` (JSONB):
+### Changes
 
-- **Front View** — `category: 'angle'`, no reference upload
-  - instruction: "Straight-on front-facing view of the product, camera perfectly perpendicular at lens height. Symmetrical composition centered on the product's primary face. Same environment and lighting as the source. Classic catalog hero with zero perspective distortion."
-- **Low Angle / Hero View** — `category: 'angle'`, no reference upload
-  - instruction: "Dramatic low-angle shot with the camera positioned slightly below the product looking upward (10–20° below horizontal). Conveys scale, power, and presence — the hero treatment. Product looms confidently in frame. Same environment, lighting, and material fidelity as the source."
+1. **`src/components/app/ImageLightbox.tsx`** — add two optional props and render them on both desktop and mobile bars (additive only, no breaking changes for other consumers):
+   - `onEdit?: (index: number) => void` — `Pencil` icon, label "Edit Image"
+   - `onGenerateAngles?: (index: number) => void` — `Layers` icon, label "Generate More Angles"
+   - Mobile: appended as icon-only buttons in the existing row (no kebab needed — total stays ≤4 icons in this surface: Download, Edit, Angles).
+   - Desktop: pill buttons next to Download.
 
-### 2. Frontend fallback (`src/pages/Perspectives.tsx`)
-- Append matching entries to `FALLBACK_VARIATIONS` (ids: `front`, `hero-low`).
-- Add icon mappings to `VARIATION_ICONS`:
-  - `'Front View'` → `Square` (lucide-react)
-  - `'Low Angle / Hero View'` → `ArrowUp`
-- Add the two icon imports.
+2. **`src/components/app/product-images/ProductImagesStep6Results.tsx`** — pass new handlers to `<ImageLightbox>`:
+   - `onEdit={(idx) => navigate('/app/freestyle?editImage=' + encode(lightboxImages[idx]) + '&imageRole=edit')}`
+   - `onGenerateAngles={(idx) => navigate('/app/perspectives?source=' + encode(lightboxImages[idx]))}`
+   - Both close the lightbox before navigating.
+   - Import `useNavigate` from react-router-dom (verify if not already present).
 
 ### Out of scope
-- No changes to backend perspective hook, prompt engine, or admin workflow variation UI.
-- No route, naming, or studio chat changes.
-- Order: appended at the end of the current 9-item list (total becomes 11).
+- No grid-card kebab menu changes — actions live in the lightbox where the user already taps to preview.
+- No changes to other lightbox callers (LibraryDetailModal etc.), no backend or routing changes.
+- Brand mark preserved; no terminal periods in button labels.
 
 ### Risk
-Low. Additive only. DB JSONB append + two frontend fallback rows. Existing variation rendering, prompt injection, and reference-upload logic handle any `category: 'angle'` item generically.
+Low. Both props are optional; existing consumers keep current behavior.
