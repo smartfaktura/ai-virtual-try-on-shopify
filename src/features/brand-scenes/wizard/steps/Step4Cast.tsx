@@ -663,14 +663,8 @@ function PeopleTab({
       : [];
   const hasAnyModel = refs.length > 0;
 
-  // "Custom settings" collapsible — auto-open if any of the fields are already set.
-  const hasCustomValues =
-    (cast?.gender?.length ?? 0) > 0 ||
-    (cast?.age?.length ?? 0) > 0 ||
-    !!cast?.extras?.build ||
-    !!cast?.extras?.ethnicity;
-  const [customOpen, setCustomOpen] = useState(hasCustomValues);
-  const customLabel = hasAnyModel ? "Override casting hints" : "Custom settings";
+  void hasAnyModel;
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 animate-fade-in">
