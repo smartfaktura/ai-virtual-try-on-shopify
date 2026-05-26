@@ -264,7 +264,7 @@ export function Step4Cast({
                   essentials: "Essentials",
                   people: "People",
                   interaction: "Interaction",
-                  styling: "Styling",
+                  styling: "Styling · optional",
                 };
                 const headlineAnswered =
                   getSubStepDisabledReason(t, answers, { module, subFamily, isReference }) === null;
