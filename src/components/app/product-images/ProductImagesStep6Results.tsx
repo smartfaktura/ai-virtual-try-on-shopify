@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, RefreshCw, CheckCircle, Archive, Loader2, Sparkles } from 'lucide-react';
+import { Download, RefreshCw, Archive, Loader2, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -106,10 +106,7 @@ export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibra
   return (
     <div className="space-y-8">
       <div className="space-y-1.5">
-        <div className="flex items-center gap-2.5">
-          <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Your visuals are ready</h1>
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Your visuals are ready</h1>
         <p className="text-sm text-muted-foreground">{totalImages} image{totalImages !== 1 ? 's' : ''} generated successfully</p>
       </div>
 
