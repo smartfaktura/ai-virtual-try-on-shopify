@@ -558,7 +558,7 @@ export default function ProductSwap() {
             <div className="min-w-0">
               <h1 className="text-2xl font-bold text-foreground leading-tight">Product Swap</h1>
               <p className="text-sm text-muted-foreground">
-                Keep the exact scene — camera, lighting, background — and only swap in a different product
+                Same scene, different product
               </p>
             </div>
           </div>
