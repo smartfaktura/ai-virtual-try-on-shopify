@@ -715,16 +715,6 @@ export default function Perspectives() {
                 </p>
               )}
 
-              <ContextualFeedbackCard
-                workflow="perspectives"
-                questionText="Are these angles useful for your product?"
-                buttonLabels={{ yes: 'Yes', almost: 'Almost', no: 'No' }}
-                reasonChips={['Angles too similar', 'Product not preserved', 'Quality too low', 'Missing key angle', 'Background issues', 'Other']}
-                textPlaceholder="What angles or quality would help most?"
-                resultId={generatingJobs[0]?.jobId}
-                triggerType="result_ready"
-              />
-
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button
                   size="pill"
@@ -740,8 +730,8 @@ export default function Perspectives() {
                   Generate more
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="outline"
+                  size="pill"
                   onClick={() => {
                     setIsGeneratingView(false);
                     navigate('/app/library');
@@ -750,6 +740,16 @@ export default function Perspectives() {
                   View in Library
                 </Button>
               </div>
+
+              <ContextualFeedbackCard
+                workflow="perspectives"
+                questionText="Are these angles useful for your product?"
+                buttonLabels={{ yes: 'Yes', almost: 'Almost', no: 'No' }}
+                reasonChips={['Angles too similar', 'Product not preserved', 'Quality too low', 'Missing key angle', 'Background issues', 'Other']}
+                textPlaceholder="What angles or quality would help most?"
+                resultId={generatingJobs[0]?.jobId}
+                triggerType="result_ready"
+              />
             </div>
           )}
 

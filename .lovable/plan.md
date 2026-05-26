@@ -1,18 +1,9 @@
-Align the "View in Library" button size/style with the primary "Swap more products" CTA on the Product Swap results screen.
+## Changes to `/app/perspectives` results view
 
-**Edit in `src/pages/ProductSwap.tsx` (line 497):**
+### 1. Button sizing consistency
+In `src/pages/Perspectives.tsx`, the **View in Library** button currently uses `variant="ghost" size="sm"`, making it smaller than the adjacent **Generate more** button which uses `size="pill"`.
 
-Change:
-```tsx
-<Button variant="ghost" size="sm" onClick={...}>
-  View in Library
-</Button>
-```
-to:
-```tsx
-<Button variant="outline" size="pill" onClick={...}>
-  View in Library
-</Button>
-```
+Fix: change `View in Library` to `variant="outline" size="pill"` so both buttons share the same height and shape.
 
-This matches the `size="pill"` used by Swap more products and the existing outline+pill style used by the Download all button, so all three buttons in the row share the same height and shape.
+### 2. Re-order feedback card
+The `ContextualFeedbackCard` is currently rendered **above** the CTA button row (Generate more / View in Library). Move it **below** the CTA buttons so the primary actions appear first.
