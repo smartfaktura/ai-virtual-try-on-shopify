@@ -26,6 +26,8 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { mockModels } from '@/data/mockData';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { WizardCard } from '@/features/brand-scenes/wizard/components/WizardCard';
+
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
   Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
@@ -933,62 +935,24 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     if (creationMode === 'chooser') {
       return (
         <div className="pb-32">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full pt-2 items-stretch">
-            <div
-              role="button"
-              tabIndex={0}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <WizardCard
               onClick={() => setCreationMode('manual')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCreationMode('manual'); } }}
-              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium mb-2">
-                01 / Generate
-              </p>
-              <p className="text-base font-semibold text-foreground leading-snug tracking-tight mb-2">
-                Create a new model from scratch
-              </p>
-              <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
-                Pick gender, age, look — we'll generate it for you
-              </p>
-              <div className="mt-auto pt-10 flex justify-end">
-                <Button size="pill" className="text-sm font-semibold pointer-events-none">
-                  Start
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-
-            </div>
-
-            <div
-              role="button"
-              tabIndex={0}
+              icon={<Wand2 className="w-5 h-5" />}
+              title="Create a new model from scratch"
+              body="Pick gender, age, and look — we generate it for you"
+            />
+            <WizardCard
               onClick={() => setCreationMode('reference')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCreationMode('reference'); } }}
-              className="group h-full min-h-[260px] flex flex-col text-left rounded-2xl border border-border/50 bg-card p-10 cursor-pointer hover:bg-muted/40 hover:border-foreground/50 hover:shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/70 font-medium mb-2">
-                02 / Reference photo
-              </p>
-              <p className="text-base font-semibold text-foreground leading-snug tracking-tight mb-2">
-                Generate a model from a real person
-              </p>
-              <p className="text-[13px] text-muted-foreground/90 leading-relaxed">
-                Upload a face — we'll build the model from it
-              </p>
-              <div className="mt-auto pt-10 flex justify-end">
-                <Button size="pill" className="text-sm font-semibold pointer-events-none">
-                  Start
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-
-            </div>
+              icon={<UserCheck className="w-5 h-5" />}
+              title="Generate from a reference photo"
+              body="Upload a face — we build the model from it"
+            />
           </div>
-
         </div>
-
       );
     }
+
 
 
     // Switch-mode link
