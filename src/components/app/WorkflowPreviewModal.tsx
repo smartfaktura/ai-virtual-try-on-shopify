@@ -294,7 +294,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
                 className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all disabled:opacity-50"
               >
                 <Layers className="w-3.5 h-3.5" />
-                Perspectives
+                More Angles
               </button>
               </div>
 

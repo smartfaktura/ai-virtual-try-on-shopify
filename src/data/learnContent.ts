@@ -272,7 +272,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
   {
     slug: 'picture-perspectives',
     section: 'visual-studio',
-    title: 'Picture Perspectives',
+    title: 'Generate More Angles',
     tagline: 'One photo → close-ups, back, side, wide angles.',
     readMin: 2,
     tracks: ['visual-types', 'advanced'],

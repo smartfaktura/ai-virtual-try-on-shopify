@@ -21,6 +21,8 @@ interface WorkflowRowProps {
   comingSoon?: boolean;
   beta?: boolean;
   featured?: boolean;
+  /** Optional user-facing display name. Falls back to workflow.name. */
+  displayName?: string;
 }
 
 const featureMap: Record<string, string[]> = {
@@ -75,7 +77,8 @@ const featureMap: Record<string, string[]> = {
   ],
 };
 
-export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, beta, featured }: WorkflowRowProps) {
+export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, beta, featured, displayName }: WorkflowRowProps) {
+  const title = displayName ?? workflow.name;
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -104,7 +107,7 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
           <LayoutTemplate className="h-5 w-5" />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-lg font-semibold text-foreground">{workflow.name}</h3>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">{workflow.description}</p>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-auto pt-2">
@@ -142,7 +145,7 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
             ) : (
               <img
                 src={getOptimizedUrl(workflow.preview_image_url || imgFallback, { quality: 60 })}
-                alt={workflow.name}
+                alt={title}
                 className="w-full h-full object-cover"
               />
             )}
@@ -152,7 +155,7 @@ export function WorkflowCard({ workflow, onSelect, reversed, id, comingSoon, bet
         {/* Content side */}
         <div className="flex flex-col justify-center gap-4 p-6 lg:p-10 flex-1">
           <h2 className="text-xl lg:text-2xl font-bold tracking-tight">
-            {workflow.name}
+            {title}
           </h2>
 
           <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">

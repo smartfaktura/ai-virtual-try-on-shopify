@@ -27,7 +27,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   'flat-lay-set': 'Flatlay Visuals',
   'mirror-selfie-set': 'Mirror Selfie Visuals',
   'interior-exterior-staging': 'Interior Staging Visuals',
-  'picture-perspectives': 'Picture Perspectives Generator',
+  'picture-perspectives': 'Generate More Angles',
   'image-upscaling': 'Image Upscaling Tool',
 };
 

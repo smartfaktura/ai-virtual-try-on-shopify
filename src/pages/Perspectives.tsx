@@ -518,14 +518,14 @@ export default function Perspectives() {
   if (isGeneratingView) {
     return (
       <div className="min-h-screen">
-        <SEOHead title="Generating Perspectives…" description="Your product perspectives are being created." />
+        <SEOHead title="Generating More Angles…" description="Your product angles are being created." />
         <div className="max-w-2xl mx-auto px-4 py-12 space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
               <Layers className="w-7 h-7 text-primary animate-pulse" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Creating Picture Perspectives…</h1>
+            <h1 className="text-2xl font-bold text-foreground">Creating More Angles…</h1>
             <p className="text-sm text-muted-foreground">
               Generating {genTotalCount} angle{genTotalCount !== 1 ? 's' : ''}
               {generatingJobs[0] ? ` of ${generatingJobs[0].productTitle}` : ''}
@@ -554,7 +554,7 @@ export default function Perspectives() {
 
             {/* Per-variation chips */}
             <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Perspectives</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Angles</p>
               <div className="flex flex-wrap gap-2">
                 {generatingJobs.map(job => {
                   const s = jobStatuses[job.jobId];
@@ -674,7 +674,7 @@ export default function Perspectives() {
 
   return (
     <div className="min-h-screen">
-      <SEOHead title="Picture Perspectives" description="Generate angle and detail variations from any image." />
+      <SEOHead title="Generate More Angles" description="Generate angle and detail variations from any image." />
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
@@ -693,7 +693,7 @@ export default function Perspectives() {
               <Layers className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Picture Perspectives</h1>
+              <h1 className="text-2xl font-bold text-foreground">Generate More Angles</h1>
               <p className="text-sm text-muted-foreground">
                 Generate angle and detail variations — close-ups, back views, side angles, and wide shots from any image.
               </p>
@@ -923,7 +923,7 @@ export default function Perspectives() {
         <section className="space-y-4">
           <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">2</span>
-            Choose Perspectives
+            Choose Angles
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
