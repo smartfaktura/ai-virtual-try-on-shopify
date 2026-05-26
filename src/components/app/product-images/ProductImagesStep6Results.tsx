@@ -30,6 +30,7 @@ interface Step6Props {
 }
 
 export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary, onStartNew }: Step6Props) {
+  const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
