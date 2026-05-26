@@ -146,6 +146,15 @@ const queryClient = new QueryClient({
   },
 });
 
+function DelayedFallback() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 200);
+    return () => clearTimeout(t);
+  }, []);
+  return show ? <BrandLoaderProgressGlyph fullScreen /> : null;
+}
+
 const App = () => {
   useEffect(() => { checkAppVersion(); }, []);
 
