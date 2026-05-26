@@ -75,7 +75,13 @@ export function resolveAll(
   const b = resolveBundle(module, subFamily);
 
   const allScales = SCALE_PRESETS.map((s) => s.value);
-  const scaleValues = (b.scale ?? allScales) as ScalePreset[];
+  const registryScales = (b.scale ?? allScales) as ScalePreset[];
+  // When a family offers a real choice (>1 option), always expose Mini /
+  // Tabletop / Other so users aren't boxed into the registry defaults.
+  const scaleValues: ScalePreset[] =
+    registryScales.length > 1
+      ? Array.from(new Set([...registryScales, "mini", "tabletop", "other"])) as ScalePreset[]
+      : registryScales;
 
   // Use `in`-checks so an explicitly-declared empty array opts the field out
   // entirely (vs. `??` which would fall back to ALL values).
