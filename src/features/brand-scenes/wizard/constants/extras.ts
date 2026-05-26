@@ -552,28 +552,28 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "motion",
     scope: "scene",
-    label: "Motion / energy",
+    label: "Motion / energy · optional",
     prefix: "Motion",
     presets: MOTION_ENERGY,
   },
   {
     key: "composition_energy",
     scope: "scene",
-    label: "Composition energy",
+    label: "Composition energy · optional",
     prefix: "Composition energy",
     presets: COMPOSITION_ENERGY,
   },
   {
     key: "crop_safety",
     scope: "scene",
-    label: "Crop-safe zones (for copy)",
+    label: "Crop-safe zones (for copy) · optional",
     prefix: "Crop safety",
     presets: CROP_SAFETY,
   },
   {
     key: "camera_angle",
     scope: "scene",
-    label: "Camera angle",
+    label: "Camera angle · optional",
     prefix: "Camera angle",
     presets: CAMERA_ANGLES_HUMAN,
     // Phase 7j — swap the preset list based on whether people are in frame.
@@ -585,7 +585,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "camera_angle_apparel",
     scope: "scene",
-    label: "Apparel-specific angle",
+    label: "Apparel-specific angle · optional",
     prefix: "Apparel angle",
     presets: CAMERA_ANGLES_APPAREL,
     category: ["fashion"],
@@ -594,7 +594,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "camera_angle_footwear",
     scope: "scene",
-    label: "Footwear-specific angle",
+    label: "Footwear-specific angle · optional",
     prefix: "Footwear angle",
     presets: CAMERA_ANGLES_FOOTWEAR,
     category: ["footwear"],
@@ -604,7 +604,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "camera_angle_eyewear",
     scope: "scene",
-    label: "Eyewear-specific angle",
+    label: "Eyewear-specific angle · optional",
     prefix: "Eyewear angle",
     presets: CAMERA_ANGLES_EYEWEAR,
     category: ["eyewear"],
@@ -613,7 +613,7 @@ export const SCENE_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "camera_angle_jewelry",
     scope: "scene",
-    label: "Jewelry-specific angle",
+    label: "Jewelry-specific angle · optional",
     prefix: "Jewelry angle",
     presets: CAMERA_ANGLES_JEWELRY,
     category: ["jewelry", "watches"],
@@ -732,7 +732,7 @@ export const CAST_EXTRAS_FIELDS: ExtrasField[] = [
   {
     key: "pose_energy",
     scope: "cast",
-    label: "Pose energy",
+    label: "Pose energy · optional",
     prefix: "Pose",
     presets: POSE_ENERGY,
     castOnly: ["solo", "two", "group", "hands"],
