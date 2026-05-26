@@ -7,8 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { ResultDetailModal, type ResultDetailItem } from '@/components/app/product-images/ResultDetailModal';
 import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
 import { toast } from '@/lib/brandedToast';
 import { saveOrShareImage } from '@/lib/mobileImageSave';
@@ -20,19 +19,19 @@ interface ResultImage {
   sceneName: string;
   sceneId?: string;
   aspectRatio?: string;
+  jobId?: string;
 }
 
 interface Step6Props {
-  results: Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string }>; productName: string }>;
+  results: Map<string, { images: Array<{ url: string; sceneName: string; sceneId?: string; aspectRatio?: string; jobId?: string }>; productName: string }>;
   onGenerateMore: () => void;
   onGoToLibrary: () => void;
   onStartNew?: () => void;
 }
 
 export function ProductImagesStep6Results({ results, onGenerateMore, onGoToLibrary, onStartNew }: Step6Props) {
-  const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxItems, setLightboxItems] = useState<ResultDetailItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const { rawScenes } = useProductImageScenes();
