@@ -266,35 +266,36 @@ function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; se
           </div>
         )}
       </div>
-      <div className="p-1.5 min-h-[44px] flex flex-col items-center justify-center gap-0.5">
+      <div className="p-1.5 flex flex-col items-center justify-center gap-0.5">
         <p className="text-[11px] font-semibold truncate text-center w-full">{scene.title}</p>
-        <div className="flex items-center justify-center gap-1 h-4">
-          {hasBackground && (
-            <>
-              <Paintbrush className="w-2.5 h-2.5 text-muted-foreground/70" />
-              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Background</span>
-              <div className="w-2 h-2 rounded-full bg-white border border-border" />
-              <div className="w-2 h-2 rounded-full bg-[#E8EDE6]" />
-              <div className="w-2 h-2 rounded-full bg-[#F8ECE8]" />
-              <div className="w-2 h-2 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
-            </>
-          )}
-          {hasAestheticColor && !hasBackground && (
-            <>
-              <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Accent Color Selected</span>
-              {scene.suggestedColors && scene.suggestedColors.length > 0
-                ? scene.suggestedColors.slice(0, 3).map((c, i) => (
-                    <div key={i} className="w-2 h-2 rounded-full border border-border/60" style={{ backgroundColor: c.hex }} />
-                  ))
-                : <>
-                    <div className="w-2 h-2 rounded-full bg-[#5F8A8B]" />
-                    <div className="w-2 h-2 rounded-full bg-[#C4835B]" />
-                    <div className="w-2 h-2 rounded-full bg-[#8B9E7E]" />
-                  </>
-              }
-            </>
-          )}
-        </div>
+        {(hasBackground || (hasAestheticColor && !hasBackground)) && (
+          <div className="flex items-center justify-center gap-1 h-4">
+            {hasBackground && (
+              <>
+                <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Custom Background</span>
+                <div className="w-2 h-2 rounded-full bg-white border border-border" />
+                <div className="hidden sm:block w-2 h-2 rounded-full bg-[#E8EDE6]" />
+                <div className="hidden sm:block w-2 h-2 rounded-full bg-[#F8ECE8]" />
+                <div className="hidden sm:block w-2 h-2 rounded-full bg-gradient-to-tr from-blue-200 to-pink-200 border border-white/30" />
+              </>
+            )}
+            {hasAestheticColor && !hasBackground && (
+              <>
+                <span className="text-[9px] text-muted-foreground/80 font-medium leading-none">Accent Color</span>
+                {scene.suggestedColors && scene.suggestedColors.length > 0
+                  ? scene.suggestedColors.slice(0, 3).map((c, i) => (
+                      <div key={i} className={`${i === 0 ? '' : 'hidden sm:block'} w-2 h-2 rounded-full border border-border/60`} style={{ backgroundColor: c.hex }} />
+                    ))
+                  : <>
+                      <div className="w-2 h-2 rounded-full bg-[#5F8A8B]" />
+                      <div className="hidden sm:block w-2 h-2 rounded-full bg-[#C4835B]" />
+                      <div className="hidden sm:block w-2 h-2 rounded-full bg-[#8B9E7E]" />
+                    </>
+                }
+              </>
+            )}
+          </div>
+        )}
       </div>
     </button>
   );
@@ -928,9 +929,8 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
         </Button>
       </div>
       {showLegend && (
-        <p className="text-[11px] text-muted-foreground/80 mb-2 flex items-center gap-1">
-          <Paintbrush className="w-2.5 h-2.5" />
-          Backgrounds shown are editable in the next step
+        <p className="text-[11px] text-muted-foreground/80 mb-2">
+          Dynamic backgrounds — fully editable in the next step
         </p>
       )}
       <div className={`grid ${gridClass} gap-2`}>
