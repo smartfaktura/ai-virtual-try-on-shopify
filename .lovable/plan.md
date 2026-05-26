@@ -1,19 +1,20 @@
-## Make Brand Models / Brand Scenes gating visible in the upgrade modal
+## Cleaner header on Product Images results step
 
-In `src/components/app/UpgradePlanModal.tsx`, each plan card currently only shows credits and images/mo. Add a tiny gating line so users can tell at a glance that Brand Models + Brand Scenes are **not** on Starter and **are** on Growth + Pro.
+On `/app/generate/product-images` the generic page header ("Create Product Visuals — Choose one or more products to start generating visuals") stays visible even after generation finishes, duplicating space above the real result headline ("Your visuals are ready").
 
 ### Change
 
-Under the existing `{credits.toLocaleString()} credits · ~{approxImages} images/mo` line (around line 353–355), append a single small row that switches on `planId`:
+**`src/pages/ProductImages.tsx` (line 1396):** wrap `PageHeader` in `{step !== 6 && (...)}` so it renders during the wizard but disappears on the results step. No new components, no copy edits, no behavior change.
 
-- **Starter** (`planId === 'starter'`):
-  `text-[10px] text-muted-foreground/70 mt-1` line:
-  `Brand Models & Brand Scenes not included`
-- **Growth / Pro**:
-  Two compact pill chips: `Brand Models` and `Brand Scenes`, styled `text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold`, wrapped in a `flex flex-wrap gap-1 mt-1.5` row.
+**`src/components/app/product-images/ProductImagesStep6Results.tsx` (lines 106–114):** lift the results headline so it acts as the page header on this step:
+- Wrapper: change top-level `space-y-8` to keep, but switch the headline block from `text-center` to left-aligned and bump sizing.
+- `h2` → `text-2xl sm:text-3xl font-semibold tracking-tight` (matches `PageHeader` scale).
+- Remove the centered `CheckCircle` icon row; instead render headline left-aligned with the subtitle directly below: `{totalImages} image{...} generated successfully`.
+- Keep the small primary `CheckCircle` inline before the headline at `w-5 h-5` for a subtle success cue.
 
-Pure visual hint; no logic, copy, or pricing changes elsewhere. Re-uses the `pricingPlans` features data that already lists Brand Models / Brand Scenes for Growth and Pro, so no data edits needed.
+Result: results page opens with just the success headline + subtitle in the same slot the page title used to occupy — less stacked text, more clarity.
 
 ### Files
 
-- `src/components/app/UpgradePlanModal.tsx` — ~12 lines added inside the plan-list `.map(...)` block. No other files touched.
+- `src/pages/ProductImages.tsx`
+- `src/components/app/product-images/ProductImagesStep6Results.tsx`
