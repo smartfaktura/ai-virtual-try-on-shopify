@@ -448,31 +448,6 @@ export function BrandSceneWizard() {
           />
         )}
       </WizardLayout>
-
-      <ResponsibilityModal
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        onAccept={async () => {
-          if (!user) {
-            toast.error("You must be signed in to continue");
-            return;
-          }
-          const { error } = await supabase
-            .from("reference_responsibility_acceptances")
-            .insert({
-              user_id: user.id,
-              user_email: user.email ?? null,
-              user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-              context: "brand_scene_wizard",
-            });
-          if (error) {
-            toast.error("Could not record your confirmation. Please try again.");
-            return;
-          }
-          dispatch({ type: "acceptResponsibility" });
-          setModalOpen(false);
-        }}
-      />
     </>
   );
 }
