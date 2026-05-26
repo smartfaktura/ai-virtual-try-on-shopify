@@ -146,7 +146,7 @@ export function getSubStepDisabledReason(
   }
 
   if (sub === "styling") {
-    if (!hasOutfitVibe(cast?.outfit)) return "Pick an outfit vibe to continue";
+    // Styling is fully optional — never block Next.
     return null;
   }
 
