@@ -414,8 +414,8 @@ export function Step6PreviewAndPick({
 
 
       {(phase === "picking" || phase === "saving") && variations.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Pick your favorite
@@ -469,12 +469,13 @@ export function Step6PreviewAndPick({
             </div>
           </div>
 
-          <div className="lg:col-span-1 space-y-3">
+          <div className="space-y-3">
             {isReferenceFlow && referenceImageUrl && <ReferenceThumb />}
             <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
           </div>
         </div>
       )}
+
 
       {/* Full structured summary — only shown outside the picking/saving phases */}
       {phase !== "picking" && phase !== "saving" && (
