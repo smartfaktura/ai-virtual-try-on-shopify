@@ -170,6 +170,7 @@ export interface BrandSceneCast {
 
 export interface BrandSceneScale {
   preset: ScalePreset;
+  note?: string;
   dimensions?: {
     w: number;
     h: number;
