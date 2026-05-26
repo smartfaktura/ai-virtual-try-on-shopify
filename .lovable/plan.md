@@ -1,32 +1,30 @@
 
 ## Goal
-On `/app/models/new` the Generate button greys out with no visible reason on mobile, and the Model Name field gives no signal it's required. Make required-ness obvious and surface the validation message on mobile.
+On `/app/brand-scenes/new` final Review step the Scene name is required but the affordance is too quiet — Generate greys out with no clear reason, especially on mobile.
 
 ## Scope
-UI/UX only — single file: `src/pages/BrandModels.tsx`. No validation rules, no backend, no business logic changed.
+UI/UX only — `src/features/brand-scenes/wizard/steps/Step6PreviewAndPick.tsx`. No gating logic changed (`nameValid = trimmedName.length >= 2` stays). Reference flow collects name in Step3 and is out of scope.
 
 ## Changes
 
-### 1. Mark Model Name as required
-Both spots that render the Name field (`essentialsBlock` ~L615 and reference-mode `Section` ~L988):
-- Add a red `*` after the label text
-- Add `aria-required="true"` and `aria-invalid={nameTouched && trimmedName.length < 2}` on the `Input`
-- When invalid + touched: `border-destructive focus-visible:ring-destructive` on the input and a small helper line below: *"Required — give your model a name"* in `text-destructive`
+### 1. Scene name field — required affordance (~L273-290, wizard flow only)
+- Append red `*` after the "Scene name" label
+- Add `nameTouched` state, set true on input `onBlur` and on attempted Generate click
+- When `nameTouched && !nameValid`:
+  - Input gets `border-destructive focus-visible:ring-destructive`
+  - Replace the grey "Required — this is how the scene appears in your library" caption with destructive variant: `<AlertCircle/> Required — give your scene a name`
+- `aria-required="true"` + `aria-invalid` on the Input
+- Attach `ref={nameInputRef}` for scroll/focus
 
-Track `nameTouched` state. Set true on input `onBlur`, and also when the user taps the disabled Generate button (see #3).
+### 2. Generate button — tap-to-reveal + visible reason (~L367-391)
+- Wrap the disabled `<Button>` in a `<span>` whose `onClick` runs `revealValidation()` when `!nameValid` → `setNameTouched(true)`, scroll name input into view, focus it. Inner Button keeps `disabled` so generation never fires.
+- Move the "Name this scene to enable generation" hint **above** the button, render it with `text-destructive` + `AlertCircle` icon so it's the first thing visible near the CTA on mobile.
+- Add `title={!nameValid ? "Name this scene first" : undefined}` for desktop hover hint.
 
-### 2. Surface validation message on mobile in the sticky footer (~L1103)
-Today the validation text uses `hidden sm:block`, so mobile users see nothing. Restructure the pill:
-
-- Mobile: validation row stacks **above** the buttons inside the pill, with an `AlertCircle` icon + `text-destructive` text
-- Desktop (`sm+`): keeps current inline layout (message left, buttons right)
-- Row only renders when `currentStep === 2 && validationError`
-
-### 3. Tap-to-reveal on disabled Generate
-- Add `title={validationError ?? undefined}` on the Generate button (desktop hover hint)
-- Wrap the Generate button in a span with `onClick` that — when disabled — runs `setNameTouched(true)` and scrolls the name input into view. This way tapping the grey button on mobile actually tells the user what's missing instead of doing nothing.
+### 3. Empty-variations Regenerate (~L398-413)
+- Same tap-to-reveal wrapper on the disabled Regenerate button.
 
 ## Out of scope
-- `canGenerate` logic, `validationError` derivation, credit checks, upload flow — all unchanged
-- Brand-scenes wizard footer — separate request if needed
-- No copy changes beyond the new helper line and the `*` marker
+- `nameValid`, credit, rights-checkbox gates — unchanged
+- Reference flow (Step3 handles name; sticky footer already surfaces "Name this scene")
+- `/app/models/new` — already shipped previous turn

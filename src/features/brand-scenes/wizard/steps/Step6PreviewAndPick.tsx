@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronLeft, Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import { ImageLightbox } from "@/components/app/ImageLightbox";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -91,12 +91,23 @@ export function Step6PreviewAndPick({
   // Mirror of the ref so the button visibly disables before phase flips.
   const [submitting, setSubmitting] = useState(false);
   const [finalRightsAck, setFinalRightsAck] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
 
   const trimmedName = answers.name?.trim() ?? "";
   const nameValid = trimmedName.length >= 2;
+  const showNameError = nameTouched && !nameValid;
   const sceneName = trimmedName || "Untitled scene";
   const isReferenceFlow = answers.source === "reference";
+
+  const revealNameValidation = () => {
+    setNameTouched(true);
+    if (!nameValid) {
+      nameInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => nameInputRef.current?.focus(), 300);
+    }
+  };
 
   const hasModelRef = !!answers.cast?.model_ref;
   const hasPeople =
@@ -271,21 +282,32 @@ export function Step6PreviewAndPick({
       {/* Scene name — mandatory in wizard flow. Reference flow already collected
           it in Step 3 but we let the user edit it here too. */}
       {!isReferenceFlow && (
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+        <div className={`rounded-2xl border bg-card p-4 sm:p-6 transition-colors ${showNameError ? "border-destructive/60" : "border-border"}`}>
           <Label htmlFor="brand-scene-name" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Scene name
+            Scene name <span className="text-destructive ml-0.5">*</span>
           </Label>
           <Input
             id="brand-scene-name"
+            ref={nameInputRef}
             value={answers.name ?? ""}
             onChange={(e) => onNameChange?.(e.target.value.slice(0, BRAND_SCENE_NAME_MAX))}
+            onBlur={() => setNameTouched(true)}
             placeholder="e.g. Lingerie morning bedroom"
             maxLength={BRAND_SCENE_NAME_MAX}
-            className="mt-2"
+            aria-required="true"
+            aria-invalid={showNameError}
+            className={`mt-2 ${showNameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
           />
-          <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-            Required — this is how the scene appears in your library.
-          </p>
+          {showNameError ? (
+            <p className="mt-2 text-[11px] text-destructive leading-relaxed flex items-center gap-1.5">
+              <AlertCircle className="w-3 h-3 flex-shrink-0" />
+              Required — give your scene a name
+            </p>
+          ) : (
+            <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+              Required — this is how the scene appears in your library.
+            </p>
+          )}
         </div>
       )}
 
@@ -364,25 +386,32 @@ export function Step6PreviewAndPick({
                 </span>
               </label>
             )}
-            <Button
-              size="pill"
-              onClick={handleGenerate}
-              disabled={!nameValid || submitting || (isReferenceFlow && !!referenceImageUrl && !finalRightsAck)}
-              className="gap-2 w-full sm:w-auto whitespace-normal text-center"
-            >
-              <Sparkles className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">
-                Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
-              </span>
-              <span className="sm:hidden">
-                Generate · {BRAND_SCENE_GENERATION_COST} credits
-              </span>
-            </Button>
             {!nameValid && (
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Name this scene to enable generation.
+              <p className="mb-2 text-[12px] text-destructive leading-relaxed flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                Name this scene above to enable generation
               </p>
             )}
+            <span
+              onClick={() => { if (!nameValid) revealNameValidation(); }}
+              className="inline-block w-full sm:w-auto"
+            >
+              <Button
+                size="pill"
+                onClick={handleGenerate}
+                disabled={!nameValid || submitting || (isReferenceFlow && !!referenceImageUrl && !finalRightsAck)}
+                title={!nameValid ? "Name this scene first" : undefined}
+                className={`gap-2 w-full sm:w-auto whitespace-normal text-center ${!nameValid ? "pointer-events-none" : ""}`}
+              >
+                <Sparkles className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">
+                  Generate {BRAND_SCENE_VARIATIONS_PER_GENERATION} variations · {BRAND_SCENE_GENERATION_COST} credits
+                </span>
+                <span className="sm:hidden">
+                  Generate · {BRAND_SCENE_GENERATION_COST} credits
+                </span>
+              </Button>
+            </span>
             {nameValid && isReferenceFlow && referenceImageUrl && !finalRightsAck && (
               <p className="mt-2 text-[11px] text-muted-foreground">
                 Tick the confirmation above to enable generation.
@@ -400,15 +429,21 @@ export function Step6PreviewAndPick({
           <p className="text-sm text-foreground/80">
             No variations to show — they may have been cleared after an edit
           </p>
-          <Button
-            size="pill"
-            onClick={handleGenerate}
-            disabled={!nameValid || submitting}
-            className="gap-2"
+          <span
+            onClick={() => { if (!nameValid) revealNameValidation(); }}
+            className="inline-block"
           >
-            <RefreshCw className="w-4 h-4" />
-            Regenerate · {BRAND_SCENE_GENERATION_COST} credits
-          </Button>
+            <Button
+              size="pill"
+              onClick={handleGenerate}
+              disabled={!nameValid || submitting}
+              title={!nameValid ? "Name this scene first" : undefined}
+              className={`gap-2 ${!nameValid ? "pointer-events-none" : ""}`}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Regenerate · {BRAND_SCENE_GENERATION_COST} credits
+            </Button>
+          </span>
         </div>
       )}
 
