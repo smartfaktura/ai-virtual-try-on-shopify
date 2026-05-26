@@ -993,7 +993,6 @@ export function ProductImagesStep2Scenes(props: Step2Props) {
   if (!isMultiCategory) {
     return (
       <>
-        <FreeSceneBanner isFree={isFree} onUpgradeClick={onUpgradeClick} limit={freeSceneLimit} current={selectedSceneIds.size} />
         <SharedScenePicker selectedSceneIds={selectedSceneIds} onSelectionChange={onSelectionChange} selectedProducts={selectedProducts} productAnalyses={productAnalyses} discoverScene={discoverScene} discoverSceneFull={discoverSceneFull} />
         <FreeLimitToast active={limitHintActive} message={`${freeSceneLimit} shot limit on Free — upgrade for unlimited`} />
       </>
