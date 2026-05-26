@@ -91,12 +91,23 @@ export function Step6PreviewAndPick({
   // Mirror of the ref so the button visibly disables before phase flips.
   const [submitting, setSubmitting] = useState(false);
   const [finalRightsAck, setFinalRightsAck] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
 
   const trimmedName = answers.name?.trim() ?? "";
   const nameValid = trimmedName.length >= 2;
+  const showNameError = nameTouched && !nameValid;
   const sceneName = trimmedName || "Untitled scene";
   const isReferenceFlow = answers.source === "reference";
+
+  const revealNameValidation = () => {
+    setNameTouched(true);
+    if (!nameValid) {
+      nameInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => nameInputRef.current?.focus(), 300);
+    }
+  };
 
   const hasModelRef = !!answers.cast?.model_ref;
   const hasPeople =
