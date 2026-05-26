@@ -31,7 +31,7 @@ import { WizardCard } from '@/features/brand-scenes/wizard/components/WizardCard
 import {
   Users, Upload, Sparkles, Crown, Loader2, Trash2, Camera, Wand2,
   Check, Star, Palette, Baby, UserCheck, Globe, ShieldCheck, ImagePlus,
-  Pencil, Info, Plus, ArrowRight, ChevronDown,
+  Pencil, Info, Plus, ArrowRight, ChevronDown, AlertCircle,
 } from 'lucide-react';
 
 /* ── Plan gate upgrade prompt ── */
@@ -216,6 +216,8 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
   const { user: currentUser } = useAuth();
   // Model name
   const [modelName, setModelName] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   // Essentials
   const [gender, setGender] = useState('Female');
@@ -313,6 +315,16 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     null;
   const isLowCreditsError = !makePublic && balance < 20 && trimmedName.length >= 2 && !isUploading && (!isReferenceMode || (uploadedUrl && termsAccepted));
   const canGenerate = !generating && !validationError;
+  const nameInvalid = trimmedName.length < 2;
+  const showNameError = nameTouched && nameInvalid;
+
+  const revealValidation = () => {
+    setNameTouched(true);
+    if (nameInvalid) {
+      nameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => nameInputRef.current?.focus(), 300);
+    }
+  };
 
 
   const buildGenerateBody = () => {
@@ -612,19 +624,31 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
     <div className="space-y-5">
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between">
-          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Model Name</Label>
+          <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+            Model Name <span className="text-destructive ml-0.5">*</span>
+          </Label>
           <span className={cn(
             "text-[10px] tabular-nums",
             modelName.length >= 28 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50"
           )}>{modelName.length}/32</span>
         </div>
         <Input
+          ref={nameInputRef}
           placeholder="e.g. Sarah, Alex, Brand Ambassador"
           value={modelName}
           onChange={(e) => setModelName(e.target.value)}
+          onBlur={() => setNameTouched(true)}
           maxLength={32}
-          className="h-9"
+          aria-required="true"
+          aria-invalid={showNameError}
+          className={cn("h-9", showNameError && "border-destructive focus-visible:ring-destructive")}
         />
+        {showNameError && (
+          <p className="text-[11px] text-destructive flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Required — give your model a name
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -985,19 +1009,31 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
             <Section title="Model name">
               <div className="space-y-1.5">
                 <div className="flex items-baseline justify-between">
-                  <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Name this model</Label>
+                  <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Name this model <span className="text-destructive ml-0.5">*</span>
+                  </Label>
                   <span className={cn(
                     "text-[10px] tabular-nums",
                     modelName.length >= 28 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/50"
                   )}>{modelName.length}/32</span>
                 </div>
                 <Input
+                  ref={nameInputRef}
                   placeholder="e.g. Sarah, Alex, Brand Ambassador"
                   value={modelName}
                   onChange={(e) => setModelName(e.target.value)}
+                  onBlur={() => setNameTouched(true)}
                   maxLength={32}
-                  className="h-9"
+                  aria-required="true"
+                  aria-invalid={showNameError}
+                  className={cn("h-9", showNameError && "border-destructive focus-visible:ring-destructive")}
                 />
+                {showNameError && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Required — give your model a name
+                  </p>
+                )}
               </div>
             </Section>
             <Section title="Reference">{referenceBlock}</Section>
@@ -1102,6 +1138,23 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
         {/* Sticky pill footer */}
         <div className="sticky bottom-5 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
           <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
+            {/* Mobile-only validation row */}
+            {currentStep === 2 && validationError && (
+              <div className="sm:hidden flex items-center gap-1.5 px-3 pt-2.5 pb-1 border-b border-border/40">
+                <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                {isLowCreditsError ? (
+                  <button
+                    type="button"
+                    onClick={() => setNoCreditsOpen(true)}
+                    className="text-[11px] text-destructive hover:underline text-left"
+                  >
+                    {validationError} →
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-destructive">{validationError}</span>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-2 p-2 sm:p-4">
               <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
                 {currentStep === 2 && validationError ? (
@@ -1138,15 +1191,20 @@ export function UnifiedGenerator({ onSuccess, isAdmin, layout = 'card' }: { onSu
                     <Button variant="outline" size="pill" onClick={handleStepBack} className="flex-1 sm:flex-none">
                       Back
                     </Button>
-                    <Button
-                      size="pill"
-                      disabled={!canGenerate}
-                      onClick={handleGenerate}
-                      title={validationError || undefined}
-                      className={`flex-1 sm:flex-none whitespace-nowrap ${!canGenerate ? 'opacity-50 hover:opacity-50' : ''}`}
+                    <span
+                      onClick={() => { if (!canGenerate) revealValidation(); }}
+                      className="flex-1 sm:flex-none"
                     >
-                      {makePublic ? 'Generate · free' : 'Generate'}
-                    </Button>
+                      <Button
+                        size="pill"
+                        disabled={!canGenerate}
+                        onClick={handleGenerate}
+                        title={validationError || undefined}
+                        className={`w-full whitespace-nowrap ${!canGenerate ? 'opacity-50 hover:opacity-50 pointer-events-none' : ''}`}
+                      >
+                        {makePublic ? 'Generate · free' : 'Generate'}
+                      </Button>
+                    </span>
                   </>
                 )}
               </div>
