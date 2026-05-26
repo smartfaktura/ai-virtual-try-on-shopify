@@ -87,6 +87,11 @@ const META_REFERENCE: Record<WizardStep, { title: string; subtitle?: string }> =
 export function BrandSceneWizard() {
   const { user } = useAuth();
   const { state, dispatch } = useWizardState();
+  // Always start a /new wizard session blank — never carry over prior answers.
+  useEffect(() => {
+    dispatch({ type: "reset" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { step, answers, sourcePicked } = state;
   const isReference = sourcePicked && answers.source === "reference";
   const META = isReference ? META_REFERENCE : META_WIZARD;
