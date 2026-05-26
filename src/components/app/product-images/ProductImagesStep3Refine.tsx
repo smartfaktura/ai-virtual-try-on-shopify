@@ -661,14 +661,6 @@ function BackgroundSwatchSelector({ value, onChange, details, update, savedColor
         onSaveGradient={onSaveGradient}
       />
 
-      {isFree && (
-        <div className="flex items-center justify-end gap-2 -mb-1">
-          <span className="text-xs text-muted-foreground">Free plan: 1 background per generation</span>
-          {onUpgradeClick && (
-            <button type="button" onClick={onUpgradeClick} className="text-xs text-primary font-medium hover:underline">Upgrade</button>
-          )}
-        </div>
-      )}
 
       {/* Swatch grid — square aspect cards, 8 per row */}
       <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
@@ -2832,14 +2824,11 @@ export function ProductImagesStep3Refine({
                   {/* AI mode confirmation */}
                   {effectiveMode === 'ai' && (
                     <div className="rounded-lg bg-primary/5 border border-primary/10 px-3 py-2.5 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                        <span className="text-xs font-medium text-foreground">
-                          AI will style {needsStylingCount > 0 ? `${needsStylingCount} shot${needsStylingCount !== 1 ? 's' : ''}` : 'all shots'} with outfits that complement your product
-                        </span>
-                      </div>
+                      <span className="text-xs font-medium text-foreground">
+                        AI will style {needsStylingCount > 0 ? `${needsStylingCount} shot${needsStylingCount !== 1 ? 's' : ''}` : 'all shots'} with outfits that complement your product
+                      </span>
                       {builtInCount > 0 && (
-                        <p className="text-[10px] text-muted-foreground pl-[22px]">
+                        <p className="text-[10px] text-muted-foreground">
                           {builtInCount} shot{builtInCount !== 1 ? 's' : ''} will keep their curated look
                         </p>
                       )}
@@ -2850,9 +2839,8 @@ export function ProductImagesStep3Refine({
                   {effectiveMode === 'ai' && (
                   <Collapsible>
                     <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note">
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/note:rotate-90 flex-shrink-0" />
-                      <Pencil className="w-3.5 h-3.5 text-muted-foreground group-hover/note:text-foreground transition-colors flex-shrink-0" />
                       <span className="text-xs font-semibold text-muted-foreground group-hover/note:text-foreground transition-colors">
+
                         {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
                       </span>
                       {details.customOutfitNote && (
@@ -3171,9 +3159,8 @@ export function ProductImagesStep3Refine({
                   {/* Styling direction — after bulk edit */}
                   <Collapsible>
                     <CollapsibleTrigger className="w-full flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group/note2">
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform group-data-[state=open]/note2:rotate-90 flex-shrink-0" />
-                      <Pencil className="w-3.5 h-3.5 text-muted-foreground group-hover/note2:text-foreground transition-colors flex-shrink-0" />
                       <span className="text-xs font-semibold text-muted-foreground group-hover/note2:text-foreground transition-colors">
+
                         {details.customOutfitNote ? 'Styling direction added' : 'Add styling direction'}
                       </span>
                       {details.customOutfitNote && (
@@ -3707,7 +3694,7 @@ export function ProductImagesStep3Refine({
         {/* Additional note */}
         <Card>
           <CardContent className="p-4 space-y-2">
-            <span className="text-sm font-semibold">Additional note</span>
+            <span className="text-sm font-semibold">Additional note <span className="text-muted-foreground font-normal">(optional)</span></span>
             <p className="text-xs text-muted-foreground">Anything important to keep in mind?</p>
             <Textarea
               placeholder="Special instructions, unusual product details, styling preferences..."
