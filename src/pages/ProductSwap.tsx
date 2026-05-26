@@ -494,7 +494,7 @@ export default function ProductSwap() {
                     <Download className="w-4 h-4 mr-2" />Download all ({resultEntries.length})
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => { setIsGeneratingView(false); navigate('/app/library'); }}>
+                <Button variant="outline" size="pill" onClick={() => { setIsGeneratingView(false); navigate('/app/library'); }}>
                   View in Library
                 </Button>
               </div>
