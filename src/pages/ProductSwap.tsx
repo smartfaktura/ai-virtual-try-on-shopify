@@ -284,7 +284,7 @@ export default function ProductSwap() {
       sceneImageUrl: sceneUrl,
       sceneTitle: sceneTitle || 'scene',
       products: selected.map(p => ({ id: p.id, imageUrl: p.image_url || '', title: p.title })),
-      ratios: Array.from(selectedRatios),
+      ratios: [detectedRatio],
     });
 
     if (result && result.jobs.length > 0) {
