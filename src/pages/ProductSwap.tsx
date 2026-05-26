@@ -721,7 +721,7 @@ export default function ProductSwap() {
                     onClick={() => {
                       const next = new Set(selectedProductIds);
                       for (const p of filteredProducts.slice(0, productVisibleCount)) {
-                        if (next.size >= 10) break;
+                        if (next.size >= MAX_PRODUCTS) break;
                         next.add(p.id);
                       }
                       setSelectedProductIds(next);
