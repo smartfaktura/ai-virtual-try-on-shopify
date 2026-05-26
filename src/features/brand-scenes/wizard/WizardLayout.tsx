@@ -141,7 +141,7 @@ export function WizardLayout({
 
       {/* Sticky footer — hidden on the final Review step (Step 6 has its own inline CTAs). */}
       {!isLastStep && (
-        <div className="sticky bottom-2 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
+        <div className="sticky bottom-5 sm:bottom-4 z-20 pb-[env(safe-area-inset-bottom)]">
           <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-lg">
             <div className="flex items-center gap-2 p-2 sm:p-4">
               <span className="hidden sm:block text-[11px] text-muted-foreground/80 truncate min-w-0">
