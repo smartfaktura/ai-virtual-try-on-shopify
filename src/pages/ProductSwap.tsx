@@ -514,23 +514,8 @@ export default function ProductSwap() {
     );
   }
 
-  // ── Auto-detect closest ratio when scene changes ──────────────────────
-  useEffect(() => {
-    if (!sceneUrl) return;
-    const img = new Image();
-    img.onload = () => {
-      const r = img.naturalWidth / img.naturalHeight;
-      const ratioMap: Record<RatioOption, number> = { '1:1': 1, '3:4': 3 / 4, '4:5': 4 / 5, '9:16': 9 / 16 };
-      let best: RatioOption = '4:5';
-      let bestDiff = Infinity;
-      for (const [k, v] of Object.entries(ratioMap) as [RatioOption, number][]) {
-        const diff = Math.abs(Math.log(r / v));
-        if (diff < bestDiff) { bestDiff = diff; best = k; }
-      }
-      setDetectedRatio(best);
-    };
-    img.src = sceneUrl;
-  }, [sceneUrl]);
+
+
 
   // ── Step guards ───────────────────────────────────────────────────────
   const canAdvanceFrom1 = !!sceneUrl;
