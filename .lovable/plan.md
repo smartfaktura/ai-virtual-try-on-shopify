@@ -1,43 +1,62 @@
-## Problem
+## What you're seeing
 
-After login, "Something went wrong" flashes for ~1 second before Dashboard loads. Console confirms the cause:
+Every clickable link in the app/site navigates to a route that is code-split with `React.lazy(() => import(...))` in `src/App.tsx`. When you click a link:
 
-```
-TypeError: Importing a module script failed
-ErrorBoundary caught: ...
-```
+1. React unmounts the current page.
+2. The lazy chunk for the new page starts downloading.
+3. The `<Suspense fallback={<BrandLoaderProgressGlyph fullScreen />}>` boundary shows a full-screen loader for that brief moment.
+4. Chunk arrives (usually <300ms), new page renders.
 
-This happens at a `React.lazy()` boundary in `src/App.tsx`. After a deploy, the cached `index.html` references old hashed chunk filenames that no longer exist on the CDN. The dynamic `import()` rejects → Suspense rethrows → `ErrorBoundary` shows the error card. A moment later `versionCheck.ts` detects the new version and reloads, which is why Dashboard eventually appears.
+That brief full-screen loader is the "flash" — it's not an error, not a reload, not caused by `lazyWithRetry` or `versionCheck`. It is the normal Suspense fallback for code splitting, and `fullScreen` makes it very visible because it paints over the whole viewport.
 
-## Safe, minimal fix (2 changes only)
+`checkAppVersion()` runs once on app mount and is gated by `sessionStorage`, so it isn't reloading on navigation. `lazyWithRetry` only reloads on a real chunk-load error, which isn't happening here.
 
-### 1. New file: `src/lib/lazyWithRetry.ts`
+## Fix (small, safe, presentation-only)
 
-A tiny wrapper around `React.lazy` that:
-- On a chunk-load failure (`Failed to fetch dynamically imported module`, `Importing a module script failed`, `ChunkLoadError`), sets a one-shot `sessionStorage` flag and calls `window.location.reload()` once — so the stale `index.html` is replaced before the user sees the error card.
-- The session flag prevents any reload loop. If the reload also fails, it rethrows and the existing `ErrorBoundary` shows the error (same as today).
-- For any non-chunk error, just rethrows. Behavior identical to `React.lazy`.
+Two tiny changes, no logic / auth / backend touched.
 
-### 2. One-line change in `src/App.tsx`
+### 1. Delay the Suspense fallback so fast loads don't flash
 
-Replace the `lazy` import:
+Wrap the fallback so it only appears after ~200ms. Most chunk loads finish faster than that, so the loader never renders and there is no flash. Slow loads still show the loader normally.
+
+In `src/App.tsx`:
 ```diff
-- import { lazy, Suspense } from 'react';
-+ import { Suspense } from 'react';
-+ import { lazyWithRetry as lazy } from '@/lib/lazyWithRetry';
+- <Suspense fallback={<BrandLoaderProgressGlyph fullScreen />}>
++ <Suspense fallback={<DelayedFallback />}>
 ```
 
-All ~70 existing `lazy(() => import(...))` lines stay exactly the same.
+Add a tiny inline component in the same file:
+```tsx
+function DelayedFallback() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 200);
+    return () => clearTimeout(t);
+  }, []);
+  return show ? <BrandLoaderProgressGlyph fullScreen /> : null;
+}
+```
 
-## What is NOT touched
+### 2. Prefetch route chunks on link hover (in-app sidebar/nav)
 
-- `ErrorBoundary.tsx` — unchanged
+The landing nav already does this. Apply the same pattern in the authenticated app nav so hovering a sidebar link warms its chunk before the click.
+
+- Identify the file that renders the app sidebar links (e.g. inside `src/components/app/`).
+- For each `<Link to="/app/...">`, add `onMouseEnter`/`onFocus` that calls the matching `() => import('@/pages/...')`.
+- No behavior change, just a network hint — purely additive.
+
+If the app sidebar is large, do the prefetch wiring only for the most-clicked links first (Dashboard, Workflows, Products, Discover, Video Hub, Library).
+
+## What is NOT changed
+
+- `lazyWithRetry.ts` — unchanged
 - `versionCheck.ts` — unchanged
-- `AuthContext.tsx`, `ProtectedRoute.tsx` — unchanged
-- Routing, auth, Supabase, backend — all unchanged
+- `ErrorBoundary.tsx` — unchanged
+- `AuthContext`, `ProtectedRoute`, routing, Supabase, edge functions — unchanged
+- The loader component itself — unchanged (just shown later)
 
 ## Why this is safe
 
-- Worst case = exactly today's behavior (brief flash then reload).
-- The `sessionStorage` guard cannot cause infinite reloads.
-- No new dependencies, no API or schema changes, no edge function work.
+- Worst case the 200ms delay does nothing and you see today's behavior.
+- Prefetch on hover is a no-op if the chunk is already cached.
+- No new dependencies. No schema or API work.

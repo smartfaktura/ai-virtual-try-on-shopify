@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { lazyWithRetry as lazy } from '@/lib/lazyWithRetry';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from '@/components/ui/sonner';
@@ -146,6 +146,15 @@ const queryClient = new QueryClient({
   },
 });
 
+function DelayedFallback() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 200);
+    return () => clearTimeout(t);
+  }, []);
+  return show ? <BrandLoaderProgressGlyph fullScreen /> : null;
+}
+
 const App = () => {
   useEffect(() => { checkAppVersion(); }, []);
 
@@ -157,7 +166,7 @@ const App = () => {
     <AuthProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <Suspense fallback={<BrandLoaderProgressGlyph fullScreen />}>
+          <Suspense fallback={<DelayedFallback />}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
