@@ -15,15 +15,11 @@ export default function BrandModelNew() {
           variant="ghost"
           size="sm"
           onClick={() => navigate('/app/models')}
-          className="gap-1.5 -ml-2 mb-2"
+          className="gap-1.5 -ml-2"
         >
           <ArrowLeft className="w-4 h-4" />
           Brand Models
         </Button>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">New brand model</h1>
-        <p className="text-base text-muted-foreground mt-1.5">
-          Choose how you want to create this model
-        </p>
       </div>
 
       <UnifiedGenerator
