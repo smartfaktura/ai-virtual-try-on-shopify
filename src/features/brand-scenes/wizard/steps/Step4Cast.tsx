@@ -421,54 +421,6 @@ export function Step4Cast({
             </Section>
           )}
 
-          {/* Product scale */}
-          {showScaleSection && (
-            <Section label="Product scale" required missing={!scale?.preset}>
-              <>
-                <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                  {visibleScales.map((s) => (
-                    <Chip
-                      key={s.value}
-                      active={scale?.preset === s.value}
-                      onClick={() => onScaleChange({ preset: s.value })}
-                    >
-                      {s.label}
-                    </Chip>
-                  ))}
-                </div>
-                {scale?.preset === "other" && (
-                  <div className="mt-3">
-                    <Input
-                      maxLength={160}
-                      value={scale?.note ?? ""}
-                      onChange={(e) => onScaleChange({ note: e.target.value })}
-                      placeholder="Describe the size — e.g. wall-mounted, 1.2 m wide"
-                    />
-                  </div>
-                )}
-                <div className="mt-3">
-                  {showExact ? (
-                    <Chip
-                      onClick={() => {
-                        setShowExact(false);
-                        onScaleChange({ dimensions: undefined });
-                      }}
-                    >
-                      Hide exact size
-                    </Chip>
-                  ) : (
-                    <AddChip onClick={() => setShowExact(true)} label="Exact size" />
-                  )}
-                </div>
-                {showExact && (
-                  <ExactDimensions
-                    value={scale?.dimensions}
-                    onChange={(d) => onScaleChange({ dimensions: d })}
-                  />
-                )}
-              </>
-            </Section>
-          )}
         </div>
       )}
 
