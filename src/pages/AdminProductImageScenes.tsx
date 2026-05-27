@@ -243,7 +243,14 @@ export default function AdminProductImageScenes() {
     if (previewCategory !== '__all__') {
       scenes = scenes.filter(s => normalizeCat(s.category_collection) === previewCategory);
     }
-    return scenes;
+    // Defensive dedupe by id — pagination tiebreakers should prevent server-side
+    // duplicates, but keep this as a safety net so the same row can never render twice.
+    const seen = new Set<string>();
+    return scenes.filter(s => {
+      if (seen.has(s.id)) return false;
+      seen.add(s.id);
+      return true;
+    });
   }, [rawScenes, showHidden, search, previewCategory]);
 
   // Group by category, sorted by most recently edited
