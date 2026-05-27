@@ -554,7 +554,7 @@ export function Step6PreviewAndPick({
 
 
       {/* Full structured summary — only shown outside the picking/saving phases */}
-      {phase !== "picking" && phase !== "saving" && (
+      {phase !== "picking" && phase !== "saving" && phase !== "saving-public" && (
         <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
       )}
 
