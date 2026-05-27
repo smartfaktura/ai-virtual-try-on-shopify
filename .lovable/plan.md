@@ -1,16 +1,37 @@
-Two scoped fixes in `/mnt/documents/brand-scenes-newsletter.html`.
+## Refine the "Current Plan" panel on /app/settings
 
-### 1. Brand Models — 4 faces in one row on mobile
-In the `@media (max-width:620px)` block, remove the override that turns `.grid4 td` into a 2-up grid (`display:inline-block; width:48%`). Replace with a tight 4-up layout that simply reduces the td padding so all four 25% cells fit comfortably:
-- `.grid4 td{ padding:0 2px !important; }`
-- `.grid4 td:first-child{ padding-left:0 !important; }`
-- `.grid4 td:last-child{ padding-right:0 !important; }`
+The card today crams 5 different type sizes, 2 badges, a thin link, a hairline credits row and a 2-button grid into ~220px. The goal is a calmer, more VOVV editorial block.
 
-Keep the desktop `width="25%"` structure intact.
+### Layout & spacing
+- Increase card padding to `p-7 sm:p-9` and switch to a vertical rhythm of `space-y-6` (instead of `space-y-3`).
+- Split the card into 3 clear bands with subtle dividers (`border-border/60`):
+  1. Plan identity
+  2. Credits usage
+  3. Billing actions
 
-### 2. Brand Scenes — equal-height images
-Root cause: the three Supabase-rendered JPGs have different native aspect ratios, so `height:auto` produces different heights. Force a uniform 3:4 crop via render params on each URL by appending `&resize=cover&width=480&height=640` (keeps `quality=65`). Once all three sources are 480×640, the existing `width:100%;height:auto` renders identical tiles in every client (including Outlook).
+### Band 1 — Plan identity
+- Eyebrow: `text-[11px] uppercase tracking-[0.18em] text-muted-foreground` → "Current plan".
+- Display row: plan name as `text-2xl font-semibold tracking-tight` (e.g. "Pro"), with billing interval as a small pill to the right.
+- Beneath: a single quiet line `text-sm text-muted-foreground` → `$179/mo · Renews May 27, 2026`.
+- Move "Switch to annual & save 20%" to a right-aligned text link on the same baseline as the price line (no longer a stranded mini link).
+- Drop the inline `Pro` badge next to the H3 (redundant with the large plan name).
 
-Update the three Brand Scenes `<img>` `src` URLs only. No CSS aspect-ratio (not Outlook-safe).
+### Band 2 — Credits usage (the "tiny line" fix)
+- Label row: "Credits used this cycle" (left, `text-sm text-muted-foreground`) + large numeric `text-2xl font-semibold tabular-nums` on the right (e.g. `4,816 / 4,500`).
+- Replace the 6px progress bar with a `h-2.5 rounded-full` bar using `bg-muted` track and `bg-foreground` fill, plus a subtle 1px inner border for depth.
+- Add a helper line under the bar: `text-xs text-muted-foreground` → e.g. `Resets in 12 days · Top up anytime`.
 
-No copy or layout structure changes beyond the two items above.
+### Band 3 — Billing actions
+- Keep the 2-button grid but increase to `h-11`, `gap-3`, and use `rounded-xl` instead of pill so it matches the card's calmer geometry.
+- Primary: "Top up credits" (filled). Secondary: "Manage billing & invoices" (outline/secondary). Same icons, slightly larger (`w-4 h-4`).
+
+### Typography cleanup
+- Only 3 type sizes in the card: eyebrow (11px), body (14px), display (24px). No more 10px badge + 12px link + 14px body + 16px h3 mix.
+- All numerics use `tabular-nums`.
+- Remove terminal periods on single-sentence subtitles per Core memory.
+
+### Files
+- `src/pages/Settings.tsx` lines 460–524 only. No business logic changes — same data sources (`planConfig`, `balance`, `creditsTotal`, `currentPeriodEnd`, `handlePortal`, `openBuyModal`).
+
+### Out of scope
+- "Choose Your Plan" grid below, sidebar, mobile-specific changes from earlier brand-scenes work.

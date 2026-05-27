@@ -458,70 +458,103 @@ export default function Settings() {
       <PageHeader title="Settings">
         <div className="space-y-6">
         {/* ─── Current Plan ─── */}
-        {!(plan === 'free' && subscriptionStatus === 'none') && (
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-3">
-            {/* Plan header */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-base font-semibold">Current Plan</h3>
-              <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
+        {!(plan === 'free' && subscriptionStatus === 'none') && (() => {
+          const currentPlanData = pricingPlans.find(p => p.planId === plan);
+          const displayPrice = currentPlanData
+            ? billingInterval === 'annual'
+              ? Math.round(currentPlanData.annualPrice / 12)
+              : currentPlanData.monthlyPrice
+            : null;
+          const renewalLabel = currentPeriodEnd && plan !== 'free'
+            ? `${subscriptionStatus === 'canceling' ? 'Access until' : 'Renews'} ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+            : null;
+          const daysLeft = currentPeriodEnd
+            ? Math.max(0, Math.ceil((currentPeriodEnd.getTime() - Date.now()) / 86400000))
+            : null;
+          const isInfinite = creditsTotal === Infinity;
+          return (
+            <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
+              {/* Band 1 — Plan identity */}
+              <div className="space-y-3">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+                  Current plan
+                </p>
+                <div className="flex items-end justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-2xl font-semibold tracking-tight leading-none">
+                      {planConfig.name}
+                    </h3>
+                    {plan !== 'free' && (
+                      <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-medium">
+                        {billingInterval === 'annual' ? 'Annual' : 'Monthly'}
+                      </Badge>
+                    )}
+                  </div>
+                  {plan !== 'free' && billingInterval !== 'annual' && (
+                    <button
+                      className="text-sm text-primary hover:underline underline-offset-4 font-medium disabled:opacity-50"
+                      onClick={handlePortal}
+                      disabled={portalLoading}
+                    >
+                      {portalLoading ? 'Redirecting…' : 'Switch to annual · save 20%'}
+                    </button>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground tabular-nums">
+                  {displayPrice !== null && displayPrice > 0 && <>${displayPrice}/mo</>}
+                  {displayPrice !== null && displayPrice > 0 && renewalLabel && ' · '}
+                  {renewalLabel}
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="my-7 border-t border-border/60" />
+
+              {/* Band 2 — Credits usage */}
+              <div className="space-y-4">
+                <div className="flex items-end justify-between gap-4">
+                  <span className="text-sm text-muted-foreground">
+                    Credits this cycle
+                  </span>
+                  <span className="text-2xl font-semibold tracking-tight tabular-nums leading-none">
+                    {balance.toLocaleString()}
+                    <span className="text-muted-foreground/70 font-normal text-base"> / {isInfinite ? '∞' : creditsTotal.toLocaleString()}</span>
+                  </span>
+                </div>
+                <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden ring-1 ring-inset ring-border/40">
+                  <div
+                    className="h-full bg-foreground rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(2, creditsPercentage))}%` }}
+                  />
+                </div>
+                {(daysLeft !== null || plan === 'free') && (
+                  <p className="text-xs text-muted-foreground">
+                    {daysLeft !== null && plan !== 'free'
+                      ? `Resets in ${daysLeft} day${daysLeft === 1 ? '' : 's'} · Top up anytime`
+                      : 'Top up anytime'}
+                  </p>
+                )}
+              </div>
+
+              {/* Band 3 — Billing actions */}
               {plan !== 'free' && (
-                <Badge variant="outline" className="text-[10px]">
-                  {billingInterval === 'annual' ? 'Annual' : 'Monthly'}
-                </Badge>
+                <>
+                  <div className="my-7 border-t border-border/60" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Button className="w-full h-11 rounded-xl" onClick={() => openBuyModal('settings')}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Top up credits
+                    </Button>
+                    <Button variant="secondary" className="w-full h-11 rounded-xl" onClick={handlePortal} disabled={portalLoading}>
+                      {portalLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ExternalLink className="w-4 h-4 mr-2" />}
+                      {portalLoading ? 'Redirecting…' : 'Manage billing & invoices'}
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
-
-            {/* Price · credits · renewal — single line */}
-            {(() => {
-              const currentPlanData = pricingPlans.find(p => p.planId === plan);
-              const displayPrice = currentPlanData
-                ? billingInterval === 'annual'
-                  ? Math.round(currentPlanData.annualPrice / 12)
-                  : currentPlanData.monthlyPrice
-                : null;
-              return (
-                <p className="text-sm text-muted-foreground -mt-1">
-                  {displayPrice !== null && displayPrice > 0 && <>${displayPrice}/mo • </>}
-                  {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits{plan !== 'free' ? '/month' : ''}
-                  {currentPeriodEnd && plan !== 'free' && ` • ${subscriptionStatus === 'canceling' ? 'Access until' : 'Renews'} ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-                </p>
-              );
-            })()}
-
-            {plan !== 'free' && billingInterval !== 'annual' && (
-              <button
-                className="text-xs text-primary hover:underline underline-offset-2 font-medium -mt-1 disabled:opacity-50"
-                onClick={handlePortal}
-                disabled={portalLoading}
-              >
-                {portalLoading ? 'Redirecting…' : 'Switch to annual & save 20% →'}
-              </button>
-            )}
-
-            {/* Credits — compact row + bar */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Credits</span>
-                <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
-              </div>
-              <Progress value={creditsPercentage} className="h-1.5" />
-            </div>
-
-            {/* Billing CTA */}
-            {plan !== 'free' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Button size="pill" className="w-full" onClick={() => openBuyModal('settings')}>
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  Top up credits
-                </Button>
-                <Button variant="secondary" size="pill" className="w-full" onClick={handlePortal} disabled={portalLoading}>
-                  {portalLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <ExternalLink className="w-4 h-4 mr-1.5" />}
-                  {portalLoading ? 'Redirecting…' : 'Manage Billing & Invoices'}
-                </Button>
-              </div>
-            ) : null}
-        </div>
-        )}
+          );
+        })()}
 
         {/* ─── Choose Your Plan ─── */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
