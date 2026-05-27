@@ -173,12 +173,8 @@ export default function BiomaShowcase() {
 
       <section className="pb-20 lg:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="mb-8 lg:mb-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-2">Selfie UGC set</p>
-            <h2 className="text-[#0f172a] text-xl sm:text-2xl font-semibold tracking-tight">Creator-style selfies for social</h2>
-            <p className="text-[#64748b] text-sm sm:text-base mt-2 max-w-xl">Raw, phone-shot energy — built for Reels, TikTok, and paid social</p>
-          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+
             {UGC_IMAGES.map((img, i) => (
               <button
                 key={i}
