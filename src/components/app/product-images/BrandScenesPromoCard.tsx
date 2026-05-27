@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { BrandScenesInfoModal } from './BrandScenesInfoModal';
 
 export const BRAND_SCENE_THUMBNAILS = [
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664670175-5a6elc.jpg?quality=75',
