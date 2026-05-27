@@ -57,7 +57,7 @@ interface Props {
   promptHash?: string;
 }
 
-type Phase = "idle" | "generating" | "picking" | "saving";
+type Phase = "idle" | "generating" | "picking" | "saving" | "saving-public";
 
 export function Step6PreviewAndPick({
   answers,
