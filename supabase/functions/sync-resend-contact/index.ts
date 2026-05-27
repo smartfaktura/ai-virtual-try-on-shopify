@@ -67,11 +67,14 @@ Deno.serve(async (req) => {
 
     // Pull profile metadata. Try by user_id first, then by email as fallback
     // (handles race conditions where profile row isn't created yet during signup).
+    const PROFILE_COLS =
+      "first_name, last_name, display_name, plan, product_categories, credits_balance, created_at, updated_at, subscription_status, current_period_end, referral_source";
+
     let profile: any = null;
     if (body.user_id) {
       const { data } = await admin
         .from("profiles")
-        .select("first_name, last_name, display_name, plan, product_categories, credits_balance, created_at")
+        .select(PROFILE_COLS)
         .eq("user_id", body.user_id)
         .maybeSingle();
       profile = data;
@@ -79,7 +82,7 @@ Deno.serve(async (req) => {
     if (!profile) {
       const { data } = await admin
         .from("profiles")
-        .select("first_name, last_name, display_name, plan, product_categories, credits_balance, created_at")
+        .select(PROFILE_COLS)
         .eq("email", email)
         .maybeSingle();
       profile = data;
@@ -94,6 +97,10 @@ Deno.serve(async (req) => {
       email.split("@")[0] ||
       null;
     const lastName = body.last_name || profile?.last_name || null;
+
+    const primaryCategory = Array.isArray(profile?.product_categories) && profile.product_categories.length > 0
+      ? profile.product_categories[0]
+      : undefined;
 
     // Build custom properties payload. Sent as a best-effort additive PATCH
     // after the audience create/update succeeds (see end of function).
@@ -113,6 +120,22 @@ Deno.serve(async (req) => {
       has_generated: incomingProps.has_generated,
       credits_balance: incomingProps.credits_balance ?? profile?.credits_balance,
       marketing_opted_in: incomingProps.marketing_opted_in,
+      // Lifecycle bundle
+      lifecycle_stage:
+        incomingProps.lifecycle_stage ?? resolveLifecycleStage(profile?.plan, profile?.subscription_status),
+      subscription_status: incomingProps.subscription_status ?? profile?.subscription_status,
+      subscription_renews_at:
+        incomingProps.subscription_renews_at ??
+        (profile?.current_period_end ? new Date(profile.current_period_end).toISOString() : undefined),
+      // Activity bundle (last_generated_at / total_generations filled by backfill, not per-event)
+      last_active_at:
+        incomingProps.last_active_at ??
+        (profile?.updated_at ? new Date(profile.updated_at).toISOString() : undefined),
+      last_generated_at: incomingProps.last_generated_at,
+      total_generations: incomingProps.total_generations,
+      // Acquisition bundle
+      primary_category: incomingProps.primary_category ?? primaryCategory,
+      referral_source: incomingProps.referral_source ?? profile?.referral_source,
     });
 
     // IMPORTANT: The Resend audiences REST endpoint expects snake_case
