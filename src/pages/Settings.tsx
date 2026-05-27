@@ -524,28 +524,28 @@ export default function Settings() {
         )}
 
         {/* ─── Choose Your Plan ─── */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-semibold">Choose Your Plan</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
           </div>
-          <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
+          <div className="inline-flex self-start sm:self-auto rounded-full border border-border bg-card p-1 shadow-sm">
             <button
-              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${billingPeriod === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setBillingPeriod('monthly')}
             >
               Monthly
             </button>
             <button
-              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-9 px-4 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${billingPeriod === 'annual' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setBillingPeriod('annual')}
             >
-              Annual (Save 20%)
+              Annual · Save 20%
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {mainPlans.map(p => (
             <PlanCard
               key={p.planId}
@@ -556,6 +556,7 @@ export default function Settings() {
               subscriptionStatus={subscriptionStatus}
               billingInterval={billingInterval}
               onSelect={handlePlanSelect}
+              compact
             />
           ))}
         </div>
