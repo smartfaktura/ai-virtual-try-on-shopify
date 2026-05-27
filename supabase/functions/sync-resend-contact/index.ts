@@ -19,8 +19,6 @@ function resolveLifecycleStage(plan?: string | null, subStatus?: string | null):
 }
 
 function toPropString(v: unknown): string | undefined {
-
-function toPropString(v: unknown): string | undefined {
   if (v === null || v === undefined) return undefined;
   if (typeof v === "string") return v;
   if (typeof v === "number" || typeof v === "boolean") return String(v);
