@@ -65,7 +65,7 @@ const IMAGES: Img[] = [
 ];
 
 const STATS = [
-  { icon: LayoutGrid, value: '59', label: 'Visuals' },
+  { icon: LayoutGrid, value: '53', label: 'Visuals' },
   { icon: Timer, value: '~3 min', label: 'Made in' },
 ];
 
@@ -90,7 +90,7 @@ export default function BiomaShowcase() {
             This is what VOVV.AI makes from one product photo
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            A complete wellness campaign — 59 visuals, ready for web, social, and retail
+            A complete wellness campaign — 53 visuals, ready for web, social, and retail
           </p>
         </div>
       </section>
