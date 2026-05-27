@@ -145,6 +145,10 @@ export function SaveToPublicScenesDialog({
         subCategory: finalSubCategory,
         compiledPrompt: persistedPrompt,
       });
+      queryClient.invalidateQueries({ queryKey: ["product-image-scenes"] });
+      queryClient.invalidateQueries({ queryKey: ["product-image-scenes-priority"] });
+      queryClient.invalidateQueries({ queryKey: ["product-image-scenes-rest"] });
+      queryClient.invalidateQueries({ queryKey: ["public-scene-buckets"] });
       toast.success(
         `Published to ${categoryLabel(scene.category_collection)} → ${scene.sub_category}`,
       );
