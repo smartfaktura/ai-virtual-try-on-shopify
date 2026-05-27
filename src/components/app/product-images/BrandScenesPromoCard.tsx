@@ -11,7 +11,7 @@ export const BRAND_SCENE_THUMBNAILS = [
 ];
 
 export function BrandScenesPromoCard() {
-  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6">
