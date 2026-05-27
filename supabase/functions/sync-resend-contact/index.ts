@@ -9,7 +9,16 @@ const RESEND_API = "https://api.resend.com";
 
 // Resend's properties API: string props must be strings, number props must be numbers.
 // Numeric keys are registered server-side via the contact-properties endpoint.
-const NUMERIC_PROP_KEYS = new Set(["credits_balance"]);
+const NUMERIC_PROP_KEYS = new Set(["credits_balance", "total_generations"]);
+
+function resolveLifecycleStage(plan?: string | null, subStatus?: string | null): string {
+  if (subStatus === "active") return "paid";
+  if (subStatus === "canceled" || subStatus === "past_due") return "churned";
+  if (!plan || plan === "free") return "lead";
+  return "trial";
+}
+
+function toPropString(v: unknown): string | undefined {
 
 function toPropString(v: unknown): string | undefined {
   if (v === null || v === undefined) return undefined;
