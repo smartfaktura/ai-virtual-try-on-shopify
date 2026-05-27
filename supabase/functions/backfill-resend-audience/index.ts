@@ -78,6 +78,8 @@ Deno.serve(async (req) => {
     let added = 0;
     let updated = 0;
     let failed = 0;
+    let property_synced = 0;
+    let property_failed = 0;
 
     for (const profile of profiles ?? []) {
       const email = String(profile.email || "").toLowerCase().trim();
@@ -101,6 +103,8 @@ Deno.serve(async (req) => {
       };
       if (Object.keys(properties).length > 0) payload.properties = properties;
 
+      let contactOk = false;
+
       // Try create; if exists, update
       const createRes = await fetch(
         `https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts`,
@@ -116,6 +120,7 @@ Deno.serve(async (req) => {
 
       if (createRes.ok) {
         added++;
+        contactOk = true;
       } else {
         const patchPayload: Record<string, unknown> = {
           first_name: firstName ?? undefined,
@@ -137,15 +142,43 @@ Deno.serve(async (req) => {
         );
         if (patchRes.ok) {
           updated++;
+          contactOk = true;
         } else {
           failed++;
           console.error(`Failed for ${email}:`, patchRes.status, await patchRes.text());
         }
       }
+
+      // Additive best-effort property PATCH (separate call so we know whether
+      // properties truly persisted, independent of the create/update step).
+      if (contactOk && Object.keys(properties).length > 0) {
+        try {
+          const propRes = await fetch(
+            `https://api.resend.com/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bearer ${RESEND_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ properties }),
+            }
+          );
+          if (propRes.ok) {
+            property_synced++;
+          } else {
+            property_failed++;
+            console.warn(`Property sync failed for ${email}:`, propRes.status, await propRes.text());
+          }
+        } catch (e) {
+          property_failed++;
+          console.warn(`Property sync error for ${email}:`, (e as Error).message);
+        }
+      }
     }
 
     return new Response(
-      JSON.stringify({ success: true, total: profiles?.length ?? 0, added, updated, failed }),
+      JSON.stringify({ success: true, total: profiles?.length ?? 0, added, updated, failed, property_synced, property_failed }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
