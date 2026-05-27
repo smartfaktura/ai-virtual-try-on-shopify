@@ -1,59 +1,31 @@
-# Wire 3 new Resend events
+## Safety verification (done before this plan)
 
-Add three event triggers that flow into the existing `track-resend-event` edge function (which already PATCHes `last_event` + `last_event_at` on the Resend contact, enabling Resend automations).
+I traced every dependency before writing this plan. Stopping the cron is 100% safe:
 
-All three are **fire-and-forget** via `pg_net.http_post` or in-handler `fetch` — they cannot delay Stripe webhooks, credit purchases, or generations. Failures are logged but never block the user flow.
+1. **The edge function does not exist** — `supabase/functions/` has no `process-automation-queue` folder. It was never deployed. Every call already returns 401 and does nothing.
+2. **The table it was designed to drain was already dropped** — migration `20260429072506` ran `DROP TABLE IF EXISTS public.email_automation_queue CASCADE;`. The cron has had nothing to process since that migration.
+3. **No code references it** — `rg` across `src/` and `supabase/functions/` finds zero references. Only historical migration files mention it.
+4. **No other cron job depends on it** — the other 5 active crons (`run-scheduled-drops`, `schedule-campaigns-tick`, `process-email-queue`, `poll-stuck-videos-every-minute`, `cleanup-brand-scene-orphans-daily`) are independent and untouched.
+5. **No user-facing feature uses it** — email automations today flow through `process-email-queue` (jobid=7), which is separate and stays running.
 
-## 1. `subscription.cancelled`
+Conclusion: unscheduling jobid=6 only stops the noise. Nothing else changes.
 
-**File:** `supabase/functions/stripe-webhook/index.ts`
+## The fix
 
-- In the `customer.subscription.deleted` handler, after the profile update, call `track-resend-event` with:
-  - `event: 'subscription.cancelled'`
-  - `attributes: { plan, cancelled_at, reason: 'deleted' }`
-- In `customer.subscription.updated`, fire the same event when `cancel_at_period_end` flips from `false` → `true` (reason: `'scheduled'`).
-- Uses existing service-role fetch pattern in the webhook — no new helpers.
+Single SQL statement in a migration:
 
-## 2. `credits.purchased`
-
-**File:** new migration updating `add_purchased_credits` RPC
-
-- Look up the user's email inside the function.
-- After balance update, call `_invoke_edge_function('track-resend-event', ...)` (same async pattern already in `deduct_credits` and `enqueue_generation`).
-- Payload: `event: 'credits.purchased'`, `attributes: { amount, new_balance }`.
-
-## 3. `generation.milestone` (1, 10, 50, 100)
-
-**File:** new migration adding AFTER UPDATE trigger on `generation_jobs`
-
-- Trigger fires when `status` transitions to `completed`.
-- Counts the user's completed jobs; if count is exactly 1, 10, 50, or 100, calls `_invoke_edge_function('track-resend-event', ...)`.
-- Payload: `event: 'generation.milestone'`, `attributes: { milestone, total }`.
-- Idempotency: add a partial unique index on `resend_event_log (user_id, event_type, (attributes->>'milestone'))` where `event_type = 'generation.milestone'` so duplicates from rare race conditions are harmless.
-
-## Technical details
-
-```text
-Stripe webhook  ──► track-resend-event ──► Resend /events/send
-                                       └─► Resend PATCH last_event
-
-add_purchased_credits RPC ──► _invoke_edge_function (async via pg_net)
-                                       └─► track-resend-event
-
-generation_jobs UPDATE → completed ──► trigger ──► milestone check
-                                       └─► track-resend-event (if 1/10/50/100)
+```sql
+SELECT cron.unschedule(6);
 ```
 
-- No new tables, no new secrets, no schema changes beyond one partial index.
-- Reuses existing throttle (220 ms gap) inside `track-resend-event`.
-- All Resend calls remain best-effort; an outage at Resend cannot affect Stripe, billing, or generation.
+That's it. No edge function code, no frontend code, no table changes.
 
-## Files touched
+## After the fix
 
-- `supabase/functions/stripe-webhook/index.ts` — add 2 event calls
-- new SQL migration — update `add_purchased_credits`, add trigger function + trigger on `generation_jobs`, add unique index on `resend_event_log`
+- The 401 entries in edge logs stop within ~1 minute
+- `cron.job` will show 5 active jobs instead of 6
+- All other crons keep running on their normal schedules
 
-## Out of scope
+## Rollback (if ever needed)
 
-- `marketing.opted_out` event
-- Step 5 (auto re-sync of `sync-resend-contact` on profile field changes)
+The original `cron.schedule(...)` call still lives in migration `20260429070957_9cb79913-8259-4361-ae83-bffb3003f8fb.sql` and can be re-run to recreate it. But since the target function and table no longer exist, there is no realistic reason to restore it.
