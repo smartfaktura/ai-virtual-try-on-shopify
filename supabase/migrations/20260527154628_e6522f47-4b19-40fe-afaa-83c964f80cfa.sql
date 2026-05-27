@@ -1,0 +1,1 @@
+SELECT cron.unschedule('refresh-resend-properties') WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'refresh-resend-properties');
