@@ -132,6 +132,7 @@ async function fetchScenesExcludingCategories(
       .select(cols)
       .not('category_collection', 'in', `(${categories.join(',')})`)
       .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
       .range(from, from + PAGE - 1);
     if (activeOnly) q = q.eq('is_active', true);
     if (!includeBundle) q = q.neq('category_collection', 'bundle');
