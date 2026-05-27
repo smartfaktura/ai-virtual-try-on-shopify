@@ -164,7 +164,55 @@ Deno.serve(async (req) => {
       response: resendResp,
     });
 
-    return json({ ok: action !== "failed", action, properties_sent: Object.keys(properties).length });
+    // ---- Additive, best-effort property sync ----------------------------------
+    // The audience POST/PATCH above only persists name + unsubscribed. To get
+    // custom properties onto the contact (for personalisation / future segments),
+    // we send a follow-up PATCH carrying just `properties`. Failures here MUST
+    // NOT affect the outer response — signup/unsubscribe flows depend on it
+    // returning ok.
+    let propertySyncStatus: "ok" | "failed" | "skipped" = "skipped";
+    if (action !== "failed" && Object.keys(properties).length > 0) {
+      try {
+        const propRes = await fetch(
+          `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${RESEND_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ properties }),
+          }
+        );
+        const propResp = await propRes.json().catch(() => ({}));
+        propertySyncStatus = propRes.ok ? "ok" : "failed";
+        await admin.from("resend_event_log").insert({
+          user_id: body.user_id ?? null,
+          email,
+          event_type: "contact.property_sync",
+          payload: { properties, http_status: propRes.status },
+          status: propertySyncStatus,
+          response: propResp,
+        });
+      } catch (propErr) {
+        propertySyncStatus = "failed";
+        await admin.from("resend_event_log").insert({
+          user_id: body.user_id ?? null,
+          email,
+          event_type: "contact.property_sync",
+          payload: { properties, error: (propErr as Error).message },
+          status: "failed",
+          response: null,
+        });
+      }
+    }
+
+    return json({
+      ok: action !== "failed",
+      action,
+      properties_sent: Object.keys(properties).length,
+      property_sync: propertySyncStatus,
+    });
   } catch (e) {
     console.error("[sync-resend-contact]", e);
     return json({ error: (e as Error).message }, 500);
