@@ -1,19 +1,14 @@
-## BIOMA Showcase Page at `/showcase/bioma`
+## Update `/showcase/bioma`
 
-Mirror the existing `MakaraWearShowcase` layout exactly (hero, stats, 4-col masonry, lightbox, dark CTA, footer) for the BIOMA Anti-Stress Probiotic Supplement generation by user `fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc` at 2026-05-27 19:53 UTC.
+1. **Add Selfie UGC section** below the main 53-image gallery
+   - 26 completed `selfie-ugc-set` jobs from user `fe45fd27...` (created 2026-05-27 20:01 UTC)
+   - Hardcoded `UGC_IMAGES` array with same `{url, scene, model}` shape, same 4-col grid, same lightbox (extend `lightbox` state to address both lists, e.g. union index or separate state)
+   - Small section header: "Selfie UGC" with the Visuals/Made-in stats line updated or a second subtle stat chip
 
-**Source data:** 59 completed jobs in `generation_jobs`, minus 6 jobs across the 4 excluded scenes (Vanity Nook, Cozy Bedroom, Coastal Wellness Ritual, Beachside Supplement Ritual) = **53 visuals**.
-
-**Page already drafted** at `src/pages/showcase/BiomaShowcase.tsx` (53 image URLs hardcoded with scene + model labels). Stats card and hero subtitle still read "59" — needs to be corrected to "53" since the excluded ones are not in the gallery.
-
-## Steps
-
-1. **Fix copy** in `src/pages/showcase/BiomaShowcase.tsx`:
-   - Stats: `59` → `53`
-   - Subtitle: "59 visuals, ready for web, social, and retail" → "53 visuals, ready for web, social, and retail"
-2. **Add route** in `src/App.tsx`:
-   - `const BiomaShowcase = lazy(() => import('@/pages/showcase/BiomaShowcase'));`
-   - `<Route path="/showcase/bioma" element={<BiomaShowcase />} />`
+2. **Rewrite final CTA block** (currently "Want this for your brand? / Send one product photo. We'll build the rest")
+   - New heading: "BIOMA, this is what VOVV.AI can do for you"
+   - New subline: "Every visual on this page was generated from a single product photo — no studio, no models, no shoot day"
+   - Keep both buttons (Try free now / Explore more examples)
 
 ## Out of scope
-- No DB changes, no other showcase pages touched, no shared component extracted.
+- No DB changes, no other showcase pages touched
