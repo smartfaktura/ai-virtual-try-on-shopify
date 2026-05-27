@@ -25,6 +25,9 @@ const PROPERTIES: PropDef[] = [
   // Acquisition bundle
   { key: "primary_category", type: "string", fallback_value: "" },
   { key: "referral_source", type: "string", fallback_value: "" },
+  // Event-trigger bundle (for Resend automations via property-change triggers)
+  { key: "last_event", type: "string", fallback_value: "" },
+  { key: "last_event_at", type: "string", fallback_value: "" },
 ];
 
 /**
