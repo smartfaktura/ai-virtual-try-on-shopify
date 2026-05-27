@@ -243,25 +243,25 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
           </div>
 
           <div className="overflow-y-auto flex-1 space-y-4 pr-1 p-1">
-            {modalFilteredUser.length > 0 && (
+            {modalFilteredGlobal.length > 0 && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
-                </div>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                  {modalFilteredUser.map(m => (
+                  {modalFilteredGlobal.map(m => (
                     <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
                 </div>
               </div>
             )}
 
-            {modalFilteredGlobal.length > 0 && (
+            {modalFilteredUser.length > 0 && (
               <div className="space-y-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
+                <div className="flex items-center gap-2">
+                  <Crown className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Your Brand Models</span>
+                </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                  {modalFilteredGlobal.map(m => (
+                  {modalFilteredUser.map(m => (
                     <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => handleModalSelect(m.modelId)} />
                   ))}
                 </div>
