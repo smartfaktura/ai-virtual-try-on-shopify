@@ -1,68 +1,45 @@
-## Add 8 new Resend properties + safe backfill of all 1,187 contacts
 
-### Source data
-- ✅ in `profiles`: `subscription_status`, `current_period_end`, `referral_source`, `product_categories[]`, `updated_at`
-- ⚙️ derived: `lifecycle_stage` from `plan` + `subscription_status`; `primary_category` from `product_categories[0]`
-- 📊 aggregated once: `last_generated_at`, `total_generations` from `generation_jobs` + `freestyle_generations`
-- ❌ `country` — no source column, skipped
+## Goal
+Recover from the partial run: fix the broken edge function, respect Resend's 5 req/sec limit, finish registering properties, and backfill all 1,187 contacts.
 
-### 1. Register the 8 new properties
+## Steps
 
-Extend the array in `register-resend-properties/index.ts`. Idempotent — existing 4 just log "already exists" and continue.
+### 1. Repair `register-resend-properties/index.ts`
+- Re-read current file to locate the dropped `fetch` line.
+- Restore the per-property POST loop with a **250ms delay between calls** (`await new Promise(r => setTimeout(r, 250))`) to stay under 5 req/sec.
+- Keep idempotency: treat `422 already exists` as success.
+- Return `{ registered, already_exists, failed }`.
 
-| key | type | fallback |
-|---|---|---|
-| `lifecycle_stage` | string | `"lead"` |
-| `subscription_status` | string | `""` |
-| `subscription_renews_at` | string | `""` |
-| `last_active_at` | string | `""` |
-| `last_generated_at` | string | `""` |
-| `total_generations` | number | `0` |
-| `primary_category` | string | `""` |
-| `referral_source` | string | `""` |
+### 2. Throttle `resync-resend-audience`
+- Reduce parallel batch size from **10 → 4** (safely under 5 req/sec).
+- Add a **300ms gap between batches** as a second safety margin.
+- Keep chunking (`offset`/`limit=300`), bulk aggregate query, and `Promise.allSettled` unchanged.
 
-`lifecycle_stage` resolver: `subscription_status='active'` → `paid`; `'canceled'/'past_due'` → `churned`; `plan='free'` → `lead`; paid plan w/o active sub → `trial`.
+### 3. Deploy both functions
+- Deploy `register-resend-properties` and `resync-resend-audience`.
 
-### 2. Extend `sync-resend-contact` (per-event)
+### 4. Register remaining properties
+- Curl `register-resend-properties` once. Expected: 10 `already_exists`, 2 `registered` (`subscription_status`, `referral_source`), 0 `failed`.
+- If anything fails, retry just that call.
 
-- Widen profile SELECT to include `subscription_status, current_period_end, referral_source, updated_at`.
-- Add 8 new keys to `buildProperties()` using only profile columns (no aggregates — keeps signup fast).
-- Add `total_generations` to `NUMERIC_PROP_KEYS`.
-- Per-signup `last_generated_at` / `total_generations` stay empty; backfill fills them.
+### 5. Run the 1,187-contact backfill
+Sequential curl calls (each ~45–90s with the new throttle):
+- `?offset=0&limit=300`
+- `?offset=300&limit=300`
+- `?offset=600&limit=300`
+- `?offset=900&limit=300`
 
-### 3. Extend `resync-resend-audience` — make it chunk-safe
+After each call, log `{ added, updated, failed, has_more, next_offset }`. If `failed > 0`, capture failing user_ids from logs for a targeted retry — don't re-run the whole chunk.
 
-Current function loops all profiles sequentially in one invocation. **Risk:** 1,187 sequential HTTP calls × ~200ms ≈ 4 min → Supabase edge function 150s timeout will kill it mid-run.
+### 6. Verify
+- Spot-check `info@tsimkus.lt` via Resend dashboard: confirm all 12 properties populated and `lifecycle_stage` correct.
+- Sample 2–3 other contacts across plan tiers (free, active sub, churned).
+- Confirm Resend total contact count ≈ 1,187.
 
-Changes:
-- Accept query params `?offset=N&limit=M` (defaults: `offset=0`, `limit=300`).
-- One bulk aggregate query before the loop builds a `Map<user_id, {last_generated_at, total_generations}>` — no N+1.
-- Within the chunk, run PATCH/POST in **batches of 10 in parallel** (`Promise.allSettled`), then loop to the next batch. ~10× faster, fits comfortably under 150s for 300 contacts. No artificial sleep — Resend's published limit is high enough for this volume.
-- Return `{ added, updated, failed, processed_from, processed_to, total_opted_in, has_more, next_offset }`.
+## Safety boundary (unchanged)
+- ❌ No DB schema, RLS, billing, signup, or email-send changes
+- ✅ Only outbound PATCH/POST to Resend; idempotent throughout
+- ✅ Chunked + throttled to fit edge function timeout and Resend rate limits
 
-### 4. Run backfill in 4 curl calls
-
-```
-POST /resync-resend-audience?offset=0&limit=300
-POST /resync-resend-audience?offset=300&limit=300
-POST /resync-resend-audience?offset=600&limit=300
-POST /resync-resend-audience?offset=900&limit=300
-```
-
-Each completes in ~30–45s. Total wall time ~3 min. If any chunk fails, just re-run that one — PATCH is idempotent.
-
-### 5. Verify
-
-- Spot-check `info@tsimkus.lt` → all 12 properties populated.
-- Check 1 free-tier contact and 1 churned contact → `lifecycle_stage` correct.
-- Check Resend dashboard total contact count is unchanged (no duplicates).
-
-### Safety summary
-- ✅ No DB schema, RLS, billing, or email-send changes
-- ✅ Re-runnable / idempotent at every layer
-- ✅ Admin-gated; touches only Resend outbound
-- ✅ Chunked + parallel-batched to fit edge function timeout
-- ❌ No new rate limiting added (per project policy — Resend's volume is fine for 1,187 calls in batches of 10)
-
-### Out of scope
-- Admin UI button, Stripe webhook auto-sync, nightly cron, `country` — separate passes later if you want.
+## Out of scope
+Admin UI button, Stripe webhook auto-sync, nightly cron, `country` field.
