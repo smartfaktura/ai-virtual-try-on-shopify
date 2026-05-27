@@ -33,9 +33,14 @@ export function BrandScenesPromoCard() {
             ))}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground leading-snug">
-              Want personalized scenes for your brand?
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.15em] uppercase px-2 py-0.5">
+                New
+              </span>
+              <p className="text-sm font-semibold text-foreground leading-snug">
+                Want personalized scenes for your brand?
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Create custom Brand Scenes once, then reuse them across every shoot
             </p>
