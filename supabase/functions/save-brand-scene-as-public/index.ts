@@ -10,10 +10,9 @@ const corsHeaders = {
 function s(v: unknown): string {
   return typeof v === "string" ? v : "";
 }
-function sArr(v: unknown): string[] {
-  if (Array.isArray(v)) return v.filter((x) => typeof x === "string" && x.trim()).map((x) => String(x));
-  if (typeof v === "string" && v.trim()) return [v];
-  return [];
+
+function slugify(v: string): string {
+  return v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "scene";
 }
 
 serve(async (req) => {
@@ -41,7 +40,6 @@ serve(async (req) => {
       });
     }
 
-    // Admin check
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
@@ -56,6 +54,9 @@ serve(async (req) => {
     const answers = body.answers ?? {};
     const name = s(body.name).trim();
     const previewUrl = s(body.previewImageUrl).trim();
+    const categoryCollection = s(body.categoryCollection).trim();
+    const subCategory = s(body.subCategory).trim();
+    const compiledPrompt = s(body.compiledPrompt).trim();
 
     if (name.length < 2) {
       return new Response(JSON.stringify({ error: "Name is required" }), {
@@ -67,48 +68,68 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (!categoryCollection || categoryCollection.length > 60) {
+      return new Response(JSON.stringify({ error: "Category is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!subCategory || subCategory.length > 80) {
+      return new Response(JSON.stringify({ error: "Sub-category is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!compiledPrompt) {
+      return new Response(JSON.stringify({ error: "Compiled prompt is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const base = answers.base ?? {};
+    const description = s(base.notes).slice(0, 280);
+    const sceneType = s(base.scene_type) || "lifestyle";
 
-    const row = {
-      name,
-      category: s(answers.module),
-      subcategory: s(answers.sub_family),
-      aesthetic_family: s(base.aesthetic_era),
-      scene_type: s(base.scene_type),
-      short_description: s(base.notes).slice(0, 280),
-      scene_goal: s(base.output_use_case),
-      palette: sArr(base.palette),
-      lighting: s(base.lighting),
-      background: s(base.setting) || s(base.location),
-      composition: s(base.composition) || s(base.composition_custom),
-      crop: s(base.framing),
-      camera_feel: s(base.lens) || s(base.lens_custom),
-      props: sArr(base.extras?.props),
-      mood: s(base.mood),
-      styling_tone: s(base.brand_voice),
-      premium_cues: sArr(base.finish ? [base.finish] : []),
-      avoid_terms: sArr(base.avoid ? [base.avoid] : []),
-      tags: sArr([base.weather, base.season, base.time_of_day, base.realism].filter(Boolean)),
-      status: "draft",
-      source_type: "brand_scene_wizard",
-      preview_image_url: previewUrl,
-    };
+    // Generate unique scene_id with one retry on collision.
+    async function insertWithUniqueSceneId() {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const shortId = crypto.randomUUID().slice(0, 8);
+        const sceneId = `brand-${slugify(name)}-${shortId}`;
+        const row = {
+          scene_id: sceneId,
+          title: name,
+          description,
+          prompt_template: compiledPrompt,
+          category_collection: categoryCollection,
+          sub_category: subCategory,
+          scene_type: sceneType,
+          preview_image_url: previewUrl,
+          is_active: true,
+          sort_order: 999,
+          sub_category_sort_order: 999,
+          is_brand_scene: false,
+          owner_user_id: null,
+          brand_scene_answers: answers,
+        };
+        const { data, error } = await supabaseAdmin
+          .from("product_image_scenes")
+          .insert(row)
+          .select("id, scene_id, title, category_collection, sub_category")
+          .single();
+        if (!error) return { data, error: null as any };
+        // Retry only on unique-violation on scene_id
+        if ((error as any)?.code !== "23505") return { data: null, error };
+      }
+      return { data: null, error: { message: "scene_id collision after retry" } as any };
+    }
 
-    const { data, error } = await supabaseAdmin
-      .from("scene_recipes")
-      .insert(row)
-      .select("id, name, status")
-      .single();
-
+    const { data, error } = await insertWithUniqueSceneId();
     if (error) {
-      console.error("scene_recipes insert failed:", error);
+      console.error("product_image_scenes insert failed:", error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ recipe: data }), {
+    return new Response(JSON.stringify({ scene: data }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
