@@ -1,7 +1,9 @@
-## Tweak Selfie UGC section on `/showcase/bioma`
+Restore the "Selfie UGC set" section header above the UGC image grid in `src/pages/showcase/BiomaShowcase.tsx`.
 
-1. **Hide section header block** — remove the label "Selfie UGC set", heading "Creator-style selfies for social", and subtitle "Raw, phone-shot energy…". Keep the grid only (still rendered under same section spacing).
-2. **Remove UGC images** at positions 1, 3, 9, 13, 14, 25, 26 (1-indexed in current order) — leaves 19 images.
-3. **Shuffle** remaining UGC images with a fixed deterministic order (hand-picked random sequence, hardcoded) so the output is stable across renders/reloads.
+The header that was previously removed should be re-inserted inside the `<section>` at the top of the UGC section, above the grid:
 
-No other changes (main editorial grid, hero, stats, CTA all unchanged).
+- Label chip: "Selfie UGC set"
+- Heading: "Creator-style selfies for social"
+- Subtitle: "Raw, phone-shot energy — built for Reels, TikTok, and paid social"
+
+No other changes — the filtered/shuffled 19 UGC images and the rest of the page remain exactly as-is.
