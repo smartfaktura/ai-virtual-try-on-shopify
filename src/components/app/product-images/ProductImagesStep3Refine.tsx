@@ -163,11 +163,33 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
         )}
       </div>
 
+      {/* Library Models — inline preview */}
+      {filteredGlobal.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
+            {inlineModels.map(m => (
+              <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
+            ))}
+          </div>
+          {filteredGlobal.length > INLINE_LIMIT && (
+            <button
+              className="mt-2 w-full text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer py-2 hover:underline underline-offset-4"
+              onClick={() => { setModalGender(genderFilter); setModalSearch(''); setShowAllModal(true); }}
+            >
+              View all {filteredGlobal.length} models →
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Your Brand Models */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Crown className="w-3.5 h-3.5 text-primary" />
-          <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Brand Models</span>
+          <Crown className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Your Brand Models</span>
         </div>
         {filteredUser.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
@@ -194,27 +216,6 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
         <BrandModelsInfoModal open={brandInfoOpen} onOpenChange={setBrandInfoOpen} />
       </div>
 
-      {/* Library Models — inline preview */}
-      {filteredGlobal.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">VOVV.AI Models</span>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
-            {inlineModels.map(m => (
-              <ModelSelectorCard key={m.modelId} model={m} isSelected={activeIds.has(m.modelId)} onSelect={() => toggleModel(m.modelId)} />
-            ))}
-          </div>
-          {filteredGlobal.length > INLINE_LIMIT && (
-            <button
-              className="mt-2 w-full text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer py-2 hover:underline underline-offset-4"
-              onClick={() => { setModalGender(genderFilter); setModalSearch(''); setShowAllModal(true); }}
-            >
-              View all {filteredGlobal.length} models →
-            </button>
-          )}
-        </div>
-      )}
 
       {userModels.length === 0 && globalModels.length === 0 && (
         <p className="text-xs text-muted-foreground italic">No models available. Use manual styling options below.</p>
