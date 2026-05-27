@@ -1,53 +1,35 @@
-## Goal
-Fix the duplicate "Vanity Nook" render and make admin-saved public scenes carry the same metadata as the editorial siblings (reference flag, triggers, description).
+## Problem
 
-## Root causes (verified)
-1. **Duplicate render**: `product_image_scenes` has 1,939 active rows and 139 share `sort_order = 999`. The three fetchers in `src/hooks/useProductImageScenes.ts` paginate 1000 rows at a time ordered only by `sort_order` — with that many ties, Postgres can return the same row on two pages, dropping another. DB has exactly 1 `brand-vanity-nook-092b4d82` row; the badge "8" and the visible second card are pure render duplication.
-2. **Empty fields on save**: `supabase/functions/save-brand-scene-as-public/index.ts` only writes `title`, `prompt_template`, `category_collection`, `sub_category`, `scene_type`, `preview_image_url`. It never sets `use_scene_reference`, `trigger_blocks`, or `description`, so those default to `false / {} / ''`.
+The new "Indoor Portrait" scene was saved successfully to `product_image_scenes` (verified in DB: `supplements-wellness → Editorial Wellness Routine`, active, owner_user_id=NULL). The reason it doesn't show in `/app/generate/product-images` is **stale React Query cache**.
 
-## Changes
+`useProductImageScenes` uses `staleTime: 5 * 60_000` on three query keys (`product-image-scenes`, `…-priority`, `…-rest`). `SaveToPublicScenesDialog` calls the edge function, shows a toast, closes — but never invalidates those keys. So the picker continues to render the previously cached list until the user hard-reloads or 5 minutes elapse.
 
-### 1. Stable pagination — `src/hooks/useProductImageScenes.ts`
-Add `id` as a secondary sort tiebreaker in all three fetchers (`fetchAllScenes`, `fetchScenesByCategories`, `fetchScenesExcludingCategories`):
-```ts
-.order('sort_order', { ascending: true })
-.order('id', { ascending: true })   // ← tiebreaker
-```
-`id` is the UUID primary key, so pagination becomes fully deterministic. Visible order only changes for rows that already tied — one-time, then locked in. No schema, no RLS, no writes touched.
+## Fix (single small change)
 
-### 2. Render-side safety net — `src/pages/AdminProductImageScenes.tsx`
-In the `filtered` memo, dedupe by `id` with a `Set` before returning. Cheap, defensive — even if a future fetcher hiccups, the same row can never render twice.
+**`src/features/brand-scenes/wizard/components/SaveToPublicScenesDialog.tsx`** — after `saveBrandSceneAsPublicScene` resolves successfully, invalidate the three scene query keys so any open product-images wizard refetches on next focus / render.
 
-### 3. Populate missing fields on save — `supabase/functions/save-brand-scene-as-public/index.ts`
-Extend the insert payload:
-- `use_scene_reference: true` — admin is publishing a hand-picked preview as the canonical reference image
-- `trigger_blocks`: derived from wizard answers
-  - always `["productDetails"]`
-  - add `"personDetails"` when `answers.cast?.model_ref` is present or `cast.preset` is in `CAST_PRESETS_WITH_PEOPLE`
-  - add `"sceneEnvironment"` when `base.scene_type` is a non-studio lifestyle/outdoor type
-- `description`: keep `base.notes` when present (current behaviour); otherwise auto-derive `"{name} — {sub_category} editorial brand scene"`, capped at 280 chars
+- Import `useQueryClient` from `@tanstack/react-query`.
+- Inside `handleSubmit`, on success and before the toast, call:
+  - `queryClient.invalidateQueries({ queryKey: ['product-image-scenes'] })`
+  - `queryClient.invalidateQueries({ queryKey: ['product-image-scenes-priority'] })`
+  - `queryClient.invalidateQueries({ queryKey: ['product-image-scenes-rest'] })`
+- Also invalidate `['public-scene-buckets']` so the dialog's own category/sub-category dropdowns pick up the newly created sub-category on the next open.
 
-No client UI change required — wizard answers already contain everything needed.
+That's the entire change. Pure client-side, no schema/RLS/edge changes.
 
-### 4. Backfill the existing Vanity Nook row (one-shot migration)
-```sql
-UPDATE public.product_image_scenes
-SET use_scene_reference = true,
-    trigger_blocks = ARRAY['productDetails']::text[],
-    description = 'Vanity Nook — Editorial Wellness Routine editorial brand scene'
-WHERE scene_id = 'brand-vanity-nook-092b4d82'
-  AND (description IS NULL OR description = '')
-  AND (trigger_blocks IS NULL OR cardinality(trigger_blocks) = 0);
-```
-Idempotent — won't touch the row if it already has values.
+## Why nothing else needs changing
 
-## Safety notes
-- All changes are additive: no column drops, no policy changes, no writes broadened.
-- Edge function still admin-gated via `has_role` (unchanged).
-- Dedupe + stable sort are pure read-path improvements; if either is removed, behaviour reverts to today's.
-- Other scenes at `sort_order = 999` may swap positions once after deploy, then stay deterministic.
+- The Vanity Nook dedupe + stable sort + admin payload fix from the previous turn are still in place and unrelated.
+- The scene already saves with correct `category_collection`, `sub_category`, `is_active=true`, `owner_user_id=NULL`, `trigger_blocks`, `description`, `use_scene_reference=true` — verified.
+- RLS `Auth read scenes` policy permits it for any authenticated user.
+
+## Verification after build
+
+1. Open Brand Scene wizard, save a test scene to public scenes under any existing sub-category.
+2. Without reloading, navigate to `/app/generate/product-images` and open that category — the new scene should appear immediately.
+3. Re-open `SaveToPublicScenesDialog` — the sub-category dropdown should include any new sub-category created in step 1.
 
 ## Out of scope
-- No changes to the SaveToPublicScenesDialog UI.
-- No changes to brand-scenes wizard flow.
-- No batch backfill of other admin-saved brand scenes (only the one row the user flagged).
+
+- No backfill needed; the Indoor Portrait scene will appear as soon as the user hard-reloads `/app/generate/product-images` once.
+- No changes to the edge function, RLS, schema, or admin scene admin page.
