@@ -64,10 +64,18 @@ const IMAGES: Img[] = [
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/6a25e1bf-a453-48bc-aebb-ef72a20699ec/0-0.jpg', scene: 'Handheld Daily Wellness Moment', model: 'Freya' },
 ];
 
+type UgcImg = { url: string; model: string };
+
+const UGC_IMAGES: UgcImg[] = [
+__UGC_ITEMS__
+];
+
 const STATS = [
-  { icon: LayoutGrid, value: '53', label: 'Visuals' },
+  { icon: LayoutGrid, value: '79', label: 'Visuals' },
   { icon: Timer, value: '~3 min', label: 'Made in' },
 ];
+
+
 
 export default function BiomaShowcase() {
   const [lightbox, setLightbox] = useState<number | null>(null);
