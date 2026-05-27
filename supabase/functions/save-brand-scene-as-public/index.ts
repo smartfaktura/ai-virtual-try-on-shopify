@@ -85,8 +85,27 @@ serve(async (req) => {
     }
 
     const base = answers.base ?? {};
-    const description = s(base.notes).slice(0, 280);
+    const cast = answers.cast ?? {};
+    const rawNotes = s(base.notes).trim();
     const sceneType = s(base.scene_type) || "lifestyle";
+
+    // Derive description: prefer wizard notes; otherwise auto-compose an editorial line.
+    const autoDescription = `${name} — ${subCategory} editorial brand scene`;
+    const description = (rawNotes ? rawNotes : autoDescription).slice(0, 280);
+
+    // Derive trigger_blocks from wizard intent so the saved scene matches the
+    // shape of editorial sibling rows (productDetails / personDetails / sceneEnvironment).
+    const CAST_PRESETS_WITH_PEOPLE = new Set([
+      "on_model", "hand_only", "lifestyle_subject", "portrait",
+    ]);
+    const hasPeople = !!cast?.model_ref ||
+      (typeof cast?.preset === "string" && CAST_PRESETS_WITH_PEOPLE.has(cast.preset));
+    const STUDIO_SCENE_TYPES = new Set(["packshot", "studio", "white", "white_studio"]);
+    const isEnvironmental = !STUDIO_SCENE_TYPES.has(sceneType);
+
+    const triggerBlocks: string[] = ["productDetails"];
+    if (hasPeople) triggerBlocks.push("personDetails");
+    if (isEnvironmental) triggerBlocks.push("sceneEnvironment");
 
     // Generate unique scene_id with one retry on collision.
     async function insertWithUniqueSceneId() {
@@ -98,10 +117,12 @@ serve(async (req) => {
           title: name,
           description,
           prompt_template: compiledPrompt,
+          trigger_blocks: triggerBlocks,
           category_collection: categoryCollection,
           sub_category: subCategory,
           scene_type: sceneType,
           preview_image_url: previewUrl,
+          use_scene_reference: true,
           is_active: true,
           sort_order: 999,
           sub_category_sort_order: 999,

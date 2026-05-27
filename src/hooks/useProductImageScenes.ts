@@ -84,6 +84,7 @@ async function fetchAllScenes(includePromptTemplate = false, activeOnly = true, 
       .from('product_image_scenes' as any)
       .select(selectCols(includePromptTemplate))
       .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
       .range(from, from + PAGE - 1);
     if (activeOnly) q = q.eq('is_active', true);
     if (!includeBundle) q = q.neq('category_collection', 'bundle');
@@ -102,7 +103,8 @@ async function fetchScenesByCategories(categories: string[], includePromptTempla
     .from('product_image_scenes' as any)
     .select(selectCols(includePromptTemplate))
     .in('category_collection', categories)
-    .order('sort_order', { ascending: true });
+    .order('sort_order', { ascending: true })
+    .order('id', { ascending: true });
   if (activeOnly) q = q.eq('is_active', true);
   // Only filter bundle when caller didn't explicitly request it as a category
   if (!includeBundle && !categories.includes('bundle')) q = q.neq('category_collection', 'bundle');
@@ -130,6 +132,7 @@ async function fetchScenesExcludingCategories(
       .select(cols)
       .not('category_collection', 'in', `(${categories.join(',')})`)
       .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
       .range(from, from + PAGE - 1);
     if (activeOnly) q = q.eq('is_active', true);
     if (!includeBundle) q = q.neq('category_collection', 'bundle');
