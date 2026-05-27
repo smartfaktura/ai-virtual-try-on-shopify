@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>VOVV.AI ��� Email Marketing Automations Playbook</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">VOVV.AI ��� Email Marketing Automations Playbook</h1>
+</header>
+<h1 id="vovv.ai-email-marketing-automations-playbook">VOVV.AI — Email
+Marketing Automations Playbook</h1>
+<p>A step-by-step build guide for every lifecycle,
+transactional-marketing, and broadcast automation we should run in
+Resend, grounded in what is already wired in Lovable Cloud.</p>
+<hr />
+<h2 id="what-is-already-live-do-not-rebuild">0. What is already live (do
+not rebuild)</h2>
+<p>You can rely on these in every automation:</p>
+<p><strong>Contact sync</strong> — <code>sync-resend-contact</code> edge
+function pushes every user to the Resend audience and updates registered
+properties whenever their data changes.</p>
+<p><strong>Registered contact properties</strong> (see
+<code>supabase/functions/register-resend-properties/index.ts</code>):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Source</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plan</code></td>
+<td>string</td>
+<td>profiles.plan</td>
+<td>Segmenting Free vs paid</td>
+</tr>
+<tr>
+<td><code>product_categories</code></td>
+<td>string</td>
+<td>comma-joined onboarding categories</td>
+<td>Category broadcasts</td>
+</tr>
+<tr>
+<td><code>primary_category</code></td>
+<td>string</td>
+<td>first / dominant category</td>
+<td>Category-tailored series</td>
+</tr>
+<tr>
+<td><code>signup_date</code></td>
+<td>string (ISO)</td>
+<td>profiles.created_at</td>
+<td>Anniversaries, age-of-account</td>
+</tr>
+<tr>
+<td><code>credits_balance</code></td>
+<td>number</td>
+<td>profiles.credits_balance</td>
+<td>Low-credits, top-up</td>
+</tr>
+<tr>
+<td><code>lifecycle_stage</code></td>
+<td>string</td>
+<td>derived (lead / active / paying / churned)</td>
+<td>Master segmentation</td>
+</tr>
+<tr>
+<td><code>subscription_status</code></td>
+<td>string</td>
+<td>Stripe sync</td>
+<td>Dunning, renewal, churn</td>
+</tr>
+<tr>
+<td><code>subscription_renews_at</code></td>
+<td>string (ISO)</td>
+<td>Stripe sync</td>
+<td>Renewal reminders</td>
+</tr>
+<tr>
+<td><code>last_active_at</code></td>
+<td>string (ISO)</td>
+<td>login / generation</td>
+<td>Win-back</td>
+</tr>
+<tr>
+<td><code>last_generated_at</code></td>
+<td>string (ISO)</td>
+<td>generation_jobs</td>
+<td>Activation, win-back</td>
+</tr>
+<tr>
+<td><code>total_generations</code></td>
+<td>number</td>
+<td>generation_jobs count</td>
+<td>Power-user, referral</td>
+</tr>
+<tr>
+<td><code>referral_source</code></td>
+<td>string</td>
+<td>utm / onboarding</td>
+<td>Cohort reports</td>
+</tr>
+<tr>
+<td><code>last_event</code></td>
+<td>string</td>
+<td>last fired event name</td>
+<td><strong>Primary automation trigger</strong></td>
+</tr>
+<tr>
+<td><code>last_event_at</code></td>
+<td>string (ISO)</td>
+<td>timestamp of last event</td>
+<td>Recency filter</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Event names already fired into Resend</strong> (set
+<code>last_event</code> to one of these — automations key off equality
+on this property):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Event</th>
+<th>Fired from</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user.signup</code></td>
+<td><code>handle_new_user</code> trigger</td>
+<td>Account created</td>
+</tr>
+<tr>
+<td><code>user.first_generation</code></td>
+<td><code>enqueue_generation</code> RPC, first job only</td>
+<td>Activation moment</td>
+</tr>
+<tr>
+<td><code>generation.milestone.first</code></td>
+<td><code>fire_generation_milestone</code></td>
+<td>First completed job</td>
+</tr>
+<tr>
+<td><code>generation.milestone.10</code></td>
+<td>trigger</td>
+<td>10 completed</td>
+</tr>
+<tr>
+<td><code>generation.milestone.50</code></td>
+<td>trigger</td>
+<td>50 completed</td>
+</tr>
+<tr>
+<td><code>generation.milestone.100</code></td>
+<td>trigger</td>
+<td>100 completed (power user)</td>
+</tr>
+<tr>
+<td><code>credits.low</code></td>
+<td><code>deduct_credits</code>, balance &lt; 10, throttled 24h</td>
+<td>Imminent run-out</td>
+</tr>
+<tr>
+<td><code>credits.purchased</code></td>
+<td><code>add_purchased_credits</code></td>
+<td>Top-up succeeded</td>
+</tr>
+<tr>
+<td><code>user.unsubscribed</code></td>
+<td><code>handle-marketing-unsubscribe</code></td>
+<td>Marketing opt-out</td>
+</tr>
+</tbody>
+</table>
+<p>Stripe-driven events (subscription created / updated / canceled /
+past_due) are forwarded by <code>sync-resend-contact</code> when called
+from the Stripe webhook with <code>event: "subscription.*"</code>. Use
+these as additional <code>last_event</code> triggers as we describe
+below.</p>
+<p><strong>Branded shell</strong> —
+<code>supabase/functions/_shared/email-render.ts</code> handles VOVV.AI
+wordmark, Inter typography, navy CTA pill, unsubscribe footer. When
+composing <em>inside Resend’s dashboard</em>, replicate that shell
+visually: white background, single-column 560px, navy
+<code>#0f172a</code> text, <code>#1e293b</code> CTA button, 12px muted
+footer, Inter via Google Fonts.</p>
+<p><strong>Sender</strong> —
+<code>VOVV.AI &lt;notifications@vovv.ai&gt;</code> (constant
+<code>RESEND_FROM</code>).</p>
+<p><strong>Suppression</strong> — <code>suppressed_emails</code> and
+<code>marketing_unsubscribes</code> block all marketing. Every Resend
+automation <strong>must</strong> include an unsubscribe link to
+<code>https://vovv.ai/marketing-unsubscribe?email={{contact.email}}&amp;token={{contact.unsubscribe_token}}</code>
+(Resend will append a one-click header automatically; this is the
+visible footer link).</p>
+<p><strong>Admin dashboard</strong> —
+<code>/admin/email-marketing</code> shows synced contacts, unsubscribes,
+and the last 50 events from <code>resend_event_log</code>. Use it as
+your QA surface after enabling each automation.</p>
+<hr />
+<h2 id="segments-to-create-first-in-resend-audiences-segments">1.
+Segments to create first (in Resend → Audiences → Segments)</h2>
+<p>Build these once; every automation below references them by name.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Segment name</th>
+<th>Filter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>All — Marketable</strong></td>
+<td><code>unsubscribed = false</code> (Resend system field)</td>
+</tr>
+<tr>
+<td><strong>Free users</strong></td>
+<td><code>plan = free</code></td>
+</tr>
+<tr>
+<td><strong>Starter</strong></td>
+<td><code>plan = starter</code></td>
+</tr>
+<tr>
+<td><strong>Growth</strong></td>
+<td><code>plan = growth</code></td>
+</tr>
+<tr>
+<td><strong>Pro+</strong></td>
+<td><code>plan in [pro, enterprise]</code></td>
+</tr>
+<tr>
+<td><strong>Any paid</strong></td>
+<td><code>plan in [starter, growth, pro, enterprise]</code></td>
+</tr>
+<tr>
+<td><strong>Activated</strong></td>
+<td><code>total_generations &gt;= 1</code></td>
+</tr>
+<tr>
+<td><strong>Never generated</strong></td>
+<td><code>total_generations = 0</code></td>
+</tr>
+<tr>
+<td><strong>Power users</strong></td>
+<td><code>total_generations &gt;= 50</code></td>
+</tr>
+<tr>
+<td><strong>Low credits</strong></td>
+<td><code>credits_balance &lt; 10</code> AND
+<code>plan != free</code></td>
+</tr>
+<tr>
+<td><strong>Dormant 30d</strong></td>
+<td><code>last_active_at &lt; now - 30 days</code></td>
+</tr>
+<tr>
+<td><strong>Dormant 60d</strong></td>
+<td><code>last_active_at &lt; now - 60 days</code></td>
+</tr>
+<tr>
+<td><strong>At-risk subs</strong></td>
+<td><code>subscription_status = past_due</code></td>
+</tr>
+<tr>
+<td><strong>Renews in 7d</strong></td>
+<td><code>subscription_renews_at between now and now+7d</code> AND
+<code>plan != free</code></td>
+</tr>
+<tr>
+<td><strong>Category: Apparel</strong></td>
+<td><code>primary_category = apparel</code> (repeat for: eyewear,
+footwear, fragrance, jewelry, accessories, beauty, home, food,
+electronics)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="lifecycle-automations-build-in-this-order">2. Lifecycle
+automations (build in this order)</h2>
+<p>For each automation: a) Resend → Automations → New, b) name it
+exactly as below, c) set trigger, d) set audience filter, e) build the
+email(s), f) enable.</p>
+<h3 id="welcome-series-3-emails">2.1 Welcome series (3 emails)</h3>
+<p><strong>Goal:</strong> get the user to their first generation within
+72h. <strong>Trigger:</strong> <code>last_event = user.signup</code>.
+<strong>Audience:</strong> All — Marketable. <strong>Exit
+conditions:</strong> <code>last_event = user.first_generation</code>
+exits the series immediately.</p>
+<p><strong>Email 1 — sent immediately (0h)</strong> - Subject A:
+<code>Welcome to VOVV.AI</code> - Subject B:
+<code>Your studio is ready</code> - Subject C:
+<code>Start with one product photo</code> - Preview text:
+<code>Turn a single product photo into a full visual library</code> -
+Body (paste into Resend, keep navy Inter shell): ``` Hey
+{{contact.first_name|there}},</p>
+<p>You’re in. VOVV.AI turns one product photo into editorial scenes,
+on-model shots, lifestyle visuals and short films — without a studio
+booking.</p>
+<p>The fastest path: upload one product, pick a scene, and let the
+studio do the rest. You have 20 free credits ready to use.
+``<code>- CTA:</code>Open Visual
+Studio<code>→</code>https://vovv.ai/app/workflows<code>- QA: appears in</code>resend_event_log<code>with event</code>user.signup`,
+body renders Inter, unsubscribe link works.</p>
+<p><strong>Email 2 — sent at +24h, only if
+<code>last_event != user.first_generation</code></strong> - Subject A:
+<code>Three scenes worth trying first</code> - Subject B:
+<code>Where most brands start</code> - Body: ``` If you’re still
+deciding what to make first, these three scenes consistently produce the
+cleanest results on the first try:</p>
+<p>• White Studio — pure e-commerce hero on a clean white background •
+Editorial Lifestyle — your product in a curated environment with shallow
+depth of field • On-Model — a real-looking model wearing or holding your
+product</p>
+<p>Each one runs in under a minute on a single credit.
+``<code>- CTA:</code>Browse
+scenes<code>→</code>https://vovv.ai/app/presets`</p>
+<p><strong>Email 3 — sent at +72h, only if still
+<code>total_generations = 0</code></strong> - Subject:
+<code>Want a 1:1 walkthrough</code> - Body: short, human, offers founder
+reply.
+<code>Most users get unstuck in five minutes once they see someone else upload a product. Reply to this email and I'll send you a 90-second screen recording for your category.</code>
+- No CTA button; reply-to behaviour relies on Resend’s
+<code>reply_to</code> header → set it to a real inbox.</p>
+<hr />
+<h3 id="first-generation-celebration-single-email">2.2 First-generation
+celebration (single email)</h3>
+<p><strong>Goal:</strong> reinforce the aha-moment, push to second
+generation. <strong>Trigger:</strong>
+<code>last_event = user.first_generation</code> OR
+<code>last_event = generation.milestone.first</code>.
+<strong>Audience:</strong> All — Marketable. <strong>Delay:</strong>
+send 10 minutes after the event (let them finish browsing the
+result).</p>
+<ul>
+<li><p>Subject A: <code>Your first shot is live</code></p></li>
+<li><p>Subject B: <code>Nice — what's next</code></p></li>
+<li><p>Body:</p>
+<pre><code>You just made your first VOVV.AI image. The same product can now run through every other scene in the library — different backgrounds, different models, different camera angles — without re-uploading.
+
+Tip: open the Library and hit &quot;Brand Ready&quot; on the shots you&#39;d actually publish. We use that signal to recommend better scenes next time.</code></pre></li>
+<li><p>CTA: <code>Generate scene #2</code> →
+<code>https://vovv.ai/app/workflows</code></p></li>
+</ul>
+<hr />
+<h3 id="activation-nudge-no-first-generation">2.3 Activation nudge (no
+first generation)</h3>
+<p><strong>Goal:</strong> rescue signups who never generated.
+<strong>Trigger:</strong> <code>last_event = user.signup</code> AND
+<code>total_generations = 0</code> AND
+<code>signup_date &lt; now - 48h</code>. In Resend this is built as a
+scheduled segment send (daily 09:00 in user’s timezone if you have it,
+otherwise 09:00 UTC) rather than an event trigger.
+<strong>Exit:</strong> any generation. Send a maximum of 2 nudges per
+user, 5 days apart.</p>
+<ul>
+<li>Subject: <code>Stuck on uploading your first product</code></li>
+<li>Body: 3 bullet troubleshooting + offer of a sample product to try
+with.</li>
+<li>CTA: <code>Try with a demo product</code> →
+<code>https://vovv.ai/app/workflows?demo=1</code></li>
+</ul>
+<hr />
+<h3 id="category-tailored-inspiration">2.4 Category-tailored
+inspiration</h3>
+<p><strong>Goal:</strong> show users scenes proven to work for their
+category. <strong>Trigger:</strong> scheduled weekly (Tuesday 10:00 user
+local / UTC fallback). <strong>Audience:</strong> Activated AND
+<code>primary_category</code> is set. One automation per category —
+duplicate this for each.</p>
+<p>Each category email surfaces 3 hero scenes from the Library
+deep-linked to
+<code>https://vovv.ai/app/presets?category={category}</code>. Image
+references come from <code>landing-assets</code> storage. Keep copy
+short — the images do the work.</p>
+<ul>
+<li>Subject template:
+<code>New {{category}} scenes worth trying</code></li>
+<li>Body template: 3 image cards (200×250) with scene name and one-line
+description, each linking to the scene’s deep link.</li>
+<li>Frequency cap: 1 per user per week across all category emails.</li>
+</ul>
+<hr />
+<h3 id="low-credits-warning">2.5 Low-credits warning</h3>
+<p><strong>Goal:</strong> convert nearly-empty paid users to a top-up or
+upgrade. <strong>Trigger:</strong>
+<code>last_event = credits.low</code>. <strong>Audience:</strong> Any
+paid. <strong>Delay:</strong> send immediately. Already throttled to
+once per 24h by <code>deduct_credits</code>.</p>
+<ul>
+<li><p>Subject A:
+<code>You have {{contact.credits_balance}} credits left</code></p></li>
+<li><p>Subject B:
+<code>Running low — top up in one click</code></p></li>
+<li><p>Body:</p>
+<pre><code>You&#39;re down to {{contact.credits_balance}} credits on the {{contact.plan}} plan.
+
+Top-ups never expire. Upgrading to the next plan gives you more monthly credits at a lower per-image cost.</code></pre></li>
+<li><p>Primary CTA: <code>Buy a top-up</code> →
+<code>https://vovv.ai/pricing#topups</code></p></li>
+<li><p>Secondary CTA (text link): <code>See plans</code> →
+<code>https://vovv.ai/pricing</code></p></li>
+</ul>
+<p>Free users get a separate variant — see 2.7.</p>
+<hr />
+<h3 id="renewal-reminder-paid">2.6 Renewal reminder (paid)</h3>
+<p><strong>Goal:</strong> reduce involuntary churn; remind value before
+charge. <strong>Trigger:</strong> segment “Renews in 7d”, scheduled
+daily. <strong>Audience:</strong> Renews in 7d.</p>
+<ul>
+<li>Subject:
+<code>Your VOVV.AI plan renews {{contact.subscription_renews_at|date}}</code></li>
+<li>Body: 1-line confirmation, 3 stats from the last 30 days (total
+images, top scene, top product), CTA to manage billing.</li>
+<li>CTA: <code>Manage billing</code> →
+<code>https://vovv.ai/app/settings/billing</code></li>
+</ul>
+<p>The 30-day stats are not directly in contact properties — for v1,
+omit them and use a generic value reminder; for v2, add
+<code>last_30d_generations</code> to
+<code>register-resend-properties</code> (listed as a follow-up in
+§6).</p>
+<hr />
+<h3 id="free-paid-upgrade-nudge">2.7 Free → paid upgrade nudge</h3>
+<p><strong>Goal:</strong> move engaged free users to Starter.
+<strong>Trigger:</strong> scheduled, weekly Thursday 10:00.
+<strong>Audience:</strong> Free users AND
+<code>total_generations &gt;= 5</code> AND
+<code>last_active_at &gt; now - 14d</code>.</p>
+<ul>
+<li>Subject A: <code>You're using VOVV.AI like a paid user</code></li>
+<li>Subject B: <code>Unlock 2K downloads and short films</code></li>
+<li>Body: 3 bullets that map directly to Starter benefits (more credits,
+2K PNG always-on, Brand Profiles, video).</li>
+<li>CTA: <code>See Starter plan</code> →
+<code>https://vovv.ai/pricing</code></li>
+</ul>
+<hr />
+<h3 id="payment-failed-dunning">2.8 Payment failed / dunning</h3>
+<p><strong>Goal:</strong> recover failed renewals before Stripe cancels.
+<strong>Trigger:</strong>
+<code>last_event = subscription.past_due</code> (fire this from the
+Stripe webhook via <code>sync-resend-contact</code>).
+<strong>Audience:</strong> At-risk subs.</p>
+<p>Sequence: T+0, T+2 days, T+5 days. Stop on
+<code>subscription_status = active</code>.</p>
+<ul>
+<li>T+0 Subject: <code>We couldn't charge your card</code></li>
+<li>T+2 Subject: <code>Your VOVV.AI plan is at risk</code></li>
+<li>T+5 Subject: <code>Last chance before downgrade</code></li>
+<li>All CTAs: <code>Update payment method</code> →
+<code>https://vovv.ai/app/settings/billing</code></li>
+</ul>
+<p>Tone: factual, brief, no guilt. Always say what happens if they do
+nothing (“your plan downgrades to Free on …”).</p>
+<hr />
+<h3 id="win-back">2.9 Win-back</h3>
+<p><strong>Goal:</strong> re-engage users dormant 30+ days.
+<strong>Trigger:</strong> scheduled daily; user enters segment
+<strong>Dormant 30d</strong> AND <code>total_generations &gt;= 1</code>.
+Suppress if they have already received a win-back in the last 60 days.
+<strong>Audience:</strong> Dormant 30d.</p>
+<ul>
+<li>Subject A: <code>Your studio is still here</code></li>
+<li>Subject B: <code>What we shipped while you were away</code></li>
+<li>Body: 3-card module of new features pulled from
+<code>/changelog</code> (manually updated when you launch new things —
+keep it timely).</li>
+<li>CTA: <code>Come back in</code> →
+<code>https://vovv.ai/app</code></li>
+</ul>
+<p>If still dormant after another 30 days (Dormant 60d), send a single
+“before we pause emails” message and then stop. Do <strong>not</strong>
+auto-unsubscribe — let the user click.</p>
+<hr />
+<h3 id="cancellation-exit-survey">2.10 Cancellation exit survey</h3>
+<p><strong>Goal:</strong> learn why people leave.
+<strong>Trigger:</strong>
+<code>last_event = subscription.canceled</code>.
+<strong>Audience:</strong> any (including just-canceled).
+<strong>Delay:</strong> +1 hour.</p>
+<ul>
+<li>Subject: <code>One quick question</code></li>
+<li>Body: 1 paragraph, then a 5-option list of clickable links (each
+link is <code>https://vovv.ai/feedback?reason=…</code>) so clicks are
+tracked in Resend without needing a form.</li>
+<li>No marketing CTA.</li>
+</ul>
+<hr />
+<h2 id="engagement-broadcasts-manual-not-automations">3. Engagement
+broadcasts (manual, not automations)</h2>
+<p>These are one-off broadcasts you compose in Resend → Broadcasts when
+something ships.</p>
+<h3 id="feature-announcements">3.1 Feature announcements</h3>
+<ul>
+<li><strong>Audience:</strong> Activated users on All — Marketable.</li>
+<li>Template: one hero image (1200×600 from
+<code>landing-assets</code>), one-paragraph what-it-is, one-paragraph
+why-it-matters, one CTA, no PS.</li>
+<li>Brand voice: minimalist luxury restraint, no exclamation marks, no
+“🎉”.</li>
+</ul>
+<h3 id="creative-drops-broadcasts">3.2 Creative Drops broadcasts</h3>
+<ul>
+<li>Triggered manually each time a drop opens (the drop itself is
+created by pg_cron — see <code>creative_drops</code>).</li>
+<li>Audience: Activated, optionally filter by
+<code>primary_category</code> for category-themed drops.</li>
+<li>Body: 3 hero images from the drop, opens-in date, CTA
+<code>Enter the drop</code> →
+<code>https://vovv.ai/app/drops/{slug}</code>.</li>
+</ul>
+<h3 id="monthly-digest-optional-low-priority">3.3 Monthly digest
+(optional, low-priority)</h3>
+<ul>
+<li>1st Tuesday of the month, 10:00 UTC.</li>
+<li>Audience: Activated.</li>
+<li>Content: most-used scene that month, one customer showcase, one tip.
+Skip if there’s nothing genuinely new — silence beats filler.</li>
+</ul>
+<hr />
+<h2 id="milestone-congratulations">4. Milestone congratulations</h2>
+<p><strong>Trigger:</strong>
+<code>last_event in [generation.milestone.10, generation.milestone.50, generation.milestone.100]</code>.
+<strong>Audience:</strong> All — Marketable.</p>
+<p>One automation, three branches by event value. Copy:</p>
+<ul>
+<li>10: <code>That's 10 shots in the books</code> — invite to share a
+Library link.</li>
+<li>50: <code>50 shots — you're moving fast</code> — offer Brand Profile
+setup tip.</li>
+<li>100: <code>100 shots — quietly impressive</code> — invite to apply
+for the case-study program.</li>
+</ul>
+<p>No CTA pressure on any of these — they’re relationship emails, not
+conversion emails.</p>
+<hr />
+<h2 id="governance-apply-to-every-automation">5. Governance (apply to
+every automation)</h2>
+<ul>
+<li><strong>Opt-in respect.</strong> Resend’s <code>unsubscribed</code>
+field is authoritative. We additionally suppress via
+<code>suppressed_emails</code> and <code>marketing_unsubscribes</code>
+on our side — Resend handles its side. Never re-subscribe a user
+automatically.</li>
+<li><strong>Marketing opt-in column.</strong>
+<code>profiles.marketing_emails_opted_in</code> gates whether we sync a
+contact in the first place. If a user toggles it off in-app,
+<code>sync-resend-contact</code> will mark them unsubscribed in
+Resend.</li>
+<li><strong>Frequency caps.</strong> No user should receive more than 3
+marketing emails in any rolling 7-day window. Configure in Resend →
+Settings → Sending limits OR enforce per-segment with “received email X
+in last N days” filters.</li>
+<li><strong>Unsubscribe link.</strong> Every email body must include the
+visible footer link in addition to Resend’s one-click header.</li>
+<li><strong>A/B testing.</strong> For lifecycle emails with subject
+variants (2.1, 2.2, 2.5, 2.7, 2.9), use Resend’s built-in A/B on subject
+only — keep body identical for clean results. Run for 7 days minimum
+before picking a winner.</li>
+<li><strong>Deliverability hygiene.</strong> Watch
+<code>marketing_unsubscribes</code> count weekly via
+<code>/admin/email-marketing</code>. If a single automation drives a
+spike, pause it.</li>
+<li><strong>No emojis in subjects, no terminal periods in
+headers</strong> — house style.</li>
+<li><strong>Sender consistency.</strong> All marketing from
+<code>notifications@vovv.ai</code>. Founder / human-reply emails (2.1
+Email 3, 2.10) should set <code>reply_to</code> to a monitored
+inbox.</li>
+</ul>
+<hr />
+<h2 id="rollout-order-recommended">6. Rollout order (recommended)</h2>
+<ol type="1">
+<li>Create all segments (§1). Block: nothing.</li>
+<li>Welcome series (2.1) + First-gen celebration (2.2). Highest
+leverage.</li>
+<li>Activation nudge (2.3).</li>
+<li>Low credits (2.5) + Free → paid (2.7).</li>
+<li>Dunning (2.8) + Renewal reminder (2.6).</li>
+<li>Win-back (2.9) + Cancellation survey (2.10).</li>
+<li>Category inspiration (2.4) once you have ≥500 contacts per
+category.</li>
+<li>Milestones (§4).</li>
+<li>Broadcasts (§3) — composed ad-hoc.</li>
+</ol>
+<p>After each one, monitor <code>/admin/email-marketing</code> for 48h
+before enabling the next.</p>
+<hr />
+<h2
+id="gaps-engineering-follow-ups-not-built-flagging-for-next-iteration">7.
+Gaps / engineering follow-ups (not built — flagging for next
+iteration)</h2>
+<p>These would unlock more precise automations but are out of scope for
+this document:</p>
+<ul>
+<li><strong><code>last_30d_generations</code> property</strong> — needed
+for renewal reminder stats (2.6).</li>
+<li><strong><code>top_scene_30d</code> property</strong> — would let
+category broadcasts (2.4) reference the user’s actual top scene instead
+of a generic recommendation.</li>
+<li><strong><code>subscription.past_due</code> event</strong> — confirm
+Stripe webhook is forwarding this to <code>sync-resend-contact</code>
+with the right event name; if not, add it.</li>
+<li><strong><code>subscription.canceled</code> event</strong> — same as
+above.</li>
+<li><strong>Timezone field on profiles</strong> — enables localized send
+times (currently we send in UTC).</li>
+<li><strong>In-app preferences page</strong> — granular control beyond a
+single <code>marketing_emails_opted_in</code> toggle (e.g. “send me
+low-credits but not weekly inspiration”). Without this, unhappy users
+will hard-unsubscribe instead of dialing back.</li>
+</ul>
+<p>Each of these can be added to
+<code>register-resend-properties/index.ts</code> and the relevant edge
+function in a follow-up.</p>
+</body>
+</html>
