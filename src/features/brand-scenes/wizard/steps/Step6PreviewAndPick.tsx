@@ -267,6 +267,27 @@ export function Step6PreviewAndPick({
     }
   };
 
+  const handleSaveAsPublic = async () => {
+    if (!selectedUrl) return;
+    if (!nameValid) {
+      toast.error("Name this scene before saving");
+      return;
+    }
+    setPhase("saving-public");
+    try {
+      const { recipe } = await saveBrandSceneAsPublicRecipe({
+        answers,
+        name: trimmedName,
+        previewImageUrl: selectedUrl,
+      });
+      toast.success(`Sent to public scene library as draft · "${recipe.name}"`);
+      setPhase("picking");
+    } catch (e) {
+      setPhase("picking");
+      toast.error(e instanceof Error ? e.message : "Could not save to public scenes");
+    }
+  };
+
 
   return (
     <div className="space-y-6">
