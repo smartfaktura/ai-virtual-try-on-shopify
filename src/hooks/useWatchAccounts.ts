@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -78,23 +78,9 @@ export function useWatchAccounts() {
     onError: (e: any) => toast.error(`Sync failed: ${e.message}`),
   });
 
-  // Realtime subscriptions for live updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('watch-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'watch_accounts' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['watch-accounts'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'watch_posts' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['watch-posts-all'] });
-        queryClient.invalidateQueries({ queryKey: ['watch-posts'] });
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
+  // Realtime subscriptions removed: watch_* tables are admin-only and were
+  // dropped from the supabase_realtime publication for security. Mutations
+  // refetch directly and the admin UI exposes a manual refresh button.
 
   const loadMorePosts = useMutation({
     mutationFn: async ({ id, username }: { id: string; username: string }) => {
