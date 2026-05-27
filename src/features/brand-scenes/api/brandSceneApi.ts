@@ -57,3 +57,15 @@ export async function saveBrandScene(args: {
   if (error || data?.error) throw pickError(error, data);
   return data;
 }
+
+export async function saveBrandSceneAsPublicRecipe(args: {
+  answers: BrandSceneAnswers;
+  name: string;
+  previewImageUrl: string;
+}): Promise<{ recipe: { id: string; name: string; status: string } }> {
+  const { data, error } = await supabase.functions.invoke("save-brand-scene-as-public", {
+    body: args,
+  });
+  if (error || data?.error) throw pickError(error, data);
+  return data;
+}

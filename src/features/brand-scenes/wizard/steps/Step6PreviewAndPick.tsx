@@ -25,6 +25,7 @@ import { BrandSceneVariationGrid } from "../components/BrandSceneVariationGrid";
 import {
   generateBrandScene,
   saveBrandScene,
+  saveBrandSceneAsPublicRecipe,
   BrandSceneApiError,
   type GeneratedVariation,
 } from "../../api/brandSceneApi";
@@ -56,7 +57,7 @@ interface Props {
   promptHash?: string;
 }
 
-type Phase = "idle" | "generating" | "picking" | "saving";
+type Phase = "idle" | "generating" | "picking" | "saving" | "saving-public";
 
 export function Step6PreviewAndPick({
   answers,
@@ -266,6 +267,27 @@ export function Step6PreviewAndPick({
     }
   };
 
+  const handleSaveAsPublic = async () => {
+    if (!selectedUrl) return;
+    if (!nameValid) {
+      toast.error("Name this scene before saving");
+      return;
+    }
+    setPhase("saving-public");
+    try {
+      const { recipe } = await saveBrandSceneAsPublicRecipe({
+        answers,
+        name: trimmedName,
+        previewImageUrl: selectedUrl,
+      });
+      toast.success(`Sent to public scene library as draft · "${recipe.name}"`);
+      setPhase("picking");
+    } catch (e) {
+      setPhase("picking");
+      toast.error(e instanceof Error ? e.message : "Could not save to public scenes");
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -448,7 +470,7 @@ export function Step6PreviewAndPick({
       )}
 
 
-      {(phase === "picking" || phase === "saving") && variations.length > 0 && (
+      {(phase === "picking" || phase === "saving" || phase === "saving-public") && variations.length > 0 && (
         <div className="space-y-5">
           <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
             <div>
@@ -486,7 +508,7 @@ export function Step6PreviewAndPick({
               <Button
                 size="pill"
                 onClick={handleSave}
-                disabled={!selectedUrl || phase === "saving"}
+                disabled={!selectedUrl || phase === "saving" || phase === "saving-public"}
                 className="gap-2 w-full sm:w-auto"
               >
                 {phase === "saving" ? (
@@ -501,6 +523,25 @@ export function Step6PreviewAndPick({
                   </>
                 )}
               </Button>
+              {isAdmin && (
+                <Button
+                  size="pill"
+                  variant="outline"
+                  onClick={handleSaveAsPublic}
+                  disabled={!selectedUrl || phase === "saving" || phase === "saving-public"}
+                  className="gap-2 w-full sm:w-auto"
+                  title="Admin only — sends to public scene library as draft"
+                >
+                  {phase === "saving-public" ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving
+                    </>
+                  ) : (
+                    <>Save to Public Scenes</>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -513,7 +554,7 @@ export function Step6PreviewAndPick({
 
 
       {/* Full structured summary — only shown outside the picking/saving phases */}
-      {phase !== "picking" && phase !== "saving" && (
+      {phase !== "picking" && phase !== "saving" && phase !== "saving-public" && (
         <Step5Review answers={answers} onNegativeNoteChange={onNegativeNoteChange} />
       )}
 
