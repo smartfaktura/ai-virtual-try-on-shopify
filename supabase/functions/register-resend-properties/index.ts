@@ -14,6 +14,17 @@ const PROPERTIES: PropDef[] = [
   { key: "product_categories", type: "string", fallback_value: "" },
   { key: "signup_date", type: "string", fallback_value: "" },
   { key: "credits_balance", type: "number", fallback_value: 0 },
+  // Lifecycle bundle
+  { key: "lifecycle_stage", type: "string", fallback_value: "lead" },
+  { key: "subscription_status", type: "string", fallback_value: "" },
+  { key: "subscription_renews_at", type: "string", fallback_value: "" },
+  // Activity bundle
+  { key: "last_active_at", type: "string", fallback_value: "" },
+  { key: "last_generated_at", type: "string", fallback_value: "" },
+  { key: "total_generations", type: "number", fallback_value: 0 },
+  // Acquisition bundle
+  { key: "primary_category", type: "string", fallback_value: "" },
+  { key: "referral_source", type: "string", fallback_value: "" },
 ];
 
 /**
@@ -35,8 +46,9 @@ Deno.serve(async (req) => {
   const results: Array<Record<string, unknown>> = [];
 
   for (const prop of PROPERTIES) {
+    // Resend rate limit: 5 req/sec — stay under by spacing 250ms apart.
+    await new Promise((r) => setTimeout(r, 250));
     try {
-      const res = await fetch(`${RESEND_API}/contact-properties`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${RESEND_API_KEY}`,
