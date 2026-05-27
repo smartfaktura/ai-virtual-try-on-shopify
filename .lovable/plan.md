@@ -1,35 +1,21 @@
 ## Problem
 
-The new "Indoor Portrait" scene was saved successfully to `product_image_scenes` (verified in DB: `supplements-wellness → Editorial Wellness Routine`, active, owner_user_id=NULL). The reason it doesn't show in `/app/generate/product-images` is **stale React Query cache**.
+New users in the last 2 hours show low real balances (2, 4, 8) because they actually start with **20 free credits** (set by `handle_new_user` trigger + `Auth.tsx` fallback, both = 20). Resend, however, shows **60 credits** for every new contact.
 
-`useProductImageScenes` uses `staleTime: 5 * 60_000` on three query keys (`product-image-scenes`, `…-priority`, `…-rest`). `SaveToPublicScenesDialog` calls the edge function, shows a toast, closes — but never invalidates those keys. So the picker continues to render the previously cached list until the user hard-reloads or 5 minutes elapse.
+Root cause: `src/pages/Onboarding.tsx` line 137 sends a hardcoded `credits_balance: 60` in the `sync-resend-contact` payload. The `sync-resend-contact` function prefers `incomingProps.credits_balance` over the actual DB value, so Resend gets 60 even though the profile holds 20.
 
-## Fix (single small change)
+Every recent `resend_event_log` row confirms this — `credits_balance: 60` on `contact.sync` and `contact.property_sync` for every new signup.
 
-**`src/features/brand-scenes/wizard/components/SaveToPublicScenesDialog.tsx`** — after `saveBrandSceneAsPublicScene` resolves successfully, invalidate the three scene query keys so any open product-images wizard refetches on next focus / render.
+## Fix (1 line)
 
-- Import `useQueryClient` from `@tanstack/react-query`.
-- Inside `handleSubmit`, on success and before the toast, call:
-  - `queryClient.invalidateQueries({ queryKey: ['product-image-scenes'] })`
-  - `queryClient.invalidateQueries({ queryKey: ['product-image-scenes-priority'] })`
-  - `queryClient.invalidateQueries({ queryKey: ['product-image-scenes-rest'] })`
-- Also invalidate `['public-scene-buckets']` so the dialog's own category/sub-category dropdowns pick up the newly created sub-category on the next open.
+In `src/pages/Onboarding.tsx`, remove the hardcoded `credits_balance: 60` from the `sync-resend-contact` invoke payload. The edge function will fall back to `profile?.credits_balance` from the DB (the real 20), which keeps Resend in sync as users spend credits.
 
-That's the entire change. Pure client-side, no schema/RLS/edge changes.
+## Optional follow-up (separate, ask first)
 
-## Why nothing else needs changing
-
-- The Vanity Nook dedupe + stable sort + admin payload fix from the previous turn are still in place and unrelated.
-- The scene already saves with correct `category_collection`, `sub_category`, `is_active=true`, `owner_user_id=NULL`, `trigger_blocks`, `description`, `use_scene_reference=true` — verified.
-- RLS `Auth read scenes` policy permits it for any authenticated user.
-
-## Verification after build
-
-1. Open Brand Scene wizard, save a test scene to public scenes under any existing sub-category.
-2. Without reloading, navigate to `/app/generate/product-images` and open that category — the new scene should appear immediately.
-3. Re-open `SaveToPublicScenesDialog` — the sub-category dropdown should include any new sub-category created in step 1.
+Backfill the 4 recent contacts in Resend with their true balance via the existing `resync-resend-audience` admin button on the Email Marketing page — no code change required, just one click.
 
 ## Out of scope
 
-- No backfill needed; the Indoor Portrait scene will appear as soon as the user hard-reloads `/app/generate/product-images` once.
-- No changes to the edge function, RLS, schema, or admin scene admin page.
+- No DB migration
+- No change to `handle_new_user`, `Auth.tsx`, or any credit-granting logic
+- No change to `sync-resend-contact` (its fallback behavior is correct)
