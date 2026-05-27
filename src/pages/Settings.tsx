@@ -172,22 +172,28 @@ function ContentPreferencesSection() {
   };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h3 className="text-base font-semibold">Content Preferences</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Select categories that match your products. This helps tailor your dashboard experience.
+    <div>
+      <div className="space-y-3">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+          Preferences
+        </p>
+        <h3 className="text-2xl font-semibold tracking-tight leading-none">Content preferences</h3>
+        <p className="text-sm text-muted-foreground">
+          Select categories that match your products — this tailors your dashboard experience
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+
+      <div className="my-7 border-t border-border/60" />
+
+      <div className="grid grid-cols-2 gap-3">
         {PRODUCT_CATEGORIES.map(({ id, label }) => (
-          <div key={id} className="flex items-center space-x-2">
+          <div key={id} className="flex items-center gap-3">
             <Checkbox
               id={`pref-${id}`}
               checked={cats.includes(id)}
               onCheckedChange={() => toggle(id)}
             />
-            <Label htmlFor={`pref-${id}`} className="text-sm cursor-pointer">
+            <Label htmlFor={`pref-${id}`} className="text-sm font-medium cursor-pointer">
               {label}
             </Label>
           </div>
@@ -195,60 +201,67 @@ function ContentPreferencesSection() {
       </div>
 
       {multiSubFamilies.length > 0 && (
-        <div className="space-y-3 pt-2 border-t border-border">
-          <div>
-            <h4 className="text-sm font-semibold">Specific product types</h4>
-            <p className="text-xs text-muted-foreground">
-              Optional — pick the precise types you work with for sharper recommendations
-            </p>
-          </div>
+        <>
+          <div className="my-7 border-t border-border/60" />
           <div className="space-y-4">
-            {multiSubFamilies.map((fam) => {
-              const types = SUB_TYPES_BY_FAMILY[fam] ?? [];
-              return (
-                <div key={fam} className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-muted-foreground">
-                      {fam}
-                    </span>
-                    <div className="flex-1 h-px bg-border" />
+            <div className="space-y-1.5">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+                Specific product types
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Optional — pick the precise types you work with for sharper recommendations
+              </p>
+            </div>
+            <div className="space-y-5">
+              {multiSubFamilies.map((fam) => {
+                const types = SUB_TYPES_BY_FAMILY[fam] ?? [];
+                return (
+                  <div key={fam} className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-muted-foreground">
+                        {fam}
+                      </span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {types.map(({ slug, label }) => {
+                        const isSelected = subs.includes(slug);
+                        return (
+                          <button
+                            key={slug}
+                            type="button"
+                            onClick={() => toggleSub(slug)}
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[13px] font-medium transition-all ${
+                              isSelected
+                                ? 'border-primary bg-primary/5 text-foreground'
+                                : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-primary" />}
+                            <span>{label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {types.map(({ slug, label }) => {
-                      const isSelected = subs.includes(slug);
-                      return (
-                        <button
-                          key={slug}
-                          type="button"
-                          onClick={() => toggleSub(slug)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                            isSelected
-                              ? 'border-primary bg-primary/5 text-foreground'
-                              : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3 text-primary" />}
-                          <span>{label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
-      <div className="flex items-center gap-3">
-        <Button size="pill" onClick={handleSave} disabled={saving}>
+      <div className="my-7 border-t border-border/60" />
+
+      <div className="flex items-center gap-4 flex-wrap">
+        <Button className="h-11 rounded-xl px-6" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : 'Save preferences'}
         </Button>
         <button
           onClick={() => { setCats(original.cats); setSubs(original.subs); }}
-          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
         >
-          <RotateCcw className="w-3 h-3" />
+          <RotateCcw className="w-3.5 h-3.5" />
           Reset to onboarding selection
         </button>
       </div>
