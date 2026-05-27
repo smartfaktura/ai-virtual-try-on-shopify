@@ -67,12 +67,12 @@ export function BrandModelsInfoModal({ open, onOpenChange }: Props) {
 
         {/* Title */}
         <DialogTitle className="text-2xl font-bold tracking-tight text-foreground mt-1.5 text-center">
-          Your brand's own model lineup
+          Create your brand’s own AI models
         </DialogTitle>
 
         {/* Subtitle */}
         <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
-          Build one with the guided wizard or from your own reference image — reuse across every visual you create.
+          Build unique models from a simple wizard or your own model photos — then reuse them across every shoot.
         </DialogDescription>
 
         {/* Feature list */}
@@ -112,7 +112,7 @@ export function BrandModelsInfoModal({ open, onOpenChange }: Props) {
 
         {!canCreate && (
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Included on Growth and above
+            Included on Growth, Pro, and higher plans.
           </p>
         )}
       </DialogContent>

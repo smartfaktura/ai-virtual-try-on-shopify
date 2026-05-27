@@ -109,7 +109,7 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
 
         {!canCreate && (
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Included on Growth and above
+            Included on Growth, Pro, and higher plans.
           </p>
         )}
       </DialogContent>
