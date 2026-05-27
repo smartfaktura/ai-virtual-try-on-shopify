@@ -25,6 +25,7 @@ import { BrandSceneVariationGrid } from "../components/BrandSceneVariationGrid";
 import {
   generateBrandScene,
   saveBrandScene,
+  saveBrandSceneAsPublicRecipe,
   BrandSceneApiError,
   type GeneratedVariation,
 } from "../../api/brandSceneApi";
