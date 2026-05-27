@@ -134,7 +134,7 @@ export default function Onboarding() {
         opted_in: marketingOptIn,
         properties: {
           plan: 'free',
-          credits_balance: 60,
+          // credits_balance intentionally omitted — sync-resend-contact reads it from the DB profile (20 for free signups)
           has_generated: false,
           signup_date: user.created_at || new Date().toISOString(),
           // Legacy keys (kept for backwards compat with existing Resend rules)
