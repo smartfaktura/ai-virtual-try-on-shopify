@@ -7,7 +7,14 @@ const corsHeaders = {
 
 const RESEND_API = "https://api.resend.com";
 
-const NUMERIC_PROP_KEYS = new Set(["credits_balance"]);
+const NUMERIC_PROP_KEYS = new Set(["credits_balance", "total_generations"]);
+
+function resolveLifecycleStage(plan?: string | null, subStatus?: string | null): string {
+  if (subStatus === "active") return "paid";
+  if (subStatus === "canceled" || subStatus === "past_due") return "churned";
+  if (!plan || plan === "free") return "lead";
+  return "trial";
+}
 
 function toPropString(v: unknown): string | undefined {
   if (v === null || v === undefined) return undefined;
@@ -32,8 +39,9 @@ function buildProperties(input: Record<string, unknown>): Record<string, string 
 }
 
 /**
- * Admin-only: bulk push all opted-in profiles to the Resend audience.
- * Hydrates names AND custom properties (plan, product_categories, signup_date, credits_balance).
+ * Admin-only: bulk push opted-in profiles to the Resend audience.
+ * Chunked (offset/limit query params) + parallel batches of 10 to fit edge function timeout.
+ * Hydrates names AND 12 custom properties.
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -65,28 +73,87 @@ Deno.serve(async (req) => {
     });
     if (!roleOk) return json({ error: "Admin only" }, 403);
 
+    const url = new URL(req.url);
+    const offset = Math.max(0, parseInt(url.searchParams.get("offset") || "0", 10));
+    const limit = Math.min(500, Math.max(1, parseInt(url.searchParams.get("limit") || "300", 10)));
+
+    // Count total for has_more reporting
+    const { count: totalOptedIn } = await admin
+      .from("profiles")
+      .select("user_id", { count: "exact", head: true })
+      .eq("marketing_emails_opted_in", true);
+
     const { data: profiles, error: pErr } = await admin
       .from("profiles")
-      .select("user_id, email, first_name, last_name, display_name, plan, product_categories, credits_balance, created_at")
-      .eq("marketing_emails_opted_in", true);
+      .select(
+        "user_id, email, first_name, last_name, display_name, plan, product_categories, credits_balance, created_at, updated_at, subscription_status, current_period_end, referral_source",
+      )
+      .eq("marketing_emails_opted_in", true)
+      .order("created_at", { ascending: true })
+      .range(offset, offset + limit - 1);
     if (pErr) throw pErr;
+
+    const rows = profiles ?? [];
+    const userIds = rows.map((r) => r.user_id).filter(Boolean) as string[];
+
+    // One bulk aggregate for activity metrics — no N+1.
+    const aggregates = new Map<string, { last_generated_at?: string; total_generations: number }>();
+    if (userIds.length > 0) {
+      const [jobsRes, freestyleRes] = await Promise.all([
+        admin
+          .from("generation_jobs")
+          .select("user_id, created_at")
+          .eq("status", "completed")
+          .in("user_id", userIds),
+        admin
+          .from("freestyle_generations")
+          .select("user_id, created_at")
+          .in("user_id", userIds),
+      ]);
+      const ingest = (rows: any[] | null) => {
+        for (const r of rows ?? []) {
+          const uid = r.user_id as string;
+          const cur = aggregates.get(uid) ?? { total_generations: 0 };
+          cur.total_generations += 1;
+          if (!cur.last_generated_at || r.created_at > cur.last_generated_at) {
+            cur.last_generated_at = r.created_at;
+          }
+          aggregates.set(uid, cur);
+        }
+      };
+      ingest(jobsRes.data);
+      ingest(freestyleRes.data);
+    }
 
     let added = 0;
     let updated = 0;
     let failed = 0;
 
-    for (const p of profiles ?? []) {
+    const processOne = async (p: any) => {
       const email = String(p.email || "").toLowerCase().trim();
-      if (!email) { failed++; continue; }
+      if (!email) { failed++; return; }
 
       const firstName = p.first_name || p.display_name || email.split("@")[0] || null;
       const lastName = p.last_name || null;
+      const agg = aggregates.get(p.user_id);
+      const primaryCategory =
+        Array.isArray(p.product_categories) && p.product_categories.length > 0
+          ? p.product_categories[0]
+          : undefined;
 
       const properties = buildProperties({
         plan: p.plan,
         product_categories: p.product_categories,
         signup_date: p.created_at ? new Date(p.created_at).toISOString() : undefined,
         credits_balance: p.credits_balance,
+        lifecycle_stage: resolveLifecycleStage(p.plan, p.subscription_status),
+        subscription_status: p.subscription_status,
+        subscription_renews_at: p.current_period_end ? new Date(p.current_period_end).toISOString() : undefined,
+        last_active_at: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
+        last_generated_at: agg?.last_generated_at,
+        total_generations: agg?.total_generations ?? 0,
+        primary_category: primaryCategory,
+        referral_source: p.referral_source,
       });
 
       const payload: Record<string, unknown> = {
@@ -106,40 +173,76 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (res.ok) {
         added++;
-      } else {
-        // Any non-OK response: try PATCH (covers 409, 422, and other "exists" responses)
-        const patchPayload: Record<string, unknown> = {
-          first_name: firstName ?? undefined,
-          last_name: lastName ?? undefined,
-          unsubscribed: false,
-        };
-        if (Object.keys(properties).length > 0) patchPayload.properties = properties;
-
-        const patchRes = await fetch(
-          `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
-          {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${RESEND_API_KEY}`,
-              "Content-Type": "application/json",
+        // POST silently ignores properties — follow up with PATCH to persist them.
+        if (Object.keys(properties).length > 0) {
+          await fetch(
+            `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bearer ${RESEND_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ properties }),
             },
-            body: JSON.stringify(patchPayload),
-          }
-        );
-        if (patchRes.ok) updated++;
-        else {
-          failed++;
-          console.error(`Failed for ${email}: POST ${res.status} / PATCH ${patchRes.status}`);
+          );
         }
+        return;
       }
+
+      const patchPayload: Record<string, unknown> = {
+        first_name: firstName ?? undefined,
+        last_name: lastName ?? undefined,
+        unsubscribed: false,
+      };
+      if (Object.keys(properties).length > 0) patchPayload.properties = properties;
+
+      const patchRes = await fetch(
+        `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(patchPayload),
+        },
+      );
+      if (patchRes.ok) updated++;
+      else {
+        failed++;
+        console.error(`Failed for ${email}: POST ${res.status} / PATCH ${patchRes.status}`);
+      }
+    };
+
+    // Parallel batches of 10
+    const BATCH = 10;
+    for (let i = 0; i < rows.length; i += BATCH) {
+      const slice = rows.slice(i, i + BATCH);
+      await Promise.allSettled(slice.map(processOne));
     }
 
-    return json({ ok: true, total: profiles?.length ?? 0, added, updated, failed });
+    const processed = rows.length;
+    const nextOffset = offset + processed;
+    const hasMore = (totalOptedIn ?? 0) > nextOffset;
+
+    return json({
+      ok: true,
+      processed_from: offset,
+      processed_to: nextOffset,
+      processed,
+      total_opted_in: totalOptedIn ?? 0,
+      added,
+      updated,
+      failed,
+      has_more: hasMore,
+      next_offset: hasMore ? nextOffset : null,
+    });
   } catch (e) {
     console.error("[resync-resend-audience]", e);
     return json({ error: (e as Error).message }, 500);
