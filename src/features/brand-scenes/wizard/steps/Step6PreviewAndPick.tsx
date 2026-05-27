@@ -470,7 +470,7 @@ export function Step6PreviewAndPick({
       )}
 
 
-      {(phase === "picking" || phase === "saving") && variations.length > 0 && (
+      {(phase === "picking" || phase === "saving" || phase === "saving-public") && variations.length > 0 && (
         <div className="space-y-5">
           <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-5">
             <div>
