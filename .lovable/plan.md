@@ -1,23 +1,23 @@
-## Fix Settings → Choose Your Plan mobile layout
+## Mobile polish + shorter headline for `brand-scenes-newsletter.html`
 
-Scope: `src/pages/Settings.tsx` header + `src/components/app/PlanCard.tsx` compact mode on mobile.
+### Headline
+Replace "Two new ways to shoot your brand — without shooting" with **"Shoot your brand — without shooting"** (hero H1).
 
-### Changes
+### Mobile CSS (≤620px @media block)
+- Reduce card inner padding: `.px` → `padding:0 18px !important` plus add `.cardpad{ padding:28px 22px 30px 22px !important; }` and apply to hero/section/CTA inner cells.
+- Hero H1: `font-size:30px !important; letter-spacing:-.6px !important;` (smaller than current 34px override).
+- Section H2 (`.h2`): add class, scale to `22px !important`.
+- Upgrade H2 (`.h2dark`): scale to `24px !important`.
+- Body copy `.body` class → `font-size:14px !important`.
+- Brand Models grid: keep 4-up but tighten — switch `.grid4 .pair` to 2-per-row (`width:48% !important; padding:0 4px 8px 4px !important;`) so faces stay readable.
+- Brand Scenes grid: stays 3-up but reduce gutter via overriding td padding to `2px`.
+- Footer columns already stack via `.fcol`. Add `text-align:left` + margin reset.
+- Outer wrapper padding `28px 12px` → `16px 0` on mobile to use full width.
+- Hero CTA + section CTAs: add `.btn` class, on mobile `display:block !important; text-align:center; width:100%; box-sizing:border-box;`.
+- Footer top row (wordmark + tagline) stacks on mobile (`.fhead td{ display:block !important; width:100% !important; text-align:left !important; padding-bottom:6px;}`).
+- Footer bottom row (copyright + view/unsub) also stacks left-aligned on mobile.
 
-1. **Header row (Settings.tsx ~L527-546)** — stack on mobile, inline on desktop:
-   - Wrap container: `flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`
-   - Billing toggle moves to its own row on mobile; shorten label to `Annual · Save 20%` (single line) so the pill doesn't wrap.
-   - Make toggle `self-start` on mobile.
+### Class additions in markup
+Tag the relevant `<td>`/`<h1>`/`<h2>`/`<p>`/`<a>` with the new classes (`cardpad`, `h2`, `h2dark`, `body`, `btn`, `fhead`) without changing desktop styles.
 
-2. **PlanCard compact on mobile** — pass `compact` prop on mobile to shrink cards:
-   - In Settings, set `compact={true}` for the grid (already works fine on desktop too, but to keep desktop unchanged we can keep compact off ≥sm). Simplest: always `compact` — reduces vertical bulk uniformly.
-   - Reduce credits box padding on mobile inside PlanCard (`py-2` mobile / `py-3` sm+).
-   - Tighten feature spacing on mobile (`space-y-1.5`).
-   - Smaller price on mobile when compact (`text-2xl` → already compact handles).
-
-3. **Card sizing** — current grid is `grid-cols-1` on mobile (full width, very tall). Cards look "too long" because of generous paddings + spacing. Tighten:
-   - Card content padding mobile: `p-4` instead of `p-5 sm:p-6`.
-   - Feature list: use `text-xs` on mobile.
-   - Reduce `space-y-5` → `space-y-3` on mobile.
-
-No behavior/business-logic changes — pure layout/presentation.
+No content rewrites besides the headline.
