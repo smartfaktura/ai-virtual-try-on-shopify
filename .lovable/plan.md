@@ -1,37 +1,59 @@
-## Refine the "Current Plan" panel on /app/settings
+## Match the rest of /app/settings to the new "Current Plan" card
 
-The card today crams 5 different type sizes, 2 badges, a thin link, a hairline credits row and a 2-button grid into ~220px. The goal is a calmer, more VOVV editorial block.
+Apply the same calm, banded, generous-padding design language (eyebrow → display → divider → action) to every other section on Settings.tsx. Visual only — no logic, no copy-meaning changes, no removed controls.
 
-### Layout & spacing
-- Increase card padding to `p-7 sm:p-9` and switch to a vertical rhythm of `space-y-6` (instead of `space-y-3`).
-- Split the card into 3 clear bands with subtle dividers (`border-border/60`):
-  1. Plan identity
-  2. Credits usage
-  3. Billing actions
+### Shared card recipe (now the page standard)
+- Container: `rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm`
+- Eyebrow label: `text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium`
+- Section title: `text-2xl font-semibold tracking-tight leading-none`
+- Subtitle: `text-sm text-muted-foreground` (no terminal period on single-sentence subtitles, per Core memory)
+- Band dividers inside a card: `my-7 border-t border-border/60` (replaces inline `<Separator />` usage inside cards)
+- Buttons: `h-11 rounded-xl` with `w-4 h-4 mr-2` icons (primary filled, secondary `variant="secondary"`)
+- Only 3 type sizes per card: 11px eyebrow, 14px body, 24px display
 
-### Band 1 — Plan identity
-- Eyebrow: `text-[11px] uppercase tracking-[0.18em] text-muted-foreground` → "Current plan".
-- Display row: plan name as `text-2xl font-semibold tracking-tight` (e.g. "Pro"), with billing interval as a small pill to the right.
-- Beneath: a single quiet line `text-sm text-muted-foreground` → `$179/mo · Renews May 27, 2026`.
-- Move "Switch to annual & save 20%" to a right-aligned text link on the same baseline as the price line (no longer a stranded mini link).
-- Drop the inline `Pro` badge next to the H3 (redundant with the large plan name).
+### Sections to restyle
 
-### Band 2 — Credits usage (the "tiny line" fix)
-- Label row: "Credits used this cycle" (left, `text-sm text-muted-foreground`) + large numeric `text-2xl font-semibold tabular-nums` on the right (e.g. `4,816 / 4,500`).
-- Replace the 6px progress bar with a `h-2.5 rounded-full` bar using `bg-muted` track and `bg-foreground` fill, plus a subtle 1px inner border for depth.
-- Add a helper line under the bar: `text-xs text-muted-foreground` → e.g. `Resets in 12 days · Top up anytime`.
+1. **"Choose Your Plan" header row** (560–579)
+   - Replace `text-base` h3 + tiny subtitle with: eyebrow "Plans" + `text-2xl` "Choose your plan" + `text-sm` subtitle "Built for ongoing brand-ready visual production"
+   - Keep the monthly/annual pill toggle; align it to bottom-right of the header block
 
-### Band 3 — Billing actions
-- Keep the 2-button grid but increase to `h-11`, `gap-3`, and use `rounded-xl` instead of pill so it matches the card's calmer geometry.
-- Primary: "Top up credits" (filled). Secondary: "Manage billing & invoices" (outline/secondary). Same icons, slightly larger (`w-4 h-4`).
+2. **Plan grid** (581–595)
+   - Keep grid + PlanCard usage untouched (out of scope per "do not change functions")
+   - Bump gap to `gap-5 sm:gap-6`
 
-### Typography cleanup
-- Only 3 type sizes in the card: eyebrow (11px), body (14px), display (24px). No more 10px badge + 12px link + 14px body + 16px h3 mix.
-- All numerics use `tabular-nums`.
-- Remove terminal periods on single-sentence subtitles per Core memory.
+3. **Enterprise banner** (598–624)
+   - Apply shared recipe padding `p-7 sm:p-9`
+   - Eyebrow "Enterprise" + `text-2xl` plan name + `text-sm` subtitle
+   - Feature checks: same grid, restyled as `text-sm text-muted-foreground` with `Check w-3.5 h-3.5 text-foreground`
+   - "Contact Sales" → `h-11 rounded-xl`
+
+4. **Need More Credits? (credit packs)** (627–637)
+   - Container padding to `p-7 sm:p-9`
+   - Eyebrow "Top-up" + `text-2xl` "Need more credits" + `text-sm` "Purchase additional credits anytime · Credits never expire"
+   - Insert `my-7 border-t border-border/60` divider between header and pack grid
+
+5. **Cancel / Reactivate footer** (640–670)
+   - Keep centered link but bump to `text-sm` and tighten copy spacing; no card chrome change
+
+6. **Notifications card** (675–729)
+   - Apply shared recipe padding
+   - Replace inline h2 + h3s with: eyebrow "Notifications" + `text-2xl` "Notifications" + `text-sm` subtitle
+   - Each sub-group (Email / Marketing / In-app) becomes a band separated by `my-7 border-t border-border/60` instead of `<Separator />`
+   - Sub-group label keeps its `text-[11px] uppercase tracking-[0.2em]` style (already matches eyebrow spec)
+   - Checkbox rows: tighten to `gap-3`, label `text-sm font-medium`, help `text-xs text-muted-foreground mt-0.5`
+   - Save button → `h-11 rounded-xl`
+
+7. **Content Preferences card** (732–734)
+   - Container padding to `p-7 sm:p-9`
+   - No edits to `ContentPreferencesSection.tsx` contents (out of scope)
+
+8. **Page-level `<Separator />` between sections** (672, 740)
+   - Replace with simple `mt-4` spacing — cards already self-separate via their borders
 
 ### Files
-- `src/pages/Settings.tsx` lines 460–524 only. No business logic changes — same data sources (`planConfig`, `balance`, `creditsTotal`, `currentPeriodEnd`, `handlePortal`, `openBuyModal`).
+- `src/pages/Settings.tsx` — only the JSX between the closing of the Current Plan band (≈558) and the end of the page wrapper
 
-### Out of scope
-- "Choose Your Plan" grid below, sidebar, mobile-specific changes from earlier brand-scenes work.
+### Out of scope (do not touch)
+- `PlanCard.tsx`, `CreditPackCard`, `ContentPreferencesSection`, `AdminFeedbackPanel`, `FeedbackBanner`
+- Any business logic, state, copy meaning, or button behavior
+- Sidebar, page header, dialogs

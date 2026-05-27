@@ -557,10 +557,13 @@ export default function Settings() {
         })()}
 
         {/* ─── Choose Your Plan ─── */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-semibold">Choose Your Plan</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+              Plans
+            </p>
+            <h3 className="text-2xl font-semibold tracking-tight leading-none">Choose your plan</h3>
+            <p className="text-sm text-muted-foreground">Built for ongoing brand-ready visual production</p>
           </div>
           <div className="inline-flex self-start sm:self-auto rounded-full border border-border bg-card p-1 shadow-sm">
             <button
@@ -578,7 +581,7 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
           {mainPlans.map(p => (
             <PlanCard
               key={p.planId}
@@ -596,27 +599,25 @@ export default function Settings() {
 
         {/* Enterprise banner */}
         {enterprisePlan && (
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="rounded-xl bg-primary/10 p-3">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">{enterprisePlan.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Need custom volume? Get unlimited visuals, dedicated support, and custom integrations.
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
-                    {enterprisePlan.features.slice(0, 4).map((f, i) => (
-                      <span key={i} className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Check className="w-3.5 h-3.5 text-primary" /> {typeof f === 'string' ? f : f.text}
-                      </span>
-                    ))}
-                  </div>
+          <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="space-y-3 flex-1">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+                  Enterprise
+                </p>
+                <h3 className="text-2xl font-semibold tracking-tight leading-none">{enterprisePlan.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Need custom volume? Get unlimited visuals, dedicated support, and custom integrations.
+                </p>
+                <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
+                  {enterprisePlan.features.slice(0, 4).map((f, i) => (
+                    <span key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Check className="w-3.5 h-3.5 text-foreground" /> {typeof f === 'string' ? f : f.text}
+                    </span>
+                  ))}
                 </div>
               </div>
-              <Button size="pill" onClick={() => window.location.href = 'mailto:hello@vovv.ai?subject=Enterprise%20Plan%20Inquiry'} className="shrink-0">
+              <Button className="h-11 rounded-xl shrink-0 px-6" onClick={() => window.location.href = 'mailto:hello@vovv.ai?subject=Enterprise%20Plan%20Inquiry'}>
                 Contact Sales
               </Button>
             </div>
@@ -624,11 +625,15 @@ export default function Settings() {
         )}
 
         {/* Credit packs */}
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-4">
-          <div>
-            <h3 className="text-base font-semibold">Need More Credits?</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">Purchase additional credits anytime • Credits never expire</p>
+        <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
+          <div className="space-y-3">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+              Top-up
+            </p>
+            <h3 className="text-2xl font-semibold tracking-tight leading-none">Need more credits</h3>
+            <p className="text-sm text-muted-foreground">Purchase additional credits anytime · Credits never expire</p>
           </div>
+          <div className="my-7 border-t border-border/60" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {creditPacks.map(pack => (
               <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} isLoading={topUpLoadingId === pack.packId} disabled={!!topUpLoadingId} />
@@ -640,7 +645,7 @@ export default function Settings() {
         {plan !== 'free' && subscriptionStatus !== 'canceling' && (
           <div className="text-center">
             <button
-              className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+              className="text-sm text-muted-foreground hover:text-destructive transition-colors underline underline-offset-4"
               onClick={() => {
                 setDialogMode('cancel');
                 setSelectedPlan(null);
@@ -653,10 +658,10 @@ export default function Settings() {
         )}
         {plan !== 'free' && subscriptionStatus === 'canceling' && (
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Your subscription will end at the end of your billing period.{' '}
               <button
-                className="text-primary hover:underline underline-offset-2"
+                className="text-primary hover:underline underline-offset-4"
                 onClick={() => {
                   setDialogMode('reactivate');
                   setSelectedPlan(null);
@@ -669,77 +674,87 @@ export default function Settings() {
           </div>
         )}
 
-        <Separator />
-
         {/* ─── Notifications ─── */}
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm space-y-5">
-          <div>
-            <h2 className="text-base font-semibold">Notifications</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">Manage how you receive updates</p>
-          </div>
+        <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
           <div className="space-y-3">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Email Notifications</h3>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+              Notifications
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight leading-none">Notifications</h2>
+            <p className="text-sm text-muted-foreground">Manage how you receive updates</p>
+          </div>
+
+          <div className="my-7 border-t border-border/60" />
+
+          <div className="space-y-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Email notifications</h3>
             {([
               { key: 'emailOnComplete' as const, label: 'Generation complete', help: 'Receive email when image generation finishes' },
               { key: 'emailOnFailed' as const, label: 'Generation failed', help: 'Receive email if generation encounters an error' },
               { key: 'emailLowCredits' as const, label: 'Low credits warning', help: "Get notified when credits drop below 10%" },
             ] as const).map(n => (
-              <div key={n.key} className="flex items-start space-x-2">
-                <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} />
-                <div>
-                  <Label htmlFor={n.key}>{n.label}</Label>
+              <div key={n.key} className="flex items-start gap-3">
+                <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <Label htmlFor={n.key} className="text-sm font-medium">{n.label}</Label>
                   <p className="text-xs text-muted-foreground">{n.help}</p>
                 </div>
               </div>
             ))}
           </div>
-          <Separator />
-          <div className="space-y-3">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Marketing & Promotions</h3>
-            <div className="flex items-start space-x-2">
-              <Checkbox id="marketingOptIn" checked={marketingOptIn} onCheckedChange={v => setMarketingOptIn(!!v)} />
-              <div>
-                <Label htmlFor="marketingOptIn">News, tips & special offers</Label>
+
+          <div className="my-7 border-t border-border/60" />
+
+          <div className="space-y-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Marketing & promotions</h3>
+            <div className="flex items-start gap-3">
+              <Checkbox id="marketingOptIn" checked={marketingOptIn} onCheckedChange={v => setMarketingOptIn(!!v)} className="mt-0.5" />
+              <div className="space-y-0.5">
+                <Label htmlFor="marketingOptIn" className="text-sm font-medium">News, tips & special offers</Label>
                 <p className="text-xs text-muted-foreground">Receive product updates, tips, and occasional promotions via email</p>
               </div>
             </div>
           </div>
-          <Separator />
-          <div className="space-y-3">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">In-App Notifications</h3>
+
+          <div className="my-7 border-t border-border/60" />
+
+          <div className="space-y-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">In-app notifications</h3>
             {([
               { key: 'inAppComplete' as const, label: 'Show generation complete' },
               { key: 'inAppFailed' as const, label: 'Show generation errors' },
               { key: 'inAppTips' as const, label: 'Show tips and suggestions', help: 'Occasional tips to improve your generations' },
             ] as const).map(n => (
-              <div key={n.key} className="flex items-start space-x-2">
-                <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} />
-                <div>
-                  <Label htmlFor={n.key}>{n.label}</Label>
+              <div key={n.key} className="flex items-start gap-3">
+                <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <Label htmlFor={n.key} className="text-sm font-medium">{n.label}</Label>
                   {'help' in n && n.help && <p className="text-xs text-muted-foreground">{n.help}</p>}
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex pt-2">
-            <Button size="pill" onClick={handleSave} disabled={isSaving}>
+
+          <div className="my-7 border-t border-border/60" />
+
+          <div className="flex">
+            <Button className="h-11 rounded-xl px-6" onClick={handleSave} disabled={isSaving}>
               {isSaving ? 'Saving…' : 'Save preferences'}
             </Button>
           </div>
         </div>
 
         {/* Content Preferences — own card */}
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
           <ContentPreferencesSection />
         </div>
 
 
         {/* Admin: User Feedback */}
         {isAdmin && (
-          <>
-            <Separator />
+          <div className="mt-4">
             <AdminFeedbackPanel />
-          </>
+          </div>
         )}
 
             {/* Feedback Banner */}
