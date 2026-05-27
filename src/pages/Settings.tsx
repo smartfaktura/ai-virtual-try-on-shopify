@@ -174,8 +174,8 @@ function ContentPreferencesSection() {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-semibold">Content Preferences</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-base font-semibold">Content Preferences</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Select categories that match your products. This helps tailor your dashboard experience.
         </p>
       </div>
@@ -527,7 +527,7 @@ export default function Settings() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-semibold">Choose Your Plan</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Built for ongoing brand-ready visual production</p>
           </div>
           <div className="inline-flex self-start sm:self-auto rounded-full border border-border bg-card p-1 shadow-sm">
             <button
