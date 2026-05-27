@@ -76,6 +76,39 @@ Deno.serve(async (req) => {
       eventResp = { error: String(e) };
     }
 
+    // ---- Property-trigger fallback ---------------------------------------------
+    // Resend's most reliable automation trigger is "contact property changed".
+    // We mirror every event onto two contact properties so users can build
+    // automations like: "when last_event becomes 'subscription.started' → send X".
+    // Runs after /events/send and is best-effort: failures don't break the call.
+    const RESEND_AUDIENCE_ID = Deno.env.get("RESEND_AUDIENCE_ID");
+    let propertySyncStatus: "ok" | "failed" | "skipped" = "skipped";
+    if (RESEND_AUDIENCE_ID) {
+      try {
+        const propRes = await fetch(
+          `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
+          {
+            method: "PATCH",
+            headers: auth,
+            body: JSON.stringify({
+              properties: {
+                last_event: event,
+                last_event_at: new Date().toISOString(),
+              },
+            }),
+          },
+        );
+        propertySyncStatus = propRes.ok ? "ok" : "failed";
+        if (!propRes.ok) {
+          const txt = await propRes.text().catch(() => "");
+          console.warn(`[track-resend-event] property PATCH ${propRes.status}: ${txt.slice(0, 200)}`);
+        }
+      } catch (propErr) {
+        propertySyncStatus = "failed";
+        console.warn("[track-resend-event] property PATCH threw", propErr);
+      }
+    }
+
     // Step C: log everything for debugging
     try {
       await admin.from("resend_event_log").insert({
@@ -85,6 +118,7 @@ Deno.serve(async (req) => {
         payload: {
           attributes: body.attributes ?? null,
           event_status: eventStatus,
+          property_sync: propertySyncStatus,
         },
         status: eventOk ? "ok" : "failed",
         response: eventResp,
