@@ -508,7 +508,7 @@ export function Step6PreviewAndPick({
               <Button
                 size="pill"
                 onClick={handleSave}
-                disabled={!selectedUrl || phase === "saving"}
+                disabled={!selectedUrl || phase === "saving" || phase === "saving-public"}
                 className="gap-2 w-full sm:w-auto"
               >
                 {phase === "saving" ? (
@@ -523,6 +523,25 @@ export function Step6PreviewAndPick({
                   </>
                 )}
               </Button>
+              {isAdmin && (
+                <Button
+                  size="pill"
+                  variant="outline"
+                  onClick={handleSaveAsPublic}
+                  disabled={!selectedUrl || phase === "saving" || phase === "saving-public"}
+                  className="gap-2 w-full sm:w-auto"
+                  title="Admin only — sends to public scene library as draft"
+                >
+                  {phase === "saving-public" ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving
+                    </>
+                  ) : (
+                    <>Save to Public Scenes</>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
 
