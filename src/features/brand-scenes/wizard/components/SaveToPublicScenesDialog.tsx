@@ -55,6 +55,7 @@ export function SaveToPublicScenesDialog({
   const [subCategoryExisting, setSubCategoryExisting] = useState<string>("");
   const [subCategoryNew, setSubCategoryNew] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!open) return;
