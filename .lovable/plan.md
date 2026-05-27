@@ -1,9 +1,11 @@
-Update the Brand Scenes promo banner on `/app/generate/product-images`.
+## Restore the Brand Scenes explainer modal
 
-File: `src/components/app/product-images/BrandScenesPromoCard.tsx`
+In `src/components/app/product-images/BrandScenesPromoCard.tsx`, revert the CTA behavior so it opens `BrandScenesInfoModal` again instead of navigating straight to `/app/brand-scenes/new`.
 
 Changes:
-- Heading: "Your brand's own scene library" → "Want personalized scenes for your brand?"
-- Subtitle: "Built from your references. Reused across every shoot." → "Create custom Brand Scenes once, then reuse them across every shoot" (no terminal period per project style)
-- CTA button: "See how it works" → "Create Brand Scenes"
-- CTA behavior: instead of opening the `BrandScenesInfoModal`, navigate to `/app/brand-scenes/new` (the Brand Scene wizard). Drop the modal import and `useState`.
+- Re-add `useState` and the `BrandScenesInfoModal` import
+- Remove `useNavigate`
+- Button `onClick` → `setOpen(true)`
+- Render `<BrandScenesInfoModal open={open} onOpenChange={setOpen} />` at the end
+
+Keep the new copy (heading, subtitle, "Create Brand Scenes" label, ArrowRight icon) — only the click behavior changes back. The modal itself already contains a CTA into the wizard, so the flow becomes: banner → explainer modal → wizard.

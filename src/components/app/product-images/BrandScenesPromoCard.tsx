@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { BrandScenesInfoModal } from './BrandScenesInfoModal';
 
 export const BRAND_SCENE_THUMBNAILS = [
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664670175-5a6elc.jpg?quality=75',
@@ -11,7 +11,7 @@ export const BRAND_SCENE_THUMBNAILS = [
 ];
 
 export function BrandScenesPromoCard() {
-  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6">
@@ -42,7 +42,7 @@ export function BrandScenesPromoCard() {
           </div>
         </div>
         <Button
-          onClick={() => navigate('/app/brand-scenes/new')}
+          onClick={() => setOpen(true)}
           variant="outline"
           className="rounded-full text-sm font-semibold px-5 h-10 w-full sm:w-auto gap-1.5 shrink-0 group bg-background text-foreground border-border hover:bg-background hover:text-foreground"
         >
@@ -50,6 +50,7 @@ export function BrandScenesPromoCard() {
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </Button>
       </div>
+      <BrandScenesInfoModal open={open} onOpenChange={setOpen} />
     </div>
   );
 }
