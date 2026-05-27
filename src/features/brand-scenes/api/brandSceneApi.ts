@@ -58,11 +58,14 @@ export async function saveBrandScene(args: {
   return data;
 }
 
-export async function saveBrandSceneAsPublicRecipe(args: {
+export async function saveBrandSceneAsPublicScene(args: {
   answers: BrandSceneAnswers;
   name: string;
   previewImageUrl: string;
-}): Promise<{ recipe: { id: string; name: string; status: string } }> {
+  categoryCollection: string;
+  subCategory: string;
+  compiledPrompt: string;
+}): Promise<{ scene: { id: string; scene_id: string; title: string; category_collection: string; sub_category: string } }> {
   const { data, error } = await supabase.functions.invoke("save-brand-scene-as-public", {
     body: args,
   });

@@ -25,11 +25,11 @@ import { BrandSceneVariationGrid } from "../components/BrandSceneVariationGrid";
 import {
   generateBrandScene,
   saveBrandScene,
-  saveBrandSceneAsPublicRecipe,
   BrandSceneApiError,
   type GeneratedVariation,
 } from "../../api/brandSceneApi";
 import type { BrandSceneAnswers } from "../../types";
+import { SaveToPublicScenesDialog } from "../components/SaveToPublicScenesDialog";
 import { assembleSceneDirective } from "../../prompt/assembleSceneDirective";
 import { injectReferenceTokens } from "../../prompt/injectReferenceTokens";
 import { CAST_PRESETS_WITH_PEOPLE } from "../constants/cast";
@@ -267,26 +267,7 @@ export function Step6PreviewAndPick({
     }
   };
 
-  const handleSaveAsPublic = async () => {
-    if (!selectedUrl) return;
-    if (!nameValid) {
-      toast.error("Name this scene before saving");
-      return;
-    }
-    setPhase("saving-public");
-    try {
-      const { recipe } = await saveBrandSceneAsPublicRecipe({
-        answers,
-        name: trimmedName,
-        previewImageUrl: selectedUrl,
-      });
-      toast.success(`Sent to public scene library as draft · "${recipe.name}"`);
-      setPhase("picking");
-    } catch (e) {
-      setPhase("picking");
-      toast.error(e instanceof Error ? e.message : "Could not save to public scenes");
-    }
-  };
+  const [publicDialogOpen, setPublicDialogOpen] = useState(false);
 
 
   return (
@@ -527,19 +508,19 @@ export function Step6PreviewAndPick({
                 <Button
                   size="pill"
                   variant="outline"
-                  onClick={handleSaveAsPublic}
-                  disabled={!selectedUrl || phase === "saving" || phase === "saving-public"}
+                  onClick={() => {
+                    if (!selectedUrl) return;
+                    if (!nameValid) {
+                      toast.error("Name this scene before saving");
+                      return;
+                    }
+                    setPublicDialogOpen(true);
+                  }}
+                  disabled={!selectedUrl || phase === "saving"}
                   className="gap-2 w-full sm:w-auto"
-                  title="Admin only — sends to public scene library as draft"
+                  title="Admin only — publishes to Visual Studio public library"
                 >
-                  {phase === "saving-public" ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving
-                    </>
-                  ) : (
-                    <>Save to Public Scenes</>
-                  )}
+                  Save to Public Scenes
                 </Button>
               )}
             </div>
