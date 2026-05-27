@@ -64,13 +64,51 @@ const IMAGES: Img[] = [
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/6a25e1bf-a453-48bc-aebb-ef72a20699ec/0-0.jpg', scene: 'Handheld Daily Wellness Moment', model: 'Freya' },
 ];
 
+type UgcImg = { url: string; model: string };
+
+const UGC_IMAGES: UgcImg[] = [
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/81cf6eb2-a83e-4fa0-8950-96bb3931f3c9/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/ba27d0d1-b7c0-4ace-9276-5715f86ef3b4/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/9a1e2d66-ee52-46cc-869c-40627e8c8b26/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/8a953431-8927-48c4-88ff-05d4a711b941/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b9065fbd-a84f-40b7-9a80-d2c6dc14b309/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1c0ba983-5aa7-456f-a497-82088583f48c/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/bcf9d7d1-cad2-45dc-8fa0-f75b0a606cd6/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/c901c251-fec2-4c1a-a600-3fc8337e1c4e/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/002bdad6-d276-43ab-820e-2b4f8c60cb9a/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/3e7a316e-c9f5-41f7-946a-d8d03262d385/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/f520b610-910b-4301-ba49-062e13977dba/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1fc1277b-3ae3-4ad7-8643-1e5ef641e6bd/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/0d0957de-50d3-4ae2-b0dd-3b53045b7a14/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b0e85dc6-9018-4d86-9023-525a5fad206b/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d0a55ac-7e62-4a9a-a904-87761ffdbfb5/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d7aaf64b-447e-4341-afbc-005fe076df5a/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/3e86fc6c-3474-4ed2-ae14-8e0f0fe0b3a3/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/379a466a-0e33-48c6-b710-419ef6db1890/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d342281-38c7-4f46-a944-a618079565fb/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/cfbe0196-5d2f-4e67-80a2-0d36a8296711/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/dd041021-06d1-4fa1-a5e2-2ebfd1a9b329/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/6e5fee99-79f3-462e-9311-b5e6fd963bdf/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/937153f7-d50c-4d95-9c3c-0bb1e29c93a6/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b47d5498-443c-4499-a7ec-8c923252f93d/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/7c9268ca-6a3c-4e5b-accf-f03621349e01/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/dcf78339-8213-4e1b-918a-6e9f8fa43308/0-0.jpg', model: 'Zara' },
+];
+
 const STATS = [
-  { icon: LayoutGrid, value: '53', label: 'Visuals' },
+  { icon: LayoutGrid, value: '79', label: 'Visuals' },
   { icon: Timer, value: '~3 min', label: 'Made in' },
 ];
 
+
+
+type LightboxState = { list: 'main' | 'ugc'; index: number } | null;
+
 export default function BiomaShowcase() {
-  const [lightbox, setLightbox] = useState<number | null>(null);
+  const [lightbox, setLightbox] = useState<LightboxState>(null);
+  const active = lightbox
+    ? (lightbox.list === 'main' ? IMAGES[lightbox.index] : { ...UGC_IMAGES[lightbox.index], scene: 'Selfie UGC' })
+    : null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -90,7 +128,7 @@ export default function BiomaShowcase() {
             This is what VOVV.AI makes from one product photo
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            A complete wellness campaign — 53 visuals, ready for web, social, and retail
+            A complete wellness campaign — 53 editorial visuals plus 26 selfie-style UGC, ready for web, social, and retail
           </p>
         </div>
       </section>
@@ -111,11 +149,15 @@ export default function BiomaShowcase() {
 
       <section className="pb-16 lg:pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="mb-8 lg:mb-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-2">Editorial campaign</p>
+            <h2 className="text-[#0f172a] text-xl sm:text-2xl font-semibold tracking-tight">Studio and lifestyle visuals</h2>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {IMAGES.map((img, i) => (
               <button
                 key={i}
-                onClick={() => setLightbox(i)}
+                onClick={() => setLightbox({ list: 'main', index: i })}
                 className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
               >
                 <img
@@ -136,28 +178,60 @@ export default function BiomaShowcase() {
         </div>
       </section>
 
-      {lightbox !== null && (
+      <section className="pb-20 lg:pb-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="mb-8 lg:mb-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-2">Selfie UGC set</p>
+            <h2 className="text-[#0f172a] text-xl sm:text-2xl font-semibold tracking-tight">Creator-style selfies for social</h2>
+            <p className="text-[#64748b] text-sm sm:text-base mt-2 max-w-xl">Raw, phone-shot energy — built for Reels, TikTok, and paid social</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {UGC_IMAGES.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setLightbox({ list: 'ugc', index: i })}
+                className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
+              >
+                <img
+                  src={getOptimizedUrl(img.url, { quality: 50 })}
+                  alt={`Selfie UGC — ${img.model}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  <p className="text-white text-xs sm:text-sm font-medium leading-tight">Selfie UGC</p>
+                  {img.model && <p className="text-white/60 text-[10px] sm:text-xs mt-0.5">{img.model}</p>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {active && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
           <button onClick={() => setLightbox(null)} className="absolute top-5 right-5 text-white/60 hover:text-white transition-colors z-10">
             <X size={24} />
           </button>
           <img
-            src={getOptimizedUrl(IMAGES[lightbox].url, { quality: 80 })}
-            alt={IMAGES[lightbox].scene}
+            src={getOptimizedUrl(active.url, { quality: 80 })}
+            alt={active.scene}
             className="max-h-[85vh] max-w-full rounded-xl object-contain"
             onClick={(e) => e.stopPropagation()}
           />
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-white text-sm font-medium">{IMAGES[lightbox].scene}</p>
-            {IMAGES[lightbox].model && <p className="text-white/50 text-xs mt-0.5">{IMAGES[lightbox].model}</p>}
+            <p className="text-white text-sm font-medium">{active.scene}</p>
+            {active.model && <p className="text-white/50 text-xs mt-0.5">{active.model}</p>}
           </div>
         </div>
       )}
 
       <section className="py-16 lg:py-28 bg-[#0f172a]">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">Want this for your brand?</h2>
-          <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">Send one product photo. We'll build the rest</p>
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">BIOMA, this is what VOVV.AI can do for you</h2>
+          <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">Every visual on this page was generated from a single product photo — no studio, no models, no shoot day</p>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
             <Link to="/auth" className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#0f172a] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto">
               Try free now
@@ -174,3 +248,4 @@ export default function BiomaShowcase() {
     </div>
   );
 }
+
