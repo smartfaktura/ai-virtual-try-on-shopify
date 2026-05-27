@@ -45,7 +45,7 @@ import {
 // AiStylistCard removed — replaced by per-scene outfit direction
 import { ProductSpecsCard } from './ProductSpecsCard';
 import { toast } from '@/lib/brandedToast';
-import { BrandModelsInfoModal } from './BrandModelsInfoModal';
+import { BrandModelsInfoModal, BRAND_MODEL_THUMBNAILS } from './BrandModelsInfoModal';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
@@ -229,15 +229,15 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
 
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
             <Tabs value={modalGender} onValueChange={(v) => setModalGender(v as any)}>
-              <TabsList className="h-8">
-                <TabsTrigger value="all" className="text-[11px] px-3 h-6">All</TabsTrigger>
-                <TabsTrigger value="female" className="text-[11px] px-3 h-6">Women</TabsTrigger>
-                <TabsTrigger value="male" className="text-[11px] px-3 h-6">Men</TabsTrigger>
+              <TabsList className="h-9 rounded-full p-1">
+                <TabsTrigger value="all" className="text-[11px] px-4 h-7 rounded-full">All</TabsTrigger>
+                <TabsTrigger value="female" className="text-[11px] px-4 h-7 rounded-full">Women</TabsTrigger>
+                <TabsTrigger value="male" className="text-[11px] px-4 h-7 rounded-full">Men</TabsTrigger>
               </TabsList>
             </Tabs>
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-              <Input placeholder="Search models..." value={modalSearch} onChange={e => setModalSearch(e.target.value)} className="pl-8 h-8 text-xs" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input placeholder="Search models..." value={modalSearch} onChange={e => setModalSearch(e.target.value)} className="pl-9 h-9 text-xs rounded-full" />
             </div>
           </div>
 
@@ -270,6 +270,41 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
             {modalFilteredUser.length === 0 && modalFilteredGlobal.length === 0 && (
               <p className="text-center text-sm text-muted-foreground py-8">No models match your search.</p>
             )}
+
+            {/* Brand Models promo */}
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-4 mt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex items-center shrink-0">
+                    {BRAND_MODEL_THUMBNAILS.map((url, i) => (
+                      <div
+                        key={i}
+                        className={`w-9 h-11 rounded-xl overflow-hidden ring-2 ring-background bg-muted ${i > 0 ? '-ml-3' : ''}`}
+                        style={{ transform: `rotate(${(i - 1) * 4}deg)`, zIndex: 3 - i }}
+                      >
+                        <ShimmerImage src={url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground leading-snug">
+                      Create your brand’s own AI models
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Build unique models from a simple wizard or your own model photos
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setBrandInfoOpen(true)}
+                  variant="outline"
+                  className="rounded-full text-sm font-semibold px-5 h-10 w-full sm:w-auto gap-1.5 shrink-0 group bg-background text-foreground border-border hover:bg-background hover:text-foreground"
+                >
+                  <span>Create Brand Models</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Modal footer */}

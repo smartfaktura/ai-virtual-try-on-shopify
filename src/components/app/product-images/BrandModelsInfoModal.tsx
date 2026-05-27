@@ -8,7 +8,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 const ELIGIBLE_PLANS = new Set(['growth', 'pro', 'enterprise']);
 
-const BRAND_MODEL_THUMBNAILS = [
+export const BRAND_MODEL_THUMBNAILS = [
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/scratch-uploads/models/model_011-1776096967441.png?width=360&height=480&quality=72&resize=cover',
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/scratch-uploads/models/model_016-1776096975176.png?width=360&height=480&quality=72&resize=cover',
   'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/scratch-uploads/models/model_063-1776097161032.png?width=360&height=480&quality=72&resize=cover',
