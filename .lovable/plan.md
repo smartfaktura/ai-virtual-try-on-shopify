@@ -1,43 +1,43 @@
-## Goal
+## Newsletter v3 — polish pass
 
-Fix the two real issues in `/mnt/documents/brand-scenes-newsletter.html`:
-1. Images render as broken icons in the preview
-2. Headlines use Times New Roman serif — wrong for VOVV's Inter sans-serif brand
+Targeted edits to `/mnt/documents/brand-scenes-newsletter.html`.
 
-Layout, copy, structure, CTAs all stay the same.
+### 1. Lighter images
+Switch to Supabase render endpoint with quality only (no width crop — per project rule, `width` causes server-side zoom on full-bleed):
+- Hero: `?quality=70`
+- 3-up Brand Scenes tiles: `?quality=65`
+- 4-up Brand Models tiles: `?quality=60`
+- Add `loading="lazy"` + `decoding="async"` on every below-fold `<img>`
 
-## Changes
+Target: total payload from ~10 MB → under 1 MB.
 
-**1. Swap image URLs to direct public objects (fixes broken images)**
+### 2. Rebrand VOVV.AI → VOVV
+Replace every user-facing `VOVV.AI` with `VOVV` (logo wordmark, H1, footer signature, `<title>`, preheader, alt text). Keep `vovv.ai` only inside URLs.
 
-Replace all `…/storage/v1/render/image/public/…?width=…&quality=…&resize=cover` with
-`…/storage/v1/object/public/…` (no transform params).
+### 3. Make "what's new" obvious
+- Small pill above hero H1: `NEW · LAUNCHED THIS WEEK` (uppercase, tracked, hairline border)
+- Rewrite H1 to lead with the news, not the brand
+- `NEW` chip beside each feature H2 (Brand Scenes, Brand Models)
+- One-line "what changed" sub-label under each H2 (before → now phrasing)
 
-Affected URLs:
-- Hero: `…/scene-previews/1776688403670-i0t3r6.jpg`
-- Scenes 3-up: `…/1776689318257-yahkye.jpg`, `…/1776840733386-n4bc6x.jpg`, `…/1776688413055-z73arv.jpg`
-- Models 4-up: `…/scratch-uploads/models/model_029-…png`, `model_018`, `model_033`, `model_049`
+### 4. Primary dark blue (replaces black)
+Introduce a single brand accent and apply it to:
+- Upgrade / final CTA section background (was `#0A0A0A` black → `#0B1C3A` deep navy)
+- All CTA buttons (primary CTA + final CTA) → same `#0B1C3A` with white text, subtle inner highlight, 2px hairline `rgba(255,255,255,0.08)` border for depth
+- Hover/visited safe (email-safe inline styles, no JS)
 
-Direct object URLs load without auth, no CORS layer, render in every email client and preview iframe.
+Body, headlines, hairlines stay black/off-white — the navy is reserved for high-intent surfaces so it pops.
 
-**2. Brand-correct typography (fixes off-brand serif)**
+### 5. Footer rebuild
+Current footer is a thin grey line. Replace with a proper editorial footer on the cream canvas:
+- Top: `VOVV` wordmark (left) + tiny tagline "AI visuals for product brands" (right)
+- Middle row: 3 link columns — `Studio` (Brand Scenes, Brand Models, Visual Studio) · `Company` (Pricing, Learn, Contact) · `Follow` (Instagram, LinkedIn, X)
+- Hairline divider
+- Bottom row: `© 2026 VOVV` · `vovv.ai` · `Unsubscribe` · `View in browser`
+- Inter 12–13px, muted `#6B6B6B`, 1.6 line-height, generous 32px top/bottom padding
 
-Headings change from `'Times New Roman', Georgia, serif` → `-apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Arial, sans-serif`:
-- H1 hero: `font-weight:500`, `font-size:40px`, `letter-spacing:-1.2px`, `line-height:1.05`
-- H2 section: `font-weight:500`, `font-size:26px`, `letter-spacing:-0.6px`
-- Upgrade card H2: same as section H2, white color
-- Body / eyebrows / buttons: unchanged (already Inter stack)
+### Out of scope
+Section order, hero copy beyond H1, layout grid, cream canvas, Inter type system.
 
-**3. Small polish**
-
-- Add `height` attribute to grid `<img>` tags so cells reserve space (no jumpy layout)
-- Slim the `font-weight:300` headings into `500` for stronger inbox presence
-
-## Out of scope
-
-- Section order, copy, CTAs, layout, button styles
-- Cream `#F7F5F2` canvas, dark upgrade card, hairline borders
-
-## Validation
-
-Overwrite file → render via headless Chromium (HTTP-served) at 680×3400 → inspect screenshot → confirm images load and headings render in clean sans-serif before delivering.
+### Validation
+Overwrite file → render via headless Chromium at 680×3600 → confirm: (a) total image bytes < 1 MB, (b) zero `VOVV.AI` in rendered text, (c) NEW pills + sub-labels visible, (d) navy CTA section + buttons render correctly, (e) footer columns align and links are legible.
