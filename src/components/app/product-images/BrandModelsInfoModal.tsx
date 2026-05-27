@@ -72,7 +72,7 @@ export function BrandModelsInfoModal({ open, onOpenChange }: Props) {
 
         {/* Subtitle */}
         <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
-          Build unique models from a simple wizard or your own model photos — then reuse them across every shoot.
+          Build a private model library with faces created only for your brand
         </DialogDescription>
 
         {/* Feature list */}

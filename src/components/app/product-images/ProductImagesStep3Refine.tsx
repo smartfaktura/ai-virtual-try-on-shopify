@@ -186,7 +186,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-foreground">Create your brand’s own AI models</p>
-                <p className="text-[11px] text-muted-foreground">Build unique models from a simple wizard or your own model photos</p>
+                <p className="text-[11px] text-muted-foreground">Build a private model library with faces created only for your brand</p>
               </div>
             </div>
           </button>
@@ -291,7 +291,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
                       Create your brand’s own AI models
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Build unique models from a simple wizard or your own model photos
+                      Build a private model library with faces created only for your brand
                     </p>
                   </div>
                 </div>
