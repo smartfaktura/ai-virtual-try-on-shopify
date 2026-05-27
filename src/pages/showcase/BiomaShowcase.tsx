@@ -102,8 +102,13 @@ const STATS = [
 
 
 
+type LightboxState = { list: 'main' | 'ugc'; index: number } | null;
+
 export default function BiomaShowcase() {
-  const [lightbox, setLightbox] = useState<number | null>(null);
+  const [lightbox, setLightbox] = useState<LightboxState>(null);
+  const active = lightbox
+    ? (lightbox.list === 'main' ? IMAGES[lightbox.index] : { ...UGC_IMAGES[lightbox.index], scene: 'Selfie UGC' })
+    : null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -123,7 +128,7 @@ export default function BiomaShowcase() {
             This is what VOVV.AI makes from one product photo
           </h1>
           <p className="text-[#64748b] text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            A complete wellness campaign — 53 visuals, ready for web, social, and retail
+            A complete wellness campaign — 53 editorial visuals plus 26 selfie-style UGC, ready for web, social, and retail
           </p>
         </div>
       </section>
@@ -144,11 +149,15 @@ export default function BiomaShowcase() {
 
       <section className="pb-16 lg:pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="mb-8 lg:mb-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-2">Editorial campaign</p>
+            <h2 className="text-[#0f172a] text-xl sm:text-2xl font-semibold tracking-tight">Studio and lifestyle visuals</h2>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {IMAGES.map((img, i) => (
               <button
                 key={i}
-                onClick={() => setLightbox(i)}
+                onClick={() => setLightbox({ list: 'main', index: i })}
                 className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
               >
                 <img
@@ -169,28 +178,60 @@ export default function BiomaShowcase() {
         </div>
       </section>
 
-      {lightbox !== null && (
+      <section className="pb-20 lg:pb-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="mb-8 lg:mb-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#94a3b8] mb-2">Selfie UGC set</p>
+            <h2 className="text-[#0f172a] text-xl sm:text-2xl font-semibold tracking-tight">Creator-style selfies for social</h2>
+            <p className="text-[#64748b] text-sm sm:text-base mt-2 max-w-xl">Raw, phone-shot energy — built for Reels, TikTok, and paid social</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {UGC_IMAGES.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setLightbox({ list: 'ugc', index: i })}
+                className="group relative aspect-[4/5] block w-full rounded-xl overflow-hidden will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f172a]/20"
+              >
+                <img
+                  src={getOptimizedUrl(img.url, { quality: 50 })}
+                  alt={`Selfie UGC — ${img.model}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  <p className="text-white text-xs sm:text-sm font-medium leading-tight">Selfie UGC</p>
+                  {img.model && <p className="text-white/60 text-[10px] sm:text-xs mt-0.5">{img.model}</p>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {active && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
           <button onClick={() => setLightbox(null)} className="absolute top-5 right-5 text-white/60 hover:text-white transition-colors z-10">
             <X size={24} />
           </button>
           <img
-            src={getOptimizedUrl(IMAGES[lightbox].url, { quality: 80 })}
-            alt={IMAGES[lightbox].scene}
+            src={getOptimizedUrl(active.url, { quality: 80 })}
+            alt={active.scene}
             className="max-h-[85vh] max-w-full rounded-xl object-contain"
             onClick={(e) => e.stopPropagation()}
           />
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-white text-sm font-medium">{IMAGES[lightbox].scene}</p>
-            {IMAGES[lightbox].model && <p className="text-white/50 text-xs mt-0.5">{IMAGES[lightbox].model}</p>}
+            <p className="text-white text-sm font-medium">{active.scene}</p>
+            {active.model && <p className="text-white/50 text-xs mt-0.5">{active.model}</p>}
           </div>
         </div>
       )}
 
       <section className="py-16 lg:py-28 bg-[#0f172a]">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">Want this for your brand?</h2>
-          <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">Send one product photo. We'll build the rest</p>
+          <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight mb-5">BIOMA, this is what VOVV.AI can do for you</h2>
+          <p className="text-[#94a3b8] text-base sm:text-lg leading-relaxed mb-10">Every visual on this page was generated from a single product photo — no studio, no models, no shoot day</p>
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
             <Link to="/auth" className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full bg-white text-[#0f172a] text-base font-semibold hover:bg-white/90 transition-colors w-full sm:w-auto">
               Try free now
@@ -207,3 +248,4 @@ export default function BiomaShowcase() {
     </div>
   );
 }
+
