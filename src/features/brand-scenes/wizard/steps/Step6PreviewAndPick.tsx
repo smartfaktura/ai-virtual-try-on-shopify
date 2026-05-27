@@ -591,6 +591,16 @@ export function Step6PreviewAndPick({
         onPick={(p) => setCustomProduct(p)}
       />
 
+      <SaveToPublicScenesDialog
+        open={publicDialogOpen}
+        onOpenChange={setPublicDialogOpen}
+        answers={answers}
+        defaultName={trimmedName}
+        previewImageUrl={selectedUrl}
+        compiledPrompt={directive}
+        hasPeople={hasPeople}
+      />
+
 
 
       {variations.length > 0 && (
