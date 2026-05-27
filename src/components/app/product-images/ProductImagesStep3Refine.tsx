@@ -190,6 +190,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
         <div className="flex items-center gap-2">
           <Crown className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Your Brand Models</span>
+          <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-[9px] font-semibold tracking-[0.15em] uppercase px-1.5 py-0.5">New</span>
         </div>
         {filteredUser.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-0.5">
@@ -259,6 +260,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
                 <div className="flex items-center gap-2">
                   <Crown className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Your Brand Models</span>
+                  <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-[9px] font-semibold tracking-[0.15em] uppercase px-1.5 py-0.5">New</span>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   {modalFilteredUser.map(m => (
