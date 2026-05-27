@@ -129,6 +129,20 @@ Deno.serve(async (req) => {
     let updated = 0;
     let failed = 0;
 
+    const resendFetch = async (path: string, init: RequestInit, retry = true): Promise<Response> => {
+      const res = await fetch(`${RESEND_API}${path}`, init);
+      if (res.status === 429 && retry) {
+        await new Promise((r) => setTimeout(r, 1500));
+        return resendFetch(path, init, false);
+      }
+      return res;
+    };
+
+    const authJson = {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    };
+
     const processOne = async (p: any) => {
       const email = String(p.email || "").toLowerCase().trim();
       if (!email) { failed++; return; }
@@ -156,45 +170,6 @@ Deno.serve(async (req) => {
         referral_source: p.referral_source,
       });
 
-      const payload: Record<string, unknown> = {
-        email,
-        first_name: firstName ?? undefined,
-        last_name: lastName ?? undefined,
-        unsubscribed: false,
-      };
-      if (Object.keys(properties).length > 0) payload.properties = properties;
-
-      const res = await fetch(
-        `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      if (res.ok) {
-        added++;
-        // POST silently ignores properties — follow up with PATCH to persist them.
-        if (Object.keys(properties).length > 0) {
-          await fetch(
-            `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `Bearer ${RESEND_API_KEY}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ properties }),
-            },
-          );
-        }
-        return;
-      }
-
       const patchPayload: Record<string, unknown> = {
         first_name: firstName ?? undefined,
         last_name: lastName ?? undefined,
@@ -202,29 +177,59 @@ Deno.serve(async (req) => {
       };
       if (Object.keys(properties).length > 0) patchPayload.properties = properties;
 
-      const patchRes = await fetch(
-        `${RESEND_API}/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(patchPayload),
-        },
-      );
-      if (patchRes.ok) updated++;
-      else {
-        failed++;
-        console.error(`Failed for ${email}: POST ${res.status} / PATCH ${patchRes.status}`);
+      // PATCH first — most contacts already exist. Saves a call vs POST-first.
+      const patchPath = `/audiences/${RESEND_AUDIENCE_ID}/contacts/${encodeURIComponent(email)}`;
+      const patchRes = await resendFetch(patchPath, {
+        method: "PATCH",
+        headers: authJson,
+        body: JSON.stringify(patchPayload),
+      });
+
+      if (patchRes.ok) { updated++; return; }
+
+      if (patchRes.status === 404) {
+        // Contact doesn't exist → POST then PATCH (POST ignores properties).
+        const postRes = await resendFetch(`/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
+          method: "POST",
+          headers: authJson,
+          body: JSON.stringify({
+            email,
+            first_name: firstName ?? undefined,
+            last_name: lastName ?? undefined,
+            unsubscribed: false,
+          }),
+        });
+        if (!postRes.ok) {
+          failed++;
+          console.error(`Failed POST for ${email}: ${postRes.status}`);
+          return;
+        }
+        if (Object.keys(properties).length > 0) {
+          const patch2 = await resendFetch(patchPath, {
+            method: "PATCH",
+            headers: authJson,
+            body: JSON.stringify({ properties }),
+          });
+          if (!patch2.ok) {
+            failed++;
+            console.error(`Failed PATCH-after-POST for ${email}: ${patch2.status}`);
+            return;
+          }
+        }
+        added++;
+        return;
       }
+
+      failed++;
+      console.error(`Failed PATCH for ${email}: ${patchRes.status}`);
     };
 
-    // Parallel batches of 10
-    const BATCH = 10;
-    for (let i = 0; i < rows.length; i += BATCH) {
-      const slice = rows.slice(i, i + BATCH);
-      await Promise.allSettled(slice.map(processOne));
+    // Sequential with 220ms delay → ~4.5 req/sec (under Resend's 5/sec limit).
+    // PATCH-first path = 1 Resend call per contact for the common case.
+    const DELAY_MS = 220;
+    for (const p of rows) {
+      await processOne(p);
+      await new Promise((r) => setTimeout(r, DELAY_MS));
     }
 
     const processed = rows.length;
