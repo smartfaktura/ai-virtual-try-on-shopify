@@ -195,7 +195,7 @@ serve(async (req) => {
 
     // Read current DB plan + period end as fallback
     const { data: currentProfile } = await supabaseAdmin.from("profiles")
-      .select("plan, current_period_end")
+      .select("plan, current_period_end, subscription_status")
       .eq("user_id", userId)
       .single();
 
@@ -257,7 +257,32 @@ serve(async (req) => {
       }
     }
 
-    // Detect downgrade to free (cancellation)
+    // Detect transition into canceling state (cancel_at_period_end = true)
+    if (
+      subscriptionStatus === "canceling" &&
+      currentProfile?.subscription_status !== "canceling"
+    ) {
+      logStep("Subscription scheduled for cancellation", { plan, periodEnd });
+      try {
+        await supabaseAdmin.functions.invoke("track-resend-event", {
+          body: {
+            email: userEmail,
+            user_id: userId,
+            event: "subscription.cancelled",
+            attributes: {
+              plan,
+              billing_interval: billingInterval,
+              cancel_at: periodEnd,
+              reason: "scheduled",
+            },
+          },
+        });
+      } catch (e) {
+        logStep("resend subscription.cancelled event failed", { error: (e as Error).message });
+      }
+    }
+
+    // Detect downgrade to free (cancellation completed)
     if (currentProfile?.plan && currentProfile.plan !== "free" && plan === "free") {
       logStep("Subscription canceled (downgrade to free)", { from: currentProfile.plan });
       try {
@@ -265,12 +290,12 @@ serve(async (req) => {
           body: {
             email: userEmail,
             user_id: userId,
-            event: "subscription.canceled",
-            attributes: { previous_plan: currentProfile.plan },
+            event: "subscription.cancelled",
+            attributes: { previous_plan: currentProfile.plan, reason: "ended" },
           },
         });
       } catch (e) {
-        logStep("resend subscription.canceled event failed", { error: (e as Error).message });
+        logStep("resend subscription.cancelled event failed", { error: (e as Error).message });
       }
     }
 
