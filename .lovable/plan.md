@@ -1,14 +1,7 @@
-## Update `/showcase/bioma`
+## Tweak Selfie UGC section on `/showcase/bioma`
 
-1. **Add Selfie UGC section** below the main 53-image gallery
-   - 26 completed `selfie-ugc-set` jobs from user `fe45fd27...` (created 2026-05-27 20:01 UTC)
-   - Hardcoded `UGC_IMAGES` array with same `{url, scene, model}` shape, same 4-col grid, same lightbox (extend `lightbox` state to address both lists, e.g. union index or separate state)
-   - Small section header: "Selfie UGC" with the Visuals/Made-in stats line updated or a second subtle stat chip
+1. **Hide section header block** — remove the label "Selfie UGC set", heading "Creator-style selfies for social", and subtitle "Raw, phone-shot energy…". Keep the grid only (still rendered under same section spacing).
+2. **Remove UGC images** at positions 1, 3, 9, 13, 14, 25, 26 (1-indexed in current order) — leaves 19 images.
+3. **Shuffle** remaining UGC images with a fixed deterministic order (hand-picked random sequence, hardcoded) so the output is stable across renders/reloads.
 
-2. **Rewrite final CTA block** (currently "Want this for your brand? / Send one product photo. We'll build the rest")
-   - New heading: "BIOMA, this is what VOVV.AI can do for you"
-   - New subline: "Every visual on this page was generated from a single product photo — no studio, no models, no shoot day"
-   - Keep both buttons (Try free now / Explore more examples)
-
-## Out of scope
-- No DB changes, no other showcase pages touched
+No other changes (main editorial grid, hero, stats, CTA all unchanged).
