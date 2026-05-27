@@ -22,6 +22,7 @@ const BrandSampleShowcase = lazy(() => import('@/pages/showcase/BrandSampleShowc
 const MakaraWearShowcase = lazy(() => import('@/pages/showcase/MakaraWearShowcase'));
 const ElfasNamuoseShowcase = lazy(() => import('@/pages/showcase/ElfasNamuoseShowcase'));
 const SixOApparelShowcase = lazy(() => import('@/pages/showcase/SixOApparelShowcase'));
+const BiomaShowcase = lazy(() => import('@/pages/showcase/BiomaShowcase'));
 
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -186,6 +187,7 @@ const App = () => {
             <Route path="/showcase/makarawear" element={<MakaraWearShowcase />} />
             <Route path="/showcase/elfas-namuose" element={<ElfasNamuoseShowcase />} />
             <Route path="/showcase/6o-apparel" element={<SixOApparelShowcase />} />
+            <Route path="/showcase/bioma" element={<BiomaShowcase />} />
 
 
             {/* Feature pages */}
