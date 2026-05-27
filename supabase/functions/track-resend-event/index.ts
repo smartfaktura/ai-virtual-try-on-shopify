@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     // We mirror every event onto two contact properties so users can build
     // automations like: "when last_event becomes 'subscription.started' → send X".
     // Runs after /events/send and is best-effort: failures don't break the call.
-    const RESEND_AUDIENCE_ID = Deno.env.get("RESEND_AUDIENCE_ID");
+    // RESEND_AUDIENCE_ID already declared at top of try block
     let propertySyncStatus: "ok" | "failed" | "skipped" = "skipped";
     if (RESEND_AUDIENCE_ID) {
       try {
