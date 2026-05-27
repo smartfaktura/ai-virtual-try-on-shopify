@@ -195,7 +195,7 @@ serve(async (req) => {
 
     // Read current DB plan + period end as fallback
     const { data: currentProfile } = await supabaseAdmin.from("profiles")
-      .select("plan, current_period_end")
+      .select("plan, current_period_end, subscription_status")
       .eq("user_id", userId)
       .single();
 
