@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
     // Resend rate limit: 5 req/sec — stay under by spacing 250ms apart.
     await new Promise((r) => setTimeout(r, 250));
     try {
+      const res = await fetch(`${RESEND_API}/contact-properties`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${RESEND_API_KEY}`,

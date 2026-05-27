@@ -220,11 +220,14 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Parallel batches of 10
-    const BATCH = 10;
+    // Throttled parallel batches — stay under Resend's 5 req/sec rate limit.
+    // Each contact triggers up to 2 Resend calls (POST + PATCH), so keep batch small.
+    const BATCH = 4;
+    const GAP_MS = 300;
     for (let i = 0; i < rows.length; i += BATCH) {
       const slice = rows.slice(i, i + BATCH);
       await Promise.allSettled(slice.map(processOne));
+      if (i + BATCH < rows.length) await new Promise((r) => setTimeout(r, GAP_MS));
     }
 
     const processed = rows.length;
