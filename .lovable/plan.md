@@ -1,39 +1,56 @@
-# Export: Active free users for Resend re-engagement
-
 ## Goal
-Generate a `.csv` file listing users who:
-- Generated at least one image/video in the **last 30 days**
-- Have **never subscribed or purchased** (free plan, no Stripe customer, no purchased credits)
-- Are **email-subscribed** (not on the Resend suppression list / not unsubscribed)
 
-Output saved to `/mnt/documents/` and presented as a downloadable artifact, formatted for direct Resend audience import.
+Make Resend properties reliably fresh and stop silent failures — without overloading the app.
 
-## CSV columns (Resend-compatible)
-- `email`
-- `first_name`
-- `last_name`
-- `plan` (always `free`)
-- `credits_balance`
-- `signup_date`
-- `last_generation_at`
-- `total_generations_30d`
-- `primary_category` (first item from `product_categories`)
+## Three independent fixes
 
-## Query logic
-1. **Active users (last 30d)**: UNION across `generation_jobs`, `freestyle_generations`, `generation_queue` (status = completed) where `created_at >= now() - interval '30 days'`. Aggregate per `user_id` → count + max(created_at).
-2. **Join `profiles`** on `user_id` and filter:
-   - `plan = 'free'`
-   - `stripe_customer_id IS NULL`
-   - `stripe_subscription_id IS NULL`
-3. **Filter out unsubscribed users**: left-join `resend_event_log` (or check `unsubscribed_at` column on profiles if present) — exclude any email that appears with `unsubscribed = true` in the most recent contact sync, OR where the user explicitly opted out.
-4. **Filter out anyone who ever purchased credits**: exclude users that appear in `resend_event_log` with `event_type = 'credits.purchased'` (since `add_purchased_credits` fires that event), as a belt-and-suspenders check beyond the `stripe_customer_id IS NULL` filter.
-5. Order by `last_generation_at DESC`.
+### 1. Fix `track-resend-event` duplicate `const` (BLOCKS automations)
 
-## Steps
-1. Inspect `profiles` schema to confirm columns for unsubscribe state (`unsubscribed`, `marketing_opted_in`, or similar) and confirm `stripe_customer_id` semantics.
-2. Run the aggregation SQL via `psql` (read-only).
-3. Pipe results to `/mnt/documents/free-active-users-30d.csv` via `COPY ... TO STDOUT WITH CSV HEADER`.
-4. Print row count + sample preview, then emit a `<presentation-artifact>` for download.
+File: `supabase/functions/track-resend-event/index.ts`
+- Remove the duplicate `const RESEND_AUDIENCE_ID` declaration (declared at line 25 AND line 84).
+- Deploy.
+- Verify: trigger a low-credit event from one test user, confirm `LAST_EVENT` / `LAST_EVENT_AT` populate in Resend, confirm a row appears in any send/event log.
 
-## Open question
-Resend's unsubscribe state lives in their audience (synced via `sync-resend-contact`), not necessarily in our DB. I'll exclude users we know unsubscribed locally; if you also want me to cross-check against Resend's live audience via API before exporting, say so and I'll add that step (adds ~1 API call per user, slower).
+Impact: unlocks `user.first_generation`, `credits.low`, `credits.purchased`, `generation.milestone.*` events — all currently lost.
+
+### 2. Fix the 5-min 401 (`schedule-campaigns-tick`)
+
+Confirmed: every run since 14:00 UTC returns `401 Unauthorized`. Cron command sends only `apikey: <anon>` but the function rejects anon.
+- Inspect `supabase/functions/schedule-campaigns-tick/index.ts` to confirm whether it needs service-role (admin work) or is fine being called with anon JWT.
+- If it needs service-role: rewrite the cron SQL to pull `SUPABASE_SERVICE_ROLE_KEY` from `vault.decrypted_secrets` and pass it as `Authorization: Bearer …` (same pattern as `process-email-queue` cron).
+- If it can accept anon: add a proper `Authorization: Bearer <anon>` header alongside `apikey`.
+- Verify: next cron tick returns 200, `net._http_response` stops logging 401s.
+
+Impact: removes ~288 failed HTTP calls/day, restores whatever campaign scheduling this was meant to do.
+
+### 3. Add 60-min Resend property refresh cron
+
+New scheduled job: `refresh-resend-properties` running `0 * * * *` (every 60 min).
+- Calls existing `resync-resend-audience` edge function (already idempotent, already used by admin "Resync" button).
+- Uses vault service-role key (same pattern as `process-email-queue`).
+- Lightweight: 1 invocation/hour, function does batched Resend PATCHes internally.
+
+Impact: `credits_balance`, `plan`, `lifecycle_stage`, `last_generated_at`, `total_generations` stay max 1 hour stale in Resend — fine for segmentation/automation. No real-time pressure, no app overload (~24 runs/day).
+
+## Load summary after fixes
+
+| Source | Frequency | Type |
+|---|---|---|
+| Real-time events (signup, credit, milestone) | per user action | fire-and-forget, already wrapped in `EXCEPTION WHEN OTHERS` |
+| Property refresh cron (NEW) | 1×/hour | single edge fn call, internally batched |
+| Campaign scheduler (FIXED) | 1×/5 min | already existed, just stops 401-ing |
+
+No new app-facing load. All Resend writes remain server-side via pg_net or edge functions — never from the browser.
+
+## Order of operations
+
+1. Fix duplicate `const` in `track-resend-event` + deploy (5 min, unblocks events)
+2. Diagnose + fix `schedule-campaigns-tick` 401 (10 min)
+3. Add `refresh-resend-properties` pg_cron job (5 min)
+4. Wait 60 min, verify Resend properties on a free user show recent `LAST_ACTIVE_AT` / `TOTAL_GENERATIONS` without admin clicking Resync.
+
+## Out of scope
+
+- `REFERRAL_SOURCE` capture (separate work — needs signup form change)
+- `PRODUCT_CATEGORIES` backfill for users who skipped onboarding
+- Switching activation/winback to Resend Broadcasts vs Automations
