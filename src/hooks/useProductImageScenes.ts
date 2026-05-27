@@ -84,6 +84,7 @@ async function fetchAllScenes(includePromptTemplate = false, activeOnly = true, 
       .from('product_image_scenes' as any)
       .select(selectCols(includePromptTemplate))
       .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
       .range(from, from + PAGE - 1);
     if (activeOnly) q = q.eq('is_active', true);
     if (!includeBundle) q = q.neq('category_collection', 'bundle');
