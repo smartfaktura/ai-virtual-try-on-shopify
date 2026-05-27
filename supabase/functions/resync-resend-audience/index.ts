@@ -7,6 +7,8 @@ const corsHeaders = {
 
 const RESEND_API = "https://api.resend.com";
 
+const NUMERIC_PROP_KEYS = new Set(["credits_balance"]);
+
 function toPropString(v: unknown): string | undefined {
   if (v === null || v === undefined) return undefined;
   if (typeof v === "string") return v;
@@ -15,9 +17,14 @@ function toPropString(v: unknown): string | undefined {
   try { return JSON.stringify(v); } catch { return undefined; }
 }
 
-function buildProperties(input: Record<string, unknown>): Record<string, string> {
-  const out: Record<string, string> = {};
+function buildProperties(input: Record<string, unknown>): Record<string, string | number> {
+  const out: Record<string, string | number> = {};
   for (const [k, v] of Object.entries(input)) {
+    if (NUMERIC_PROP_KEYS.has(k)) {
+      const n = typeof v === "number" ? v : v == null ? NaN : Number(v);
+      if (Number.isFinite(n)) out[k] = n;
+      continue;
+    }
     const s = toPropString(v);
     if (s !== undefined && s !== "") out[k] = s;
   }
