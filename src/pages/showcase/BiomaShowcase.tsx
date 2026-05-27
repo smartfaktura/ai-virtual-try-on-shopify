@@ -67,32 +67,25 @@ const IMAGES: Img[] = [
 type UgcImg = { url: string; model: string };
 
 const UGC_IMAGES: UgcImg[] = [
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/81cf6eb2-a83e-4fa0-8950-96bb3931f3c9/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/ba27d0d1-b7c0-4ace-9276-5715f86ef3b4/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/9a1e2d66-ee52-46cc-869c-40627e8c8b26/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/8a953431-8927-48c4-88ff-05d4a711b941/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b9065fbd-a84f-40b7-9a80-d2c6dc14b309/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1c0ba983-5aa7-456f-a497-82088583f48c/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/bcf9d7d1-cad2-45dc-8fa0-f75b0a606cd6/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/c901c251-fec2-4c1a-a600-3fc8337e1c4e/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/002bdad6-d276-43ab-820e-2b4f8c60cb9a/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/3e7a316e-c9f5-41f7-946a-d8d03262d385/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/f520b610-910b-4301-ba49-062e13977dba/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1fc1277b-3ae3-4ad7-8643-1e5ef641e6bd/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/0d0957de-50d3-4ae2-b0dd-3b53045b7a14/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b0e85dc6-9018-4d86-9023-525a5fad206b/0-0.jpg', model: 'Freya' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d0a55ac-7e62-4a9a-a904-87761ffdbfb5/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d7aaf64b-447e-4341-afbc-005fe076df5a/0-0.jpg', model: 'Zara' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/3e86fc6c-3474-4ed2-ae14-8e0f0fe0b3a3/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/379a466a-0e33-48c6-b710-419ef6db1890/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d342281-38c7-4f46-a944-a618079565fb/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/cfbe0196-5d2f-4e67-80a2-0d36a8296711/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/dd041021-06d1-4fa1-a5e2-2ebfd1a9b329/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/6e5fee99-79f3-462e-9311-b5e6fd963bdf/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/937153f7-d50c-4d95-9c3c-0bb1e29c93a6/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b9065fbd-a84f-40b7-9a80-d2c6dc14b309/0-0.jpg', model: 'Freya' },
   { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/b47d5498-443c-4499-a7ec-8c923252f93d/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/7c9268ca-6a3c-4e5b-accf-f03621349e01/0-0.jpg', model: 'Zara' },
-  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/dcf78339-8213-4e1b-918a-6e9f8fa43308/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/937153f7-d50c-4d95-9c3c-0bb1e29c93a6/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/f520b610-910b-4301-ba49-062e13977dba/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/3e7a316e-c9f5-41f7-946a-d8d03262d385/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/6e5fee99-79f3-462e-9311-b5e6fd963bdf/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1c0ba983-5aa7-456f-a497-82088583f48c/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/ba27d0d1-b7c0-4ace-9276-5715f86ef3b4/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d0a55ac-7e62-4a9a-a904-87761ffdbfb5/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/c901c251-fec2-4c1a-a600-3fc8337e1c4e/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/cfbe0196-5d2f-4e67-80a2-0d36a8296711/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/1fc1277b-3ae3-4ad7-8643-1e5ef641e6bd/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/5d342281-38c7-4f46-a944-a618079565fb/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/dd041021-06d1-4fa1-a5e2-2ebfd1a9b329/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/8a953431-8927-48c4-88ff-05d4a711b941/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/379a466a-0e33-48c6-b710-419ef6db1890/0-0.jpg', model: 'Zara' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/bcf9d7d1-cad2-45dc-8fa0-f75b0a606cd6/0-0.jpg', model: 'Freya' },
+  { url: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/d7aaf64b-447e-4341-afbc-005fe076df5a/0-0.jpg', model: 'Zara' },
 ];
 
 const STATS = [
@@ -248,4 +241,3 @@ export default function BiomaShowcase() {
     </div>
   );
 }
-
