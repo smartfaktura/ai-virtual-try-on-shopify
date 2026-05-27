@@ -69,7 +69,7 @@ export function BrandScenesInfoModal({ open, onOpenChange }: Props) {
 
         {/* Subtitle */}
         <DialogDescription className="text-sm text-muted-foreground mt-2 text-center">
-          Built from your references. Reused across every shoot.
+          Build a private scene library with reusable looks created only for your brand.
         </DialogDescription>
 
         {/* Feature list */}
