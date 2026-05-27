@@ -1,73 +1,45 @@
-## Activation Nudge — VOVV.AI branded email (personalized)
+## Rebuild Activation Nudge — match VOVV newsletter pattern
 
-Build a paste-into-Resend HTML email that matches the existing VOVV welcome template (`supabase/functions/send-email/index.ts`), mobile-optimized, with 3 compressed showcase images hosted on `vovv.ai`, and **Resend merge tags** so subject + body adapt to each contact.
+Rewrite `/mnt/documents/activation-nudge-email_v2.html` using the exact visual system from the attached `brand-scenes-newsletter (4).html` reference. Fix broken images by uploading to a public storage bucket (the `vovv.ai/email/` paths only exist locally and never resolve in inboxes).
 
-### Resend personalization tokens used
+### Fixes vs v1
 
-Resend renders contact attributes inline using `{{{TOKEN|fallback}}}` (triple braces, pipe fallback). We'll use:
+1. **Brand mark:** "VOVV" everywhere (uppercase, 2.4px letter-spacing wordmark). Remove all "VOVV.AI".
+2. **Visual system matches newsletter exactly:**
+   - Body bg `#F7F5F2` (cream), card bg `#FFFFFF`, border `1px solid #E8E4DD`, radius `6px`
+   - Image radius `3px`, pill buttons `border-radius:999px`
+   - Navy CTA `#0B1C3A` with white text
+   - System font stack only: `-apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Arial, sans-serif` — **no Google Fonts** (caused the off look in v1)
+   - Hero H1 `40px / weight 500 / -1.2px letter-spacing`, body `15px / 1.55 / #4A4A4A`, eyebrow caps `11px / 2.4px letter-spacing / #6B6B6B`
+   - 600px container, 44px card padding, 14px gap between cards
+3. **Fix broken images:** upload 6 compressed JPGs to public Supabase Storage bucket `email-assets` (create if missing, public read). Use real CDN URLs `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/email-assets/...?quality=65&width=480&height=600&resize=cover`.
+4. **6 category tiles** in a 3×2 grid (stacks 1-col on mobile) with caption underneath each:
+   - Skincare ← `skincare-serum-marble.png`
+   - Fashion ← `fashion-knit-loft.png`
+   - Home ← `home-candle-evening.png`
+   - Activewear ← `fashion-activewear-gym.png`
+   - Food & Drink ← `food-cocktail-rocks.png`
+   - Fragrance ← `skincare-perfume-vanity.png`
+5. **Shorter copy:**
+   - Eyebrow: `STILL EXPLORING?`
+   - H1: `Your first visual, {{{FIRST_NAME|friend}}} — in 60 seconds`
+   - Lede (one sentence): `You signed up but haven't created yet. {{{credits_balance|20}}} free credits are waiting.`
+   - Steps card removed (too long) — replaced with single inline "Upload → Pick a Visual Type → Done" microcopy under the grid
+   - CTA: `Start Creating →`
+   - Reassurance: `{{{credits_balance|20}}} credits on your {{{plan|Free}}} plan`
+   - Secondary: `Need ideas? Browse the gallery →` → `/app/discover`
+6. **Dynamic tokens verified:** `{{{FIRST_NAME|friend}}}`, `{{{credits_balance|20}}}`, `{{{plan|Free}}}` — triple-brace Resend syntax with pipe fallbacks, used in subject + preheader + body.
+7. **Footer** matches newsletter: wordmark left + tagline right, 3-column links (Studio / Company / Follow), hairline, `© 2026 VOVV · vovv.ai` + `View in browser · Unsubscribe`.
 
-| Token | Source | Fallback |
-|---|---|---|
-| `{{{FIRST_NAME\|there}}}` | Resend built-in (split from full name) | `there` |
-| `{{{plan\|Free}}}` | Custom attribute synced from `profiles.plan_tier` | `Free` |
-| `{{{credits_balance\|20}}}` | Custom attribute synced from `profiles.credits_balance` | `20` |
-| `{{{signup_source\|the homepage}}}` | Custom attribute (optional, if synced) | `the homepage` |
+### Resend subject + preheader (paste into Send email step)
 
-The Resend automation is already set in the chat: triggered by `last_event = user.signed_up`, waits 24h, condition `last_event still = user.signed_up`. So every recipient is guaranteed a signed-up user with their `FIRST_NAME` already on the contact record.
+- Subject: `{{{FIRST_NAME|Hey}}}, your first visual is one click away`
+- Preheader: `{{{credits_balance|20}}} free credits are still waiting — 60 seconds to create`
 
-### Personalized subject lines (set in Resend "Send email" step, not HTML)
+### Execution steps
 
-The user pastes **one** as the subject — recommended:
-- **Subject:** `{{{FIRST_NAME|Hey}}}, your first visual is one click away`
-- **Preview text (preheader):** `Your {{{credits_balance|20}}} free credits are still waiting — create something in 60 seconds`
-
-### 1. Compress & host 3 showcase images (~65 KB each)
-
-Source PNGs in `public/images/showcase/` are 1.3–1.8 MB. Resize to 600px wide, JPG q78, strip metadata, save to `public/email/` so they're served from `https://vovv.ai/email/...`:
-
-- `public/email/nudge-skincare.jpg` ← `skincare-serum-marble.png`
-- `public/email/nudge-fashion.jpg`  ← `fashion-knit-loft.png`
-- `public/email/nudge-home.jpg`     ← `home-candle-evening.png`
-
-Total payload ≈ 165 KB across all 3 images.
-
-### 2. Create `/mnt/documents/activation-nudge-email.html`
-
-Self-contained HTML matching the existing brand system from `send-email/index.ts`:
-- Colors: navy `#0f172a`, navy CTA `#1e293b`, muted `#64748b`, stone `#f5f5f4`, border `#e7e5e4`, white body
-- Inter font via Google Fonts + system fallbacks
-- 560px max-width table layout (email-client safe), 40px outer padding, scales to 100% on mobile
-- VOVV.‌AI wordmark (with invisible ZWNJ to defeat Gmail auto-linking, matching existing template)
-- Footer with "© 2026 VOVV.‌AI" and "A product by 123Presets"
-
-**Personalized content structure (mobile-first, single column):**
-
-1. **Hidden preheader:** `Your {{{credits_balance|20}}} free credits are still waiting — create something in 60 seconds`
-2. **H1:** `Your first visual is one click away, {{{FIRST_NAME|friend}}}`
-3. **Lede:** `Noticed you signed up but haven't created anything yet. Here's what you could be making with your {{{credits_balance|20}}} free credits in under a minute.`
-4. **3-image grid** (stacks on mobile): skincare / fashion / home with captions
-5. **Stone card** with 3 numbered steps:
-   - 1. Upload a product photo (or pick a sample)
-   - 2. Choose a Visual Type
-   - 3. Get studio-quality images in seconds
-6. **Primary CTA:** "Start Creating" → `https://vovv.ai/app/workflows`
-7. **Reassurance line:** `You still have {{{credits_balance|20}}} free credits on your {{{plan|Free}}} plan ready to use.`
-8. **Secondary link:** "Need ideas? Browse the gallery →" → `https://vovv.ai/app/discover`
-
-### Mobile optimizations
-- `<meta name="viewport">` + `meta name="x-apple-disable-message-reformatting"`
-- Image cells `display:block; width:100%; height:auto` so they reflow on narrow screens
-- Font sizes: H1 24px, body 15px, captions 12px — readable at 320px
-- CTA button ≥ 44px tap target
-
-### 3. Deliver as artifact + paste-ready subject/preheader
-
-```
-<presentation-artifact path="activation-nudge-email.html" mime_type="text/html"></presentation-artifact>
-```
-
-Plus the subject + preheader strings the user pastes into the Resend "Send email" step fields.
-
-### Notes on what's syncable from your app
-- `FIRST_NAME` is automatically populated by Resend's contact import if a full name exists — your backend currently sends `name` via `track-resend-event`, so this works.
-- `plan` and `credits_balance` will only render personalized values if you push them as **custom attributes** when you create/update Resend contacts. If they aren't synced yet, the `|fallback` defaults render gracefully ("Free", "20"). Optional follow-up: add these to the `attributes` object in `track-resend-event` so they stay fresh.
+1. Compress 6 source PNGs from `public/images/showcase/` to ≤80KB JPGs at 600×800 (4:3) into `/tmp/email-tiles/`.
+2. Ensure public storage bucket `email-assets` exists (create with `supabase--migration` if missing, public read policy).
+3. Upload all 6 via `supabase--storage_upload` to `email-assets/nudge/{slug}.jpg`.
+4. Write `/mnt/documents/activation-nudge-email_v2.html` using the storage CDN URLs and the newsletter's exact style tokens.
+5. Deliver as artifact.
