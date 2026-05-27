@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +55,7 @@ export function SaveToPublicScenesDialog({
   const [subCategoryExisting, setSubCategoryExisting] = useState<string>("");
   const [subCategoryNew, setSubCategoryNew] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!open) return;
@@ -144,6 +145,10 @@ export function SaveToPublicScenesDialog({
         subCategory: finalSubCategory,
         compiledPrompt: persistedPrompt,
       });
+      queryClient.invalidateQueries({ queryKey: ["product-image-scenes"] });
+      queryClient.invalidateQueries({ queryKey: ["product-image-scenes-priority"] });
+      queryClient.invalidateQueries({ queryKey: ["product-image-scenes-rest"] });
+      queryClient.invalidateQueries({ queryKey: ["public-scene-buckets"] });
       toast.success(
         `Published to ${categoryLabel(scene.category_collection)} → ${scene.sub_category}`,
       );
