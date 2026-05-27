@@ -1,65 +1,47 @@
-## Activation Nudge v3 — scene imagery + better footer
+## Fix Realtime security findings
 
-### 1. Swap 6 tile images to the scenes library
+Two scanner errors will be resolved: missing RLS on `realtime.messages`, and `watch_accounts`/`watch_posts` being exposed via the Realtime publication.
 
-Use the `scenes/` folder in the public `landing-assets` bucket (18 available — picked the 6 most visually diverse and on-brand). All routed through Supabase image render for compression (`?quality=70&width=360&height=480&resize=cover`).
+### 1. Database migration
 
-| Tile label   | Scene file                          |
-|--------------|-------------------------------------|
-| SKINCARE     | `scenes/scene-spa-towels.jpg`       |
-| FRAGRANCE    | `scenes/scene-dried-flowers.jpg`    |
-| HOME         | `scenes/scene-midcentury-console.jpg` |
-| FASHION      | `scenes/scene-linen-textile.jpg`    |
-| FOOD & DRINK | `scenes/scene-brunch-table.jpg`     |
-| ACTIVEWEAR   | `scenes/scene-stone-path.jpg`       |
+```sql
+-- Stop streaming admin-only tables to Realtime
+ALTER PUBLICATION supabase_realtime DROP TABLE public.watch_accounts;
+ALTER PUBLICATION supabase_realtime DROP TABLE public.watch_posts;
 
-Category labels and 3×2 grid layout stay the same. No changes to hero, CTA, or micro-steps.
+-- Lock down realtime.messages so only authenticated users can subscribe
+ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY;
 
-### 2. Footer — better version
-
-Restructure to match the newsletter footer hierarchy more closely:
-
-```text
-VOVV                                          AI visuals for product brands
-─────────────────────────────────────────────────────────────────────────
-STUDIO              EXPLORE             COMPANY             FOLLOW
-Visual Studio       Discover            Pricing             Instagram
-Visual Types        Learn               Contact             LinkedIn
-Library             Presets             Affiliates          X / Twitter
-─────────────────────────────────────────────────────────────────────────
-You're receiving this because you signed up for VOVV.
-Manage preferences  ·  Unsubscribe  ·  View in browser
-© 2026 VOVV  ·  vovv.ai  ·  Vilnius, Lithuania
+CREATE POLICY "Authenticated users can receive realtime broadcasts"
+ON realtime.messages
+FOR SELECT
+TO authenticated
+USING (true);
 ```
 
-Changes vs. current footer:
-- 3 columns → 4 columns (Studio / Explore / Company / Follow), mobile-stacks to 1
-- Added: Visual Types, Library, Presets, Affiliates, X/Twitter
-- New "you're receiving this because…" reassurance line above legal row
-- Manage preferences / Unsubscribe / View in browser grouped on one line
-- Location appended to copyright row
-- Same hairline divider, same cream bg, same `#9A9A9A` legal text
+Leaves `discover_presets` and `generated_videos` on the publication untouched.
 
-### 3. Subject line + preheader (3 options to pick from)
+### 2. Code change
 
-All use Resend triple-brace tokens with pipe fallbacks. Subject ≤ 50 chars, preheader 70–110 chars (renders fully in Gmail/Apple Mail without truncation).
+In `src/hooks/useWatchAccounts.ts`, remove the two `postgres_changes` subscriptions on `watch_accounts` and `watch_posts` plus their channel setup/teardown. Mutations already call `refetchAccounts()` / `refetchPosts()`, and the admin Trend Watch page has a manual refresh button, so the UI keeps working.
 
-**Option A — direct, credit-led** (recommended)
-- Subject: `{{{FIRST_NAME|Hey}}}, your {{{credits_balance|20}}} credits are waiting`
-- Preheader: `60 seconds to your first visual — pick a scene, upload a product, done`
+### 3. Verification
 
-**Option B — curiosity / outcome-led**
-- Subject: `Your brand, in 60 seconds`
-- Preheader: `{{{FIRST_NAME|Friend}}}, here's what your product could look like by tonight`
+- Confirm publication only contains `discover_presets` and `generated_videos`.
+- Re-run the security scan — both findings should clear.
+- Smoke-test Trend Watch admin (list loads, add/refresh works).
 
-**Option C — soft nudge / FOMO-light**
-- Subject: `Still thinking it over, {{{FIRST_NAME|friend}}}?`
-- Preheader: `Your {{{credits_balance|20}}} free credits don't expire — but your first visual is one click away`
+### Risk / rollback
 
-### 4. Output
+Non-destructive. Rollback if needed:
 
-Write `/mnt/documents/activation-nudge-email_v3.html` (keep v2 intact for comparison). No project source files touched.
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.watch_accounts;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.watch_posts;
+DROP POLICY "Authenticated users can receive realtime broadcasts" ON realtime.messages;
+ALTER TABLE realtime.messages DISABLE ROW LEVEL SECURITY;
+```
 
----
+### Out of scope
 
-**Question before I build:** which subject/preheader option (A, B, or C) should I bake into the HTML `<title>` and preheader div? Default is A unless you say otherwise.
+No changes to `watch_*` table RLS (already admin-only), no changes to other realtime features.
