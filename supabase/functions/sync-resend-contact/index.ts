@@ -80,10 +80,9 @@ Deno.serve(async (req) => {
       null;
     const lastName = body.last_name || profile?.last_name || null;
 
-    // Build custom properties payload (kept for log/debug + future migration to
-    // Resend's new /contacts API). NOTE: the legacy /audiences/{id}/contacts
-    // endpoint does NOT support custom properties — they are silently dropped.
-    // We still log them locally so resend_event_log keeps a complete record.
+    // Build custom properties payload. Sent as a best-effort additive PATCH
+    // after the audience create/update succeeds (see end of function).
+    // Local resend_event_log keeps a full record either way.
     const incomingProps = (body.properties ?? {}) as Record<string, unknown>;
     const properties = buildProperties({
       plan: incomingProps.plan ?? profile?.plan,

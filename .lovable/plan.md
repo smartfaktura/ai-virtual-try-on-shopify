@@ -1,27 +1,55 @@
-## Apply shared card recipe to ContentPreferencesSection
+# Safely enable Resend contact properties
 
-Restyle the header, sub-section, and footer of `ContentPreferencesSection` (Settings.tsx lines 174–256) to match the rest of the page. Visual only — categories logic, subs logic, save handler, reset all unchanged.
+Goal: make the contact properties we already build (`plan`, `primary_family`, `primary_subtype`, `families`, `subtypes`, `product_categories`, `product_subcategories`, `signup_date`, `has_generated`, `credits_balance`, `marketing_opted_in`) actually persist on Resend contacts so we can use them as segment/personalisation data — without changing anything in the current working sync, signup, unsubscribe, or broadcast flows.
 
-### Changes
-- Wrapper `space-y-5` → `space-y-0` (use explicit dividers like other sections).
-- Header (177–181):
-  - Eyebrow `text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium` → "Preferences"
-  - Title `text-2xl font-semibold tracking-tight leading-none` → "Content preferences"
-  - Subtitle `text-sm text-muted-foreground` → "Select categories that match your products — this tailors your dashboard experience"
-- Insert `my-7 border-t border-border/60` divider before the category grid.
-- Category grid (182–195): keep 2-col grid, bump to `gap-3`, label `text-sm font-medium`.
-- Specific product types block (197–241):
-  - Replace `pt-2 border-t border-border` with our standard `my-7 border-t border-border/60` divider above it
-  - Sub-header: drop `text-sm font-semibold` h4 and replace with same eyebrow style "Specific product types" + `text-xs text-muted-foreground` helper
-  - Family label: keep uppercase mini-label but match tracking to `tracking-[0.18em]` for consistency
-  - Chip buttons: keep behavior, slightly larger `px-3.5 py-2 text-[13px] rounded-full`
-- Footer (243–254):
-  - Add `my-7 border-t border-border/60` divider above
-  - Save button → `h-11 rounded-xl px-6` (drop `size="pill"`)
-  - Reset link → `text-sm text-muted-foreground hover:text-foreground` with `w-3.5 h-3.5` icon
+## Safety principles
 
-### Files
-- `src/pages/Settings.tsx` lines 174–256 only
+- Never remove or restructure the existing `/audiences/{id}/contacts` POST/PATCH path. That's what keeps contacts subscribed/unsubscribed and what powers current broadcasts.
+- Properties are added as an **additive, best-effort second step** wrapped in `try/catch`. If the property call fails for any reason, we log it but still return `ok: true` from the main sync — so signup, unsubscribe, and broadcasts keep working exactly as today.
+- No DB schema changes. No changes to `handle_new_user`, `deduct_credits`, `enqueue_generation`, or any RPC that calls these functions.
+- No frontend changes.
+- No new secrets — reuses existing `RESEND_API_KEY` and `RESEND_AUDIENCE_ID`.
 
-### Out of scope
-- Logic, data loading, save/reset behavior, categories source, toast copy
+## Step 1 — Add additive property sync in `sync-resend-contact`
+
+After the existing audience POST/PATCH completes successfully (action `created` or `updated`), make one extra best-effort call to Resend's contact-update endpoint that does accept `properties`:
+
+```
+PATCH /audiences/{RESEND_AUDIENCE_ID}/contacts/{email}
+body: { properties: { plan, primary_family, ... } }
+```
+
+Rules:
+- Wrap in its own `try/catch`. Any failure is logged to `resend_event_log` with `event_type: 'contact.property_sync'` and `status: 'failed'`, but does NOT change the outer function's success response.
+- Skip entirely if `Object.keys(properties).length === 0`.
+- Skip if the parent contact action was `failed` (no contact to attach to).
+- Continue writing `properties` into the existing `resend_event_log` payload exactly as today, so we keep the local audit trail intact.
+- Remove the misleading "silently dropped" comment only after Step 3 verifies persistence.
+
+## Step 2 — Same additive pattern in `backfill-resend-audience`
+
+Mirror the same best-effort property push after each successful POST/PATCH inside the loop, so a one-time admin run backfills property values onto all currently opted-in contacts.
+
+- Per-contact property failures are counted separately as `property_failed` and do NOT increment the existing `failed` counter.
+- Function still returns the same shape today plus a new `property_failed` field for visibility.
+
+## Step 3 — Verify, then backfill
+
+1. Deploy the two edge functions.
+2. Trigger one test sync (e.g., re-run the signup event for an internal test account) and confirm:
+   - Audience contact still created/updated (no regression).
+   - `resend_event_log` shows a second `contact.property_sync` row with `status: 'ok'`.
+   - The property values are visible on that contact's profile in the Resend dashboard.
+3. If the property endpoint returns a 4xx (Resend plan/feature mismatch), the change has zero user impact — we adjust to whichever endpoint Resend expects on our account (newer top-level `/contacts` API) and redeploy.
+4. Once verified on one contact, run `backfill-resend-audience` from admin to populate properties on all existing opted-in contacts.
+
+## Out of scope
+
+- Switching off the legacy `/audiences/{id}/contacts` endpoint.
+- New property names beyond what's already built today.
+- UI inside VOVV.AI for managing properties or Resend segments.
+- Multi-audience segmentation (separate plan for that).
+
+## Rollback
+
+If the property call causes any unexpected behavior, revert the two edge function files — no DB, schema, or auth state is touched, so rollback is just a redeploy.
