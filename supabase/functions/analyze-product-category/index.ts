@@ -80,6 +80,8 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["shoes", /\bboot\b|\bboots\b/i, "boots"],
   ["shoes", /high heel|stiletto|pump/i, "high-heels"],
   ["home-decor", /armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
+  ["tech-devices", /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case|leather case/i, "phone-cases"],
+  ["bags-accessories", /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case/i, "phone-cases"],
 ];
 
 /** Demote overly-broad "garments" to a more specific subcategory based on title/description */
@@ -196,7 +198,7 @@ IMPORTANT: Pay close attention to the product title — if the title says "perfu
 
 VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 
-PHONE CASE GUIDANCE: Any phone case, iPhone case, AirPods case, Samsung case, MagSafe case, silicone/clear/leather case for a phone or earbuds MUST be categorised as "phone-cases" (NOT "tech-devices" or "bags-accessories").
+PHONE CASE GUIDANCE (CRITICAL): If the product IS a case for a phone, iPhone, AirPods, Samsung device, or any MagSafe accessory — even if it appears to be a "tech" or "accessory" item — the category MUST be "phone-cases". Never use "tech-devices" or "bags-accessories" for a case. Silicone case, clear case, leather case, MagSafe case → ALWAYS "phone-cases".
 
 BRIDAL GUIDANCE: Any wedding dress, bridal gown, bridesmaid dress, or bridalwear MUST be categorised as "wedding-dress" (NOT "dresses" or "garments"). Examples: "Lace Wedding Dress" → wedding-dress, "Bridal Gown" → wedding-dress, "Bridesmaid Dress" → wedding-dress.
 
