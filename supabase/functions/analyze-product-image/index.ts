@@ -48,6 +48,15 @@ If it's a PRODUCT, return:
 - "description": 10-20 word description of color, material, style, key features
 - "specification": A detailed 30-50 word generation-ready description covering the product's silhouette, construction, materials, colors, finish, texture, and key visual details. Include hex color codes if identifiable. This should read like a technical product spec for image generation.
 
+CRITICAL RULE FOR PHONE CASES, TABLET CASES, LAPTOP SLEEVES, AIRPODS / EARBUD CASES, SMARTWATCH BANDS, AND SCREEN PROTECTORS:
+- NEVER mention or guess any device brand or model designation, even if cutouts, camera bumps, button placement, or silhouette make a specific device identifiable.
+- FORBIDDEN words in title, productType, description, and specification: "iPhone", "Apple", "Samsung", "Galaxy", "Pixel", "Google Pixel", "Huawei", "Xiaomi", "OnePlus", "Sony", "Nokia", "Motorola", "iPad", "MacBook", "AirPods", "Apple Watch", and any model numbers or suffixes like "15", "15 Pro", "Pro Max", "Ultra", "S24", "S25", "Mini", "Plus", "Air".
+- Describe the item generically: "Phone Case", "Tablet Case", "Laptop Sleeve", "Earbud Case", "Watch Band", "Screen Protector".
+- Examples:
+  - Bad title: "Orange Striped iPhone 15 Pro Case" → Good: "Orange Striped Phone Case"
+  - Bad description: "...glossy phone case for iPhone 15 Pro" → Good: "...glossy phone case with a slim profile and precise cutouts"
+  - Bad specification: "Designed for iPhone 15 Pro Max with MagSafe ring" → Good: "Slim TPU phone case with a circular accessory ring and precise cutouts for camera, speaker, and charging port"
+
 If it's a ROOM, BUILDING, or SPACE, return:
 - "title": Descriptive room/space name (e.g. "Modern Open-Plan Living Room", "Sunny Master Bedroom", "Victorian Brick Facade")
 - "productType": Space type (e.g. "Living Room", "Bedroom", "Kitchen", "Front Facade", "Office")
@@ -55,6 +64,7 @@ If it's a ROOM, BUILDING, or SPACE, return:
 - "specification": A detailed 30-50 word description of the space's architecture, materials, color palette, lighting, and key design elements suitable for image generation.
 
 Return ONLY the JSON object, no markdown or explanation.`,
+
             },
             {
               type: "image_url",

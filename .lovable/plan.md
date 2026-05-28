@@ -1,25 +1,29 @@
-## Problem
+## Goal
 
-When a user uploads a phone case, `analyze-product-category` asks the AI for a category. The AI often returns `"tech-devices"` (a valid category), so the function early-exits at the "valid category" check and never reaches the title-based phone-case detection. Result: phone case → Tech & Devices instead of Phone Cases.
+Prevent `analyze-product-image` from writing any specific phone model (e.g. "iPhone 15 Pro", "Samsung Galaxy S24", "Pixel 8") into `title`, `description`, or `specification` when the analyzed product is a phone case. The function should still confidently detect that the item is a phone case — just describe it generically.
 
-The existing `SPECIFICITY_OVERRIDES` table has no `tech-devices → phone-cases` entry, so an AI label of `tech-devices` is never corrected even when the title clearly says "phone case".
+## Change (single file)
 
-## Fix
+`supabase/functions/analyze-product-image/index.ts` — update the prompt sent to Gemini Flash (lines 43–57). Two additions:
 
-Single file: `supabase/functions/analyze-product-category/index.ts`
+1. **Hard rule appended to the PRODUCT block** instructing the model never to mention a brand or model designation for phone accessories, even if cutouts make it identifiable. List the protected categories so the rule covers adjacent cases: phone cases, tablet cases, laptop sleeves, AirPods/earbud cases, watch bands, screen protectors.
 
-1. **Add two specificity overrides** so AI-returned parents get remapped when the title matches a phone-case pattern:
-   ```ts
-   ["tech-devices",     /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case|leather case/i, "phone-cases"],
-   ["bags-accessories", /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case/i, "phone-cases"],
-   ```
+2. **Concrete substitution examples** so the model knows what to write instead:
+   - Bad: "Orange Striped iPhone 15 Pro Case"
+   - Good: "Orange Striped Phone Case"
+   - Bad: "...phone case with a glossy finish for iPhone 15 Pro"
+   - Good: "...phone case with a glossy finish, slim profile with precise cutouts"
 
-2. **Strengthen the system prompt** with a sharper rule: any product that *is* a case for a phone/AirPods/MagSafe must be `phone-cases`, never `tech-devices` or `bags-accessories`.
+3. **Also forbid** the words: "iPhone", "Samsung", "Galaxy", "Pixel", "Huawei", "Xiaomi", "OnePlus", and any model numbers (e.g. "15 Pro", "S24", "Ultra") inside `title` / `productType` / `description` / `specification` when `productType` is a phone case.
 
-No DB changes, no schema changes, no client code changes. Patterns are tight ("phone case", "iphone case", "magsafe", etc.) so false-positive risk is negligible, and the override only fires when the AI already picked one of the two parent buckets.
+No other code paths change. No DB migration. No change to `generate-workflow` — once the source description no longer contains the device name, the assembled prompt at lines 603–606 will be clean automatically. Existing products that already have a polluted description in the DB will keep their old text until re-analyzed (we are not touching historical rows).
+
+## Out of scope
+
+- Cleaning up already-saved product descriptions in the DB.
+- Adding a category-aware post-filter / regex sanitizer (prompt rule alone is enough for Flash; we can add a regex backstop later if it slips through).
+- Changing the 6 phone-case scenes with literal `\n\n` (unrelated, already discussed).
 
 ## Verification
 
-- Re-run product analysis on the uploaded phone case → category resolves to `phone-cases`.
-- Check edge function logs for `Category specificity override: "tech-devices" -> "phone-cases"`.
-- Confirm Step 2 Scenes loads the Phone Cases bucket under Bags & Accessories.
+After deploy, re-upload a phone case in info@tsimkus.lt's account and confirm the returned JSON's `title`, `description`, and `specification` contain no device brand/model names.
