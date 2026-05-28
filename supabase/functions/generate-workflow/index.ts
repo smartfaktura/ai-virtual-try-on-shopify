@@ -154,6 +154,7 @@ interface WorkflowRequest {
       finish?: string;
       packagingRelevant?: boolean;
       personCompatible?: boolean;
+      deviceModel?: string;
     };
   };
   additional_products?: Array<{
@@ -597,13 +598,34 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
   }
   const analysisBlock = analysisLines.length > 0 ? `\n${analysisLines.join('\n')}` : '';
 
+  // ── Phone-case fidelity block ───────────────────────────────────────────────
+  // Locks the device shape under the case to the reference image's cutouts, and
+  // (when the analyzer detected it) to a specific phone model. Gated on
+  // phone-cases only — every other category renders identically.
+  const PHONE_CASE_RE = /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case|leather case/i;
+  const isPhoneCase =
+    analysisData?.category === 'phone-cases' ||
+    PHONE_CASE_RE.test(product.productType || '') ||
+    PHONE_CASE_RE.test(product.title || '');
+  const deviceModel = (analysisData as { deviceModel?: string } | undefined)?.deviceModel?.trim();
+  const deviceModelLine = isPhoneCase && deviceModel
+    ? `\n- DEVICE MODEL: The case fits a "${deviceModel}". The phone/device under the case MUST be a "${deviceModel}" — match its silhouette, corner radius, frame material, and camera bump exactly.`
+    : '';
+  const phoneCaseBlock = isPhoneCase
+    ? `\n\nPHONE CASE FIDELITY (CRITICAL):
+- The [PRODUCT IMAGE] is a phone case. Its camera cutout shape, lens count, MagSafe ring, and button/port cutouts are the source of truth for the device underneath. Reproduce them EXACTLY.
+- The phone body under the case MUST match those cutouts. Do NOT invent a different device (no swapping a single-lens phone for a triple-lens Pro, or vice versa).
+- Default to a BACK-of-phone view (case facing camera). If the scene calls for a front/angled view, the screen MUST be off/black — do not invent UI, notch art, or Dynamic Island content.
+- Preserve every printed graphic, texture, color, and finish on the case at 100% fidelity.${deviceModelLine}`
+    : '';
+
   return `${processedTemplate}
 ${themeBlock}
 ${isBundle ? '' : `PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
-${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
+${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}${phoneCaseBlock}
 `}${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${isBundle ? variation.instruction : (propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' '))}
