@@ -1036,7 +1036,7 @@ async function completeQueueJob(
     requested_count: requestedCount,
     credits_used: creditsReserved,
     creative_drop_id: payload.creative_drop_id || null,
-    prompt_final: payload.prompt || null,
+    prompt_final: (payload.prompt as string) || ((payload as any)?.extra_variations?.[0]?.instruction as string) || null,
     scene_name: (payload as any).__scene_name ?? (payload as any).pose?.name ?? payload.scene_name ?? null,
     scene_id:
       (payload as any).__scene_id ??
