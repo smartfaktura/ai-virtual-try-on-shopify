@@ -1,36 +1,37 @@
-## Simpler approach
+# Fix phone-case "overlay" feel — move reminder to top, rephrase
 
-Drop the duplicate `[CASE ARTWORK LOCK]` anchor idea. Generations *do* sometimes come out correct — the variance suggests the case reference is just losing attention priority, not that we need a second copy of it. Two small changes only:
+## Problem
+The `FINAL REMINDER` line we appended at the end of phone-case prompts is making outputs look like the case artwork is *pasted/overlaid* on top of the rendered phone, instead of being the actual physical case. The word "literal visual copy" plus its position right after `AVOID:` reads to the model as a post-render compositing instruction.
 
-### 1. Put the product reference first in the references array
+## Fix
 
-In `supabase/functions/generate-workflow/index.ts` (and the native Gemini path for phone cases), when building the multi-image payload for Gemini 3 Pro:
+### 1. Remove the trailing FINAL REMINDER (both files)
+- `supabase/functions/generate-workflow/index.ts` line 677 — drop the `${isPhoneCase ? '\n\nFINAL REMINDER: …' : ''}` suffix.
+- `src/lib/productImagePromptBuilder.ts` line 1601 — drop the `\n\nFINAL REMINDER: …` suffix.
 
-- Current order: `[MODEL IMAGE]` first (when present), then `[PRODUCT IMAGE]`, then any extras.
-- New order for **phone cases**: `[PRODUCT IMAGE]` always first, then `[MODEL IMAGE]`, then extras.
+### 2. Add ONE strong opening line at the very top of the phone-case prompt
+Inserted before the scene/theme block, framed as physical reality (not overlay):
 
-The first image in a Gemini multi-image request gets the strongest visual anchoring. When the model image is first, the case becomes "an object the person is holding"; when the case is first, the model becomes "a person holding this exact object". This alone is responsible for a large share of the drift we're seeing on selfie/hand-held scenes.
+> `PHONE CASE — PRIMARY SUBJECT LOCK: The phone and case visible in the final image ARE the exact physical phone+case shown in [PRODUCT IMAGE]. Render them as a real object existing in the scene — not as artwork pasted, overlaid, mocked-up, or composited onto a generic phone. The case's printed graphics, colors, stripes, edges, corner radius, and the phone's camera island shape, lens count, and lens positions must match [PRODUCT IMAGE] pixel-for-pixel because it IS the same object.`
 
-### 2. One strong final reference line
+- In `generate-workflow/index.ts`: prepend this line to `phoneCaseBlock` (around line 643) so it lands at the top of `PRODUCT DETAILS` instead of after `AVOID:`.
+- In `productImagePromptBuilder.ts`: prepend the same line at the start of the phone-case fidelity append (line 1601), and keep the existing detailed HARD CONSTRAINT block right after.
 
-At the very end of the assembled prompt (after `AVOID:`, last thing the model reads), append a single sentence for phone cases:
+### 3. Audit phone-case prompt phrasing for overlay-implying words
+Sweep both phone-case blocks and remove/soften anything that could read as overlay:
+- "Copy the … area" → "Match the … area" (copy implies paste).
+- Leave "Preserve every printed graphic…" as-is (preserve = part of the object, fine).
+- No "sticker", "apply", "place on top", "overlay" phrasing exists today — confirmed clean.
 
-> `FINAL REMINDER: The phone case in the output must be a literal visual copy of [PRODUCT IMAGE]. The case artwork, stripes, colors, camera cutout shape, lens count, and lens positions in [PRODUCT IMAGE] are not suggestions — they are the exact case to render. Do not redesign them.`
+### 4. Version bump
+`public/version.json` → new timestamp.
 
-That's it — no duplicate anchor, no removing existing fidelity block, no two-pass pipeline.
+## Files
+- `supabase/functions/generate-workflow/index.ts`
+- `src/lib/productImagePromptBuilder.ts`
+- `public/version.json`
 
-### Verify
-
-Re-generate the Orange Striped iPhone Case across "Poolside Case Rest", "Lace Case Selfie", "Soft Mirror Case" and confirm the stripe rhythm and 3-lens triangular island match the reference.
-
-## Files touched
-
-- `supabase/functions/generate-workflow/index.ts` — reorder references for phone cases, append final reminder.
-- `src/lib/productImagePromptBuilder.ts` — append the same final reminder so local-built prompts match.
-- `public/version.json` — bump.
-
-## What this will NOT touch
-
-- No duplicate references, no case-artwork-lock label.
-- No changes to the existing `PHONE CASE FIDELITY` block (it stays as-is).
-- No model forcing, no scene-template edits, no two-pass pipeline, no UI changes.
+## Not changing
+- Reference image ordering (product is already first).
+- Analyzer, model selection, UI, billing, other categories.
+- The existing detailed `PHONE CASE FIDELITY` blocks — they stay; only repositioned and prefixed.

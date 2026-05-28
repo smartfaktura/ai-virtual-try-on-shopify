@@ -641,10 +641,12 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
     : '';
 
   const phoneCaseBlock = isPhoneCase
-    ? `\n\nPHONE CASE FIDELITY (CRITICAL — [PRODUCT IMAGE] IS THE SOURCE OF TRUTH):
-- Copy the camera/cutout area of the [PRODUCT IMAGE] EXACTLY as shown. Match the visible cutout shape, size, proportions, orientation, position on the back, lens openings, flash holes, sensor holes, border thickness, and the case material around the cutout. If the reference shows a full-width horizontal camera row, render a full-width horizontal camera row. If it shows a small square island, render a small square island. If it shows a vertical pill, render a vertical pill.
+    ? `\n\nPHONE CASE — PRIMARY SUBJECT LOCK: The phone and case visible in the final image ARE the exact physical phone+case shown in [PRODUCT IMAGE]. Render them as a real physical object existing in the scene — not as artwork pasted, overlaid, mocked-up, or composited onto a generic phone. The case's printed graphics, colors, stripes, edges, corner radius, and the phone's camera island shape, lens count, and lens positions must match [PRODUCT IMAGE] pixel-for-pixel because it IS the same object.
+
+PHONE CASE FIDELITY (CRITICAL — [PRODUCT IMAGE] IS THE SOURCE OF TRUTH):
+- Match the camera/cutout area of the [PRODUCT IMAGE] EXACTLY as shown. Match the visible cutout shape, size, proportions, orientation, position on the back, lens openings, flash holes, sensor holes, border thickness, and the case material around the cutout. If the reference shows a full-width horizontal camera row, render a full-width horizontal camera row. If it shows a small square island, render a small square island. If it shows a vertical pill, render a vertical pill.
 - Do NOT normalize the camera into a generic iPhone, Samsung, or Pixel module from memory. Do NOT redesign, simplify, beautify, stretch, shrink, rotate, mirror, or relocate the camera area. Do NOT add or remove lenses, flashes, or sensors.
-- Preserve every printed graphic, stripe, texture, color, edge, and corner radius of the case at 100% fidelity.
+- Preserve every printed graphic, stripe, texture, color, edge, and corner radius of the case at 100% fidelity — as the physical surface of the case, not as a sticker, decal, or overlay.
 - Default to a BACK-of-phone view (case facing camera). If a front/angled view is needed, the screen MUST be off/black with no invented UI, notch art, app icons, wallpaper, or Dynamic Island content.
 - Hands, fingers, nails, jewelry, or clothing MUST NOT cover, occlude, or replace the camera area — keep it fully visible in selfie/hand-held shots.${phoneHintBlock}`
     : '';
@@ -674,7 +676,7 @@ ${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same id
 7. ${isBundle ? 'BACKGROUND ISOLATION (CRITICAL): Each [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE all backgrounds. Extract ONLY the product objects from ALL reference images. The output environment MUST come exclusively from the bundle scene instruction above.' : 'BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the variation instruction above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.'}
 ${batchOutfitLock ? `8. OUTFIT CONSISTENCY (CRITICAL): If a person/model appears, they MUST wear the EXACT same outfit described in the variation instruction. Do NOT deviate — same colors, same garment types, same shoes. This is a multi-image batch and visual consistency across all shots is mandatory.` : ""}
 
-${allNegatives ? `AVOID: ${allNegatives}, reference background, original background, source image background` : "AVOID: reference background, original background, source image background"}${isPhoneCase ? `\n\nFINAL REMINDER: The phone case in the output must be a literal visual copy of [PRODUCT IMAGE]. The case artwork, stripes, colors, camera cutout shape, lens count, and lens positions in [PRODUCT IMAGE] are not suggestions — they are the exact case to render. Do not redesign them.` : ''}`;
+${allNegatives ? `AVOID: ${allNegatives}, reference background, original background, source image background` : "AVOID: reference background, original background, source image background"}`;
   })();
 
   return prompt;
