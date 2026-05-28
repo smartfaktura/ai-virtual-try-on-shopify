@@ -1571,5 +1571,35 @@ export function buildDynamicPrompt(
     prompt += ' SCENE LIGHT VALIDATION (HARD CONSTRAINT — clean, not too bright): Use soft, cloud-diffused or open-shade daylight with balanced clean exposure. Highlights stay creamy, shadows airy and short, contrast medium-low. STRICTLY NO harsh midday sun, no blown-out white highlights on the garment, no hot spots on skin or court, no heavy lens flare, no overexposed sky. The court surface must be evenly lit and read clean and refined.';
   }
 
+  // ── Phone-case device-lock saugiklis ──
+  // Final unambiguous device/camera spec for any phone-cases product. Earlier
+  // scene templates often describe the case in passing but let the AI pick the
+  // wrong phone (lens count flip, mirrored camera island, full-screen mockup).
+  // Repeating this at the END ensures the image model treats the camera layout
+  // as immutable across every scene in the batch.
+  if (analysis?.category === 'phone-cases') {
+    const a = analysis as Partial<ProductAnalysis> & {
+      lensCount?: number;
+      lensArrangement?: string;
+      cameraIslandShape?: string;
+      cameraCutoutPosition?: string;
+      cameraLayoutDescription?: string;
+      hasMagsafeRing?: boolean;
+      caseStyle?: string;
+      deviceModel?: string;
+    };
+    const parts: string[] = [];
+    if (a.deviceModel) parts.push(`Device under the case: "${a.deviceModel}" — match its silhouette, frame, and camera bump exactly. Never substitute another model.`);
+    if (a.cameraLayoutDescription) parts.push(`Camera layout: ${a.cameraLayoutDescription}.`);
+    if (typeof a.lensCount === 'number') parts.push(`Exactly ${a.lensCount} lens${a.lensCount === 1 ? '' : 'es'} — never add or remove a lens.`);
+    if (a.lensArrangement) parts.push(`Lens arrangement: ${a.lensArrangement}.`);
+    if (a.cameraIslandShape) parts.push(`Camera island shape: ${a.cameraIslandShape}.`);
+    if (a.cameraCutoutPosition) parts.push(`Camera cutout position: ${a.cameraCutoutPosition} on the back — do NOT mirror, flip, or relocate it.`);
+    if (a.hasMagsafeRing) parts.push(`A MagSafe ring is part of the case — preserve it.`);
+    if (a.caseStyle) parts.push(`Case style: ${a.caseStyle}.`);
+    const spec = parts.join(' ');
+    prompt += ` PHONE CASE DEVICE LOCK (HARD CONSTRAINT — overrides any default phone styling): The [PRODUCT IMAGE] phone case is the source of truth for the device underneath. ${spec} Default view is the BACK of the phone (case facing camera); if a front/angled view appears, the screen must be off/black with no invented UI, notch art, app icons, wallpaper, or Dynamic Island content. Preserve every printed graphic, color, stripe, texture, and edge of the case at 100% fidelity. Hands, fingers, manicured nails, jewelry, sunglasses, or clothing must NEVER cover, occlude, replace, or visually compete with the camera module — keep the camera island fully visible and unobstructed in selfie and hand-held framings. STRICTLY FORBIDDEN: swapping the phone for a different model, mirroring or flipping the camera island to the opposite corner, adding or removing lenses, inventing a foldable/clear/transparent back, fabricating brand logos or wordmarks on the phone or case.`;
+  }
+
   return cleanupPrompt(prompt);
 }
