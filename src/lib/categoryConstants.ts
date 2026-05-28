@@ -85,6 +85,7 @@ export const SUBTYPE_HEADLINES: Record<string, string> = {
   backpacks: 'Create your first backpack campaign in seconds - no photoshoot needed.',
   fragrance: 'Create your first fragrance campaign in seconds - no photoshoot needed.',
   furniture: 'Create your first furniture campaign in seconds - no photoshoot needed.',
+  'phone-cases': 'Create your first phone case campaign in seconds - no photoshoot needed.',
 };
 
 export const SUBTYPE_HEADLINES_RETURNING: Record<string, string> = {
@@ -101,6 +102,7 @@ export const SUBTYPE_HEADLINES_RETURNING: Record<string, string> = {
   backpacks: 'Create campaign-ready backpack visuals - no photoshoot needed.',
   fragrance: 'Create campaign-ready fragrance visuals - no photoshoot needed.',
   furniture: 'Create campaign-ready furniture visuals - no photoshoot needed.',
+  'phone-cases': 'Create campaign-ready phone case visuals - no photoshoot needed.',
 };
 
 /** Display label for the pill selector */

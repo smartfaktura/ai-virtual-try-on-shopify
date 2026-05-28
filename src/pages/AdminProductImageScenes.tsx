@@ -103,6 +103,7 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
     label: 'Tech',
     items: [
       { value: 'tech-devices', label: 'Tech / Devices' },
+      { value: 'phone-cases', label: 'Phone Cases' },
     ],
   },
   {

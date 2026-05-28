@@ -13,7 +13,7 @@ const corsHeaders = {
 const SUBS_BY_FAMILY: Record<string, string[]> = {
   fashion: ['garments', 'hoodies', 'dresses', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'streetwear'],
   footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
-  'bags-accessories': ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'hats-small'],
+  'bags-accessories': ['bags-accessories', 'backpacks', 'wallets-cardholders', 'belts', 'scarves', 'phone-cases', 'hats-small'],
   watches: ['watches'],
   eyewear: ['eyewear'],
   jewelry: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'],
@@ -44,6 +44,7 @@ const SLUG_SYNONYMS: Record<string, string[]> = {
   'wallets-cardholders': ['wallet', 'cardholder', 'card holder'],
   belts: ['belt'],
   scarves: ['scarf', 'scarves'],
+  'phone-cases': ['phone case', 'iphone case', 'airpods case', 'samsung case', 'silicone case', 'clear case', 'magsafe case', 'magsafe'],
   'hats-small': ['hat', 'cap', 'beanie', 'beret'],
   'jewellery-rings': ['ring', 'rings', 'band', 'signet'],
   'jewellery-necklaces': ['necklace', 'pendant', 'chain', 'choker', 'collar'],
