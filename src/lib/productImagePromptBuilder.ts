@@ -1472,7 +1472,7 @@ export function buildDynamicPrompt(
 
     if (sceneNeedsPerson) {
       let injectedNote = '';
-      const resolvedHint = resolveOutfitHintText(scene, details, product.title);
+      const resolvedHint = resolveOutfitHintText(scene, details, product.title, ctx);
       if (resolvedHint && !prompt.includes(resolvedHint)) {
         let hint = resolvedHint;
         if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
