@@ -1588,17 +1588,17 @@ export function buildDynamicPrompt(
       caseStyle?: string;
       deviceModel?: string;
     };
-    const parts: string[] = [];
-    if (a.deviceModel) parts.push(`Device under the case: "${a.deviceModel}" — match its silhouette, frame, and camera bump exactly. Never substitute another model.`);
-    if (a.cameraLayoutDescription) parts.push(`Camera layout: ${a.cameraLayoutDescription}.`);
-    if (typeof a.lensCount === 'number') parts.push(`Exactly ${a.lensCount} lens${a.lensCount === 1 ? '' : 'es'} — never add or remove a lens.`);
-    if (a.lensArrangement) parts.push(`Lens arrangement: ${a.lensArrangement}.`);
-    if (a.cameraIslandShape) parts.push(`Camera island shape: ${a.cameraIslandShape}.`);
-    if (a.cameraCutoutPosition) parts.push(`Camera cutout position: ${a.cameraCutoutPosition} on the back — do NOT mirror, flip, or relocate it.`);
-    if (a.hasMagsafeRing) parts.push(`A MagSafe ring is part of the case — preserve it.`);
-    if (a.caseStyle) parts.push(`Case style: ${a.caseStyle}.`);
-    const spec = parts.join(' ');
-    prompt += ` PHONE CASE DEVICE LOCK (HARD CONSTRAINT — overrides any default phone styling): The [PRODUCT IMAGE] phone case is the source of truth for the device underneath. ${spec} Default view is the BACK of the phone (case facing camera); if a front/angled view appears, the screen must be off/black with no invented UI, notch art, app icons, wallpaper, or Dynamic Island content. Preserve every printed graphic, color, stripe, texture, and edge of the case at 100% fidelity. Hands, fingers, manicured nails, jewelry, sunglasses, or clothing must NEVER cover, occlude, replace, or visually compete with the camera module — keep the camera island fully visible and unobstructed in selfie and hand-held framings. STRICTLY FORBIDDEN: swapping the phone for a different model, mirroring or flipping the camera island to the opposite corner, adding or removing lenses, inventing a foldable/clear/transparent back, fabricating brand logos or wordmarks on the phone or case.`;
+    const hints: string[] = [];
+    if (a.cameraLayoutDescription) hints.push(`Observed in reference: ${a.cameraLayoutDescription}`);
+    if (typeof a.lensCount === 'number') hints.push(`Observed lens count: ${a.lensCount}.`);
+    if (a.lensArrangement) hints.push(`Observed lens arrangement: ${a.lensArrangement}.`);
+    if (a.cameraIslandShape) hints.push(`Observed cutout shape: ${a.cameraIslandShape}.`);
+    if (a.cameraCutoutPosition) hints.push(`Observed cutout position: ${a.cameraCutoutPosition}.`);
+    if (a.hasMagsafeRing) hints.push(`A MagSafe ring is visible inside the case.`);
+    if (a.caseStyle) hints.push(`Case style: ${a.caseStyle}.`);
+    if (a.deviceModel) hints.push(`Internal label only (do NOT use to redesign the camera): "${a.deviceModel}".`);
+    const hintSentence = hints.length ? ` Reference observations (HINTS ONLY — the [PRODUCT IMAGE] pixels always win): ${hints.join(' ')}` : '';
+    prompt += ` PHONE CASE FIDELITY (HARD CONSTRAINT — [PRODUCT IMAGE] IS THE SOURCE OF TRUTH): Copy the camera/cutout area of the [PRODUCT IMAGE] EXACTLY as shown — match the visible cutout shape, size, proportions, orientation, position, lens openings, flash holes, sensor holes, border thickness, and case material around it. If the reference shows a full-width horizontal camera row, render a full-width horizontal camera row. If it shows a small square island, render a small square island. If it shows a vertical pill, render a vertical pill. Do NOT normalize the camera into a generic iPhone, Samsung, or Pixel module from memory. Do NOT redesign, simplify, stretch, shrink, rotate, mirror, or relocate the camera area, and do NOT add or remove lenses, flashes, or sensors. Preserve every printed graphic, stripe, texture, color, edge, and corner radius of the case at 100% fidelity. Default view is the BACK of the phone (case facing camera); if a front/angled view appears, the screen must be off/black with no invented UI, notch art, app icons, wallpaper, or Dynamic Island content. Hands, fingers, manicured nails, jewelry, sunglasses, or clothing must NEVER cover, occlude, or replace the camera area — keep it fully visible and unobstructed in selfie and hand-held framings.${hintSentence}`;
   }
 
   return cleanupPrompt(prompt);
