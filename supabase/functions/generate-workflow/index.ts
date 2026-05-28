@@ -155,6 +155,13 @@ interface WorkflowRequest {
       packagingRelevant?: boolean;
       personCompatible?: boolean;
       deviceModel?: string;
+      lensCount?: number;
+      lensArrangement?: string;
+      cameraIslandShape?: string;
+      cameraCutoutPosition?: string;
+      cameraLayoutDescription?: string;
+      hasMagsafeRing?: boolean;
+      caseStyle?: string;
     };
   };
   additional_products?: Array<{
@@ -608,15 +615,33 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
     PHONE_CASE_RE.test(product.productType || '') ||
     PHONE_CASE_RE.test(product.title || '');
   const deviceModel = (analysisData as { deviceModel?: string } | undefined)?.deviceModel?.trim();
-  const deviceModelLine = isPhoneCase && deviceModel
-    ? `\n- DEVICE MODEL: The case fits a "${deviceModel}". The phone/device under the case MUST be a "${deviceModel}" — match its silhouette, corner radius, frame material, and camera bump exactly.`
-    : '';
+  const ad = analysisData as Record<string, unknown> | undefined;
+  const cameraLayoutDescription = (ad?.cameraLayoutDescription as string | undefined)?.trim();
+  const lensCount = ad?.lensCount as number | undefined;
+  const lensArrangement = (ad?.lensArrangement as string | undefined)?.trim();
+  const cameraIslandShape = (ad?.cameraIslandShape as string | undefined)?.trim();
+  const cameraCutoutPosition = (ad?.cameraCutoutPosition as string | undefined)?.trim();
+  const hasMagsafeRing = ad?.hasMagsafeRing === true;
+  const caseStyle = (ad?.caseStyle as string | undefined)?.trim();
+
+  const phoneSpecLines: string[] = [];
+  if (deviceModel) phoneSpecLines.push(`- DEVICE MODEL: The case fits a "${deviceModel}". The phone/device under the case MUST be a "${deviceModel}" — match its silhouette, corner radius, frame material, and camera bump exactly. Do NOT substitute a different model.`);
+  if (cameraLayoutDescription) phoneSpecLines.push(`- CAMERA LAYOUT: ${cameraLayoutDescription}`);
+  if (typeof lensCount === 'number') phoneSpecLines.push(`- LENS COUNT: exactly ${lensCount} lens${lensCount === 1 ? '' : 'es'} — never add or remove a lens.`);
+  if (lensArrangement) phoneSpecLines.push(`- LENS ARRANGEMENT: ${lensArrangement}.`);
+  if (cameraIslandShape) phoneSpecLines.push(`- CAMERA ISLAND SHAPE: ${cameraIslandShape}.`);
+  if (cameraCutoutPosition) phoneSpecLines.push(`- CAMERA CUTOUT POSITION: ${cameraCutoutPosition} on the back of the phone — do NOT mirror, flip, or relocate it.`);
+  if (hasMagsafeRing) phoneSpecLines.push(`- MAGSAFE: a circular MagSafe ring is part of the case — preserve it.`);
+  if (caseStyle) phoneSpecLines.push(`- CASE STYLE: ${caseStyle}.`);
+  const phoneSpecBlock = phoneSpecLines.length ? `\n${phoneSpecLines.join('\n')}` : '';
+
   const phoneCaseBlock = isPhoneCase
     ? `\n\nPHONE CASE FIDELITY (CRITICAL):
-- The [PRODUCT IMAGE] is a phone case. Its camera cutout shape, lens count, MagSafe ring, and button/port cutouts are the source of truth for the device underneath. Reproduce them EXACTLY.
-- The phone body under the case MUST match those cutouts. Do NOT invent a different device (no swapping a single-lens phone for a triple-lens Pro, or vice versa).
+- The [PRODUCT IMAGE] is a phone case. Its camera cutout shape, lens count, MagSafe ring, and button/port cutouts are the source of truth for the device underneath. Reproduce them EXACTLY — same count, same arrangement, same position, same orientation.
+- The phone body under the case MUST match those cutouts. Do NOT invent a different device (no swapping a single-lens phone for a triple-lens Pro, or vice versa). Do NOT mirror or flip the camera module to the opposite corner.
 - Default to a BACK-of-phone view (case facing camera). If the scene calls for a front/angled view, the screen MUST be off/black — do not invent UI, notch art, or Dynamic Island content.
-- Preserve every printed graphic, texture, color, and finish on the case at 100% fidelity.${deviceModelLine}`
+- Preserve every printed graphic, texture, color, and finish on the case at 100% fidelity.
+- Hands, fingers, nails, jewelry, or clothing MUST NOT cover, occlude, or replace the camera module — keep the camera island fully visible in selfie/hand-held shots.${phoneSpecBlock}`
     : '';
 
   return `${processedTemplate}
@@ -1011,7 +1036,7 @@ async function completeQueueJob(
     requested_count: requestedCount,
     credits_used: creditsReserved,
     creative_drop_id: payload.creative_drop_id || null,
-    prompt_final: payload.prompt || null,
+    prompt_final: (payload.prompt as string) || ((payload as any)?.extra_variations?.[0]?.instruction as string) || null,
     scene_name: (payload as any).__scene_name ?? (payload as any).pose?.name ?? payload.scene_name ?? null,
     scene_id:
       (payload as any).__scene_id ??

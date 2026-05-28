@@ -203,6 +203,16 @@ export interface ProductAnalysis {
   containerType?: string;
   clinicalCleanlinessLevel?: string;
   routineContext?: string;
+
+  // ── Phone Cases (camera/device lock) ──
+  deviceModel?: string;
+  lensCount?: number;
+  lensArrangement?: string;
+  cameraIslandShape?: string;
+  cameraCutoutPosition?: string;
+  cameraLayoutDescription?: string;
+  hasMagsafeRing?: boolean;
+  caseStyle?: string;
 }
 
 // ── Scene assignment ──

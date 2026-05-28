@@ -41,7 +41,11 @@ export function useProductAnalysis() {
       }
 
       const existing = (p as any).analysis_json as ProductAnalysis | null;
-      if (existing?.category && existing?.version === 2) {
+      // Force re-analysis when a phone-case lacks the new camera-layout fields
+      const isPhoneCaseMissingCameraFields =
+        existing?.category === 'phone-cases' &&
+        !(existing as any).cameraLayoutDescription;
+      if (existing?.category && existing?.version === 2 && !isPhoneCaseMissingCameraFields) {
         cached[p.id] = existing;
         analyzedOrInflight.current.add(p.id);
       } else {

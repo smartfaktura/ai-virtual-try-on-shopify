@@ -237,6 +237,15 @@ Food: foodType, servingMode, ingredientObjectsPrimary, ingredientObjectsSecondar
 Electronics: deviceType, interfaceType, screenPresence, screenStateSuggested, finishMaterialPrimary, industrialStyle, portDetail, buttonDetail
 Sports: sportType, gearType, performanceMaterial, gripTexture, motionCue, usageContext, surfaceContext
 Health: supplementType, dosageForm, mixingMode, wellnessIngredientObjects, containerType, clinicalCleanlinessLevel, routineContext
+Phone Cases (REQUIRED when category is "phone-cases" — infer purely from the visible cutout pattern in the image):
+- deviceModel: Best guess of the device the case fits (e.g. "iPhone 15 Pro", "iPhone 15 Pro Max", "iPhone 15", "iPhone SE 3", "Samsung Galaxy S24 Ultra", "Pixel 8 Pro", "AirPods Pro 2"). If unsure between two close models, pick the most likely one — never leave this empty for phone-cases.
+- lensCount: integer 1, 2, 3, or 4 — number of camera lenses visible through the cutout.
+- lensArrangement: short phrase, e.g. "triple lens in square island top-left", "dual diagonal lenses top-left", "horizontal triple module centered", "single lens centered", "vertical pill cutout".
+- cameraIslandShape: "square", "rounded-square", "rectangle", "pill", "circle", or "none".
+- cameraCutoutPosition: "top-left", "top-center", "top-right", "center", "vertical-strip", etc — describing where on the BACK of the phone the cutout sits.
+- cameraLayoutDescription: one descriptive sentence combining lens count, arrangement, island shape, position, and any flash/sensor/MagSafe details visible. This is the master sentence the image generator will use to lock the phone hardware under the case.
+- hasMagsafeRing: boolean — true if a circular MagSafe ring is visible inside the case back.
+- caseStyle: "hard-shell", "silicone", "clear", "leather", "magsafe", "folio", "wallet-case", etc.
 
 Use the IMAGE as primary signal. Be vivid and specific. All hex colors must be valid (#RRGGBB).
 
