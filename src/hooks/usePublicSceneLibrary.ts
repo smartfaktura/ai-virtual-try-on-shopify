@@ -96,7 +96,6 @@ export const COLLECTION_LABEL: Record<string, string> = {
   'home-decor': 'Home Decor',
   furniture: 'Furniture',
   'tech-devices': 'Tech / Devices',
-  'phone-cases': 'Phone Cases',
   food: 'Food & Snacks',
   beverages: 'Beverages',
   'snacks-food': 'Snacks',
