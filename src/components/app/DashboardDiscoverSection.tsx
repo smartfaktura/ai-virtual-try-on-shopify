@@ -61,6 +61,7 @@ export function DashboardDiscoverSection() {
     'eyewear': 'accessories', 'bags-accessories': 'accessories', 'backpacks': 'accessories',
     'belts': 'accessories', 'scarves': 'accessories', 'caps': 'accessories',
     'wallets-cardholders': 'accessories',
+    'phone-cases': 'accessories',
   };
 
   const defaultCategory = useMemo(() => {

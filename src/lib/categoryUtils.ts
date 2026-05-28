@@ -44,6 +44,7 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['candle', 'vase', 'planter', 'pillow', 'blanket', 'lamp', 'clock', 'frame', 'mirror', 'rug', 'decor', 'home', 'interior', 'ceramic', 'tray', 'coaster', 'diffuser', 'figurine', 'ornament', 'sculpture', 'potpourri', 'wreath', 'garland', 'cushion', 'throw', 'tapestry', 'wall art', 'bookend'], 'home-decor' as TemplateCategory],
   [['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'probiotic', 'omega', 'wellness', 'greens', 'superfood', 'gummy'], 'supplements-wellness' as TemplateCategory],
   [['shoe', 'sandal', 'loafer', 'slipper', 'footwear', 'mule', 'clog', 'oxford'], 'shoes' as TemplateCategory],
+  [['phone case', 'iphone case', 'airpods case', 'samsung case', 'silicone case', 'clear case', 'magsafe case', 'magsafe'], 'phone-cases' as TemplateCategory],
   [['bag', 'handbag', 'purse', 'clutch', 'tote', 'briefcase', 'satchel', 'crossbody'], 'bags-accessories' as TemplateCategory],
   [['phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'tablet', 'keyboard', 'tech', 'gadget'], 'tech-devices' as TemplateCategory],
   // Fallback: pets / sports / toys / stationery → Clothing & Apparel (most universal scene set)
@@ -84,6 +85,7 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   shoes: 'Shoes',
   'bags-accessories': 'Bags & Accessories',
   'tech-devices': 'Tech / Devices',
+  'phone-cases': 'Phone Cases',
   backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders',
   belts: 'Belts',

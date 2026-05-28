@@ -63,7 +63,7 @@ export type ProductCategory =
   | 'lingerie' | 'swimwear' | 'activewear' | 'kidswear'
   | 'dresses' | 'hoodies' | 'jeans' | 'jackets'
   | 'sneakers' | 'boots' | 'high-heels'
-  | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'eyewear'
+  | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'phone-cases' | 'eyewear'
   | 'watches' | 'jewellery-necklaces' | 'jewellery-earrings'
   | 'jewellery-bracelets' | 'jewellery-rings'
   | 'pet-accessories';

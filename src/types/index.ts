@@ -37,7 +37,7 @@ export interface Template {
 export type TemplateCategory = 'garments' | 'beauty-skincare' | 'makeup-lipsticks' | 'fragrance'
   | 'food' | 'beverages' | 'home-decor' | 'furniture' | 'supplements-wellness'
   | 'shoes' | 'bags-accessories' | 'tech-devices' | 'caps' | 'hats' | 'beanies' | 'other'
-  | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves'
+  | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'phone-cases'
   | 'jewellery-necklaces' | 'jewellery-earrings' | 'jewellery-bracelets' | 'jewellery-rings' | 'watches'
   | 'dresses' | 'hoodies' | 'sneakers' | 'boots' | 'high-heels'
   | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'jackets'

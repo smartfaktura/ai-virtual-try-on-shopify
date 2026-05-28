@@ -1082,6 +1082,7 @@ function getBuiltInPresets(category: string, isMale = false): OutfitPreset[] {
   const OUTFIT_CATEGORY_FALLBACK: Record<string, string> = {
     backpacks: 'bags-accessories',
     'wallets-cardholders': 'bags-accessories',
+    'phone-cases': 'bags-accessories',
     belts: 'bags-accessories',
     scarves: 'bags-accessories',
     'jewellery-necklaces': 'fragrance',

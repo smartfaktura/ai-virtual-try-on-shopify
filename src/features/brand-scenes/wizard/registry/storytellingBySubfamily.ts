@@ -144,6 +144,13 @@ const MOMENTS: Record<string, string[]> = {
     "Folded on chair",
     "Head-wrap moment",
   ],
+  "bags-accessories/phone-cases": [
+    "Snapping onto phone",
+    "Set on desk",
+    "Slipping into pocket",
+    "Holding in hand",
+    "MagSafe click moment",
+  ],
 
   // Hats / Caps / Beanies
   "hats-caps-beanies/caps": [

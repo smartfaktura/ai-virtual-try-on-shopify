@@ -27,7 +27,7 @@ export function resolveConversionCategory(raw?: string[] | string | null): Conve
     if (c.includes('home') || c.includes('decor') || c.includes('furniture')) return 'home';
     if (c.includes('fashion') || c.includes('apparel') || c.includes('garment') || c.includes('clothing') || c === 'hoodies' || c === 'dresses' || c === 'jeans' || c === 'jackets' || c === 'activewear' || c === 'swimwear' || c === 'lingerie' || c === 'kidswear' || c === 'streetwear') return 'fashion';
     if (c === 'footwear' || c === 'shoes' || c === 'sneakers' || c === 'boots' || c === 'high-heels') return 'fashion';
-    if (c.includes('accessor') || c.includes('bag') || c.includes('hat') || c.includes('scarf') || c === 'bags-accessories' || c === 'backpacks' || c === 'wallets-cardholders' || c === 'belts' || c === 'eyewear') return 'accessories';
+    if (c.includes('accessor') || c.includes('bag') || c.includes('hat') || c.includes('scarf') || c === 'bags-accessories' || c === 'backpacks' || c === 'wallets-cardholders' || c === 'belts' || c === 'phone-cases' || c.includes('phone case') || c === 'eyewear') return 'accessories';
   }
   return 'fallback';
 }

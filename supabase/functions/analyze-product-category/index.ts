@@ -13,7 +13,7 @@ const VALID_CATEGORIES = new Set([
   "high-heels", "garments", "dresses", "wedding-dress", "hoodies", "jeans", "jackets",
   "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
-  "home-decor", "furniture", "tech-devices", "food", "beverages", "supplements-wellness",
+  "home-decor", "furniture", "tech-devices", "phone-cases", "food", "beverages", "supplements-wellness",
 ]);
 
 /** Title-based category fallback when AI returns "other" or invalid */
@@ -53,6 +53,7 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/\bshirt\b|pants|skirt|coat|sweater|blouse|cardigan|vest/i, "garments"],
   [/armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
   [/candle|vase|pillow|lamp|decor|cushion|throw|planter|frame/i, "home-decor"],
+  [/phone case|iphone case|airpods case|samsung case|silicone case|clear case|magsafe case|magsafe/i, "phone-cases"],
   [/phone|laptop|tablet|headphone|speaker|camera|earbuds|charger|keyboard|mouse/i, "tech-devices"],
   [/protein|vitamin|supplement|probiotic|collagen|creatine|pre-?workout/i, "supplements-wellness"],
   [/coffee|tea|juice|soda|wine|beer|kombucha|smoothie|energy drink|lemonade|milk/i, "beverages"],
@@ -193,7 +194,9 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+
+PHONE CASE GUIDANCE: Any phone case, iPhone case, AirPods case, Samsung case, MagSafe case, silicone/clear/leather case for a phone or earbuds MUST be categorised as "phone-cases" (NOT "tech-devices" or "bags-accessories").
 
 BRIDAL GUIDANCE: Any wedding dress, bridal gown, bridesmaid dress, or bridalwear MUST be categorised as "wedding-dress" (NOT "dresses" or "garments"). Examples: "Lace Wedding Dress" → wedding-dress, "Bridal Gown" → wedding-dress, "Bridesmaid Dress" → wedding-dress.
 
