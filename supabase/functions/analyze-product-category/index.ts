@@ -80,6 +80,8 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["shoes", /\bboot\b|\bboots\b/i, "boots"],
   ["shoes", /high heel|stiletto|pump/i, "high-heels"],
   ["home-decor", /armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],
+  ["tech-devices", /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case|leather case/i, "phone-cases"],
+  ["bags-accessories", /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case/i, "phone-cases"],
 ];
 
 /** Demote overly-broad "garments" to a more specific subcategory based on title/description */
