@@ -47,6 +47,7 @@ If it's a PRODUCT, return:
 - "productType": Short category (e.g. "Leggings", "Scented Candle", "Face Serum")
 - "description": 10-20 word description of color, material, style, key features
 - "specification": A detailed 30-50 word generation-ready description covering the product's silhouette, construction, materials, colors, finish, texture, and key visual details. Include hex color codes if identifiable. This should read like a technical product spec for image generation.
+- "deviceModel" (ONLY if the product is a phone case, AirPods case, MagSafe case, or other device-specific case): Best guess of the device the case fits, based on the visible cutout pattern. Use camera-bump shape and lens count as the primary signal (e.g. triple-lens square bump → "iPhone 15 Pro" or "iPhone 15 Pro Max"; dual diagonal lenses → "iPhone 15" / "iPhone 14"; single-lens centered → "iPhone SE 3"; horizontal triple module → "Samsung Galaxy S24 Ultra"; vertical pill cutout → "AirPods Pro 2"). If unsure between two close models, return the most likely one. Omit this field entirely for any non-case product.
 
 If it's a ROOM, BUILDING, or SPACE, return:
 - "title": Descriptive room/space name (e.g. "Modern Open-Plan Living Room", "Sunny Master Bedroom", "Victorian Brick Facade")
