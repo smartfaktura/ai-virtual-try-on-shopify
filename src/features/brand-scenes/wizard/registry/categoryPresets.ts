@@ -263,6 +263,15 @@ export const PRESETS: Partial<Record<BrandSceneModule, Bundle>> = {
         body_part_focus: ["hands", "detail"],
         hands_on_product: ["pinch", "cap", "tap"],
       },
+      "phone-cases": {
+        scale: ["pocket", "handheld"],
+        default_scale: "handheld",
+        interactions: ["using", "holding", "beside", "hero"],
+        cast_presets: ["hands", "solo", "none"],
+        default_cast: "hands",
+        body_part_focus: ["hands", "detail"],
+        hands_on_product: ["pinch", "tap", "cradle"],
+      },
       belts: {
         cast_presets: ["solo", "hands", "none"],
         interactions: ["wearing", "holding", "beside", "hero"],

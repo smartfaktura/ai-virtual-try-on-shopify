@@ -210,6 +210,7 @@ function buildCollections(scenes: DbScene[]): CategoryCollection[] {
     'home-decor': 'Home Decor',
     furniture: 'Furniture',
     'tech-devices': 'Tech / Devices',
+    'phone-cases': 'Phone Cases',
     food: 'Food & Snacks',
     beverages: 'Beverages',
     'supplements-wellness': 'Supplements & Wellness',

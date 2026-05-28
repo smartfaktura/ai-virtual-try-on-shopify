@@ -210,6 +210,11 @@ const POOLS: Record<string, Pool> = {
     studio: ["Floating drape", "Velvet plinth", "Draped on marble"],
     indoor_lifestyle: ["Boudoir corner", "Atelier", "Folded on linen chair"],
   },
+  "bags-accessories/phone-cases": {
+    studio: ["Plinth on cyclorama", "Acrylic riser", "Marble slab", "Painted gradient"],
+    indoor_lifestyle: ["Minimalist desk", "Café table", "Coffee shop side table", "Linen tray on console"],
+    outdoor_location: ["City street bench", "Rooftop ledge"],
+  },
 
   // ---------------- Hats, Caps & Beanies ----------------
   "hats-caps-beanies/caps": {

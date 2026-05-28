@@ -51,6 +51,7 @@ const TITLE_MAP: Record<string, string> = {
   furniture: 'Furniture',
   'home-decor': 'Home Decor',
   'tech-devices': 'Tech / Devices',
+  'phone-cases': 'Phone Cases',
   food: 'Food & Snacks',
   beverages: 'Beverages',
   'supplements-wellness': 'Supplements & Wellness',

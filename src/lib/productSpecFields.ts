@@ -219,6 +219,14 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'screen', label: 'Screen', type: 'input', placeholder: '6.1"' },
   ],
 
+  // ── Phone Cases ──
+  'phone-cases': [
+    { key: 'compatibility', label: 'Compatibility', type: 'input', placeholder: 'iPhone 15 Pro' },
+    { key: 'material', label: 'Material', type: 'select', options: ['Silicone', 'TPU', 'Leather', 'Clear / Polycarbonate', 'Aramid Fiber', 'Wood', 'Metal', 'Fabric', 'Other'] },
+    { key: 'finish', label: 'Finish', type: 'select', options: ['Matte', 'Glossy', 'Textured', 'Soft-touch', 'Transparent'] },
+    { key: 'feature', label: 'Key Feature', type: 'select', options: ['MagSafe', 'Camera Ring', 'Kickstand', 'Cardholder', 'Lanyard Loop', 'Drop-proof', 'None'] },
+  ],
+
 
 
   // ── Supplements ──

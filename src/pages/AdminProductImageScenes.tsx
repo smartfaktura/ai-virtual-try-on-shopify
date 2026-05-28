@@ -66,6 +66,7 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
     label: 'Accessories',
     items: [
       { value: 'wallets-cardholders', label: 'Wallets & Cardholders' },
+      { value: 'phone-cases', label: 'Phone Cases' },
       { value: 'belts', label: 'Belts' },
       { value: 'scarves', label: 'Scarves' },
       { value: 'caps', label: 'Caps' },
@@ -103,7 +104,6 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
     label: 'Tech',
     items: [
       { value: 'tech-devices', label: 'Tech / Devices' },
-      { value: 'phone-cases', label: 'Phone Cases' },
     ],
   },
   {
