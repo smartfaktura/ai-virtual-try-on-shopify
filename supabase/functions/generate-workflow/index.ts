@@ -154,6 +154,7 @@ interface WorkflowRequest {
       finish?: string;
       packagingRelevant?: boolean;
       personCompatible?: boolean;
+      deviceModel?: string;
     };
   };
   additional_products?: Array<{
