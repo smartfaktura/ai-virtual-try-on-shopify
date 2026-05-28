@@ -1,29 +1,47 @@
-## Goal
+# Fix: Resolve dynamic tokens inside scene `outfit_hint`
 
-Prevent `analyze-product-image` from writing any specific phone model (e.g. "iPhone 15 Pro", "Samsung Galaxy S24", "Pixel 8") into `title`, `description`, or `specification` when the analyzed product is a phone case. The function should still confidently detect that the item is a phone case — just describe it generically.
+## Problem
 
-## Change (single file)
+Tokens like `{{productMainHex}}`, `{{productSecondaryHex}}`, `{{productAccentHex}}`, `{{backgroundBaseHex}}` (and the rest of the 70+ token vocabulary) resolve correctly when authored in `prompt_template`, but pass through as **literal text** when authored in `outfit_hint`.
 
-`supabase/functions/analyze-product-image/index.ts` — update the prompt sent to Gemini Flash (lines 43–57). Two additions:
+## Root cause
 
-1. **Hard rule appended to the PRODUCT block** instructing the model never to mention a brand or model designation for phone accessories, even if cutouts make it identifiable. List the protected categories so the rule covers adjacent cases: phone cases, tablet cases, laptop sleeves, AirPods/earbud cases, watch bands, screen protectors.
+`src/lib/productImagePromptBuilder.ts` → `resolveOutfitHintText()` (lines 925–935) only does two narrow `.replace()` calls:
 
-2. **Concrete substitution examples** so the model knows what to write instead:
-   - Bad: "Orange Striped iPhone 15 Pro Case"
-   - Good: "Orange Striped Phone Case"
-   - Bad: "...phone case with a glossy finish for iPhone 15 Pro"
-   - Good: "...phone case with a glossy finish, slim profile with precise cutouts"
+```ts
+return scene.outfitHint
+  .replace(/\{\{aestheticColor\}\}/gi, colorDesc)
+  .replace(/\{\{productName\}\}/gi, productName || 'the product');
+```
 
-3. **Also forbid** the words: "iPhone", "Samsung", "Galaxy", "Pixel", "Huawei", "Xiaomi", "OnePlus", and any model numbers (e.g. "15 Pro", "S24", "Ultra") inside `title` / `productType` / `description` / `specification` when `productType` is a phone case.
+It never invokes the generic `resolveToken(token, ctx)` resolver that `prompt_template` runs through (around line 1393). So any other `{{…}}` token in an outfit_hint reaches Gemini unresolved.
 
-No other code paths change. No DB migration. No change to `generate-workflow` — once the source description no longer contains the device name, the assembled prompt at lines 603–606 will be clean automatically. Existing products that already have a polluted description in the DB will keep their old text until re-analyzed (we are not touching historical rows).
+## Fix (simple, ~10 lines)
+
+Update `resolveOutfitHintText()` to run the same generic resolver as `prompt_template`, while keeping the existing `aestheticColor` behavior (it's not a token in the generic resolver — it's outfit-hint-specific).
+
+1. Change the function signature to also accept the `TokenContext` (or the inputs needed to build it: `product`, `analysis`, `details`, `scene`).
+2. After the two existing narrow replacements, run:
+   ```ts
+   out = out.replace(/\{\{(\w+)\}\}/g, (match, token) => {
+     const v = resolveToken(token, ctx);
+     return v === '' ? match : v; // leave unknown tokens untouched, same as prompt_template path
+   });
+   ```
+   (Mirror the exact behavior used for `prompt_template` so we don't accidentally blank tokens that are intentionally empty.)
+3. Update the two call sites of `resolveOutfitHintText` (around lines 1022 and 1457) to pass the already-built `TokenContext` / required inputs — both call sites are inside the main builder where `ctx` is already in scope, so no new plumbing.
 
 ## Out of scope
 
-- Cleaning up already-saved product descriptions in the DB.
-- Adding a category-aware post-filter / regex sanitizer (prompt rule alone is enough for Flash; we can add a regex backstop later if it slips through).
-- Changing the 6 phone-case scenes with literal `\n\n` (unrelated, already discussed).
+- No changes to `outfit_hint` schema or admin UI.
+- No changes to which tokens exist (Token System v2 stays as-is).
+- No edge-function or DB changes.
+- `generate-workflow` edge function is not affected — outfit_hint is resolved client-side before payload is sent.
 
 ## Verification
 
-After deploy, re-upload a phone case in info@tsimkus.lt's account and confirm the returned JSON's `title`, `description`, and `specification` contain no device brand/model names.
+1. Pick a phone-case scene whose `outfit_hint` contains `{{productMainHex}}` / `{{backgroundBaseHex}}`.
+2. Generate → inspect the final prompt (existing prompt log/debug panel).
+3. Confirm the outfit line now contains the actual hex value (e.g. `#E67F2C`) instead of `{{productMainHex}}`.
+4. Confirm `{{aestheticColor}}` and `{{productName}}` still resolve as before.
+5. Generate a scene whose outfit_hint has no tokens — must be unchanged.

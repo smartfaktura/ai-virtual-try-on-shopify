@@ -922,16 +922,22 @@ function hasUserDefinedOutfit(details: DetailSettings): boolean {
 }
 
 // ── Shared outfit hint resolver ──
-function resolveOutfitHintText(scene: ProductImageScene, details: DetailSettings, productName?: string): string | undefined {
+function resolveOutfitHintText(scene: ProductImageScene, details: DetailSettings, productName?: string, ctx?: TokenContext): string | undefined {
   if (!scene.outfitHint) return undefined;
   // If user explicitly enabled outfit override AND has at least one slot defined → bypass scene hint
   if (details.outfitOverrideEnabled && hasUserDefinedOutfit(details)) return undefined;
   const hex = details.aestheticColorHex;
   const label = details.aestheticColorLabel;
   const colorDesc = hex && /^#[0-9A-Fa-f]{6}$/.test(hex) ? (label ? `${label} (${hex})` : hex) : 'coordinated';
-  return scene.outfitHint
+  let out = scene.outfitHint
     .replace(/\{\{aestheticColor\}\}/gi, colorDesc)
     .replace(/\{\{productName\}\}/gi, productName || 'the product');
+  // Resolve remaining generic {{token}} placeholders (productMainHex, backgroundBaseHex, etc.)
+  // Mirrors prompt_template behavior so outfit_hint authors can use the full token vocabulary.
+  if (ctx) {
+    out = out.replace(/\{\{(\w+)\}\}/g, (_, token) => resolveToken(token, ctx));
+  }
+  return out;
 }
 
 // ── Token resolution ──
@@ -1012,7 +1018,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'personDirective': {
       const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
+      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName, ctx);
       const isHalfPortrait = (scene.triggerBlocks || []).includes('halfPortrait');
       return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint, isHalfPortrait);
     }
@@ -1020,7 +1026,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
       // Scene-controlled outfit: use outfit_hint if present
-      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
+      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName, ctx);
       if (resolvedHint) {
         let hint = resolvedHint;
         if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
@@ -1466,7 +1472,7 @@ export function buildDynamicPrompt(
 
     if (sceneNeedsPerson) {
       let injectedNote = '';
-      const resolvedHint = resolveOutfitHintText(scene, details, product.title);
+      const resolvedHint = resolveOutfitHintText(scene, details, product.title, ctx);
       if (resolvedHint && !prompt.includes(resolvedHint)) {
         let hint = resolvedHint;
         if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
