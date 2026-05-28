@@ -1018,7 +1018,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
 
     case 'personDirective': {
       const needsPerson = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
+      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName, ctx);
       const isHalfPortrait = (scene.triggerBlocks || []).includes('halfPortrait');
       return buildPersonDirective(details, cat, needsPerson, ctx.modelGender, analysis?.garmentType, resolvedHint, isHalfPortrait);
     }
@@ -1026,7 +1026,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
     case 'nailDirective': return resolveNailStyle(details.nails);
     case 'outfitDirective': {
       // Scene-controlled outfit: use outfit_hint if present
-      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName);
+      const resolvedHint = resolveOutfitHintText(scene, details, ctx.productName, ctx);
       if (resolvedHint) {
         let hint = resolvedHint;
         if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
