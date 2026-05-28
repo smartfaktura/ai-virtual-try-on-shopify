@@ -155,6 +155,13 @@ interface WorkflowRequest {
       packagingRelevant?: boolean;
       personCompatible?: boolean;
       deviceModel?: string;
+      lensCount?: number;
+      lensArrangement?: string;
+      cameraIslandShape?: string;
+      cameraCutoutPosition?: string;
+      cameraLayoutDescription?: string;
+      hasMagsafeRing?: boolean;
+      caseStyle?: string;
     };
   };
   additional_products?: Array<{
