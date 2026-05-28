@@ -624,24 +624,29 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
   const hasMagsafeRing = ad?.hasMagsafeRing === true;
   const caseStyle = (ad?.caseStyle as string | undefined)?.trim();
 
-  const phoneSpecLines: string[] = [];
-  if (deviceModel) phoneSpecLines.push(`- DEVICE MODEL: The case fits a "${deviceModel}". The phone/device under the case MUST be a "${deviceModel}" — match its silhouette, corner radius, frame material, and camera bump exactly. Do NOT substitute a different model.`);
-  if (cameraLayoutDescription) phoneSpecLines.push(`- CAMERA LAYOUT: ${cameraLayoutDescription}`);
-  if (typeof lensCount === 'number') phoneSpecLines.push(`- LENS COUNT: exactly ${lensCount} lens${lensCount === 1 ? '' : 'es'} — never add or remove a lens.`);
-  if (lensArrangement) phoneSpecLines.push(`- LENS ARRANGEMENT: ${lensArrangement}.`);
-  if (cameraIslandShape) phoneSpecLines.push(`- CAMERA ISLAND SHAPE: ${cameraIslandShape}.`);
-  if (cameraCutoutPosition) phoneSpecLines.push(`- CAMERA CUTOUT POSITION: ${cameraCutoutPosition} on the back of the phone — do NOT mirror, flip, or relocate it.`);
-  if (hasMagsafeRing) phoneSpecLines.push(`- MAGSAFE: a circular MagSafe ring is part of the case — preserve it.`);
-  if (caseStyle) phoneSpecLines.push(`- CASE STYLE: ${caseStyle}.`);
-  const phoneSpecBlock = phoneSpecLines.length ? `\n${phoneSpecLines.join('\n')}` : '';
+  // Hints only — describe what the analyzer SAW in the reference. These are
+  // weaker than the actual [PRODUCT IMAGE] pixels and must never be allowed
+  // to override the visible camera geometry of the uploaded case.
+  const phoneHintLines: string[] = [];
+  if (cameraLayoutDescription) phoneHintLines.push(`- Observed in reference: ${cameraLayoutDescription}`);
+  if (typeof lensCount === 'number') phoneHintLines.push(`- Observed lens count in reference: ${lensCount}.`);
+  if (lensArrangement) phoneHintLines.push(`- Observed lens arrangement: ${lensArrangement}.`);
+  if (cameraIslandShape) phoneHintLines.push(`- Observed camera cutout shape: ${cameraIslandShape}.`);
+  if (cameraCutoutPosition) phoneHintLines.push(`- Observed camera cutout position: ${cameraCutoutPosition}.`);
+  if (hasMagsafeRing) phoneHintLines.push(`- Observed MagSafe ring inside the case.`);
+  if (caseStyle) phoneHintLines.push(`- Observed case style: ${caseStyle}.`);
+  if (deviceModel) phoneHintLines.push(`- Internal label only (do NOT use to redesign the camera): "${deviceModel}".`);
+  const phoneHintBlock = phoneHintLines.length
+    ? `\nReference observations (HINTS ONLY — the [PRODUCT IMAGE] pixels always win if they disagree):\n${phoneHintLines.join('\n')}`
+    : '';
 
   const phoneCaseBlock = isPhoneCase
-    ? `\n\nPHONE CASE FIDELITY (CRITICAL):
-- The [PRODUCT IMAGE] is a phone case. Its camera cutout shape, lens count, MagSafe ring, and button/port cutouts are the source of truth for the device underneath. Reproduce them EXACTLY — same count, same arrangement, same position, same orientation.
-- The phone body under the case MUST match those cutouts. Do NOT invent a different device (no swapping a single-lens phone for a triple-lens Pro, or vice versa). Do NOT mirror or flip the camera module to the opposite corner.
-- Default to a BACK-of-phone view (case facing camera). If the scene calls for a front/angled view, the screen MUST be off/black — do not invent UI, notch art, or Dynamic Island content.
-- Preserve every printed graphic, texture, color, and finish on the case at 100% fidelity.
-- Hands, fingers, nails, jewelry, or clothing MUST NOT cover, occlude, or replace the camera module — keep the camera island fully visible in selfie/hand-held shots.${phoneSpecBlock}`
+    ? `\n\nPHONE CASE FIDELITY (CRITICAL — [PRODUCT IMAGE] IS THE SOURCE OF TRUTH):
+- Copy the camera/cutout area of the [PRODUCT IMAGE] EXACTLY as shown. Match the visible cutout shape, size, proportions, orientation, position on the back, lens openings, flash holes, sensor holes, border thickness, and the case material around the cutout. If the reference shows a full-width horizontal camera row, render a full-width horizontal camera row. If it shows a small square island, render a small square island. If it shows a vertical pill, render a vertical pill.
+- Do NOT normalize the camera into a generic iPhone, Samsung, or Pixel module from memory. Do NOT redesign, simplify, beautify, stretch, shrink, rotate, mirror, or relocate the camera area. Do NOT add or remove lenses, flashes, or sensors.
+- Preserve every printed graphic, stripe, texture, color, edge, and corner radius of the case at 100% fidelity.
+- Default to a BACK-of-phone view (case facing camera). If a front/angled view is needed, the screen MUST be off/black with no invented UI, notch art, app icons, wallpaper, or Dynamic Island content.
+- Hands, fingers, nails, jewelry, or clothing MUST NOT cover, occlude, or replace the camera area — keep it fully visible in selfie/hand-held shots.${phoneHintBlock}`
     : '';
 
   return `${processedTemplate}
