@@ -31,6 +31,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'eyewear': ['sunglasses', 'glasses', 'eyewear', 'optical', 'aviator', 'wayfarer', 'spectacles'],
   'backpacks': ['backpack', 'rucksack', 'daypack', 'school bag', 'laptop bag'],
   'wallets-cardholders': ['wallet', 'cardholder', 'card holder', 'card case', 'money clip', 'billfold'],
+  'phone-cases': ['phone case', 'iphone case', 'airpods case', 'samsung case', 'silicone case', 'clear case', 'magsafe case', 'magsafe', 'pixel case', 'galaxy case'],
   'belts': ['belt', 'waist belt', 'leather belt', 'buckle belt', 'chain belt'],
   'scarves': ['scarf', 'shawl', 'wrap', 'bandana', 'neckerchief', 'stole'],
   'sneakers': ['sneaker', 'trainer', 'air max', 'nike dunk', 'jordan', 'running shoe', 'tennis shoe', 'skate shoe', 'new balance'],

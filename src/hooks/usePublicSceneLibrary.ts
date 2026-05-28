@@ -80,6 +80,7 @@ export const COLLECTION_LABEL: Record<string, string> = {
   'bags-accessories': 'Bags',
   backpacks: 'Backpacks',
   'wallets-cardholders': 'Wallets & Cardholders',
+  'phone-cases': 'Phone Cases',
   belts: 'Belts',
   scarves: 'Scarves',
   'caps': 'Caps', 'hats': 'Hats', 'beanies': 'Beanies',
