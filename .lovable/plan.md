@@ -1,41 +1,36 @@
-You’re right — the fix should not assume which iPhone model is “correct.” If the reference case has a full camera row / large horizontal camera area, that must be copied. If it has a small square island, that must be copied. The model name is secondary and must never override the visible reference.
+## Simpler approach
 
-What I found:
+Drop the duplicate `[CASE ARTWORK LOCK]` anchor idea. Generations *do* sometimes come out correct — the variance suggests the case reference is just losing attention priority, not that we need a second copy of it. Two small changes only:
 
-- The latest batch did include phone-case analysis and the product reference image.
-- The failure happens because the generator is still allowed to interpret the camera area as “phone hardware under the case,” so it sometimes invents a different iPhone-style camera module.
-- The current wording over-emphasizes detected device model and lens count. That is useful metadata, but it is weaker than the actual image and can mislead generation when the AI guesses the wrong model.
+### 1. Put the product reference first in the references array
 
-Plan:
+In `supabase/functions/generate-workflow/index.ts` (and the native Gemini path for phone cases), when building the multi-image payload for Gemini 3 Pro:
 
-1. Make the reference image the absolute source of truth
-   - Update phone-case prompts so they say: copy the visible camera/cutout geometry from `[PRODUCT IMAGE]` exactly.
-   - The detected device model becomes only a weak label for debugging, not a creative instruction.
-   - If text analysis and image reference conflict, the image reference wins.
+- Current order: `[MODEL IMAGE]` first (when present), then `[PRODUCT IMAGE]`, then any extras.
+- New order for **phone cases**: `[PRODUCT IMAGE]` always first, then `[MODEL IMAGE]`, then extras.
 
-2. Add a dedicated camera-detail reference for phone cases
-   - In `generate-workflow`, automatically crop the camera/cutout region from the uploaded product image.
-   - Attach it as `[PHONE CASE CAMERA DETAIL]` alongside the full product reference.
-   - The generator will be told to copy that patch exactly: shape, size, position, orientation, row/island dimensions, lens holes, flash holes, sensor holes, border thickness, and case material around it.
+The first image in a Gemini multi-image request gets the strongest visual anchoring. When the model image is first, the case becomes "an object the person is holding"; when the case is first, the model becomes "a person holding this exact object". This alone is responsible for a large share of the drift we're seeing on selfie/hand-held scenes.
 
-3. Remove unsafe assumptions from the prompt
-   - Do not forbid wide/horizontal camera rows.
-   - Do not force “small top-left rounded square” unless the reference image actually shows that.
-   - Do not tell the model to create a specific iPhone/Samsung/Pixel camera module from memory.
+### 2. One strong final reference line
 
-4. Change the phone-case lock wording
-   - Replace “phone hardware under the case” with “camera/cutout patch visible in the reference.”
-   - Add: “Do not normalize this into a generic iPhone camera. Do not redesign from device knowledge. Copy the reference geometry even if it differs from common phone models.”
+At the very end of the assembled prompt (after `AVOID:`, last thing the model reads), append a single sentence for phone cases:
 
-5. Improve analysis fields without trusting them too much
-   - Keep `deviceModel`, `lensCount`, and layout fields for search/debugging.
-   - Add or emphasize a more neutral field like `cameraCutoutGeometry`, describing what is visually present rather than which phone model it might be.
+> `FINAL REMINDER: The phone case in the output must be a literal visual copy of [PRODUCT IMAGE]. The case artwork, stripes, colors, camera cutout shape, lens count, and lens positions in [PRODUCT IMAGE] are not suggestions — they are the exact case to render. Do not redesign them.`
 
-6. Store the actual final prompt for future debugging
-   - Save the real generated prompt used by `generate-workflow`, not just the scene instruction.
-   - Include whether `[PHONE CASE CAMERA DETAIL]` was attached, so we can audit future batches accurately.
+That's it — no duplicate anchor, no removing existing fidelity block, no two-pass pipeline.
 
-Expected result:
+### Verify
 
-- Phone-case outputs should replicate the uploaded case’s camera/cutout layout directly, whether it is a full camera row, square island, vertical pill, or any other model-specific shape.
-- We avoid hardcoding iPhone assumptions and make visual reference fidelity the controlling rule.
+Re-generate the Orange Striped iPhone Case across "Poolside Case Rest", "Lace Case Selfie", "Soft Mirror Case" and confirm the stripe rhythm and 3-lens triangular island match the reference.
+
+## Files touched
+
+- `supabase/functions/generate-workflow/index.ts` — reorder references for phone cases, append final reminder.
+- `src/lib/productImagePromptBuilder.ts` — append the same final reminder so local-built prompts match.
+- `public/version.json` — bump.
+
+## What this will NOT touch
+
+- No duplicate references, no case-artwork-lock label.
+- No changes to the existing `PHONE CASE FIDELITY` block (it stays as-is).
+- No model forcing, no scene-template edits, no two-pass pipeline, no UI changes.
