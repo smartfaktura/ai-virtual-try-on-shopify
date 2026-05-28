@@ -154,14 +154,6 @@ interface WorkflowRequest {
       finish?: string;
       packagingRelevant?: boolean;
       personCompatible?: boolean;
-      deviceModel?: string;
-      lensCount?: number;
-      lensArrangement?: string;
-      cameraIslandShape?: string;
-      cameraCutoutPosition?: string;
-      cameraLayoutDescription?: string;
-      hasMagsafeRing?: boolean;
-      caseStyle?: string;
     };
   };
   additional_products?: Array<{
@@ -605,59 +597,13 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
   }
   const analysisBlock = analysisLines.length > 0 ? `\n${analysisLines.join('\n')}` : '';
 
-  // ── Phone-case fidelity block ───────────────────────────────────────────────
-  // Locks the device shape under the case to the reference image's cutouts, and
-  // (when the analyzer detected it) to a specific phone model. Gated on
-  // phone-cases only — every other category renders identically.
-  const PHONE_CASE_RE = /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case|leather case/i;
-  const isPhoneCase =
-    analysisData?.category === 'phone-cases' ||
-    PHONE_CASE_RE.test(product.productType || '') ||
-    PHONE_CASE_RE.test(product.title || '');
-  const deviceModel = (analysisData as { deviceModel?: string } | undefined)?.deviceModel?.trim();
-  const ad = analysisData as Record<string, unknown> | undefined;
-  const cameraLayoutDescription = (ad?.cameraLayoutDescription as string | undefined)?.trim();
-  const lensCount = ad?.lensCount as number | undefined;
-  const lensArrangement = (ad?.lensArrangement as string | undefined)?.trim();
-  const cameraIslandShape = (ad?.cameraIslandShape as string | undefined)?.trim();
-  const cameraCutoutPosition = (ad?.cameraCutoutPosition as string | undefined)?.trim();
-  const hasMagsafeRing = ad?.hasMagsafeRing === true;
-  const caseStyle = (ad?.caseStyle as string | undefined)?.trim();
-
-  // Hints only — describe what the analyzer SAW in the reference. These are
-  // weaker than the actual [PRODUCT IMAGE] pixels and must never be allowed
-  // to override the visible camera geometry of the uploaded case.
-  const phoneHintLines: string[] = [];
-  if (cameraLayoutDescription) phoneHintLines.push(`- Observed in reference: ${cameraLayoutDescription}`);
-  if (typeof lensCount === 'number') phoneHintLines.push(`- Observed lens count in reference: ${lensCount}.`);
-  if (lensArrangement) phoneHintLines.push(`- Observed lens arrangement: ${lensArrangement}.`);
-  if (cameraIslandShape) phoneHintLines.push(`- Observed camera cutout shape: ${cameraIslandShape}.`);
-  if (cameraCutoutPosition) phoneHintLines.push(`- Observed camera cutout position: ${cameraCutoutPosition}.`);
-  if (hasMagsafeRing) phoneHintLines.push(`- Observed MagSafe ring inside the case.`);
-  if (caseStyle) phoneHintLines.push(`- Observed case style: ${caseStyle}.`);
-  if (deviceModel) phoneHintLines.push(`- Internal label only (do NOT use to redesign the camera): "${deviceModel}".`);
-  const phoneHintBlock = phoneHintLines.length
-    ? `\nReference observations (HINTS ONLY — the [PRODUCT IMAGE] pixels always win if they disagree):\n${phoneHintLines.join('\n')}`
-    : '';
-
-  const phoneCaseBlock = isPhoneCase
-    ? `\n\nPHONE CASE — PRIMARY SUBJECT LOCK: The phone and case visible in the final image ARE the exact physical phone+case shown in [PRODUCT IMAGE]. Render them as a real physical object existing in the scene — not as artwork pasted, overlaid, mocked-up, or composited onto a generic phone. The case's printed graphics, colors, stripes, edges, corner radius, and the phone's camera island shape, lens count, and lens positions must match [PRODUCT IMAGE] pixel-for-pixel because it IS the same object.
-
-PHONE CASE FIDELITY (CRITICAL — [PRODUCT IMAGE] IS THE SOURCE OF TRUTH):
-- Match the camera/cutout area of the [PRODUCT IMAGE] EXACTLY as shown. Match the visible cutout shape, size, proportions, orientation, position on the back, lens openings, flash holes, sensor holes, border thickness, and the case material around the cutout. If the reference shows a full-width horizontal camera row, render a full-width horizontal camera row. If it shows a small square island, render a small square island. If it shows a vertical pill, render a vertical pill.
-- Do NOT normalize the camera into a generic iPhone, Samsung, or Pixel module from memory. Do NOT redesign, simplify, beautify, stretch, shrink, rotate, mirror, or relocate the camera area. Do NOT add or remove lenses, flashes, or sensors.
-- Preserve every printed graphic, stripe, texture, color, edge, and corner radius of the case at 100% fidelity — as the physical surface of the case, not as a sticker, decal, or overlay.
-- Default to a BACK-of-phone view (case facing camera). If a front/angled view is needed, the screen MUST be off/black with no invented UI, notch art, app icons, wallpaper, or Dynamic Island content.
-- Hands, fingers, nails, jewelry, or clothing MUST NOT cover, occlude, or replace the camera area — keep it fully visible in selfie/hand-held shots.${phoneHintBlock}`
-    : '';
-
   return `${processedTemplate}
 ${themeBlock}
 ${isBundle ? '' : `PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
-${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}${phoneCaseBlock}
+${product.description ? `- Description: ${product.description}` : ""}${analysisBlock}
 `}${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}${outfitBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${isBundle ? variation.instruction : (propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' '))}
@@ -1043,7 +989,7 @@ async function completeQueueJob(
     requested_count: requestedCount,
     credits_used: creditsReserved,
     creative_drop_id: payload.creative_drop_id || null,
-    prompt_final: (payload.prompt as string) || ((payload as any)?.extra_variations?.[0]?.instruction as string) || null,
+    prompt_final: payload.prompt || null,
     scene_name: (payload as any).__scene_name ?? (payload as any).pose?.name ?? payload.scene_name ?? null,
     scene_id:
       (payload as any).__scene_id ??

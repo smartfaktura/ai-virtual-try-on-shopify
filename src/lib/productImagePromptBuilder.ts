@@ -1571,35 +1571,5 @@ export function buildDynamicPrompt(
     prompt += ' SCENE LIGHT VALIDATION (HARD CONSTRAINT — clean, not too bright): Use soft, cloud-diffused or open-shade daylight with balanced clean exposure. Highlights stay creamy, shadows airy and short, contrast medium-low. STRICTLY NO harsh midday sun, no blown-out white highlights on the garment, no hot spots on skin or court, no heavy lens flare, no overexposed sky. The court surface must be evenly lit and read clean and refined.';
   }
 
-  // ── Phone-case device-lock saugiklis ──
-  // Final unambiguous device/camera spec for any phone-cases product. Earlier
-  // scene templates often describe the case in passing but let the AI pick the
-  // wrong phone (lens count flip, mirrored camera island, full-screen mockup).
-  // Repeating this at the END ensures the image model treats the camera layout
-  // as immutable across every scene in the batch.
-  if (analysis?.category === 'phone-cases') {
-    const a = analysis as Partial<ProductAnalysis> & {
-      lensCount?: number;
-      lensArrangement?: string;
-      cameraIslandShape?: string;
-      cameraCutoutPosition?: string;
-      cameraLayoutDescription?: string;
-      hasMagsafeRing?: boolean;
-      caseStyle?: string;
-      deviceModel?: string;
-    };
-    const hints: string[] = [];
-    if (a.cameraLayoutDescription) hints.push(`Observed in reference: ${a.cameraLayoutDescription}`);
-    if (typeof a.lensCount === 'number') hints.push(`Observed lens count: ${a.lensCount}.`);
-    if (a.lensArrangement) hints.push(`Observed lens arrangement: ${a.lensArrangement}.`);
-    if (a.cameraIslandShape) hints.push(`Observed cutout shape: ${a.cameraIslandShape}.`);
-    if (a.cameraCutoutPosition) hints.push(`Observed cutout position: ${a.cameraCutoutPosition}.`);
-    if (a.hasMagsafeRing) hints.push(`A MagSafe ring is visible inside the case.`);
-    if (a.caseStyle) hints.push(`Case style: ${a.caseStyle}.`);
-    if (a.deviceModel) hints.push(`Internal label only (do NOT use to redesign the camera): "${a.deviceModel}".`);
-    const hintSentence = hints.length ? ` Reference observations (HINTS ONLY — the [PRODUCT IMAGE] pixels always win): ${hints.join(' ')}` : '';
-    prompt += ` PHONE CASE — PRIMARY SUBJECT LOCK: The phone and case visible in the final image ARE the exact physical phone+case shown in [PRODUCT IMAGE]. Render them as a real physical object existing in the scene — not as artwork pasted, overlaid, mocked-up, or composited onto a generic phone. The case's printed graphics, colors, stripes, edges, corner radius, and the phone's camera island shape, lens count, and lens positions must match [PRODUCT IMAGE] pixel-for-pixel because it IS the same object. PHONE CASE FIDELITY (HARD CONSTRAINT — [PRODUCT IMAGE] IS THE SOURCE OF TRUTH): Match the camera/cutout area of the [PRODUCT IMAGE] EXACTLY as shown — match the visible cutout shape, size, proportions, orientation, position, lens openings, flash holes, sensor holes, border thickness, and case material around it. If the reference shows a full-width horizontal camera row, render a full-width horizontal camera row. If it shows a small square island, render a small square island. If it shows a vertical pill, render a vertical pill. Do NOT normalize the camera into a generic iPhone, Samsung, or Pixel module from memory. Do NOT redesign, simplify, stretch, shrink, rotate, mirror, or relocate the camera area, and do NOT add or remove lenses, flashes, or sensors. Preserve every printed graphic, stripe, texture, color, edge, and corner radius of the case at 100% fidelity — as the physical surface of the case, not as a sticker, decal, or overlay. Default view is the BACK of the phone (case facing camera); if a front/angled view appears, the screen must be off/black with no invented UI, notch art, app icons, wallpaper, or Dynamic Island content. Hands, fingers, manicured nails, jewelry, sunglasses, or clothing must NEVER cover, occlude, or replace the camera area — keep it fully visible and unobstructed in selfie and hand-held framings.${hintSentence}`;
-  }
-
   return cleanupPrompt(prompt);
 }

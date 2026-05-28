@@ -1,37 +1,25 @@
-# Fix phone-case "overlay" feel — move reminder to top, rephrase
-
 ## Problem
-The `FINAL REMINDER` line we appended at the end of phone-case prompts is making outputs look like the case artwork is *pasted/overlaid* on top of the rendered phone, instead of being the actual physical case. The word "literal visual copy" plus its position right after `AVOID:` reads to the model as a post-render compositing instruction.
+
+When a user uploads a phone case, `analyze-product-category` asks the AI for a category. The AI often returns `"tech-devices"` (a valid category), so the function early-exits at the "valid category" check and never reaches the title-based phone-case detection. Result: phone case → Tech & Devices instead of Phone Cases.
+
+The existing `SPECIFICITY_OVERRIDES` table has no `tech-devices → phone-cases` entry, so an AI label of `tech-devices` is never corrected even when the title clearly says "phone case".
 
 ## Fix
 
-### 1. Remove the trailing FINAL REMINDER (both files)
-- `supabase/functions/generate-workflow/index.ts` line 677 — drop the `${isPhoneCase ? '\n\nFINAL REMINDER: …' : ''}` suffix.
-- `src/lib/productImagePromptBuilder.ts` line 1601 — drop the `\n\nFINAL REMINDER: …` suffix.
+Single file: `supabase/functions/analyze-product-category/index.ts`
 
-### 2. Add ONE strong opening line at the very top of the phone-case prompt
-Inserted before the scene/theme block, framed as physical reality (not overlay):
+1. **Add two specificity overrides** so AI-returned parents get remapped when the title matches a phone-case pattern:
+   ```ts
+   ["tech-devices",     /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case|leather case/i, "phone-cases"],
+   ["bags-accessories", /phone case|iphone case|airpods case|samsung case|magsafe|silicone case|clear case/i, "phone-cases"],
+   ```
 
-> `PHONE CASE — PRIMARY SUBJECT LOCK: The phone and case visible in the final image ARE the exact physical phone+case shown in [PRODUCT IMAGE]. Render them as a real object existing in the scene — not as artwork pasted, overlaid, mocked-up, or composited onto a generic phone. The case's printed graphics, colors, stripes, edges, corner radius, and the phone's camera island shape, lens count, and lens positions must match [PRODUCT IMAGE] pixel-for-pixel because it IS the same object.`
+2. **Strengthen the system prompt** with a sharper rule: any product that *is* a case for a phone/AirPods/MagSafe must be `phone-cases`, never `tech-devices` or `bags-accessories`.
 
-- In `generate-workflow/index.ts`: prepend this line to `phoneCaseBlock` (around line 643) so it lands at the top of `PRODUCT DETAILS` instead of after `AVOID:`.
-- In `productImagePromptBuilder.ts`: prepend the same line at the start of the phone-case fidelity append (line 1601), and keep the existing detailed HARD CONSTRAINT block right after.
+No DB changes, no schema changes, no client code changes. Patterns are tight ("phone case", "iphone case", "magsafe", etc.) so false-positive risk is negligible, and the override only fires when the AI already picked one of the two parent buckets.
 
-### 3. Audit phone-case prompt phrasing for overlay-implying words
-Sweep both phone-case blocks and remove/soften anything that could read as overlay:
-- "Copy the … area" → "Match the … area" (copy implies paste).
-- Leave "Preserve every printed graphic…" as-is (preserve = part of the object, fine).
-- No "sticker", "apply", "place on top", "overlay" phrasing exists today — confirmed clean.
+## Verification
 
-### 4. Version bump
-`public/version.json` → new timestamp.
-
-## Files
-- `supabase/functions/generate-workflow/index.ts`
-- `src/lib/productImagePromptBuilder.ts`
-- `public/version.json`
-
-## Not changing
-- Reference image ordering (product is already first).
-- Analyzer, model selection, UI, billing, other categories.
-- The existing detailed `PHONE CASE FIDELITY` blocks — they stay; only repositioned and prefixed.
+- Re-run product analysis on the uploaded phone case → category resolves to `phone-cases`.
+- Check edge function logs for `Category specificity override: "tech-devices" -> "phone-cases"`.
+- Confirm Step 2 Scenes loads the Phone Cases bucket under Bags & Accessories.
