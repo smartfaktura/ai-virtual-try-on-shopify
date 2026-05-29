@@ -17,6 +17,7 @@ import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { useProductImageScenes, dbToFrontend } from '@/hooks/useProductImageScenes';
 import { CATEGORY_KEYWORDS } from '@/components/app/product-images/constants';
+import { getCategoryLabel } from '@/lib/productCategories';
 import { getTriggeredBlocks, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal, type AddProductTab } from '@/components/app/AddProductModal';
 import { Input } from '@/components/ui/input';
@@ -386,6 +387,7 @@ export default function ProductImages() {
       setQuickUploadProgress('Analyzing…');
       let title = 'Untitled Product';
       let productType = '';
+      let userCategory: string | null = null;
       let description = '';
 
       try {
@@ -397,22 +399,27 @@ export default function ProductImages() {
           });
           if (analysisData?.title) title = analysisData.title;
           if (analysisData?.productType) productType = analysisData.productType;
+          if (typeof analysisData?.userCategory === 'string' && analysisData.userCategory) {
+            userCategory = analysisData.userCategory;
+          }
           if (analysisData?.description) description = analysisData.description;
         }
       } catch {
         // Analysis failed — proceed with defaults
       }
 
-      // 3. Insert product
+      // 3. Insert product (mirror ManualProductTab: canonical category label wins)
       setQuickUploadProgress('Creating product…');
+      const resolvedCategory = (getCategoryLabel(userCategory) || productType || '').substring(0, 100);
       const { data: newProduct, error: insertError } = await supabase
         .from('user_products')
         .insert({
           user_id: user.id,
           title,
-          product_type: productType,
+          product_type: resolvedCategory,
           description,
           image_url: imageUrl,
+          analysis_json: userCategory ? ({ userCategory } as never) : null,
         })
         .select()
         .single();
