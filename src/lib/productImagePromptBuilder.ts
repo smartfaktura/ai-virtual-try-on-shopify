@@ -1530,7 +1530,7 @@ export function buildDynamicPrompt(
   const cat = analysis?.category;
   const isJewelry = (cat as string) === 'jewelry' || cat === 'jewellery-necklaces' || cat === 'jewellery-earrings' || cat === 'jewellery-bracelets' || cat === 'jewellery-rings';
   if (isJewelry) {
-    prompt += ' JEWELRY REALISM (CRITICAL): No sparkle effects, no starburst reflections, no glitter particles, no fantasy light rays, no diamond twinkle overlays, no lens flare on gemstones. Jewelry must look like a real editorial photograph — tactile, dimensional, and physically believable. Reflections on metal and stones must be smooth, controlled, and natural. Never add any post-processing glow or shimmer that would not exist in a real studio photograph.';
+    prompt += ' JEWELRY REALISM (CRITICAL): Render the jewelry as a real editorial photograph with natural metal and gemstone reflections, accurate scale, crisp edges, and physically believable material detail. Keep reflections smooth, controlled, and realistic. Do not add sparkle effects, glitter, fantasy glow, starbursts, or artificial gemstone flares.';
   }
 
   // Append negative prompt
