@@ -556,10 +556,10 @@ export default function AnimateVideo() {
             <div className="rounded-2xl border border-border bg-card shadow-sm hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 min-h-[400px] flex flex-col">
               {/* Batch Mode toggle — inside the card */}
               <div className={cn(
-                'flex items-center justify-between rounded-t-2xl px-6 py-3 border-b transition-colors',
+                'flex items-center justify-between gap-3 rounded-t-2xl px-4 sm:px-6 py-3 border-b transition-colors',
                 isPaidUser ? 'border-border bg-muted/30' : 'border-border/60 bg-muted/20'
               )}>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   {isPaidUser ? (
                     <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Images className="h-3.5 w-3.5 text-primary" />
@@ -571,18 +571,18 @@ export default function AnimateVideo() {
                       className="w-7 h-7 rounded-full object-cover border-2 border-background shrink-0"
                     />
                   )}
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground">Batch Mode</p>
                     {isPaidUser ? (
-                      <p className="text-[11px] text-muted-foreground leading-tight">Animate up to 10 images with the same settings</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight break-words">Animate up to 10 images with the same settings</p>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground leading-tight">
+                      <p className="text-[11px] text-muted-foreground leading-tight break-words">
                         Upgrade to any paid plan to animate multiple images at once
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {!isPaidUser && (
                     <button
                       onClick={() => navigate('/app/settings')}
@@ -594,6 +594,7 @@ export default function AnimateVideo() {
                   <Switch checked={bulkMode} onCheckedChange={setBulkMode} disabled={!isPaidUser} />
                 </div>
               </div>
+
 
               <div className="p-6 space-y-4 flex-1 flex flex-col">
               <div>
