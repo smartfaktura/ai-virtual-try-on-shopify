@@ -62,6 +62,7 @@ CRITICAL RULE FOR PHONE CASES, TABLET CASES, LAPTOP SLEEVES, AIRPODS / EARBUD CA
 If it's a ROOM, BUILDING, or SPACE, return:
 - "title": Descriptive room/space name (e.g. "Modern Open-Plan Living Room", "Sunny Master Bedroom", "Victorian Brick Facade")
 - "productType": Space type (e.g. "Living Room", "Bedroom", "Kitchen", "Front Facade", "Office")
+- "category": null
 - "description": 10-20 word description of the space style, lighting, notable features
 - "specification": A detailed 30-50 word description of the space's architecture, materials, color palette, lighting, and key design elements suitable for image generation.
 
