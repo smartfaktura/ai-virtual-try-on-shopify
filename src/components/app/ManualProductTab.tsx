@@ -43,6 +43,7 @@ interface ManualProductTabProps {
   onClose: () => void;
   editingProduct?: UserProduct | null;
   initialFiles?: File[];
+  showQuickTip?: boolean;
 }
 
 interface BatchItem {
