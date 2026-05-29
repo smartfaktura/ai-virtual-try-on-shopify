@@ -26,6 +26,8 @@ export interface DbScene {
   outfit_hint: string | null;
   use_scene_reference: boolean;
   updated_at: string;
+  owner_user_id?: string | null;
+  is_brand_scene?: boolean | null;
 }
 
 export function dbToFrontend(d: DbScene): ProductImageScene {
@@ -49,14 +51,17 @@ export function dbToFrontend(d: DbScene): ProductImageScene {
 // ── Fetch helpers ──
 
 // Full client column list — includes `prompt_template` because the wizard's
-// buildDynamicPrompt runs locally on selected scenes.
-const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+// buildDynamicPrompt runs locally on selected scenes. Also includes
+// `owner_user_id` and `is_brand_scene` so the hook can hide other users'
+// brand scenes client-side (defense in depth on top of RLS).
+const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference,owner_user_id,is_brand_scene';
 
 // Ultra-slim columns for the deferred "rest" fetch — only what the picker UI
 // needs (title / preview / category / ordering). Heavy `prompt_template`,
 // `description`, and timestamps are fetched on-demand if a user picks one of
 // these scenes (see fetchSceneById).
-const SLIM_REST_COLUMNS = 'id,scene_id,title,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+const SLIM_REST_COLUMNS = 'id,scene_id,title,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference,owner_user_id,is_brand_scene';
+
 
 function selectCols(includePromptTemplate: boolean): string {
   return includePromptTemplate ? '*' : CLIENT_COLUMNS;
@@ -275,11 +280,17 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // Slim mode = wizard client (priority + active only). Admin paths keep full payload.
   const useSlimRest = !!hasPriority && activeOnly;
   const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}${useSlimRest ? '-slimrest' : ''}${includeBundle ? '-bundle' : ''}`;
+  // Admin catalog callers opt into the full cross-user catalog via includeInactive.
+  // For everyone else (user-facing wizard), hide other users' brand scenes — both
+  // to defend against stale React Query cache from a prior session in the same
+  // browser and as belt-and-suspenders on top of RLS.
+  const isAdminCatalogCaller = options?.includeInactive === true;
+  const userKey = user?.id ?? 'anon';
 
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
   const { data: priorityScenes, isLoading: isLoadingPriority } = useQuery({
-    queryKey: [...QUERY_KEY_PRIORITY, cacheVariant, priorityCats],
+    queryKey: [...QUERY_KEY_PRIORITY, cacheVariant, userKey, priorityCats],
     queryFn: () => fetchScenesByCategories(priorityCats!, includePromptTemplate, activeOnly, includeBundle),
     enabled: !!hasPriority,
     staleTime: 5 * 60 * 1000,
@@ -295,7 +306,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   }, [hasPriority, priorityScenes]);
 
   const { data: restScenes, isLoading: isLoadingRest } = useQuery({
-    queryKey: [...QUERY_KEY_REST, cacheVariant, priorityCats],
+    queryKey: [...QUERY_KEY_REST, cacheVariant, userKey, priorityCats],
     queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly, useSlimRest, includeBundle),
     enabled: !!hasPriority && !!priorityScenes && restEnabled,
     staleTime: 5 * 60 * 1000,
@@ -304,7 +315,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // ── Mode B: Full fetch (no priority — admin, review, results) ──
 
   const { data: allRawScenes, isLoading: isLoadingAll } = useQuery({
-    queryKey: [...QUERY_KEY_ALL, cacheVariant],
+    queryKey: [...QUERY_KEY_ALL, cacheVariant, userKey],
     queryFn: () => fetchAllScenes(includePromptTemplate, activeOnly, includeBundle),
     enabled: !hasPriority,
     staleTime: 5 * 60 * 1000,
@@ -312,9 +323,15 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
 
   // ── Merge results ──
 
-  const rawScenes: DbScene[] = hasPriority
+  const rawScenesUnfiltered: DbScene[] = hasPriority
     ? [...(priorityScenes ?? []), ...(restScenes ?? [])]
     : (allRawScenes ?? []);
+
+  // Defense in depth: in user-facing callers, drop any row whose owner is
+  // another user. Admin catalog tools (includeInactive: true) bypass this.
+  const rawScenes: DbScene[] = isAdminCatalogCaller
+    ? rawScenesUnfiltered
+    : rawScenesUnfiltered.filter(s => !s.owner_user_id || s.owner_user_id === user?.id);
 
   const isLoading = hasPriority ? isLoadingPriority : isLoadingAll;
   const scenes = rawScenes.length > 0 ? rawScenes : null;
@@ -323,6 +340,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // When priority loading is active, return empty arrays instead of hardcoded fallback
   // to prevent flash of stale data before real data arrives
   const useFallback = !hasPriority && !scenes;
+
 
   const categoryCollections: CategoryCollection[] = scenes
     ? buildCollections(activeScenes)
