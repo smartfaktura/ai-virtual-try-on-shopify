@@ -529,7 +529,7 @@ export default function AnimateVideo() {
   const currentProgressMember = PROGRESS_TEAM[progressAvatarIdx];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32">
       <PageHeader
         title="Animate Image"
         subtitle="Turn a still product image into a polished commercial video"
@@ -1315,47 +1315,49 @@ export default function AnimateVideo() {
                 const generateDisabled = bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading;
 
                 return (
-                  <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
-                    <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
-                      <span className="text-sm text-muted-foreground">Cost:</span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {totalVideos > 1 ? (
-                          <>{perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits</>
-                        ) : (
-                          <>{perVideo} credits</>
+                  <div className="sticky bottom-4 z-10 pb-[env(safe-area-inset-bottom)]">
+                    <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+                        <span className="text-sm text-muted-foreground">Cost:</span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {totalVideos > 1 ? (
+                            <>{perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits</>
+                          ) : (
+                            <>{perVideo} credits</>
+                          )}
+                        </span>
+                        {motionCount > 1 && (
+                          <span className="text-xs text-muted-foreground">
+                            ({motionCount} camera motion{motionCount > 1 ? 's' : ''}{imageCount > 1 ? ` × ${imageCount} images` : ''})
+                          </span>
                         )}
-                      </span>
-                      {motionCount > 1 && (
-                        <span className="text-xs text-muted-foreground">
-                          ({motionCount} camera motion{motionCount > 1 ? 's' : ''}{imageCount > 1 ? ` × ${imageCount} images` : ''})
-                        </span>
-                      )}
-                      {notEnoughCredits && (
-                        <span className="text-xs font-medium text-destructive">
-                          Need {totalCredits - creditsBalance} more credits
-                        </span>
+                        {notEnoughCredits && (
+                          <span className="text-xs font-medium text-destructive">
+                            Need {totalCredits - creditsBalance} more credits
+                          </span>
+                        )}
+                      </div>
+                      {notEnoughCredits ? (
+                        <Button
+                          onClick={() => openBuyModal('animate_video_cta')}
+                          size="lg"
+                          className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Get credits
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={handleGenerate}
+                          disabled={generateDisabled}
+                          size="lg"
+                          className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          {totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video'}
+                        </Button>
                       )}
                     </div>
-                    {notEnoughCredits ? (
-                      <Button
-                        onClick={() => openBuyModal('animate_video_cta')}
-                        size="lg"
-                        className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-                      >
-                        <Sparkles className="h-4 w-4" />
-                        Get credits
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleGenerate}
-                        disabled={generateDisabled}
-                        size="lg"
-                        className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-                      >
-                        <Sparkles className="h-4 w-4" />
-                        {totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video'}
-                      </Button>
-                    )}
                   </div>
                 );
               })()}

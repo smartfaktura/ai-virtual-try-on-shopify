@@ -255,15 +255,18 @@ export default function StartEndVideo() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32">
       <PageHeader
         title="Start & End Video"
         subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them"
         backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
+        titleBadge={
+          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">
+            Beta
+          </span>
+        }
       >
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">
-          Beta
-        </span>
+        <></>
       </PageHeader>
 
       {/* Recent completed transition — recovers a previous result the user navigated away from */}
@@ -381,29 +384,31 @@ export default function StartEndVideo() {
         <ValidationWarnings warnings={[{ type: 'error', message: project.pipelineError }]} />
       )}
 
-      {/* Generate row */}
-      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
-          <CreditEstimateBox params={creditParams} />
+      {/* Generate row — floating */}
+      <div className="sticky bottom-4 z-10 pb-[env(safe-area-inset-bottom)]">
+        <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+            <CreditEstimateBox params={creditParams} />
+          </div>
+          <Button
+            size="lg"
+            className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+            disabled={!canGenerate}
+            onClick={handleGenerate}
+          >
+            {project.isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Generate Video
+              </>
+            )}
+          </Button>
         </div>
-        <Button
-          size="lg"
-          className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-          disabled={!canGenerate}
-          onClick={handleGenerate}
-        >
-          {project.isGenerating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Generate Video
-            </>
-          )}
-        </Button>
       </div>
 
       <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} />
