@@ -48,23 +48,25 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
     onClose();
   };
 
-  const description =
-    scene.description?.trim() ||
-    'A ready-to-create visual direction. Upload your own product photo and VOVV.AI will adapt this look to your brand.';
+  const rawDescription = scene.description?.trim() ?? '';
+  const hasRealDescription =
+    rawDescription.length > 0 &&
+    rawDescription.toLowerCase() !== scene.title.trim().toLowerCase();
+  const description = hasRealDescription
+    ? rawDescription
+    : "An editorial direction crafted by VOVV.AI. Upload your own product and we'll restage it in this exact mood — same light, same composition, your brand.";
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-[26rem] sm:max-w-3xl md:max-w-5xl lg:max-w-6xl border-none bg-background p-0 rounded-3xl sm:rounded-[2rem] max-h-[94dvh] sm:max-h-[92vh] overflow-hidden [&>button]:hidden">
+      <DialogContent className="max-w-[26rem] sm:max-w-2xl md:max-w-4xl lg:max-w-[58rem] border-none bg-background p-0 rounded-3xl sm:rounded-[1.75rem] max-h-[90dvh] sm:max-h-[90vh] overflow-hidden [&>button]:hidden">
         <DialogTitle className="sr-only">{scene.title}</DialogTitle>
-        <div className="grid gap-0 md:grid-cols-[7fr_5fr] max-h-[94dvh] sm:max-h-[92vh] overflow-y-auto">
-          {/* Hero — fills edge-to-edge, no white letterbox bands */}
-          <div className="relative aspect-[4/5] md:aspect-auto md:max-h-none w-full overflow-hidden bg-muted/40">
-            {/* Skeleton shimmer */}
+        <div className="grid gap-0 md:grid-cols-[4fr_3fr] max-h-[90dvh] sm:max-h-[90vh] overflow-y-auto">
+          {/* Hero — native 4:5, never stretched */}
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/40">
             {!imgLoaded && (
               <Skeleton className="absolute inset-0 z-[1] rounded-none" />
             )}
 
-            {/* Tiny low-quality placeholder for instant paint */}
             {placeholderUrl && (
               <img
                 src={placeholderUrl}
@@ -76,7 +78,6 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
               />
             )}
 
-            {/* Full quality hero — cover everywhere so the modal frame stays clean */}
             {heroUrl && (
               <img
                 src={heroUrl}
@@ -91,7 +92,6 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
               />
             )}
 
-            {/* Floating close — high contrast over hero */}
             <DialogClose
               aria-label="Close"
               className="absolute top-4 right-4 z-[4] flex h-10 w-10 items-center justify-center rounded-full border border-foreground/10 bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background"
@@ -100,8 +100,8 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
             </DialogClose>
           </div>
 
-          {/* Body — generous VOVV spacing */}
-          <div className="flex flex-col p-6 sm:p-10 md:p-12">
+          {/* Body — calm VOVV spacing */}
+          <div className="flex flex-col p-6 sm:p-8 md:p-10">
             <div className="flex flex-wrap items-center gap-2">
               {familyLabel && (
                 <Badge variant="secondary" className="rounded-full bg-foreground/[0.06] text-foreground/70 border-none font-medium px-3 py-1">
@@ -113,30 +113,31 @@ export function SceneDetailModal({ scene, familyLabel, onClose }: SceneDetailMod
               </Badge>
             </div>
 
-            <h2 className="mt-6 sm:mt-8 text-2xl sm:text-3xl md:text-[2.125rem] font-semibold tracking-tight text-foreground leading-[1.15]">
+            <h2 className="mt-5 sm:mt-6 text-2xl sm:text-[1.75rem] md:text-3xl font-semibold tracking-tight text-foreground leading-[1.15]">
               {scene.title}
             </h2>
 
-            <p className="mt-5 sm:mt-6 text-[0.95rem] sm:text-base leading-relaxed text-foreground/60 max-w-prose">
+            <p className="mt-4 sm:mt-5 text-sm sm:text-[0.95rem] leading-relaxed text-foreground/60 max-w-prose">
               {description}
             </p>
 
-            <div className="mt-10 sm:mt-12 md:mt-auto md:pt-12 space-y-3">
+            <div className="mt-8 md:mt-auto md:pt-10 space-y-3">
               <Button
                 onClick={handleCta}
                 size="lg"
-                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold h-[3.5rem] text-[0.95rem]"
+                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold h-[3.25rem]"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 {user ? 'Create this visual' : 'Sign up and create free'}
               </Button>
               <p className="text-center text-xs text-foreground/50 leading-relaxed">
-                Upload your product photo and VOVV.AI will adapt this look
+                Upload one product photo. We adapt the styling, lighting, and composition while keeping your product true to life.
               </p>
             </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+
   );
 }
