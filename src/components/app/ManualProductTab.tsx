@@ -53,6 +53,7 @@ interface BatchItem {
   previewUrl: string;
   title: string;
   productType: string;
+  userCategory: string | null;
   description: string;
   dimensions: string;
   isAnalyzing: boolean;
@@ -596,17 +597,19 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         setUploadProgress({ current: i, total: batchItems.length });
         const imageUrl = await uploadFile(item.file);
 
+        const resolvedCategory = (getCategoryLabel(item.userCategory) || item.productType || '').substring(0, 100);
         const { data: insertedBatch, error } = await supabase.from('user_products').insert({
           user_id: user.id,
           title: item.title.trim().substring(0, 200),
-          product_type: item.productType || '',
+          product_type: resolvedCategory,
           description: item.description.trim().substring(0, 500),
           image_url: imageUrl,
           dimensions: item.dimensions.trim() || null,
+          analysis_json: item.userCategory ? { userCategory: item.userCategory } : null,
         } as any).select('id').single();
         if (error) throw new Error(error.message);
         if (insertedBatch?.id) {
-          gtmProductUploaded({ userId: user.id, productId: insertedBatch.id, productCategory: item.productType || null });
+          gtmProductUploaded({ userId: user.id, productId: insertedBatch.id, productCategory: resolvedCategory || null });
         }
         setUploadProgress({ current: i + 1, total: batchItems.length });
       }
@@ -642,16 +645,20 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
     });
   };
 
-  const updateBatchItem = (id: string, field: 'title' | 'productType' | 'description' | 'dimensions', value: string) => {
+  const updateBatchItem = (id: string, field: 'title' | 'productType' | 'description' | 'dimensions' | 'userCategory', value: string | null) => {
     setBatchItems(prev => prev.map(b => {
       if (b.id !== id) return b;
       return {
         ...b,
         [field]: value,
-        manualEdits: field === 'dimensions' ? b.manualEdits : { ...b.manualEdits, [field]: true },
+        manualEdits: (field === 'dimensions' || field === 'userCategory') ? b.manualEdits : { ...b.manualEdits, [field]: true },
       };
     }));
   };
+
+  const [brokenThumbs, setBrokenThumbs] = useState<Record<string, boolean>>({});
+  const [activeCategoryItemId, setActiveCategoryItemId] = useState<string | null>(null);
+  const markBroken = (id: string) => setBrokenThumbs(prev => prev[id] ? prev : { ...prev, [id]: true });
 
   const anyBatchAnalyzing = batchItems.some(b => b.isAnalyzing);
   const hasContent = isBatchMode ? batchItems.length > 0 : !!singleImage;
