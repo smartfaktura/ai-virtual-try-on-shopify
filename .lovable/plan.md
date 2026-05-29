@@ -1,81 +1,68 @@
 ## Scope
-`/app/video/animate` polish: fix credits guard on Generate, reposition the Generate CTA, hide the StudioChat support bubble on this route, and standardize card/spacing/radius/segmented-button styles on the visible Settings stack to match VOVV's existing pattern. No backend / pipeline logic changes.
+Polish credit cost copy + Generate CTAs + floating bar layout + page header on `/app/video/animate` and `/app/video/start-end` so the two pages feel identical. No backend / pipeline logic changes.
 
 ## Changes
 
-### 1. Hide StudioChat on this route
-`src/components/app/StudioChat.tsx` — add `if (location.pathname === '/app/video/animate') return null;` alongside the existing hard-hide list (around line 64).
+### 1. `src/components/app/video/CreditEstimateBox.tsx` (shared by both pages)
+- Remove the `Coins` icon and its import.
+- Change label `"Estimated cost:"` → `"Cost:"`.
+- Container stays the same shape but loses the leading icon. Result:
+  ```
+  <div ref={ref} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+    <span className="text-sm text-muted-foreground">Cost:</span>
+    <span className="text-sm font-semibold text-foreground">{credits} credits</span>
+  </div>
+  ```
 
-### 2. Credits guard + Generate footer — `src/pages/video/AnimateVideo.tsx` (lines 1308–1350)
-Inside the `Generate` block compute:
-- `perVideo`, `totalVideos`, `totalCredits` (already computed inline).
-- `notEnoughCredits = totalCredits > creditsBalance`.
+### 2. `src/pages/video/AnimateVideo.tsx` — Generate footer copy
+Inside the inline cost block (added last turn), change `Estimated cost:` → `Cost:` and drop the leading `<Sparkles>` icon next to that label so it matches the shared component.
 
-Wrap the cost summary and CTA together in a single footer card:
+### 3. `src/pages/video/StartEndVideo.tsx` — header parity with Animate
+- Replace the current wrapper `<div className="container max-w-5xl py-8 space-y-6">` with `<div className="max-w-4xl mx-auto space-y-6">` (identical to Animate).
+- Remove the standalone Back button block (lines 259–264) and the `flex items-start justify-between` wrapper around the PageHeader (lines 265–275). Use Animate's pattern instead:
+  ```
+  <PageHeader
+    title="Start & End Video"
+    subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them"
+    backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
+  >
+    <div />
+  </PageHeader>
+  ```
+  The Beta badge gets relocated inline next to the title — render it as a small pill inside the subtitle row by passing it as the trailing element of the title string is not possible, so keep it visually by appending a small badge under the subtitle:
+  ```
+  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">Beta</span>
+  ```
+  placed as the PageHeader child (where `<div />` is) so it lives in the same header block. Drop trailing period from subtitle (memory rule).
+
+### 4. `src/pages/video/StartEndVideo.tsx` — floating Generate bar parity with Animate
+Replace the sticky bar (line 393) with the same static card pattern Animate uses:
 ```
 <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
   <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
-    <Sparkles className="h-4 w-4 text-muted-foreground" />
-    <span className="text-sm text-muted-foreground">Estimated cost:</span>
-    <span className="text-sm font-semibold text-foreground">…</span>
-    {notEnoughCredits && (
-      <span className="text-xs font-medium text-destructive">
-        Need {totalCredits - creditsBalance} more credits
-      </span>
+    <CreditEstimateBox params={creditParams} />
+  </div>
+  <Button
+    size="lg"
+    className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+    disabled={!canGenerate}
+    onClick={handleGenerate}
+  >
+    {project.isGenerating ? (
+      <>
+        <Loader2 className="h-4 w-4 animate-spin" />
+        {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
+      </>
+    ) : (
+      <>
+        <Sparkles className="h-4 w-4" />
+        Generate Video
+      </>
     )}
-  </div>
-  {notEnoughCredits ? (
-    <Button
-      onClick={() => openBuyModal('animate_video_cta')}
-      size="lg"
-      className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-    >
-      <Sparkles className="h-4 w-4" />
-      Get credits
-    </Button>
-  ) : (
-    <Button
-      onClick={handleGenerate}
-      disabled={bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading}
-      size="lg"
-      className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-    >
-      <Sparkles className="h-4 w-4" />
-      {totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video'}
-    </Button>
-  )}
+  </Button>
 </div>
 ```
-Pull `openBuyModal` from the existing `useCredits()` destructure on line 61.
-
-### 3. Settings card visual polish — `src/pages/video/AnimateVideo.tsx` (line 1244)
-- Container: `rounded-xl border border-border bg-card p-4 space-y-4` → `rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-5`.
-- Heading (line 1245): `text-sm font-medium text-foreground` → `text-base font-semibold tracking-tight text-foreground`.
-- Field labels (`Aspect Ratio`, `Duration`): bump from `text-xs` → `text-sm font-medium text-foreground`, keep tooltip inline.
-- Duration segmented buttons (lines 1263–1272): `px-3 py-1 rounded-md text-sm` → `px-4 py-1.5 rounded-full text-sm`.
-- `AudioModeSelector` already uses `rounded-full` pills — no change.
-
-### 4. Preservation Rules card — `src/components/app/video/PreservationRulesPanel.tsx` (line 31)
-- Container: `rounded-xl border border-border bg-card p-4 space-y-3` → `rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4`.
-- Section title (the existing heading inside): bump to `text-base font-semibold tracking-tight`.
-
-### 5. Motion Refinement card — `src/components/app/video/MotionRefinementPanel.tsx` (line 70)
-- `rounded-xl` → `rounded-2xl` on the outer card.
-- Trigger button (line 72): keep behavior, just change `rounded-xl` → `rounded-2xl` so the corners match.
-
-### 6. Specific Motion Note label — `src/pages/video/AnimateVideo.tsx` (line 1281)
-Promote the bare label-and-textarea block into a card matching the others so it stops feeling visually orphaned:
-```
-<div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-3">
-  <div className="flex items-center gap-1">
-    <label className="text-base font-semibold tracking-tight text-foreground">
-      Specific Motion Note <span className="text-sm text-muted-foreground font-normal">(optional)</span>
-    </label>
-    <InfoTooltip text="…" />
-  </div>
-  <Textarea … className="min-h-[96px] resize-none rounded-xl" maxLength={500} />
-</div>
-```
+Drops `sticky bottom-6`, `backdrop-blur-md`, the `min-w-[240px]` button, and shortens the CTA label.
 
 ## Out of scope
-No edits to the upload card, motion goal selector, pipeline progress UI, results panel, or any pipeline/credits backend logic. The existing `NoCreditsModal` flow stays as a secondary safety net.
+No changes to refinement panels, compatibility cards, pipelines, or analytics. AnimateVideo's existing footer structure stays intact aside from the label/icon tweak in step 2.
