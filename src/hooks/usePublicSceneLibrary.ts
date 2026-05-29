@@ -20,7 +20,7 @@ export interface PublicScene {
 }
 
 const PUBLIC_COLUMNS =
-  'scene_id,title,description,category_collection,sub_category,preview_image_url,sort_order,category_sort_order,sub_category_sort_order';
+  'scene_id,title,description,category_collection,sub_category,preview_image_url,sort_order,category_sort_order,sub_category_sort_order,owner_user_id,is_brand_scene';
 
 async function fetchPublicScenes(): Promise<PublicScene[]> {
   const PAGE = 1000;
@@ -32,6 +32,8 @@ async function fetchPublicScenes(): Promise<PublicScene[]> {
       .select(PUBLIC_COLUMNS)
       .eq('is_active', true)
       .neq('category_collection', 'bundle')
+      .is('owner_user_id', null)
+      .eq('is_brand_scene', false)
       .order('category_sort_order', { ascending: true })
       .order('sub_category_sort_order', { ascending: true })
       .order('sort_order', { ascending: true })
@@ -42,7 +44,10 @@ async function fetchPublicScenes(): Promise<PublicScene[]> {
     if (batch.length < PAGE) break;
     from += PAGE;
   }
-  return all as PublicScene[];
+  // Defense in depth: drop any row that slipped through with an owner or brand flag.
+  return (all as any[]).filter(
+    (s) => !s.owner_user_id && s.is_brand_scene !== true,
+  ) as PublicScene[];
 }
 
 // Friendly family labels for the public page (super-set of taxonomy.ts).
