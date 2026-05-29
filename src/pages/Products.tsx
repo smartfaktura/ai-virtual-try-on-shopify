@@ -24,6 +24,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { gtagViewItem } from '@/lib/gtag';
 import { getCategoryLabel } from '@/lib/productCategories';
+import { mapTextToCategory } from '@/lib/categoryResolver';
 
 interface UserProduct {
   id: string;
@@ -39,7 +40,9 @@ interface UserProduct {
 }
 
 const getDisplayCategory = (p: UserProduct): string => {
-  const id = p.analysis_json?.userCategory;
+  const id =
+    p.analysis_json?.userCategory ||
+    mapTextToCategory(`${p.title ?? ''} ${p.product_type ?? ''}`);
   const label = id ? getCategoryLabel(id) : '';
   if (label) return label;
   const raw = p.product_type?.includes(':') ? p.product_type.split(':').pop() : p.product_type;
