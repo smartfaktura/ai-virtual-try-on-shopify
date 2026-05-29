@@ -296,7 +296,7 @@ export function SceneCatalogModal({
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-foreground">Select a Scene Look</h2>
             <p className="text-sm text-muted-foreground mt-0.5 tracking-tight">
-              1,200+ curated scenes
+              {counts.data?.total ? `${counts.data.total.toLocaleString()} curated scenes` : 'Curated scenes'}
             </p>
           </div>
         </header>
