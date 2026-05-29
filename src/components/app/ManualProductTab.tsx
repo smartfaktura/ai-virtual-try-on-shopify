@@ -205,6 +205,19 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         notifyAnalysisSoftFail();
         return;
       }
+      if (data?.kind === 'not_product') {
+        const reason = typeof data.reason === 'string' && data.reason ? data.reason : "That image doesn't look like a product";
+        toast.error(`${reason}. Please upload a product photo.`);
+        if (target) {
+          // Remove the rejected batch item entirely
+          setBatchItems(prev => prev.filter(b => b.id !== target.batchId));
+        } else {
+          // Clear the single-image draft
+          setSingleImage(null);
+          setIsAnalyzing(false);
+        }
+        return;
+      }
       if (data) {
         const aiCategory: string | null = typeof data.userCategory === 'string' && data.userCategory ? data.userCategory : null;
         if (target) {
