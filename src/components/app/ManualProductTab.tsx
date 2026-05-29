@@ -152,7 +152,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
       if (editingProduct.inside_image_url) setInsideImage({ previewUrl: editingProduct.inside_image_url });
       if (editingProduct.texture_image_url) setTextureImage({ previewUrl: editingProduct.texture_image_url });
-      
+
+      // Load Product Category from analysis_json (user pick wins, else AI suggestion)
+      const analysis = (editingProduct as any).analysis_json as { category?: string; userCategory?: string } | null;
+      setUserCategory(analysis?.userCategory || null);
+      setSuggestedCategory(analysis?.category || null);
+
       // Load extra fields
       if (editingProduct.weight) setWeight(editingProduct.weight);
       if (editingProduct.materials) setMaterials(editingProduct.materials);
@@ -160,6 +165,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (editingProduct.weight || editingProduct.materials || editingProduct.color) setMoreDetailsOpen(true);
     }
   }, [editingProduct]);
+
 
   // Consume initialFiles once when provided (e.g. from page-level drag overlay or empty-state drop)
   const consumedInitialRef = useRef(false);
