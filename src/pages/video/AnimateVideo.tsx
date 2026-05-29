@@ -1241,15 +1241,15 @@ export default function AnimateVideo() {
               />
 
               {/* Settings */}
-              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-                <h3 className="text-sm font-medium text-foreground">Settings</h3>
+              <div className="space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
+                <h3 className="text-base font-semibold tracking-tight text-foreground">Settings</h3>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-1">
-                    <label className="text-xs text-muted-foreground">Aspect Ratio</label>
+                    <label className="text-sm font-medium text-foreground">Aspect Ratio</label>
                     <InfoTooltip text="For image-to-video, the output always matches your source image ratio. This selector is informational only." />
                   </div>
-                  <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                  <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     Output matches your source image ratio
                   </p>
@@ -1257,13 +1257,13 @@ export default function AnimateVideo() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-1">
-                    <label className="text-xs text-muted-foreground">Duration</label>
+                    <label className="text-sm font-medium text-foreground">Duration</label>
                     <InfoTooltip text="Longer videos use more credits but allow more complex motion sequences." />
                   </div>
                   <div className="flex gap-2">
                     {(['5', '10'] as Duration[]).map((d) => (
                       <button key={d} onClick={() => setDuration(d)}
-                        className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
+                        className={cn('px-4 py-1.5 rounded-full text-sm border transition-colors',
                           duration === d ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
                         )}>
                         {d} seconds
@@ -1276,10 +1276,10 @@ export default function AnimateVideo() {
               </div>
 
               {/* Specific Motion Note */}
-              <div className="space-y-2">
+              <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-3">
                 <div className="flex items-center gap-1">
-                  <label className="text-sm font-medium text-foreground">
-                    Specific Motion Note <span className="text-muted-foreground font-normal">(optional)</span>
+                  <label className="text-base font-semibold tracking-tight text-foreground">
+                    Specific Motion Note <span className="text-sm text-muted-foreground font-normal">(optional)</span>
                   </label>
                   <InfoTooltip text="Add precise instructions like 'one basketball dribble' or 'gentle fabric sway at the hem'. Overrides may be softened if they conflict with preservation settings." />
                 </div>
@@ -1287,7 +1287,7 @@ export default function AnimateVideo() {
                   value={userPrompt}
                   onChange={(e) => setUserPrompt(e.target.value)}
                   placeholder="Example: one realistic basketball dribble, controlled body movement, background stays static"
-                  className="min-h-[80px] resize-none"
+                  className="min-h-[96px] resize-none rounded-xl"
                   maxLength={500}
                 />
               </div>
