@@ -1048,10 +1048,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
         return `OUTFIT DIRECTION — ${hint}`;
       }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      if (!needsOutfit) {
-        const isAiModeEmpty = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
-        return isAiModeEmpty ? '' : '';
-      }
+      if (!needsOutfit) return '';
       return aiOrDefaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait'));
     }
     case 'focusArea': return resolveFocusArea(details, scene);
