@@ -1268,6 +1268,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         </div>
       )}
 
+      {/* Inline quick tip (edit mode) — above sticky footer */}
+      {showQuickTip && singleImage && (
+        <div className="mt-2 animate-fade-in">
+          <ProductUploadTips />
+        </div>
+      )}
+
       {/* Footer — floating bar matching workflow CTA */}
       {singleImage && (
         <div className="sticky bottom-4 z-10 max-w-full mt-4 pb-[env(safe-area-inset-bottom)] animate-fade-in">
