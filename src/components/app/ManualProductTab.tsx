@@ -218,6 +218,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               description: !b.manualEdits.description && data.description ? data.description : b.description,
               // Only fill canonical category if user hasn't picked one manually
               userCategory: b.userCategory ?? aiCategory,
+              // Write-once: remember the AI's pick so we can show the "Suggested" pill until the user overrides it.
+              suggestedCategory: b.suggestedCategory ?? aiCategory,
             };
           }));
         } else {
@@ -322,6 +324,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         title: '',
         productType: '',
         userCategory: null,
+        suggestedCategory: null,
         description: '',
         dimensions: '',
         isAnalyzing: false,
@@ -351,6 +354,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         title: '',
         productType: '',
         userCategory: null,
+        suggestedCategory: null,
         description: '',
         dimensions: '',
         isAnalyzing: false,
@@ -384,6 +388,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       title: '',
       productType: '',
       userCategory: null,
+      suggestedCategory: null,
       description: '',
       dimensions: '',
       isAnalyzing: false,
