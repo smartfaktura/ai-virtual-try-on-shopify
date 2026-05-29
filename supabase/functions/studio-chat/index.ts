@@ -172,8 +172,8 @@ Brand Model image: **20 credits** per generation. Using a public Brand Model som
 Image Upscaling: **2K = 10 credits**, **4K = 15 credits**
 
 Video (variable, not flat):
-- Animate: **10 credits** (5s) / **18 credits** (10s); +2 for premium motion, +4 for ambient audio
-- Start & End: **20 credits** flat
+- Animate: **25 credits** (5s) / **40 credits** (10s); +2 for premium motion, +4 for ambient audio
+- Start & End: **35 credits** flat
 - Short Film: roughly **10–18 credits per shot** + small planning fee + audio add-ons
 
 When asked "how much does X cost?", give the exact number above — never vague ranges.
