@@ -1,38 +1,47 @@
-# Trim redundant always-on negatives + improve PERSON_NEGATIVES
+# Remove "All text on packaging must be perfectly legible" from CRITICAL REQUIREMENTS
 
-## 1. Trim redundant negatives
+## Why
+Currently `supabase/functions/generate-workflow/index.ts` (line 618) injects this on **every** non-interior generation:
 
-About 60% of `BASE_NEGATIVES` + `PRODUCT_NEGATIVES` duplicates `CRITICAL REQUIREMENTS` already added by `supabase/functions/generate-workflow/index.ts` (lines 615-625). Repeating instructions as negatives wastes tokens and can trigger negative-prompt bias on Gemini/Seedream.
+> 3. All text on packaging must be perfectly legible.
 
-| Always-on phrase | Already covered by | Verdict |
-|---|---|---|
-| "Preserve all original product branding, logos, and label text exactly as shown" | CRITICAL #2 + #3 | Remove |
-| "No background from reference image, no original product photo environment" | CRITICAL #7 + tail AVOID | Remove |
-| "no over-saturation, no color banding, no chromatic aberration, no lens flare artifacts" | CRITICAL #4 ("no AI artifacts") | Remove |
-| "No watermarks, no artificial text overlays" | Nothing upstream | Keep |
-| "No warped product edges, no melted/distorted labels, no duplicated products, no floating elements" | Nothing upstream | Keep |
+99% of products (apparel, shoes, eyewear, jewelry, bags, etc.) have no packaging at all. Forcing the model to think about "packaging text legibility" on these:
+- Wastes a numbered CRITICAL slot
+- Can bias the model toward inventing labels/tags on items that shouldn't have any (hangtags on dresses, stickers on sneakers)
+- CRITICAL #2 already covers it for true packaging products: "preserve 100% accurate packaging, labels, colors, branding, shape, and materials"
 
-### Change (lines 230-232)
+## Change
 
-```ts
-const BASE_NEGATIVES = 'No watermarks, no artificial text overlays.';
-const PERSON_NEGATIVES = 'Keep the person anatomically natural and realistic: correct hands, fingers, nails, limbs, joints, posture, and body proportions.';
-const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
+`supabase/functions/generate-workflow/index.ts` — delete line 618 entirely and renumber subsequent items.
+
+Before:
+```
+2. The product MUST look EXACTLY like [PRODUCT IMAGE]...
+3. All text on packaging must be perfectly legible.
+4. Ultra high resolution, professional quality, no AI artifacts.
+5. This specific variation must clearly match...
+6. The person MUST match [MODEL IMAGE]...
+7. BACKGROUND ISOLATION (CRITICAL): ...
+8. OUTFIT CONSISTENCY (CRITICAL): ...
 ```
 
-## 2. Improve PERSON_NEGATIVES
+After:
+```
+2. The product MUST look EXACTLY like [PRODUCT IMAGE]...
+3. Ultra high resolution, professional quality, no AI artifacts.
+4. This specific variation must clearly match...
+5. The person MUST match [MODEL IMAGE]...
+6. BACKGROUND ISOLATION (CRITICAL): ...
+7. OUTFIT CONSISTENCY (CRITICAL): ...
+```
 
-Old: `No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.`
-
-New: `Keep the person anatomically natural and realistic: correct hands, fingers, nails, limbs, joints, posture, and body proportions.`
-
-Why: Positive framing ("keep correct") outperforms negative framing ("no extra") on modern diffusion models. Stating what TO do reduces negative-prompt bias while covering the same failure modes.
+Also update the `additionalProducts` inline numbering on line 617 which currently references `idx + 4` — shift to `idx + 3` so multi-product numbering stays continuous, and adjust the final count line from `additionalProducts.length + 4` to `additionalProducts.length + 3`.
 
 ## Effect
-- ~55 fewer tokens per prompt across all variations and jobs.
-- No duplicate branding/background isolation phrasing.
-- Real safety guards still in place (watermark, melted labels, duplicates, floating).
-- PERSON_NEGATIVES becomes positively framed and anatomically comprehensive.
+- Label/text fidelity for true packaging products still covered by CRITICAL #2 ("packaging, labels, colors, branding")
+- No more spurious "packaging text" hint pushing the model toward inventing tags/labels on apparel/shoes/jewelry
+- One less CRITICAL line per prompt
 
 ## Out of scope
-`BG_COLOR_NEGATIVES`, edge-function CRITICAL text, camera/focus/lighting maps remain unchanged.
+- Interior workflow block (lines 572-586) — no change, doesn't include this line.
+- Builder-side negatives — already trimmed in previous step.
