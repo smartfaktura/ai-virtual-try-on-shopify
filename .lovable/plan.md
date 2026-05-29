@@ -1,44 +1,45 @@
-## Root cause (rechecked against the DB)
+## What I found
 
-- RLS on `product_image_scenes` is correct. For non-admin `123presets@gmail.com`, the policy `Auth read scenes` only returns:
-  - global scenes (`owner_user_id IS NULL`) that are active, or
-  - their own rows (`owner_user_id = auth.uid()`).
-- The DB confirms `123presets` is **not** an admin, so `TEST`, `GHA Lobby Image`, and `Subway` are not actually returned by the server for that user.
-- The leak is in the client. `useProductImageScenes` defines its React Query keys without the current user id:
-  - `['product-image-scenes', cacheVariant]`
-  - `['product-image-scenes-priority', cacheVariant, priorityCats]`
-  - `['product-image-scenes-rest', cacheVariant, priorityCats]`
-  - `staleTime: 5 * 60 * 1000`
-- That means once any session (admin viewing the page, prewarm, or a shared tab) populates the cache, the next user in the same browser reuses it. That is what is showing other users' Brand Scenes inside the Activewear category for `123presets`.
+`/product-visual-library` uses `src/hooks/usePublicSceneLibrary.ts`, not the Product Images picker hook we already patched.
 
-So this is a frontend cache isolation bug, not an RLS bug.
+That hook currently queries active `product_image_scenes` with only:
 
-## Safe fix (frontend only, no DB changes)
+```text
+is_active = true
+category_collection != bundle
+```
 
-1. Scope React Query keys by user
-   - In `src/hooks/useProductImageScenes.ts`, add the current `user?.id ?? 'anon'` into all three query keys (`QUERY_KEY_ALL`, `QUERY_KEY_PRIORITY`, `QUERY_KEY_REST`).
-   - Result: admin and non-admin sessions never share cached scene lists; logout/login swaps cache cleanly.
+It does not explicitly exclude user-owned Brand Scenes. The database currently has active user-owned Brand Scenes in `activewear`, including `GHA Lobby Image` and `TEST`, so they can appear on the public Visual Library if the request is authenticated or if any permissive path/cache returns them.
 
-2. Defense-in-depth filter on the client
-   - After fetching, drop any row where `owner_user_id` is set and not equal to the current user id, unless the caller explicitly opts into the admin catalog (`includeInactive: true` paths used by admin pages).
-   - This guarantees that even if a stale query result is hydrated from anywhere, other users' brand scenes are never rendered to a normal user.
+## Safe fix
 
-3. Cache-bust on auth change
-   - In the auth state listener, invalidate the three scene query keys on sign-in / sign-out so a logout in the same tab does not leave admin data behind.
+1. Update `src/hooks/usePublicSceneLibrary.ts`
+   - Add `owner_user_id` and `is_brand_scene` to the selected columns
+   - Add database filters:
+     - `owner_user_id IS NULL`
+     - `is_brand_scene = false`
+   - Add a defensive client-side filter before returning scenes, so private Brand Scenes are hidden even if a cached or unexpected payload includes them
 
-4. Keep admin tools intact
-   - `AdminProductImageScenes`, `AdminBulkPreviewUpload`, and `BundleVisuals` already pass `includeInactive: true` / `includeBundle: true`. Those paths skip the owner filter so admins keep full catalog management.
+2. Keep the public page public
+   - Do not add auth requirements
+   - Do not show any user-owned Brand Scenes on `/product-visual-library`
+   - Keep only global/public catalog scenes there
 
-5. No RLS changes
-   - RLS is already correct and already protects the data server-side. Adding a RESTRICTIVE policy here would risk breaking admin catalog editing and is unnecessary for this bug.
+3. Keep user Brand Scenes working elsewhere
+   - Do not change `/app/brand-scenes`
+   - Do not change the user-facing Product Images picker fix already made
+   - Do not change admin scene management
 
-## Files touched
+4. Optional hardening after the frontend fix
+   - Add a dedicated public database function/view for the Visual Library that only returns global non-brand scenes, then point this hook to it
+   - This is safer long-term, but the smallest immediate fix is the hook-level query + filter above
 
-- `src/hooks/useProductImageScenes.ts` — user-scoped query keys + owner-filter for user-facing callers.
-- `src/contexts/AuthContext.tsx` (or wherever the auth subscription lives) — invalidate scene query keys on auth events.
+## Files to change
 
-## Why this is the smallest safe fix
+- `src/hooks/usePublicSceneLibrary.ts` only
 
-- The visible bug is cache reuse; user-scoped query keys fix it directly.
-- The owner filter is a belt-and-suspenders guard against future regressions or unrelated shared-cache paths.
-- No migrations, no RLS rewrites, no admin breakage, no edge function changes.
+## Why this is safe
+
+- It only narrows public Visual Library results
+- It does not touch RLS, migrations, admin tools, or saved Brand Scenes
+- It prevents another user’s Brand Scenes from rendering on the public marketing/library page
