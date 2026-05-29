@@ -26,6 +26,8 @@ export interface DbScene {
   outfit_hint: string | null;
   use_scene_reference: boolean;
   updated_at: string;
+  owner_user_id?: string | null;
+  is_brand_scene?: boolean | null;
 }
 
 export function dbToFrontend(d: DbScene): ProductImageScene {
