@@ -84,16 +84,12 @@ export default function AddProduct() {
 
       {isEditing ? (
         editingProduct && (
-          <>
-            <ManualProductTab
-              onProductAdded={handleDone}
-              onClose={handleDone}
-              editingProduct={editingProduct}
-            />
-            <div className="mt-6">
-              <ProductUploadTips />
-            </div>
-          </>
+          <ManualProductTab
+            onProductAdded={handleDone}
+            onClose={handleDone}
+            editingProduct={editingProduct}
+            showQuickTip
+          />
         )
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
