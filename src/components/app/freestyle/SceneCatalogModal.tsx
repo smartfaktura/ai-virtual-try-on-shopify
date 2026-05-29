@@ -296,7 +296,7 @@ export function SceneCatalogModal({
           <div className="min-w-0">
             <h2 className="text-lg font-semibold text-foreground">Select a Scene Look</h2>
             <p className="text-sm text-muted-foreground mt-0.5 tracking-tight">
-              1,200+ curated scenes
+              {counts.data?.total ? `${counts.data.total.toLocaleString()} curated scenes` : 'Curated scenes'}
             </p>
           </div>
         </header>
@@ -361,7 +361,7 @@ export function SceneCatalogModal({
                     </h3>
                     <span className="text-[10px] text-muted-foreground/70">Your saved</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                     {brandScenes.data!.map(s => (
                       <SceneCatalogCard
                         key={s.id}

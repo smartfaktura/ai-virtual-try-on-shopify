@@ -1,14 +1,17 @@
-# Product Catalog Modal — sidebar + search bar cleanup
+## Scope
+Fix the misleading "1,200+ curated scenes" label in the Scene Look modal on `/app/freestyle` and tighten the mobile grid to 3 columns.
 
-## Changes in `src/components/app/freestyle/ProductCatalogModal.tsx`
+## Changes
 
-1. **Remove the "Quick" sidebar section** (lines ~241–254). Drop both the "All products" and "Samples" rows. The "Recently added" / Sort controls in the filter bar already cover sample/featured browsing; the new top entry in Category will own "show everything".
+**`src/components/app/freestyle/SceneCatalogModal.tsx`**
 
-2. **Rename Category → Any to "All products"** (line ~261). Keep the same `onClick={() => setCategoryFilter(null)}` and `active={categoryFilter === null}` behavior — only the visible label changes.
+1. Subheader (line 299): replace the hardcoded `1,200+ curated scenes` with the live total from `counts.data.total` (already loaded via `useSceneCounts`). Render as `{counts.data?.total ? \`${counts.data.total.toLocaleString()} curated scenes\` : 'Curated scenes'}` so the number always matches reality and gracefully falls back while loading.
 
-3. **Round the search bar to match other freestyle search inputs.** Update the `Input` className on line 183 from `pl-9 h-9 text-sm` to `pl-10 h-10 text-sm rounded-full`, and bump the `Search` icon's left offset from `left-3` to `left-3.5` so it stays centered inside the pill. This matches `SceneCatalogFilters` (`pl-10 pr-9 h-10 text-sm rounded-full`).
+2. Grid (line 364): change `grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3` → `grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3` so mobile shows 3 columns with slightly tighter gaps.
+
+**`src/components/app/freestyle/SceneCatalogGrid.tsx`** (lines 68 and 87)
+
+Apply the same mobile bump: `grid-cols-2` → `grid-cols-3` on both grid wrappers, keep `sm:`/`lg:`/`xl:` breakpoints intact, tighten gap to `gap-2 sm:gap-3` on mobile.
 
 ## Out of scope
-- No behavior change in the filter bar (All / Recently added pills, Sort dropdown).
-- No grid, empty state, or sample data changes.
-- No mobile sheet refactor.
+No changes to filtering, sidebar, card markup, or desktop layout.

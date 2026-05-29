@@ -65,7 +65,7 @@ export const SceneCatalogGrid = forwardRef<HTMLDivElement, SceneCatalogGridProps
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
         {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="aspect-[4/5] w-full rounded-xl" />
         ))}
@@ -84,7 +84,7 @@ export const SceneCatalogGrid = forwardRef<HTMLDivElement, SceneCatalogGridProps
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
         {flat.map(scene => (
           <SceneCatalogCard
             key={scene.id}
