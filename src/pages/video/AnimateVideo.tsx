@@ -1361,17 +1361,18 @@ export default function AnimateVideo() {
       {isPipelineActive && !isBulkRunning && (
         <div className="space-y-6">
           {/* Branded takeover card */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm p-8 space-y-6">
+          <div className="rounded-2xl border border-border bg-card shadow-sm p-5 sm:p-8 space-y-6">
             <div className="flex items-center gap-4">
               <div className="relative">
                 <img
                   src={getOptimizedUrl(currentProgressMember.avatar, { quality: 60 })}
                   alt={currentProgressMember.name}
-                  className="w-12 h-12 rounded-full border-2 border-primary/20 object-cover transition-all duration-700"
+                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-primary/20 object-cover transition-all duration-700"
                 />
                 <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
                   <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
                 </div>
+
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground">VOVV.AI Studio</p>
