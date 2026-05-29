@@ -1,51 +1,65 @@
 ## Scope
-`/app/video/animate` and `/app/video/start-end` look inconsistent: cramped header, random Beta pill, and a non-floating Generate bar that sits inline at the very bottom instead of staying anchored above the fold. Make both pages share an identical chrome — same wrapper width / rhythm, same header treatment (with optional inline badge), and a properly floating Generate bar matching the project's existing pattern (`src/components/app/product-images/ProductImagesStickyBar.tsx`).
-
-No backend, pipeline, settings, or business-logic changes.
+Match the AnimateVideo floating cost bar to StartEndVideo: same `CreditEstimateBox` pill, same muted typography, no red "Need X more credits" text, no cheap inline error. Only the floating bar on `/app/video/animate` changes — pricing logic, CTAs, and StartEndVideo stay untouched.
 
 ## Changes
 
-### 1. `src/components/app/PageHeader.tsx` — support an inline badge next to the title
-Add an optional `titleBadge?: React.ReactNode` prop and render it inline next to the `<h1>` (after the title, same row, vertically centered). Default `undefined` so all existing callers are unaffected.
+### `src/pages/video/AnimateVideo.tsx` — floating Generate bar (block around lines 1317–1363)
+
+Replace the inline "Cost: 25 credits  Need 25 more credits" row with the same `CreditEstimateBox` component used on StartEnd, plus a small muted multiplier line. Drop the destructive red copy entirely — the disabled Generate button + `Get credits` CTA already communicate the state.
+
+New inner layout (still inside the existing `sticky bottom-4 z-10` shell and the existing IIFE that computes `perVideo`, `totalVideos`, `totalCredits`, `notEnoughCredits`, `generateDisabled`):
 
 ```tsx
-<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
-{titleBadge && <span className="inline-flex">{titleBadge}</span>}
+<div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+  <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+    <CreditEstimateBox
+      params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }}
+    />
+    {totalVideos > 1 && (
+      <span className="text-xs text-muted-foreground">
+        × {totalVideos} {totalVideos === 1 ? 'video' : 'videos'} = {totalCredits} credits
+      </span>
+    )}
+  </div>
+
+  {notEnoughCredits ? (
+    <Button
+      onClick={() => openBuyModal('animate_video_cta')}
+      size="lg"
+      className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+    >
+      <Sparkles className="h-4 w-4" />
+      Get credits
+    </Button>
+  ) : (
+    <Button
+      onClick={handleGenerate}
+      disabled={generateDisabled}
+      size="lg"
+      className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+    >
+      <Sparkles className="h-4 w-4" />
+      {totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video'}
+    </Button>
+  )}
+</div>
 ```
 
-(`titleBadge` lives inside the same `flex flex-col sm:flex-row sm:items-center` row as the back button + title.)
+Add the missing `CreditEstimateBox` import (already imported at top of the file — no new import).
 
-### 2. `src/pages/video/StartEndVideo.tsx` — header, wrapper, floating CTA
-- Wrapper: `max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32` (matches Animate after step 3 and reserves space for the floating bar).
-- PageHeader: drop the `<span Beta>` child (no more "random floating element" under the subtitle); pass the same pill via the new `titleBadge` prop so it sits inline with the title. Children become `<></>` (PageHeader still requires a child).
-- Generate row (currently lines 384–407): convert to floating CTA:
-  ```tsx
-  <div className="sticky bottom-4 z-10 pb-[env(safe-area-inset-bottom)]">
-    <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
-      <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
-        <CreditEstimateBox params={creditParams} />
-      </div>
-      <Button size="lg" className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto" disabled={!canGenerate} onClick={handleGenerate}>
-        {project.isGenerating ? (<><Loader2 className="h-4 w-4 animate-spin" />{project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}</>) : (<><Sparkles className="h-4 w-4" />Generate Video</>)}
-      </Button>
-    </div>
-  </div>
-  ```
+### What's removed
+- `<span className="text-sm text-muted-foreground">Cost:</span>` + the bold credits span (replaced by `CreditEstimateBox`).
+- `(N camera motions × M images)` parenthetical (collapsed into the simpler `× N videos = X credits` muted line).
+- The red `text-destructive` "Need X more credits" pill — gone. State is now communicated by the disabled Generate button and the `Get credits` CTA only, matching StartEnd's restraint.
 
-### 3. `src/pages/video/AnimateVideo.tsx` — match StartEnd exactly
-- Wrapper (line 532): `max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32` (was `max-w-4xl mx-auto space-y-6`).
-- PageHeader stays as is — no badge needed.
-- Generate row (the existing `rounded-2xl border border-border bg-card p-4 sm:p-5 …` block around line 1318): wrap in the same `sticky bottom-4 z-10 pb-[env(safe-area-inset-bottom)]` shell and apply `bg-card/95 backdrop-blur-md shadow-lg` to the inner card so it visually matches StartEnd. All inner logic (notEnoughCredits branch, Get credits button, bulk totals copy) stays untouched.
+### Out of scope
+- No changes to `CreditEstimateBox.tsx`, pricing logic, the IIFE math, or `NoCreditsModal`.
+- No changes to StartEndVideo.
+- No changes to PageHeader or wrapper styles (already unified in the previous turn).
 
-### 4. Verification
-- Eyeball both pages at desktop (1264) and mobile (375) widths via the preview screenshot tool to confirm:
-  - Headers share the same size, back-action style, subtitle treatment.
-  - The Beta pill on StartEnd sits inline next to "Start & End Video", not floating below the subtitle.
-  - The Generate bar stays pinned 16 px above the viewport bottom on both pages while scrolling, with the cost label on the left and CTA on the right; on mobile it stacks (cost row above CTA).
-  - Last card on each page is not visually hidden under the sticky bar (`pb-32` confirms clearance).
-
-## Out of scope
-- No copy changes inside the existing settings/refinement panels.
-- No changes to the Audio & Note card, Compatibility card, Recent-result banner, results panel, or pipeline UI.
-- No animation work, no library/upload-modal changes.
-- Other pages that use PageHeader keep their current rendering (new prop is optional).
+## Verification
+Eyeball `/app/video/animate` in single-video and multi-motion/bulk states at 1264 × 821 and 375 × 812:
+- Cost pill matches StartEnd exactly (rounded `bg-muted/50` border).
+- No red text anywhere in the bar.
+- Multi-video state shows quiet muted multiplier line next to the pill.
+- Generate / Get credits CTAs still work as expected.
