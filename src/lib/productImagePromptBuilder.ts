@@ -1509,9 +1509,8 @@ export function buildDynamicPrompt(
             injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
           }
         } else if (isAiMode) {
-          // AI mode: inject lightweight product-aware wardrobe note
-          const noteClause = details.customOutfitNote ? ` STYLING PRIORITY: ${details.customOutfitNote}` : '';
-          injectedNote = `WARDROBE NOTE (subordinate to scene direction): Choose an outfit that naturally complements the product. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive with the scene palette.${noteClause}`;
+          // AI mode: inject scene-aware wardrobe directive (shared helper, no specific garments/colors)
+          injectedNote = buildAiWardrobeDirective(details);
         }
       }
 
