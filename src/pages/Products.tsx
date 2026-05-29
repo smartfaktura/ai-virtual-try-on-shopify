@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { gtagViewItem } from '@/lib/gtag';
+import { getCategoryLabel } from '@/lib/productCategories';
 
 interface UserProduct {
   id: string;
@@ -34,7 +35,16 @@ interface UserProduct {
   tags: string[] | null;
   created_at: string;
   updated_at: string;
+  analysis_json?: { userCategory?: string | null } | null;
 }
+
+const getDisplayCategory = (p: UserProduct): string => {
+  const id = p.analysis_json?.userCategory;
+  const label = id ? getCategoryLabel(id) : '';
+  if (label) return label;
+  const raw = p.product_type?.includes(':') ? p.product_type.split(':').pop() : p.product_type;
+  return raw || '';
+};
 
 type ViewMode = 'grid' | 'list';
 type SortBy = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
