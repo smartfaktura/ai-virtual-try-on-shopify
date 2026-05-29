@@ -1,66 +1,36 @@
-## Add Product Category picker to Add/Edit Product
+# Product Details cleanup + Category picker redesign
 
-### What this adds
+## 1. Product Details form (`ManualProductTab.tsx`, single-edit view)
 
-A new **Product Category** field in the Product Details section, sitting next to Product Type. It opens a clean modal listing the same 35+ subcategories used in Visual Studio Step 2 (Dresses, Sneakers, Necklaces, etc.), grouped by family. The AI-suggested category is pre-selected so users with already-analyzed products see the right value, not an empty field.
+- **Remove** the "Product Type" `Input` (lines 1164-1177) and the "Change category" quick-chips block below it (lines 1180-1208). `productType` state stays so save/load logic and DB writes (`product_type` column) continue working — it's just no longer shown to the user.
+- **Promote Product Category** into the freed slot. New layout: two-column grid → left = `Product Name *`, right = `Product Category`. Description + Dimensions stay as the next row.
+- **"Suggested" pill**: when `!userCategory && suggestedCategory`, render a small badge inside the category trigger button:
+  - `bg-primary text-primary-foreground` (primary dark blue, white text), rounded-full, text-[10px], uppercase tracking, `px-2 py-0.5`, label `Suggested` (no sparkles icon).
+  - Sits to the right of the category label, left of the pencil icon.
+- Keep the pencil edit affordance on the trigger.
 
-### Product Type vs Product Category
+## 2. CategoryPickerModal redesign
 
-- **Product Type** — freeform text the AI writes (e.g. "mini dress"). Unchanged.
-- **Product Category** (new) — one of the 35+ canonical IDs used by Step 2 to pick scenes.
+- **Width**: bump `max-w-2xl` → `max-w-3xl`, container `rounded-3xl` (matches the "super big rounding" elsewhere). Increase padding (`px-8 pt-8 pb-6`).
+- **Header copy** (shorter): title `Product category`, description `Pick the closest match for better scene results` (single short line).
+- **Search input**: taller (`h-11`), `rounded-2xl`, larger placeholder, full-width, subtle muted background (`bg-muted/40`), search icon `w-4 h-4`. Placeholder: `Search categories`.
+- **Suggested at top**: when `suggested` exists, render a dedicated section above the groups titled `SUGGESTED`, containing only that one category as a single full-width pill with the same primary-blue `Suggested` badge.
+- **Category buttons**: switch grid from `gap-1.5` → `gap-2`, buttons from `rounded-md py-2` → `rounded-2xl py-3 px-4`, `text-sm`, more breathing room. Selected = primary fill; suggested-in-grid = subtle primary tint; default = `border-border/60 hover:bg-muted`. Drop the inline `Sparkles` icon on suggested items inside the grid (suggestion now lives only in the dedicated top section).
+- **Group labels**: keep tiny uppercase, add a little more spacing (`space-y-6` between groups, `mb-3` under label).
+- **Scroll area**: `max-h-[65vh]`.
 
-Both kept; they play different roles.
+## 3. Mobile UX
 
-### What the user sees
+- Modal: on `sm:` breakpoint and below, content goes near full-screen — `max-w-[100vw] h-[100dvh] sm:h-auto sm:max-w-3xl`, rounded only on desktop (`sm:rounded-3xl rounded-none`), sticky header with search, scroll body fills remaining space. Suggested section pinned at the very top of the scroll body.
+- Category grid collapses to `grid-cols-1` on mobile (currently `grid-cols-2 sm:grid-cols-3`) so each pill is big and easily tappable; `sm:grid-cols-2 md:grid-cols-3`.
+- Category trigger button in the form: keep `h-9` on desktop, `h-11` on mobile so the badge has room.
 
-```text
-┌───────────────────────────┐  ┌───────────────────────────┐
-│ Product Name *            │  │ Product Type              │
-│ [ Floral Mini Dress     ] │  │ [ mini dress            ] │
-└───────────────────────────┘  └───────────────────────────┘
-┌───────────────────────────┐  ┌───────────────────────────┐
-│ Product Category          │  │ Dimensions (optional)     │
-│ [ Dresses             ▾ ] │  │ [ 28 x 35 x 13 cm       ] │
-└───────────────────────────┘  └───────────────────────────┘
-        ▲ click → modal
-```
+## 4. Out of scope
 
-**Modal:** search bar on top, then categories grouped by the existing `CATEGORY_SUPER_GROUPS` (Fashion & Apparel, Footwear, Bags & Accessories, Jewelry, Beauty & Fragrance, Food & Drink, Home & Lifestyle). The current/suggested category is highlighted. Click → modal closes → field updates.
+- Batch-mode card still keeps its Product Type input + chips for now (asked only about the single-edit form / screenshot). Can do batch in a follow-up if you want.
+- No DB schema changes. `product_type` column keeps being written from whatever Step 2 / AI fills; we just stop showing the field.
 
-**Pre-fill priority** (so existing users aren't shown empty fields):
-1. `userCategory` (user's saved pick)
-2. else `category` (from Step 2 AI analysis)
-3. else "Choose category"
+## Files touched
 
-Any product that's been through Step 2 already has `category` in `analysis_json`, so it shows the AI's category right away.
-
-### Storage
-
-Save into the existing `user_products.analysis_json` JSONB column under a new key `userCategory`. **No DB migration.** AI's `category` is never overwritten — it stays as a fallback.
-
-### Step 2 reading
-
-In `ProductImagesStep2Scenes.tsx`, where we currently read `analyses[id].category`, prefer `userCategory` if present. One-line change. Scene-picking, grouping, generation, billing — all untouched.
-
-### Files
-
-1. **New** `src/lib/productCategories.ts` — single source of truth: `CATEGORY_LABELS` + `CATEGORY_SUPER_GROUPS` (extracted from `ProductImagesStep2Scenes.tsx`). Future categories added here only.
-2. **New** `src/components/app/product-images/CategoryPickerModal.tsx` — search + grouped list + suggested-pick highlight.
-3. **Edit** `src/components/app/ManualProductTab.tsx` — add the Category trigger + modal in the single-edit form (~line 1140) and the batch card (~line 780). Keep the old "Change category" chip toggle for now (it edits Product Type, which is separate). Persist `userCategory` on save.
-4. **Edit** `src/components/app/product-images/ProductImagesStep2Scenes.tsx` — import labels/groups from the shared file; prefer `userCategory` over `category` when reading.
-5. **Edit** `src/hooks/useProductAnalysis.ts` — `overrideCategory` writes to `userCategory` instead of overwriting `category`.
-
-### Safety guarantees
-
-- **No DB migration**, no schema change, no RLS change
-- New field is **optional** — empty for all legacy products until user picks
-- Reading layer always falls back: `userCategory ?? category ?? 'other'`
-- Existing analyzed products show the AI-suggested category pre-filled
-- Step 2 scene logic, generation, prompts, billing, queue — unchanged
-- Easy rollback: remove the new field + revert one read
-
-### Out of scope (saved for later)
-
-- The bigger plan to make the upload analyzer return canonical category at upload time
-- Backfilling `userCategory` for legacy rows
-- Showing category on product list cards
+- `src/components/app/ManualProductTab.tsx` — remove Product Type UI block, move Category into the grid, add Suggested badge.
+- `src/components/app/product-images/CategoryPickerModal.tsx` — full visual redesign + mobile sheet behavior + Suggested-at-top section + shortened copy.
