@@ -2108,14 +2108,16 @@ export function ProductImagesStep3Refine({
   }, [selectedProductsList, analyses, primaryCategory]);
 
   // Auto-pick presets for scenes without outfit_hint on first mount
+  // ONLY in manual mode — AI mode must not inject specific outfits, otherwise the
+  // prompt builder treats those as an OUTFIT LOCK (e.g. "grey cotton sweater…").
   useEffect(() => {
-    if (!hasPersonBlock || autoPickedRef.current || details.outfitMode === 'manual') return;
+    if (!hasPersonBlock || autoPickedRef.current) return;
+    if (details.outfitMode !== 'manual') { autoPickedRef.current = true; return; }
     const existing = details.outfitConfigByScene;
     if (existing && Object.keys(existing).length > 0) {
       autoPickedRef.current = true;
       return;
     }
-    // For scenes without outfit_hint, auto-assign based on first product's preset
     const firstPreset = Object.values(perProductPicks)[0];
     if (!firstPreset) { autoPickedRef.current = true; return; }
     const map: Record<string, OutfitConfig> = {};
@@ -2131,7 +2133,7 @@ export function ProductImagesStep3Refine({
       autoPickedRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasPersonBlock, perProductPicks, modelShots]);
+  }, [hasPersonBlock, perProductPicks, modelShots, details.outfitMode]);
 
   // Get the auto-picked preset name for display
   const autoPickedPresetName = useMemo(() => {

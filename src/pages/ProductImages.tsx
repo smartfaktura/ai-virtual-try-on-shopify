@@ -893,13 +893,16 @@ export default function ProductImages() {
           for (let vIdx = 0; vIdx < variations.length; vIdx++) {
             const variationOverride = variations[vIdx];
             // Per-scene outfit override > per-product outfit > global outfitConfig
-            const perSceneOutfit = details.outfitConfigByScene?.[scene.id];
-            const perProductOutfit = details.outfitConfigByProduct?.[product.id];
+            // Only honored in manual mode — AI mode must never inherit saved outfit presets
+            // (those would re-trigger the specific OUTFIT LOCK string in the prompt).
+            const isManualOutfit = details.outfitMode === 'manual';
+            const perSceneOutfit = isManualOutfit ? details.outfitConfigByScene?.[scene.id] : undefined;
+            const perProductOutfit = isManualOutfit ? details.outfitConfigByProduct?.[product.id] : undefined;
             const resolvedOutfit = perSceneOutfit || perProductOutfit;
             const variationDetails: DetailSettings = {
               ...details,
               ...variationOverride,
-              ...(resolvedOutfit ? { outfitConfig: resolvedOutfit } : {}),
+              ...(resolvedOutfit ? { outfitConfig: resolvedOutfit } : (isManualOutfit ? {} : { outfitConfig: undefined })),
               // Enable override flag when per-scene outfit exists so prompt builder bypasses outfit_hint
               ...(perSceneOutfit ? { outfitOverrideEnabled: true } : {}),
             };
