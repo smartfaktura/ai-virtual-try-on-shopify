@@ -1071,7 +1071,7 @@ function resolveToken(token: string, ctx: TokenContext): string {
     }
 
     case 'consistencyDirective': return CONSISTENCY_MAP[details.consistency || 'balanced'] || CONSISTENCY_MAP['balanced'];
-    case 'productSize': return analysis?.sizeClass || 'medium';
+    case 'productSize': return (analysis as any)?.sizeReference || (analysis as any)?.sizeBucket || analysis?.sizeClass || 'medium';
     case 'colorFamily': return analysis?.colorFamily || 'neutral tones';
 
     case 'stylingDirective': {

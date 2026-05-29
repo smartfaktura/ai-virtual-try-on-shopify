@@ -149,6 +149,11 @@ interface WorkflowRequest {
     analysis?: {
       category?: string;
       sizeClass?: string;
+      sizePrimaryCm?: number;
+      sizeSecondaryCm?: number | null;
+      sizeBucket?: string;
+      sizeReference?: string;
+      sizeConfidence?: 'high' | 'medium' | 'low';
       colorFamily?: string;
       materialFamily?: string;
       finish?: string;
@@ -593,7 +598,23 @@ ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstruct
     if (analysisData.materialFamily) analysisLines.push(`- Material: ${analysisData.materialFamily}`);
     if (analysisData.finish) analysisLines.push(`- Finish: ${analysisData.finish}`);
     if (analysisData.colorFamily) analysisLines.push(`- Color family: ${analysisData.colorFamily}`);
-    if (analysisData.sizeClass) analysisLines.push(`- Size class: ${analysisData.sizeClass}`);
+    // Size: only when user did NOT provide explicit dimensions (their specs are authoritative)
+    if (!product.dimensions) {
+      const primary = analysisData.sizePrimaryCm;
+      const secondary = analysisData.sizeSecondaryCm;
+      const ref = analysisData.sizeReference;
+      const conf = analysisData.sizeConfidence;
+      if (ref || primary) {
+        const dims = [primary && `${primary}cm`, secondary && `${secondary}cm`].filter(Boolean).join(' × ');
+        const confTag = conf === 'low' ? ' (approximate)' : '';
+        const line = ref
+          ? `- Real-world size: ${ref}${dims ? ` (${dims})` : ''}${confTag}`
+          : `- Real-world size: ${dims}${confTag}`;
+        analysisLines.push(line);
+      } else if (analysisData.sizeBucket || analysisData.sizeClass) {
+        analysisLines.push(`- Size class: ${analysisData.sizeBucket || analysisData.sizeClass}`);
+      }
+    }
   }
   const analysisBlock = analysisLines.length > 0 ? `\n${analysisLines.join('\n')}` : '';
 

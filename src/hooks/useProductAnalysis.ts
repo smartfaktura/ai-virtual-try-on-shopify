@@ -93,7 +93,7 @@ export function useProductAnalysis() {
               console.warn(`Analysis failed for ${product.id}:`, error);
               newAnalyses[product.id] = {
                 category: 'other',
-                sizeClass: 'medium',
+                sizeClass: '',
                 colorFamily: 'neutral',
                 materialFamily: 'mixed',
                 finish: 'matte',
@@ -127,7 +127,7 @@ export function useProductAnalysis() {
             console.error(`Analysis error for ${product.id}:`, err);
             newAnalyses[product.id] = {
               category: 'other',
-              sizeClass: 'medium',
+              sizeClass: '',
               colorFamily: 'neutral',
               materialFamily: 'mixed',
               finish: 'matte',
@@ -175,7 +175,7 @@ export function useProductAnalysis() {
       const freshAnalysis: ProductAnalysis = (error || !data?.analysis)
         ? {
             category: 'other',
-            sizeClass: 'medium',
+            sizeClass: '',
             colorFamily: 'neutral',
             materialFamily: 'mixed',
             finish: 'matte',

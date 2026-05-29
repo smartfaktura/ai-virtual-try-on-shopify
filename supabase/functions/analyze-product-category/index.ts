@@ -210,7 +210,17 @@ FURNITURE vs HOME-DECOR: Use "furniture" for any seating (chairs, armchairs, sof
 
 GLOBAL VISUAL (always return):
 - category: one of the valid categories above
-- sizeClass: very-small | small | medium | large | extra-large
+- sizePrimaryCm: number — the single most defining dimension in centimeters (ring → inner diameter; necklace → chain length; bag → height; phone case → length; chair → seat height; lamp → total height; bottle → height; earring → drop length; watch → case diameter). Estimate from the image; if multiple plausible values, pick the realistic median for this exact subtype.
+- sizeSecondaryCm: number or null — second meaningful dimension (bag width, chair width, bottle diameter, lamp shade diameter). Use null when not applicable (rings, simple pendants).
+- sizeBucket: very-small | small | medium | large | extra-large (derive from sizePrimaryCm; <2cm very-small, 2-10 small, 10-40 medium, 40-120 large, >120 extra-large).
+- sizeReference: short vivid real-world comparison anchored to a body part or everyday object. Examples: "fits on a fingertip, ~16mm inner diameter", "sits across the collarbone, ~42cm chain", "fills an adult palm, ~9cm tall phone case", "reaches mid-thigh when worn, ~65cm tote", "stands knee-high, ~55cm side table", "taller than a person, ~210cm wardrobe".
+- sizeConfidence: high | medium | low — high when a body part / known object / ruler is visible in shot; medium when relying on strong category prior; low when ambiguous.
+SIZE REASONING RULES:
+  1. Visible body parts (hand, finger, ear, wrist, neck, foot, full body) beat category priors.
+  2. Use packaging / coin / phone / A4 if visible as scale.
+  3. Otherwise use median for the exact subtype: rings 14-22mm inner diameter; stud earrings 4-12mm, drop earrings 15-80mm drop; pendant necklaces 40-80cm chain; watches 28-46mm case; phone cases 14-17cm length; clutches 18-28cm, crossbody 20-28cm, tote 35-45cm; sneakers 26-30cm; fragrance bottles 8-18cm; dining chairs seat 45cm/total 85cm; floor lamps 140-180cm; sofas 180-240cm width. Extend with your own knowledge for other categories.
+  4. Round to nearest 0.5cm under 10cm, nearest 1cm under 100cm, nearest 5cm above 100cm. Never invent precision.
+- sizeClass: keep equal to sizeBucket for backwards compatibility
 - productSubcategory, productForm, productSilhouette
 - productMainHex, productSecondaryHex, productAccentHex (valid #RRGGBB)
 - backgroundBaseHex, backgroundSecondaryHex, shadowToneHex

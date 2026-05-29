@@ -73,7 +73,12 @@ export interface ProductAnalysis {
   version?: number;
 
   category: ProductCategory;
-  sizeClass: 'very-small' | 'small' | 'medium' | 'large' | 'extra-large';
+  sizeClass: string;
+  sizePrimaryCm?: number;
+  sizeSecondaryCm?: number | null;
+  sizeBucket?: string;
+  sizeReference?: string;
+  sizeConfidence?: 'high' | 'medium' | 'low';
   colorFamily: string;
   materialFamily: string;
   finish: string;
