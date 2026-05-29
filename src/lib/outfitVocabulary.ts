@@ -85,6 +85,7 @@ export const SHOE_TYPES: GarmentTypeOption[] = [
   { id: 'sandal', label: 'Sandal', subtypes: ['flat', 'thong', 'slide', 'gladiator', 'heeled'], materials: ['leather', 'suede'] },
   { id: 'slide', label: 'Slide', subtypes: ['pool', 'sport', 'platform'], materials: ['rubber', 'foam', 'leather'] },
   { id: 'mule', label: 'Mule', subtypes: ['flat', 'heeled', 'pointed'], materials: ['leather', 'suede'] },
+  { id: 'socks', label: 'Socks', subtypes: ['ankle', 'crew', 'knee-high', 'sheer', 'ribbed'], materials: ['cotton', 'wool', 'sheer nylon'] },
 ];
 
 // ── Accessories ──
