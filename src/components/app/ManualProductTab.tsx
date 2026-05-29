@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast, toastSophia } from '@/lib/brandedToast';
 import { gtmProductUploaded } from '@/lib/gtm';
+import { CategoryPickerModal } from '@/components/app/product-images/CategoryPickerModal';
+import { getCategoryLabel } from '@/lib/productCategories';
 
 interface UserProduct {
   id: string;
