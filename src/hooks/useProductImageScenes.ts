@@ -49,14 +49,17 @@ export function dbToFrontend(d: DbScene): ProductImageScene {
 // ── Fetch helpers ──
 
 // Full client column list — includes `prompt_template` because the wizard's
-// buildDynamicPrompt runs locally on selected scenes.
-const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+// buildDynamicPrompt runs locally on selected scenes. Also includes
+// `owner_user_id` and `is_brand_scene` so the hook can hide other users'
+// brand scenes client-side (defense in depth on top of RLS).
+const CLIENT_COLUMNS = 'id,scene_id,title,description,prompt_template,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,created_at,updated_at,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference,owner_user_id,is_brand_scene';
 
 // Ultra-slim columns for the deferred "rest" fetch — only what the picker UI
 // needs (title / preview / category / ordering). Heavy `prompt_template`,
 // `description`, and timestamps are fetched on-demand if a user picks one of
 // these scenes (see fetchSceneById).
-const SLIM_REST_COLUMNS = 'id,scene_id,title,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference';
+const SLIM_REST_COLUMNS = 'id,scene_id,title,trigger_blocks,category_collection,scene_type,preview_image_url,is_active,sort_order,sub_category,category_sort_order,requires_extra_reference,sub_category_sort_order,suggested_colors,outfit_hint,use_scene_reference,owner_user_id,is_brand_scene';
+
 
 function selectCols(includePromptTemplate: boolean): string {
   return includePromptTemplate ? '*' : CLIENT_COLUMNS;
