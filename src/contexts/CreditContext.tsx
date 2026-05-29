@@ -355,7 +355,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, []);
   
   const openBuyModal = useCallback((source?: string) => {
-    setBuyModalSource(source ?? null);
+    setBuyModalSource(typeof source === 'string' ? source : null);
     setBuyModalOpen(true);
   }, []);
   const closeBuyModal = useCallback(() => {
