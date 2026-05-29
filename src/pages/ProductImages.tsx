@@ -1361,6 +1361,28 @@ export default function ProductImages() {
     }
   })();
 
+  const blockedReason = (() => {
+    if (canProceed) return null;
+    switch (step) {
+      case 1:
+        return 'Pick at least one product to continue';
+      case 2:
+        if (hasMultipleCategories && perCategoryScenes.size > 0)
+          return 'Each category needs at least one shot';
+        return 'Select at least one shot to continue';
+      case 4:
+        if (!(details.selectedAspectRatios?.length))
+          return 'Pick an aspect ratio to continue';
+        if (totalImages === 0)
+          return 'Add shots or models to generate';
+        if (!canAfford)
+          return 'Not enough credits — top up to generate';
+        return 'Finish the setup above to generate';
+      default:
+        return 'Finish this step to continue';
+    }
+  })();
+
   const handleNext = () => {
     switch (step) {
       case 1: setStep(2); break;
@@ -1875,6 +1897,7 @@ export default function ProductImages() {
           totalCredits={totalCredits}
           balance={balance}
           canProceed={canProceed}
+          blockedReason={blockedReason}
           onNext={handleNext}
           onBack={handleBack}
         />

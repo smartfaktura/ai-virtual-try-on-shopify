@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Coins, Sparkles, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 import type { PIStep } from './types';
 
 const STEP_LABELS: Record<number, string> = {
@@ -17,13 +18,14 @@ interface StickyBarProps {
   totalCredits: number;
   balance: number;
   canProceed: boolean;
+  blockedReason?: string | null;
   onNext: () => void;
   onBack: () => void;
 }
 
 const TOTAL_STEPS = 4;
 
-export function ProductImagesStickyBar({ step, productCount, sceneCount, totalImages, totalCredits, balance, canProceed, onNext, onBack }: StickyBarProps) {
+export function ProductImagesStickyBar({ step, productCount, sceneCount, totalImages, totalCredits, balance, canProceed, blockedReason, onNext, onBack }: StickyBarProps) {
   const canAfford = balance >= totalCredits;
 
   const ctaLabel = (() => {
@@ -37,6 +39,16 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
   })();
 
   const showGenIcon = step === 4;
+
+  const handleClick = () => {
+    if (!canProceed) {
+      toast(blockedReason ?? 'Finish this step to continue', { duration: 2600 });
+      return;
+    }
+    onNext();
+  };
+
+  const blockedClass = !canProceed ? 'opacity-50 cursor-not-allowed hover:bg-primary' : '';
 
   return (
     <div className="sticky bottom-4 z-10 max-w-full min-w-0 overflow-hidden pb-[env(safe-area-inset-bottom)]">
@@ -71,7 +83,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
             {step > 1 && step <= 4 && (
               <Button variant="outline" size="pill" className="flex-shrink-0" onClick={onBack}>Back</Button>
             )}
-            <Button size="pill" disabled={!canProceed} onClick={onNext} className="gap-1.5 flex-1">
+            <Button size="pill" onClick={handleClick} aria-disabled={!canProceed} className={`gap-1.5 flex-1 ${blockedClass}`}>
               {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
               {ctaLabel}
               {!showGenIcon && <ArrowRight className="w-3.5 h-3.5" />}
@@ -126,7 +138,7 @@ export function ProductImagesStickyBar({ step, productCount, sceneCount, totalIm
             {step > 1 && step <= 4 && (
               <Button variant="outline" size="pill" onClick={onBack}>Back</Button>
             )}
-            <Button size="pill" disabled={!canProceed} onClick={onNext} className="gap-1.5">
+            <Button size="pill" onClick={handleClick} aria-disabled={!canProceed} className={`gap-1.5 ${blockedClass}`}>
               {showGenIcon && <Sparkles className="w-3.5 h-3.5" />}
               {ctaLabel}
               {!showGenIcon && <ArrowRight className="w-3.5 h-3.5" />}
