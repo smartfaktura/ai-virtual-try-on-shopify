@@ -65,7 +65,7 @@ const QUICK_TYPES = [
 
 const MAX_BATCH = 100;
 
-export function ManualProductTab({ onProductAdded, onClose, editingProduct, initialFiles }: ManualProductTabProps) {
+export function ManualProductTab({ onProductAdded, onClose, editingProduct, initialFiles, showQuickTip }: ManualProductTabProps) {
   const { user } = useAuth();
   // Single product mode state
   const [title, setTitle] = useState('');
