@@ -856,12 +856,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           }}
           onOpenChange={(o) => { if (!o) setActiveCategoryItemId(null); }}
         />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
         {/* Progress */}
         {isUploading && uploadProgress.total > 0 && (
