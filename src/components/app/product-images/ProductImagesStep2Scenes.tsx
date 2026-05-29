@@ -134,9 +134,12 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
   const matched = new Set<string>();
 
   for (const p of products) {
-    // Try AI analysis first, then cached analysis_json
-    const rawCat = productAnalyses?.[p.id]?.category
-      || ((p as any).analysis_json as { category?: string } | null)?.category;
+    // Priority: user-confirmed pick > live AI analysis > cached analysis_json
+    const cached = (p as any).analysis_json as { category?: string; userCategory?: string } | null;
+    const rawCat = cached?.userCategory
+      || productAnalyses?.[p.id]?.category
+      || cached?.category;
+
 
     if (rawCat) {
       const valid = normalizeAndValidateCategory(rawCat, p.title || '');
