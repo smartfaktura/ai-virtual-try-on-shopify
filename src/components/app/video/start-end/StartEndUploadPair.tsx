@@ -177,13 +177,14 @@ export function StartEndUploadPair({ start, end, onUploadFile, onPickFromLibrary
           <span className="text-[10.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">End</span>
         </div>
       </div>
-      {/* Direction chip — mobile */}
-      <div className="flex sm:hidden justify-center my-1">
+      {/* Direction chip — mobile, centered between the stacked slots */}
+      <div className="flex sm:hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background border border-border shadow-sm">
           <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">Transition</span>
           <ArrowDown className="h-3 w-3 text-foreground/60" />
         </div>
       </div>
+
     </div>
   );
 }
