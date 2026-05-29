@@ -1,24 +1,13 @@
-## Goal
+Update the JEWELRY REALISM (CRITICAL) prompt injection in `src/lib/productImagePromptBuilder.ts` (line 1533).
 
-Clean up the AVOID line injected at the end of every product image prompt.
+**Current text:**
+```
+JEWELRY REALISM (CRITICAL): No sparkle effects, no starburst reflections, no glitter particles, no fantasy light rays, no diamond twinkle overlays, no lens flare on gemstones. Jewelry must look like a real editorial photograph — tactile, dimensional, and physically believable. Reflections on metal and stones must be smooth, controlled, and natural. Never add any post-processing glow or shimmer that would not exist in a real studio photograph.
+```
 
-## Changes
+**New text:**
+```
+JEWELRY REALISM (CRITICAL): Render the jewelry as a real editorial photograph with natural metal and gemstone reflections, accurate scale, crisp edges, and physically believable material detail. Keep reflections smooth, controlled, and realistic. Do not add sparkle effects, glitter, fantasy glow, starbursts, or artificial gemstone flares.
+```
 
-### 1. Update the Product Visuals workflow AVOID value (database)
-In `workflows.negative_prompt_additions` for workflow `Product Visuals` (id `4bb79966-42f1-4720-af45-183aa954e8e1`):
-
-From:
-> No watermarks, no text overlays, no chromatic aberration, no warped product edges, no duplicated products.
-
-To:
-> Do not add watermarks, text overlays, artificial graphics, duplicated products, warped product edges, distorted shapes, chromatic aberration, lens flare, color banding, oversaturation, or visible AI artifacts.
-
-### 2. Remove the hardcoded suffix (edge function)
-In `supabase/functions/generate-workflow/index.ts` line 624, drop `, reference background, original background, source image background` from both branches. The BACKGROUND ISOLATION (CRITICAL) block above already enforces this much more clearly.
-
-Result — final AVOID line becomes simply:
-> AVOID: Do not add watermarks, text overlays, artificial graphics, duplicated products, warped product edges, distorted shapes, chromatic aberration, lens flare, color banding, oversaturation, or visible AI artifacts.
-
-### Scope
-
-Only Product Visuals workflow's negatives + the shared suffix. Other workflows (Virtual Try-On, Product Listing, Mirror Selfie, Selfie/UGC) keep their own `negative_prompt_additions` untouched.
+**Rationale:** The new version is more directive ("Render the jewelry as..." vs "No... no... no..."), explicitly calls out desirable qualities (accurate scale, crisp edges, believable material detail), and tightens the avoid-list into a single clean sentence. No other files or logic are affected.
