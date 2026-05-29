@@ -499,9 +499,7 @@ export default function Products() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {filtered.map(product => {
               const imgCount = imageCounts[product.id] || 0;
-              const displayType = product.product_type?.includes(':')
-                ? product.product_type.split(':').pop()
-                : product.product_type;
+              const displayType = getDisplayCategory(product);
               return (
                 <Card key={product.id} className="group overflow-hidden">
                   <div className="aspect-square relative bg-muted">
