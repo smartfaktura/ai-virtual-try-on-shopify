@@ -67,9 +67,9 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="rounded-xl border border-border bg-card">
+      <div className="rounded-2xl border border-border bg-card">
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-4 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors rounded-xl">
+          <button className="w-full flex items-center justify-between p-5 sm:p-6 text-base font-semibold tracking-tight text-foreground hover:bg-muted/30 transition-colors rounded-2xl">
             Motion Refinement
             <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', open && 'rotate-180')} />
           </button>
