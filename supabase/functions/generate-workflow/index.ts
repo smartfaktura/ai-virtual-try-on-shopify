@@ -621,7 +621,7 @@ ${model ? `5. The person MUST match [MODEL IMAGE] exactly — same face, same id
 6. ${isBundle ? 'BACKGROUND ISOLATION (CRITICAL): Each [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE all backgrounds. Extract ONLY the product objects from ALL reference images. The output environment MUST come exclusively from the bundle scene instruction above.' : 'BACKGROUND ISOLATION (CRITICAL): The [PRODUCT IMAGE] may contain a background — you MUST completely IGNORE it. Extract ONLY the product object from the reference. The output background/environment MUST come exclusively from the variation instruction above. Do NOT reproduce any surface, texture, lighting, or environment from [PRODUCT IMAGE]. If the reference shows stone, water, fabric, or any surface — that is NOT part of the product.'}
 ${batchOutfitLock ? `7. OUTFIT CONSISTENCY (CRITICAL): If a person/model appears, they MUST wear the EXACT same outfit described in the variation instruction. Do NOT deviate — same colors, same garment types, same shoes. This is a multi-image batch and visual consistency across all shots is mandatory.` : ""}
 
-${allNegatives ? `AVOID: ${allNegatives}, reference background, original background, source image background` : "AVOID: reference background, original background, source image background"}`;
+${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
   })();
 
   return prompt;
