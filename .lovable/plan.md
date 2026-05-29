@@ -1,31 +1,44 @@
-# Update Phone Cases Product Spec Field
+# Gate "OUTFIT CONSISTENCY (CRITICAL)" to person scenes only
 
-## What we're doing
+## What's happening today
 
-Rename the first field in the phone-cases product details section from **"Compatibility"** to **"Phone Model"**, and update its placeholder to include the `e.g.` prefix so users understand it's an example, not a default value.
+Every generation sent through `generate-workflow` includes this line in CRITICAL REQUIREMENTS #7:
 
-## Why
+> OUTFIT CONSISTENCY (CRITICAL): If a person/model appears, they MUST wear the EXACT same outfit…
 
-- **"Phone Model"** is clearer to users than **"Compatibility"** — the user immediately knows what to type
-- The current placeholder (`iPhone 15 Pro`) looks like a pre-filled default, causing confusion
-- Adding `e.g.` makes it obvious the text is just an example
-- The underlying field key (`compatibility`) stays unchanged, so saved data and prompt tokens are unaffected
+It fires because the wizard always sends `batch_outfit_lock: true` (`src/pages/ProductImages.tsx:1007`), regardless of whether the chosen scene actually puts a person in frame. The edge function then renders the line whenever that flag is on (`supabase/functions/generate-workflow/index.ts:622`).
 
-## Changes
+Result: pure packshots, flat lays, furniture rooms, food, etc. all get an irrelevant "if a person/model appears…" directive. Harmless wording, but noise the model has to parse and occasionally treats as a cue to invent a model.
 
-**File:** `src/lib/productSpecFields.ts` (line 224)
+## The change
 
-```diff
-  'phone-cases': [
--   { key: 'compatibility', label: 'Compatibility', type: 'input', placeholder: 'iPhone 15 Pro' },
-+   { key: 'compatibility', label: 'Phone Model', type: 'input', placeholder: 'e.g. iPhone 17 Pro Max' },
-    { key: 'material', label: 'Material', type: 'select', ... },
-    ...
-  ],
+Only send `batch_outfit_lock: true` when the scene actually involves a person — i.e. its `triggerBlocks` include `personDetails` or `actionDetails` (the same flags the wizard already uses to decide whether a model reference is required, see `ProductImages.tsx:885` and `:1362`).
+
+### Edit
+**File:** `src/pages/ProductImages.tsx` (line ~1007, inside the per-scene job payload)
+
+Replace the hard-coded `batch_outfit_lock: true` with a computed value:
+
+```ts
+const sceneNeedsPerson = (scene.triggerBlocks || []).some(
+  (b: string) => b === 'personDetails' || b === 'actionDetails'
+);
+// …
+batch_outfit_lock: sceneNeedsPerson,
 ```
+
+(Compute `sceneNeedsPerson` once per scene inside the existing loop; reuse if you also want to log it.)
+
+No edge-function change is required — `generate-workflow` already conditions the line on `batch_outfit_lock`. When the flag is `false`, CRITICAL #7 is simply omitted.
 
 ## Out of scope
 
-- No database migration needed (field key unchanged)
-- No prompt-builder changes needed (token key unchanged)
-- No UI component changes needed (label is rendered dynamically from this config)
+- No DB migration.
+- No change to the edge function's prompt template.
+- No change to how model references are attached — that still uses the same `personDetails` / `actionDetails` trigger check.
+- Interior / furniture prompt (the other big block we discussed) is untouched.
+
+## How to verify
+
+1. Pick a non-person scene (e.g. a clean packshot or a furniture room) → generate → confirm the prompt logged by `generate-workflow` no longer contains the "OUTFIT CONSISTENCY" line.
+2. Pick an on-model scene (one with `personDetails` or `actionDetails` trigger) → generate → confirm the line is still present.
