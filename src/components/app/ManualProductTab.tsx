@@ -769,12 +769,17 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               >
                 <div className="flex gap-3 p-3">
                   {/* Thumbnail */}
-                  <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted/30">
-                    <img
-                      src={item.previewUrl}
-                      alt={item.title || 'Product'}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center">
+                    {brokenThumbs[item.id] ? (
+                      <Package className="w-6 h-6 text-muted-foreground/60" />
+                    ) : (
+                      <img
+                        src={item.previewUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={() => markBroken(item.id)}
+                      />
+                    )}
                     {item.isAnalyzing && (
                       <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center">
                         <Sparkles className="w-4 h-4 text-primary animate-pulse" />
@@ -796,16 +801,20 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                             item.isAnalyzing && !item.manualEdits.title && 'animate-pulse ring-1 ring-primary/30'
                           )}
                         />
-                        <Input
-                          placeholder={item.isAnalyzing ? 'Analyzing…' : 'Type (e.g. Shoes)'}
-                          value={item.productType}
-                          onChange={(e) => updateBatchItem(item.id, 'productType', e.target.value)}
-                          maxLength={100}
+                        <button
+                          type="button"
+                          onClick={() => setActiveCategoryItemId(item.id)}
+                          disabled={item.isAnalyzing}
                           className={cn(
-                            'h-8 text-xs',
-                            item.isAnalyzing && !item.manualEdits.productType && 'animate-pulse ring-1 ring-primary/30'
+                            'h-8 text-xs rounded-md border bg-background px-2 flex items-center justify-between gap-1.5 text-left truncate hover:bg-muted/40 transition-colors',
+                            item.isAnalyzing && 'animate-pulse ring-1 ring-primary/30'
                           )}
-                        />
+                        >
+                          <span className={cn('truncate', !item.userCategory && !item.productType && 'text-muted-foreground')}>
+                            {getCategoryLabel(item.userCategory) || item.productType || (item.isAnalyzing ? 'Analyzing…' : 'Choose category')}
+                          </span>
+                          <ChevronDown className="w-3 h-3 shrink-0 text-muted-foreground" />
+                        </button>
                       </div>
                       {aiFilled && !item.isAnalyzing && (
                         <button
@@ -824,56 +833,29 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                       </button>
                     </div>
 
-                    {/* Quick type chips — collapsible */}
-                    {!item.isAnalyzing && (
-                      <>
-                        {(!item.productType || expandedChips[item.id]) ? (
-                          <div className="flex flex-wrap gap-1">
-                            {QUICK_TYPES.map((t) => (
-                              <Badge
-                                key={t}
-                                variant={item.productType === t ? 'default' : 'outline'}
-                                className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
-                                onClick={() => {
-                                  updateBatchItem(item.id, 'productType', item.productType === t ? '' : t);
-                                  if (item.productType !== t) setExpandedChips(prev => ({ ...prev, [item.id]: false }));
-                                }}
-                              >
-                                {t}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : (
-                          <span
-                            onClick={() => setExpandedChips(prev => ({ ...prev, [item.id]: true }))}
-                            className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
-                          >
-                            Change category
-                          </span>
-                        )}
-                      </>
-                    )}
+                    <Input
+                      placeholder="Dimensions (optional)"
+                      value={item.dimensions}
+                      onChange={(e) => updateBatchItem(item.id, 'dimensions', e.target.value)}
+                      maxLength={100}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <Textarea
-                        placeholder={item.isAnalyzing ? 'Analyzing…' : 'Brief description…'}
-                        value={item.description}
-                        onChange={(e) => updateBatchItem(item.id, 'description', e.target.value)}
-                        maxLength={500}
-                        rows={2}
-                        className={cn(
-                          'resize-none min-h-0 text-xs',
-                          item.isAnalyzing && !item.manualEdits.description && 'animate-pulse ring-1 ring-primary/30'
-                        )}
-                      />
-                      <Input
-                        placeholder="Dimensions (optional)"
-                        value={item.dimensions}
-                        onChange={(e) => updateBatchItem(item.id, 'dimensions', e.target.value)}
-                        maxLength={100}
-                        className="h-8 text-xs self-start"
-                      />
-                    </div>
+        <CategoryPickerModal
+          open={!!activeCategoryItemId}
+          value={activeCategoryItemId ? (batchItems.find(b => b.id === activeCategoryItemId)?.userCategory ?? null) : null}
+          onChange={(v) => {
+            if (activeCategoryItemId) updateBatchItem(activeCategoryItemId, 'userCategory', v);
+            setActiveCategoryItemId(null);
+          }}
+          onOpenChange={(o) => { if (!o) setActiveCategoryItemId(null); }}
+        />
                   </div>
                 </div>
               </div>
