@@ -1,38 +1,35 @@
-## Diagnosis
-The grey sweater text is still coming from the UI auto-preset system, not from the new AI wardrobe directive itself.
+## Proposal
 
-In `ProductImagesStep3Refine.tsx`, AI styling currently auto-populates `outfitConfigByScene` for scenes without a built-in `outfit_hint`. Then `ProductImages.tsx` copies that per-scene outfit into `details.outfitConfig`, which makes the prompt builder treat AI styling like a specific manual outfit. That produces:
+When AI styling mode is active **and** the user left "Add styling direction" empty, skip the `WARDROBE DIRECTION` block entirely. Let the scene/variation prompt be the only styling source. This removes one more layer of wardrobe noise and matches your intuition that less injection = better adherence to the scene.
 
-```text
-OUTFIT LOCK — Wearing exactly: Top: grey cotton relaxed-fit crewneck knit...
-```
+## Behavior matrix (after change)
 
-There is also one fallback branch in `productImagePromptBuilder.ts` that still wraps user outfits in a `WARDROBE NOTE` when templates omit `{{outfitDirective}}`, which can preserve the old wording path.
+| Mode | Styling direction text | Scene `outfit_hint` | Result in prompt |
+|---|---|---|---|
+| AI | empty | none | **No wardrobe block at all** (scene prompt is sole source) |
+| AI | filled | none | `STYLING PRIORITY: <text>` only (no generic WARDROBE DIRECTION) |
+| AI | empty/filled | present | Scene `outfit_hint` wins (unchanged) |
+| Manual | — | — | `OUTFIT LOCK — Wearing exactly: …` (unchanged) |
+| Product-is-outfit category (lingerie, swimwear, activewear, kidswear) | — | — | Strict product lock (unchanged) |
 
-## Plan
+Skin/anatomy realism line (`Hyper-realistic skin texture…`) gets moved into the always-on quality directives so it still appears even when no wardrobe block is emitted.
 
-1. **Remove AI-mode auto outfit injection**
-   - In `ProductImagesStep3Refine.tsx`, stop auto-writing preset outfits into `details.outfitConfigByScene` when `outfitMode` is AI.
-   - AI styling should only keep `outfitMode: 'ai'` and optional `customOutfitNote`.
-   - Manual styling remains unchanged.
+## Changes
 
-2. **Prevent per-scene outfit presets from overriding AI mode at generation time**
-   - In `ProductImages.tsx`, only apply `resolvedOutfit` into `variationDetails.outfitConfig` when `details.outfitMode === 'manual'`.
-   - This ensures stale `outfitConfigByScene` data from older sessions cannot leak into AI generations.
+1. **`src/lib/productImagePromptBuilder.ts`**
+   - In `buildAiWardrobeDirective`:
+     - If `customOutfitNote` is empty → return empty string (no `WARDROBE DIRECTION` block).
+     - If filled → return only `STYLING PRIORITY: <text>` (drop the generic paragraph).
+   - Move the "Hyper-realistic skin texture with visible pores, natural anatomy, correct proportions" line into the existing always-on realism/quality directive section so on-model shots always get it regardless of wardrobe block.
+   - Keep AI-mode hardening from the previous fix (ignore stale `outfitConfig`/`outfitConfigByScene`).
+   - Manual mode and product-is-outfit categories untouched.
 
-3. **Harden prompt builder fallback**
-   - In `productImagePromptBuilder.ts`, update the auto-injector so AI mode always emits the shared `WARDROBE DIRECTION` helper unless the category is a strict product-is-outfit category.
-   - Do not wrap AI wardrobe text in the old `WARDROBE NOTE` / outfit color wording.
-
-4. **Keep manual and hard-lock behavior intact**
-   - Manual mode still emits `OUTFIT LOCK — Wearing exactly: ...`.
-   - Product-is-outfit categories still keep the strict “product is the outfit” lock unless we separately decide to loosen activewear/kidswear later.
-   - Scene `outfit_hint` still wins unless user manually overrides it.
+2. **No UI changes.** The "Add styling direction" textarea continues to work as the only AI-mode wardrobe input.
 
 ## Verification
 
-- AI styling + necklace + empty styling direction → final prompt contains `WARDROBE DIRECTION`, no `grey cotton`, no `denim`, no `sneaker`, no `OUTFIT LOCK`.
-- AI styling + necklace + styling direction → same directive plus `STYLING PRIORITY`.
-- Manual styling → specific outfit lock still appears.
-- Old saved state with `outfitConfigByScene` + AI mode → ignored during generation.
-- Product-is-outfit category → strict product lock still appears.
+- AI + empty styling → final prompt has **no** `WARDROBE DIRECTION`, no `STYLING PRIORITY`, no `OUTFIT LOCK`; skin-realism line still present.
+- AI + styling text "all white linen" → prompt contains `STYLING PRIORITY: all white linen`, nothing else wardrobe-related.
+- Manual outfit picked → `OUTFIT LOCK — Wearing exactly: …` still present.
+- Scene with built-in `outfit_hint` → hint still wins.
+- Activewear/lingerie/swimwear/kidswear → strict product lock still present.
