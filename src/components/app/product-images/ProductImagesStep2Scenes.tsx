@@ -190,7 +190,7 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
 // Global scenes removed — all scenes now belong to individual categories
 
 function SceneCard({ scene, selected, onToggle }: { scene: ProductImageScene; selected: boolean; onToggle: () => void }) {
-  const hasBackground = scene.promptTemplate?.includes('{{background}}');
+  const hasBackground = scene.triggerBlocks?.includes('background');
   const hasAestheticColor = scene.triggerBlocks?.includes('aestheticColor');
 
   return (
