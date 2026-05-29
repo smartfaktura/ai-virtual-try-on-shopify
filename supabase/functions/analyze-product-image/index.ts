@@ -41,14 +41,18 @@ serve(async (req) => {
           content: [
             {
               type: "text",
-              text: `Analyze this image. It could be a product photo OR a room/building/space photo.${titleContext}
+              text: `Analyze this image. It MUST be a tangible product (something a brand sells and a customer can buy / hold / wear / use).${titleContext}
 
-If it's a PRODUCT, return:
+If the image IS a product, return:
+- "kind": "product"
 - "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle")
-- "productType": Short free-form category label (e.g. "Leggings", "Scented Candle", "Face Serum")
-- "category": One canonical id from this enum (REQUIRED for products). If unsure, use "other". Enum: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, skirts, streetwear, hoodies, jeans, trousers, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+- "productType": Short free-form category label (e.g. "Leggings", "Scented Candle", "Face Serum"). NEVER use a location, room, or place name here.
+- "category": REQUIRED. One canonical id from this enum (use "other" only if truly none fit): fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, skirts, streetwear, hoodies, jeans, trousers, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 - "description": 10-20 word description of color, material, style, key features
 - "specification": A detailed 30-50 word generation-ready description covering the product's silhouette, construction, materials, colors, finish, texture, and key visual details. Include hex color codes if identifiable. This should read like a technical product spec for image generation.
+
+If the image is NOT a product — examples include rooms, kitchens, bedrooms, offices, building facades, streets, parks, landscapes, sports courts, stadiums, gyms, swimming pools, beaches, mountains, sky, generic interiors or exteriors, plain people with no clear product, screenshots, logos, charts, or abstract art — return ONLY this JSON and nothing else:
+{ "kind": "not_product", "reason": "<short reason, e.g. 'Image shows a basketball court, not a product'>" }
 
 CRITICAL RULE FOR PHONE CASES, TABLET CASES, LAPTOP SLEEVES, AIRPODS / EARBUD CASES, SMARTWATCH BANDS, AND SCREEN PROTECTORS:
 - NEVER mention or guess any device brand or model designation, even if cutouts, camera bumps, button placement, or silhouette make a specific device identifiable.
@@ -58,13 +62,6 @@ CRITICAL RULE FOR PHONE CASES, TABLET CASES, LAPTOP SLEEVES, AIRPODS / EARBUD CA
   - Bad title: "Orange Striped iPhone 15 Pro Case" → Good: "Orange Striped Phone Case"
   - Bad description: "...glossy phone case for iPhone 15 Pro" → Good: "...glossy phone case with a slim profile and precise cutouts"
   - Bad specification: "Designed for iPhone 15 Pro Max with MagSafe ring" → Good: "Slim TPU phone case with a circular accessory ring and precise cutouts for camera, speaker, and charging port"
-
-If it's a ROOM, BUILDING, or SPACE, return:
-- "title": Descriptive room/space name (e.g. "Modern Open-Plan Living Room", "Sunny Master Bedroom", "Victorian Brick Facade")
-- "productType": Space type (e.g. "Living Room", "Bedroom", "Kitchen", "Front Facade", "Office")
-- "category": null
-- "description": 10-20 word description of the space style, lighting, notable features
-- "specification": A detailed 30-50 word description of the space's architecture, materials, color palette, lighting, and key design elements suitable for image generation.
 
 Return ONLY the JSON object, no markdown or explanation.`,
 
@@ -178,15 +175,34 @@ Return ONLY the JSON object, no markdown or explanation.`,
     }
 
     // Layer 2/3: validate AI's category against canonical enum, fall back to
-    // regex over title+productType, else null. Safe default never crashes UI.
+    // regex over title+productType. Reject anything that looks like a location.
+    const SPACE_RE = /\b(court|room|kitchen|bedroom|living\s*room|bathroom|hallway|hall|office|facade|building|street|sidewalk|park|stadium|arena|gym|swimming\s*pool|pool|beach|mountain|forest|landscape|interior|exterior|space|garage|warehouse|store\s+front|cafe\s+interior|restaurant\s+interior|lobby|terrace|balcony|garden|backyard|lawn)\b/i;
     try {
       if (parsed && typeof parsed === "object") {
         const p = parsed as Record<string, unknown>;
-        const userCategory = resolveCanonicalCategory(
-          p.category,
-          typeof p.title === "string" ? p.title : null,
-          typeof p.productType === "string" ? p.productType : null,
-        );
+        const title = typeof p.title === "string" ? p.title : "";
+        const productType = typeof p.productType === "string" ? p.productType : "";
+
+        // Server-side saugiklis: reject locations even if the model ignored the rule.
+        const looksLikeSpace =
+          p.kind === "not_product" ||
+          (!p.category && (SPACE_RE.test(title) || SPACE_RE.test(productType)));
+
+        if (looksLikeSpace) {
+          return new Response(
+            JSON.stringify({
+              kind: "not_product",
+              reason:
+                typeof p.reason === "string" && p.reason
+                  ? p.reason
+                  : "Image looks like a location, not a product",
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+
+        const userCategory = resolveCanonicalCategory(p.category, title || null, productType || null);
+        p.kind = "product";
         p.userCategory = userCategory;
       }
     } catch (resolveErr) {

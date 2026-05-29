@@ -64,6 +64,12 @@ export function UploadSourceCard({
       });
       if (!resp.ok) throw new Error('Analysis failed');
       const data = await resp.json();
+      if (data?.kind === 'not_product') {
+        const reason = typeof data.reason === 'string' && data.reason ? data.reason : "That image doesn't look like a product";
+        toast.error(`${reason}. Please upload a product photo.`);
+        onRemove();
+        return;
+      }
       onUpdateProductInfo({
         title: data.title || currentInfo.title,
         productType: data.productType || currentInfo.productType,

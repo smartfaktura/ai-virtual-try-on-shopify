@@ -415,6 +415,13 @@ export default function TextToProduct() {
       });
       if (!resp.ok) throw new Error('Analysis failed');
       const data = await resp.json();
+      if (data?.kind === 'not_product') {
+        const reason = typeof data.reason === 'string' && data.reason ? data.reason : "That image doesn't look like a product";
+        toast.error(`${reason}. Please upload a product photo.`);
+        // Clear the just-attached reference image
+        setProducts(prev => prev.map(p => p.id === productId ? { ...p, referenceImageFile: undefined, referenceImagePreview: undefined } : p));
+        return;
+      }
       setProducts(prev => prev.map(p => {
         if (p.id !== productId) return p;
         return {

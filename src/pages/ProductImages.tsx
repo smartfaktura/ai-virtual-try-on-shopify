@@ -397,6 +397,17 @@ export default function ProductImages() {
           const { data: analysisData } = await supabase.functions.invoke('analyze-product-image', {
             body: { imageUrl },
           });
+          if (analysisData?.kind === 'not_product') {
+            const reason = typeof analysisData.reason === 'string' && analysisData.reason
+              ? analysisData.reason
+              : "That image doesn't look like a product";
+            toast.error(`${reason}. Please upload a product photo.`);
+            // Best-effort: remove the just-uploaded file so we don't leave orphans
+            try { await supabase.storage.from('product-uploads').remove([uploadData.path]); } catch { /* ignore */ }
+            setQuickUploading(false);
+            setQuickUploadProgress('');
+            return;
+          }
           if (analysisData?.title) title = analysisData.title;
           if (analysisData?.productType) productType = analysisData.productType;
           if (typeof analysisData?.userCategory === 'string' && analysisData.userCategory) {
