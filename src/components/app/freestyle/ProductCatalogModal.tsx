@@ -253,21 +253,30 @@ export function ProductCatalogModal({
                 />
               </SidebarSection>
 
-              {productTypes.length > 0 && (
-                <SidebarSection title="Type">
+              {visibleGroups.length > 0 && (
+                <SidebarSection title="Category">
                   <SidebarRow
-                    active={false}
-                    onClick={() => setTypeFilter(null)}
+                    active={categoryFilter === null}
+                    onClick={() => setCategoryFilter(null)}
                     label="Any"
                   />
-                  {productTypes.map(t => (
-                    <SidebarRow
-                      key={t}
-                      active={typeFilter === t}
-                      onClick={() => setTypeFilter(t)}
-                      label={t}
-                      count={products.filter(p => p.product_type === t).length}
-                    />
+                  {visibleGroups.map(group => (
+                    <div key={group.label} className="pt-2">
+                      <p className="px-2 mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                        {group.label}
+                      </p>
+                      <div className="space-y-0.5">
+                        {group.items.map(id => (
+                          <SidebarRow
+                            key={id}
+                            active={categoryFilter === id}
+                            onClick={() => setCategoryFilter(id)}
+                            label={getCategoryLabel(id)}
+                            count={categoryCounts.get(id) ?? 0}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </SidebarSection>
               )}
