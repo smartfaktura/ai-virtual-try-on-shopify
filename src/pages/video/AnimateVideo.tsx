@@ -1423,7 +1423,7 @@ export default function AnimateVideo() {
 
       {/* ──── ERROR STATE ──── */}
       {(pipelineStage === 'error' || videoStatus === 'error') && !isPipelineActive && !isComplete && (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 space-y-4">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 sm:p-6 space-y-4">
           <div className="flex items-start gap-3">
             <div className="h-9 w-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
               <X className="h-5 w-5 text-destructive" />
