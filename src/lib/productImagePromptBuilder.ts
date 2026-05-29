@@ -823,7 +823,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let dir = defaultPersonDirective(category);
       if (!resolvedOutfitHint) {
-        dir += ` ${defaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
+        dir += ` ${aiOrDefaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
       }
       dir += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return dir;
