@@ -174,13 +174,13 @@ export function ProductCatalogModal({
             </p>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search your products…"
-              className="pl-9 h-9 text-sm"
+              className="pl-10 h-10 text-sm rounded-full"
             />
           </div>
         </header>
@@ -238,27 +238,13 @@ export function ProductCatalogModal({
           {/* Sidebar */}
           <aside className="hidden lg:block w-[240px] shrink-0 border-r border-border/40 overflow-y-auto">
             <div className="p-4 space-y-5">
-              <SidebarSection title="Quick">
-                <SidebarRow
-                  active={false}
-                  onClick={() => setQuickView('all')}
-                  label="All products"
-                  count={userCount + sampleCount}
-                />
-                <SidebarRow
-                  active={quickView === 'samples'}
-                  onClick={() => setQuickView('samples')}
-                  label="Samples"
-                  count={sampleCount}
-                />
-              </SidebarSection>
-
               {visibleGroups.length > 0 && (
                 <SidebarSection title="Category">
                   <SidebarRow
                     active={categoryFilter === null}
-                    onClick={() => setCategoryFilter(null)}
-                    label="Any"
+                    onClick={() => { setCategoryFilter(null); setQuickView('all'); }}
+                    label="All products"
+                    count={userCount + sampleCount}
                   />
                   {visibleGroups.map(group => (
                     <div key={group.label} className="pt-2">
