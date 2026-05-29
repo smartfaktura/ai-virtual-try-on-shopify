@@ -167,11 +167,15 @@ export function useUserBrandScenes(
     enabled,
     staleTime: 60 * 1000,
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [] as CatalogScene[];
+
       let q: any = supabase
         .from('product_image_scenes')
         .select(SLIM_COLUMNS)
         .eq('is_active', true)
         .eq('is_brand_scene', true)
+        .eq('owner_user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(24);
 
@@ -188,6 +192,7 @@ export function useUserBrandScenes(
     },
   });
 }
+
 
 
 /**

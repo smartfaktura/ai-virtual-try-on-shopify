@@ -1,39 +1,31 @@
-# Fix false "Custom Background" badge on scenes
+## Why you see TEST and GHA Lobby
 
-## Problem
+`info@tsimkus.lt` is an **admin** user. The RLS policy `Auth read scenes` on `product_image_scenes` lets admins read every row — including other users' brand scenes. The hook that powers the "Brand Scenes" group in Step 2 (`useUserBrandScenes` in `src/hooks/useSceneCatalog.ts`, lines 160–190) filters by `is_brand_scene = true` and category, but **does not filter by `owner_user_id = auth.uid()`**. It relies on RLS to do that — which silently breaks for admins.
 
-`Soft Lounge Glow`, `Waistband Fit Closeup` (and likely others) show the **Custom Background** badge in Step 2 of Product Images, but selecting them does **not** actually feed a user-chosen backdrop into generation.
+Result: as admin, your "Brand Scenes" row in the activewear category shows every other user's brand scenes too (TEST belongs to `lanny@activelyblack.com`, GHA Lobby Image belongs to `g.harmonyactive@gmail.com`).
 
-Root cause: the badge in `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (line 193) detects "has background" by string-matching `{{background}}` in `promptTemplate`:
+## Fix (one-line, UI only)
 
-```ts
-const hasBackground = scene.promptTemplate?.includes('{{background}}');
-```
-
-But the real source of truth — confirmed in the admin editor screenshot — is the scene's `triggerBlocks` array. Both offending scenes contain the literal `{{background}}` token in their template text, yet their `triggerBlocks` does **not** include `'background'` (only `personDetails`, `stylingDetails`). Without the trigger block, the upstream resolver never substitutes the token and the user's color choice is ignored.
-
-So the badge lies.
-
-## Fix
-
-Single-line semantic change in `SceneCard` (`ProductImagesStep2Scenes.tsx`):
+In `src/hooks/useUserBrandScenes`, explicitly scope the query to the current user:
 
 ```ts
-// before
-const hasBackground = scene.promptTemplate?.includes('{{background}}');
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return [];
 
-// after
-const hasBackground = scene.triggerBlocks?.includes('background');
+let q = supabase
+  .from('product_image_scenes')
+  .select(SLIM_COLUMNS)
+  .eq('is_active', true)
+  .eq('is_brand_scene', true)
+  .eq('owner_user_id', user.id)   // <-- add this
+  .order('created_at', { ascending: false })
+  .limit(24);
 ```
 
-`hasAestheticColor` already reads from `triggerBlocks` correctly — this just makes `hasBackground` consistent.
+Also include the user id in the React Query key so admin/user switches don't share a cache:
+`queryKey: ['user-brand-scenes', user.id, family ?? null, categoryCollection ?? null]`
 
-## Effect
+No DB / RLS / backend changes needed. Other users are already correctly isolated by RLS — this fix only stops admins from accidentally seeing every brand scene in their own picker.
 
-- Soft Lounge Glow, Waistband Fit Closeup, and any other scene whose template still contains stray `{{background}}` text but lacks the `background` trigger will **stop showing** the "Custom Background" label + swatches.
-- Scenes that legitimately have `background` in `triggerBlocks` are unaffected.
-- No DB migration, no template edits, no backend change.
-
-## Out of scope (flag only)
-
-Stray `{{background}}` text still sits in those template bodies. It's inert today (resolver leaves it untouched without the trigger), but worth a future cleanup pass via admin editor. Not blocking — purely cosmetic in the prompt.
+## Files changed
+- `src/hooks/useSceneCatalog.ts` — add `owner_user_id` filter and userId in query key inside `useUserBrandScenes`.
