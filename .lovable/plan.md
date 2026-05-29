@@ -1,44 +1,20 @@
-## Problem
+Update `src/components/library/SceneDetailModal.tsx` (the popup on `/product-visual-library`):
 
-The drag-and-drop / "Upload Image" tile on `/app/generate/product-images` writes the analyzer's free-form `productType` (e.g. "Midi Dress", "Maxi Dress") into `user_products.product_type`. That free-form value is what shows under each tile in the grid.
+**1. Make the modal larger**
+- Bump `DialogContent` max-width: `sm:max-w-3xl md:max-w-5xl lg:max-w-6xl` (was `sm:max-w-2xl md:max-w-3xl`)
+- Raise height cap to `max-h-[92vh]` (was `88vh`) and round to `sm:rounded-[2rem]`
+- Rebalance the split so the hero gets more room: `md:grid-cols-[7fr_5fr]` (was `5fr_6fr`)
+- Let the hero fill the modal height on desktop: add `md:aspect-auto` so it stops being locked to 4:5 and matches the panel height
 
-The Add Product modal and Bulk Add tab (`src/components/app/ManualProductTab.tsx`) instead store the canonical Product Category:
-- `product_type` ← `getCategoryLabel(userCategory) || productType` (≤100 chars)
-- `analysis_json` ← `{ userCategory }` (canonical id)
+**2. Refine the white text panel with VOVV spacing standards**
+- Padding: `p-6 sm:p-10 md:p-12` (was `p-4 sm:p-8`)
+- Switch from a single `gap-*` stack to explicit vertical rhythm using `mt-*`:
+  - Badges row at top
+  - Title: `mt-6 sm:mt-8`, `text-2xl sm:text-3xl md:text-[2.125rem]`, `leading-[1.15]`
+  - Description: `mt-5 sm:mt-6`, `text-[0.95rem] sm:text-base`, `text-foreground/60`, `max-w-prose`, remove `line-clamp` so the copy breathes
+- CTA block pinned to bottom on desktop: `md:mt-auto md:pt-12`, button height `h-[3.5rem]`
+- Badges: add `px-3 py-1` for more presence
+- Close button: `h-10 w-10`, `top-4 right-4`
+- Drop the trailing period on the helper line ("…adapt this look") to match the no-terminal-periods rule for single-sentence subtitles
 
-Result: quick-uploaded products look inconsistent in the grid and don't carry the canonical category that downstream prompt logic relies on.
-
-## Fix (one file, one function)
-
-Edit `src/pages/ProductImages.tsx` → `handleQuickUpload` only:
-
-1. Add import: `import { getCategoryLabel } from '@/lib/productCategories';` (same module ManualProductTab uses).
-2. Capture both fields from the analyzer response:
-   - `userCategory` (canonical id, e.g. `dresses`)
-   - `productType` (free-form fallback)
-3. Compute display value the same way the bulk path does:
-   ```ts
-   const resolvedCategory = (getCategoryLabel(userCategory) || productType || '').substring(0, 100);
-   ```
-4. Insert payload becomes:
-   - `product_type: resolvedCategory`
-   - `analysis_json: userCategory ? { userCategory } : null`
-5. Leave `title`, `description`, `image_url`, optimistic cache update, auto-select, and toast behavior untouched.
-
-## What this does NOT change
-
-- No DB migration, no edge function change, no RLS change.
-- `analyze-product-image` already returns both `productType` and `userCategory` — we just consume the canonical one.
-- No change to `handleDemoSelect` (demo products already ship pre-baked metadata).
-- No change to existing rows in `user_products`.
-- No UI/grid component changes — the corrected `product_type` value renders through the existing card subtitle.
-
-## Safety
-
-- Pure additive client logic; failures fall back to empty string exactly like today.
-- `getCategoryLabel` returns `''` for unknown ids, so when the analyzer can't categorize, behavior matches current (free-form `productType` or empty).
-- Matches the already-shipped pattern in `ManualProductTab.tsx` lines 619 and 627, so there's no new convention to maintain.
-
-## Files touched
-
-- `src/pages/ProductImages.tsx` — import + `handleQuickUpload` insert payload only.
+No logic, props, data, or routing changes. Pure presentation update.
