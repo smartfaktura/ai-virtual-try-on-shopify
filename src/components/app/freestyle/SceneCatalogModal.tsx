@@ -361,7 +361,7 @@ export function SceneCatalogModal({
                     </h3>
                     <span className="text-[10px] text-muted-foreground/70">Your saved</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                     {brandScenes.data!.map(s => (
                       <SceneCatalogCard
                         key={s.id}
