@@ -16,6 +16,7 @@ import { toast, toastSophia } from '@/lib/brandedToast';
 import { gtmProductUploaded } from '@/lib/gtm';
 import { CategoryPickerModal } from '@/components/app/product-images/CategoryPickerModal';
 import { getCategoryLabel } from '@/lib/productCategories';
+import { ProductUploadTips } from '@/components/app/ProductUploadTips';
 
 interface UserProduct {
   id: string;
@@ -43,6 +44,7 @@ interface ManualProductTabProps {
   onClose: () => void;
   editingProduct?: UserProduct | null;
   initialFiles?: File[];
+  showQuickTip?: boolean;
 }
 
 interface BatchItem {
@@ -64,7 +66,7 @@ const QUICK_TYPES = [
 
 const MAX_BATCH = 100;
 
-export function ManualProductTab({ onProductAdded, onClose, editingProduct, initialFiles }: ManualProductTabProps) {
+export function ManualProductTab({ onProductAdded, onClose, editingProduct, initialFiles, showQuickTip }: ManualProductTabProps) {
   const { user } = useAuth();
   // Single product mode state
   const [title, setTitle] = useState('');
@@ -1263,6 +1265,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           <p className="text-[11px] text-muted-foreground text-center">
             Uploading…
           </p>
+        </div>
+      )}
+
+      {/* Inline quick tip (edit mode) — above sticky footer */}
+      {showQuickTip && singleImage && (
+        <div className="mt-2 animate-fade-in">
+          <ProductUploadTips />
         </div>
       )}
 
