@@ -572,9 +572,10 @@ export default function Products() {
                   <div className="flex-1 min-w-0 space-y-0.5">
                     <p className="text-sm font-medium">{product.title}</p>
                     <div className="flex items-center gap-2">
-                      {product.product_type && (
-                        <Badge variant="secondary" className="text-[10px]">{product.product_type}</Badge>
-                      )}
+                      {(() => {
+                        const cat = getDisplayCategory(product);
+                        return cat ? <Badge variant="secondary" className="text-[10px]">{cat}</Badge> : null;
+                      })()}
                       {product.description && (
                         <span className="text-xs text-muted-foreground truncate max-w-[200px]">{product.description}</span>
                       )}
