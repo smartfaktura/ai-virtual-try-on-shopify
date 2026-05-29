@@ -28,9 +28,9 @@ export function PreservationRulesPanel(props: PreservationRulesPanelProps) {
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
       <div className="flex items-center gap-1">
-        <h3 className="text-sm font-medium text-foreground">Preservation Rules</h3>
+        <h3 className="text-base font-semibold tracking-tight text-foreground">Preservation Rules</h3>
         <InfoTooltip text="Toggle which elements the AI should protect from changing during motion. Critical for brand consistency." />
       </div>
       {RULES.map(({ key, label, tooltip }) => (

@@ -58,7 +58,7 @@ export default function AnimateVideo() {
 
   const { bulkItems, isBulkRunning, isBulkComplete, runBulkAnimatePipeline, resetBulk } = useBulkVideoProject();
 
-  const { balance: creditsBalance, plan } = useCredits();
+  const { balance: creditsBalance, plan, openBuyModal } = useCredits();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
@@ -1241,15 +1241,15 @@ export default function AnimateVideo() {
               />
 
               {/* Settings */}
-              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-                <h3 className="text-sm font-medium text-foreground">Settings</h3>
+              <div className="space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
+                <h3 className="text-base font-semibold tracking-tight text-foreground">Settings</h3>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-1">
-                    <label className="text-xs text-muted-foreground">Aspect Ratio</label>
+                    <label className="text-sm font-medium text-foreground">Aspect Ratio</label>
                     <InfoTooltip text="For image-to-video, the output always matches your source image ratio. This selector is informational only." />
                   </div>
-                  <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                  <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     Output matches your source image ratio
                   </p>
@@ -1257,13 +1257,13 @@ export default function AnimateVideo() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-1">
-                    <label className="text-xs text-muted-foreground">Duration</label>
+                    <label className="text-sm font-medium text-foreground">Duration</label>
                     <InfoTooltip text="Longer videos use more credits but allow more complex motion sequences." />
                   </div>
                   <div className="flex gap-2">
                     {(['5', '10'] as Duration[]).map((d) => (
                       <button key={d} onClick={() => setDuration(d)}
-                        className={cn('px-3 py-1 rounded-md text-sm border transition-colors',
+                        className={cn('px-4 py-1.5 rounded-full text-sm border transition-colors',
                           duration === d ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40'
                         )}>
                         {d} seconds
@@ -1276,10 +1276,10 @@ export default function AnimateVideo() {
               </div>
 
               {/* Specific Motion Note */}
-              <div className="space-y-2">
+              <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-3">
                 <div className="flex items-center gap-1">
-                  <label className="text-sm font-medium text-foreground">
-                    Specific Motion Note <span className="text-muted-foreground font-normal">(optional)</span>
+                  <label className="text-base font-semibold tracking-tight text-foreground">
+                    Specific Motion Note <span className="text-sm text-muted-foreground font-normal">(optional)</span>
                   </label>
                   <InfoTooltip text="Add precise instructions like 'one basketball dribble' or 'gentle fabric sway at the hem'. Overrides may be softened if they conflict with preservation settings." />
                 </div>
@@ -1287,7 +1287,7 @@ export default function AnimateVideo() {
                   value={userPrompt}
                   onChange={(e) => setUserPrompt(e.target.value)}
                   placeholder="Example: one realistic basketball dribble, controlled body movement, background stays static"
-                  className="min-h-[80px] resize-none"
+                  className="min-h-[96px] resize-none rounded-xl"
                   maxLength={500}
                 />
               </div>
@@ -1306,22 +1306,22 @@ export default function AnimateVideo() {
 
 
               {/* Generate */}
-              <div className="flex flex-col gap-3">
-                {(() => {
-                  const perVideo = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
-                  const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
-                  const totalVideos = imageCount * motionCount;
-                  const totalCredits = perVideo * totalVideos;
+              {(() => {
+                const perVideo = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+                const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
+                const totalVideos = imageCount * motionCount;
+                const totalCredits = perVideo * totalVideos;
+                const notEnoughCredits = totalCredits > creditsBalance;
+                const generateDisabled = bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading;
 
-                  return (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border flex-wrap">
-                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                return (
+                  <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+                      <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="text-sm text-muted-foreground">Estimated cost:</span>
                       <span className="text-sm font-semibold text-foreground">
                         {totalVideos > 1 ? (
-                          <>
-                            {perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits
-                          </>
+                          <>{perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits</>
                         ) : (
                           <>{perVideo} credits</>
                         )}
@@ -1331,23 +1331,35 @@ export default function AnimateVideo() {
                           ({motionCount} camera motion{motionCount > 1 ? 's' : ''}{imageCount > 1 ? ` × ${imageCount} images` : ''})
                         </span>
                       )}
+                      {notEnoughCredits && (
+                        <span className="text-xs font-medium text-destructive">
+                          Need {totalCredits - creditsBalance} more credits
+                        </span>
+                      )}
                     </div>
-                  );
-                })()}
-                <Button
-                  onClick={handleGenerate}
-                  disabled={bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading}
-                  className="gap-2 self-start"
-                  size="lg"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {(() => {
-                    const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
-                    const totalVideos = imageCount * motionCount;
-                    return totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video';
-                  })()}
-                </Button>
-              </div>
+                    {notEnoughCredits ? (
+                      <Button
+                        onClick={() => openBuyModal('animate_video_cta')}
+                        size="lg"
+                        className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Get credits
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleGenerate}
+                        disabled={generateDisabled}
+                        size="lg"
+                        className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        {totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video'}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>

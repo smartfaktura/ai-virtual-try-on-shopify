@@ -61,6 +61,7 @@ export function StudioChat() {
   // Hard-hide on new brand model page across all viewports
   if (location.pathname === '/app/models/new') return null;
   if (location.pathname === '/app/products/new') return null;
+  if (location.pathname === '/app/video/animate') return null;
   if (/^\/app\/products\/[^/]+\/edit$/.test(location.pathname)) return null;
 
   const hideOnMobile = isMobile && (
