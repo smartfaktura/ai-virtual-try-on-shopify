@@ -275,6 +275,12 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // Slim mode = wizard client (priority + active only). Admin paths keep full payload.
   const useSlimRest = !!hasPriority && activeOnly;
   const cacheVariant = `${includePromptTemplate ? 'pt' : 'slim'}-${activeOnly ? 'active' : 'all'}${useSlimRest ? '-slimrest' : ''}${includeBundle ? '-bundle' : ''}`;
+  // Admin catalog callers opt into the full cross-user catalog via includeInactive.
+  // For everyone else (user-facing wizard), hide other users' brand scenes — both
+  // to defend against stale React Query cache from a prior session in the same
+  // browser and as belt-and-suspenders on top of RLS.
+  const isAdminCatalogCaller = options?.includeInactive === true;
+  const userKey = user?.id ?? 'anon';
 
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
