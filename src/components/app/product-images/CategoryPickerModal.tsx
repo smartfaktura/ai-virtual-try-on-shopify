@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Check, Search, Sparkles } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CATEGORY_LABELS, CATEGORY_SUPER_GROUPS } from '@/lib/productCategories';
 
@@ -10,7 +10,7 @@ interface CategoryPickerModalProps {
   onOpenChange: (open: boolean) => void;
   /** Current chosen category id (user pick) — highlighted as selected. */
   value?: string | null;
-  /** AI-suggested category id — shown with a Sparkles badge when distinct from value. */
+  /** AI-suggested category id — pinned at the top with a Suggested badge when distinct from value. */
   suggested?: string | null;
   onChange: (id: string) => void;
 }
@@ -42,62 +42,85 @@ export function CategoryPickerModal({ open, onOpenChange, value, suggested, onCh
     onOpenChange(false);
   };
 
+  const showSuggested = !!suggested && CATEGORY_LABELS[suggested] && (!query || CATEGORY_LABELS[suggested].toLowerCase().includes(query.trim().toLowerCase()));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-3">
-          <DialogTitle className="text-lg font-medium">Choose product category</DialogTitle>
-          <DialogDescription className="text-xs">
-            Pick the closest match — this guides which scenes appear in Visual Studio
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="px-6 pb-3">
+      <DialogContent className="p-0 gap-0 overflow-hidden flex flex-col max-w-[100vw] w-screen h-[100dvh] rounded-none sm:max-w-3xl sm:w-full sm:h-auto sm:max-h-[88vh] sm:rounded-3xl">
+        <DialogHeader className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 space-y-3 shrink-0 border-b sm:border-b-0">
+          <div className="space-y-1.5">
+            <DialogTitle className="text-xl font-medium tracking-tight">Product category</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Pick the closest match for better scene results
+            </DialogDescription>
+          </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               autoFocus
-              placeholder="Search categories…"
+              placeholder="Search categories"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 h-9 text-sm"
+              className="pl-11 h-11 text-sm rounded-2xl bg-muted/40 border-transparent focus-visible:bg-background"
             />
           </div>
-        </div>
+        </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto px-6 pb-6 space-y-5">
+        <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-8 pt-2 space-y-6">
+          {showSuggested && (
+            <div className="space-y-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium mb-3">
+                Suggested
+              </div>
+              <button
+                type="button"
+                onClick={() => handlePick(suggested!)}
+                className={cn(
+                  'w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl text-sm text-left border transition-colors',
+                  value === suggested
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-primary/30 bg-primary/5 hover:bg-primary/10',
+                )}
+              >
+                <span className="truncate">{CATEGORY_LABELS[suggested!]}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className={cn(
+                    'text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full',
+                    value === suggested ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
+                  )}>
+                    Suggested
+                  </span>
+                  {value === suggested && <Check className="w-4 h-4 shrink-0" />}
+                </span>
+              </button>
+            </div>
+          )}
+
           {filteredGroups.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-8">No categories match "{query}"</p>
+            <p className="text-xs text-muted-foreground text-center py-12">No categories match "{query}"</p>
           )}
           {filteredGroups.map((group) => (
             <div key={group.label} className="space-y-2">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium mb-3">
                 {group.label}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {group.ids.map((id) => {
                   const isSelected = value === id;
-                  const isSuggested = !isSelected && suggested === id;
                   return (
                     <button
                       key={id}
                       type="button"
                       onClick={() => handlePick(id)}
                       className={cn(
-                        'flex items-center justify-between gap-2 px-3 py-2 rounded-md text-xs text-left border transition-colors',
+                        'flex items-center justify-between gap-2 px-4 py-3 rounded-2xl text-sm text-left border transition-colors',
                         isSelected
                           ? 'bg-primary text-primary-foreground border-primary'
-                          : isSuggested
-                            ? 'border-primary/40 bg-primary/5 hover:bg-primary/10'
-                            : 'border-border hover:bg-muted',
+                          : 'border-border/60 hover:bg-muted',
                       )}
                     >
                       <span className="truncate">{CATEGORY_LABELS[id]}</span>
-                      {isSelected ? (
-                        <Check className="w-3.5 h-3.5 shrink-0" />
-                      ) : isSuggested ? (
-                        <Sparkles className="w-3 h-3 shrink-0 text-primary" />
-                      ) : null}
+                      {isSelected && <Check className="w-4 h-4 shrink-0" />}
                     </button>
                   );
                 })}
