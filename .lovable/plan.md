@@ -1,45 +1,26 @@
-## What I found
+## Scope
 
-`/product-visual-library` uses `src/hooks/usePublicSceneLibrary.ts`, not the Product Images picker hook we already patched.
+Only `/product-visual-library`. No DB changes, no other pages affected.
 
-That hook currently queries active `product_image_scenes` with only:
+## Problem
 
-```text
-is_active = true
-category_collection != bundle
-```
+The query orders by `category_sort_order` first. Inside the `activewear` collection, the DB has mixed `category_sort_order` values per row: Padel and Tennis rows have `0`, while Editorial Sport Poses has `25`. So Padel/Tennis scenes get inserted into the sub-category map before Editorial Sport Poses and appear at the top.
 
-It does not explicitly exclude user-owned Brand Scenes. The database currently has active user-owned Brand Scenes in `activewear`, including `GHA Lobby Image` and `TEST`, so they can appear on the public Visual Library if the request is authenticated or if any permissive path/cache returns them.
+## Fix
 
-## Safe fix
+Edit `src/hooks/usePublicSceneLibrary.ts` only. In `fetchPublicScenes`, also select `sub_category_sort_order` (already selected). In `buildFamilyTree`:
 
-1. Update `src/hooks/usePublicSceneLibrary.ts`
-   - Add `owner_user_id` and `is_brand_scene` to the selected columns
-   - Add database filters:
-     - `owner_user_id IS NULL`
-     - `is_brand_scene = false`
-   - Add a defensive client-side filter before returning scenes, so private Brand Scenes are hidden even if a cached or unexpected payload includes them
+1. Track each sub-group's minimum `sub_category_sort_order`.
+2. After grouping, **sort `subGroups` inside each collection by that minimum ascending** (tie-break: label A–Z).
+3. Sort `collections` inside each family by the smallest `category_sort_order` seen in their rows (tie-break: existing insertion order).
 
-2. Keep the public page public
-   - Do not add auth requirements
-   - Do not show any user-owned Brand Scenes on `/product-visual-library`
-   - Keep only global/public catalog scenes there
+That makes Activewear render: Editorial Sport Poses (-2) → TRENDING ON INSTAGRAM (-1) → Essential Shots (0) → Creative Shots / Gym UGC / Padel (1) → Flat Lay (2) → Tennis (3) → Aesthetic Color Sport Sets (4) — regardless of the inconsistent `category_sort_order` on individual rows.
 
-3. Keep user Brand Scenes working elsewhere
-   - Do not change `/app/brand-scenes`
-   - Do not change the user-facing Product Images picker fix already made
-   - Do not change admin scene management
+Activewear stays first inside Fashion & Apparel because at least one of its rows has `category_sort_order = 0` (lowest in the family).
 
-4. Optional hardening after the frontend fix
-   - Add a dedicated public database function/view for the Visual Library that only returns global non-brand scenes, then point this hook to it
-   - This is safer long-term, but the smallest immediate fix is the hook-level query + filter above
+## Not touched
 
-## Files to change
-
-- `src/hooks/usePublicSceneLibrary.ts` only
-
-## Why this is safe
-
-- It only narrows public Visual Library results
-- It does not touch RLS, migrations, admin tools, or saved Brand Scenes
-- It prevents another user’s Brand Scenes from rendering on the public marketing/library page
+- DB rows
+- RLS / auth / brand-scene filters
+- Any other page or hook
+- Admin scene tools

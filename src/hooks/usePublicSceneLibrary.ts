@@ -17,6 +17,9 @@ export interface PublicScene {
   category_collection: string | null;
   sub_category: string | null;
   preview_image_url: string | null;
+  category_sort_order?: number | null;
+  sub_category_sort_order?: number | null;
+  sort_order?: number | null;
 }
 
 const PUBLIC_COLUMNS =
@@ -178,18 +181,39 @@ export function buildFamilyTree(scenes: PublicScene[]): FamilyGroup[] {
     const collMap = familyMap.get(family)!;
     const collections: CollectionGroup[] = Array.from(collMap.entries()).map(
       ([slug, subMap]) => {
-        const subGroups: SubGroup[] = Array.from(subMap.entries()).map(
-          ([label, sceneList]) => ({ label, scenes: sceneList }),
-        );
+        const subGroups: SubGroup[] = Array.from(subMap.entries())
+          .map(([label, sceneList]) => {
+            const minSub = sceneList.reduce(
+              (m, s) => Math.min(m, s.sub_category_sort_order ?? Number.POSITIVE_INFINITY),
+              Number.POSITIVE_INFINITY,
+            );
+            return { label, scenes: sceneList, _minSub: minSub };
+          })
+          .sort((a, b) => {
+            if (a._minSub !== b._minSub) return a._minSub - b._minSub;
+            return a.label.localeCompare(b.label);
+          })
+          .map(({ label, scenes }) => ({ label, scenes }));
         const totalCount = subGroups.reduce((acc, g) => acc + g.scenes.length, 0);
+        const minCat = Array.from(subMap.values()).reduce(
+          (m, list) =>
+            list.reduce(
+              (mm, s) => Math.min(mm, s.category_sort_order ?? Number.POSITIVE_INFINITY),
+              m,
+            ),
+          Number.POSITIVE_INFINITY,
+        );
         return {
           slug,
           label: getCollectionLabel(slug),
           totalCount,
           subGroups,
-        };
+          _minCat: minCat,
+        } as CollectionGroup & { _minCat: number };
       },
-    );
+    )
+      .sort((a: any, b: any) => a._minCat - b._minCat)
+      .map(({ _minCat, ...rest }: any) => rest as CollectionGroup);
 
     const totalCount = collections.reduce((acc, c) => acc + c.totalCount, 0);
 
