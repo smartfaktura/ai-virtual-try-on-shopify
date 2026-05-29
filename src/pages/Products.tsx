@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { gtagViewItem } from '@/lib/gtag';
+import { getCategoryLabel } from '@/lib/productCategories';
 
 interface UserProduct {
   id: string;
@@ -34,7 +35,16 @@ interface UserProduct {
   tags: string[] | null;
   created_at: string;
   updated_at: string;
+  analysis_json?: { userCategory?: string | null } | null;
 }
+
+const getDisplayCategory = (p: UserProduct): string => {
+  const id = p.analysis_json?.userCategory;
+  const label = id ? getCategoryLabel(id) : '';
+  if (label) return label;
+  const raw = p.product_type?.includes(':') ? p.product_type.split(':').pop() : p.product_type;
+  return raw || '';
+};
 
 type ViewMode = 'grid' | 'list';
 type SortBy = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
@@ -489,9 +499,7 @@ export default function Products() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {filtered.map(product => {
               const imgCount = imageCounts[product.id] || 0;
-              const displayType = product.product_type?.includes(':')
-                ? product.product_type.split(':').pop()
-                : product.product_type;
+              const displayType = getDisplayCategory(product);
               return (
                 <Card key={product.id} className="group overflow-hidden">
                   <div className="aspect-square relative bg-muted">
@@ -564,9 +572,10 @@ export default function Products() {
                   <div className="flex-1 min-w-0 space-y-0.5">
                     <p className="text-sm font-medium">{product.title}</p>
                     <div className="flex items-center gap-2">
-                      {product.product_type && (
-                        <Badge variant="secondary" className="text-[10px]">{product.product_type}</Badge>
-                      )}
+                      {(() => {
+                        const cat = getDisplayCategory(product);
+                        return cat ? <Badge variant="secondary" className="text-[10px]">{cat}</Badge> : null;
+                      })()}
                       {product.description && (
                         <span className="text-xs text-muted-foreground truncate max-w-[200px]">{product.description}</span>
                       )}
