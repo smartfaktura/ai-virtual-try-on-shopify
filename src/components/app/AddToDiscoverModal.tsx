@@ -55,6 +55,7 @@ const PRODUCT_TYPE_TO_COLLECTION: Record<string, string> = {
   dress: 'dresses',
   hoodie: 'hoodies',
   jeans: 'jeans',
+  trousers: 'trousers',
   jacket: 'jackets',
   activewear: 'activewear',
   swimwear: 'swimwear',

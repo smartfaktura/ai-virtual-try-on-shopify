@@ -27,6 +27,7 @@ const DETECTION_RULES: [string[], TemplateCategory][] = [
   [['dress', 'gown', 'maxi dress', 'midi dress', 'sundress', 'cocktail dress'], 'dresses' as TemplateCategory],
   [['hoodie', 'hooded sweatshirt', 'zip-up hoodie', 'pullover hoodie'], 'hoodies' as TemplateCategory],
   [['jeans', 'denim', 'skinny jeans', 'wide-leg jeans', 'mom jeans'], 'jeans' as TemplateCategory],
+  [['trousers', 'trouser', 'chinos', 'chino', 'slacks', 'dress pants', 'dress pant', 'cargo pants', 'cargo trousers', 'joggers', 'sweatpants', 'track pants', 'tailored trousers'], 'trousers' as TemplateCategory],
   [['jacket', 'blazer', 'bomber', 'puffer', 'windbreaker', 'parka', 'trench coat'], 'jackets' as TemplateCategory],
   [['activewear', 'sportswear', 'yoga', 'gym wear', 'athletic', 'workout', 'legging', 'sports bra'], 'activewear' as TemplateCategory],
   [['swimwear', 'bikini', 'swimsuit', 'swim trunks', 'bathing suit'], 'swimwear' as TemplateCategory],
@@ -110,6 +111,7 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   lingerie: 'Lingerie',
   kidswear: 'Kidswear',
   jeans: 'Jeans',
+  trousers: 'Trousers',
   jackets: 'Jackets',
 };
 

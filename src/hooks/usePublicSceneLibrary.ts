@@ -75,6 +75,7 @@ export const COLLECTION_LABEL: Record<string, string> = {
   dresses: 'Dresses',
   hoodies: 'Hoodies',
   jeans: 'Jeans',
+  trousers: 'Trousers',
   jackets: 'Jackets',
   activewear: 'Activewear',
   swimwear: 'Swimwear',
