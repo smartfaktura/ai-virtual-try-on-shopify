@@ -9,7 +9,18 @@ import { Check, Package, Plus, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { CATEGORY_LABELS, CATEGORY_SUPER_GROUPS, getCategoryLabel } from '@/lib/productCategories';
+import { mapTextToCategory } from '@/lib/categoryResolver';
 import type { Tables } from '@/integrations/supabase/types';
+
+function resolveProductCategory(p: UserProduct): string {
+  const aj = (p as any).analysis_json;
+  const fromAnalysis = aj && typeof aj === 'object' ? aj.userCategory : null;
+  if (fromAnalysis && CATEGORY_LABELS[fromAnalysis]) return fromAnalysis;
+  const fromText = mapTextToCategory(`${p.title ?? ''} ${p.product_type ?? ''}`);
+  if (fromText && CATEGORY_LABELS[fromText]) return fromText;
+  return 'other';
+}
 
 type UserProduct = Tables<'user_products'>;
 
@@ -53,7 +64,7 @@ export function ProductCatalogModal({
 }: ProductCatalogModalProps) {
   const navigate = useNavigate();
   const [quickView, setQuickView] = useState<QuickView>('all');
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>('featured');
   const [pending, setPending] = useState<UserProduct | null>(null);
   const [search, setSearch] = useState('');
@@ -69,19 +80,40 @@ export function ProductCatalogModal({
     return [...products, ...SAMPLE_PRODUCTS];
   }, [products]);
 
-  const productTypes = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach(p => p.product_type && set.add(p.product_type));
-    return Array.from(set).sort();
-  }, [products]);
+  // Map each product to its canonical category id (cached).
+  const productCategoryMap = useMemo(() => {
+    const m = new Map<string, string>();
+    allProducts.forEach(p => m.set(p.id, resolveProductCategory(p)));
+    return m;
+  }, [allProducts]);
+
+  // Count products per category id (across user products + samples that will show).
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    allProducts.forEach(p => {
+      const id = productCategoryMap.get(p.id) || 'other';
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    });
+    return counts;
+  }, [allProducts, productCategoryMap]);
+
+  // Only render groups that contain at least one matching category id.
+  const visibleGroups = useMemo(() => {
+    return CATEGORY_SUPER_GROUPS
+      .map(g => ({
+        label: g.label,
+        items: g.ids.filter(id => (categoryCounts.get(id) ?? 0) > 0),
+      }))
+      .filter(g => g.items.length > 0);
+  }, [categoryCounts]);
 
   const filtered = useMemo(() => {
     let list = allProducts;
     if (quickView === 'samples') {
       list = list.filter(p => SAMPLE_IDS.has(p.id));
     }
-    if (typeFilter) {
-      list = list.filter(p => p.product_type === typeFilter);
+    if (categoryFilter) {
+      list = list.filter(p => productCategoryMap.get(p.id) === categoryFilter);
     }
     const q = search.trim().toLowerCase();
     if (q) {
@@ -96,13 +128,13 @@ export function ProductCatalogModal({
       list = [...list].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
     }
     return list;
-  }, [allProducts, quickView, typeFilter, sort, search]);
+  }, [allProducts, quickView, categoryFilter, sort, search, productCategoryMap]);
 
-  const anyFilterActive = quickView !== 'all' || typeFilter !== null || sort !== 'featured';
+  const anyFilterActive = quickView !== 'all' || categoryFilter !== null || sort !== 'featured';
 
   const clearAll = () => {
     setQuickView('all');
-    setTypeFilter(null);
+    setCategoryFilter(null);
     setSort('featured');
   };
 
@@ -221,21 +253,30 @@ export function ProductCatalogModal({
                 />
               </SidebarSection>
 
-              {productTypes.length > 0 && (
-                <SidebarSection title="Type">
+              {visibleGroups.length > 0 && (
+                <SidebarSection title="Category">
                   <SidebarRow
-                    active={false}
-                    onClick={() => setTypeFilter(null)}
+                    active={categoryFilter === null}
+                    onClick={() => setCategoryFilter(null)}
                     label="Any"
                   />
-                  {productTypes.map(t => (
-                    <SidebarRow
-                      key={t}
-                      active={typeFilter === t}
-                      onClick={() => setTypeFilter(t)}
-                      label={t}
-                      count={products.filter(p => p.product_type === t).length}
-                    />
+                  {visibleGroups.map(group => (
+                    <div key={group.label} className="pt-2">
+                      <p className="px-2 mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                        {group.label}
+                      </p>
+                      <div className="space-y-0.5">
+                        {group.items.map(id => (
+                          <SidebarRow
+                            key={id}
+                            active={categoryFilter === id}
+                            onClick={() => setCategoryFilter(id)}
+                            label={getCategoryLabel(id)}
+                            count={categoryCounts.get(id) ?? 0}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </SidebarSection>
               )}

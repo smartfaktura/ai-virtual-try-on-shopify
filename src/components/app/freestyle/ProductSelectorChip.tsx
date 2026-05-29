@@ -43,6 +43,7 @@ export function ProductSelectorChip({
 
   const triggerButton = (
     <button
+      type="button"
       onClick={() => onOpenChange(!open)}
       className={cn(
         "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors min-w-0",
@@ -54,6 +55,7 @@ export function ProductSelectorChip({
           <img src={getOptimizedUrl(selectedProduct.image_url, { quality: 60 })} alt="" className="w-4 h-4 rounded object-cover shrink-0" />
           <span className="truncate flex-1 min-w-0 text-left">{selectedProduct.title}</span>
           <button
+            type="button"
             onClick={e => { e.stopPropagation(); onSelect(null); }}
             className="ml-0.5 w-3.5 h-3.5 rounded-full bg-muted-foreground/20 flex items-center justify-center hover:bg-muted-foreground/30 transition-colors shrink-0"
           >
