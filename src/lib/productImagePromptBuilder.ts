@@ -789,6 +789,21 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
   return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials. Clothing must NOT compete with the product.${accStr}${colorTag}`;
 }
 
+// ── AI-styling wardrobe directive (scene-aware, generic — lets AI decide) ──
+function buildAiWardrobeDirective(d: DetailSettings): string {
+  const noteClause = d.customOutfitNote ? ` STYLING PRIORITY: ${d.customOutfitNote}` : '';
+  return `WARDROBE DIRECTION: Follow the variation prompt as the styling source of truth. Add only the visible clothing or styling elements that naturally support the scene, product placement, and composition. Do not force a full outfit if the image only needs an open neckline, bare shoulder, hand, wrist, cropped body area, or product interaction. Wardrobe must stay minimal, appropriate, and secondary to the product, without covering, recoloring, reshaping, or distracting from it. Keep styling consistent across this batch.${noteClause}`;
+}
+
+// Returns AI directive when AI styling is selected and category isn't a "product IS the outfit" one;
+// otherwise falls back to the structured/manual OUTFIT LOCK string.
+function aiOrDefaultOutfitDirective(category: string | undefined, d: DetailSettings, gender?: string, garmentType?: string, halfPortrait?: boolean): string {
+  const isAiMode = d.outfitMode === 'ai' || (!d.outfitMode && !d.outfitConfig && !d.outfitConfigByScene);
+  const productIsOutfit = category === 'lingerie' || category === 'swimwear' || category === 'activewear' || category === 'kidswear';
+  if (isAiMode && !productIsOutfit) return buildAiWardrobeDirective(d);
+  return defaultOutfitDirective(category, d, gender, garmentType, halfPortrait);
+}
+
 // ── Person directive builder (skips auto values) ──
 function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string, halfPortrait?: boolean): string {
   const parts: string[] = [];
