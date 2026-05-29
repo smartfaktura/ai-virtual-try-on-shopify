@@ -76,17 +76,24 @@ export default function AddProduct() {
       }
       backAction={{ content: 'Products', onAction: handleDone }}
     >
-      <div className="hidden sm:block">
-        <ProductUploadTips />
-      </div>
+      {!isEditing && (
+        <div className="hidden sm:block">
+          <ProductUploadTips />
+        </div>
+      )}
 
       {isEditing ? (
         editingProduct && (
-          <ManualProductTab
-            onProductAdded={handleDone}
-            onClose={handleDone}
-            editingProduct={editingProduct}
-          />
+          <>
+            <ManualProductTab
+              onProductAdded={handleDone}
+              onClose={handleDone}
+              editingProduct={editingProduct}
+            />
+            <div className="mt-6">
+              <ProductUploadTips />
+            </div>
+          </>
         )
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
