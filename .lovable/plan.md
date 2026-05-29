@@ -1,78 +1,51 @@
 ## Scope
-When the Continue / Generate button in `/app/generate/product-images` is grey because something's missing, the user gets no feedback. Add a short, plain sonner toast explaining what to do — mobile-friendly. Purely a UX layer; `canProceed` logic is untouched.
+`/app/video/animate` and `/app/video/start-end` look inconsistent: cramped header, random Beta pill, and a non-floating Generate bar that sits inline at the very bottom instead of staying anchored above the fold. Make both pages share an identical chrome — same wrapper width / rhythm, same header treatment (with optional inline badge), and a properly floating Generate bar matching the project's existing pattern (`src/components/app/product-images/ProductImagesStickyBar.tsx`).
+
+No backend, pipeline, settings, or business-logic changes.
 
 ## Changes
 
-### 1. `src/pages/ProductImages.tsx` — compute `blockedReason`
-Right after the existing `canProceed` IIFE (line 1349), add a parallel IIFE returning a short string when blocked, otherwise `null`.
-
-```ts
-const blockedReason = (() => {
-  if (canProceed) return null;
-  switch (step) {
-    case 1:
-      return 'Pick at least one product to continue';
-    case 2:
-      if (hasMultipleCategories && perCategoryScenes.size > 0)
-        return 'Each category needs at least one shot';
-      return 'Select at least one shot to continue';
-    case 4:
-      if (!(details.selectedAspectRatios?.length))
-        return 'Pick an aspect ratio to continue';
-      if (totalImages === 0)
-        return 'Add shots or models to generate';
-      if (!canAfford)
-        return 'Not enough credits — top up to generate';
-      return 'Finish the setup above to generate';
-    default:
-      return 'Finish this step to continue';
-  }
-})();
-```
-
-Pass through to the sticky bar:
-```tsx
-<ProductImagesStickyBar
-  ...
-  canProceed={canProceed}
-  blockedReason={blockedReason}
-  onNext={handleNext}
-  onBack={handleBack}
-/>
-```
-
-### 2. `src/components/app/product-images/ProductImagesStickyBar.tsx` — interactive "soft-disabled" state
-- Add `blockedReason?: string | null` to `StickyBarProps`.
-- Import `toast` from `sonner`.
-- Replace the `disabled={!canProceed}` Buttons (mobile + desktop) with a click handler that fires a plain toast (no icon, no description) when blocked:
+### 1. `src/components/app/PageHeader.tsx` — support an inline badge next to the title
+Add an optional `titleBadge?: React.ReactNode` prop and render it inline next to the `<h1>` (after the title, same row, vertically centered). Default `undefined` so all existing callers are unaffected.
 
 ```tsx
-const handleClick = () => {
-  if (!canProceed) {
-    toast(blockedReason ?? 'Finish this step to continue', { duration: 2600 });
-    return;
-  }
-  onNext();
-};
+<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
+{titleBadge && <span className="inline-flex">{titleBadge}</span>}
 ```
 
-Button (both layouts) — drop `disabled`, keep grey look via classes, add `aria-disabled`:
-```tsx
-<Button
-  size="pill"
-  onClick={handleClick}
-  aria-disabled={!canProceed}
-  className={`gap-1.5 ${!canProceed ? 'opacity-50 cursor-not-allowed hover:bg-primary' : ''}`}
->
-  ...
-</Button>
-```
-(Mobile variant keeps its existing `flex-1`.)
+(`titleBadge` lives inside the same `flex flex-col sm:flex-row sm:items-center` row as the back button + title.)
 
-### 3. Mobile fit
-All copy strings ≤40 chars so they fit one line on a 360 px viewport using sonner defaults. `<Toaster />` is already mounted globally — no provider work.
+### 2. `src/pages/video/StartEndVideo.tsx` — header, wrapper, floating CTA
+- Wrapper: `max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32` (matches Animate after step 3 and reserves space for the floating bar).
+- PageHeader: drop the `<span Beta>` child (no more "random floating element" under the subtitle); pass the same pill via the new `titleBadge` prop so it sits inline with the title. Children become `<></>` (PageHeader still requires a child).
+- Generate row (currently lines 384–407): convert to floating CTA:
+  ```tsx
+  <div className="sticky bottom-4 z-10 pb-[env(safe-area-inset-bottom)]">
+    <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+        <CreditEstimateBox params={creditParams} />
+      </div>
+      <Button size="lg" className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto" disabled={!canGenerate} onClick={handleGenerate}>
+        {project.isGenerating ? (<><Loader2 className="h-4 w-4 animate-spin" />{project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}</>) : (<><Sparkles className="h-4 w-4" />Generate Video</>)}
+      </Button>
+    </div>
+  </div>
+  ```
+
+### 3. `src/pages/video/AnimateVideo.tsx` — match StartEnd exactly
+- Wrapper (line 532): `max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32` (was `max-w-4xl mx-auto space-y-6`).
+- PageHeader stays as is — no badge needed.
+- Generate row (the existing `rounded-2xl border border-border bg-card p-4 sm:p-5 …` block around line 1318): wrap in the same `sticky bottom-4 z-10 pb-[env(safe-area-inset-bottom)]` shell and apply `bg-card/95 backdrop-blur-md shadow-lg` to the inner card so it visually matches StartEnd. All inner logic (notEnoughCredits branch, Get credits button, bulk totals copy) stays untouched.
+
+### 4. Verification
+- Eyeball both pages at desktop (1264) and mobile (375) widths via the preview screenshot tool to confirm:
+  - Headers share the same size, back-action style, subtitle treatment.
+  - The Beta pill on StartEnd sits inline next to "Start & End Video", not floating below the subtitle.
+  - The Generate bar stays pinned 16 px above the viewport bottom on both pages while scrolling, with the cost label on the left and CTA on the right; on mobile it stacks (cost row above CTA).
+  - Last card on each page is not visually hidden under the sticky bar (`pb-32` confirms clearance).
 
 ## Out of scope
-- No changes to `canProceed` truth values, `handleNext`, or other wizards.
-- No new icons in the toast (per user direction).
-- No new dependencies.
+- No copy changes inside the existing settings/refinement panels.
+- No changes to the Audio & Note card, Compatibility card, Recent-result banner, results panel, or pipeline UI.
+- No animation work, no library/upload-modal changes.
+- Other pages that use PageHeader keep their current rendering (new prop is optional).

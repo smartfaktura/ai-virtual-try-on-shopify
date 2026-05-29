@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;
+  titleBadge?: React.ReactNode;
   subtitle?: React.ReactNode;
   backAction?: { content: string; onAction: () => void };
   actions?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function PageHeader({ title, subtitle, backAction, actions, children }: PageHeaderProps) {
+export function PageHeader({ title, titleBadge, subtitle, backAction, actions, children }: PageHeaderProps) {
   return (
     <div>
       <div className="mb-4 sm:mb-6">
@@ -21,7 +22,10 @@ export function PageHeader({ title, subtitle, backAction, actions, children }: P
                 {backAction.content}
               </Button>
             )}
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
+              {titleBadge && <span className="inline-flex items-center">{titleBadge}</span>}
+            </div>
           </div>
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
