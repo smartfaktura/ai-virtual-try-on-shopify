@@ -727,12 +727,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                   key={item.id}
                   className="group flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 transition-all hover:shadow-sm"
                 >
-                  <div className="relative w-12 h-12 shrink-0 rounded-md overflow-hidden bg-muted/30">
-                    <img src={item.previewUrl} alt={item.title} className="w-full h-full object-cover" />
+                  <div className="relative w-12 h-12 shrink-0 rounded-md overflow-hidden bg-muted/30 flex items-center justify-center">
+                    {brokenThumbs[item.id] ? (
+                      <Package className="w-4 h-4 text-muted-foreground/60" />
+                    ) : (
+                      <img
+                        src={item.previewUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={() => markBroken(item.id)}
+                      />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.title || 'Untitled product'}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{item.productType || '—'}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{getCategoryLabel(item.userCategory) || item.productType || '—'}</p>
                   </div>
                   <button
                     onClick={() => setExpandedItems(prev => ({ ...prev, [item.id]: true }))}
