@@ -1004,7 +1004,7 @@ export default function ProductImages() {
                   batch_id: batchId,
                   scene_name: scene.title,
                   scene_id: scene.id,
-                  batch_outfit_lock: true,
+                  batch_outfit_lock: !!needsModel,
                   batch_size: scenesForProduct.length,
                 };
 
