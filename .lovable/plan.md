@@ -1,34 +1,42 @@
-# Show canonical Product Category badge on /app/products
+# Resolve canonical category for legacy products on /app/products
 
-## Problem
+## Why it's still showing "Mini Dress" / "Pants"
 
-The pill under each product card on `/app/products` shows the free-form `product_type` (e.g. "Mini Dress", "Null product", "Pants"). Now that the analyzer writes a canonical id to `analysis_json.userCategory`, the list should show that proper label (e.g. "Dresses", "Trousers", "Phone Cases") and fall back to `product_type` only when missing.
+These products were uploaded before the analyzer change. Their `analysis_json.userCategory` is empty, so my previous fallback dropped back to the raw `product_type` ("Mini Dress", "Pants", "Phone Case"). The analyzer fix only affects newly uploaded products.
 
-## Change
+## Fix — client-side regex resolver (zero DB writes)
 
-`src/pages/Products.tsx` only — pure display layer, two badges.
+Add a tiny browser-safe mirror of the server's `mapTitleToCategory` regex table at `src/lib/categoryResolver.ts`. Use it in `getDisplayCategory` so any legacy row gets mapped to a canonical id from `title + product_type` and rendered via `getCategoryLabel`.
 
-1. **Type**: add `analysis_json?: { userCategory?: string | null } | null` to the `UserProduct` interface (line 27-37). Query already uses `select('*')` so no SQL change.
-2. **Helper**: at top of component, derive
+```text
+analysis_json.userCategory  →  client regex on title+product_type  →  raw product_type (last resort)
+```
+
+Result without touching the DB: "Mini Dress" → "Dresses", "Pants" → "Trousers", "Phone Case" → "Phone Cases".
+
+## Changes
+
+1. **New** `src/lib/categoryResolver.ts` — exports `mapTextToCategory(text: string): string | null`. Same patterns as `supabase/functions/_shared/category-mapper.ts` so server and client agree. Pure function, no deps.
+2. **Edit** `src/pages/Products.tsx` — extend `getDisplayCategory`:
    ```ts
-   const getDisplayCategory = (p: UserProduct) => {
-     const id = p.analysis_json?.userCategory;
-     const label = id ? getCategoryLabel(id) : '';
-     return label || (p.product_type?.includes(':') ? p.product_type.split(':').pop() : p.product_type) || '';
-   };
+   const id = p.analysis_json?.userCategory
+     ?? mapTextToCategory(`${p.title ?? ''} ${p.product_type ?? ''}`);
+   const label = id ? getCategoryLabel(id) : '';
+   return label || (raw product_type fallback unchanged);
    ```
-   Import `getCategoryLabel` from `@/lib/productCategories`.
-3. **Grid badge** (line 528-530): render `getDisplayCategory(product)` instead of `displayType`.
-4. **List badge** (line 567-569): same — show `getDisplayCategory(product)` and gate on its truthiness.
 
-## Non-changes (safety)
+## Safety
 
-- The "All Types" filter dropdown and search keep using `product_type` — no filter logic touched, so no risk of empty results.
-- No DB migration, no query change, no edge function change.
-- Products with no `analysis_json` (old rows) keep showing exactly what they show today.
-- The colon-split rule for legacy `trigger:foo:bar` strings is preserved in the fallback branch.
-- `getCategoryLabel` already returns `''` for null/empty and the raw id when unknown, so no crash path.
+- Pure display change, no schema or query touched.
+- If regex matches nothing, current behaviour (raw `product_type`) is preserved.
+- Reusing the exact same regex order as the server keeps client/server in lockstep — no divergence risk.
+- No effect on filtering/search (still `product_type` based).
+
+## Optional follow-up (not in this plan)
+
+Lazy backfill: when the user opens Edit Product, write the resolved id back into `analysis_json.userCategory`. Can do later if you want persistence; not needed for the display fix.
 
 ## Files
 
+- `src/lib/categoryResolver.ts` (new)
 - `src/pages/Products.tsx`
