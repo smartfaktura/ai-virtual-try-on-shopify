@@ -1487,30 +1487,29 @@ export function buildDynamicPrompt(
         if (details.customOutfitNote) hint += ` STYLING PRIORITY: ${details.customOutfitNote}`;
         injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${hint} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction.`;
       } else if (!resolvedHint) {
-        // No scene hint — fall back to user-selected outfit or AI directive
+        // No scene hint — AI mode always wins, regardless of any stale outfitConfig.
         const isAiMode = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
-        const hasUserOutfit =
-          !isAiMode && (
+        if (isAiMode) {
+          injectedNote = buildAiWardrobeDirective(details);
+        } else {
+          const hasUserOutfit =
             !!details.outfitConfig ||
             !!details.outfitTop ||
             !!details.outfitBottom ||
             !!details.outfitShoes ||
-            !!details.outfitAccessories
-          );
-        if (hasUserOutfit) {
-          const directive = defaultOutfitDirective(
-            analysis?.category,
-            details,
-            (details as any).modelGender,
-            analysis?.garmentType,
-            (scene.triggerBlocks || []).includes('halfPortrait')
-          );
-          if (directive && !prompt.includes(directive)) {
-            injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
+            !!details.outfitAccessories;
+          if (hasUserOutfit) {
+            const directive = defaultOutfitDirective(
+              analysis?.category,
+              details,
+              (details as any).modelGender,
+              analysis?.garmentType,
+              (scene.triggerBlocks || []).includes('halfPortrait')
+            );
+            if (directive && !prompt.includes(directive)) {
+              injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
+            }
           }
-        } else if (isAiMode) {
-          // AI mode: inject scene-aware wardrobe directive (shared helper, no specific garments/colors)
-          injectedNote = buildAiWardrobeDirective(details);
         }
       }
 
