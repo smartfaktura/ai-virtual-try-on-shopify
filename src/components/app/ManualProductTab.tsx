@@ -54,6 +54,8 @@ interface BatchItem {
   title: string;
   productType: string;
   userCategory: string | null;
+  /** AI-suggested canonical category — session-only, never persisted. Used to render the "Suggested" pill. */
+  suggestedCategory: string | null;
   description: string;
   dimensions: string;
   isAnalyzing: boolean;
@@ -216,6 +218,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               description: !b.manualEdits.description && data.description ? data.description : b.description,
               // Only fill canonical category if user hasn't picked one manually
               userCategory: b.userCategory ?? aiCategory,
+              // Write-once: remember the AI's pick so we can show the "Suggested" pill until the user overrides it.
+              suggestedCategory: b.suggestedCategory ?? aiCategory,
             };
           }));
         } else {
@@ -307,6 +311,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         title,
         productType,
         userCategory: userCategory ?? null,
+        suggestedCategory: suggestedCategory ?? null,
         description,
         dimensions,
         isAnalyzing,
@@ -320,6 +325,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         title: '',
         productType: '',
         userCategory: null,
+        suggestedCategory: null,
         description: '',
         dimensions: '',
         isAnalyzing: false,
@@ -349,6 +355,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         title: '',
         productType: '',
         userCategory: null,
+        suggestedCategory: null,
         description: '',
         dimensions: '',
         isAnalyzing: false,
@@ -382,6 +389,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       title: '',
       productType: '',
       userCategory: null,
+      suggestedCategory: null,
       description: '',
       dimensions: '',
       isAnalyzing: false,
@@ -745,7 +753,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.title || 'Untitled product'}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{getCategoryLabel(item.userCategory) || item.productType || '—'}</p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <p className="text-[11px] text-muted-foreground truncate">{getCategoryLabel(item.userCategory) || item.productType || '—'}</p>
+                      {item.suggestedCategory && item.userCategory === item.suggestedCategory && (
+                        <span className="shrink-0 text-[8px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">
+                          Suggested
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => setExpandedItems(prev => ({ ...prev, [item.id]: true }))}
@@ -817,7 +832,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                           <span className={cn('truncate', !item.userCategory && !item.productType && 'text-muted-foreground')}>
                             {getCategoryLabel(item.userCategory) || item.productType || (item.isAnalyzing ? 'Analyzing…' : 'Choose category')}
                           </span>
-                          <ChevronDown className="w-3 h-3 shrink-0 text-muted-foreground" />
+                          <span className="flex items-center gap-1 shrink-0">
+                            {item.suggestedCategory && item.userCategory === item.suggestedCategory && (
+                              <span className="text-[8px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">
+                                Suggested
+                              </span>
+                            )}
+                            <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                          </span>
                         </button>
                       </div>
                       {aiFilled && !item.isAnalyzing && (
@@ -854,6 +876,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         <CategoryPickerModal
           open={!!activeCategoryItemId}
           value={activeCategoryItemId ? (batchItems.find(b => b.id === activeCategoryItemId)?.userCategory ?? null) : null}
+          suggested={activeCategoryItemId ? (batchItems.find(b => b.id === activeCategoryItemId)?.suggestedCategory ?? null) : null}
           onChange={(v) => {
             if (activeCategoryItemId) updateBatchItem(activeCategoryItemId, 'userCategory', v);
             setActiveCategoryItemId(null);
@@ -1177,7 +1200,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                   {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
                 </span>
                 <span className="flex items-center gap-2 shrink-0">
-                  {!userCategory && suggestedCategory && (
+                  {suggestedCategory && (userCategory ?? suggestedCategory) === suggestedCategory && (
                     <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
                       Suggested
                     </span>
