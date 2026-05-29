@@ -250,6 +250,7 @@ function resolveBodyFramingDirective(category?: string, sceneType?: string, trig
     case 'hoodies':
     case 'streetwear':
     case 'jeans':
+    case 'trousers':
     case 'jackets':
       return 'Full-body shot — model visible from head to toe, feet fully inside frame, natural standing pose. Do NOT crop at the knees or waist.';
     case 'lingerie':
@@ -297,6 +298,7 @@ function defaultBackground(category?: string): string {
     case 'hoodies':
     case 'streetwear':
     case 'jeans':
+    case 'trousers':
     case 'jackets':
     case 'shoes':
     case 'sneakers':
@@ -361,6 +363,7 @@ function defaultShadow(category?: string): string {
     case 'hoodies':
     case 'streetwear':
     case 'jeans':
+    case 'trousers':
     case 'jackets':
     case 'shoes':
     case 'sneakers':
@@ -404,6 +407,7 @@ function defaultStyling(category?: string): string {
     case 'hoodies':
     case 'streetwear':
     case 'jeans':
+    case 'trousers':
     case 'jackets':
       return 'Clean commercial styling — crisp, professional composition.';
     case 'lingerie':
@@ -467,6 +471,7 @@ function defaultLighting(category?: string): string {
     case 'hoodies':
     case 'streetwear':
     case 'jeans':
+    case 'trousers':
     case 'jackets': return 'Even soft studio lighting revealing fabric texture and true color.';
     case 'bags-accessories':
     case 'backpacks':
@@ -511,6 +516,7 @@ function defaultPersonDirective(category?: string): string {
     case 'hoodies':
     case 'streetwear':
     case 'jeans':
+    case 'trousers':
     case 'jackets':
       return 'Professional fashion model with natural, contemporary look — realistic skin texture, confident but relaxed posture, editorial presence.';
     case 'lingerie':
@@ -560,6 +566,7 @@ function categoryOutfitDefaults(category?: string, gender?: string): OutfitPiece
     case 'hoodies':
     case 'streetwear':
     case 'jeans':
+    case 'trousers':
     case 'jackets':
       return isMale
         ? { top: 'plain white crew-neck tee', bottom: 'slim navy cotton chinos', shoes: 'white leather sneakers', accessories: 'none' }

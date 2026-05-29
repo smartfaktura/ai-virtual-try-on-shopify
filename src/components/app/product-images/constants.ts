@@ -41,6 +41,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'dresses': ['dress', 'gown', 'maxi dress', 'midi dress', 'mini dress', 'sundress', 'cocktail dress', 'evening dress', 'wrap dress'],
   'hoodies': ['hoodie', 'hooded sweatshirt', 'zip-up hoodie', 'pullover hoodie', 'oversized hoodie'],
   'jeans': ['jeans', 'denim', 'skinny jeans', 'wide-leg jeans', 'straight-leg jeans', 'mom jeans', 'boyfriend jeans', 'distressed jeans'],
+  'trousers': ['trousers', 'trouser', 'pants', 'chinos', 'chino', 'slacks', 'dress pants', 'cargo pants', 'cargo trousers', 'joggers', 'sweatpants', 'track pants', 'wide-leg pants', 'tailored trousers'],
   'jackets': ['jacket', 'blazer', 'bomber', 'puffer', 'windbreaker', 'denim jacket', 'leather jacket', 'parka', 'trench coat', 'overcoat'],
   'activewear': ['activewear', 'sportswear', 'yoga', 'gym wear', 'athletic', 'workout', 'running', 'legging', 'sports bra', 'alo yoga', 'lululemon', 'fitness'],
   'swimwear': ['swimwear', 'bikini', 'swimsuit', 'one-piece', 'swim trunks', 'board shorts', 'bathing suit', 'rash guard'],

@@ -67,7 +67,7 @@ const GRID_CLASSES: Record<GridSize, string> = {
 };
 
 const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'wedding-dress', 'hoodies', 'jeans', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'] },
+  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'wedding-dress', 'hoodies', 'jeans', 'trousers', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'] },
   { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
   { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'phone-cases', 'belts', 'scarves', 'caps', 'hats', 'beanies', 'watches', 'eyewear'] },
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
@@ -91,6 +91,8 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["garments", /\bdress\b|\bdresses\b|gown/i, "dresses"],
   ["garments", /hoodie|hooded sweatshirt/i, "hoodies"],
   ["garments", /\bjeans\b|denim/i, "jeans"],
+  ["garments", /\btrouser|\btrousers\b|\bchino|\bslack|\bdress\s+pants?\b|\bcargo\s+pants?\b|\bjogger|\bsweatpants\b|\btrack\s+pants?\b/i, "trousers"],
+  ["dresses", /\btrouser|\btrousers\b|\bchino|\bslack|\bdress\s+pants?\b|\bcargo\s+pants?\b/i, "trousers"],
   ["garments", /jacket|blazer|bomber|puffer/i, "jackets"],
   ["shoes", /sneaker|trainer/i, "sneakers"],
   ["shoes", /\bboot\b|\bboots\b/i, "boots"],

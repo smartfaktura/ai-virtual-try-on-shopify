@@ -50,6 +50,11 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
     { key: 'hemLength', label: 'Hem Length', type: 'select', options: ['Cropped (ankle)', 'Regular', 'Full length', 'Extra long'] },
     { key: 'fit', label: 'Fit', type: 'select', options: ['Skinny', 'Slim', 'Straight', 'Regular', 'Wide-leg', 'Bootcut', 'Tapered'] },
   ],
+  'trousers': [
+    { key: 'waistHeight', label: 'Waist Rise', type: 'select', options: ['Low-rise', 'Mid-rise', 'High-rise'] },
+    { key: 'hemLength', label: 'Hem Length', type: 'select', options: ['Cropped (ankle)', 'Regular', 'Full length', 'Extra long'] },
+    { key: 'fit', label: 'Fit', type: 'select', options: ['Skinny', 'Slim', 'Straight', 'Regular', 'Wide-leg', 'Tapered', 'Relaxed'] },
+  ],
   'jackets': [
     { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
     { key: 'length', label: 'Length', type: 'select', options: ['Cropped', 'Hip', 'Mid-thigh', 'Knee'] },
@@ -367,7 +372,7 @@ export function getCategoryFields(category: string | undefined | null, fieldValu
 }
 
 const APPAREL_CATEGORIES = new Set([
-  'garments', 'dresses', 'hoodies', 'jeans', 'jackets', 'activewear',
+  'garments', 'dresses', 'hoodies', 'jeans', 'trousers', 'jackets', 'activewear',
   'swimwear', 'lingerie', 'kidswear',
 ]);
 
@@ -380,7 +385,7 @@ export function isApparelCategory(category: string | undefined | null): boolean 
 const CATEGORY_LABELS: Record<string, string> = {
   'furniture': 'Furniture',
   'garments': 'Garment', 'dresses': 'Dress', 'hoodies': 'Hoodie',
-  'jeans': 'Jeans', 'jackets': 'Jacket', 'activewear': 'Activewear',
+  'jeans': 'Jeans', 'trousers': 'Trousers', 'jackets': 'Jacket', 'activewear': 'Activewear',
   'swimwear': 'Swimwear', 'lingerie': 'Lingerie', 'kidswear': 'Kidswear',
   'sneakers': 'Sneakers', 'shoes': 'Shoes', 'boots': 'Boots', 'high-heels': 'Heels',
   'bags-accessories': 'Bag', 'backpacks': 'Backpack',

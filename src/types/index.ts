@@ -40,7 +40,7 @@ export type TemplateCategory = 'garments' | 'beauty-skincare' | 'makeup-lipstick
   | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'phone-cases'
   | 'jewellery-necklaces' | 'jewellery-earrings' | 'jewellery-bracelets' | 'jewellery-rings' | 'watches'
   | 'dresses' | 'hoodies' | 'sneakers' | 'boots' | 'high-heels'
-  | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'jackets'
+  | 'activewear' | 'eyewear' | 'swimwear' | 'lingerie' | 'kidswear' | 'jeans' | 'trousers' | 'jackets'
   | 'wedding-dress';
 
 export interface PromptBlueprint {

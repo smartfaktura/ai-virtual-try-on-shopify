@@ -38,6 +38,7 @@ const CATEGORY_GROUPS: { label: string; items: { value: string; label: string }[
       { value: 'dresses', label: 'Dresses' },
       { value: 'hoodies', label: 'Hoodies' },
       { value: 'jeans', label: 'Jeans' },
+      { value: 'trousers', label: 'Trousers' },
       { value: 'jackets', label: 'Jackets' },
       { value: 'activewear', label: 'Activewear' },
       { value: 'swimwear', label: 'Swimwear' },
