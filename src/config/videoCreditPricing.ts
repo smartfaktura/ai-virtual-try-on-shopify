@@ -1,13 +1,13 @@
 // Shared credit pricing engine — single source of truth for frontend + backend
 export const VIDEO_CREDIT_RULES = {
   animate: {
-    base5s: 10,
-    base10s: 18,
+    base5s: 25,
+    base10s: 40,
     premiumMotion: 2,   // add-on for complex motion recipes
     ambient: 4,         // ambient audio add-on
   },
   startEnd: {
-    base5s: 20,         // flat 20 credits per Start & End video
+    base5s: 35,         // flat 35 credits per Start & End video
     ambient: 0,
     premiumTransition: 0,
   },
