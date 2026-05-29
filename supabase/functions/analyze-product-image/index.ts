@@ -45,7 +45,8 @@ serve(async (req) => {
 
 If it's a PRODUCT, return:
 - "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle")
-- "productType": Short category (e.g. "Leggings", "Scented Candle", "Face Serum")
+- "productType": Short free-form category label (e.g. "Leggings", "Scented Candle", "Face Serum")
+- "category": One canonical id from this enum (REQUIRED for products). If unsure, use "other". Enum: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, skirts, streetwear, hoodies, jeans, trousers, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 - "description": 10-20 word description of color, material, style, key features
 - "specification": A detailed 30-50 word generation-ready description covering the product's silhouette, construction, materials, colors, finish, texture, and key visual details. Include hex color codes if identifiable. This should read like a technical product spec for image generation.
 
