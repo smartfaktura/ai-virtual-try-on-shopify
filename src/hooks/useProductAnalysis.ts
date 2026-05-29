@@ -218,12 +218,23 @@ export function useProductAnalysis() {
     }
   }, []);
 
-  /** Manually override a product's category */
+  /** Manually override a product's category (user-confirmed pick). Preserves AI's `category` as fallback. */
   const overrideCategory = useCallback((productId: string, category: ProductAnalysis['category']) => {
     setState(prev => {
       const existing = prev.analyses[productId];
-      if (!existing) return prev;
-      const updated = { ...existing, category };
+      // Store user pick under userCategory; keep AI's category untouched as fallback.
+      const updated: ProductAnalysis = existing
+        ? ({ ...existing, userCategory: category } as any)
+        : ({
+            category: category,
+            userCategory: category,
+            sizeClass: '',
+            colorFamily: 'neutral',
+            materialFamily: 'mixed',
+            finish: 'matte',
+            packagingRelevant: false,
+            personCompatible: true,
+          } as any);
       supabase
         .from('user_products')
         .update({ analysis_json: updated as any })
@@ -235,6 +246,7 @@ export function useProductAnalysis() {
       };
     });
   }, []);
+
 
   return {
     analyses: state.analyses,
