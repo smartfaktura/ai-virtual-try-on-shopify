@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Sparkles, Loader2, Play, X } from 'lucide-react';
+import { Sparkles, Loader2, Play, X } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -255,24 +255,16 @@ export default function StartEndVideo() {
   }
 
   return (
-    <div className="container max-w-5xl py-8 space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/app/video')} className="rounded-lg">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
-        </Button>
-      </div>
-      <div className="flex items-start justify-between gap-3">
-        <PageHeader
-          title="Start & End Video"
-          subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them."
-        >
-          <></>
-        </PageHeader>
-        <span className="mt-2 inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">
+    <div className="max-w-4xl mx-auto space-y-6">
+      <PageHeader
+        title="Start & End Video"
+        subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them"
+        backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
+      >
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">
           Beta
         </span>
-      </div>
+      </PageHeader>
 
       {/* Recent completed transition — recovers a previous result the user navigated away from */}
       {project.recentResult && !project.isGenerating && !project.isComplete && (
@@ -390,23 +382,25 @@ export default function StartEndVideo() {
       )}
 
       {/* Generate row */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sticky bottom-6 bg-background/90 backdrop-blur-md rounded-2xl border border-border p-4 shadow-lg shadow-foreground/[0.04]">
-        <CreditEstimateBox params={creditParams} />
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+          <CreditEstimateBox params={creditParams} />
+        </div>
         <Button
           size="lg"
-          className="min-w-[240px] rounded-xl"
+          className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
           disabled={!canGenerate}
           onClick={handleGenerate}
         >
           {project.isGenerating ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Generate Transition Video
+              <Sparkles className="h-4 w-4" />
+              Generate Video
             </>
           )}
         </Button>
