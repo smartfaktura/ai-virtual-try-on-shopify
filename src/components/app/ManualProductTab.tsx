@@ -1161,71 +1161,31 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                 )}
               />
             </div>
+            {/* Product Category — canonical 35+ subcategory picker (drives Visual Studio scene selection) */}
             <div className="space-y-1">
-              <Label htmlFor="product-type" className="text-xs font-medium text-foreground">Product Type</Label>
-              <Input
-                id="product-type"
-                placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
-                value={productType}
-                onChange={(e) => { setProductType(e.target.value); hasManualEdits.current.productType = true; }}
-                maxLength={100}
-                className={cn(
-                  'transition-all duration-300',
-                  isAnalyzing && !hasManualEdits.current.productType && 'animate-pulse ring-1 ring-primary/30'
-                )}
-              />
+              <Label className="text-xs font-medium text-foreground">
+                Product Category <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <button
+                type="button"
+                onClick={() => setCategoryPickerOpen(true)}
+                className="w-full h-11 sm:h-9 px-3 text-xs text-left border border-input rounded-md bg-background hover:bg-muted/50 transition-colors flex items-center justify-between gap-2"
+              >
+                <span className={cn('truncate', !(userCategory || suggestedCategory) && 'text-muted-foreground')}>
+                  {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
+                </span>
+                <span className="flex items-center gap-2 shrink-0">
+                  {!userCategory && suggestedCategory && (
+                    <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                      Suggested
+                    </span>
+                  )}
+                  <Pencil className="w-3 h-3 text-muted-foreground" />
+                </span>
+              </button>
             </div>
           </div>
 
-          {!(isAnalyzing && !hasManualEdits.current.productType) && (
-            <>
-              {(!productType || singleChipsExpanded) ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {QUICK_TYPES.map((t) => (
-                    <Badge
-                      key={t}
-                      variant={productType === t ? 'default' : 'outline'}
-                      className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
-                      onClick={() => {
-                        setProductType(productType === t ? '' : t);
-                        hasManualEdits.current.productType = true;
-                        if (productType !== t) setSingleChipsExpanded(false);
-                      }}
-                    >
-                      {t}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <span
-                  onClick={() => setSingleChipsExpanded(true)}
-                  className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
-                >
-                  Change category
-                </span>
-              )}
-            </>
-          )}
-
-          {/* Product Category — canonical 35+ subcategory picker (drives Visual Studio scene selection) */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium text-foreground">
-              Product Category <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <button
-              type="button"
-              onClick={() => setCategoryPickerOpen(true)}
-              className="w-full h-9 px-3 text-xs text-left border border-input rounded-md bg-background hover:bg-muted/50 transition-colors flex items-center justify-between"
-            >
-              <span className={cn(!(userCategory || suggestedCategory) && 'text-muted-foreground')}>
-                {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
-                {!userCategory && suggestedCategory && (
-                  <span className="ml-1.5 text-[10px] text-muted-foreground">· suggested</span>
-                )}
-              </span>
-              <Pencil className="w-3 h-3 text-muted-foreground" />
-            </button>
-          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
