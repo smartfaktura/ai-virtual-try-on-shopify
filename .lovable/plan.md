@@ -1,48 +1,45 @@
-# Freestyle product picker — mobile fix + category sidebar
+# Drop "space/location" branch from product analyzer
 
-Two issues on `/app/freestyle`:
+Today `analyze-product-image` is dual-purpose — it returns either a product OR a room/building/space (`Living Room`, `Front Facade`, **`Basketball Court`**…). Spaces get written into `user_products.product_type` verbatim, and because they have no canonical category they always fall into `other`.
 
-1. **Mobile** — tapping the **Product** pill doesn't open the picker sheet.
-2. **Desktop sidebar** — left filter currently lists raw `product_type` values (Activewear, Activewear Set, Apparel Outfit, Armchair, Armless Chair, Athletic Dress, Athletic Shoes, Athletic Shorts, …). User wants it grouped by canonical **product category** instead (e.g. Fashion & Apparel → Dresses, Jackets, Activewear; Footwear → Sneakers, Boots; Bags & Accessories; Jewelry; Beauty & Fragrance; …).
+We want products only.
 
----
+## Changes
 
-## 1. Mobile picker doesn't open
+### 1. `supabase/functions/analyze-product-image/index.ts`
 
-Root cause in `src/components/app/freestyle/ProductSelectorChip.tsx` + `MobilePickerSheet.tsx`:
+Rewrite the prompt to be **product-only**:
 
-- On mobile, `ProductSelectorChip` returns `triggerButton` AND `<MobilePickerSheet>` as siblings. The chip's outer wrapper in `FreestyleSettingsChips.tsx` is `<div className="w-full opacity-40?">` — fine. But `MobilePickerSheet` renders as a sibling inside that wrapper, which on Freestyle lives inside the bottom prompt bar (`sticky`/`fixed`, typically with `overflow-hidden`, `z-index` lower than 50, and `transform`/backdrop-blur which creates a new containing block — so `fixed inset-0 z-50` is clipped to the bar instead of the viewport).
-- Even if it does render, `pointer-events-none` is applied to the content for 260 ms after open. Combined with the chip's parent having `pointer-events` quirks during the same gesture, the first tap can be swallowed.
+- Remove the entire "If it's a ROOM, BUILDING, or SPACE…" branch.
+- Add an explicit instruction: *"If the image is not a tangible product (e.g. it shows a room, building, landscape, sports court, street scene, indoor/outdoor location, person without a clear product, screenshot, logo only, abstract art), return `{ "kind": "not_product", "reason": "<short reason>" }` and nothing else."*
+- For products, require `kind: "product"` and `category` chosen from the canonical enum (`fragrance, beauty-skincare, … other`) — never null, never freeform. `productType` stays a short label like "Leggings", "Scented Candle".
+- Keep the phone-case anti-brand rules unchanged.
+- Server-side guard: after JSON parse, if `kind === "not_product"` OR if `resolveCanonicalCategory` returns nothing AND the title/productType matches space keywords (`court|room|kitchen|bedroom|living|office|facade|building|street|park|stadium|gym|studio space|landscape`), force the response to `{ kind: "not_product", reason: "Image looks like a location, not a product" }`. This is a saugiklis in case the model ignores the rule.
 
-Fix:
-- Render `MobilePickerSheet` through a React **portal to `document.body`** so the parent's `transform` / `overflow-hidden` / stacking context can never clip it. (Add a small `<Portal>` wrapper using `createPortal`.)
-- Remove the 260 ms `pointer-events-none` gate; replace with a one-frame `requestAnimationFrame` flag (enough to avoid the trigger's bubbling tap closing the sheet) and also add `onClick={(e) => e.stopPropagation()}` on the sheet panel.
-- Make the trigger button explicit: `type="button"` + `onPointerUp` fallback so iOS Safari reliably toggles even when a parent listens to pointer events.
+### 2. Client callers handle `not_product`
 
-No props, data, or routing change.
+Four callers: `src/components/app/ManualProductTab.tsx`, `src/components/app/UploadSourceCard.tsx`, `src/pages/TextToProduct.tsx`, `src/pages/ProductImages.tsx`.
 
-## 2. Sidebar grouped by category, not product_type
+In each:
+- After `supabase.functions.invoke('analyze-product-image', …)`, if `data.kind === 'not_product'`, **abort** the upload flow (don't insert into `user_products`, don't autofill fields), and show a toast: *"That looks like a location, not a product. Upload a product photo to continue."*
+- For ManualProductTab batch mode, mark that batch item as rejected and skip it (don't silently mislabel as "other").
 
-In `src/components/app/freestyle/ProductCatalogModal.tsx`:
+No credit/billing change needed — `analyze-product-image` doesn't deduct credits.
 
-- Replace the current **Type** section (built from `products[i].product_type`) with a **Category** section built from the canonical taxonomy in `src/lib/productCategories.ts` (`CATEGORY_LABELS` + `CATEGORY_SUPER_GROUPS`).
-- For each product, resolve its category id in this order:
-  1. `product.analysis_json?.userCategory` if it's a known id;
-  2. else `mapTextToCategory(product.title + ' ' + product.product_type)` from `src/lib/categoryResolver.ts`;
-  3. else `'other'`.
-- Render the sidebar as collapsible **super-groups** (Fashion & Apparel, Footwear, Bags & Accessories, Jewelry, Beauty & Fragrance, Food & Drink, Home & Lifestyle). Under each group, list only the category ids that have ≥1 product, with the canonical label from `getCategoryLabel(id)` and the count.
-- Filtering state changes from `typeFilter: string | null` to `categoryFilter: string | null` (category id). Grid filter uses the same resolver. "Any" row clears it.
-- Header label changes from `TYPE` to `CATEGORY`.
+### 3. One-off cleanup (optional, mention)
 
-No DB change, no edge function change. Pure client refactor of the catalog modal.
-
-## Files to edit
-
-- `src/components/app/freestyle/ProductCatalogModal.tsx` — sidebar grouped by category + resolver-driven filter.
-- `src/components/app/freestyle/MobilePickerSheet.tsx` — portal to `document.body`, remove pointer-events delay, stopPropagation on panel.
-- `src/components/app/freestyle/ProductSelectorChip.tsx` — `type="button"` on trigger, ensure mobile branch always wraps sheet in portal.
+The existing `956b1175-…` row ("Outdoor Basketball Court", product_type "Basketball Court") stays in the DB until the user deletes it. Not deleting automatically — it's user data.
 
 ## Out of scope
 
-- No changes to product data schema, to Visual Studio Step 2, or to other pickers (Bundle, Brand Scenes) — only `/app/freestyle`.
-- Copy and visual styling of the desktop modal unchanged apart from sidebar labels.
+- No DB schema change. `product_type` stays a free-text column.
+- No change to other analyzers (`analyze-product-category`, `analyze-trend-post`, room/scene generators) — they're used elsewhere intentionally.
+- Brand Scenes / location uploads (if any) use their own flow, untouched.
+
+## Files
+
+- `supabase/functions/analyze-product-image/index.ts`
+- `src/components/app/ManualProductTab.tsx`
+- `src/components/app/UploadSourceCard.tsx`
+- `src/pages/TextToProduct.tsx`
+- `src/pages/ProductImages.tsx`
