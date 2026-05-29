@@ -1132,8 +1132,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* Product Details — only after an image is uploaded */}
       {singleImage && (
-        <div className="rounded-2xl border bg-card p-4 sm:p-5 space-y-2 animate-fade-in">
-          <div className="flex items-center gap-2">
+        <div className="rounded-3xl border bg-card p-5 sm:p-7 space-y-5 animate-fade-in">
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Product details
             </span>
@@ -1144,32 +1144,32 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               </span>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
               <Label htmlFor="product-title" className="text-xs font-medium text-foreground">
                 Product Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="product-title"
-                placeholder={isAnalyzing && !hasManualEdits.current.title ? "Analyzing…" : "e.g. Black Yoga Leggings"}
+                placeholder={isAnalyzing && !hasManualEdits.current.title ? "Analyzing…" : "e.g. Black Leather Crossbody Bag"}
                 value={title}
                 onChange={(e) => { setTitle(e.target.value); hasManualEdits.current.title = true; }}
                 maxLength={200}
                 className={cn(
-                  'transition-all duration-300',
+                  'h-11 rounded-xl px-4 text-sm transition-all duration-300',
                   isAnalyzing && !hasManualEdits.current.title && 'animate-pulse ring-1 ring-primary/30'
                 )}
               />
             </div>
             {/* Product Category — canonical 35+ subcategory picker (drives Visual Studio scene selection) */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground">
-                Product Category <span className="text-muted-foreground font-normal">(optional)</span>
+                Product Category
               </Label>
               <button
                 type="button"
                 onClick={() => setCategoryPickerOpen(true)}
-                className="w-full h-11 sm:h-9 px-3 text-xs text-left border border-input rounded-md bg-background hover:bg-muted/50 transition-colors flex items-center justify-between gap-2"
+                className="w-full h-11 px-4 text-sm text-left border border-input rounded-xl bg-background hover:bg-muted/50 transition-colors flex items-center justify-between gap-2"
               >
                 <span className={cn('truncate', !(userCategory || suggestedCategory) && 'text-muted-foreground')}>
                   {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
@@ -1187,33 +1187,34 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </div>
 
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label htmlFor="product-desc" className="text-xs font-medium text-foreground">Description</Label>
               <Textarea
                 id="product-desc"
-                placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
+                placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "A short, plain description — colour, material, key details…"}
                 value={description}
                 onChange={(e) => { setDescription(e.target.value); hasManualEdits.current.description = true; }}
                 maxLength={500}
-                rows={2}
+                rows={3}
                 className={cn(
-                  'resize-none min-h-0 transition-all duration-300',
+                  'resize-none rounded-xl p-4 text-sm transition-all duration-300',
                   isAnalyzing && !hasManualEdits.current.description && 'animate-pulse ring-1 ring-primary/30'
                 )}
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label htmlFor="product-dimensions" className="text-xs font-medium text-foreground">
-                Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
+                Dimensions
               </Label>
               <Input
                 id="product-dimensions"
-                placeholder="e.g. 28 x 35 x 13 cm"
+                placeholder="e.g. 28 × 35 × 13 cm"
                 value={dimensions}
                 onChange={(e) => setDimensions(e.target.value)}
                 maxLength={100}
+                className="h-11 rounded-xl px-4 text-sm"
               />
               <p className="text-[11px] text-muted-foreground/70 sm:hidden mt-1">
                 Tip: Add real dimensions (e.g. 15×10cm) for realistic scaling in scenes.
@@ -1225,8 +1226,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
 
       {/* More Details (optional, collapsible) — only after image uploaded */}
       {singleImage && (
-        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className={cn('animate-fade-in transition-all', moreDetailsOpen && 'rounded-2xl border bg-card p-4 sm:p-5')}>
-          <CollapsibleTrigger className={cn('flex items-center gap-2 w-full hover:opacity-80 transition-opacity', moreDetailsOpen ? 'pb-1' : 'py-1.5 px-1')}>
+        <Collapsible open={moreDetailsOpen} onOpenChange={setMoreDetailsOpen} className="rounded-3xl border bg-card p-5 sm:p-7 animate-fade-in">
+          <CollapsibleTrigger className="flex items-center gap-2 w-full hover:opacity-80 transition-opacity">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               More details
             </span>
@@ -1234,21 +1235,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
             <ChevronDown className={cn('w-3.5 h-3.5 ml-auto text-muted-foreground transition-transform', moreDetailsOpen && 'rotate-180')} />
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-5">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-foreground">Weight</Label>
-                <Input placeholder="e.g. 250g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} />
+                <Input placeholder="e.g. 250 g" value={weight} onChange={(e) => setWeight(e.target.value)} maxLength={50} className="h-11 rounded-xl px-4 text-sm" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-foreground">Color</Label>
-                <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} />
+                <Input placeholder="e.g. Matte Black" value={color} onChange={(e) => setColor(e.target.value)} maxLength={100} className="h-11 rounded-xl px-4 text-sm" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-foreground">Materials</Label>
-                <Input placeholder="e.g. Italian leather, brass" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} />
+                <Input placeholder="e.g. Italian leather, brass hardware" value={materials} onChange={(e) => setMaterials(e.target.value)} maxLength={200} className="h-11 rounded-xl px-4 text-sm" />
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground/70 mt-2">
+            <p className="text-[11px] text-muted-foreground/70 mt-3">
               Weight and materials help the AI generate more realistic product scenes.
             </p>
           </CollapsibleContent>
