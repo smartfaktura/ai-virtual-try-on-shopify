@@ -311,6 +311,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         title,
         productType,
         userCategory: userCategory ?? null,
+        suggestedCategory: suggestedCategory ?? null,
         description,
         dimensions,
         isAnalyzing,
