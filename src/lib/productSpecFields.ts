@@ -221,7 +221,7 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
 
   // ── Phone Cases ──
   'phone-cases': [
-    { key: 'compatibility', label: 'Compatibility', type: 'input', placeholder: 'iPhone 15 Pro' },
+    { key: 'compatibility', label: 'Phone Model', type: 'input', placeholder: 'e.g. iPhone 17 Pro Max' },
     { key: 'material', label: 'Material', type: 'select', options: ['Silicone', 'TPU', 'Leather', 'Clear / Polycarbonate', 'Aramid Fiber', 'Wood', 'Metal', 'Fabric', 'Other'] },
     { key: 'finish', label: 'Finish', type: 'select', options: ['Matte', 'Glossy', 'Textured', 'Soft-touch', 'Transparent'] },
     { key: 'feature', label: 'Key Feature', type: 'select', options: ['MagSafe', 'Camera Ring', 'Kickstand', 'Cardholder', 'Lanyard Loop', 'Drop-proof', 'None'] },

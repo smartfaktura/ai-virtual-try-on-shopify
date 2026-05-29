@@ -1,29 +1,31 @@
-Update the JEWELRY REALISM (CRITICAL) prompt injection in `src/lib/productImagePromptBuilder.ts` (line 1533).
+# Update Phone Cases Product Spec Field
 
-**Current text:**
-```
-JEWELRY REALISM (CRITICAL): No sparkle effects, no starburst reflections, no glitter particles, no fantasy light rays, no diamond twinkle overlays, no lens flare on gemstones. Jewelry must look like a real editorial photograph — tactile, dimensional, and physically believable. Reflections on metal and stones must be smooth, controlled, and natural. Never add any post-processing glow or shimmer that would not exist in a real studio photograph.
-```
+## What we're doing
 
-**New text:**
-```
-JEWELRY REALISM (CRITICAL): Render the jewelry as a real editorial photograph with natural metal and gemstone reflections, accurate scale, crisp edges, and physically believable material detail. Keep reflections smooth, controlled, and realistic. Do not add sparkle effects, glitter, fantasy glow, starbursts, or artificial gemstone flares.
-```
+Rename the first field in the phone-cases product details section from **"Compatibility"** to **"Phone Model"**, and update its placeholder to include the `e.g.` prefix so users understand it's an example, not a default value.
 
-**Rationale:** The new version is more directive ("Render the jewelry as..." vs "No... no... no..."), explicitly calls out desirable qualities (accurate scale, crisp edges, believable material detail), and tightens the avoid-list into a single clean sentence. No other files or logic are affected.
+## Why
 
----
+- **"Phone Model"** is clearer to users than **"Compatibility"** — the user immediately knows what to type
+- The current placeholder (`iPhone 15 Pro`) looks like a pre-filled default, causing confusion
+- Adding `e.g.` makes it obvious the text is just an example
+- The underlying field key (`compatibility`) stays unchanged, so saved data and prompt tokens are unaffected
 
-Update the phone-cases product spec fields in `src/lib/productSpecFields.ts` (line 224).
+## Changes
 
-**Current field:**
-```
-{ key: 'compatibility', label: 'Compatibility', type: 'input', placeholder: 'iPhone 15 Pro' },
-```
+**File:** `src/lib/productSpecFields.ts` (line 224)
 
-**New field:**
-```
-{ key: 'compatibility', label: 'Phone Model', type: 'input', placeholder: 'e.g. iPhone 17 Pro Max' },
+```diff
+  'phone-cases': [
+-   { key: 'compatibility', label: 'Compatibility', type: 'input', placeholder: 'iPhone 15 Pro' },
++   { key: 'compatibility', label: 'Phone Model', type: 'input', placeholder: 'e.g. iPhone 17 Pro Max' },
+    { key: 'material', label: 'Material', type: 'select', ... },
+    ...
+  ],
 ```
 
-**Rationale:** "Phone Model" is clearer to users than "Compatibility". Adding `e.g.` to the placeholder makes it obvious it's an example, not a pre-filled default value. Field key stays `compatibility` so saved data and prompt tokens remain intact.
+## Out of scope
+
+- No database migration needed (field key unchanged)
+- No prompt-builder changes needed (token key unchanged)
+- No UI component changes needed (label is rendered dynamically from this config)
