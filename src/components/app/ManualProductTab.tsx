@@ -1200,7 +1200,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                   {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
                 </span>
                 <span className="flex items-center gap-2 shrink-0">
-                  {!userCategory && suggestedCategory && (
+                  {suggestedCategory && (userCategory ?? suggestedCategory) === suggestedCategory && (
                     <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
                       Suggested
                     </span>
