@@ -1,20 +1,15 @@
-Update `src/components/library/SceneDetailModal.tsx` (the popup on `/product-visual-library`):
+Refine `src/components/library/SceneDetailModal.tsx`:
 
-**1. Make the modal larger**
-- Bump `DialogContent` max-width: `sm:max-w-3xl md:max-w-5xl lg:max-w-6xl` (was `sm:max-w-2xl md:max-w-3xl`)
-- Raise height cap to `max-h-[92vh]` (was `88vh`) and round to `sm:rounded-[2rem]`
-- Rebalance the split so the hero gets more room: `md:grid-cols-[7fr_5fr]` (was `5fr_6fr`)
-- Let the hero fill the modal height on desktop: add `md:aspect-auto` so it stops being locked to 4:5 and matches the panel height
+**1. Smaller, image-true modal**
+- `DialogContent`: `sm:max-w-2xl md:max-w-4xl lg:max-w-[58rem]`, `max-h-[90vh]` (down from `lg:max-w-6xl` / `92vh`)
+- Grid: `md:grid-cols-[4fr_3fr]` — image column drives width; at 4:5 the panel height naturally matches the hero
+- Hero column: **remove `md:aspect-auto`** so the image keeps its native `aspect-[4/5]` on every breakpoint (no stretch, no crop)
+- Body padding back to a calmer `p-6 sm:p-8 md:p-10`
 
-**2. Refine the white text panel with VOVV spacing standards**
-- Padding: `p-6 sm:p-10 md:p-12` (was `p-4 sm:p-8`)
-- Switch from a single `gap-*` stack to explicit vertical rhythm using `mt-*`:
-  - Badges row at top
-  - Title: `mt-6 sm:mt-8`, `text-2xl sm:text-3xl md:text-[2.125rem]`, `leading-[1.15]`
-  - Description: `mt-5 sm:mt-6`, `text-[0.95rem] sm:text-base`, `text-foreground/60`, `max-w-prose`, remove `line-clamp` so the copy breathes
-- CTA block pinned to bottom on desktop: `md:mt-auto md:pt-12`, button height `h-[3.5rem]`
-- Badges: add `px-3 py-1` for more presence
-- Close button: `h-10 w-10`, `top-4 right-4`
-- Drop the trailing period on the helper line ("…adapt this look") to match the no-terminal-periods rule for single-sentence subtitles
+**2. Better copy**
+- Skip the redundant description when it equals the title (current DB has `description === title`, so "City Corner Ease / City Corner Ease" shows twice). Treat `description === title` as empty.
+- Improved fallback description: *"An editorial direction crafted by VOVV.AI. Upload your own product and we'll restage it in this exact mood — same light, same composition, your brand."*
+- Helper microcopy under the CTA, rewritten and split into a two-sentence body (so it can keep punctuation per the core rule): *"Upload one product photo. We adapt the styling, lighting, and composition while keeping your product true to life."*
+- Title sizing toned back to `sm:text-[1.75rem] md:text-3xl` to match the smaller frame
 
-No logic, props, data, or routing changes. Pure presentation update.
+No logic, data, or prop changes.
