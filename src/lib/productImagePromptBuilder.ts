@@ -789,6 +789,21 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
   return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials. Clothing must NOT compete with the product.${accStr}${colorTag}`;
 }
 
+// ── AI-styling wardrobe directive (scene-aware, generic — lets AI decide) ──
+function buildAiWardrobeDirective(d: DetailSettings): string {
+  const noteClause = d.customOutfitNote ? ` STYLING PRIORITY: ${d.customOutfitNote}` : '';
+  return `WARDROBE DIRECTION: Follow the variation prompt as the styling source of truth. Add only the visible clothing or styling elements that naturally support the scene, product placement, and composition. Do not force a full outfit if the image only needs an open neckline, bare shoulder, hand, wrist, cropped body area, or product interaction. Wardrobe must stay minimal, appropriate, and secondary to the product, without covering, recoloring, reshaping, or distracting from it. Keep styling consistent across this batch.${noteClause}`;
+}
+
+// Returns AI directive when AI styling is selected and category isn't a "product IS the outfit" one;
+// otherwise falls back to the structured/manual OUTFIT LOCK string.
+function aiOrDefaultOutfitDirective(category: string | undefined, d: DetailSettings, gender?: string, garmentType?: string, halfPortrait?: boolean): string {
+  const isAiMode = d.outfitMode === 'ai' || (!d.outfitMode && !d.outfitConfig && !d.outfitConfigByScene);
+  const productIsOutfit = category === 'lingerie' || category === 'swimwear' || category === 'activewear' || category === 'kidswear';
+  if (isAiMode && !productIsOutfit) return buildAiWardrobeDirective(d);
+  return defaultOutfitDirective(category, d, gender, garmentType, halfPortrait);
+}
+
 // ── Person directive builder (skips auto values) ──
 function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPerson?: boolean, gender?: string, garmentType?: string, resolvedOutfitHint?: string, halfPortrait?: boolean): string {
   const parts: string[] = [];
@@ -808,7 +823,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let dir = defaultPersonDirective(category);
       if (!resolvedOutfitHint) {
-        dir += ` ${defaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
+        dir += ` ${aiOrDefaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
       }
       dir += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return dir;
@@ -820,7 +835,7 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
 
   // Append outfit using structured config or smart default for on-model scenes
   if (sceneNeedsPerson && !resolvedOutfitHint) {
-    directive += ` ${defaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
+    directive += ` ${aiOrDefaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
   }
 
   // Append model reference if present
@@ -1033,14 +1048,8 @@ function resolveToken(token: string, ctx: TokenContext): string {
         return `OUTFIT DIRECTION — ${hint}`;
       }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      // In AI mode, inject a lightweight product-aware directive instead of nothing
-      const isAiMode = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
-      if (isAiMode) {
-        if (!needsOutfit) return '';
-        const noteClause = details.customOutfitNote ? ` STYLING PRIORITY: ${details.customOutfitNote}` : '';
-        return `WARDROBE — Choose an outfit that naturally complements [PRODUCT]. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive with the scene palette.${noteClause}`;
-      }
-      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait')) : '';
+      if (!needsOutfit) return '';
+      return aiOrDefaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait'));
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
@@ -1500,9 +1509,8 @@ export function buildDynamicPrompt(
             injectedNote = `WARDROBE NOTE (subordinate to scene direction — do NOT alter scene mood, lighting, pose, framing, or color palette): ${directive} Outfit colors are wardrobe accents only; the overall image color story, lighting, and composition are set by the scene direction below.`;
           }
         } else if (isAiMode) {
-          // AI mode: inject lightweight product-aware wardrobe note
-          const noteClause = details.customOutfitNote ? ` STYLING PRIORITY: ${details.customOutfitNote}` : '';
-          injectedNote = `WARDROBE NOTE (subordinate to scene direction): Choose an outfit that naturally complements the product. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive with the scene palette.${noteClause}`;
+          // AI mode: inject scene-aware wardrobe directive (shared helper, no specific garments/colors)
+          injectedNote = buildAiWardrobeDirective(details);
         }
       }
 
