@@ -1306,22 +1306,22 @@ export default function AnimateVideo() {
 
 
               {/* Generate */}
-              <div className="flex flex-col gap-3">
-                {(() => {
-                  const perVideo = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
-                  const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
-                  const totalVideos = imageCount * motionCount;
-                  const totalCredits = perVideo * totalVideos;
+              {(() => {
+                const perVideo = estimateCredits({ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion });
+                const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
+                const totalVideos = imageCount * motionCount;
+                const totalCredits = perVideo * totalVideos;
+                const notEnoughCredits = totalCredits > creditsBalance;
+                const generateDisabled = bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading;
 
-                  return (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border flex-wrap">
-                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                return (
+                  <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+                      <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="text-sm text-muted-foreground">Estimated cost:</span>
                       <span className="text-sm font-semibold text-foreground">
                         {totalVideos > 1 ? (
-                          <>
-                            {perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits
-                          </>
+                          <>{perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits</>
                         ) : (
                           <>{perVideo} credits</>
                         )}
@@ -1331,23 +1331,35 @@ export default function AnimateVideo() {
                           ({motionCount} camera motion{motionCount > 1 ? 's' : ''}{imageCount > 1 ? ` × ${imageCount} images` : ''})
                         </span>
                       )}
+                      {notEnoughCredits && (
+                        <span className="text-xs font-medium text-destructive">
+                          Need {totalCredits - creditsBalance} more credits
+                        </span>
+                      )}
                     </div>
-                  );
-                })()}
-                <Button
-                  onClick={handleGenerate}
-                  disabled={bulkMode ? bulkImages.filter(i => i.url).length === 0 : !imageUrl || isUploading}
-                  className="gap-2 self-start"
-                  size="lg"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {(() => {
-                    const imageCount = bulkMode ? bulkImages.filter(i => i.url).length : 1;
-                    const totalVideos = imageCount * motionCount;
-                    return totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video';
-                  })()}
-                </Button>
-              </div>
+                    {notEnoughCredits ? (
+                      <Button
+                        onClick={() => openBuyModal('animate_video_cta')}
+                        size="lg"
+                        className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Get credits
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleGenerate}
+                        disabled={generateDisabled}
+                        size="lg"
+                        className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        {totalVideos > 1 ? `Generate ${totalVideos} Videos` : 'Generate Video'}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>
