@@ -1,5 +1,4 @@
 import React from 'react';
-import { Coins } from 'lucide-react';
 import { estimateCredits, type CreditEstimateParams } from '@/config/videoCreditPricing';
 
 interface CreditEstimateBoxProps {
@@ -12,8 +11,7 @@ export const CreditEstimateBox = React.forwardRef<HTMLDivElement, CreditEstimate
 
     return (
       <div ref={ref} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
-        <Coins className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Estimated cost:</span>
+        <span className="text-sm text-muted-foreground">Cost:</span>
         <span className="text-sm font-semibold text-foreground">{credits} credits</span>
       </div>
     );

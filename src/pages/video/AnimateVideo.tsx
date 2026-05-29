@@ -1317,8 +1317,7 @@ export default function AnimateVideo() {
                 return (
                   <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
-                      <Sparkles className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-sm text-muted-foreground">Estimated cost:</span>
+                      <span className="text-sm text-muted-foreground">Cost:</span>
                       <span className="text-sm font-semibold text-foreground">
                         {totalVideos > 1 ? (
                           <>{perVideo} × {totalVideos} video{totalVideos > 1 ? 's' : ''} = {totalCredits} credits</>
