@@ -17,6 +17,7 @@ import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { useProductImageScenes, dbToFrontend } from '@/hooks/useProductImageScenes';
 import { CATEGORY_KEYWORDS } from '@/components/app/product-images/constants';
+import { getCategoryLabel } from '@/lib/productCategories';
 import { getTriggeredBlocks, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal, type AddProductTab } from '@/components/app/AddProductModal';
 import { Input } from '@/components/ui/input';
