@@ -17,6 +17,9 @@ export interface PublicScene {
   category_collection: string | null;
   sub_category: string | null;
   preview_image_url: string | null;
+  category_sort_order?: number | null;
+  sub_category_sort_order?: number | null;
+  sort_order?: number | null;
 }
 
 const PUBLIC_COLUMNS =
