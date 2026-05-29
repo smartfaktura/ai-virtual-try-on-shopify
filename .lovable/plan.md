@@ -1,41 +1,29 @@
-# Bulk mode polish — Add Products
+# Edit Product — Main photo polish
 
-All edits scoped to `src/components/app/ManualProductTab.tsx`, only inside the `isBatchMode` branch (line 660+). No DB, no schema, no other components touched.
+Scope: `src/components/app/ManualProductTab.tsx`, the side-by-side block starting at line 994. UI only. No data/business logic.
 
-## 1. Safe image fallback (no crash, no UI break)
+## What's off today
 
-The expanded thumbnail currently shows the raw `alt` text overflowing when the object URL fails to load (visible in screenshot). The actual uploaded image continues to render normally — we only add a graceful fallback for the failure case.
+- The main-photo tile is `w-[180px] h-[180px]` with `object-contain` but **no background** on the tile. Portrait shots (like the screenshot dress) sit inside an invisible square, so the image looks like it's floating with awkward empty gaps on the sides — not a framed tile.
+- The hover row with **X** (remove) and ✎ (replace) is gated by `opacity-0 group-hover:opacity-100`. On mobile/touch there is no hover, so those buttons are unreachable. Same issue on the Extra Angles `X` chips (line 1093).
 
-- Add local state `const [brokenThumbs, setBrokenThumbs] = useState<Record<string, boolean>>({})`.
-- On `<img>` `onError` set `brokenThumbs[item.id] = true`. The image element keeps its current `src={item.previewUrl}` and styling — nothing changes on the happy path.
-- Only when `brokenThumbs[item.id]` is true, render a small `<Package />` icon centered inside the same `bg-muted/40` tile instead of the broken `<img>`. This is purely a fallback; the user's uploaded image is still the primary content.
-- Apply the same `onError` handling to the collapsed `w-12 h-12` thumbnail (line ~720) so the two states stay consistent.
+## Fix
 
-Safety: purely additive UI state, no effect on data or submission.
+1. Frame the main photo tile so any aspect ratio sits nicely
+   - Keep the 180×180 square footprint (the user explicitly does not want it bigger).
+   - Add `bg-muted/30` + a hairline `border border-border/60` to the tile so the letterboxed area reads as an intentional frame, not empty space. Keep `object-contain` so portraits/landscapes are never cropped.
+   - Tile classes become: `relative group w-[180px] h-[180px] rounded-xl overflow-hidden flex items-center justify-center bg-muted/30 border border-border/60 mt-2` (drop the redundant `aspect-square` since width=height already).
 
-## 2. Replace free-form "Type" input with canonical Category picker
+2. Make action buttons usable on touch
+   - Replace `opacity-0 group-hover:opacity-100 transition-opacity` on the main-photo action row (line 1010) with `opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity`. Buttons are always visible on mobile, hover-revealed on desktop (unchanged desktop behaviour).
+   - Bump the button backdrop from `bg-background/80` to `bg-background/90 shadow-sm` so the always-on mobile chips remain legible against any image.
+   - Apply the same `opacity-100 sm:opacity-0 sm:group-hover/ref:opacity-100` swap to the Extra Angles per-tile `X` button (line 1093) so users can remove an angle on mobile too.
 
-Mirrors single-mode behaviour and matches the brand category picker the user already approved.
+## Safety
 
-- Extend `BatchItem` with `userCategory?: string | null` (default `null`). Existing items in state get `null` via spread defaults — backwards compatible.
-- Replace the second column `<Input>` "Type (e.g. Shoes)" (line ~779) with a button styled like the single-mode picker trigger: `h-8 text-xs rounded-md border px-2 flex items-center justify-between gap-1.5 text-left`. Label = `getCategoryLabel(item.userCategory) || item.productType || 'Choose category'` (so AI's free-form type still shows until user picks).
-- Add state `const [activeCategoryItemId, setActiveCategoryItemId] = useState<string | null>(null)`. Clicking the button sets it; the existing `<CategoryPickerModal>` is rendered once at the bottom of the batch tree with `open={!!activeCategoryItemId}`, `value={batchItems.find(b => b.id === activeCategoryItemId)?.userCategory ?? null}`, `onChange={(v) => { updateBatchItem(activeCategoryItemId!, 'userCategory', v); setActiveCategoryItemId(null); }}`, `onOpenChange={(o) => !o && setActiveCategoryItemId(null)}`. We import `CategoryPickerModal` and `getCategoryLabel` the same way single mode does (already imported in this file — verified via grep before editing).
-- Remove the QUICK_TYPES chip block + "Change category" dotted link (lines 807-835). The picker supersedes them.
-- Collapsed row subtitle (line 724) becomes: `getCategoryLabel(item.userCategory) || item.productType || '—'`.
-- Persistence — `handleSubmitBatch` insert payload (line 599):
-  - `product_type: (getCategoryLabel(item.userCategory) || item.productType || '').substring(0, 100)` — keeps the column populated for downstream photography logic.
-  - Add `analysis_json: item.userCategory ? { userCategory: item.userCategory } : null` — same shape single mode writes.
-  - GTM call uses the same resolved label.
-
-Safety: `product_type` column stays a string (never null), `analysis_json` is either null or a small object — both already supported by existing inserts in this file.
-
-## 3. Hide description field in bulk expanded card
-
-Remove the `<Textarea>` description (lines 837-848) from the bulk expanded card. Dimensions input moves to its own full-width row below the name+category row.
-
-- `description` still exists on `BatchItem` and is still set by AI analysis if it arrives — we just don't render an editor for it in bulk. On submit we send `item.description.trim().substring(0, 500)` as today (often empty string, which the column already accepts).
-
-Safety: column is nullable / accepts empty string; no insert shape change.
+- Pure className changes; no state, props, handlers, or layout structure touched.
+- Desktop behaviour identical (hover-reveal preserved at `sm:` and above).
+- No effect on the upload empty state, the batch UI, or the form below.
 
 ## Files
 

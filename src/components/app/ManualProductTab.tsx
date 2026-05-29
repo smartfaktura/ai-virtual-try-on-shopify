@@ -1001,13 +1001,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                   Main photo
                 </span>
               </div>
-              <div className="relative group w-[180px] h-[180px] aspect-square rounded-xl overflow-hidden flex items-center justify-center mt-2">
+              <div className="relative group w-[180px] h-[180px] rounded-xl overflow-hidden flex items-center justify-center mt-2 bg-muted/30 border border-border/60">
                 <img
                   src={singleImage.previewUrl}
                   alt={title || 'Product preview'}
                   className="w-full h-full object-contain"
                 />
-                <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   {!isEditing && (
                     <button
                       onClick={() => {
@@ -1028,12 +1028,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                         setTextureImage(null);
                         hasManualEdits.current = { title: false, productType: false, description: false };
                       }}
-                      className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      className="w-7 h-7 rounded-full bg-background/90 shadow-sm backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  <label className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-muted cursor-pointer transition-colors">
+                  <label className="w-7 h-7 rounded-full bg-background/90 shadow-sm backdrop-blur-sm flex items-center justify-center hover:bg-muted cursor-pointer transition-colors">
                     <Pencil className="w-3.5 h-3.5" />
                     <input
                       type="file"
@@ -1090,7 +1090,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
                             </div>
                             <button
                               onClick={(e) => { e.preventDefault(); setter(null); }}
-                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/90 shadow-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/ref:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
                             >
                               <X className="w-3 h-3" />
                             </button>
