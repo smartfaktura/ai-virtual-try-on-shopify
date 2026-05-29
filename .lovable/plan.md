@@ -1,46 +1,35 @@
 ## Goal
-Make `/app/video/animate` and `/app/video/start-end` look polished and consistent on mobile (≤390px). Currently AnimateVideo has horizontal overflow and over-padded cards on mobile; StartEnd is mostly fine but needs minor polish to stay in sync.
+Tighten mobile (≤390px) on both `/app/video/animate` and `/app/video/start-end`. Main complaint: Upload + Library buttons inside each Start/End frame slot stack vertically and look narrow. Secondary: the mobile "Transition ↓" chip lands at the bottom instead of between the two frames, and AnimateVideo's "Choose from Library" label gets truncated on mobile.
 
-## Issues found (mobile, 390×844)
+## Issues found
 
-**AnimateVideo (`src/pages/video/AnimateVideo.tsx`)**
-1. **Horizontal overflow on the Batch Mode card header.** The long description "Upgrade to any paid plan to animate multiple images at once" sits in a `flex` row next to an "Upgrade" pill + `Switch`, with no `min-w-0` / wrapping → pushes the row past viewport, clipping the Upgrade pill and Switch and forcing the whole page to scroll horizontally.
-2. **Card padding too large on mobile.** Several cards use `p-6` / `p-8` / `px-6 py-3` unconditionally (Batch Mode header, upload card body, pipeline-active card, error card). Should be `p-4 sm:p-6` / `p-5 sm:p-8`.
-3. **Three secondary buttons (`Upload image` / `Choose from Library` / `Paste (⌘V)`) cram into a `flex gap-2` row on mobile** and visually overflow the card. On mobile the third "Paste" button should be hidden (paste isn't a mobile gesture anyway) and the two remaining buttons should be `grid grid-cols-2`.
-4. **Pipeline-active card** (line ~1362) uses `p-8` and a 12×12 avatar — too big on mobile. Switch to `p-5 sm:p-8`.
+**StartEndVideo — `src/components/app/video/start-end/StartEndUploadPair.tsx`**
+1. **Upload / Library buttons stack vertically on mobile.** The wrapper is `flex flex-col sm:flex-row gap-2.5 w-full max-w-[280px]` → on mobile the two buttons sit in a narrow 280px column, one on top of the other. User reads this as "super narrow buttons not correct".
+2. **Mobile "Transition ↓" chip lives outside the grid**, in a sibling `<div className="flex sm:hidden ... my-1">` rendered AFTER both Slots. Visually the chip sits below the End frame instead of between Start and End.
+3. Each Slot uses `aspect-[4/5] min-h-[280px]` — fine, keep.
 
-**StartEndVideo (`src/pages/video/StartEndVideo.tsx`)**
-1. Audio & Note card uses `p-5 sm:p-6` — fine, keep.
-2. Recent-result card uses `p-4 sm:px-5 sm:py-4` but "View video" button + close X may crowd a long timestamp. Add `min-w-0` to the text column and `hidden sm:inline` qualifier on the timestamp prefix.
-3. Sticky bottom bar already responsive (`flex-col sm:flex-row`). No change needed.
-
-**Consistency (both)**
-- Both pages use the same `max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32` shell — keep as is.
-- Both pages use the same `PageHeader` and same sticky bottom CTA pattern — keep consistent.
+**AnimateVideo — `src/pages/video/AnimateVideo.tsx`**
+1. The "Choose from Library" button label truncates on mobile (`Choose from Lib...`) because the 2-col grid gives each button ~165px and the label + icon + padding don't fit. Shorten the mobile label to "Library" (keep "Choose from Library" on `sm:` and up). Same idea on the "Upload image" → keep as-is, it fits.
 
 ## Changes
 
-### `src/pages/video/AnimateVideo.tsx`
-1. **Batch Mode header (lines ~558–596)**: wrap the inner content row with `min-w-0`, set the title/description `<div>` to `min-w-0 flex-1`, allow the description `<p>` to wrap (`break-words`). Change outer padding from `px-6 py-3` to `px-4 sm:px-6 py-3`. Wrap the Switch + Upgrade pill cluster in `shrink-0`.
-2. **Upload card body (line ~598)**: `p-6` → `p-4 sm:p-6`.
-3. **Secondary buttons row (lines ~667–700)**: change from `flex items-center gap-2` to `grid grid-cols-2 sm:grid-cols-3 gap-2`. Hide the "Paste (⌘V)" button on mobile (`hidden sm:inline-flex`). Reduce label on mobile: keep "Upload image" / "Choose from Library" but allow `truncate`.
-4. **Pipeline-active card (line ~1362)**: `p-8` → `p-5 sm:p-8`; avatar `w-12 h-12` → `w-11 h-11 sm:w-12 sm:h-12`.
-5. **Error card (line ~1423)**: `p-6` → `p-4 sm:p-6`.
-6. **Sticky CTA bar (line ~1319)**: already `p-4 sm:p-5 flex-col sm:flex-row` — no change.
+### `src/components/app/video/start-end/StartEndUploadPair.tsx`
+1. Buttons row inside `Slot` (the `flex flex-col sm:flex-row ... max-w-[280px]` wrapper):
+   - Change to `flex flex-row gap-2 w-full max-w-[320px]` so Upload and Library always sit side by side, and grow to fit the slot width on mobile.
+2. Mobile direction chip:
+   - Remove the standalone `<div className="flex sm:hidden ... my-1">` block at the bottom.
+   - Add a new mobile-only absolutely-positioned chip inside the existing `<div className="relative">`, mirroring the desktop one: `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 sm:hidden`, content `Transition` + `ArrowDown`. This places it between Start (top) and End (bottom) in the single-column grid.
 
-### `src/pages/video/StartEndVideo.tsx`
-1. **Recent-result card (lines ~273–301)**: add `min-w-0` to the text column; wrap timestamp prefix "Generated " in `hidden sm:inline` so mobile shows only the date.
-2. No other changes — page is structurally clean.
+### `src/pages/video/AnimateVideo.tsx`
+1. Secondary "Choose from Library" button (around line 678):
+   - Replace the static label with `<span className="truncate"><span className="sm:hidden">Library</span><span className="hidden sm:inline">Choose from Library</span></span>` so mobile shows "Library", desktop keeps the full label. No other changes.
 
 ## Out of scope
-- No logic changes (no pipeline, no credit math, no upload/handler changes).
-- No StartEnd refactor — only the small text-column tweak.
-- No PageHeader changes (shared component, already responsive).
-- No desktop visual changes — all edits are mobile-first additions (`p-4 sm:p-6`, `grid-cols-2 sm:grid-cols-3`, `hidden sm:inline-flex`).
+- No logic changes anywhere.
+- No changes to `PageHeader`, sticky bottom CTA, `CreditEstimateBox`, `TransitionGoalSelector`, `TransitionRefinementPanel`, `PreservationRulesPanel`, `TransitionSummaryCard`, or `AudioModeSelector` — they read clean at 390px.
+- No desktop visual changes — mobile-only additions or label swaps.
 
 ## Verification
-Re-screenshot both pages at 390×844 after edits and confirm:
-- No horizontal page scroll on AnimateVideo
-- Batch Mode header fits in viewport with Upgrade pill + Switch fully visible
-- Secondary buttons fit cleanly in 2 columns on mobile, 3 on sm+
-- StartEnd layout unchanged on desktop, recent-result card tidy on mobile
+At 390×844:
+- `/app/video/start-end`: Upload + Library sit side by side inside each frame slot; "Transition ↓" chip sits centered between Start and End in single-column layout.
+- `/app/video/animate`: "Upload image" + "Library" both fit cleanly with no truncation on mobile; full "Choose from Library" label still shows from `sm` breakpoint up.

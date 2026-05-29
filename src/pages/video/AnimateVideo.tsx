@@ -684,7 +684,7 @@ export default function AnimateVideo() {
                   disabled={isUploading}
                 >
                   <FolderOpen className="h-3 w-3 shrink-0" />
-                  <span className="truncate">Choose from Library</span>
+                  <span className="truncate"><span className="sm:hidden">Library</span><span className="hidden sm:inline">Choose from Library</span></span>
                 </Button>
                 {!bulkMode && (
                   <Button
