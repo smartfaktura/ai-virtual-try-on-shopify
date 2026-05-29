@@ -175,15 +175,34 @@ Return ONLY the JSON object, no markdown or explanation.`,
     }
 
     // Layer 2/3: validate AI's category against canonical enum, fall back to
-    // regex over title+productType, else null. Safe default never crashes UI.
+    // regex over title+productType. Reject anything that looks like a location.
+    const SPACE_RE = /\b(court|room|kitchen|bedroom|living\s*room|bathroom|hallway|hall|office|facade|building|street|sidewalk|park|stadium|arena|gym|swimming\s*pool|pool|beach|mountain|forest|landscape|interior|exterior|space|garage|warehouse|store\s+front|cafe\s+interior|restaurant\s+interior|lobby|terrace|balcony|garden|backyard|lawn)\b/i;
     try {
       if (parsed && typeof parsed === "object") {
         const p = parsed as Record<string, unknown>;
-        const userCategory = resolveCanonicalCategory(
-          p.category,
-          typeof p.title === "string" ? p.title : null,
-          typeof p.productType === "string" ? p.productType : null,
-        );
+        const title = typeof p.title === "string" ? p.title : "";
+        const productType = typeof p.productType === "string" ? p.productType : "";
+
+        // Server-side saugiklis: reject locations even if the model ignored the rule.
+        const looksLikeSpace =
+          p.kind === "not_product" ||
+          (!p.category && (SPACE_RE.test(title) || SPACE_RE.test(productType)));
+
+        if (looksLikeSpace) {
+          return new Response(
+            JSON.stringify({
+              kind: "not_product",
+              reason:
+                typeof p.reason === "string" && p.reason
+                  ? p.reason
+                  : "Image looks like a location, not a product",
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+
+        const userCategory = resolveCanonicalCategory(p.category, title || null, productType || null);
+        p.kind = "product";
         p.userCategory = userCategory;
       }
     } catch (resolveErr) {
