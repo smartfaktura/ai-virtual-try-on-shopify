@@ -789,10 +789,14 @@ function defaultOutfitDirective(category?: string, details?: DetailSettings, gen
   return `OUTFIT LOCK — Wearing exactly: ${outfitStr}. CRITICAL: This exact outfit must appear identically in every on-model shot — same colors, same fit, same materials. Clothing must NOT compete with the product.${accStr}${colorTag}`;
 }
 
-// ── AI-styling wardrobe directive (scene-aware, generic — lets AI decide) ──
+// ── AI-styling wardrobe directive (scene-aware) ──
+// If user provided a styling direction, emit it as STYLING PRIORITY only.
+// If empty, return '' — the scene/variation prompt is the sole styling source.
 function buildAiWardrobeDirective(d: DetailSettings): string {
-  const noteClause = d.customOutfitNote ? ` STYLING PRIORITY: ${d.customOutfitNote}` : '';
-  return `WARDROBE DIRECTION: Follow the variation prompt as the styling source of truth. Add only the visible clothing or styling elements that naturally support the scene, product placement, and composition. Do not force a full outfit if the image only needs an open neckline, bare shoulder, hand, wrist, cropped body area, or product interaction. Wardrobe must stay minimal, appropriate, and secondary to the product, without covering, recoloring, reshaping, or distracting from it. Keep styling consistent across this batch.${noteClause}`;
+  if (d.customOutfitNote && d.customOutfitNote.trim()) {
+    return `STYLING PRIORITY: ${d.customOutfitNote.trim()}`;
+  }
+  return '';
 }
 
 // Returns AI directive when AI styling is selected and category isn't a "product IS the outfit" one;
@@ -823,7 +827,8 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
     if (sceneNeedsPerson) {
       let dir = defaultPersonDirective(category);
       if (!resolvedOutfitHint) {
-        dir += ` ${aiOrDefaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
+        const outfitDir = aiOrDefaultOutfitDirective(category, d, gender, garmentType, halfPortrait);
+        if (outfitDir) dir += ` ${outfitDir}`;
       }
       dir += ' Hyper-realistic skin texture with visible pores, natural anatomy, and correct proportions.';
       return dir;
@@ -835,7 +840,8 @@ function buildPersonDirective(d: DetailSettings, category?: string, sceneNeedsPe
 
   // Append outfit using structured config or smart default for on-model scenes
   if (sceneNeedsPerson && !resolvedOutfitHint) {
-    directive += ` ${aiOrDefaultOutfitDirective(category, d, gender, garmentType, halfPortrait)}`;
+    const outfitDir = aiOrDefaultOutfitDirective(category, d, gender, garmentType, halfPortrait);
+    if (outfitDir) directive += ` ${outfitDir}`;
   }
 
   // Append model reference if present
