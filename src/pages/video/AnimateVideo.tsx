@@ -58,7 +58,7 @@ export default function AnimateVideo() {
 
   const { bulkItems, isBulkRunning, isBulkComplete, runBulkAnimatePipeline, resetBulk } = useBulkVideoProject();
 
-  const { balance: creditsBalance, plan } = useCredits();
+  const { balance: creditsBalance, plan, openBuyModal } = useCredits();
   const { upload, isUploading, progress: uploadProgress } = useFileUpload();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
