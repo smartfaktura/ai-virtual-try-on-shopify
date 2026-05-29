@@ -92,7 +92,7 @@ const FAQS = [
   },
   {
     q: 'What exactly counts as 1 credit?',
-    a: 'A standard image is 4–6 credits depending on complexity. Video generation runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model generation is 20 credits per image; adding a public Brand Model is free. You always see the cost before you generate.',
+    a: 'A standard image is 4–6 credits depending on complexity. Video generation runs 25–60 credits per clip. 4K upscaling is ~5 credits. Brand Model generation is 20 credits per image; adding a public Brand Model is free. You always see the cost before you generate.',
   },
   {
     q: 'Do unused credits roll over?',
