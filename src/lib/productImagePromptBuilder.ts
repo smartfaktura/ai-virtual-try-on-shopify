@@ -1547,8 +1547,10 @@ export function buildDynamicPrompt(
     prompt += ` SCENE REFERENCE — Replicate the exact composition, camera angle, lighting setup, and environment from the provided scene reference image. Replace only the product with ${product.title} (${analysis?.category || 'product'}). Maintain identical framing, perspective, and overall styling.`;
   }
 
-  // Product reference isolation — prevent AI from picking up extra garments from the product photo
-  prompt += ` PRODUCT REFERENCE ISOLATION — The product reference image shows "${product.title}". Focus ONLY on this specific product. Ignore any other garments, clothing items, or accessories visible in the reference photo. The model should wear the product exactly as described, with the outfit specified in the wardrobe note — do NOT reproduce other clothing from the reference image.`;
+  // PRODUCT REFERENCE ISOLATION block removed — fidelity already covered by CRITICAL #2, #6,
+  // and the final [PRODUCT IMAGE] reproduce-only directive. Outfit matching handled by WARDROBE NOTE
+  // and CRITICAL #7 when wantsPeople === true.
+
 
   // Append custom note at the end
   if (details.customNote && !prompt.includes(details.customNote)) {

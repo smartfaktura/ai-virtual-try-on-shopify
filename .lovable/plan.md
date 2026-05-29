@@ -1,47 +1,31 @@
-# Fix: Resolve dynamic tokens inside scene `outfit_hint`
+## Goal
+Stop injecting the "PRODUCT REFERENCE ISOLATION — The product reference image shows ..." block into every `/app/generate/product-images` prompt sent to Nano Banana / Gemini.
 
-## Problem
+## Change
+**File:** `src/lib/productImagePromptBuilder.ts`
+**Line:** 1550–1551
 
-Tokens like `{{productMainHex}}`, `{{productSecondaryHex}}`, `{{productAccentHex}}`, `{{backgroundBaseHex}}` (and the rest of the 70+ token vocabulary) resolve correctly when authored in `prompt_template`, but pass through as **literal text** when authored in `outfit_hint`.
-
-## Root cause
-
-`src/lib/productImagePromptBuilder.ts` → `resolveOutfitHintText()` (lines 925–935) only does two narrow `.replace()` calls:
-
+Delete the unconditional append:
 ```ts
-return scene.outfitHint
-  .replace(/\{\{aestheticColor\}\}/gi, colorDesc)
-  .replace(/\{\{productName\}\}/gi, productName || 'the product');
+// Product reference isolation — prevent AI from picking up extra garments from the product photo
+prompt += ` PRODUCT REFERENCE ISOLATION — The product reference image shows "${product.title}". Focus ONLY on this specific product. Ignore any other garments, clothing items, or accessories visible in the reference photo. The model should wear the product exactly as described, with the outfit specified in the wardrobe note — do NOT reproduce other clothing from the reference image.`;
 ```
 
-It never invokes the generic `resolveToken(token, ctx)` resolver that `prompt_template` runs through (around line 1393). So any other `{{…}}` token in an outfit_hint reaches Gemini unresolved.
+That's it — one block removed. No conditions, no flag, no admin UI. Pure deletion.
 
-## Fix (simple, ~10 lines)
-
-Update `resolveOutfitHintText()` to run the same generic resolver as `prompt_template`, while keeping the existing `aestheticColor` behavior (it's not a token in the generic resolver — it's outfit-hint-specific).
-
-1. Change the function signature to also accept the `TokenContext` (or the inputs needed to build it: `product`, `analysis`, `details`, `scene`).
-2. After the two existing narrow replacements, run:
-   ```ts
-   out = out.replace(/\{\{(\w+)\}\}/g, (match, token) => {
-     const v = resolveToken(token, ctx);
-     return v === '' ? match : v; // leave unknown tokens untouched, same as prompt_template path
-   });
-   ```
-   (Mirror the exact behavior used for `prompt_template` so we don't accidentally blank tokens that are intentionally empty.)
-3. Update the two call sites of `resolveOutfitHintText` (around lines 1022 and 1457) to pass the already-built `TokenContext` / required inputs — both call sites are inside the main builder where `ctx` is already in scope, so no new plumbing.
+## Why this is safe
+- The remaining product-fidelity anchors stay intact:
+  - CRITICAL #2 ("product MUST look EXACTLY like [PRODUCT IMAGE]")
+  - CRITICAL #6 (BACKGROUND ISOLATION — extract only product object)
+  - Final `[PRODUCT IMAGE] reproduce ONLY the product object (shape, colors, labels, materials). IGNORE all background, surfaces, and environment` line
+- OUTFIT CONSISTENCY (CRITICAL #7) still enforces wardrobe-note matching when a model is present.
+- WARDROBE NOTE block (when `wantsPeople === true`) still carries the per-scene outfit spec.
 
 ## Out of scope
+- No changes to outfit logic, wardrobe note, scene templates, or any other injection.
+- No admin panel.
+- No conditional gating — just remove.
 
-- No changes to `outfit_hint` schema or admin UI.
-- No changes to which tokens exist (Token System v2 stays as-is).
-- No edge-function or DB changes.
-- `generate-workflow` edge function is not affected — outfit_hint is resolved client-side before payload is sent.
-
-## Verification
-
-1. Pick a phone-case scene whose `outfit_hint` contains `{{productMainHex}}` / `{{backgroundBaseHex}}`.
-2. Generate → inspect the final prompt (existing prompt log/debug panel).
-3. Confirm the outfit line now contains the actual hex value (e.g. `#E67F2C`) instead of `{{productMainHex}}`.
-4. Confirm `{{aestheticColor}}` and `{{productName}}` still resolve as before.
-5. Generate a scene whose outfit_hint has no tokens — must be unchanged.
+## Validation
+- Generate one jewelry-on-model scene → confirm outfit still respects wardrobe note (other product-fidelity rules should hold the line).
+- Generate one still-life (chair / fragrance) → confirm prompt no longer contains the nonsensical "wardrobe note" reference.
