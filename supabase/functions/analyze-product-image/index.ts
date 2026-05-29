@@ -177,6 +177,22 @@ Return ONLY the JSON object, no markdown or explanation.`,
       }
     }
 
+    // Layer 2/3: validate AI's category against canonical enum, fall back to
+    // regex over title+productType, else null. Safe default never crashes UI.
+    try {
+      if (parsed && typeof parsed === "object") {
+        const p = parsed as Record<string, unknown>;
+        const userCategory = resolveCanonicalCategory(
+          p.category,
+          typeof p.title === "string" ? p.title : null,
+          typeof p.productType === "string" ? p.productType : null,
+        );
+        p.userCategory = userCategory;
+      }
+    } catch (resolveErr) {
+      console.warn("Category resolution failed (continuing without):", resolveErr);
+    }
+
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
