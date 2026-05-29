@@ -1207,7 +1207,28 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
             </>
           )}
 
+          {/* Product Category — canonical 35+ subcategory picker (drives Visual Studio scene selection) */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-foreground">
+              Product Category <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <button
+              type="button"
+              onClick={() => setCategoryPickerOpen(true)}
+              className="w-full h-9 px-3 text-xs text-left border border-input rounded-md bg-background hover:bg-muted/50 transition-colors flex items-center justify-between"
+            >
+              <span className={cn(!(userCategory || suggestedCategory) && 'text-muted-foreground')}>
+                {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
+                {!userCategory && suggestedCategory && (
+                  <span className="ml-1.5 text-[10px] text-muted-foreground">· suggested</span>
+                )}
+              </span>
+              <Pencil className="w-3 h-3 text-muted-foreground" />
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
             <div className="space-y-1">
               <Label htmlFor="product-desc" className="text-xs font-medium text-foreground">Description</Label>
               <Textarea
