@@ -596,7 +596,7 @@ export default function AnimateVideo() {
               </div>
 
 
-              <div className="p-6 space-y-4 flex-1 flex flex-col">
+              <div className="p-4 sm:p-6 space-y-4 flex-1 flex flex-col">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
                   {bulkMode ? 'Upload your product images' : 'Upload your product image'}
