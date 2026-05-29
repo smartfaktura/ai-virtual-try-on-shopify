@@ -54,6 +54,8 @@ interface BatchItem {
   title: string;
   productType: string;
   userCategory: string | null;
+  /** AI-suggested canonical category — session-only, never persisted. Used to render the "Suggested" pill. */
+  suggestedCategory: string | null;
   description: string;
   dimensions: string;
   isAnalyzing: boolean;
