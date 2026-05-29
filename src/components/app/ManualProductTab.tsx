@@ -535,8 +535,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         weight: weight.trim() || null,
         materials: materials.trim() || null,
         color: color.trim() || null,
-        
+
       };
+
+      // Merge userCategory into analysis_json (preserve all existing AI fields).
+      if (userCategory) {
+        const existingAnalysis = (editingProduct as any)?.analysis_json as Record<string, unknown> | null;
+        productData.analysis_json = { ...(existingAnalysis || {}), userCategory };
+      }
+
 
       if (isEditing && editingProduct) {
         const { error } = await supabase
