@@ -11,3 +11,19 @@ JEWELRY REALISM (CRITICAL): Render the jewelry as a real editorial photograph wi
 ```
 
 **Rationale:** The new version is more directive ("Render the jewelry as..." vs "No... no... no..."), explicitly calls out desirable qualities (accurate scale, crisp edges, believable material detail), and tightens the avoid-list into a single clean sentence. No other files or logic are affected.
+
+---
+
+Update the phone-cases product spec fields in `src/lib/productSpecFields.ts` (line 224).
+
+**Current field:**
+```
+{ key: 'compatibility', label: 'Compatibility', type: 'input', placeholder: 'iPhone 15 Pro' },
+```
+
+**New field:**
+```
+{ key: 'compatibility', label: 'Phone Model', type: 'input', placeholder: 'e.g. iPhone 17 Pro Max' },
+```
+
+**Rationale:** "Phone Model" is clearer to users than "Compatibility". Adding `e.g.` to the placeholder makes it obvious it's an example, not a pre-filled default value. Field key stays `compatibility` so saved data and prompt tokens remain intact.
