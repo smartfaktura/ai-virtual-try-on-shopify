@@ -16,6 +16,7 @@ import { toast, toastSophia } from '@/lib/brandedToast';
 import { gtmProductUploaded } from '@/lib/gtm';
 import { CategoryPickerModal } from '@/components/app/product-images/CategoryPickerModal';
 import { getCategoryLabel } from '@/lib/productCategories';
+import { ProductUploadTips } from '@/components/app/ProductUploadTips';
 
 interface UserProduct {
   id: string;
