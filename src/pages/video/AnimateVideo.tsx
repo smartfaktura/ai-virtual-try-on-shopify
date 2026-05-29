@@ -665,40 +665,41 @@ export default function AnimateVideo() {
               )}
 
               {/* Secondary input methods */}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30"
+                  className="text-xs h-8 gap-1.5 hover:border-primary/30 min-w-0"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
                 >
-                  <Upload className="h-3 w-3" />
-                  {bulkMode ? 'Upload images' : 'Upload image'}
+                  <Upload className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{bulkMode ? 'Upload images' : 'Upload image'}</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30"
+                  className="text-xs h-8 gap-1.5 hover:border-primary/30 min-w-0"
                   onClick={() => setLibraryPickerOpen(true)}
                   disabled={isUploading}
                 >
-                  <FolderOpen className="h-3 w-3" />
-                  Choose from Library
+                  <FolderOpen className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Choose from Library</span>
                 </Button>
                 {!bulkMode && (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default"
+                    className="hidden sm:inline-flex text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default min-w-0"
                     disabled={isUploading}
                     onClick={() => toast.info('Press ⌘V (or Ctrl+V) to paste an image')}
                   >
-                    <ClipboardPaste className="h-3 w-3" />
-                    Paste (⌘V)
+                    <ClipboardPaste className="h-3 w-3 shrink-0" />
+                    <span className="truncate">Paste (⌘V)</span>
                   </Button>
                 )}
               </div>
+
               </div>
             </div>
 
