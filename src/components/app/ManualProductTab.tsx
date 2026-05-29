@@ -1266,23 +1266,26 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         </div>
       )}
 
-      {/* Footer — only shown when an image is present */}
+      {/* Footer — floating bar matching workflow CTA */}
       {singleImage && (
-        <div className="sticky bottom-0 -mx-5 sm:-mx-7 px-5 sm:px-7 -mb-5 sm:-mb-7 pb-5 sm:pb-7 pt-3 bg-background/95 backdrop-blur border-t flex justify-end gap-3 mt-2 animate-fade-in">
-          <Button variant="ghost" onClick={onClose} disabled={isUploading} >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isUploading || isAnalyzing || !title.trim() || !singleImage}
-            className="min-w-[100px] sm:min-w-[120px]"
-          >
-            {isUploading ? (
-              <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{isEditing ? 'Saving…' : 'Uploading…'}</>
-            ) : (
-              isEditing ? 'Save Changes' : 'Add Product'
-            )}
-          </Button>
+        <div className="sticky bottom-4 z-10 max-w-full mt-4 pb-[env(safe-area-inset-bottom)] animate-fade-in">
+          <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg flex items-center justify-end gap-2 p-3 sm:p-4">
+            <Button variant="ghost" size="pill" onClick={onClose} disabled={isUploading}>
+              Cancel
+            </Button>
+            <Button
+              size="pill"
+              onClick={handleSubmit}
+              disabled={isUploading || isAnalyzing || !title.trim() || !singleImage}
+              className="min-w-[120px] sm:min-w-[140px]"
+            >
+              {isUploading ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{isEditing ? 'Saving…' : 'Uploading…'}</>
+              ) : (
+                isEditing ? 'Save Changes' : 'Add Product'
+              )}
+            </Button>
+          </div>
         </div>
       )}
 
