@@ -1048,14 +1048,11 @@ function resolveToken(token: string, ctx: TokenContext): string {
         return `OUTFIT DIRECTION — ${hint}`;
       }
       const needsOutfit = (scene.triggerBlocks || []).includes('personDetails') || (scene.triggerBlocks || []).includes('actionDetails');
-      // In AI mode, inject a lightweight product-aware directive instead of nothing
-      const isAiMode = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
-      if (isAiMode) {
-        if (!needsOutfit) return '';
-        const noteClause = details.customOutfitNote ? ` STYLING PRIORITY: ${details.customOutfitNote}` : '';
-        return `WARDROBE — Choose an outfit that naturally complements [PRODUCT]. Style should be editorial, minimal, and never compete with the product. Let clothing tones stay neutral and cohesive with the scene palette.${noteClause}`;
+      if (!needsOutfit) {
+        const isAiModeEmpty = details.outfitMode === 'ai' || (!details.outfitMode && !details.outfitConfig && !details.outfitConfigByScene);
+        return isAiModeEmpty ? '' : '';
       }
-      return needsOutfit ? defaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait')) : '';
+      return aiOrDefaultOutfitDirective(cat, details, ctx.modelGender, analysis?.garmentType, (scene.triggerBlocks || []).includes('halfPortrait'));
     }
     case 'focusArea': return resolveFocusArea(details, scene);
 
