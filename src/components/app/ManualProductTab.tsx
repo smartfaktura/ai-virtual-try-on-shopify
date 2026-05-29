@@ -1324,6 +1324,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </Button>
         </div>
       )}
+
+      <CategoryPickerModal
+        open={categoryPickerOpen}
+        onOpenChange={setCategoryPickerOpen}
+        value={userCategory}
+        suggested={suggestedCategory}
+        onChange={(id) => setUserCategory(id)}
+      />
     </div>
   );
 }
+
