@@ -226,7 +226,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           if (data.title && !hasManualEdits.current.title) setTitle(data.title);
           if (data.productType && !hasManualEdits.current.productType) setProductType(data.productType);
           if (data.description && !hasManualEdits.current.description) setDescription(data.description);
-          if (aiCategory && !userCategory) setUserCategory(aiCategory);
+          if (aiCategory) {
+            setSuggestedCategory(prev => prev ?? aiCategory);
+            setUserCategory(prev => prev ?? aiCategory);
+          }
         }
       }
     } catch (err) {
@@ -1194,10 +1197,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               <button
                 type="button"
                 onClick={() => setCategoryPickerOpen(true)}
-                className="w-full h-11 px-4 text-sm text-left border border-input rounded-xl bg-background hover:bg-muted/50 transition-colors flex items-center justify-between gap-2"
+                className={cn(
+                  'w-full h-11 px-4 text-sm text-left border border-input rounded-xl bg-background hover:bg-muted/50 transition-colors flex items-center justify-between gap-2',
+                  isAnalyzing && !(userCategory || suggestedCategory) && 'animate-pulse ring-1 ring-primary/30'
+                )}
               >
                 <span className={cn('truncate', !(userCategory || suggestedCategory) && 'text-muted-foreground')}>
-                  {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
+                  {getCategoryLabel(userCategory || suggestedCategory) || (isAnalyzing ? 'Analyzing…' : 'Choose category')}
                 </span>
                 <span className="flex items-center gap-2 shrink-0">
                   {suggestedCategory && (userCategory ?? suggestedCategory) === suggestedCategory && (
