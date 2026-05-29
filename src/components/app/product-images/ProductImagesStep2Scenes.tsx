@@ -30,7 +30,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   hoodies: 'Hoodies', streetwear: 'Streetwear', sneakers: 'Sneakers',
   boots: 'Boots', 'high-heels': 'High Heels', activewear: 'Activewear',
   eyewear: 'Eyewear', swimwear: 'Swimwear', lingerie: 'Lingerie',
-  kidswear: 'Kidswear', jeans: 'Jeans', jackets: 'Jackets',
+  kidswear: 'Kidswear', jeans: 'Jeans', trousers: 'Trousers', jackets: 'Jackets',
   'wedding-dress': 'Wedding Dress',
 };
 
