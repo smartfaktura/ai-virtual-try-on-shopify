@@ -73,6 +73,8 @@ export interface ProductAnalysis {
   version?: number;
 
   category: ProductCategory;
+  /** User-confirmed canonical category override (takes priority over `category` when set). */
+  userCategory?: ProductCategory;
   sizeClass: string;
   sizePrimaryCm?: number;
   sizeSecondaryCm?: number | null;

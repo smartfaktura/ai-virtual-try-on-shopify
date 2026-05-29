@@ -16,23 +16,7 @@ import { TEAM_MEMBERS } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 /** Category label lookup */
-const CATEGORY_LABELS: Record<string, string> = {
-  garments: 'Clothing & Apparel', 'beauty-skincare': 'Beauty & Skincare',
-  'makeup-lipsticks': 'Makeup & Lipsticks', fragrance: 'Fragrance',
-  food: 'Food & Snacks', beverages: 'Beverages', furniture: 'Furniture', 'home-decor': 'Home Decor',
-  'supplements-wellness': 'Supplements & Wellness', shoes: 'Shoes',
-  'bags-accessories': 'Bags & Accessories', 'tech-devices': 'Tech / Devices',
-  other: 'Other', backpacks: 'Backpacks',
-  'wallets-cardholders': 'Wallets & Cardholders', 'phone-cases': 'Phone Cases', belts: 'Belts', scarves: 'Scarves',
-  caps: 'Caps', hats: 'Hats', beanies: 'Beanies', 'jewellery-necklaces': 'Necklaces',
-  'jewellery-earrings': 'Earrings', 'jewellery-bracelets': 'Bracelets',
-  'jewellery-rings': 'Rings', watches: 'Watches', dresses: 'Dresses', skirts: 'Skirts',
-  hoodies: 'Hoodies', streetwear: 'Streetwear', sneakers: 'Sneakers',
-  boots: 'Boots', 'high-heels': 'High Heels', activewear: 'Activewear',
-  eyewear: 'Eyewear', swimwear: 'Swimwear', lingerie: 'Lingerie',
-  kidswear: 'Kidswear', jeans: 'Jeans', trousers: 'Trousers', jackets: 'Jackets',
-  'wedding-dress': 'Wedding Dress',
-};
+import { CATEGORY_LABELS, CATEGORY_SUPER_GROUPS } from '@/lib/productCategories';
 
 interface Step2Props {
   selectedSceneIds: Set<string>;
@@ -65,16 +49,6 @@ const GRID_CLASSES: Record<GridSize, string> = {
   '4col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4',
   '3col': 'grid-cols-3 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3',
 };
-
-const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'wedding-dress', 'hoodies', 'jeans', 'trousers', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'] },
-  { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
-  { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'phone-cases', 'belts', 'scarves', 'caps', 'hats', 'beanies', 'watches', 'eyewear'] },
-  { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },
-  { label: 'Beauty & Fragrance', ids: ['beauty-skincare', 'makeup-lipsticks', 'fragrance'] },
-  { label: 'Food & Drink', ids: ['food', 'beverages'] },
-  { label: 'Home & Lifestyle', ids: ['home-decor', 'furniture', 'tech-devices', 'supplements-wellness', 'other'] },
-];
 
 /** Refine generic parent categories to specific child when title strongly matches */
 const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
@@ -160,9 +134,12 @@ function detectRelevantCategories(products: UserProduct[], productAnalyses?: Rec
   const matched = new Set<string>();
 
   for (const p of products) {
-    // Try AI analysis first, then cached analysis_json
-    const rawCat = productAnalyses?.[p.id]?.category
-      || ((p as any).analysis_json as { category?: string } | null)?.category;
+    // Priority: user-confirmed pick > live AI analysis > cached analysis_json
+    const cached = (p as any).analysis_json as { category?: string; userCategory?: string } | null;
+    const rawCat = cached?.userCategory
+      || productAnalyses?.[p.id]?.category
+      || cached?.category;
+
 
     if (rawCat) {
       const valid = normalizeAndValidateCategory(rawCat, p.title || '');

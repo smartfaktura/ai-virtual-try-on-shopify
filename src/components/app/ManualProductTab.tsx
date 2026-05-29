@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast, toastSophia } from '@/lib/brandedToast';
 import { gtmProductUploaded } from '@/lib/gtm';
+import { CategoryPickerModal } from '@/components/app/product-images/CategoryPickerModal';
+import { getCategoryLabel } from '@/lib/productCategories';
 
 interface UserProduct {
   id: string;
@@ -123,6 +125,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [expandedChips, setExpandedChips] = useState<Record<string, boolean>>({});
   const [singleChipsExpanded, setSingleChipsExpanded] = useState(false);
 
+  // Canonical Product Category (single-edit). User pick wins; falls back to AI suggestion.
+  const [userCategory, setUserCategory] = useState<string | null>(null);
+  const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+
+
   // Per-item expand/collapse for batch cards. When AI analysis fills the fields,
   // we collapse the card to a tidy row so the modal stays scannable.
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -146,7 +154,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (editingProduct.packaging_image_url) setPackagingImage({ previewUrl: editingProduct.packaging_image_url });
       if (editingProduct.inside_image_url) setInsideImage({ previewUrl: editingProduct.inside_image_url });
       if (editingProduct.texture_image_url) setTextureImage({ previewUrl: editingProduct.texture_image_url });
-      
+
+      // Load Product Category from analysis_json (user pick wins, else AI suggestion)
+      const analysis = (editingProduct as any).analysis_json as { category?: string; userCategory?: string } | null;
+      setUserCategory(analysis?.userCategory || null);
+      setSuggestedCategory(analysis?.category || null);
+
       // Load extra fields
       if (editingProduct.weight) setWeight(editingProduct.weight);
       if (editingProduct.materials) setMaterials(editingProduct.materials);
@@ -154,6 +167,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
       if (editingProduct.weight || editingProduct.materials || editingProduct.color) setMoreDetailsOpen(true);
     }
   }, [editingProduct]);
+
 
   // Consume initialFiles once when provided (e.g. from page-level drag overlay or empty-state drop)
   const consumedInitialRef = useRef(false);
@@ -523,8 +537,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         weight: weight.trim() || null,
         materials: materials.trim() || null,
         color: color.trim() || null,
-        
+
       };
+
+      // Merge userCategory into analysis_json (preserve all existing AI fields).
+      if (userCategory) {
+        const existingAnalysis = (editingProduct as any)?.analysis_json as Record<string, unknown> | null;
+        productData.analysis_json = { ...(existingAnalysis || {}), userCategory };
+      }
+
 
       if (isEditing && editingProduct) {
         const { error } = await supabase
@@ -1186,7 +1207,28 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
             </>
           )}
 
+          {/* Product Category — canonical 35+ subcategory picker (drives Visual Studio scene selection) */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-foreground">
+              Product Category <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <button
+              type="button"
+              onClick={() => setCategoryPickerOpen(true)}
+              className="w-full h-9 px-3 text-xs text-left border border-input rounded-md bg-background hover:bg-muted/50 transition-colors flex items-center justify-between"
+            >
+              <span className={cn(!(userCategory || suggestedCategory) && 'text-muted-foreground')}>
+                {getCategoryLabel(userCategory || suggestedCategory) || 'Choose category'}
+                {!userCategory && suggestedCategory && (
+                  <span className="ml-1.5 text-[10px] text-muted-foreground">· suggested</span>
+                )}
+              </span>
+              <Pencil className="w-3 h-3 text-muted-foreground" />
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
             <div className="space-y-1">
               <Label htmlFor="product-desc" className="text-xs font-medium text-foreground">Description</Label>
               <Textarea
@@ -1282,6 +1324,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
           </Button>
         </div>
       )}
+
+      <CategoryPickerModal
+        open={categoryPickerOpen}
+        onOpenChange={setCategoryPickerOpen}
+        value={userCategory}
+        suggested={suggestedCategory}
+        onChange={(id) => setUserCategory(id)}
+      />
     </div>
   );
 }
+
