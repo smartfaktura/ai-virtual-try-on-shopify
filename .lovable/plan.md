@@ -1,62 +1,39 @@
-## Goal
+# Fix false "Custom Background" badge on scenes
 
-Raise video generation costs so they cover Kling API spend:
+## Problem
 
-- **Animate an Image** (5s): `10 → 25` credits
-- **Start & End Video** (5s): `20 → 35` credits
+`Soft Lounge Glow`, `Waistband Fit Closeup` (and likely others) show the **Custom Background** badge in Step 2 of Product Images, but selecting them does **not** actually feed a user-chosen backdrop into generation.
 
-This is a small change — pricing lives in a single source-of-truth file that both the UI and the queue (`enqueue_generation`) consume.
-
-## Files to change
-
-### 1. `src/config/videoCreditPricing.ts` (core)
-The whole estimator reads from one constant object. Update:
+Root cause: the badge in `src/components/app/product-images/ProductImagesStep2Scenes.tsx` (line 193) detects "has background" by string-matching `{{background}}` in `promptTemplate`:
 
 ```ts
-animate: {
-  base5s: 25,        // was 10
-  base10s: 40,       // was 18  (scaled proportionally; see note)
-  premiumMotion: 2,
-  ambient: 4,
-},
-startEnd: {
-  base5s: 35,        // was 20
-  ambient: 0,
-  premiumTransition: 0,
-},
+const hasBackground = scene.promptTemplate?.includes('{{background}}');
 ```
 
-All these consumers automatically pick up the new numbers:
-- `src/pages/video/AnimateVideo.tsx` (cost chip, generate button, bulk estimator)
-- `src/pages/video/StartEndVideo.tsx`
-- `src/hooks/useGenerateVideo.ts` (sent to `enqueue_generation` as `credits_reserved`)
-- `src/components/app/video/CreditEstimateBox.tsx`
+But the real source of truth — confirmed in the admin editor screenshot — is the scene's `triggerBlocks` array. Both offending scenes contain the literal `{{background}}` token in their template text, yet their `triggerBlocks` does **not** include `'background'` (only `personDetails`, `stylingDetails`). Without the trigger block, the upstream resolver never substitutes the token and the user's color choice is ignored.
 
-No backend pricing constants to touch — `generate-video` edge function just trusts `credits_reserved` reserved by the RPC.
+So the badge lies.
 
-### 2. `supabase/functions/studio-chat/index.ts` (user-facing copy)
-Two lines in the SYSTEM_PROMPT pricing block:
+## Fix
 
+Single-line semantic change in `SceneCard` (`ProductImagesStep2Scenes.tsx`):
+
+```ts
+// before
+const hasBackground = scene.promptTemplate?.includes('{{background}}');
+
+// after
+const hasBackground = scene.triggerBlocks?.includes('background');
 ```
-- Animate an Image: **25 credits** (5s) / **40 credits** (10s); +2 for premium motion, +4 for ambient audio
-- Start & End Video: **35 credits** flat
-```
 
-### 3. `src/pages/AppPricing.tsx` (FAQ)
-Current FAQ text says *"Video generation runs 30–60 credits per clip"*. After the bump, animate-5s starts at 25, start-end at 35, short-films/ad-sequences/consistent-model already higher — recommend updating wording to **"25–60 credits per clip"** to stay accurate.
+`hasAestheticColor` already reads from `triggerBlocks` correctly — this just makes `hasBackground` consistent.
 
-## Open question — 10-second Animate pricing
+## Effect
 
-You only specified the 5s cost. Animate currently has a 10s tier at 18 credits. I propose **40 credits** for 10s (keeps the same ~1.6× ratio vs 5s). If you want a different number (e.g. flat 50, or leave at 18), say so before I implement.
+- Soft Lounge Glow, Waistband Fit Closeup, and any other scene whose template still contains stray `{{background}}` text but lacks the `background` trigger will **stop showing** the "Custom Background" label + swatches.
+- Scenes that legitimately have `background` in `triggerBlocks` are unaffected.
+- No DB migration, no template edits, no backend change.
 
-Also leaving these unchanged unless you say otherwise:
-- Short Film, Ad Sequence, Consistent Model pricing
-- Add-ons (ambient +4, premium motion +2)
+## Out of scope (flag only)
 
-## Out of scope
-- No DB migrations needed — credits are deducted via `enqueue_generation` RPC using whatever cost the client sends.
-- No refunds for previously generated videos.
-- Memory `mem://features/studio-chat-knowledge-source` already enforces re-syncing studio-chat when credit costs change — covered by step 2.
-
-## Effort
-~5 minutes of edits, no schema changes, takes effect immediately on next deploy.
+Stray `{{background}}` text still sits in those template bodies. It's inert today (resolver leaves it untouched without the trigger), but worth a future cleanup pass via admin editor. Not blocking — purely cosmetic in the prompt.
