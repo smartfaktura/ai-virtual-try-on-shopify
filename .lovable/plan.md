@@ -1,68 +1,78 @@
 ## Scope
-Polish credit cost copy + Generate CTAs + floating bar layout + page header on `/app/video/animate` and `/app/video/start-end` so the two pages feel identical. No backend / pipeline logic changes.
+When the Continue / Generate button in `/app/generate/product-images` is grey because something's missing, the user gets no feedback. Add a short, plain sonner toast explaining what to do — mobile-friendly. Purely a UX layer; `canProceed` logic is untouched.
 
 ## Changes
 
-### 1. `src/components/app/video/CreditEstimateBox.tsx` (shared by both pages)
-- Remove the `Coins` icon and its import.
-- Change label `"Estimated cost:"` → `"Cost:"`.
-- Container stays the same shape but loses the leading icon. Result:
-  ```
-  <div ref={ref} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
-    <span className="text-sm text-muted-foreground">Cost:</span>
-    <span className="text-sm font-semibold text-foreground">{credits} credits</span>
-  </div>
-  ```
+### 1. `src/pages/ProductImages.tsx` — compute `blockedReason`
+Right after the existing `canProceed` IIFE (line 1349), add a parallel IIFE returning a short string when blocked, otherwise `null`.
 
-### 2. `src/pages/video/AnimateVideo.tsx` — Generate footer copy
-Inside the inline cost block (added last turn), change `Estimated cost:` → `Cost:` and drop the leading `<Sparkles>` icon next to that label so it matches the shared component.
-
-### 3. `src/pages/video/StartEndVideo.tsx` — header parity with Animate
-- Replace the current wrapper `<div className="container max-w-5xl py-8 space-y-6">` with `<div className="max-w-4xl mx-auto space-y-6">` (identical to Animate).
-- Remove the standalone Back button block (lines 259–264) and the `flex items-start justify-between` wrapper around the PageHeader (lines 265–275). Use Animate's pattern instead:
-  ```
-  <PageHeader
-    title="Start & End Video"
-    subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them"
-    backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
-  >
-    <div />
-  </PageHeader>
-  ```
-  The Beta badge gets relocated inline next to the title — render it as a small pill inside the subtitle row by passing it as the trailing element of the title string is not possible, so keep it visually by appending a small badge under the subtitle:
-  ```
-  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">Beta</span>
-  ```
-  placed as the PageHeader child (where `<div />` is) so it lives in the same header block. Drop trailing period from subtitle (memory rule).
-
-### 4. `src/pages/video/StartEndVideo.tsx` — floating Generate bar parity with Animate
-Replace the sticky bar (line 393) with the same static card pattern Animate uses:
+```ts
+const blockedReason = (() => {
+  if (canProceed) return null;
+  switch (step) {
+    case 1:
+      return 'Pick at least one product to continue';
+    case 2:
+      if (hasMultipleCategories && perCategoryScenes.size > 0)
+        return 'Each category needs at least one shot';
+      return 'Select at least one shot to continue';
+    case 4:
+      if (!(details.selectedAspectRatios?.length))
+        return 'Pick an aspect ratio to continue';
+      if (totalImages === 0)
+        return 'Add shots or models to generate';
+      if (!canAfford)
+        return 'Not enough credits — top up to generate';
+      return 'Finish the setup above to generate';
+    default:
+      return 'Finish this step to continue';
+  }
+})();
 ```
-<div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
-  <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
-    <CreditEstimateBox params={creditParams} />
-  </div>
-  <Button
-    size="lg"
-    className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-    disabled={!canGenerate}
-    onClick={handleGenerate}
-  >
-    {project.isGenerating ? (
-      <>
-        <Loader2 className="h-4 w-4 animate-spin" />
-        {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
-      </>
-    ) : (
-      <>
-        <Sparkles className="h-4 w-4" />
-        Generate Video
-      </>
-    )}
-  </Button>
-</div>
+
+Pass through to the sticky bar:
+```tsx
+<ProductImagesStickyBar
+  ...
+  canProceed={canProceed}
+  blockedReason={blockedReason}
+  onNext={handleNext}
+  onBack={handleBack}
+/>
 ```
-Drops `sticky bottom-6`, `backdrop-blur-md`, the `min-w-[240px]` button, and shortens the CTA label.
+
+### 2. `src/components/app/product-images/ProductImagesStickyBar.tsx` — interactive "soft-disabled" state
+- Add `blockedReason?: string | null` to `StickyBarProps`.
+- Import `toast` from `sonner`.
+- Replace the `disabled={!canProceed}` Buttons (mobile + desktop) with a click handler that fires a plain toast (no icon, no description) when blocked:
+
+```tsx
+const handleClick = () => {
+  if (!canProceed) {
+    toast(blockedReason ?? 'Finish this step to continue', { duration: 2600 });
+    return;
+  }
+  onNext();
+};
+```
+
+Button (both layouts) — drop `disabled`, keep grey look via classes, add `aria-disabled`:
+```tsx
+<Button
+  size="pill"
+  onClick={handleClick}
+  aria-disabled={!canProceed}
+  className={`gap-1.5 ${!canProceed ? 'opacity-50 cursor-not-allowed hover:bg-primary' : ''}`}
+>
+  ...
+</Button>
+```
+(Mobile variant keeps its existing `flex-1`.)
+
+### 3. Mobile fit
+All copy strings ≤40 chars so they fit one line on a 360 px viewport using sonner defaults. `<Toaster />` is already mounted globally — no provider work.
 
 ## Out of scope
-No changes to refinement panels, compatibility cards, pipelines, or analytics. AnimateVideo's existing footer structure stays intact aside from the label/icon tweak in step 2.
+- No changes to `canProceed` truth values, `handleNext`, or other wizards.
+- No new icons in the toast (per user direction).
+- No new dependencies.
