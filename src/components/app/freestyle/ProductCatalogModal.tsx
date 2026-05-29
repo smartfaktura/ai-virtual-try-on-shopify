@@ -64,7 +64,7 @@ export function ProductCatalogModal({
 }: ProductCatalogModalProps) {
   const navigate = useNavigate();
   const [quickView, setQuickView] = useState<QuickView>('all');
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>('featured');
   const [pending, setPending] = useState<UserProduct | null>(null);
   const [search, setSearch] = useState('');
@@ -80,19 +80,40 @@ export function ProductCatalogModal({
     return [...products, ...SAMPLE_PRODUCTS];
   }, [products]);
 
-  const productTypes = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach(p => p.product_type && set.add(p.product_type));
-    return Array.from(set).sort();
-  }, [products]);
+  // Map each product to its canonical category id (cached).
+  const productCategoryMap = useMemo(() => {
+    const m = new Map<string, string>();
+    allProducts.forEach(p => m.set(p.id, resolveProductCategory(p)));
+    return m;
+  }, [allProducts]);
+
+  // Count products per category id (across user products + samples that will show).
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    allProducts.forEach(p => {
+      const id = productCategoryMap.get(p.id) || 'other';
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    });
+    return counts;
+  }, [allProducts, productCategoryMap]);
+
+  // Only render groups that contain at least one matching category id.
+  const visibleGroups = useMemo(() => {
+    return CATEGORY_SUPER_GROUPS
+      .map(g => ({
+        label: g.label,
+        items: g.ids.filter(id => (categoryCounts.get(id) ?? 0) > 0),
+      }))
+      .filter(g => g.items.length > 0);
+  }, [categoryCounts]);
 
   const filtered = useMemo(() => {
     let list = allProducts;
     if (quickView === 'samples') {
       list = list.filter(p => SAMPLE_IDS.has(p.id));
     }
-    if (typeFilter) {
-      list = list.filter(p => p.product_type === typeFilter);
+    if (categoryFilter) {
+      list = list.filter(p => productCategoryMap.get(p.id) === categoryFilter);
     }
     const q = search.trim().toLowerCase();
     if (q) {
@@ -107,13 +128,13 @@ export function ProductCatalogModal({
       list = [...list].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
     }
     return list;
-  }, [allProducts, quickView, typeFilter, sort, search]);
+  }, [allProducts, quickView, categoryFilter, sort, search, productCategoryMap]);
 
-  const anyFilterActive = quickView !== 'all' || typeFilter !== null || sort !== 'featured';
+  const anyFilterActive = quickView !== 'all' || categoryFilter !== null || sort !== 'featured';
 
   const clearAll = () => {
     setQuickView('all');
-    setTypeFilter(null);
+    setCategoryFilter(null);
     setSort('featured');
   };
 
