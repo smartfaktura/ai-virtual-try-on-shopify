@@ -290,7 +290,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // ── Mode A: Two-tier fetch (when priority categories provided) ──
 
   const { data: priorityScenes, isLoading: isLoadingPriority } = useQuery({
-    queryKey: [...QUERY_KEY_PRIORITY, cacheVariant, priorityCats],
+    queryKey: [...QUERY_KEY_PRIORITY, cacheVariant, userKey, priorityCats],
     queryFn: () => fetchScenesByCategories(priorityCats!, includePromptTemplate, activeOnly, includeBundle),
     enabled: !!hasPriority,
     staleTime: 5 * 60 * 1000,
@@ -306,7 +306,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   }, [hasPriority, priorityScenes]);
 
   const { data: restScenes, isLoading: isLoadingRest } = useQuery({
-    queryKey: [...QUERY_KEY_REST, cacheVariant, priorityCats],
+    queryKey: [...QUERY_KEY_REST, cacheVariant, userKey, priorityCats],
     queryFn: () => fetchScenesExcludingCategories(priorityCats!, includePromptTemplate, activeOnly, useSlimRest, includeBundle),
     enabled: !!hasPriority && !!priorityScenes && restEnabled,
     staleTime: 5 * 60 * 1000,
@@ -315,7 +315,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // ── Mode B: Full fetch (no priority — admin, review, results) ──
 
   const { data: allRawScenes, isLoading: isLoadingAll } = useQuery({
-    queryKey: [...QUERY_KEY_ALL, cacheVariant],
+    queryKey: [...QUERY_KEY_ALL, cacheVariant, userKey],
     queryFn: () => fetchAllScenes(includePromptTemplate, activeOnly, includeBundle),
     enabled: !hasPriority,
     staleTime: 5 * 60 * 1000,
@@ -323,9 +323,15 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
 
   // ── Merge results ──
 
-  const rawScenes: DbScene[] = hasPriority
+  const rawScenesUnfiltered: DbScene[] = hasPriority
     ? [...(priorityScenes ?? []), ...(restScenes ?? [])]
     : (allRawScenes ?? []);
+
+  // Defense in depth: in user-facing callers, drop any row whose owner is
+  // another user. Admin catalog tools (includeInactive: true) bypass this.
+  const rawScenes: DbScene[] = isAdminCatalogCaller
+    ? rawScenesUnfiltered
+    : rawScenesUnfiltered.filter(s => !s.owner_user_id || s.owner_user_id === user?.id);
 
   const isLoading = hasPriority ? isLoadingPriority : isLoadingAll;
   const scenes = rawScenes.length > 0 ? rawScenes : null;
@@ -334,6 +340,7 @@ export function useProductImageScenes(options?: UseProductImageScenesOptions) {
   // When priority loading is active, return empty arrays instead of hardcoded fallback
   // to prevent flash of stale data before real data arrives
   const useFallback = !hasPriority && !scenes;
+
 
   const categoryCollections: CategoryCollection[] = scenes
     ? buildCollections(activeScenes)
