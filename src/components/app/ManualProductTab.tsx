@@ -123,6 +123,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
   const [expandedChips, setExpandedChips] = useState<Record<string, boolean>>({});
   const [singleChipsExpanded, setSingleChipsExpanded] = useState(false);
 
+  // Canonical Product Category (single-edit). User pick wins; falls back to AI suggestion.
+  const [userCategory, setUserCategory] = useState<string | null>(null);
+  const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+
+
   // Per-item expand/collapse for batch cards. When AI analysis fills the fields,
   // we collapse the card to a tidy row so the modal stays scannable.
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
