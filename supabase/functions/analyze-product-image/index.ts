@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveCanonicalCategory } from "../_shared/category-mapper.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,7 +45,8 @@ serve(async (req) => {
 
 If it's a PRODUCT, return:
 - "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle")
-- "productType": Short category (e.g. "Leggings", "Scented Candle", "Face Serum")
+- "productType": Short free-form category label (e.g. "Leggings", "Scented Candle", "Face Serum")
+- "category": One canonical id from this enum (REQUIRED for products). If unsure, use "other". Enum: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, skirts, streetwear, hoodies, jeans, trousers, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 - "description": 10-20 word description of color, material, style, key features
 - "specification": A detailed 30-50 word generation-ready description covering the product's silhouette, construction, materials, colors, finish, texture, and key visual details. Include hex color codes if identifiable. This should read like a technical product spec for image generation.
 
@@ -60,6 +62,7 @@ CRITICAL RULE FOR PHONE CASES, TABLET CASES, LAPTOP SLEEVES, AIRPODS / EARBUD CA
 If it's a ROOM, BUILDING, or SPACE, return:
 - "title": Descriptive room/space name (e.g. "Modern Open-Plan Living Room", "Sunny Master Bedroom", "Victorian Brick Facade")
 - "productType": Space type (e.g. "Living Room", "Bedroom", "Kitchen", "Front Facade", "Office")
+- "category": null
 - "description": 10-20 word description of the space style, lighting, notable features
 - "specification": A detailed 30-50 word description of the space's architecture, materials, color palette, lighting, and key design elements suitable for image generation.
 
@@ -172,6 +175,22 @@ Return ONLY the JSON object, no markdown or explanation.`,
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    }
+
+    // Layer 2/3: validate AI's category against canonical enum, fall back to
+    // regex over title+productType, else null. Safe default never crashes UI.
+    try {
+      if (parsed && typeof parsed === "object") {
+        const p = parsed as Record<string, unknown>;
+        const userCategory = resolveCanonicalCategory(
+          p.category,
+          typeof p.title === "string" ? p.title : null,
+          typeof p.productType === "string" ? p.productType : null,
+        );
+        p.userCategory = userCategory;
+      }
+    } catch (resolveErr) {
+      console.warn("Category resolution failed (continuing without):", resolveErr);
     }
 
     return new Response(JSON.stringify(parsed), {

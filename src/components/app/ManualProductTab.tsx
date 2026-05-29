@@ -204,6 +204,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
         return;
       }
       if (data) {
+        const aiCategory: string | null = typeof data.userCategory === 'string' && data.userCategory ? data.userCategory : null;
         if (target) {
           setBatchItems(prev => prev.map(b => {
             if (b.id !== target.batchId) return b;
@@ -213,12 +214,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct, init
               title: !b.manualEdits.title && data.title ? data.title : b.title,
               productType: !b.manualEdits.productType && data.productType ? data.productType : b.productType,
               description: !b.manualEdits.description && data.description ? data.description : b.description,
+              // Only fill canonical category if user hasn't picked one manually
+              userCategory: b.userCategory ?? aiCategory,
             };
           }));
         } else {
           if (data.title && !hasManualEdits.current.title) setTitle(data.title);
           if (data.productType && !hasManualEdits.current.productType) setProductType(data.productType);
           if (data.description && !hasManualEdits.current.description) setDescription(data.description);
+          if (aiCategory && !userCategory) setUserCategory(aiCategory);
         }
       }
     } catch (err) {
