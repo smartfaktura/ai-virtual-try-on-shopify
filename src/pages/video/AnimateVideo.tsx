@@ -556,10 +556,10 @@ export default function AnimateVideo() {
             <div className="rounded-2xl border border-border bg-card shadow-sm hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 min-h-[400px] flex flex-col">
               {/* Batch Mode toggle — inside the card */}
               <div className={cn(
-                'flex items-center justify-between rounded-t-2xl px-6 py-3 border-b transition-colors',
+                'flex items-center justify-between gap-3 rounded-t-2xl px-4 sm:px-6 py-3 border-b transition-colors',
                 isPaidUser ? 'border-border bg-muted/30' : 'border-border/60 bg-muted/20'
               )}>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   {isPaidUser ? (
                     <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Images className="h-3.5 w-3.5 text-primary" />
@@ -571,18 +571,18 @@ export default function AnimateVideo() {
                       className="w-7 h-7 rounded-full object-cover border-2 border-background shrink-0"
                     />
                   )}
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground">Batch Mode</p>
                     {isPaidUser ? (
-                      <p className="text-[11px] text-muted-foreground leading-tight">Animate up to 10 images with the same settings</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight break-words">Animate up to 10 images with the same settings</p>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground leading-tight">
+                      <p className="text-[11px] text-muted-foreground leading-tight break-words">
                         Upgrade to any paid plan to animate multiple images at once
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {!isPaidUser && (
                     <button
                       onClick={() => navigate('/app/settings')}
@@ -595,7 +595,8 @@ export default function AnimateVideo() {
                 </div>
               </div>
 
-              <div className="p-6 space-y-4 flex-1 flex flex-col">
+
+              <div className="p-4 sm:p-6 space-y-4 flex-1 flex flex-col">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
                   {bulkMode ? 'Upload your product images' : 'Upload your product image'}
@@ -664,40 +665,41 @@ export default function AnimateVideo() {
               )}
 
               {/* Secondary input methods */}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30"
+                  className="text-xs h-8 gap-1.5 hover:border-primary/30 min-w-0"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
                 >
-                  <Upload className="h-3 w-3" />
-                  {bulkMode ? 'Upload images' : 'Upload image'}
+                  <Upload className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{bulkMode ? 'Upload images' : 'Upload image'}</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30"
+                  className="text-xs h-8 gap-1.5 hover:border-primary/30 min-w-0"
                   onClick={() => setLibraryPickerOpen(true)}
                   disabled={isUploading}
                 >
-                  <FolderOpen className="h-3 w-3" />
-                  Choose from Library
+                  <FolderOpen className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Choose from Library</span>
                 </Button>
                 {!bulkMode && (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default"
+                    className="hidden sm:inline-flex text-xs h-8 gap-1.5 hover:border-primary/30 cursor-default min-w-0"
                     disabled={isUploading}
                     onClick={() => toast.info('Press ⌘V (or Ctrl+V) to paste an image')}
                   >
-                    <ClipboardPaste className="h-3 w-3" />
-                    Paste (⌘V)
+                    <ClipboardPaste className="h-3 w-3 shrink-0" />
+                    <span className="truncate">Paste (⌘V)</span>
                   </Button>
                 )}
               </div>
+
               </div>
             </div>
 
@@ -1359,17 +1361,18 @@ export default function AnimateVideo() {
       {isPipelineActive && !isBulkRunning && (
         <div className="space-y-6">
           {/* Branded takeover card */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm p-8 space-y-6">
+          <div className="rounded-2xl border border-border bg-card shadow-sm p-5 sm:p-8 space-y-6">
             <div className="flex items-center gap-4">
               <div className="relative">
                 <img
                   src={getOptimizedUrl(currentProgressMember.avatar, { quality: 60 })}
                   alt={currentProgressMember.name}
-                  className="w-12 h-12 rounded-full border-2 border-primary/20 object-cover transition-all duration-700"
+                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-primary/20 object-cover transition-all duration-700"
                 />
                 <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
                   <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
                 </div>
+
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground">VOVV.AI Studio</p>
@@ -1420,7 +1423,7 @@ export default function AnimateVideo() {
 
       {/* ──── ERROR STATE ──── */}
       {(pipelineStage === 'error' || videoStatus === 'error') && !isPipelineActive && !isComplete && (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 space-y-4">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 sm:p-6 space-y-4">
           <div className="flex items-start gap-3">
             <div className="h-9 w-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
               <X className="h-5 w-5 text-destructive" />

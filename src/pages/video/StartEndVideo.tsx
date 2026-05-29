@@ -276,11 +276,12 @@ export default function StartEndVideo() {
             <Play className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">Your last transition is ready</p>
-            <p className="text-[11.5px] text-muted-foreground">
-              Generated {new Date(project.recentResult.createdAt).toLocaleString()} · open it without re-running.
+            <p className="text-sm font-medium text-foreground truncate">Your last transition is ready</p>
+            <p className="text-[11.5px] text-muted-foreground truncate">
+              <span className="hidden sm:inline">Generated </span>{new Date(project.recentResult.createdAt).toLocaleString()}<span className="hidden sm:inline"> · open it without re-running.</span>
             </p>
           </div>
+
           <Button
             type="button"
             size="sm"
