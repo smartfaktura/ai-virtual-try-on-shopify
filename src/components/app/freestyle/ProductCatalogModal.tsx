@@ -9,7 +9,18 @@ import { Check, Package, Plus, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { CATEGORY_LABELS, CATEGORY_SUPER_GROUPS, getCategoryLabel } from '@/lib/productCategories';
+import { mapTextToCategory } from '@/lib/categoryResolver';
 import type { Tables } from '@/integrations/supabase/types';
+
+function resolveProductCategory(p: UserProduct): string {
+  const aj = (p as any).analysis_json;
+  const fromAnalysis = aj && typeof aj === 'object' ? aj.userCategory : null;
+  if (fromAnalysis && CATEGORY_LABELS[fromAnalysis]) return fromAnalysis;
+  const fromText = mapTextToCategory(`${p.title ?? ''} ${p.product_type ?? ''}`);
+  if (fromText && CATEGORY_LABELS[fromText]) return fromText;
+  return 'other';
+}
 
 type UserProduct = Tables<'user_products'>;
 
