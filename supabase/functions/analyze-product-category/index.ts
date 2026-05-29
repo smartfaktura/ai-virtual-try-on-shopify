@@ -10,7 +10,7 @@ const corsHeaders = {
 const VALID_CATEGORIES = new Set([
   "fragrance", "beauty-skincare", "makeup-lipsticks", "bags-accessories", "backpacks",
   "wallets-cardholders", "belts", "scarves", "caps", "hats", "beanies", "shoes", "sneakers", "boots",
-  "high-heels", "garments", "dresses", "wedding-dress", "hoodies", "jeans", "jackets",
+  "high-heels", "garments", "dresses", "wedding-dress", "hoodies", "jeans", "trousers", "jackets",
   "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
   "home-decor", "furniture", "tech-devices", "phone-cases", "food", "beverages", "supplements-wellness",
@@ -35,7 +35,9 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression (?:wear|short|legging|tight)|legging|sports bra|rash guard|\bjersey\b|tracksuit|track suit|\byoga\b|pilates|\brunning\b|jogger|marathon|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|bike (?:short|jersey)|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
   // Bridal MUST be checked BEFORE generic dresses
   [/wedding dress|bridal gown|bridal dress|wedding gown|bridesmaid dress|bridalwear|\bbridal\b/i, "wedding-dress"],
-  [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
+  // Trousers MUST be checked BEFORE \bdress\b so "dress pants" doesn't fall into dresses
+  [/\btrouser|\btrousers\b|\bchino|\bchinos\b|\bslack|\bslacks\b|\bdress\s+pants?\b|\bcargo\s+pants?\b|\bjogger|\bsweatpants\b|\btrack\s+pants?\b/i, "trousers"],
+  [/\bdress(?!\s+(pants?|shirts?|shorts?|shoes?|socks?|code))\b|\bdresses\b|gown|maxi dress|midi dress|sundress|cocktail dress/i, "dresses"],
   [/hoodie|hooded sweatshirt/i, "hoodies"],
   [/\bjeans\b|denim|skinny jeans|wide-leg jeans|mom jeans/i, "jeans"],
   [/jacket|blazer|bomber|puffer|windbreaker|parka|trench coat/i, "jackets"],
@@ -72,7 +74,9 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
   ["bags-accessories", /backpack|rucksack|daypack/i, "backpacks"],
   ["dresses", /wedding|bridal|bridesmaid/i, "wedding-dress"],
   ["garments", /wedding dress|bridal gown|bridal dress|wedding gown|bridalwear/i, "wedding-dress"],
-  ["garments", /\bdress\b|\bdresses\b|gown/i, "dresses"],
+  ["dresses", /\btrouser|\btrousers\b|\bchino|\bslack|\bdress\s+pants?\b|\bcargo\s+pants?\b/i, "trousers"],
+  ["garments", /\btrouser|\btrousers\b|\bchino|\bslack|\bdress\s+pants?\b|\bcargo\s+pants?\b|\bjogger|\bsweatpants\b/i, "trousers"],
+  ["garments", /\bdress(?!\s+(pants?|shirts?|shorts?|shoes?|socks?|code))\b|\bdresses\b|gown/i, "dresses"],
   ["garments", /hoodie|hooded sweatshirt/i, "hoodies"],
   ["garments", /\bjeans\b|denim/i, "jeans"],
   ["garments", /jacket|blazer|bomber|puffer/i, "jackets"],
@@ -88,8 +92,9 @@ const SPECIFICITY_OVERRIDES: [string, RegExp, string][] = [
 const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
   [/hoodie|hooded sweatshirt|zip-?up hoodie/i, "hoodies"],
   [/\bjeans?\b|denim|skinny jean|wide-?leg|mom jean/i, "jeans"],
+  [/\btrouser|\btrousers\b|\bchino|\bslack|\bdress\s+pants?\b|\bcargo\s+pants?\b|\bjogger|\bsweatpants\b|\btrack\s+pants?\b/i, "trousers"],
   [/wedding dress|bridal gown|bridal dress|wedding gown|bridesmaid dress|bridalwear|\bbridal\b/i, "wedding-dress"],
-  [/\bdress\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
+  [/\bdress(?!\s+(pants?|shirts?|shorts?|shoes?|socks?|code))\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
   [/jacket|blazer|bomber|puffer|parka|trench/i, "jackets"],
   [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression|legging|sports bra|rash guard|\bjersey\b|tracksuit|\byoga\b|pilates|\brunning\b|jogger|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
   [/swimwear|bikini|swimsuit|swim trunks/i, "swimwear"],
@@ -196,11 +201,13 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, trousers, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 
 PHONE CASE GUIDANCE (CRITICAL): If the product IS a case for a phone, iPhone, AirPods, Samsung device, or any MagSafe accessory — even if it appears to be a "tech" or "accessory" item — the category MUST be "phone-cases". Never use "tech-devices" or "bags-accessories" for a case. Silicone case, clear case, leather case, MagSafe case → ALWAYS "phone-cases".
 
 BRIDAL GUIDANCE: Any wedding dress, bridal gown, bridesmaid dress, or bridalwear MUST be categorised as "wedding-dress" (NOT "dresses" or "garments"). Examples: "Lace Wedding Dress" → wedding-dress, "Bridal Gown" → wedding-dress, "Bridesmaid Dress" → wedding-dress.
+
+TROUSERS vs JEANS vs DRESSES (CRITICAL): Any non-sport trouser-like garment — chinos, slacks, dress pants, dress trousers, cargo pants, tailored trousers, joggers (non-sport), sweatpants, track pants — MUST be categorised as "trousers". Use "jeans" ONLY when the title or description clearly indicates denim or jeans. NEVER tag "Dress Pants", "Dress Trousers", "Dress Shirt", "Dress Shoes", or "Dress Socks" as "dresses" — these are NOT dresses, the word "dress" is just an adjective meaning formal/smart. Examples: "Light Gray Dress Pants" → trousers, "Slim Fit Chinos" → trousers, "Tailored Wool Trousers" → trousers, "Black Skinny Jeans" → jeans, "Floral Maxi Dress" → dresses.
 
 HEADWEAR GUIDANCE: Use "caps" for baseball caps, snapbacks, trucker caps, visors, dad hats. Use "hats" for fedoras, panamas, bucket hats, wide-brim hats, sun hats, cowboy hats, boaters, berets. Use "beanies" for knit caps, beanies, toques, skull caps, watch caps.
 
