@@ -227,9 +227,9 @@ const STYLING_DIRECTION_MAP: Record<string, string> = {
 };
 
 // ── Negative prompt components ──
-const BASE_NEGATIVES = 'No watermarks, no artificial text overlays or watermark text, no chromatic aberration, no lens flare artifacts, no color banding, no over-saturation.';
-const PERSON_NEGATIVES = 'No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.';
-const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements. No background from reference image, no original product photo environment. Preserve all original product branding, logos, and label text exactly as shown.';
+const BASE_NEGATIVES = 'No watermarks, no artificial text overlays.';
+const PERSON_NEGATIVES = 'Keep the person anatomically natural and realistic: correct hands, fingers, nails, limbs, joints, posture, and body proportions.';
+const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
 const BG_COLOR_NEGATIVES = 'No warm tint on background, no yellow cast on background, no beige drift on background, no color contamination from product onto background, no background color variation, no uneven background tone.';
 
 // PRODUCT_FIDELITY and REFERENCE_ISOLATION removed — covered by edge function CRITICAL REQUIREMENTS #2 and #7

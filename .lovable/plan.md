@@ -1,31 +1,38 @@
-## Goal
-Stop injecting the "PRODUCT REFERENCE ISOLATION — The product reference image shows ..." block into every `/app/generate/product-images` prompt sent to Nano Banana / Gemini.
+# Trim redundant always-on negatives + improve PERSON_NEGATIVES
 
-## Change
-**File:** `src/lib/productImagePromptBuilder.ts`
-**Line:** 1550–1551
+## 1. Trim redundant negatives
 
-Delete the unconditional append:
+About 60% of `BASE_NEGATIVES` + `PRODUCT_NEGATIVES` duplicates `CRITICAL REQUIREMENTS` already added by `supabase/functions/generate-workflow/index.ts` (lines 615-625). Repeating instructions as negatives wastes tokens and can trigger negative-prompt bias on Gemini/Seedream.
+
+| Always-on phrase | Already covered by | Verdict |
+|---|---|---|
+| "Preserve all original product branding, logos, and label text exactly as shown" | CRITICAL #2 + #3 | Remove |
+| "No background from reference image, no original product photo environment" | CRITICAL #7 + tail AVOID | Remove |
+| "no over-saturation, no color banding, no chromatic aberration, no lens flare artifacts" | CRITICAL #4 ("no AI artifacts") | Remove |
+| "No watermarks, no artificial text overlays" | Nothing upstream | Keep |
+| "No warped product edges, no melted/distorted labels, no duplicated products, no floating elements" | Nothing upstream | Keep |
+
+### Change (lines 230-232)
+
 ```ts
-// Product reference isolation — prevent AI from picking up extra garments from the product photo
-prompt += ` PRODUCT REFERENCE ISOLATION — The product reference image shows "${product.title}". Focus ONLY on this specific product. Ignore any other garments, clothing items, or accessories visible in the reference photo. The model should wear the product exactly as described, with the outfit specified in the wardrobe note — do NOT reproduce other clothing from the reference image.`;
+const BASE_NEGATIVES = 'No watermarks, no artificial text overlays.';
+const PERSON_NEGATIVES = 'Keep the person anatomically natural and realistic: correct hands, fingers, nails, limbs, joints, posture, and body proportions.';
+const PRODUCT_NEGATIVES = 'No warped product edges, no melted or distorted labels, no duplicated products, no floating elements.';
 ```
 
-That's it — one block removed. No conditions, no flag, no admin UI. Pure deletion.
+## 2. Improve PERSON_NEGATIVES
 
-## Why this is safe
-- The remaining product-fidelity anchors stay intact:
-  - CRITICAL #2 ("product MUST look EXACTLY like [PRODUCT IMAGE]")
-  - CRITICAL #6 (BACKGROUND ISOLATION — extract only product object)
-  - Final `[PRODUCT IMAGE] reproduce ONLY the product object (shape, colors, labels, materials). IGNORE all background, surfaces, and environment` line
-- OUTFIT CONSISTENCY (CRITICAL #7) still enforces wardrobe-note matching when a model is present.
-- WARDROBE NOTE block (when `wantsPeople === true`) still carries the per-scene outfit spec.
+Old: `No extra fingers, no distorted joints, no unnatural hand anatomy, no missing limbs, no fused fingers, no deformed nails, correct human proportions.`
+
+New: `Keep the person anatomically natural and realistic: correct hands, fingers, nails, limbs, joints, posture, and body proportions.`
+
+Why: Positive framing ("keep correct") outperforms negative framing ("no extra") on modern diffusion models. Stating what TO do reduces negative-prompt bias while covering the same failure modes.
+
+## Effect
+- ~55 fewer tokens per prompt across all variations and jobs.
+- No duplicate branding/background isolation phrasing.
+- Real safety guards still in place (watermark, melted labels, duplicates, floating).
+- PERSON_NEGATIVES becomes positively framed and anatomically comprehensive.
 
 ## Out of scope
-- No changes to outfit logic, wardrobe note, scene templates, or any other injection.
-- No admin panel.
-- No conditional gating — just remove.
-
-## Validation
-- Generate one jewelry-on-model scene → confirm outfit still respects wardrobe note (other product-fidelity rules should hold the line).
-- Generate one still-life (chair / fragrance) → confirm prompt no longer contains the nonsensical "wardrobe note" reference.
+`BG_COLOR_NEGATIVES`, edge-function CRITICAL text, camera/focus/lighting maps remain unchanged.
