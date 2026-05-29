@@ -409,7 +409,8 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
   return (
     <div className="space-y-6 pb-28 overflow-x-clip max-w-full min-w-0 w-full">
-      <BrandScenesPromoCard />
+
+
 
       <div className="flex items-center justify-between gap-2 flex-wrap min-w-0 max-w-full">
         <div>
@@ -496,10 +497,11 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       )}
 
       {(unifiedOther.length > 0 || isLoadingRest) && (
-        <div className="space-y-4">
+        <div className="space-y-4 pt-2">
+          <BrandScenesPromoCard />
           <div className="space-y-1">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>
-            <p className="text-xs text-muted-foreground/80">Browse any category — you can mix shots from anywhere into one generation</p>
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">Explore more</h3>
+            <p className="text-sm text-muted-foreground mt-1">Browse any category — mix shots from anywhere into one generation</p>
           </div>
           {isLoadingRest && unifiedOther.length === 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">

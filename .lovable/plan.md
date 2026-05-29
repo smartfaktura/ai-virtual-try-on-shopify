@@ -1,17 +1,13 @@
 ## Scope
-Fix the misleading "1,200+ curated scenes" label in the Scene Look modal on `/app/freestyle` and tighten the mobile grid to 3 columns.
+Step 2 (Shots) of `/app/generate/product-images`: reposition the Brand Scenes promo banner and refine the "Explore more" header typography.
 
-## Changes
+## Changes — `src/components/app/product-images/ProductImagesStep2Scenes.tsx`
 
-**`src/components/app/freestyle/SceneCatalogModal.tsx`**
+1. **Move BrandScenesPromoCard** — remove `<BrandScenesPromoCard />` from line 412 (top of Step 2). Re-render it inside the `unifiedOther.length > 0 || isLoadingRest` block (line 498) as the first child, so it appears right after the Recommended Shots section and immediately before the "Explore more" header.
 
-1. Subheader (line 299): replace the hardcoded `1,200+ curated scenes` with the live total from `counts.data.total` (already loaded via `useSceneCounts`). Render as `{counts.data?.total ? \`${counts.data.total.toLocaleString()} curated scenes\` : 'Curated scenes'}` so the number always matches reality and gracefully falls back while loading.
+2. **Improve "Explore more" header** (lines 500–503) — match the "Select shots" vibe used at line 416. Change:
+   - `<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Explore more</h3>` → `<h3 className="text-lg font-semibold tracking-tight text-foreground">Explore more</h3>` (proper-case, no uppercase, larger).
+   - `<p className="text-xs text-muted-foreground/80">Browse any category — you can mix shots from anywhere into one generation</p>` → `<p className="text-sm text-muted-foreground mt-1">Browse any category — mix shots from anywhere into one generation</p>`.
+   - Wrap with `space-y-1` (already there) and add `pt-2` to the parent block for more vertical breathing room above the section.
 
-2. Grid (line 364): change `grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3` → `grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3` so mobile shows 3 columns with slightly tighter gaps.
-
-**`src/components/app/freestyle/SceneCatalogGrid.tsx`** (lines 68 and 87)
-
-Apply the same mobile bump: `grid-cols-2` → `grid-cols-3` on both grid wrappers, keep `sm:`/`lg:`/`xl:` breakpoints intact, tighten gap to `gap-2 sm:gap-3` on mobile.
-
-## Out of scope
-No changes to filtering, sidebar, card markup, or desktop layout.
+No other edits to grid, lists, or behavior.
