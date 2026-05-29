@@ -918,7 +918,7 @@ export default function Freestyle() {
       model: imageRole === 'model',
       scene: imageRole === 'scene',
     } : undefined,
-    onBuyCredits: openBuyModal,
+    onBuyCredits: () => openBuyModal('freestyle_action_bar'),
   };
 
   return (

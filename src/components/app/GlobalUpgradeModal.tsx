@@ -13,7 +13,7 @@ import { UpgradePlanModal } from './UpgradePlanModal';
  */
 export function GlobalUpgradeModal() {
   const { buyModalOpen, closeBuyModal, plan, buyModalSource } = useCredits();
-  const isFeatureGate = !!buyModalSource && buyModalSource.endsWith('-gate');
+  const isFeatureGate = typeof buyModalSource === 'string' && buyModalSource.endsWith('-gate');
   const isTopupOnly = plan !== 'free' && !isFeatureGate;
   return (
     <UpgradePlanModal
