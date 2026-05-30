@@ -254,13 +254,15 @@ export default function Perspectives() {
   });
 
 
-  const filteredProducts = products.filter(p =>
-    p.title.toLowerCase().includes(productSearch.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const haystack = [
+      p.title, p.description, p.product_type, p.color, p.materials,
+      p.sku, p.dimensions, p.weight, (p.tags || []).join(' '),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return matchesTokens(haystack, productSearch);
+  });
 
-  const filteredLibrary = libraryItems.filter(i =>
-    i.title.toLowerCase().includes(librarySearch.toLowerCase())
-  );
+  const filteredLibrary = libraryItems.filter(i => matchesTokens(i.searchHaystack, librarySearch));
 
   // ── Hook ──────────────────────────────────────────────────────────────
   const { generate, isGenerating, progress } = useGeneratePerspectives();
