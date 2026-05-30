@@ -1816,14 +1816,18 @@ export default function ProductImages() {
         onOpenChange={setDemoPickerOpen}
         onSelectDemo={handleDemoSelect}
       />
-      {bulkUploadFiles && user && (
+      {reviewItems && user && (
         <BulkUploadReviewModal
-          open={!!bulkUploadFiles}
-          files={bulkUploadFiles}
+          open={!!reviewItems}
+          items={reviewItems}
           userId={user.id}
-          onClose={() => setBulkUploadFiles(null)}
+          onClose={() => {
+            reviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setReviewItems(null);
+          }}
           onComplete={(productIds) => {
-            setBulkUploadFiles(null);
+            reviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setReviewItems(null);
             queryClient.invalidateQueries({ queryKey: ['user-products', user.id] });
             if (productIds.length) {
               setSelectedProductIdsCapped(prev => {
