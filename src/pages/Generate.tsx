@@ -2979,6 +2979,9 @@ export default function Generate() {
                         product_type: scratchUpload.productInfo.productType,
                         description: scratchUpload.productInfo.description,
                         image_url: finalUrl,
+                        analysis_json: scratchUpload.productInfo.category
+                          ? { category: scratchUpload.productInfo.category, userCategory: scratchUpload.productInfo.category }
+                          : null,
                       }).then(({ error }) => {
                         if (!error) {
                           queryClient.invalidateQueries({ queryKey: ['user-products'] });
