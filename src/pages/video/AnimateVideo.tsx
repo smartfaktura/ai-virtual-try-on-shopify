@@ -145,7 +145,7 @@ export default function AnimateVideo() {
   // Settings
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const [duration, setDuration] = useState<Duration>('5');
-  const [audioMode, setAudioMode] = useState<AudioMode>('silent');
+  const audioMode: AudioMode = 'silent';
   const [userPrompt, setUserPrompt] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
