@@ -26,6 +26,7 @@ import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { CatalogStepper, type StepDef } from '@/components/app/catalog/CatalogStepper';
 import { PageHeader } from '@/components/app/PageHeader';
 import { cn } from '@/lib/utils';
@@ -643,15 +644,26 @@ export default function ProductSwap() {
                     <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-1">
                     {filteredLibrary.slice(0, libraryVisibleCount).map(item => (
-                      <div key={item.id} onClick={() => pickLibrary(item)}
-                        className="relative rounded-xl border-2 p-1.5 cursor-pointer transition-all border-border hover:border-primary/50">
-                        <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                          <img src={getOptimizedUrl(item.imageUrl, { quality: 60 })} alt={item.title} className="w-full h-full object-cover" />
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => pickLibrary(item)}
+                        className="relative rounded-xl border-2 border-transparent hover:border-foreground/20 overflow-hidden transition-all text-left cursor-pointer"
+                      >
+                        <div className="aspect-square bg-muted overflow-hidden">
+                          <ShimmerImage
+                            src={getOptimizedUrl(item.imageUrl, { quality: 70 })}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                        <p className="text-[10px] text-muted-foreground truncate mt-1 px-0.5">{item.title}</p>
-                      </div>
+                        <div className="h-[52px] flex flex-col justify-center px-2.5">
+                          <p className="text-xs font-medium truncate leading-tight">{item.title || '\u00A0'}</p>
+                          <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{'\u00A0'}</p>
+                        </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -763,27 +775,43 @@ export default function ProductSwap() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-1">
               {filteredProducts.slice(0, productVisibleCount).map(product => {
                 const isSelected = selectedProductIds.has(product.id);
                 return (
-                  <div key={product.id} onClick={() => toggleProduct(product.id)}
-                    className={`relative rounded-xl border-2 p-1.5 cursor-pointer transition-all ${
-                      isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                    }`}>
-                    <div className="absolute top-1.5 left-1.5 z-10 bg-background/90 rounded shadow-sm p-0.5">
-                      <Checkbox checked={isSelected} onCheckedChange={() => toggleProduct(product.id)} />
-                    </div>
-                    <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => toggleProduct(product.id)}
+                    className={`relative rounded-xl border-2 overflow-hidden transition-all text-left cursor-pointer ${
+                      isSelected
+                        ? 'border-foreground ring-2 ring-foreground/15 shadow-md'
+                        : 'border-transparent hover:border-foreground/20'
+                    }`}
+                  >
+                    <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
                       {product.image_url ? (
-                        <img src={getOptimizedUrl(product.image_url, { quality: 60 })} alt={product.title} className="w-full h-full object-cover" />
+                        <ShimmerImage
+                          src={getOptimizedUrl(product.image_url, { quality: 70 })}
+                          alt={product.title}
+                          className="max-w-full max-h-full object-contain"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
                       )}
                     </div>
-                    <p className="text-[10px] font-medium truncate mt-1">{product.title}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{product.product_type}</p>
-                  </div>
+                    <div className="h-[52px] flex flex-col justify-center px-2.5">
+                      <p className="text-xs font-medium truncate leading-tight">{product.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">
+                        {product.product_type || '\u00A0'}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle className="w-5 h-5 text-primary fill-primary/20" />
+                      </div>
+                    )}
+                  </button>
                 );
               })}
             </div>
