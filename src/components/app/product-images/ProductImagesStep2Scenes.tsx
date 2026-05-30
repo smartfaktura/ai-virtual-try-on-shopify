@@ -673,36 +673,26 @@ function CategoryExpandedContent({ catId, catTitle, essentialScenes, categorySce
 
   return (
     <div className="mt-1.5 rounded-xl border border-border bg-muted/10 p-2">
-      {essentialSubGroups.map((sg, i) => {
-        const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
-        return (
-          <SubGroupSection
-            key={`ess-${i}`}
-            label={sg.label}
-            scenes={sg.scenes}
-            selectedSceneIds={selectedSceneIds}
-            toggleScene={toggleScene}
-            allSelected={sgAllSelected}
-            onToggleAll={() => bulkToggle(sg.scenes)}
-            gridClass={gridClass}
-          />
-        );
-      })}
-      {catSubGroups.map((sg, i) => {
-        const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
-        return (
-          <SubGroupSection
-            key={`cat-${i}`}
-            label={sg.label}
-            scenes={sg.scenes}
-            selectedSceneIds={selectedSceneIds}
-            toggleScene={toggleScene}
-            allSelected={sgAllSelected}
-            onToggleAll={() => bulkToggle(sg.scenes)}
-            gridClass={gridClass}
-          />
-        );
-      })}
+      {essentialSubGroups.map((sg, i) => (
+        <SubGroupSection
+          key={`ess-${i}`}
+          label={sg.label}
+          scenes={sg.scenes}
+          selectedSceneIds={selectedSceneIds}
+          toggleScene={toggleScene}
+          gridClass={gridClass}
+        />
+      ))}
+      {catSubGroups.map((sg, i) => (
+        <SubGroupSection
+          key={`cat-${i}`}
+          label={sg.label}
+          scenes={sg.scenes}
+          selectedSceneIds={selectedSceneIds}
+          toggleScene={toggleScene}
+          gridClass={gridClass}
+        />
+      ))}
     </div>
   );
 }
