@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, Suspense } from 'react';
+import { lazyWithRetry as lazy } from '@/lib/lazyWithRetry';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
