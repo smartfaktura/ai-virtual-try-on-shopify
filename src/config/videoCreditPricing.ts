@@ -3,8 +3,8 @@ export const VIDEO_CREDIT_RULES = {
   animate: {
     base5s: 25,
     base10s: 50,
-    premiumMotion: 2,   // add-on for complex motion recipes
-    ambient: 0,         // audio surcharge removed — toggle no longer exposed
+    premiumMotionMultiplier: 2,   // PRO Mode camera motions (orbit / premium handheld) cost 2×
+    ambient: 0,                   // audio surcharge removed — toggle no longer exposed
   },
   startEnd: {
     base5s: 35,         // flat 35 credits per Start & End video
@@ -51,14 +51,19 @@ export interface CreditEstimateParams {
 const PREMIUM_MOTION_RECIPES = ['product_orbit', 'premium_handheld'];
 const PREMIUM_TRANSITION_STYLES = ['cinematic', 'editorial'];
 
+/** Returns true if the given camera motion id triggers PRO Mode pricing (2× cost). */
+export function isPremiumCameraMotion(id: string | undefined | null): boolean {
+  return !!id && PREMIUM_MOTION_RECIPES.includes(id);
+}
+
 export function estimateCredits(params: CreditEstimateParams): number {
   const { workflowType, duration, audioMode, motionRecipe, shotCount = 2, consistencyLevel = 'standard', transitionStyle } = params;
 
   if (workflowType === 'animate') {
     const rules = VIDEO_CREDIT_RULES.animate;
     let cost = duration === '10' ? rules.base10s : rules.base5s;
-    if (motionRecipe && PREMIUM_MOTION_RECIPES.includes(motionRecipe)) {
-      cost += rules.premiumMotion;
+    if (isPremiumCameraMotion(motionRecipe)) {
+      cost = cost * rules.premiumMotionMultiplier;
     }
     if (audioMode === 'ambient') cost += rules.ambient;
     return cost;

@@ -21,6 +21,7 @@ import { BulkImageGrid, type BulkImage } from '@/components/app/video/BulkImageG
 import { BulkProgressBanner } from '@/components/app/video/BulkProgressBanner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PRODUCT_CATEGORIES, SCENE_TYPES, CAMERA_MOTIONS, SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES, getMotionGoalsForCategory, getDefaultPreservation } from '@/lib/videoMotionRecipes';
+import { isPremiumCameraMotion } from '@/config/videoCreditPricing';
 import { estimateCredits, estimateBulkCredits } from '@/config/videoCreditPricing';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
@@ -875,7 +876,7 @@ export default function AnimateVideo() {
                                     <div className="space-y-1">
                                       <label className="text-xs text-muted-foreground">Camera Motion</label>
                                       <select value={imgOverrides.cameraMotion || cameraMotion} onChange={(e) => setOverride('cameraMotion', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
-                                        {CAMERA_MOTIONS.map(cm => <option key={cm.id} value={cm.id}>{cm.label}</option>)}
+                                        {CAMERA_MOTIONS.map(cm => <option key={cm.id} value={cm.id}>{cm.label}{isPremiumCameraMotion(cm.id) ? ' — PRO · 2×' : ''}</option>)}
                                       </select>
                                     </div>
                                     <div className="space-y-1">

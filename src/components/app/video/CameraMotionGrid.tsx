@@ -2,6 +2,7 @@ import { useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { CAMERA_MOTIONS } from '@/lib/videoMotionRecipes';
+import { isPremiumCameraMotion } from '@/config/videoCreditPricing';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { InfoTooltip } from './InfoTooltip';
 import { Badge } from '@/components/ui/badge';
@@ -77,6 +78,7 @@ export function CameraMotionGrid({
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
         {CAMERA_MOTIONS.map((motion) => {
           const active = isSelected(motion.id);
+          const isPro = isPremiumCameraMotion(motion.id);
           const previewUrl = motion.preview
             ? getLandingAssetUrl(motion.preview)
             : undefined;
@@ -112,12 +114,19 @@ export function CameraMotionGrid({
                   </div>
                 )}
 
+                {isPro && (
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-foreground/90 backdrop-blur-sm text-[9px] font-semibold tracking-wider uppercase text-background leading-none">
+                    PRO · 2×
+                  </div>
+                )}
+
                 {active && (
                   <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
                     <Check className="h-2.5 w-2.5 text-primary-foreground" />
                   </div>
                 )}
               </div>
+
 
               <div className="px-1 py-1.5">
                 <span
