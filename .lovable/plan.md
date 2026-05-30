@@ -1,24 +1,17 @@
-# Move "Category" out of the field
+Update the upload review row so the selected category and status badge no longer collide.
 
-The label is crammed inside the trigger and overlaps the value. Fix:
+Implementation plan:
 
-## Layout per row
-Two rows of content stacked next to the thumbnail:
+```text
+[image]  CATEGORY                                      [x]
+         [ Dress                         Suggested ▾ ]
 ```
-[thumb]   CATEGORY                              [×]
-          [ Garment              Suggested  ▾ ]
-```
-- Tiny `CATEGORY` label sits **above** the field as a regular form label (`text-[10px] uppercase tracking-wider text-muted-foreground`, `mb-1`).
-- The SelectTrigger only contains: value (truncated, flex-1) + Suggested/Pick-one pill + chevron. Plenty of room now.
-- Trigger height stays `h-10`, padding `px-3`.
 
-## Row container
-- `flex items-start` (top-aligned) so the label + field column lines up with the thumb's top edge.
-- Thumb: `w-14 h-14 sm:w-16 sm:h-16 rounded-xl`, aligned with `mt-[18px]` so it visually centers against the field (label + field combined).
-  Simpler: align thumb to the field by giving the label a fixed height equal to `mt-0` on thumb and label sitting above — center the thumb vertically with the **field row** by making the right column `flex flex-col` and giving the thumb `self-end mb-0` so it bottom-aligns with the field. Cleanest: keep `items-center` on the outer row and let the label sit as a small line above the field; the thumb visually centers against the (label+field) block.
-- Remove `×` button stays inline far right, vertically centered.
+- Keep `Category` as a small label above the select field, not inside the placeholder
+- Change the select trigger layout to `justify-between` so the selected value stays left and the `Suggested` badge stays right
+- Add clear spacing between `Dress` and `Suggested` using a dedicated right-side badge area
+- Make the badge smaller and less visually heavy, with `ml-3`/`gap-3` and stable shrink behavior
+- Ensure mobile works by letting the value truncate before it reaches the badge, rather than squeezing everything together
+- Keep the existing rounded corners and modal styling consistent with the app
 
-## File
-- `src/components/app/BulkUploadReviewModal.tsx` only.
-
-No logic changes.
+File to update: `src/components/app/BulkUploadReviewModal.tsx`

@@ -250,22 +250,20 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                   Category
                 </div>
                 <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
-                  <SelectTrigger className="h-10 text-sm w-full px-3">
-                    <span className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="min-w-0 flex-1 truncate text-left">
-                        <SelectValue placeholder="Pick category…" />
-                      </span>
-                      {row.isSuggested && row.status === 'suggested' && (
-                        <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground flex-shrink-0">
-                          Suggested
-                        </span>
-                      )}
-                      {row.status === 'failed' && (
-                        <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground flex-shrink-0">
-                          Pick one
-                        </span>
-                      )}
+                  <SelectTrigger className="h-10 text-sm w-full px-3 [&>span:first-child]:flex [&>span:first-child]:items-center [&>span:first-child]:justify-between [&>span:first-child]:gap-3 [&>span:first-child]:w-full [&>span:first-child]:min-w-0">
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      <SelectValue placeholder="Pick category…" />
                     </span>
+                    {row.isSuggested && row.status === 'suggested' && (
+                      <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground flex-shrink-0">
+                        Suggested
+                      </span>
+                    )}
+                    {row.status === 'failed' && (
+                      <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-destructive/10 text-destructive flex-shrink-0">
+                        Pick one
+                      </span>
+                    )}
                   </SelectTrigger>
                   <SelectContent className="max-h-[280px]">
                     {categoryOptions.map(group => (
