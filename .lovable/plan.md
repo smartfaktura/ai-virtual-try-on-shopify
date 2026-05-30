@@ -1,37 +1,33 @@
-# Three small polish fixes
+# Polish the Review Uploads modal
 
-## 1. Analyzing card matches the Upload Image tile layout
-
-Placeholder is structurally identical to the regular product card and the Upload Image tile — same width, same `aspect-square` body, same `h-[44px]` footer band — so it never breaks the grid.
-
-- Body shows the user's uploaded image as a **blurred** background (`object-cover blur-md scale-110 opacity-60`) with a small spinner + "Analyzing…" centered over it.
-- Footer band keeps the same `text-[10px]` / `text-[9px]` rhythm.
-
-## 2. Suggested pill — exact style from `/app/products/:id/edit`
-
-Reuse the markup from `ManualProductTab.tsx`:
-
-```tsx
-<span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
-  Suggested
-</span>
-```
-
-Failed rows get the same shape with `bg-destructive text-destructive-foreground` reading "Pick one".
-
-## 3. Pill lives INSIDE the Select trigger, right next to the value
-
-This is the part that's been off. In `/app/products/:id/edit` the Suggested pill sits **inside the field**, immediately to the right of the resolved value ("Dress") — not after the field, not above the label.
-
-Implementation in `BulkUploadReviewModal.tsx`:
-
-- Keep the small `CATEGORY` label above the field.
-- Render a custom trigger that looks like the shadcn `SelectTrigger` (same border, height, padding, chevron) but whose inner content is:
+## 1. Fit "Dress" + Suggested pill inside the field
+Right now they touch (`Dress[SUGGESTED]`). Fix:
+- Add real `gap-2` between the value and the pill inside the trigger.
+- Bump the trigger to `h-10` with `px-3` so the pill breathes.
+- Prefix the value with a muted **Category:** label (`text-[10px] uppercase tracking-wider text-muted-foreground`) so the field reads:
   ```
-  [ Dress  ·  Suggested ]              ▾
+  Category:  Dress   [ Suggested ]            ▾
   ```
-  i.e. the value text on the left, the pill inline next to it, chevron on the far right — all within the same bordered control.
-- When the user changes the value, `isSuggested` flips false and the pill disappears (existing behavior).
-- Failed rows render the same control with "Pick one" pill inside it instead.
+- Truncate the value, never the pill (pill is `flex-shrink-0`).
 
-Files touched: `src/pages/ProductImages.tsx` (analyzing card markup), `src/components/app/BulkUploadReviewModal.tsx` (pill style + in-trigger placement).
+## 2. Rounder corners, consistent with the app
+- Thumbnail: `rounded-md` → `rounded-xl` (matches product cards).
+- Row container: `rounded-lg` → `rounded-xl`.
+- Trigger: keep shadcn default `rounded-md` (already consistent with other inputs).
+
+## 3. Header sizing matches our modal standard
+- Title `text-base font-medium` → `text-lg font-semibold tracking-tight` (matches other dialogs like AddProduct).
+- Description stays `text-xs text-muted-foreground` but with `leading-relaxed` and no terminal period (per brand rule).
+- Tighten header `space-y-1` and dialog `gap-5`.
+
+## 4. Mobile layout
+On `< sm` the 64px thumb + field + pill gets cramped. Switch the row to:
+- Thumb stays left at 56×56 on mobile, 64×64 on `sm+`.
+- Field takes full remaining width; pill wraps to a second visual line inside the trigger only if needed (kept on one line via `min-w-0` + truncation on value).
+- Remove (×) button moves from absolute top-right to inline at the far right on mobile so it doesn't overlap the pill.
+- Dialog: `max-w-xl` on desktop, full-width with `mx-3` padding and `p-4` on mobile.
+
+## 5. Files touched
+- `src/components/app/BulkUploadReviewModal.tsx` — header sizing, row container radius, thumb radius/size, trigger height/padding, in-trigger `Category:` label + gap, mobile remove-button placement.
+
+No logic, analyzer, or save-flow changes.
