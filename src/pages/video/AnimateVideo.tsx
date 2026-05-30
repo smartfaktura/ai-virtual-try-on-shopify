@@ -500,7 +500,7 @@ export default function AnimateVideo() {
       cameraMotion: cameraMotion.replace(/_/g, ' '),
       subjectMotion: subjectMotion.replace(/_/g, ' '),
       duration: `${duration}s`,
-      audioMode: audioMode === 'silent' ? 'Silent' : 'Ambient',
+      audioMode: 'Silent',
       creditsUsed: credits,
       realismLevel: realismLevel.replace(/_/g, ' '),
       loopStyle: loopStyle === 'none' ? 'None' : loopStyle.replace(/_/g, ' '),
