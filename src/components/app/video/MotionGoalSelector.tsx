@@ -16,7 +16,7 @@ export function MotionGoalSelector({ category, sceneType, selectedGoalId, onChan
   const topRecommended = recommendedGoalIds[0];
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
       <h3 className="text-sm font-medium text-foreground">Recommended Motion</h3>
       <div className="grid gap-2">
         {goals.map((goal) => {
@@ -27,7 +27,7 @@ export function MotionGoalSelector({ category, sceneType, selectedGoalId, onChan
               key={goal.id}
               onClick={() => onChange(goal.id)}
               className={cn(
-                'w-full text-left px-3 py-2.5 rounded-lg border transition-all',
+                'w-full text-left px-3 py-2.5 rounded-xl border transition-all',
                 isSelected
                   ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                   : 'border-border bg-card hover:border-primary/30'
