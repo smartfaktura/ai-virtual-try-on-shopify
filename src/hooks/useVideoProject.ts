@@ -8,6 +8,43 @@ import { toast } from '@/lib/brandedToast';
 
 export type PipelineStage = 'idle' | 'creating_project' | 'analyzing' | 'building_prompt' | 'generating' | 'queued' | 'complete' | 'error';
 
+// ---- Analysis cache (module-level, hydrated from sessionStorage) ----
+const ANALYSIS_CACHE_KEY = 'vovv:video-analysis-cache:v1';
+const analysisCache = new Map<string, VideoAnalysis>();
+(function hydrateAnalysisCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = window.sessionStorage.getItem(ANALYSIS_CACHE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      for (const [k, v] of Object.entries(parsed)) {
+        if (v && typeof v === 'object') analysisCache.set(k, v as VideoAnalysis);
+      }
+    }
+  } catch {
+    // Corrupt entry — wipe and continue
+    try { window.sessionStorage.removeItem(ANALYSIS_CACHE_KEY); } catch {}
+  }
+})();
+function persistAnalysisCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    const obj: Record<string, VideoAnalysis> = {};
+    analysisCache.forEach((v, k) => { obj[k] = v; });
+    window.sessionStorage.setItem(ANALYSIS_CACHE_KEY, JSON.stringify(obj));
+  } catch {
+    // Quota / Safari private mode — ignore, in-memory cache still works
+  }
+}
+const cacheKeyFor = (imageUrl: string, workflow: string = 'animate') => `${workflow}:${imageUrl}`;
+export function hasCachedAnalysis(imageUrl: string, workflow: string = 'animate'): boolean {
+  return analysisCache.has(cacheKeyFor(imageUrl, workflow));
+}
+export function getCachedAnalysis(imageUrl: string, workflow: string = 'animate'): VideoAnalysis | null {
+  return analysisCache.get(cacheKeyFor(imageUrl, workflow)) ?? null;
+}
+
 interface AnimateParams {
   imageUrl: string;
   category: string;
@@ -47,8 +84,16 @@ export function useVideoProject() {
     generateVideo.reset();
   }, [generateVideo]);
 
-  // Phase A: Analyze image and return suggestions
+  // Phase A: Analyze image and return suggestions (cached per image URL)
   const analyzeImage = useCallback(async (imageUrl: string): Promise<VideoAnalysis | null> => {
+    // Cache hit — skip edge function & loading state
+    const cached = getCachedAnalysis(imageUrl, 'animate');
+    if (cached) {
+      setAnalysisResult(cached);
+      setPipelineError(null);
+      return cached;
+    }
+
     setIsAnalyzingImage(true);
     setPipelineError(null);
     try {
@@ -60,6 +105,11 @@ export function useVideoProject() {
 
       const analysis: VideoAnalysis = data.analysis;
       setAnalysisResult(analysis);
+      // Persist to cache (in-memory + sessionStorage best-effort)
+      try {
+        analysisCache.set(cacheKeyFor(imageUrl, 'animate'), analysis);
+        persistAnalysisCache();
+      } catch {}
       return analysis;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Analysis failed';

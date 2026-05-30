@@ -25,7 +25,7 @@ import { isPremiumCameraMotion } from '@/config/videoCreditPricing';
 import { estimateCredits, estimateBulkCredits } from '@/config/videoCreditPricing';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
-import { useVideoProject } from '@/hooks/useVideoProject';
+import { useVideoProject, getCachedAnalysis } from '@/hooks/useVideoProject';
 import { useBulkVideoProject } from '@/hooks/useBulkVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -102,11 +102,10 @@ export default function AnimateVideo() {
     return () => clearTimeout(timer);
   }, [analysisCompleteData, uploadCompleteTime]);
 
-  // When uiRevealReady flips, apply buffered analysis data
-  useEffect(() => {
-    if (!uiRevealReady || !analysisCompleteData) return;
-    const analysis = analysisCompleteData;
+  // Apply analysis fields to form state (shared by staged-reveal and cache-hit paths)
+  const applyAnalysis = useCallback((analysis: any) => {
     setHasAnalyzed(true);
+    setUiRevealReady(true);
     if (analysis.category) { setCategory(analysis.category); setDetectedCategory(analysis.category); }
     if (analysis.ecommerce_scene_type) { setSceneType(analysis.ecommerce_scene_type); setDetectedSceneType(analysis.ecommerce_scene_type); }
     if (analysis.recommended_motion_goals?.length) { setRecommendedGoalIds(analysis.recommended_motion_goals); setMotionGoalId(analysis.recommended_motion_goals[0]); }
@@ -115,9 +114,15 @@ export default function AnimateVideo() {
     if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
     if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
     if (analysis.risk_flags?.identity_sensitive || analysis.identity_sensitive) { setPreserveIdentity(true); setPreserveOutfit(true); }
+  }, []);
+
+  // When uiRevealReady flips (staged path), apply buffered analysis data
+  useEffect(() => {
+    if (!uiRevealReady || !analysisCompleteData) return;
+    applyAnalysis(analysisCompleteData);
     setAnalysisCompleteData(null);
     setUploadCompleteTime(null);
-  }, [uiRevealReady, analysisCompleteData]);
+  }, [uiRevealReady, analysisCompleteData, applyAnalysis]);
 
   // Product Context
   const [category, setCategory] = useState('fashion_apparel');
@@ -216,6 +221,12 @@ export default function AnimateVideo() {
     if (url) {
       setImageUrl(url);
       setWarnings(newWarnings);
+      const cached = getCachedAnalysis(url);
+      if (cached) {
+        applyAnalysis(cached);
+        analyzeImage(url); // keep hook's analysisResult in sync (instant from cache)
+        return;
+      }
       setHasAnalyzed(false);
       setUiRevealReady(false);
       setAnalysisCompleteData(null);
@@ -225,7 +236,7 @@ export default function AnimateVideo() {
         setAnalysisCompleteData(analysis);
       }
     }
-  }, [upload, analyzeImage]);
+  }, [upload, analyzeImage, applyAnalysis]);
 
   // File input handler
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,6 +250,12 @@ export default function AnimateVideo() {
     setImagePreview(libraryImageUrl);
     setImageUrl(libraryImageUrl);
     setWarnings([]);
+    const cached = getCachedAnalysis(libraryImageUrl);
+    if (cached) {
+      applyAnalysis(cached);
+      analyzeImage(libraryImageUrl); // keep hook's analysisResult in sync (instant from cache)
+      return;
+    }
     setHasAnalyzed(false);
     setUiRevealReady(false);
     setAnalysisCompleteData(null);
@@ -247,7 +264,7 @@ export default function AnimateVideo() {
     if (analysis) {
       setAnalysisCompleteData(analysis);
     }
-  }, [analyzeImage]);
+  }, [analyzeImage, applyAnalysis]);
 
   // Auto-load image from query param (e.g. from Library "Generate Video" button)
   const queryImageConsumed = useRef(false);
@@ -320,10 +337,16 @@ export default function AnimateVideo() {
           const current = prev;
           const firstWithUrl = current.find(i => i.url);
           if (firstWithUrl?.id === id && !hasAnalyzed) {
-            analyzeImage(url).then(analysis => {
-              if (analysis) setAnalysisCompleteData(analysis);
-            });
-            setUploadCompleteTime(Date.now());
+            const cached = getCachedAnalysis(url);
+            if (cached) {
+              applyAnalysis(cached);
+              analyzeImage(url); // sync hook state, instant
+            } else {
+              setUploadCompleteTime(Date.now());
+              analyzeImage(url).then(analysis => {
+                if (analysis) setAnalysisCompleteData(analysis);
+              });
+            }
           }
           return current;
         });
@@ -331,7 +354,7 @@ export default function AnimateVideo() {
         setBulkImages(prev => prev.filter(img => img.id !== id));
       }
     }
-  }, [bulkImages, upload, analyzeImage, hasAnalyzed]);
+  }, [bulkImages, upload, analyzeImage, hasAnalyzed, applyAnalysis]);
 
   const handleBulkRemoveImage = useCallback((id: string) => {
     setBulkImages(prev => prev.filter(img => img.id !== id));
@@ -351,14 +374,21 @@ export default function AnimateVideo() {
       const updated = [...prev, ...newImages];
       // Trigger analysis on first image if not yet analyzed
       if (!hasAnalyzed && updated.length > 0 && updated[0].url) {
-        setUploadCompleteTime(Date.now());
-        analyzeImage(updated[0].url).then(analysis => {
-          if (analysis) setAnalysisCompleteData(analysis);
-        });
+        const firstUrl = updated[0].url;
+        const cached = getCachedAnalysis(firstUrl);
+        if (cached) {
+          applyAnalysis(cached);
+          analyzeImage(firstUrl); // sync hook state, instant
+        } else {
+          setUploadCompleteTime(Date.now());
+          analyzeImage(firstUrl).then(analysis => {
+            if (analysis) setAnalysisCompleteData(analysis);
+          });
+        }
       }
       return updated;
     });
-  }, [bulkImages, hasAnalyzed, analyzeImage]);
+  }, [bulkImages, hasAnalyzed, analyzeImage, applyAnalysis]);
 
   const motionCount = isPaidUser ? selectedCameraMotions.length : 1;
 
