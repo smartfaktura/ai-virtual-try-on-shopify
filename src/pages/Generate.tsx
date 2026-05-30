@@ -4823,6 +4823,22 @@ export default function Generate() {
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
       <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category={conversionCategory} generationCount={generatedImages.length} />
+      {bulkUploadFiles && user && (
+        <BulkUploadReviewModal
+          open={!!bulkUploadFiles}
+          files={bulkUploadFiles}
+          userId={user.id}
+          onClose={() => setBulkUploadFiles(null)}
+          onComplete={(productIds) => {
+            setBulkUploadFiles(null);
+            queryClient.invalidateQueries({ queryKey: ['user-products'] });
+            setSourceType('product');
+            setScratchUpload(null);
+            setSelectedProductIds(new Set(productIds));
+            setCurrentStep('product');
+          }}
+        />
+      )}
       <AddProductModal
         open={showAddProduct}
         onOpenChange={setShowAddProduct}
