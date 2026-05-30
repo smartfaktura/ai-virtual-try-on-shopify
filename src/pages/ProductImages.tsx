@@ -18,9 +18,9 @@ import { injectActiveJob } from '@/lib/optimisticJobInjection';
 import { toast } from '@/lib/brandedToast';
 import { useProductImageScenes, dbToFrontend } from '@/hooks/useProductImageScenes';
 import { CATEGORY_KEYWORDS } from '@/components/app/product-images/constants';
-import { getCategoryLabel } from '@/lib/productCategories';
 import { getTriggeredBlocks, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal, type AddProductTab } from '@/components/app/AddProductModal';
+import { BulkUploadReviewModal } from '@/components/app/BulkUploadReviewModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -350,116 +350,20 @@ export default function ProductImages() {
   const [sentinelEl, setSentinelEl] = useState<HTMLDivElement | null>(null);
   const MAX_PRODUCTS = 20;
 
-  // Quick upload state
-  const [quickUploading, setQuickUploading] = useState(false);
-  const [quickUploadProgress, setQuickUploadProgress] = useState('');
+  // Direct image uploads are reviewed before saving so users can confirm product category.
+  const [bulkUploadFiles, setBulkUploadFiles] = useState<File[] | null>(null);
   const quickUploadInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [demoPickerOpen, setDemoPickerOpen] = useState(false);
 
-  const handleQuickUpload = useCallback(async (file: File) => {
+  const openUploadReview = useCallback((files: File[]) => {
     if (!user) { toast.error('Please sign in to upload'); return; }
-    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
-    if (file.size > 20 * 1024 * 1024) { toast.error('Image must be under 20MB'); return; }
-
-    setQuickUploading(true);
-    setQuickUploadProgress('Uploading…');
-
-    try {
-      // 1. Upload to storage
-      const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substring(2, 8);
-      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const fileName = `${user.id}/${timestamp}-${randomId}.${extension}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('product-uploads')
-        .upload(fileName, file, { cacheControl: '3600', upsert: false });
-
-      if (uploadError) throw new Error(uploadError.message);
-
-      const { data: urlData } = supabase.storage
-        .from('product-uploads')
-        .getPublicUrl(uploadData.path);
-
-      const imageUrl = urlData.publicUrl;
-
-      // 2. Analyze product image
-      setQuickUploadProgress('Analyzing…');
-      let title = 'Untitled Product';
-      let productType = '';
-      let userCategory: string | null = null;
-      let description = '';
-
-      try {
-        const { data: session } = await supabase.auth.getSession();
-        const token = session?.session?.access_token;
-        if (token) {
-          const { data: analysisData } = await supabase.functions.invoke('analyze-product-image', {
-            body: { imageUrl },
-          });
-          if (analysisData?.kind === 'not_product') {
-            const reason = typeof analysisData.reason === 'string' && analysisData.reason
-              ? analysisData.reason
-              : "That image doesn't look like a product";
-            toast.error(`${reason}. Please upload a product photo.`);
-            // Best-effort: remove the just-uploaded file so we don't leave orphans
-            try { await supabase.storage.from('product-uploads').remove([uploadData.path]); } catch { /* ignore */ }
-            setQuickUploading(false);
-            setQuickUploadProgress('');
-            return;
-          }
-          if (analysisData?.title) title = analysisData.title;
-          if (analysisData?.productType) productType = analysisData.productType;
-          if (typeof analysisData?.userCategory === 'string' && analysisData.userCategory) {
-            userCategory = analysisData.userCategory;
-          }
-          if (analysisData?.description) description = analysisData.description;
-        }
-      } catch {
-        // Analysis failed — proceed with defaults
-      }
-
-      // 3. Insert product (mirror ManualProductTab: canonical category label wins)
-      setQuickUploadProgress('Creating product…');
-      const resolvedCategory = (getCategoryLabel(userCategory) || productType || '').substring(0, 100);
-      const { data: newProduct, error: insertError } = await supabase
-        .from('user_products')
-        .insert({
-          user_id: user.id,
-          title,
-          product_type: resolvedCategory,
-          description,
-          image_url: imageUrl,
-          analysis_json: userCategory ? ({ userCategory } as never) : null,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw new Error(insertError.message);
-
-      // 4. Optimistically insert into cache, auto-select, then reconcile
-      queryClient.setQueryData<UserProduct[]>(['user-products', user.id], (old) => {
-        const list = old ?? [];
-        if (list.some(p => p.id === newProduct.id)) return list;
-        return [newProduct as UserProduct, ...list];
-      });
-      setSelectedProductIds(prev => {
-        const next = new Set(prev);
-        next.add(newProduct.id);
-        return next;
-      });
-      queryClient.invalidateQueries({ queryKey: ['user-products'] });
-
-      // Product appearing in grid is sufficient feedback — no toast needed
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Upload failed';
-      toast.error(msg);
-    } finally {
-      setQuickUploading(false);
-      setQuickUploadProgress('');
-    }
-  }, [user, queryClient]);
+    const images = files.filter(file => file.type.startsWith('image/'));
+    if (images.length === 0) { toast.error('Please upload an image file'); return; }
+    const oversized = images.find(file => file.size > 20 * 1024 * 1024);
+    if (oversized) { toast.error('Images must be under 20MB'); return; }
+    setBulkUploadFiles(images);
+  }, [user]);
 
   // Instant demo product insert — uses pre-baked metadata, zero AI cost
   const handleDemoSelect = useCallback(async (demo: DemoProduct) => {
@@ -505,14 +409,14 @@ export default function ProductImages() {
         if (item.type.startsWith('image/')) {
           e.preventDefault();
           const file = item.getAsFile();
-          if (file) handleQuickUpload(file);
+          if (file) openUploadReview([file]);
           return;
         }
       }
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [step, handleQuickUpload]);
+  }, [step, openUploadReview]);
 
 
   // Generation state
