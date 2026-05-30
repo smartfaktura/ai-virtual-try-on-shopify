@@ -277,7 +277,7 @@ const App = () => {
                         <Route path="/jobs/:id" element={<Jobs />} />
                         <Route path="/video" element={<VideoHub />} />
                         <Route path="/video/animate" element={<AnimateVideo />} />
-                        <Route path="/video/short-film" element={<ShortFilm />} />
+                        <Route path="/video/short-film" element={<Navigate to="/app/video" replace />} />
                         <Route path="/video/start-end" element={<StartEndVideo />} />
                         <Route path="/video/legacy" element={<VideoGenerate />} />
                         <Route path="/freestyle" element={<Freestyle />} />
