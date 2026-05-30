@@ -1391,9 +1391,9 @@ export default function ProductImages() {
           <>
             <div className="space-y-3">
               {/* Toolbar */}
-              {userProducts.length >= 5 && (
+              {userProducts.length >= 10 && (
               <div className="flex flex-col sm:flex-row gap-3 sm:items-center min-w-0">
-                {userProducts.length >= 5 && (
+                {userProducts.length >= 10 && (
                   <div className="relative flex-1 min-w-0">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     <Input
