@@ -1,74 +1,40 @@
-# Upload review — analyze on grid, cleaner popup, grouped category picker
+# Three small upload-review polish fixes
 
-Refines the upload flow on `/app/generate/product-images` based on your feedback. No backend, no generation, no schema changes — purely the upload review UX.
+## 1. "Suggested" badge — match /app/products style
 
-## 1. Move "Analyzing…" out of the popup, onto the grid
+In `/app/products` the category chip beside the product title uses the shared `<Badge variant="secondary">…</Badge>` component (dark navy pill, white text). I'll reuse the exact same component in the review popup.
 
-Today the popup opens immediately and shows "Analyzing…" inside each row. Instead:
+- Remove the custom "CATEGORY · SUGGESTED" header row.
+- Place `<Badge variant="secondary">Suggested</Badge>` inline to the right of the category dropdown so it sits next to the resolved label (e.g. next to "Dress").
+- Badge disappears the moment the user changes the dropdown (already the behavior).
+- "Pick one" fallback for failed analysis also becomes a `<Badge variant="destructive">`.
 
-- When you pick/drop/paste images, **do not open the popup yet**.
-- Show a temporary "analyzing" placeholder card on the product grid for each file, with the image thumbnail + a subtle spinner + "Analyzing…" label (matching the existing product card style).
-- Run the AI category analysis in the background.
-- Once **all** files finish analyzing (success or failure), the review popup opens with results already filled in.
-- If a single file fails analysis, it still appears in the popup with category empty so you can pick manually.
+## 2. Analyzing placeholder no longer breaks the grid
 
-Placeholder cards disappear when the popup opens. If you cancel the popup, the placeholders are cleared (nothing saved).
+The dashed border + thicker frame + extra padding made the placeholder card taller than neighbouring product cards. I'll make it visually identical to a regular product card:
 
-## 2. Cleaner review popup
+- Drop the dashed border, keep the same `rounded-xl` and `border-2 border-transparent` treatment as a normal card.
+- Keep the same `aspect-square` thumbnail and the same `h-[44px]` label area (so row heights line up exactly with surrounding products).
+- Image is dimmed to ~40% opacity with a small centered spinner overlay.
+- Label area shows: "Analyzing…" + "Detecting category" in the same `text-[10px]` / `text-[9px]` sizing as product cards.
 
-- Remove the Sparkles icon from the title and the CheckCircle/AlertCircle icons next to each row.
-- Title becomes simply: **Review uploads** (count moved into the confirm button only).
-- Description shortened: *Confirm the category we picked, or change it*
-- **Drop the title/name input** — names are auto-generated, you said it's noise.
-- Each row shows: thumbnail · category dropdown (with a small "Suggested" badge next to the dropdown when the value came from AI and hasn't been changed) · remove (×) button.
-- The "Suggested" badge disappears the moment you change the category, so you can tell at a glance which ones you've reviewed.
+## 3. Save button uses dot loader, not spinner
 
-## 3. Mobile-first popup layout
+Replace the `Loader2` spinner inside the "Save N products" button with the same three bouncing dots used in `StudioChat`:
 
-- Single-column stack on mobile: thumbnail (64px) on the left, category dropdown + Suggested badge on the right, remove button top-right corner.
-- Footer buttons stay side-by-side but full-width on mobile.
-- Max height tuned so the list scrolls inside the dialog on small screens.
-
-## 4. Grouped category dropdown
-
-The flat 35-item alphabetical list is replaced with grouped sections inside the same `Select` (using `SelectGroup` + `SelectLabel`), with subcategories under each parent:
-
-```text
-Apparel
-  Dress, Garment, Hoodie, Jacket, Jeans, Trousers, Activewear,
-  Swimwear, Lingerie, Kidswear
-Footwear
-  Sneakers, Shoes, Boots, Heels
-Bags & Accessories
-  Bag, Backpack, Wallet, Belt, Scarf
-Headwear
-  Cap, Hat, Beanie
-Jewellery & Watches
-  Watch, Necklace, Ring, Bracelet, Earring
-Eyewear
-  Eyewear
-Beauty & Fragrance
-  Fragrance, Skincare, Makeup
-Food & Beverage
-  Food, Beverage
-Home & Tech
-  Furniture, Home Décor, Tech Device
-Wellness & Pets
-  Supplement, Pet Accessory
-Other
-  Other
+```tsx
+<span className="flex items-center gap-1">
+  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+</span>
 ```
 
-Trigger still shows the resolved label (e.g. "Dress"). Grouping is presentation-only — the stored `category` value is unchanged, so all downstream prompt logic, scenes, and saved products keep working exactly as before.
+Button label stays "Save N products" — dots replace the spinner only.
 
 ## Files touched
 
-- `src/components/app/BulkUploadReviewModal.tsx` — strip icons + title input, add Suggested badge, grouped Select, mobile layout, expose analysis result via a new path so the parent can pre-analyze.
-- `src/pages/ProductImages.tsx` — change `openUploadReview` to first run analysis and render placeholder cards on the grid, then open the modal with prepared rows.
-- `src/lib/productSpecFields.ts` — add a `CATEGORY_GROUPS` constant (presentation-only) used by the dropdown. No change to existing exports.
+- `src/components/app/BulkUploadReviewModal.tsx` — Badge + dot loader.
+- `src/pages/ProductImages.tsx` — analyzing placeholder card markup.
 
-## Out of scope
-
-- No changes to `analyze-product-image` edge function, `user_products` schema, scene logic, generation, billing, or any other page.
-- No change to the "More options" path (still opens `AddProductModal`).
-- No change to category values stored in DB.
+No backend, no analyzer, no flow changes.
