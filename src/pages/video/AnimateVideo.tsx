@@ -221,6 +221,12 @@ export default function AnimateVideo() {
     if (url) {
       setImageUrl(url);
       setWarnings(newWarnings);
+      const cached = getCachedAnalysis(url);
+      if (cached) {
+        applyAnalysis(cached);
+        analyzeImage(url); // keep hook's analysisResult in sync (instant from cache)
+        return;
+      }
       setHasAnalyzed(false);
       setUiRevealReady(false);
       setAnalysisCompleteData(null);
@@ -230,7 +236,7 @@ export default function AnimateVideo() {
         setAnalysisCompleteData(analysis);
       }
     }
-  }, [upload, analyzeImage]);
+  }, [upload, analyzeImage, applyAnalysis]);
 
   // File input handler
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,6 +250,12 @@ export default function AnimateVideo() {
     setImagePreview(libraryImageUrl);
     setImageUrl(libraryImageUrl);
     setWarnings([]);
+    const cached = getCachedAnalysis(libraryImageUrl);
+    if (cached) {
+      applyAnalysis(cached);
+      analyzeImage(libraryImageUrl); // keep hook's analysisResult in sync (instant from cache)
+      return;
+    }
     setHasAnalyzed(false);
     setUiRevealReady(false);
     setAnalysisCompleteData(null);
@@ -252,7 +264,7 @@ export default function AnimateVideo() {
     if (analysis) {
       setAnalysisCompleteData(analysis);
     }
-  }, [analyzeImage]);
+  }, [analyzeImage, applyAnalysis]);
 
   // Auto-load image from query param (e.g. from Library "Generate Video" button)
   const queryImageConsumed = useRef(false);
