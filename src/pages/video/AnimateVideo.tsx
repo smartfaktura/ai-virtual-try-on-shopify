@@ -1274,14 +1274,13 @@ export default function AnimateVideo() {
                 <h3 className="text-base font-semibold tracking-tight text-foreground">Settings</h3>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">Aspect Ratio</label>
-                    <InfoTooltip text="For image-to-video, the output always matches your source image ratio. This selector is informational only." />
+                    <span className="rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                      Auto · matches source
+                    </span>
+                    <InfoTooltip text="For image-to-video, the output always matches your source image ratio." />
                   </div>
-                  <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    Output matches your source image ratio
-                  </p>
                 </div>
 
                 <div className="space-y-2">
