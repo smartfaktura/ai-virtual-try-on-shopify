@@ -23,7 +23,7 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 const SOCIAL_LINKS: SocialLink[] = [
   {
     label: 'Discord',
-    href: 'https://discord.gg/ZgnSJqUyV',
+    href: 'https://discord.gg/jJzDtrbbV',
     icon: <DiscordIcon className="w-4 h-4" />,
     primary: true,
   },

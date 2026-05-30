@@ -105,7 +105,7 @@ const socialLinks = [
     ),
   },
   {
-    href: 'https://discord.gg/ZgnSJqUyV',
+    href: 'https://discord.gg/jJzDtrbbV',
     label: 'Discord',
     icon: (
       <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor">

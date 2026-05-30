@@ -6,7 +6,7 @@ import founderImg from '@/assets/founder-tomas.jpg';
 
 const socialLinks = [
   { label: 'Email', href: 'mailto:hello@vovv.ai' },
-  { label: 'Discord', href: 'https://discord.gg/ZgnSJqUyV' },
+  { label: 'Discord', href: 'https://discord.gg/jJzDtrbbV' },
   { label: 'Twitter', href: 'https://twitter.com/vovvai' },
   { label: 'Instagram', href: 'https://instagram.com/vovv.ai' },
 ];
@@ -95,7 +95,7 @@ export default function AppHelp() {
             </a>
 
             <a
-              href="https://discord.gg/ZgnSJqUyV"
+              href="https://discord.gg/jJzDtrbbV"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-4 px-5 sm:px-6 py-4 border-b border-border hover:bg-muted/40 transition-colors"

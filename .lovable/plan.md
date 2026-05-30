@@ -1,18 +1,14 @@
-## Goal
-Remove the "Share to Explore" overlay button from generated images in `/app/freestyle`, while keeping the codepath intact for future re-enabling.
+## Plan: Update Discord Invite Link
 
-## Change
+Replace the old Discord invite URL `https://discord.gg/ZgnSJqUyV` with the new URL `https://discord.gg/jJzDtrbbV` across the codebase.
 
-### File: `src/components/app/freestyle/FreestyleGallery.tsx`
+### Files to edit
+1. `src/pages/AppHelp.tsx` — 2 occurrences (data array + inline link)
+2. `src/pages/HelpCenter.tsx` — 1 occurrence
+3. `src/components/app/AppShell.tsx` — 1 occurrence
+4. `src/components/app/CommunityBanner.tsx` — 1 occurrence
+5. `src/components/landing/LandingFooter.tsx` — 1 occurrence
+6. `src/components/home/HomeFooter.tsx` — 1 occurrence
 
-The `ImageCard` component conditionally renders a Share to Explore button (Send icon, lines ~425-433) only when the `onShareToDiscover` callback prop is provided.
-
-**Action:** Stop passing `onShareToDiscover` to `ImageCard` instances within the gallery grid. This is a single prop removal — the conditional `{onShareToDiscover && (...)}` block in `ImageCard` will then never render for freestyle images.
-
-**Preserve:**
-- `SubmitToDiscoverModal` import and component (still used elsewhere)
-- `shareImg` state and `shareHandler` logic (kept in place but unused)
-- All other image action buttons: Download, Delete, Copy Settings, Add as Scene, Add as Model, Add to Discover
-
-## Scope
-Presentational only. No logic, state, or modal changes. Other routes (e.g., product-images) that pass `onShareToDiscover` to their own gallery instances are unaffected.
+### Change
+String replacement only — no logic, layout, or functional changes.
