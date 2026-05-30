@@ -1,8 +1,22 @@
-Two tweaks to `src/components/app/BulkUploadReviewModal.tsx`:
+## Goal
+On `/app/video/start-end` and `/app/video/animate`, the "Cost: N credits" pill and the "Not enough credits" pill currently wrap to separate rows in the sticky bottom bar (visible in the attached screenshot of the narrow mobile-style preview). Make them smaller so they sit on the same row, with the "Get credits" button below.
 
-1. **Push the Suggested pill fully to the right of the trigger** — the current wrapper isn't expanding to full width, so "Dresses" and "Suggested" end up centered together. Fix by:
-   - Removing the inner wrapper span and laying out the trigger contents directly using `ml-auto` on the pill
-   - Adding `w-full` and `text-left` on the SelectValue wrapper so the value stays pinned left
-   - Result: `Dresses ............ [Suggested]  ▾`
+## Changes
 
-2. **Trim the dropdown height** — list now has ~40 items so the popover feels endless. Lower `max-h-[280px]` → `max-h-[260px]`, and tighten `SelectItem` (`py-1.5`) and `SelectLabel` (`py-1`) so more entries fit in the visible area without scrolling feeling sluggish. Also shorten a couple of the longest labels (e.g. "Supplements & Wellness" → "Supplements") in the modal mapping to keep rows compact.
+**1. `src/components/app/video/CreditEstimateBox.tsx`**
+- Reduce pill padding `px-3.5 py-2` → `px-2.5 py-1`
+- Reduce text from `text-sm` → `text-xs`
+- Keep rounded-full, border, muted bg
+- Shorten label: render as `Cost N` (drop the "credits" word, drop the colon-space gap) — e.g. `Cost 35` to save horizontal space
+
+**2. `src/pages/video/StartEndVideo.tsx` (lines 405-410)**
+- Shrink the "Not enough credits" pill to match: `px-2.5 py-1`, `text-xs`, icon `h-3 w-3`
+- Keep destructive styling
+
+**3. `src/pages/video/AnimateVideo.tsx` (lines 1327-1337)**
+- Same shrink on the "Not enough credits" pill (`px-2.5 py-1`, `text-xs`, icon `h-3 w-3`)
+- Also shrink the `× N = N credits` multiplier pill to align (already `text-xs`, just normalize padding to `px-2.5 py-1`)
+
+No layout-structure changes — the existing `flex-wrap` row continues to host all pills; reducing pill size lets Cost + Not-enough-credits fit on one line at the current preview width, while the full-width "Get credits" button stays on the next row on narrow viewports (unchanged `w-full sm:w-auto` behavior).
+
+No logic changes; visual/spacing only.
