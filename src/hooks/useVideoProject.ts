@@ -37,11 +37,11 @@ function persistAnalysisCache() {
     // Quota / Safari private mode — ignore, in-memory cache still works
   }
 }
-const cacheKeyFor = (imageUrl: string, workflow: WorkflowType | 'animate' = 'animate') => `${workflow}:${imageUrl}`;
-export function hasCachedAnalysis(imageUrl: string, workflow: WorkflowType | 'animate' = 'animate'): boolean {
+const cacheKeyFor = (imageUrl: string, workflow: string = 'animate') => `${workflow}:${imageUrl}`;
+export function hasCachedAnalysis(imageUrl: string, workflow: string = 'animate'): boolean {
   return analysisCache.has(cacheKeyFor(imageUrl, workflow));
 }
-export function getCachedAnalysis(imageUrl: string, workflow: WorkflowType | 'animate' = 'animate'): VideoAnalysis | null {
+export function getCachedAnalysis(imageUrl: string, workflow: string = 'animate'): VideoAnalysis | null {
   return analysisCache.get(cacheKeyFor(imageUrl, workflow)) ?? null;
 }
 
