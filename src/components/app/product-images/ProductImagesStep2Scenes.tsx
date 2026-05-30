@@ -299,6 +299,10 @@ interface UnifiedCategorySectionProps {
   isRecommended?: boolean;
   gridClass: string;
   headerRight?: React.ReactNode;
+  showGlobalSelection?: boolean;
+  globalSelectionCount?: number;
+  onClearGlobalSelection?: () => void;
+
 }
 
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
@@ -413,12 +417,8 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
 
 
-      {selectedSceneIds.size > 0 && (
-        <div className="flex items-center justify-end gap-2 flex-wrap min-w-0 max-w-full">
-          <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} selected</Badge>
-          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
-        </div>
-      )}
+
+
 
 
 
@@ -426,29 +426,41 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       {/* No category detected: show all category collections expanded */}
       {!hasDetectedCategories && ACTIVE_CATEGORY_COLLECTIONS.length > 0 && (
         <div className="space-y-2">
-          {ACTIVE_CATEGORY_COLLECTIONS.map((cat, idx) => (
-            <UnifiedCategorySectionWithSelectAll
-              key={cat.id}
-              catId={cat.id}
-              catTitle={CATEGORY_LABELS[cat.id] || cat.title}
-              essentialScenes={[]}
-              categoryScenes={cat.scenes}
-              categorySubGroups={cat.subGroups}
-              selectedSceneIds={selectedSceneIds}
-              onSelectionChange={onSelectionChange}
-              isOpen={expandedCategories.has(cat.id)}
-              onToggleOpen={() => toggleCategory(cat.id)}
-              toggleScene={toggleScene}
-              gridClass={gridClass}
-              headerRight={idx === 0 ? (
-                <span className="hidden sm:inline-flex">
-                  <GridSizeToggle value={gridSize} onChange={setGridSize} />
-                </span>
-              ) : undefined}
-            />
-          ))}
+          {ACTIVE_CATEGORY_COLLECTIONS.map((cat, idx) => {
+            const section = (
+              <UnifiedCategorySectionWithSelectAll
+                key={cat.id}
+                catId={cat.id}
+                catTitle={CATEGORY_LABELS[cat.id] || cat.title}
+                essentialScenes={[]}
+                categoryScenes={cat.scenes}
+                categorySubGroups={cat.subGroups}
+                selectedSceneIds={selectedSceneIds}
+                onSelectionChange={onSelectionChange}
+                isOpen={expandedCategories.has(cat.id)}
+                onToggleOpen={() => toggleCategory(cat.id)}
+                toggleScene={toggleScene}
+                gridClass={gridClass}
+                showGlobalSelection={idx === 0 && selectedSceneIds.size > 0}
+                globalSelectionCount={selectedSceneIds.size}
+                onClearGlobalSelection={() => onSelectionChange(new Set())}
+              />
+            );
+            if (idx === 0) {
+              return (
+                <div key={cat.id} className="flex items-center gap-2 min-w-0 max-w-full">
+                  <div className="flex-1 min-w-0">{section}</div>
+                  <span className="hidden sm:inline-flex shrink-0">
+                    <GridSizeToggle value={gridSize} onChange={setGridSize} />
+                  </span>
+                </div>
+              );
+            }
+            return section;
+          })}
         </div>
       )}
+
 
       {/* "Pre-selected from Explore" card now rendered at the page level
           (ProductImages.tsx) so it paints instantly on Step 2 entry. */}
@@ -471,30 +483,42 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       )}
       {unifiedRecommended.length > 0 && (
         <div className="space-y-2">
-          {unifiedRecommended.map((cat, idx) => (
-            <UnifiedCategorySectionWithSelectAll
-              key={cat.id}
-              catId={cat.id}
-              catTitle={CATEGORY_LABELS[cat.id] || cat.title}
-              essentialScenes={cat.essentialScenes}
-              categoryScenes={cat.scenes}
-              categorySubGroups={cat.subGroups}
-              selectedSceneIds={selectedSceneIds}
-              onSelectionChange={onSelectionChange}
-              isOpen={expandedCategories.has(cat.id)}
-              onToggleOpen={() => toggleCategory(cat.id)}
-              toggleScene={toggleScene}
-              isRecommended
-              gridClass={gridClass}
-              headerRight={idx === 0 ? (
-                <span className="hidden sm:inline-flex">
-                  <GridSizeToggle value={gridSize} onChange={setGridSize} />
-                </span>
-              ) : undefined}
-            />
-          ))}
+          {unifiedRecommended.map((cat, idx) => {
+            const section = (
+              <UnifiedCategorySectionWithSelectAll
+                key={cat.id}
+                catId={cat.id}
+                catTitle={CATEGORY_LABELS[cat.id] || cat.title}
+                essentialScenes={cat.essentialScenes}
+                categoryScenes={cat.scenes}
+                categorySubGroups={cat.subGroups}
+                selectedSceneIds={selectedSceneIds}
+                onSelectionChange={onSelectionChange}
+                isOpen={expandedCategories.has(cat.id)}
+                onToggleOpen={() => toggleCategory(cat.id)}
+                toggleScene={toggleScene}
+                isRecommended
+                gridClass={gridClass}
+                showGlobalSelection={idx === 0 && selectedSceneIds.size > 0}
+                globalSelectionCount={selectedSceneIds.size}
+                onClearGlobalSelection={() => onSelectionChange(new Set())}
+              />
+            );
+            if (idx === 0) {
+              return (
+                <div key={cat.id} className="flex items-center gap-2 min-w-0 max-w-full">
+                  <div className="flex-1 min-w-0">{section}</div>
+                  <span className="hidden sm:inline-flex shrink-0">
+                    <GridSizeToggle value={gridSize} onChange={setGridSize} />
+                  </span>
+                </div>
+              );
+            }
+            return section;
+          })}
         </div>
       )}
+
 
       {(unifiedOther.length > 0 || isLoadingRest) && (
         <div className="space-y-4 pt-2">
@@ -712,6 +736,7 @@ function UnifiedCategorySectionWithSelectAll({
   catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
   selectedSceneIds, onSelectionChange, isOpen, onToggleOpen, toggleScene,
   isRecommended, gridClass, headerRight,
+  showGlobalSelection, globalSelectionCount, onClearGlobalSelection,
 }: UnifiedCategorySectionProps) {
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
@@ -747,6 +772,10 @@ function UnifiedCategorySectionWithSelectAll({
     onSelectionChange(next);
   };
 
+  const globalSelectionInfo = showGlobalSelection && globalSelectionCount && onClearGlobalSelection
+    ? { count: globalSelectionCount, onClear: onClearGlobalSelection }
+    : undefined;
+
   return (
     <Collapsible open={isOpen} onOpenChange={onToggleOpen}>
       <CollapsibleTrigger className="w-full">
@@ -770,8 +799,8 @@ function UnifiedCategorySectionWithSelectAll({
               </div>
             )}
             {isRecommended && (
-              <span className="inline-flex items-center rounded-full text-[10px] h-5 px-2 font-semibold bg-primary/10 text-primary">
-                Recommended Shots
+              <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                Recommended
               </span>
             )}
             {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -782,6 +811,7 @@ function UnifiedCategorySectionWithSelectAll({
         {/* Essential shots sub-groups */}
         {essentialSubGroups.map((sg, i) => {
           const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+          const isFirst = i === 0;
           return (
             <SubGroupSection
               key={`ess-${i}`}
@@ -792,6 +822,7 @@ function UnifiedCategorySectionWithSelectAll({
               allSelected={sgAllSelected}
               onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
+              globalSelectionInfo={isFirst ? globalSelectionInfo : undefined}
             />
           );
         })}
@@ -799,6 +830,7 @@ function UnifiedCategorySectionWithSelectAll({
         {/* Category shots sub-groups */}
         {catSubGroups.map((sg, i) => {
           const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+          const isFirst = essentialSubGroups.length === 0 && i === 0;
           return (
             <SubGroupSection
               key={`cat-${i}`}
@@ -809,6 +841,7 @@ function UnifiedCategorySectionWithSelectAll({
               allSelected={sgAllSelected}
               onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
+              globalSelectionInfo={isFirst ? globalSelectionInfo : undefined}
             />
           );
         })}
@@ -816,6 +849,7 @@ function UnifiedCategorySectionWithSelectAll({
     </Collapsible>
   );
 }
+
 
 /** Animated color cycling dot */
 function CuratorColorHint({ baseHex }: { baseHex: string }) {
@@ -839,7 +873,7 @@ function CuratorColorHint({ baseHex }: { baseHex: string }) {
 }
 
 /** Per-sub-group section with Select All on left and label on right */
-function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSelected, onToggleAll, gridClass }: {
+function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSelected, onToggleAll, gridClass, globalSelectionInfo }: {
   label: string;
   scenes: ProductImageScene[];
   selectedSceneIds: Set<string>;
@@ -847,6 +881,7 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
   allSelected: boolean;
   onToggleAll: () => void;
   gridClass: string;
+  globalSelectionInfo?: { count: number; onClear: () => void };
 }) {
   const selectedCount = scenes.filter(s => selectedSceneIds.has(s.id)).length;
   const curatorColor = scenes.find(s => s.suggestedColors?.length)?.suggestedColors?.[0];
@@ -861,6 +896,21 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
         {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
         <div className="h-px flex-1 bg-border min-w-[20px]" />
+        {globalSelectionInfo && (
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+              {globalSelectionInfo.count} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[10px] h-6 px-2 shrink-0"
+              onClick={(e) => { e.stopPropagation(); globalSelectionInfo.onClear(); }}
+            >
+              Clear
+            </Button>
+          </div>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -871,6 +921,7 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
           {selectedCount > 0 && !allSelected && ` (${selectedCount}/${scenes.length})`}
         </Button>
       </div>
+
       {showLegend && (
         <p className="text-[11px] text-muted-foreground/80 mb-2">
           Dynamic backgrounds — fully editable in the next step
