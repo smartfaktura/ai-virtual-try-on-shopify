@@ -84,8 +84,16 @@ export function useVideoProject() {
     generateVideo.reset();
   }, [generateVideo]);
 
-  // Phase A: Analyze image and return suggestions
+  // Phase A: Analyze image and return suggestions (cached per image URL)
   const analyzeImage = useCallback(async (imageUrl: string): Promise<VideoAnalysis | null> => {
+    // Cache hit — skip edge function & loading state
+    const cached = getCachedAnalysis(imageUrl, 'animate');
+    if (cached) {
+      setAnalysisResult(cached);
+      setPipelineError(null);
+      return cached;
+    }
+
     setIsAnalyzingImage(true);
     setPipelineError(null);
     try {
@@ -97,6 +105,11 @@ export function useVideoProject() {
 
       const analysis: VideoAnalysis = data.analysis;
       setAnalysisResult(analysis);
+      // Persist to cache (in-memory + sessionStorage best-effort)
+      try {
+        analysisCache.set(cacheKeyFor(imageUrl, 'animate'), analysis);
+        persistAnalysisCache();
+      } catch {}
       return analysis;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Analysis failed';
