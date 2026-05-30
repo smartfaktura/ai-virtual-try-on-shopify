@@ -1370,7 +1370,7 @@ export default function ProductImages() {
       case 1: return { title: 'Select products', subtitle: 'Choose one or more products to start generating visuals' };
       case 2: return { title: 'Select shots', subtitle: 'Pick the shots you want to generate for your products' };
       case 3: return { title: 'Customize details', subtitle: 'Add the details needed for your selected visuals' };
-      case 4: return { title: 'Review & generate', subtitle: 'A few last details left to fill' };
+      case 4: return { title: 'Review & generate', subtitle: 'Check everything and start creating your visuals' };
       default: return null;
     }
   })();
