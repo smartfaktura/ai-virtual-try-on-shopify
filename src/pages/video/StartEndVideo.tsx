@@ -224,7 +224,7 @@ export default function StartEndVideo() {
       { label: 'Motion', value: MOTION_STRENGTHS.find((s) => s.id === motionStrength)?.label ?? motionStrength },
       { label: 'Smoothness', value: SMOOTHNESS_LEVELS.find((s) => s.id === smoothness)?.label ?? smoothness },
       { label: 'Realism', value: REALISM_LEVELS.find((s) => s.id === realism)?.label ?? realism },
-      { label: 'Audio', value: audioMode === 'ambient' ? 'Ambient' : 'Silent' },
+      { label: 'Audio', value: 'Silent' },
       { label: 'Aspect ratio', value: derivedAspectRatio },
       ...(project.compatibility ? [{ label: 'Compatibility', value: project.compatibility.tier }] : []),
       ...(userNote.trim() ? [{ label: 'Note', value: userNote.trim() }] : []),
