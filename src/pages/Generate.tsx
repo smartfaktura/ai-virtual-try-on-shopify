@@ -4845,14 +4845,18 @@ export default function Generate() {
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
       <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category={conversionCategory} generationCount={generatedImages.length} />
-      {bulkUploadFiles && user && (
+      {bulkReviewItems && user && (
         <BulkUploadReviewModal
-          open={!!bulkUploadFiles}
-          files={bulkUploadFiles}
+          open={!!bulkReviewItems}
+          items={bulkReviewItems}
           userId={user.id}
-          onClose={() => setBulkUploadFiles(null)}
+          onClose={() => {
+            bulkReviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setBulkReviewItems(null);
+          }}
           onComplete={(productIds) => {
-            setBulkUploadFiles(null);
+            bulkReviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setBulkReviewItems(null);
             queryClient.invalidateQueries({ queryKey: ['user-products'] });
             setSourceType('product');
             setScratchUpload(null);
