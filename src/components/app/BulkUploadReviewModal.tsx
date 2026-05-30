@@ -55,7 +55,7 @@ async function analyzeOne(file: File): Promise<{ title: string; productType: str
       title: data.title || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
       productType: data.productType || '',
       description: data.description || '',
-      category: data.category || 'other',
+      category: data.userCategory || data.category || 'other',
     };
   } catch {
     return null;

@@ -1,17 +1,34 @@
-# Always show the category confirmation popup, even for 1 file
+## What happened
 
-## Issue
-Single-file uploads on `/app/generate/product-images` open `AddProductModal` → `ManualProductTab`, which has only an inline picker — no popup. Only 2+ files trigger `BulkUploadReviewModal`. User expects the popup for every upload.
+I changed the wrong/older product selection component first. Your current route `/app/generate/product-images` is actually rendering `src/pages/ProductImages.tsx`, not `ProductImagesStep1Products.tsx`.
 
-## Fix
-In `src/components/app/product-images/ProductImagesStep1Products.tsx`, drop the `files.length === 1` branch and always route picked files through `BulkUploadReviewModal` (1 file or many). The modal already analyzes per file, lets the user confirm/edit the AI category, then saves to `user_products` and pre-selects them.
+That is why you still see the old upload tile text `More options` in the preview, and why clicking `Upload Image` still quick-saves the product immediately instead of showing the category confirmation popup.
 
-The "Add Product" empty-state button keeps opening `AddProductModal` so users without products can still choose URL / CSV / Shopify import methods.
+## Why this won’t mess up the app
 
-## Files
-- `src/components/app/product-images/ProductImagesStep1Products.tsx` — remove single-file branch, send all uploads to `BulkUploadReviewModal`.
+The fix will be limited to the upload entry points on `/app/generate/product-images` only. I will not touch generation, shots, billing, credits, scene selection, existing saved products, backend schema, or global navigation.
 
-## Out of scope
-- `BulkUploadReviewModal` internals (already shows per-row category select).
-- Other entry points and `ManualProductTab`.
-- Backend / DB.
+## Plan
+
+1. Update the real upload handler in `src/pages/ProductImages.tsx`
+   - Replace the current quick-upload path for the Step 1 upload tile with the existing `BulkUploadReviewModal` flow
+   - This means selecting one image or multiple images opens the review popup first
+   - The user can confirm or change category before saving
+
+2. Cover the matching upload entry points on that page
+   - Existing-products upload tile
+   - Empty-state “Upload product photo” button
+   - Drag-and-drop upload on the product grid
+   - Paste image upload while on Step 1
+
+3. Keep the old “More options” path unchanged
+   - It will still open the Add Product modal for URL / manual / import-style workflows
+   - Only direct image upload should route to category confirmation
+
+4. Clean up the earlier misplaced change
+   - Remove the unused single-file/upload popup wiring from `ProductImagesStep1Products.tsx` if it is not used by this route
+   - This reduces risk and avoids having two conflicting upload implementations
+
+5. Verify the visible UI signal
+   - The upload tile on `/app/generate/product-images` should no longer immediately save
+   - It should open the review popup titled like `Review 1 uploads` with a category dropdown before saving
