@@ -337,10 +337,16 @@ export default function AnimateVideo() {
           const current = prev;
           const firstWithUrl = current.find(i => i.url);
           if (firstWithUrl?.id === id && !hasAnalyzed) {
-            analyzeImage(url).then(analysis => {
-              if (analysis) setAnalysisCompleteData(analysis);
-            });
-            setUploadCompleteTime(Date.now());
+            const cached = getCachedAnalysis(url);
+            if (cached) {
+              applyAnalysis(cached);
+              analyzeImage(url); // sync hook state, instant
+            } else {
+              setUploadCompleteTime(Date.now());
+              analyzeImage(url).then(analysis => {
+                if (analysis) setAnalysisCompleteData(analysis);
+              });
+            }
           }
           return current;
         });
@@ -348,7 +354,7 @@ export default function AnimateVideo() {
         setBulkImages(prev => prev.filter(img => img.id !== id));
       }
     }
-  }, [bulkImages, upload, analyzeImage, hasAnalyzed]);
+  }, [bulkImages, upload, analyzeImage, hasAnalyzed, applyAnalysis]);
 
   const handleBulkRemoveImage = useCallback((id: string) => {
     setBulkImages(prev => prev.filter(img => img.id !== id));
