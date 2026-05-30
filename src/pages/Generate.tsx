@@ -2620,6 +2620,7 @@ export default function Generate() {
                   variant={isInteriorDesign ? 'room' : 'product'}
                   saveToLibrary={saveToLibrary}
                   onSaveToLibraryChange={isInteriorDesign ? undefined : setSaveToLibrary}
+                  onBulkFiles={(!isInteriorDesign && !!user) ? (files) => setBulkUploadFiles(files) : undefined}
                 />
 
                 {/* Recent uploads as collapsible section below upload area */}
