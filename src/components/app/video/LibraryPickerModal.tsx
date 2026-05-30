@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { preventAutoFocusOnMobile } from '@/lib/dialogAutoFocus';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Search, ImageIcon, Check, FolderOpen } from 'lucide-react';
@@ -47,6 +48,7 @@ export function LibraryPickerModal({ open, onOpenChange, onSelect, multiSelect =
       <DialogContent
         className="max-w-3xl rounded-2xl p-0 overflow-hidden gap-0"
         aria-describedby={undefined}
+        onOpenAutoFocus={preventAutoFocusOnMobile}
       >
         {/* Header */}
         <div className="px-6 pt-5 pb-4 border-b border-border bg-background space-y-3">
