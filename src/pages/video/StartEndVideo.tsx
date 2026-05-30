@@ -391,29 +391,40 @@ export default function StartEndVideo() {
         <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
             <CreditEstimateBox params={creditParams} />
-          </div>
-          <Button
-            size="lg"
-            className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-            disabled={!canGenerate}
-            onClick={handleGenerate}
-          >
-            {project.isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Generate Video
-              </>
+            {notEnoughCredits && !project.isGenerating && (
+              <span className="text-xs text-muted-foreground">
+                Not enough credits — you need {creditCost}, you have {creditsBalance}
+              </span>
             )}
-          </Button>
+          </div>
+          {notEnoughCredits && !project.isGenerating ? (
+            <Button
+              size="lg"
+              className="rounded-full w-full sm:w-auto sm:ml-auto"
+              onClick={() => openBuyModal('start_end_video_cta')}
+            >
+              Get credits
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+              disabled={!canGenerate}
+              onClick={handleGenerate}
+            >
+              {project.isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
+                </>
+              ) : (
+                'Generate Video'
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
-      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} />
     </div>
   );
 }
