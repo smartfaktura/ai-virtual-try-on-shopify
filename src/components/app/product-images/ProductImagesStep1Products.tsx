@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, CheckCircle, Upload, Package, Search, Plus } from 'lucide-react';
 import { AddProductModal } from '@/components/app/AddProductModal';
+import { BulkUploadReviewModal } from '@/components/app/BulkUploadReviewModal';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { useAuth } from '@/contexts/AuthContext';
 import type { UserProduct } from './types';
 
 interface Step1Props {
