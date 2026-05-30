@@ -299,6 +299,10 @@ interface UnifiedCategorySectionProps {
   isRecommended?: boolean;
   gridClass: string;
   headerRight?: React.ReactNode;
+  showGlobalSelection?: boolean;
+  globalSelectionCount?: number;
+  onClearGlobalSelection?: () => void;
+
 }
 
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
