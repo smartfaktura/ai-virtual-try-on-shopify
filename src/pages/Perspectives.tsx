@@ -982,19 +982,28 @@ export default function Perspectives() {
               </div>
 
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search products..."
+                  placeholder="Search by name, type, color, SKU, tag…"
                   value={productSearch}
                   onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }}
-                  className="pl-9"
+                  className="pl-11 pr-4 h-11 rounded-full text-sm"
                 />
               </div>
               <div className="flex gap-2 items-center">
                 <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
                   {selectedProductIds.size} selected
                 </Badge>
-                <span className="text-xs text-muted-foreground">(max 10)</span>
+                {selectedProductIds.size > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2"
+                    onClick={() => setSelectedProductIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
                 {filteredProducts.slice(0, productVisibleCount).map(product => {
