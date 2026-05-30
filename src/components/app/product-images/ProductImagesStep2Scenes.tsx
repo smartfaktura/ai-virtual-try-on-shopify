@@ -433,7 +433,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       {/* No category detected: show all category collections expanded */}
       {!hasDetectedCategories && ACTIVE_CATEGORY_COLLECTIONS.length > 0 && (
         <div className="space-y-2">
-          {ACTIVE_CATEGORY_COLLECTIONS.map(cat => (
+          {ACTIVE_CATEGORY_COLLECTIONS.map((cat, idx) => (
             <UnifiedCategorySectionWithSelectAll
               key={cat.id}
               catId={cat.id}
@@ -447,6 +447,11 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               onToggleOpen={() => toggleCategory(cat.id)}
               toggleScene={toggleScene}
               gridClass={gridClass}
+              headerRight={idx === 0 ? (
+                <span className="hidden sm:inline-flex">
+                  <GridSizeToggle value={gridSize} onChange={setGridSize} />
+                </span>
+              ) : undefined}
             />
           ))}
         </div>
@@ -473,7 +478,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       )}
       {unifiedRecommended.length > 0 && (
         <div className="space-y-2">
-          {unifiedRecommended.map(cat => (
+          {unifiedRecommended.map((cat, idx) => (
             <UnifiedCategorySectionWithSelectAll
               key={cat.id}
               catId={cat.id}
@@ -488,6 +493,11 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               toggleScene={toggleScene}
               isRecommended
               gridClass={gridClass}
+              headerRight={idx === 0 ? (
+                <span className="hidden sm:inline-flex">
+                  <GridSizeToggle value={gridSize} onChange={setGridSize} />
+                </span>
+              ) : undefined}
             />
           ))}
         </div>
