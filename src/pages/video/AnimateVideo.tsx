@@ -13,7 +13,7 @@ import { ProductContextSelector } from '@/components/app/video/ProductContextSel
 import { MotionGoalSelector } from '@/components/app/video/MotionGoalSelector';
 import { MotionRefinementPanel } from '@/components/app/video/MotionRefinementPanel';
 import { PreservationRulesPanel } from '@/components/app/video/PreservationRulesPanel';
-import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
+
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/video/VideoResultsPanel';
