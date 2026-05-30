@@ -1,67 +1,51 @@
-# Make orbit + premium handheld 2× cost ("PRO Mode")
+# Fix Orbit pricing + Motion Refinement label legibility
 
-## What changes for users
+## Bug found
 
-- 5s video with `product_orbit` or `premium_handheld`: **25 → 50 credits**
-- 10s video with `product_orbit` or `premium_handheld`: **50 → 100 credits**
-- All other camera motions stay at 25 / 50 credits.
-- Both options visually labeled as **PRO Mode** in every camera-motion selector so users understand the surcharge.
+The camera-motion grid uses id **`orbit`** (`src/lib/videoMotionRecipes.ts:260`), but the premium list everywhere checks for **`product_orbit`**. Result:
 
-## Pricing logic change
+- No `PRO · 2×` badge on the Orbit tile
+- Frontend `estimateCredits` never doubles for Orbit
+- Backend `enqueue-generation` never doubles for Orbit
+- Only Premium Handheld was actually doubled
 
-Today `premiumMotion: 2` is a flat `+2`. We replace it with a **2× multiplier** applied only when the selected camera motion is `product_orbit` or `premium_handheld`.
+The id `product_orbit` doesn't exist in `CAMERA_MOTIONS` at all — it was a stale name. We replace it with `orbit` everywhere (no backward-compat needed because no row in the DB could have matched it).
+
+## Changes
+
+### 1. Pricing — use the real id
 
 `src/config/videoCreditPricing.ts`
-- Remove `premiumMotion: 2`; add `premiumMotionMultiplier: 2`.
-- In `estimateCredits` (animate branch):
-  ```ts
-  let cost = duration === '10' ? rules.base10s : rules.base5s;
-  if (motionRecipe && PREMIUM_MOTION_RECIPES.includes(motionRecipe)) {
-    cost = cost * rules.premiumMotionMultiplier;
-  }
-  ```
-- Export a small helper `isPremiumCameraMotion(id: string): boolean` so UI doesn't duplicate the list.
+```ts
+const PREMIUM_MOTION_RECIPES = ['orbit', 'premium_handheld'];
+```
 
 `supabase/functions/enqueue-generation/index.ts`
-- Replace the existing `+2` block:
-  ```ts
-  let cost = dur === "10" ? 50 : 25;
-  if (["product_orbit", "premium_handheld"].includes(motion)) cost *= 2;
-  ```
-- Redeploy `enqueue-generation`.
-
-## UI: "PRO Mode" label
-
-Targets — both camera-motion `<select>` dropdowns in `src/pages/video/AnimateVideo.tsx` (main picker + per-image override at line 877-879).
-
-Approach: append ` — PRO · 2×` to the option text when `cm.id` is in the premium list. `<option>` can't render badges, but plain-text suffix is the standard pattern and matches the rest of the file.
-
-```tsx
-{CAMERA_MOTIONS.map(cm => (
-  <option key={cm.id} value={cm.id}>
-    {cm.label}{isPremiumCameraMotion(cm.id) ? ' — PRO · 2×' : ''}
-  </option>
-))}
+```ts
+if (["orbit", "premium_handheld"].includes(motion)) cost *= 2;
 ```
+Redeploy `enqueue-generation`.
 
-Also: directly above each Camera Motion select, render a small inline hint when the currently-selected motion is premium:
-```
-PRO Mode active · doubles credit cost for cinematic camera work
-```
-Styled with existing `text-[10px] text-muted-foreground` token — no new tokens.
+### 2. AnimateVideo override select
 
-## Credit summary panel
+The per-image override `<select>` already uses `isPremiumCameraMotion` — no change needed; it will now correctly tag Orbit with ` — PRO · 2×`.
 
-The summary row already calls `estimateCredits(...)` so it will automatically display 50 / 100 after the rule change. No extra wiring.
+### 3. Motion Refinement label legibility
 
-## Not changed
+`src/components/app/video/CameraMotionGrid.tsx` — tile labels currently render as `text-[10px] text-muted-foreground` (gray on white card, low contrast, too small). Fix:
 
-- Recipe presets that *default* to `premium_handheld` / `orbit` (Premium Campaign Reveal, Editorial Perfume Ad, Premium Electronics Ad, Premium Bottle Showcase, Clean Rotation, Dynamic Training) — they inherit the new 2× cost automatically, which is the intended behavior.
-- Start & End, Consistent Model, Ad Sequence, Short Film — out of scope.
-- Existing queued/completed jobs — historical `credits_reserved` values unchanged.
+- Bump base size: `text-[10px]` → `text-[11px]`
+- Tighten weight + color for non-active: `text-muted-foreground` → `text-foreground/80 font-medium`
+- Active state already bold/foreground — keep as is
+- Add slightly more vertical padding: `py-1.5` → `py-2`
 
-## Files touched
+PRO badge also gets a small contrast/readability bump:
+- Larger text: `text-[9px]` → `text-[10px]`
+- Tighter padding stays, but use full `bg-foreground` (not 90% alpha) for crisp contrast over varied video previews
+- Add subtle ring for definition: `ring-1 ring-background/40`
 
-- `src/config/videoCreditPricing.ts` — multiplier + helper
-- `src/pages/video/AnimateVideo.tsx` — PRO suffix in both camera-motion selects + active hint
-- `supabase/functions/enqueue-generation/index.ts` — `*= 2` instead of `+= 2`, then deploy
+## Files
+
+- `src/config/videoCreditPricing.ts` — swap `product_orbit` → `orbit`
+- `supabase/functions/enqueue-generation/index.ts` — swap `product_orbit` → `orbit`, redeploy
+- `src/components/app/video/CameraMotionGrid.tsx` — label + badge typography
