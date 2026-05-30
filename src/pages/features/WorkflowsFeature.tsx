@@ -42,7 +42,7 @@ const tools: Tool[] = [
   { name: 'Perspectives',        tagline: 'One photo, every camera angle — instantly.',                 to: '/features/perspectives',         icon: Compass },
   { name: 'Catalog Studio',      tagline: 'Phase-aware ecommerce sets at scale. (BETA)',                to: '/app/catalog',                   icon: Layers },
   { name: 'Freestyle',           tagline: 'Open-prompt creative playground for art direction.',         to: '/app/freestyle',                 icon: Wand2 },
-  { name: 'Short Film',          tagline: 'AI campaign director — script, shots and motion.',           to: '/app/video/short-film',          icon: Film },
+  
   { name: 'Image Upscaling',     tagline: '2K and 4K refinement with studio-grade clarity.',            to: '/features/upscale',              icon: ArrowUpCircle },
   { name: 'Brand Profiles',      tagline: 'Lock palette, mood and lighting across every output.',      to: '/features/brand-profiles',       icon: Palette },
   { name: 'Real Estate Staging', tagline: 'Stage empty rooms in 12 design styles.',                    to: '/features/real-estate-staging',  icon: Home },
