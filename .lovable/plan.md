@@ -1,10 +1,8 @@
-Two fixes to `src/components/app/BulkUploadReviewModal.tsx`:
+Two tweaks to `src/components/app/BulkUploadReviewModal.tsx`:
 
-1. **Use canonical category list** — Replace the hard-coded `CATEGORY_GROUPS` with the shared `CATEGORY_SUPER_GROUPS` + `CATEGORY_LABELS` from `src/lib/productCategories.ts` so all categories (Phone Cases, Eyewear, Wedding Dress, Supplements & Wellness, Other, etc.) appear and stay in sync with the rest of the app.
+1. **Push the Suggested pill fully to the right of the trigger** — the current wrapper isn't expanding to full width, so "Dresses" and "Suggested" end up centered together. Fix by:
+   - Removing the inner wrapper span and laying out the trigger contents directly using `ml-auto` on the pill
+   - Adding `w-full` and `text-left` on the SelectValue wrapper so the value stays pinned left
+   - Result: `Dresses ............ [Suggested]  ▾`
 
-2. **More breathing room between value and pill** — Inside the SelectTrigger:
-   - Bump gap from `gap-3` to `gap-6` (with `sm:gap-8`)
-   - Add `mr-1` on the Suggested pill so it sits clearly away from the chevron too
-   - Keep truncation on the value so long labels still shorten gracefully on mobile
-
-No logic / data changes beyond swapping the category source.
+2. **Trim the dropdown height** — list now has ~40 items so the popover feels endless. Lower `max-h-[280px]` → `max-h-[260px]`, and tighten `SelectItem` (`py-1.5`) and `SelectLabel` (`py-1`) so more entries fit in the visible area without scrolling feeling sluggish. Also shorten a couple of the longest labels (e.g. "Supplements & Wellness" → "Supplements") in the modal mapping to keep rows compact.
