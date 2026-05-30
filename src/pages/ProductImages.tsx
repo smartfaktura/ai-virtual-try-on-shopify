@@ -1379,13 +1379,6 @@ export default function ProductImages() {
     <div className="space-y-6 pb-36 overflow-x-clip max-w-full min-w-0">
       <SEOHead title="Create Product Visuals — VOVV" description="Generate product visuals" />
 
-      {stepHeader && (
-        <div className="mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{stepHeader.title}</h1>
-          <p className="text-base text-muted-foreground mt-1.5">{stepHeader.subtitle}</p>
-        </div>
-      )}
-
       {step <= 4 && (
         <CatalogStepper
           steps={STEP_DEFS}
@@ -1393,6 +1386,13 @@ export default function ProductImages() {
           canNavigateTo={canNavigateTo}
           onStepClick={(s) => setStep(s as PIStep)}
         />
+      )}
+
+      {stepHeader && (
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{stepHeader.title}</h1>
+          <p className="text-base text-muted-foreground mt-1.5">{stepHeader.subtitle}</p>
+        </div>
       )}
 
 
