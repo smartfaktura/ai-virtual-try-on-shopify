@@ -762,7 +762,7 @@ function UnifiedCategorySectionWithSelectAll({
           <div className="flex items-center gap-2">
             {isRecommended && (
               <span className="inline-flex items-center rounded-full text-[10px] h-5 px-2 font-semibold bg-primary/10 text-primary">
-                Recommended
+                Recommended Shots
               </span>
             )}
             {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
