@@ -42,7 +42,8 @@ function calculateCreditCost(
 
     // Animate workflow — aligned with src/config/videoCreditPricing.ts
     let cost = dur === "10" ? 50 : 25;
-    if (["product_orbit", "premium_handheld"].includes(motion)) cost += 2;
+    // PRO Mode camera motions (orbit / premium handheld) cost 2×
+    if (["product_orbit", "premium_handheld"].includes(motion)) cost *= 2;
     // Audio surcharge removed — audio toggle no longer exposed to users
     return cost;
 
