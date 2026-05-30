@@ -1471,7 +1471,8 @@ export default function ProductImages() {
               (() => {
                 const filtered = userProducts.filter(p =>
                   p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-                   (p.product_type || '').toLowerCase().includes(productSearch.toLowerCase())
+                   (p.product_type || '').toLowerCase().includes(productSearch.toLowerCase()) ||
+                   displayCategory(p).toLowerCase().includes(productSearch.toLowerCase())
                 );
 
                 if (filtered.length === 0 && productSearch) {
