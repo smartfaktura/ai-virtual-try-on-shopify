@@ -355,15 +355,14 @@ export default function StartEndVideo() {
         onPreserveOutfitChange={setPreserveOutfit}
       />
 
-      {/* Audio + Note */}
+      {/* Note */}
       <div className="rounded-2xl border border-border bg-card shadow-sm p-5 sm:p-6 space-y-5">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-base font-semibold tracking-tight text-foreground">Audio &amp; Note</h3>
+          <h3 className="text-base font-semibold tracking-tight text-foreground">Note</h3>
           <p className="text-[11.5px] text-muted-foreground hidden sm:block">
-            Optional finishing touches
+            Optional finishing touch
           </p>
         </div>
-        <AudioModeSelector value={audioMode} onChange={(v) => setAudioMode(v as 'silent' | 'ambient')} />
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground">Transition Note (optional)</label>
           <Textarea
@@ -377,6 +376,7 @@ export default function StartEndVideo() {
           <div className="text-[11px] text-muted-foreground text-right">{userNote.length}/240</div>
         </div>
       </div>
+
 
       {/* Summary */}
       <TransitionSummaryCard rows={summaryRows} />
