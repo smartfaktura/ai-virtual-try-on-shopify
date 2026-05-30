@@ -226,10 +226,10 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !isSaving) onClose(); }}>
-      <DialogContent className="max-w-xl p-5 sm:p-6 gap-4">
-        <DialogHeader className="space-y-1.5 text-left">
-          <DialogTitle className="text-base font-medium">Review uploads</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
+      <DialogContent className="max-w-xl w-[calc(100%-1.5rem)] p-4 sm:p-6 gap-5 rounded-2xl">
+        <DialogHeader className="space-y-1 text-left">
+          <DialogTitle className="text-lg font-semibold tracking-tight">Review uploads</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
             Confirm the category we picked, or change it
           </DialogDescription>
         </DialogHeader>
@@ -238,18 +238,23 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
           {rows.map(row => (
             <div
               key={row.id}
-              className="relative flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card/40"
+              className="relative flex items-center gap-3 p-2.5 rounded-xl border border-border bg-card/40"
             >
               <img
                 src={row.previewUrl}
                 alt=""
-                className="w-16 h-16 rounded-md object-cover bg-muted flex-shrink-0"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover bg-muted flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
-                  <SelectTrigger className="h-9 text-sm w-full pr-2">
+                  <SelectTrigger className="h-10 text-sm w-full px-3">
                     <span className="flex items-center gap-2 min-w-0 flex-1">
-                      <SelectValue placeholder="Pick category…" />
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground flex-shrink-0">
+                        Category
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-left">
+                        <SelectValue placeholder="Pick category…" />
+                      </span>
                       {row.isSuggested && row.status === 'suggested' && (
                         <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground flex-shrink-0">
                           Suggested
@@ -282,10 +287,10 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                 type="button"
                 onClick={() => removeRow(row.id)}
                 disabled={isSaving}
-                className="absolute top-1.5 right-1.5 p-1 rounded-md text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
                 aria-label="Remove"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           ))}
