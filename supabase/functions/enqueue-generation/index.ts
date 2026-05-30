@@ -30,20 +30,22 @@ function calculateCreditCost(
   // Video jobs use dedicated pricing
   if (jobType === "video" || jobType === "video_multishot") {
     const dur = String(payload?.duration || "5");
-    const audio = String(payload?.audioMode || "silent");
     const motion = String(payload?.cameraMotion || "");
     const wf = String(payload?.workflow_type || "");
     if (jobType === "video_multishot") return 40; // flat rate for short film / multi-shot
 
-    // Start & End workflow: flat 20 credits per video.
+
+    // Start & End workflow: flat 35 credits per video (matches frontend).
     if (wf === "start_end") {
-      return 20;
+      return 35;
     }
 
-    let cost = dur === "10" ? 18 : 10;
-    if (audio === "ambient") cost += 4;
+    // Animate workflow — aligned with src/config/videoCreditPricing.ts
+    let cost = dur === "10" ? 50 : 25;
     if (["product_orbit", "premium_handheld"].includes(motion)) cost += 2;
+    // Audio surcharge removed — audio toggle no longer exposed to users
     return cost;
+
   }
 
   let perImage: number;

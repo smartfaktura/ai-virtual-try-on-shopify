@@ -1,36 +1,54 @@
-# Disable Short Film (temporary)
+## Goal
+1. Stop the silent undercharge — backend deduction must match the credit number shown in the UI
+2. Raise Animate 10 s base cost from 40 → **50** credits
+3. Remove the Audio mode option from `/app/video/animate` and `/app/video/start-end` (always silent)
 
-Short Film burns the most Kling credits per session (4–6 shots × 1080p Kling v3). Until we re-evaluate pricing / caps, fully disable it end-to-end.
+## Changes
 
-## What changes
+### 1. `src/config/videoCreditPricing.ts` — single source of truth, bump 10s
+- `animate.base10s`: `40` → **`50`**
+- Keep `base5s: 25`, `premiumMotion: 2`
+- Set `animate.ambient: 0` (no longer reachable, but safe)
+- Set `startEnd.ambient: 0`
 
-### 1. Block the route (frontend)
-`src/App.tsx` — replace the `/video/short-film` route element with a redirect to `/app/video` and show a branded toast: *"Short Film is temporarily paused while we upgrade the video engine."*
+### 2. `supabase/functions/enqueue-generation/index.ts` — use the same formula
+Replace the hardcoded `dur === "10" ? 18 : 10` block for `video` jobs with the same numbers used by the frontend:
+```ts
+// animate workflow
+let cost = dur === "10" ? 50 : 25;
+if (["product_orbit", "premium_handheld"].includes(motion)) cost += 2;
+// audio removed — ignore audio field even if client sends it
+return cost;
+```
+Keep the `startEnd` (flat 35) and `video_multishot` (40) branches as-is. Deploy this function.
 
-### 2. Remove user-facing entry points
-- `src/pages/VideoHub.tsx` — keep card as `disabled` + `comingSoon` (already is). Update copy to "Temporarily unavailable" so it doesn't promise a future date.
-- `src/pages/Dashboard.tsx` (line 213) — hide the "Start a Short Film" outline button (conditional `false` flag or remove until re-enabled).
-- `src/pages/features/WorkflowsFeature.tsx` (line 45) — remove the Short Film entry from the public Workflows feature list, OR mark with a "Paused" badge if that grid supports it. Public landing pages should not advertise it.
+### 3. Remove Audio UI — `src/pages/video/AnimateVideo.tsx`
+- Drop `AudioModeSelector` import and its render block (line ~1277)
+- Drop the per-image Audio `<select>` in bulk overrides (lines ~952–956)
+- Hardcode `audioMode = 'silent'` (keep the constant so payloads/estimates stay valid) and remove the `useState`
+- Remove "Audio" row from the summary list (line ~503)
 
-### 3. Backend safety net (defense in depth)
-`supabase/functions/generate-video/index.ts` — at the top of the handler, after parsing payload, reject when `payload.workflow_type === 'short_film'` OR `job_type === 'video_multishot'`:
-- Mark the job `failed` with `error_message: "Short Film is temporarily disabled"`.
-- Call `refund_credits` RPC for `credits_reserved`.
-- Return 200 (so process-queue doesn't retry) with `{ disabled: true }`.
+### 4. Remove Audio UI — `src/pages/video/StartEndVideo.tsx`
+- Drop `AudioModeSelector` import and the entire "Audio & Note" section header for audio (line ~358–367) — keep the Note input, just rename heading to "Note"
+- Hardcode `audioMode = 'silent'`, remove `useState`
+- Remove "Audio" entry from the summary chips (line ~227)
 
-This guarantees any cached client, in-flight retry, or external caller can't drain Kling balance through the short-film path.
+### 5. No DB migration needed
+`credits_reserved` continues to store whatever `enqueue-generation` calculates — only the formula changes.
 
-### 4. No DB / pricing / sidebar-nav changes
-Leave `useShortFilmProject.ts`, the wizard pages, types, and credit pricing intact — re-enabling later is a one-line revert per file.
+## What this fixes
+- tsimkus's 5 s silent job will now deduct **25** credits (was 10), matching the button label
+- A 10 s silent video will deduct **50** credits (was 18)
+- 10 s + premium_handheld will deduct **52** credits (was 24)
+- Users can no longer pick Ambient audio on these two workflows, so the +4 ambient surcharge disappears entirely from these flows
 
-## Out of scope
-- Animate Image, Start & End, Ad Sequence, Consistent Model — untouched.
-- Refunding past Short Film failures.
-- Switching providers or adding per-user daily caps (separate work).
+## Not changing
+- Short Film pricing (already disabled in UI)
+- Consistent Model / Ad Sequence workflows
+- The `audio` field in `generated_videos.metadata` — old rows keep their value; new rows simply won't have audio enabled
 
 ## Files touched
-1. `src/App.tsx`
-2. `src/pages/VideoHub.tsx`
-3. `src/pages/Dashboard.tsx`
-4. `src/pages/features/WorkflowsFeature.tsx`
-5. `supabase/functions/generate-video/index.ts`
+- `src/config/videoCreditPricing.ts`
+- `supabase/functions/enqueue-generation/index.ts` (deploy)
+- `src/pages/video/AnimateVideo.tsx`
+- `src/pages/video/StartEndVideo.tsx`

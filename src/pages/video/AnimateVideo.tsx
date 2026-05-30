@@ -13,7 +13,7 @@ import { ProductContextSelector } from '@/components/app/video/ProductContextSel
 import { MotionGoalSelector } from '@/components/app/video/MotionGoalSelector';
 import { MotionRefinementPanel } from '@/components/app/video/MotionRefinementPanel';
 import { PreservationRulesPanel } from '@/components/app/video/PreservationRulesPanel';
-import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
+
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { VideoResultsPanel, type QuickVariationPreset } from '@/components/app/video/VideoResultsPanel';
@@ -145,7 +145,7 @@ export default function AnimateVideo() {
   // Settings
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const [duration, setDuration] = useState<Duration>('5');
-  const [audioMode, setAudioMode] = useState<AudioMode>('silent');
+  const audioMode: AudioMode = 'silent';
   const [userPrompt, setUserPrompt] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -500,7 +500,7 @@ export default function AnimateVideo() {
       cameraMotion: cameraMotion.replace(/_/g, ' '),
       subjectMotion: subjectMotion.replace(/_/g, ' '),
       duration: `${duration}s`,
-      audioMode: audioMode === 'silent' ? 'Silent' : 'Ambient',
+      audioMode: 'Silent',
       creditsUsed: credits,
       realismLevel: realismLevel.replace(/_/g, ' '),
       loopStyle: loopStyle === 'none' ? 'None' : loopStyle.replace(/_/g, ' '),
@@ -948,13 +948,8 @@ export default function AnimateVideo() {
                                         <option value="10">10s</option>
                                       </select>
                                     </div>
-                                    <div className="space-y-1">
-                                      <label className="text-xs text-muted-foreground">Audio</label>
-                                      <select value={imgOverrides.audioMode || audioMode} onChange={(e) => setOverride('audioMode', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
-                                        <option value="silent">Silent</option>
-                                        <option value="ambient">Ambient</option>
-                                      </select>
-                                    </div>
+
+
                                   </div>
                                 </div>
 
@@ -1273,9 +1268,8 @@ export default function AnimateVideo() {
                     ))}
                   </div>
                 </div>
-
-                <AudioModeSelector value={audioMode} onChange={(v) => setAudioMode(v as AudioMode)} />
               </div>
+
 
               {/* Specific Motion Note */}
               <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-3">

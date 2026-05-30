@@ -2,15 +2,16 @@
 export const VIDEO_CREDIT_RULES = {
   animate: {
     base5s: 25,
-    base10s: 40,
+    base10s: 50,
     premiumMotion: 2,   // add-on for complex motion recipes
-    ambient: 4,         // ambient audio add-on
+    ambient: 0,         // audio surcharge removed — toggle no longer exposed
   },
   startEnd: {
     base5s: 35,         // flat 35 credits per Start & End video
     ambient: 0,
     premiumTransition: 0,
   },
+
   adSequence: {
     base2Shots: 24,
     extraShot: 8,
