@@ -115,7 +115,7 @@ export function CameraMotionGrid({
                 )}
 
                 {isPro && (
-                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-foreground/90 backdrop-blur-sm text-[9px] font-semibold tracking-wider uppercase text-background leading-none">
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-foreground text-[10px] font-semibold tracking-wider uppercase text-background leading-none ring-1 ring-background/40">
                     PRO · 2×
                   </div>
                 )}
@@ -128,11 +128,11 @@ export function CameraMotionGrid({
               </div>
 
 
-              <div className="px-1 py-1.5">
+              <div className="px-1 py-2">
                 <span
                   className={cn(
-                    'text-[10px] leading-tight line-clamp-2 text-center block',
-                    active ? 'text-foreground font-medium' : 'text-muted-foreground',
+                    'text-[11px] leading-tight line-clamp-2 text-center block',
+                    active ? 'text-foreground font-semibold' : 'text-foreground/80 font-medium',
                   )}
                 >
                   {motion.label}
