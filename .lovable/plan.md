@@ -1,17 +1,10 @@
-Update the upload review row so the selected category and status badge no longer collide.
+Two fixes to `src/components/app/BulkUploadReviewModal.tsx`:
 
-Implementation plan:
+1. **Use canonical category list** — Replace the hard-coded `CATEGORY_GROUPS` with the shared `CATEGORY_SUPER_GROUPS` + `CATEGORY_LABELS` from `src/lib/productCategories.ts` so all categories (Phone Cases, Eyewear, Wedding Dress, Supplements & Wellness, Other, etc.) appear and stay in sync with the rest of the app.
 
-```text
-[image]  CATEGORY                                      [x]
-         [ Dress                         Suggested ▾ ]
-```
+2. **More breathing room between value and pill** — Inside the SelectTrigger:
+   - Bump gap from `gap-3` to `gap-6` (with `sm:gap-8`)
+   - Add `mr-1` on the Suggested pill so it sits clearly away from the chevron too
+   - Keep truncation on the value so long labels still shorten gracefully on mobile
 
-- Keep `Category` as a small label above the select field, not inside the placeholder
-- Change the select trigger layout to `justify-between` so the selected value stays left and the `Suggested` badge stays right
-- Add clear spacing between `Dress` and `Suggested` using a dedicated right-side badge area
-- Make the badge smaller and less visually heavy, with `ml-3`/`gap-3` and stable shrink behavior
-- Ensure mobile works by letting the value truncate before it reaches the badge, rather than squeezing everything together
-- Keep the existing rounded corners and modal styling consistent with the app
-
-File to update: `src/components/app/BulkUploadReviewModal.tsx`
+No logic / data changes beyond swapping the category source.
