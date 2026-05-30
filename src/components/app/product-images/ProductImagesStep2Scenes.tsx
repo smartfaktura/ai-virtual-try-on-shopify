@@ -412,11 +412,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
 
 
-      <div className="flex items-center justify-between gap-2 flex-wrap min-w-0 max-w-full">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight truncate min-w-0">Select shots</h2>
-          <p className="text-sm text-muted-foreground mt-1">Pick the shots you want to generate for your products</p>
-        </div>
+      <div className="flex items-center justify-end gap-2 flex-wrap min-w-0 max-w-full">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
           {selectedSceneIds.size > 0 && (
             <>
