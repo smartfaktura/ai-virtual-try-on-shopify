@@ -1603,7 +1603,7 @@ export default function ProductImages() {
                             <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-xl" />
                             <div className="h-[44px] px-1.5 py-1 bg-card flex flex-col justify-center">
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-1">{up.title}</p>
-                              <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type || '\u00A0'}</p>
+                              <p className="text-[9px] text-muted-foreground truncate mt-0.5">{displayCategory(up) || '\u00A0'}</p>
                             </div>
                           </div>
                         );
