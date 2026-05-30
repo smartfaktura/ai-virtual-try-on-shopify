@@ -403,8 +403,8 @@ export default function StartEndVideo() {
           <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
             <CreditEstimateBox params={creditParams} />
             {notEnoughCredits && !project.isGenerating && (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-destructive/30 bg-destructive/10 text-sm font-medium text-destructive">
-                <AlertCircle className="h-3.5 w-3.5" />
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-destructive/30 bg-destructive/10 text-xs font-medium text-destructive">
+                <AlertCircle className="h-3 w-3" />
                 Not enough credits
               </span>
             )}

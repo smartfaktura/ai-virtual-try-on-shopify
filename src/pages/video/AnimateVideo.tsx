@@ -1325,13 +1325,13 @@ export default function AnimateVideo() {
                           params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }}
                         />
                         {totalVideos > 1 && (
-                          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-muted/30 text-xs font-medium text-muted-foreground">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-muted/30 text-xs font-medium text-muted-foreground">
                             × {totalVideos} = {totalCredits} credits
                           </span>
                         )}
                         {notEnoughCredits && (
-                          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-destructive/30 bg-destructive/10 text-sm font-medium text-destructive">
-                            <AlertCircle className="h-3.5 w-3.5" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-destructive/30 bg-destructive/10 text-xs font-medium text-destructive">
+                            <AlertCircle className="h-3 w-3" />
                             Not enough credits
                           </span>
                         )}
