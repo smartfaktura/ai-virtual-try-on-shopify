@@ -103,10 +103,13 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
                     <p className="text-[11px] text-muted-foreground flex-1">
                       Select multiple camera motions with any paid plan
                     </p>
-                    <a href="/pricing" className="text-[11px] font-medium text-primary hover:underline flex items-center gap-0.5">
-                      <Sparkles className="h-3 w-3" />
+                    <button
+                      type="button"
+                      onClick={() => props.onUpgrade?.()}
+                      className="text-[11px] font-medium text-primary hover:underline"
+                    >
                       Upgrade
-                    </a>
+                    </button>
                   </div>
                 )}
               </>
