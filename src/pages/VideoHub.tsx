@@ -53,6 +53,10 @@ interface RecentVideoCardProps {
   nowTick?: number;
   /** Briefly highlight this card after it transitions processing → complete */
   highlight?: boolean;
+  /** Force a fixed CSS aspect ratio (e.g. "4/5") — when set, ignores natural ratio */
+  forceRatio?: string;
+  /** Show a small ratio label badge */
+  showRatioBadge?: boolean;
 }
 
 function RecentVideoCard({
