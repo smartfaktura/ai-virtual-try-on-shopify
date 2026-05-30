@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { preventAutoFocusOnMobile } from '@/lib/dialogAutoFocus';
 import { Input } from '@/components/ui/input';
 import { Check, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,7 +47,7 @@ export function CategoryPickerModal({ open, onOpenChange, value, suggested, onCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 gap-0 overflow-hidden flex flex-col max-w-[100vw] w-screen h-[100dvh] rounded-none sm:max-w-3xl sm:w-full sm:h-auto sm:max-h-[88vh] sm:rounded-3xl">
+      <DialogContent onOpenAutoFocus={preventAutoFocusOnMobile} className="p-0 gap-0 overflow-hidden flex flex-col max-w-[100vw] w-screen h-[100dvh] rounded-none sm:max-w-3xl sm:w-full sm:h-auto sm:max-h-[88vh] sm:rounded-3xl">
         <DialogHeader className="sticky top-0 z-10 bg-background px-4 sm:px-8 pt-4 sm:pt-8 pb-3 sm:pb-4 space-y-3 shrink-0 border-b border-border/60 sm:border-b-0">
           <div className="space-y-1.5 pr-8">
             <DialogTitle className="text-base sm:text-xl font-medium tracking-tight">Product category</DialogTitle>
@@ -57,7 +58,6 @@ export function CategoryPickerModal({ open, onOpenChange, value, suggested, onCh
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              autoFocus
               placeholder="Search categories"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
