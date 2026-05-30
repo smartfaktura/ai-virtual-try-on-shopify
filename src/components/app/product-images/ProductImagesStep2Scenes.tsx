@@ -298,6 +298,7 @@ interface UnifiedCategorySectionProps {
   toggleScene: (id: string) => void;
   isRecommended?: boolean;
   gridClass: string;
+  headerRight?: React.ReactNode;
 }
 
 // UnifiedCategorySection rendering moved to UnifiedCategorySectionWithSelectAll below
@@ -412,7 +413,7 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
 
 
-      <div className="flex items-center justify-end gap-2 flex-wrap min-w-0 max-w-full">
+      <div className="flex sm:hidden items-center justify-end gap-2 flex-wrap min-w-0 max-w-full">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
           {selectedSceneIds.size > 0 && (
             <>
@@ -420,11 +421,15 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
               <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
             </>
           )}
-          <span className="hidden sm:inline-flex">
-            <GridSizeToggle value={gridSize} onChange={setGridSize} />
-          </span>
         </div>
       </div>
+      {/* Mobile-only inline selection state above; desktop grid toggle moves into first category header below */}
+      {selectedSceneIds.size > 0 && (
+        <div className="hidden sm:flex items-center justify-end gap-2 -mt-2">
+          <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} selected</Badge>
+          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
+        </div>
+      )}
 
 
 
@@ -707,7 +712,7 @@ function CategoryExpandedContent({ catId, catTitle, essentialScenes, categorySce
 function UnifiedCategorySectionWithSelectAll({
   catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
   selectedSceneIds, onSelectionChange, isOpen, onToggleOpen, toggleScene,
-  isRecommended, gridClass,
+  isRecommended, gridClass, headerRight,
 }: UnifiedCategorySectionProps) {
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
@@ -760,6 +765,11 @@ function UnifiedCategorySectionWithSelectAll({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {headerRight && (
+              <div onClick={e => { e.stopPropagation(); e.preventDefault(); }}>
+                {headerRight}
+              </div>
+            )}
             {isRecommended && (
               <span className="inline-flex items-center rounded-full text-[10px] h-5 px-2 font-semibold bg-primary/10 text-primary">
                 Recommended Shots
