@@ -291,7 +291,14 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
           </Button>
           <Button onClick={handleConfirmAll} disabled={!allReady || isSaving} className="flex-1 sm:flex-none">
             {isSaving ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</>
+              <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+                </span>
+                <span>Saving</span>
+              </span>
             ) : (
               `Save ${rows.length} ${rows.length === 1 ? 'product' : 'products'}`
             )}
