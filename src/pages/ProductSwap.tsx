@@ -50,6 +50,15 @@ interface LibraryPickerItem {
   imageUrl: string;
   title: string;
   createdAt: string;
+  searchHaystack: string;
+}
+
+// Multi-token AND match across a precomputed lowercase haystack.
+function matchesTokens(haystack: string, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const tokens = q.split(/\s+/).filter(Boolean);
+  return tokens.every(t => haystack.includes(t));
 }
 
 export default function ProductSwap() {
