@@ -26,6 +26,8 @@ interface MotionRefinementPanelProps {
   onMultiCameraMotionChange?: (ids: string[]) => void;
   /** Controls upsell display for free users */
   isPaidUser?: boolean;
+  /** Called when free user clicks the upsell "Upgrade" link */
+  onUpgrade?: () => void;
 }
 
 function ChipRow({ label, tooltip, items, value, onChange }: { label: string; tooltip?: string; items: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) {
