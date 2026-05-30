@@ -195,6 +195,8 @@ export interface ScratchUpload {
     title: string;
     productType: string;
     description: string;
+    category?: string;
+    categoryConfirmed?: boolean;
   };
 }
 
