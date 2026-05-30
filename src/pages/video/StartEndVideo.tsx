@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Play, X, ArrowLeft } from 'lucide-react';
+import { Loader2, Play, X, ArrowLeft, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -403,7 +403,8 @@ export default function StartEndVideo() {
           <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
             <CreditEstimateBox params={creditParams} />
             {notEnoughCredits && !project.isGenerating && (
-              <span className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-destructive/30 bg-destructive/10 text-sm font-medium text-destructive">
+                <AlertCircle className="h-3.5 w-3.5" />
                 Not enough credits
               </span>
             )}
