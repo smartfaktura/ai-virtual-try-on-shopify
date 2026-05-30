@@ -67,6 +67,8 @@ function RecentVideoCard({
   onToggleSelect,
   nowTick,
   highlight,
+  forceRatio,
+  showRatioBadge,
 }: RecentVideoCardProps) {
   const isComplete = video.status === 'complete' && video.video_url;
   const isProcessing = video.status === 'processing' || video.status === 'queued';
@@ -77,12 +79,12 @@ function RecentVideoCard({
   const thumbnailUrl = hasThumbnail ? getOptimizedUrl(rawThumb, { quality: 60 }) : undefined;
 
   // Determine aspect-ratio for the wrapper:
-  // Use the video's stored aspect_ratio when available, otherwise default to 3/4
-  const cssRatio = ratioToCss(video.aspect_ratio) || '3/4';
+  // forceRatio wins; otherwise use stored aspect_ratio; otherwise default to 3/4
+  const cssRatio = forceRatio || ratioToCss(video.aspect_ratio) || '3/4';
 
-  // Track natural image ratio for more accurate framing
+  // Track natural image ratio for more accurate framing (only when not forced)
   const [naturalRatio, setNaturalRatio] = useState<string | undefined>(undefined);
-  const displayRatio = naturalRatio || cssRatio;
+  const displayRatio = forceRatio || naturalRatio || cssRatio;
 
   const handleClick = useCallback(() => {
     if (selectMode) {
