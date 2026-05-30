@@ -1,40 +1,37 @@
-# Three small upload-review polish fixes
+# Three small polish fixes
 
-## 1. "Suggested" badge — match /app/products style
+## 1. Analyzing card matches the Upload Image tile layout
 
-In `/app/products` the category chip beside the product title uses the shared `<Badge variant="secondary">…</Badge>` component (dark navy pill, white text). I'll reuse the exact same component in the review popup.
+Placeholder is structurally identical to the regular product card and the Upload Image tile — same width, same `aspect-square` body, same `h-[44px]` footer band — so it never breaks the grid.
 
-- Remove the custom "CATEGORY · SUGGESTED" header row.
-- Place `<Badge variant="secondary">Suggested</Badge>` inline to the right of the category dropdown so it sits next to the resolved label (e.g. next to "Dress").
-- Badge disappears the moment the user changes the dropdown (already the behavior).
-- "Pick one" fallback for failed analysis also becomes a `<Badge variant="destructive">`.
+- Body shows the user's uploaded image as a **blurred** background (`object-cover blur-md scale-110 opacity-60`) with a small spinner + "Analyzing…" centered over it.
+- Footer band keeps the same `text-[10px]` / `text-[9px]` rhythm.
 
-## 2. Analyzing placeholder no longer breaks the grid
+## 2. Suggested pill — exact style from `/app/products/:id/edit`
 
-The dashed border + thicker frame + extra padding made the placeholder card taller than neighbouring product cards. I'll make it visually identical to a regular product card:
-
-- Drop the dashed border, keep the same `rounded-xl` and `border-2 border-transparent` treatment as a normal card.
-- Keep the same `aspect-square` thumbnail and the same `h-[44px]` label area (so row heights line up exactly with surrounding products).
-- Image is dimmed to ~40% opacity with a small centered spinner overlay.
-- Label area shows: "Analyzing…" + "Detecting category" in the same `text-[10px]` / `text-[9px]` sizing as product cards.
-
-## 3. Save button uses dot loader, not spinner
-
-Replace the `Loader2` spinner inside the "Save N products" button with the same three bouncing dots used in `StudioChat`:
+Reuse the markup from `ManualProductTab.tsx`:
 
 ```tsx
-<span className="flex items-center gap-1">
-  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
-  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
-  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+<span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+  Suggested
 </span>
 ```
 
-Button label stays "Save N products" — dots replace the spinner only.
+Failed rows get the same shape with `bg-destructive text-destructive-foreground` reading "Pick one".
 
-## Files touched
+## 3. Pill lives INSIDE the Select trigger, right next to the value
 
-- `src/components/app/BulkUploadReviewModal.tsx` — Badge + dot loader.
-- `src/pages/ProductImages.tsx` — analyzing placeholder card markup.
+This is the part that's been off. In `/app/products/:id/edit` the Suggested pill sits **inside the field**, immediately to the right of the resolved value ("Dress") — not after the field, not above the label.
 
-No backend, no analyzer, no flow changes.
+Implementation in `BulkUploadReviewModal.tsx`:
+
+- Keep the small `CATEGORY` label above the field.
+- Render a custom trigger that looks like the shadcn `SelectTrigger` (same border, height, padding, chevron) but whose inner content is:
+  ```
+  [ Dress  ·  Suggested ]              ▾
+  ```
+  i.e. the value text on the left, the pill inline next to it, chevron on the far right — all within the same bordered control.
+- When the user changes the value, `isSuggested` flips false and the pill disappears (existing behavior).
+- Failed rows render the same control with "Pick one" pill inside it instead.
+
+Files touched: `src/pages/ProductImages.tsx` (analyzing card markup), `src/components/app/BulkUploadReviewModal.tsx` (pill style + in-trigger placement).
