@@ -432,6 +432,39 @@ serve(async (req) => {
 
     if (isQueueInternal && body.job_id) {
       const jobType = body.job_type as string;
+      const workflowType = body.workflow_type as string | undefined;
+      const payloadWorkflowType = (body.payload && (body.payload as Record<string, unknown>).workflow_type) as string | undefined;
+      const isShortFilm =
+        jobType === "video_multishot" ||
+        workflowType === "short_film" ||
+        payloadWorkflowType === "short_film";
+
+      // SAFETY NET: Short Film is temporarily disabled while we upgrade the video engine.
+      if (isShortFilm) {
+        console.warn(`[generate-video] Short Film job rejected (disabled): job=${body.job_id}`);
+        const serviceClient = getServiceClient();
+        const userId = body.user_id as string;
+        const creditsReserved = (body.credits_reserved as number) || 0;
+        try {
+          await serviceClient
+            .from("generation_queue")
+            .update({
+              status: "failed",
+              error_message: "Short Film is temporarily disabled while we upgrade the video engine.",
+              completed_at: new Date().toISOString(),
+            })
+            .eq("id", body.job_id);
+          if (userId && creditsReserved > 0) {
+            await serviceClient.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+          }
+        } catch (err) {
+          console.error("[generate-video] Failed to mark Short Film job failed:", err);
+        }
+        return new Response(
+          JSON.stringify({ ok: true, disabled: true, job_id: body.job_id }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       if (jobType === "video_multishot") {
         handleMultishotWorkerMode(body).catch(err => {

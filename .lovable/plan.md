@@ -1,35 +1,36 @@
-## Goal
-Tighten mobile (≤390px) on both `/app/video/animate` and `/app/video/start-end`. Main complaint: Upload + Library buttons inside each Start/End frame slot stack vertically and look narrow. Secondary: the mobile "Transition ↓" chip lands at the bottom instead of between the two frames, and AnimateVideo's "Choose from Library" label gets truncated on mobile.
+# Disable Short Film (temporary)
 
-## Issues found
+Short Film burns the most Kling credits per session (4–6 shots × 1080p Kling v3). Until we re-evaluate pricing / caps, fully disable it end-to-end.
 
-**StartEndVideo — `src/components/app/video/start-end/StartEndUploadPair.tsx`**
-1. **Upload / Library buttons stack vertically on mobile.** The wrapper is `flex flex-col sm:flex-row gap-2.5 w-full max-w-[280px]` → on mobile the two buttons sit in a narrow 280px column, one on top of the other. User reads this as "super narrow buttons not correct".
-2. **Mobile "Transition ↓" chip lives outside the grid**, in a sibling `<div className="flex sm:hidden ... my-1">` rendered AFTER both Slots. Visually the chip sits below the End frame instead of between Start and End.
-3. Each Slot uses `aspect-[4/5] min-h-[280px]` — fine, keep.
+## What changes
 
-**AnimateVideo — `src/pages/video/AnimateVideo.tsx`**
-1. The "Choose from Library" button label truncates on mobile (`Choose from Lib...`) because the 2-col grid gives each button ~165px and the label + icon + padding don't fit. Shorten the mobile label to "Library" (keep "Choose from Library" on `sm:` and up). Same idea on the "Upload image" → keep as-is, it fits.
+### 1. Block the route (frontend)
+`src/App.tsx` — replace the `/video/short-film` route element with a redirect to `/app/video` and show a branded toast: *"Short Film is temporarily paused while we upgrade the video engine."*
 
-## Changes
+### 2. Remove user-facing entry points
+- `src/pages/VideoHub.tsx` — keep card as `disabled` + `comingSoon` (already is). Update copy to "Temporarily unavailable" so it doesn't promise a future date.
+- `src/pages/Dashboard.tsx` (line 213) — hide the "Start a Short Film" outline button (conditional `false` flag or remove until re-enabled).
+- `src/pages/features/WorkflowsFeature.tsx` (line 45) — remove the Short Film entry from the public Workflows feature list, OR mark with a "Paused" badge if that grid supports it. Public landing pages should not advertise it.
 
-### `src/components/app/video/start-end/StartEndUploadPair.tsx`
-1. Buttons row inside `Slot` (the `flex flex-col sm:flex-row ... max-w-[280px]` wrapper):
-   - Change to `flex flex-row gap-2 w-full max-w-[320px]` so Upload and Library always sit side by side, and grow to fit the slot width on mobile.
-2. Mobile direction chip:
-   - Remove the standalone `<div className="flex sm:hidden ... my-1">` block at the bottom.
-   - Add a new mobile-only absolutely-positioned chip inside the existing `<div className="relative">`, mirroring the desktop one: `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 sm:hidden`, content `Transition` + `ArrowDown`. This places it between Start (top) and End (bottom) in the single-column grid.
+### 3. Backend safety net (defense in depth)
+`supabase/functions/generate-video/index.ts` — at the top of the handler, after parsing payload, reject when `payload.workflow_type === 'short_film'` OR `job_type === 'video_multishot'`:
+- Mark the job `failed` with `error_message: "Short Film is temporarily disabled"`.
+- Call `refund_credits` RPC for `credits_reserved`.
+- Return 200 (so process-queue doesn't retry) with `{ disabled: true }`.
 
-### `src/pages/video/AnimateVideo.tsx`
-1. Secondary "Choose from Library" button (around line 678):
-   - Replace the static label with `<span className="truncate"><span className="sm:hidden">Library</span><span className="hidden sm:inline">Choose from Library</span></span>` so mobile shows "Library", desktop keeps the full label. No other changes.
+This guarantees any cached client, in-flight retry, or external caller can't drain Kling balance through the short-film path.
+
+### 4. No DB / pricing / sidebar-nav changes
+Leave `useShortFilmProject.ts`, the wizard pages, types, and credit pricing intact — re-enabling later is a one-line revert per file.
 
 ## Out of scope
-- No logic changes anywhere.
-- No changes to `PageHeader`, sticky bottom CTA, `CreditEstimateBox`, `TransitionGoalSelector`, `TransitionRefinementPanel`, `PreservationRulesPanel`, `TransitionSummaryCard`, or `AudioModeSelector` — they read clean at 390px.
-- No desktop visual changes — mobile-only additions or label swaps.
+- Animate Image, Start & End, Ad Sequence, Consistent Model — untouched.
+- Refunding past Short Film failures.
+- Switching providers or adding per-user daily caps (separate work).
 
-## Verification
-At 390×844:
-- `/app/video/start-end`: Upload + Library sit side by side inside each frame slot; "Transition ↓" chip sits centered between Start and End in single-column layout.
-- `/app/video/animate`: "Upload image" + "Library" both fit cleanly with no truncation on mobile; full "Choose from Library" label still shows from `sm` breakpoint up.
+## Files touched
+1. `src/App.tsx`
+2. `src/pages/VideoHub.tsx`
+3. `src/pages/Dashboard.tsx`
+4. `src/pages/features/WorkflowsFeature.tsx`
+5. `supabase/functions/generate-video/index.ts`

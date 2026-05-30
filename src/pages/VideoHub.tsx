@@ -332,7 +332,7 @@ export default function VideoHub() {
       <VideoWorkflowCard
         icon={Clapperboard}
         title="Short Film"
-        description="Plan and generate a premium multi-shot brand film"
+        description="Temporarily unavailable while we upgrade the video engine"
         bestFor={['Brand storytelling', 'Multi-shot', 'Campaign films']}
         to="/app/video/short-film"
         disabled
