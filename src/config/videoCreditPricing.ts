@@ -48,7 +48,7 @@ export interface CreditEstimateParams {
   transitionStyle?: string;
 }
 
-const PREMIUM_MOTION_RECIPES = ['product_orbit', 'premium_handheld'];
+const PREMIUM_MOTION_RECIPES = ['orbit', 'premium_handheld'];
 const PREMIUM_TRANSITION_STYLES = ['cinematic', 'editorial'];
 
 /** Returns true if the given camera motion id triggers PRO Mode pricing (2× cost). */
