@@ -1,22 +1,38 @@
 ## Goal
-On `/app/video/start-end` and `/app/video/animate`, the "Cost: N credits" pill and the "Not enough credits" pill currently wrap to separate rows in the sticky bottom bar (visible in the attached screenshot of the narrow mobile-style preview). Make them smaller so they sit on the same row, with the "Get credits" button below.
+
+On `/app/generate/product-images` Step 1 (Product), display the **canonical category label** (e.g. "Clothing & Apparel", "Eyewear", "Phone Cases") instead of the raw free-text `product_type` ("Garment", "Dress", "Dresses").
+
+## Root cause
+
+`ProductImagesStep1Products.tsx` reads `p.product_type` directly. That field is whatever the user typed in Add Product. The canonical, normalized category lives in `analysis_json.category` (e.g. `garments`, `eyewear`) and is mapped to a clean label via `CATEGORY_LABELS` in `src/lib/productCategories.ts`.
 
 ## Changes
 
-**1. `src/components/app/video/CreditEstimateBox.tsx`**
-- Reduce pill padding `px-3.5 py-2` → `px-2.5 py-1`
-- Reduce text from `text-sm` → `text-xs`
-- Keep rounded-full, border, muted bg
-- Shorten label: render as `Cost N` (drop the "credits" word, drop the colon-space gap) — e.g. `Cost 35` to save horizontal space
+Single file: `src/components/app/product-images/ProductImagesStep1Products.tsx`
 
-**2. `src/pages/video/StartEndVideo.tsx` (lines 405-410)**
-- Shrink the "Not enough credits" pill to match: `px-2.5 py-1`, `text-xs`, icon `h-3 w-3`
-- Keep destructive styling
+1. Import the resolver:
+   ```ts
+   import { getCategoryLabel } from '@/lib/productCategories';
+   ```
 
-**3. `src/pages/video/AnimateVideo.tsx` (lines 1327-1337)**
-- Same shrink on the "Not enough credits" pill (`px-2.5 py-1`, `text-xs`, icon `h-3 w-3`)
-- Also shrink the `× N = N credits` multiplier pill to align (already `text-xs`, just normalize padding to `px-2.5 py-1`)
+2. Add a helper that prefers the analyzer category, then falls back to `product_type`:
+   ```ts
+   const displayCategory = (p: UserProduct) => {
+     const catId = (p as any)?.analysis_json?.category as string | undefined;
+     const label = catId ? getCategoryLabel(catId) : '';
+     return label || p.product_type || '';
+   };
+   ```
+   (UserProduct already carries `analysis_json` — confirmed in `user_products` schema.)
 
-No layout-structure changes — the existing `flex-wrap` row continues to host all pills; reducing pill size lets Cost + Not-enough-credits fit on one line at the current preview width, while the full-width "Get credits" button stays on the next row on narrow viewports (unchanged `w-full sm:w-auto` behavior).
+3. Use it in:
+   - The tile subtitle (line 169): `{displayCategory(p) || '\u00A0'}`
+   - The search filter (line 50): also match against `displayCategory(p)` so searching "Clothing" finds garments.
+   - The type filter dropdown (lines 41–53, 83–95): build the list from `displayCategory(p)` values and compare against it, so the filter chips read "Clothing & Apparel" / "Eyewear" / "Phone Cases" etc. instead of duplicated raw strings like "Dress" + "Dresses" + "dress".
 
-No logic changes; visual/spacing only.
+No DB changes, no other surfaces touched. `product_type` is still kept as the fallback for legacy rows missing `analysis_json.category`.
+
+## Out of scope
+
+- Backfilling `analysis_json` for the ~1,224 legacy products without analyzer output.
+- Other product list surfaces (Catalog, Perspectives, Products page) — can do the same swap later if you want a consistent look across the app; flag it and I'll extend the change.
