@@ -1,29 +1,29 @@
-## Fixes for `/app/product-swap`
+## Fix mobile UX on `/app/perspectives` source selector
 
-Frontend only — `src/pages/ProductSwap.tsx`.
+Frontend only — `src/pages/Perspectives.tsx`, Step 1 ("Choose Source").
 
-### 1. Scene step — card caption (no more "Library · May 30")
+### Problem
 
-Currently when a job has no product title we fall back to the date. Replace with product name + image format.
+On mobile the source selector uses `grid-cols-1` so the three "From Library / From Products / From Scratch" cards stack full-width. After tapping one, the picker panel renders below all three cards, forcing the user to scroll past the other two to find the actual picker they just opened.
 
-- Add `ratio` to the `generation_jobs` select; add `aspect_ratio` to the `freestyle_generations` select.
-- Extend `LibraryPickerItem` with `subtitle: string` (e.g. `"1:1"`, `"4:5"`, or `"Freestyle"` when no ratio).
-- Title resolution:
-  - Jobs: prefer `user_products.title` → `product_name` → `workflows.name` → `scene_name` → `"Generated image"`. Never the date.
-  - Freestyle: `"Freestyle"` (or first 40 chars of prompt as today).
-- Subtitle = aspect-ratio string (e.g. `1:1`, `4:5`, `16:9`); when missing, show workflow/source label (`Freestyle`, workflow name) so the second line is never blank.
-- Render the existing second `<p>` slot with the new `subtitle` instead of the non-breaking-space placeholder.
+### Fix
 
-### 2. Products step — consistent thumbnails (match `/app/generate/product-images`)
+Make the selector compact on mobile so all three options fit in one row and the picker appears immediately under them — same pattern desktop already has.
 
-Currently `aspect-square bg-muted flex items-center justify-center p-2` + `object-contain` makes cards look random (cutouts on grey, letterboxed photos, etc.). ProductImages uses a clean full-bleed `object-cover` thumbnail — apply the same so every card looks uniform.
+In the source-cards section (around lines 845–876):
 
-- Replace the inner wrapper with `aspect-square bg-muted overflow-hidden` (no padding, no flex centering).
-- `ShimmerImage` becomes `w-full h-full object-cover` (drop `max-w-full max-h-full object-contain`).
-- Keep the existing 52px caption strip, `CheckCircle` overlay, and selection ring untouched.
-- "No image" fallback stays but stretches full-bleed (`w-full h-full flex items-center justify-center`).
+1. Change grid to `grid-cols-3` at every breakpoint (drop `sm:grid-cols-3` distinction): `grid grid-cols-3 gap-2 sm:gap-3`.
+2. Tighten card padding on mobile: `p-2.5 sm:p-4`.
+3. Center contents on mobile, left-align on desktop: replace inner `space-y-2` wrapper with `flex flex-col items-center text-center sm:items-start sm:text-left gap-1.5 sm:gap-2`.
+4. Make the icon tile smaller on mobile: `w-9 h-9 sm:w-10 sm:h-10`.
+5. Title/description sizing:
+   - Title: keep `text-sm font-semibold`, add `leading-tight`.
+   - Description: hide on mobile (`hidden sm:block`) — the icon + title is enough on a 390px screen.
+6. "Selected" indicator: hide the text on mobile, keep the dot — `hidden sm:flex` on the row, or shrink it to just the dot. Simplest: keep `flex` but make the label `hidden sm:inline`.
+
+Result on mobile: a 3-up row of compact icon-cards (Library / Products / Scratch), and the chosen source's picker (search field, grid, or uploader) appears directly under the row — no more scrolling past unrelated cards.
 
 ### Out of scope
 
-- No DB, hook, search, or grid-layout changes.
-- Library picker thumbnails (scenes) keep `object-cover` as today — only the caption text changes.
+- No changes to picker contents, generation logic, variations, or desktop layout (cards still look the same ≥ sm).
+- No changes to the page hero, step 2 (variations), or step 3 (ratios).

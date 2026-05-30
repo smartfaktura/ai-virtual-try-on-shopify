@@ -842,38 +842,39 @@ export default function Perspectives() {
           </h2>
 
           {/* Source type selector cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {sourceOptions.map((option) => (
               <button
                 key={option.id}
                 type="button"
                 onClick={() => handleSourceTypeChange(option.id)}
-                className={`p-4 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                className={`p-2.5 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
                   sourceType === option.id
                     ? 'border-primary bg-primary/5 shadow-md'
                     : 'border-border hover:border-primary/50 hover:bg-muted'
                 }`}
               >
-                <div className="space-y-2">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                <div className="flex flex-col items-center text-center sm:items-start sm:text-left gap-1.5 sm:gap-2">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
                     sourceType === option.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}>
                     <option.icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">{option.title}</p>
-                    <p className="text-xs text-muted-foreground">{option.description}</p>
+                    <p className="text-xs sm:text-sm font-semibold leading-tight">{option.title}</p>
+                    <p className="text-xs text-muted-foreground hidden sm:block">{option.description}</p>
                   </div>
                   {sourceType === option.id && (
                     <div className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      <span className="text-xs font-medium text-primary">Selected</span>
+                      <span className="text-xs font-medium text-primary hidden sm:inline">Selected</span>
                     </div>
                   )}
                 </div>
               </button>
             ))}
           </div>
+
 
           {/* ── Library picker ─────────────────────────────────────────── */}
           {sourceType === 'library' && (
