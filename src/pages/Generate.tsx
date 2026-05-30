@@ -488,6 +488,16 @@ export default function Generate() {
   const [tryOnSearchQuery, setTryOnSearchQuery] = useState('');
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const PRODUCTS_PER_PAGE = 22;
+  const matchesProductTokens = (p: any, query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    const haystack = [
+      p.title, p.description, p.product_type, p.color, p.materials,
+      p.sku, p.dimensions, p.weight,
+      Array.isArray(p.tags) ? p.tags.join(' ') : '',
+    ].filter(Boolean).join(' ').toLowerCase();
+    return q.split(/\s+/).every(t => haystack.includes(t));
+  };
   const [visibleProductCount, setVisibleProductCount] = useState(PRODUCTS_PER_PAGE);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
@@ -3005,14 +3015,14 @@ export default function Generate() {
               <div>
                 <h2 className="text-base font-semibold">
                    {isFlatLay ? 'Select Products for Flat Lay'
-                     : isMirrorSelfie ? 'Select Product(s) for Mirror Selfie'
+                     : (isSelfieUgc || isMirrorSelfie) ? 'Select Product'
                     : activeWorkflow?.uses_tryon ? 'Select Clothing Item(s)' : 'Select Product(s)'}
                  </h2>
                  <p className="text-sm text-muted-foreground">
                    {isFlatLay
                      ? 'Select 1–3 products to arrange together in your flat lay composition'
-                     : isMirrorSelfie
-                     ? 'Choose the product(s) your model will wear or hold in the mirror selfie'
+                     : (isSelfieUgc || isMirrorSelfie)
+                     ? 'Choose the product to feature in this generation'
                      : activeWorkflow?.uses_tryon
                      ? 'Choose one or more clothing items to try on a model.'
                      : 'Choose one or multiple products. 2+ products will use bulk generation.'}
@@ -3156,12 +3166,12 @@ export default function Generate() {
                 {/* Toolbar: Search + Actions */}
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search products..."
+                      placeholder="Search by name, type, color, SKU, tag…"
                       value={tryOnSearchQuery}
                       onChange={e => { setTryOnSearchQuery(e.target.value); setVisibleProductCount(PRODUCTS_PER_PAGE); }}
-                      className="h-8 text-xs pl-8"
+                      className="h-10 text-sm pl-10 pr-4 rounded-full"
                     />
                   </div>
                   {!isFreeUser && (
@@ -3171,10 +3181,7 @@ export default function Generate() {
                         variant="outline"
                         className="h-8 text-xs"
                         onClick={() => {
-                          const filtered = userProducts.filter(p =>
-                            p.title.toLowerCase().includes(tryOnSearchQuery.toLowerCase()) ||
-                            p.product_type.toLowerCase().includes(tryOnSearchQuery.toLowerCase())
-                          );
+                          const filtered = userProducts.filter(p => matchesProductTokens(p, tryOnSearchQuery));
                           setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS_PER_BATCH).map(p => p.id)));
                         }}
                       >
@@ -3214,10 +3221,7 @@ export default function Generate() {
                 )}
 
                 {(() => {
-                  const filteredProducts = userProducts.filter(p =>
-                    p.title.toLowerCase().includes(tryOnSearchQuery.toLowerCase()) ||
-                    p.product_type.toLowerCase().includes(tryOnSearchQuery.toLowerCase())
-                  );
+                  const filteredProducts = userProducts.filter(p => matchesProductTokens(p, tryOnSearchQuery));
                    const visibleProducts = filteredProducts.slice(0, visibleProductCount);
                    const canMultiSelect = !isFreeUser;
 
@@ -3343,12 +3347,12 @@ export default function Generate() {
                 {/* Toolbar: Search + Actions */}
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search products..."
+                      placeholder="Search by name, type, color, SKU, tag…"
                       value={tryOnSearchQuery}
                       onChange={e => { setTryOnSearchQuery(e.target.value); setVisibleProductCount(PRODUCTS_PER_PAGE); }}
-                      className="h-8 text-xs pl-8"
+                      className="h-10 text-sm pl-10 pr-4 rounded-full"
                     />
                   </div>
                   <Button
@@ -3356,10 +3360,7 @@ export default function Generate() {
                     variant="outline"
                     className="h-8 text-xs"
                     onClick={() => {
-                      const filtered = userProducts.filter(p =>
-                        p.title.toLowerCase().includes(tryOnSearchQuery.toLowerCase()) ||
-                        p.product_type.toLowerCase().includes(tryOnSearchQuery.toLowerCase())
-                      );
+                      const filtered = userProducts.filter(p => matchesProductTokens(p, tryOnSearchQuery));
                       setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS_PER_BATCH).map(p => p.id)));
                     }}
                   >
@@ -3397,10 +3398,7 @@ export default function Generate() {
                 )}
 
                 {(() => {
-                  const filteredProducts = userProducts.filter(p =>
-                    p.title.toLowerCase().includes(tryOnSearchQuery.toLowerCase()) ||
-                    p.product_type.toLowerCase().includes(tryOnSearchQuery.toLowerCase())
-                   );
+                  const filteredProducts = userProducts.filter(p => matchesProductTokens(p, tryOnSearchQuery));
                    const visibleProducts = filteredProducts.slice(0, visibleProductCount);
 
                   if (filteredProducts.length === 0 && tryOnSearchQuery) {
