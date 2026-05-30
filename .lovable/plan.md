@@ -1,73 +1,44 @@
 ## Goal
 
-Add two new perspective options to `/app/perspectives`, appended as the **last** selections:
+Upgrade both search inputs on `/app/product-swap` (Scene step library picker + Products step) so they match Library's behavior: match across multiple fields instead of just `title`.
 
-1. **45° Back-Left** — three-quarter rear view from behind, rotated 45° to model/product's left.
-2. **45° Back-Right** — three-quarter rear view from behind, rotated 45° to model/product's right.
+## Scope
 
-These mirror the existing `45° Front-Left` / `45° Front-Right` shots but from the rear hemisphere, so customers can capture back construction with depth (vs. the flat straight-back view).
-
-## Where variations live
-
-The page reads from `workflows.generation_config->variation_strategy->variations` (DB-driven, ID `0417991a-9b16-4537-a035-e24e6f26b1db`, currently 11 entries). The `FALLBACK_VARIATIONS` array in `src/pages/Perspectives.tsx` is only a safety net but is kept in sync for consistency.
-
-Prompt rendering happens in `src/hooks/useGeneratePerspectives.ts` in `getOnModelPhotographyDNA` and `getProductOnlyPhotographyDNA`. Today's `default:` branch derives a `sideNote` from `left/right + 45` keywords — but when `back + left + 45` co-occur it would incorrectly emit the front-left three-quarter description while still appending the back block. Needs a dedicated back-45 branch.
+Frontend only — `src/pages/ProductSwap.tsx`. No DB, hooks, or query changes. Library picker still uses the existing client-side fetch (200 freestyle + 200 jobs); search is just filtered locally over more fields.
 
 ## Changes
 
-### 1. DB migration — append two variations (last positions)
+### 1. Library picker search (Scene step)
 
-Append to `workflows.generation_config.variation_strategy.variations` for id `0417991a-9b16-4537-a035-e24e6f26b1db`:
-
-```json
-{
-  "label": "45° Back-Left",
-  "category": "angle",
-  "instruction": "Three-quarter rear view from the back-left. Camera positioned at 45° behind the product/model on the left side, revealing the full back panel plus the left side construction in a single dimensional shot. Same environment, lighting, and material fidelity as the source. Slightly elevated (15–20° above horizontal) for natural rear hero framing.",
-  "referenceUpload": {
-    "prompt": "Upload a back or back-left reference of your product for best results (optional)",
-    "recommended": true
-  }
-},
-{
-  "label": "45° Back-Right",
-  "category": "angle",
-  "instruction": "Three-quarter rear view from the back-right. Camera positioned at 45° behind the product/model on the right side, revealing the full back panel plus the right side construction in a single dimensional shot. Same environment, lighting, and material fidelity as the source. Slightly elevated (15–20° above horizontal) for natural rear hero framing.",
-  "referenceUpload": {
-    "prompt": "Upload a back or back-right reference of your product for best results (optional)",
-    "recommended": true
-  }
-}
+Currently:
+```ts
+libraryItems.filter(i => i.title.toLowerCase().includes(librarySearch.toLowerCase()))
 ```
 
-### 2. `src/pages/Perspectives.tsx` — extend `FALLBACK_VARIATIONS`
+Extend `LibraryPickerItem` to carry extra haystack fields fetched alongside the existing query (already partially selected — just thread them through):
 
-Append two matching entries at the end (after `hero-low`) with ids `back-left-45` and `back-right-45`, `category: 'angle'`, same instructions as above, and the same `referenceUpload` blocks.
+- For freestyle rows: also keep `prompt` text.
+- For job rows: also keep `workflow name`, `product title`, `scene_name`, `model_name`, `prompt_final` (add to the `.select(...)`).
 
-### 3. `src/hooks/useGeneratePerspectives.ts` — back-45 prompt branch
+Build a per-item `searchHaystack: string` once at load time (lowercased, space-joined). Filter with multi-token AND match — split the query on whitespace and require every token to appear in the haystack. Mirrors the spirit of Library's `.or(ilike)` across `product_name / scene_name / model_name / workflow_slug / prompt_final`.
 
-In both `getOnModelPhotographyDNA` and `getProductOnlyPhotographyDNA` (`default:` block), replace the current `sideNote` ternary so back+45 takes priority over front+45:
+### 2. Products search (Products step)
 
-- If `isBack && l.includes('45') && l.includes('left')` → "Camera positioned at 45° BEHIND the [model/product] on the left side. Both the full back and the left side panel are visible, creating a rear three-quarter view with natural depth. The front is NOT visible."
-- If `isBack && l.includes('45') && l.includes('right')` → symmetric right variant.
-- Otherwise keep existing front-left/front-right/profile logic.
+Currently:
+```ts
+products.filter(p => p.title.toLowerCase().includes(productSearch.toLowerCase()))
+```
 
-Also extend the existing `isBack` line so it stays accurate for the new angles (mention that the back panel + chosen side seam are the hero, head may be turned slightly away on model shots).
+Build a haystack from these `user_products` columns: `title`, `description`, `product_type`, `color`, `materials`, `sku`, `dimensions`, `weight`, and `tags[]` (joined). Same multi-token AND match.
 
-Keep elevation note (`15–20° above horizontal`) — already triggered by `l.includes('45')`.
+### 3. UX polish (small, matches Library's input feel)
 
-### 4. No UI/grid changes
-
-Variations render in their array order, so appending puts them last automatically. Selection cap, reference uploads, and credit math all read from the same array — no extra wiring.
+- Keep the existing input styling; just update `placeholder` on both inputs to something like `"Search by name, prompt, scene, model…"` (library) and `"Search by name, type, color, SKU, tag…"` (products).
+- No new icons, no debouncing needed (filtering is local and cheap).
+- Empty-state copy stays the same.
 
 ## Out of scope
 
-- Existing 9 variations untouched
-- No changes to `useGeneratePerspectives` outside the `sideNote` branches
-- No new icons/thumbnails (uses default angle styling)
-
-## Verification
-
-- Open `/app/perspectives`, scroll the variations grid → "45° Back-Left" and "45° Back-Right" appear as the last two options.
-- Select one with a model image and one with a product-only image, generate, confirm the rendered prompt logs include the new back-45 sideNote (not the front-left/front-right text).
-- Confirm the optional reference upload slot renders for both new options.
+- No server-side search for the picker (dataset is already capped at 400 client-side).
+- No changes to selection, grids, generation, or the Library page itself.
+- No new fields persisted to the DB.
