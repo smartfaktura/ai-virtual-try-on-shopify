@@ -655,7 +655,7 @@ export default function ProductSwap() {
                 <div className="flex items-center gap-2 py-1 px-1">
                   <div className="relative flex-1">
                     <Search className="absolute left-[18px] top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search generated images..." value={librarySearch}
+                    <Input placeholder="Search by name, prompt, scene, model…" value={librarySearch}
                       onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }}
                       className="pl-11 pr-4 h-11 rounded-full text-sm" />
                   </div>
@@ -756,7 +756,7 @@ export default function ProductSwap() {
 
               <div className="relative py-1 px-1">
                 <Search className="absolute left-[18px] top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search products..." value={productSearch}
+                <Input placeholder="Search by name, type, color, SKU, tag…" value={productSearch}
                   onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }}
                   className="pl-11 pr-4 h-11 rounded-full text-sm" />
               </div>
