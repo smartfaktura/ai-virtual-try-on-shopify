@@ -849,12 +849,12 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, gridCla
 
   return (
     <div className="pt-3 pl-2 min-w-0 max-w-full">
-      <div className="flex items-center gap-2 mb-1 min-w-0 max-w-full">
+      <div className="flex items-center gap-3 mb-1 min-w-0 max-w-full">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
         {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
         <div className="h-px flex-1 bg-border min-w-[12px]" />
         {globalSelectionInfo && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <span className="text-[10px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               {globalSelectionInfo.count} selected
             </span>
