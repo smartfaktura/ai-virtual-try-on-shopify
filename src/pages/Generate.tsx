@@ -488,6 +488,16 @@ export default function Generate() {
   const [tryOnSearchQuery, setTryOnSearchQuery] = useState('');
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const PRODUCTS_PER_PAGE = 22;
+  const matchesProductTokens = (p: any, query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    const haystack = [
+      p.title, p.description, p.product_type, p.color, p.materials,
+      p.sku, p.dimensions, p.weight,
+      Array.isArray(p.tags) ? p.tags.join(' ') : '',
+    ].filter(Boolean).join(' ').toLowerCase();
+    return q.split(/\s+/).every(t => haystack.includes(t));
+  };
   const [visibleProductCount, setVisibleProductCount] = useState(PRODUCTS_PER_PAGE);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
