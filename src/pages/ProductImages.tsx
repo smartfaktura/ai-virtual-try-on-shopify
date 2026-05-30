@@ -1395,9 +1395,6 @@ export default function ProductImages() {
         />
       )}
 
-      {step >= 2 && step <= 3 && selectedProducts.length > 0 && (
-        <ProductContextStrip products={selectedProducts} onChangeProducts={() => setStep(1)} />
-      )}
 
       <div className="mt-2" ref={wizardContentRef}>
         {/* Step 1 keeps the Pre-selected scene silently in state; banner only renders on Step 2 (Shots). */}
