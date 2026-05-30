@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Play, X } from 'lucide-react';
+import { Loader2, Play, X, ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -243,6 +243,9 @@ export default function StartEndVideo() {
   if (project.isComplete && project.videoUrl) {
     return (
       <div className="container max-w-5xl py-8 space-y-6">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/app/video')} className="gap-1.5 -ml-2 self-start">
+          <ArrowLeft className="w-4 h-4" />Video
+        </Button>
         <PageHeader
           title="Start & End Video"
           subtitle="Cinematic transition between two frames"
@@ -262,11 +265,13 @@ export default function StartEndVideo() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32">
+    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-6 pb-32">
+      <Button variant="ghost" size="sm" onClick={() => navigate('/app/video')} className="gap-1.5 -ml-2 self-start">
+        <ArrowLeft className="w-4 h-4" />Video
+      </Button>
       <PageHeader
         title="Start & End Video"
-        subtitle="Upload two frames and let AI generate a smooth, cinematic transition between them"
-        backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
+        subtitle="Cinematic transition between two frames"
         titleBadge={
           <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-[0.14em] uppercase">
             Beta
