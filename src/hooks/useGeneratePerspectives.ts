@@ -120,22 +120,27 @@ function getOnModelPhotographyDNA(category: PerspectiveCategory, label: string):
     default: {
       const isBack = label.toLowerCase().includes('back');
       const l = label.toLowerCase();
-      const sideNote = l.includes('left')
-        ? l.includes('45')
-          ? 'Camera positioned at 45° to the model\'s front-left. Both the front face and left side of the body/garment are visible, creating a three-quarter view with natural depth.'
-          : 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
-        : l.includes('right')
-          ? l.includes('45')
-            ? 'Camera positioned at 45° to the model\'s front-right. Both the front face and right side of the body/garment are visible, creating a three-quarter view with natural depth.'
-            : 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
-          : '';
+      const is45 = l.includes('45');
+      const sideNote = isBack && is45 && l.includes('left')
+        ? 'Camera positioned at 45° BEHIND the model on the left side. The full back of the body/garment AND the left side panel are both visible, creating a rear three-quarter view with natural depth. The front of the model is NOT visible — only the back and left flank.'
+        : isBack && is45 && l.includes('right')
+          ? 'Camera positioned at 45° BEHIND the model on the right side. The full back of the body/garment AND the right side panel are both visible, creating a rear three-quarter view with natural depth. The front of the model is NOT visible — only the back and right flank.'
+          : l.includes('left')
+            ? is45
+              ? 'Camera positioned at 45° to the model\'s front-left. Both the front face and left side of the body/garment are visible, creating a three-quarter view with natural depth.'
+              : 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
+            : l.includes('right')
+              ? is45
+                ? 'Camera positioned at 45° to the model\'s front-right. Both the front face and right side of the body/garment are visible, creating a three-quarter view with natural depth.'
+                : 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
+              : '';
 
       return `PHOTOGRAPHY DNA — ON-MODEL ANGLE:
 - Lens: 85mm at f/8, deep depth-of-field ensuring both the model and product are tack-sharp.
-- Camera height: At the model's torso midpoint — straight-on, not looking down or up.${l.includes('45') ? ' Slightly elevated (15–20° above horizontal) for the classic hero angle.' : ''}
+- Camera height: At the model's torso midpoint — straight-on, not looking down or up.${is45 ? ' Slightly elevated (15–20° above horizontal) for the classic hero angle.' : ''}
 - Framing: Model fills 70–80% of the frame. Same body coverage as the source (full body, upper body, etc.).
 - The model rotates naturally to present the requested angle — the camera moves around the model.
-${isBack ? '- Back-specific: Model\'s back is facing camera. Show rear construction of garment, back panel, any visible labels, the way fabric falls across the back and shoulders. The model\'s head may be slightly turned or facing away.' : ''}
+${isBack ? `- Back-specific: Model's back is facing camera. Show rear construction of garment — back panel seams, yoke, any visible labels, the way fabric falls across the back and shoulders.${is45 ? ' Because this is a 45° rear three-quarter, also reveal the chosen side seam, sleeve attachment, and how the garment wraps around the body.' : ''} The model's head may be slightly turned or facing away.` : ''}
 ${sideNote ? `- Side-specific: ${sideNote}` : ''}
 - Pose: Same pose INTENT as source — if standing with weight on one hip, maintain that. If arms are at sides, keep them. Adapt naturally for the new angle but preserve the energy and stance.
 - Lighting: Same key-light direction as source. Consistent shadow fall across all angles.
@@ -175,21 +180,26 @@ function getProductOnlyPhotographyDNA(category: PerspectiveCategory, label: stri
     default: {
       const isBack = label.toLowerCase().includes('back');
       const l = label.toLowerCase();
-      const sideNote = l.includes('left')
-        ? l.includes('45')
-          ? 'Camera positioned at 45° to the product\'s front-left. Both the front face and left side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
-          : 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
-        : l.includes('right')
-          ? l.includes('45')
-            ? 'Camera positioned at 45° to the product\'s front-right. Both the front face and right side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
-            : 'Camera positioned at exact 90° to the product\'s right face. The right side panel fills the frame.'
-          : '';
+      const is45 = l.includes('45');
+      const sideNote = isBack && is45 && l.includes('left')
+        ? 'Camera positioned at 45° BEHIND the product on the left side. Both the full back face AND the left side panel are visible, creating a rear three-quarter view with natural depth and dimensionality. The front face of the product is NOT visible — only the back and left flank.'
+        : isBack && is45 && l.includes('right')
+          ? 'Camera positioned at 45° BEHIND the product on the right side. Both the full back face AND the right side panel are visible, creating a rear three-quarter view with natural depth and dimensionality. The front face of the product is NOT visible — only the back and right flank.'
+          : l.includes('left')
+            ? is45
+              ? 'Camera positioned at 45° to the product\'s front-left. Both the front face and left side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
+              : 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
+            : l.includes('right')
+              ? is45
+                ? 'Camera positioned at 45° to the product\'s front-right. Both the front face and right side panel are visible, creating a three-quarter view with natural depth and dimensionality.'
+                : 'Camera positioned at exact 90° to the product\'s right face. The right side panel fills the frame.'
+              : '';
 
       return `PHOTOGRAPHY DNA — PRODUCT ANGLE:
 - Lens: 85mm at f/8, deep depth-of-field ensuring the entire product is tack-sharp from nearest edge to farthest.
-- Camera height: Positioned at the product's vertical midpoint — not looking down, not looking up. Straight-on at the product center of mass.${l.includes('45') ? ' Slightly elevated (15–20° above horizontal) for the classic e-commerce hero angle.' : ''}
+- Camera height: Positioned at the product's vertical midpoint — not looking down, not looking up. Straight-on at the product center of mass.${is45 ? ' Slightly elevated (15–20° above horizontal) for the classic e-commerce hero angle.' : ''}
 - Framing: Product fills 70–80% of the frame with consistent margins on all sides. Match the exact same scale as a front-facing hero shot.
-${isBack ? '- Back-specific: Show all rear construction details — back panel seams, interior lining edge, care labels if visible, rear pocket construction, heel counter on shoes. If the product has a label or tag on the back, it must be legible.' : ''}
+${isBack ? `- Back-specific: Show all rear construction details — back panel seams, interior lining edge, care labels if visible, rear pocket construction, heel counter on shoes.${is45 ? ' Because this is a 45° rear three-quarter, also reveal the chosen side panel, seams, and any hardware visible from that flank.' : ''} If the product has a label or tag on the back, it must be legible.` : ''}
 ${sideNote ? `- Side-specific: ${sideNote}` : ''}
 - Lighting: Same key-light direction and intensity as a front-facing shot. Consistent shadow fall direction across all angles (light from upper-left at 45°).
 - DO NOT rotate or tilt the product — only the camera moves around the product.`;
