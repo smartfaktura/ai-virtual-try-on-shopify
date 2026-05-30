@@ -46,7 +46,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
   };
 
   const productTypes = useMemo(() => {
-    const types = new Set(products.map(p => p.product_type).filter(Boolean));
+    const types = new Set(products.map(p => displayCategory(p)).filter(Boolean));
     return Array.from(types).sort();
   }, [products]);
 
@@ -54,10 +54,13 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
     let list = products;
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(p => p.title.toLowerCase().includes(q) || (p.product_type && p.product_type.toLowerCase().includes(q)));
+      list = list.filter(p => {
+        const cat = displayCategory(p).toLowerCase();
+        return p.title.toLowerCase().includes(q) || cat.includes(q);
+      });
     }
     if (typeFilter !== 'all') {
-      list = list.filter(p => p.product_type === typeFilter);
+      list = list.filter(p => displayCategory(p) === typeFilter);
     }
     return list;
   }, [products, search, typeFilter]);
