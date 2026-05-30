@@ -1,54 +1,67 @@
-## Goal
-1. Stop the silent undercharge — backend deduction must match the credit number shown in the UI
-2. Raise Animate 10 s base cost from 40 → **50** credits
-3. Remove the Audio mode option from `/app/video/animate` and `/app/video/start-end` (always silent)
+# Make orbit + premium handheld 2× cost ("PRO Mode")
 
-## Changes
+## What changes for users
 
-### 1. `src/config/videoCreditPricing.ts` — single source of truth, bump 10s
-- `animate.base10s`: `40` → **`50`**
-- Keep `base5s: 25`, `premiumMotion: 2`
-- Set `animate.ambient: 0` (no longer reachable, but safe)
-- Set `startEnd.ambient: 0`
+- 5s video with `product_orbit` or `premium_handheld`: **25 → 50 credits**
+- 10s video with `product_orbit` or `premium_handheld`: **50 → 100 credits**
+- All other camera motions stay at 25 / 50 credits.
+- Both options visually labeled as **PRO Mode** in every camera-motion selector so users understand the surcharge.
 
-### 2. `supabase/functions/enqueue-generation/index.ts` — use the same formula
-Replace the hardcoded `dur === "10" ? 18 : 10` block for `video` jobs with the same numbers used by the frontend:
-```ts
-// animate workflow
-let cost = dur === "10" ? 50 : 25;
-if (["product_orbit", "premium_handheld"].includes(motion)) cost += 2;
-// audio removed — ignore audio field even if client sends it
-return cost;
+## Pricing logic change
+
+Today `premiumMotion: 2` is a flat `+2`. We replace it with a **2× multiplier** applied only when the selected camera motion is `product_orbit` or `premium_handheld`.
+
+`src/config/videoCreditPricing.ts`
+- Remove `premiumMotion: 2`; add `premiumMotionMultiplier: 2`.
+- In `estimateCredits` (animate branch):
+  ```ts
+  let cost = duration === '10' ? rules.base10s : rules.base5s;
+  if (motionRecipe && PREMIUM_MOTION_RECIPES.includes(motionRecipe)) {
+    cost = cost * rules.premiumMotionMultiplier;
+  }
+  ```
+- Export a small helper `isPremiumCameraMotion(id: string): boolean` so UI doesn't duplicate the list.
+
+`supabase/functions/enqueue-generation/index.ts`
+- Replace the existing `+2` block:
+  ```ts
+  let cost = dur === "10" ? 50 : 25;
+  if (["product_orbit", "premium_handheld"].includes(motion)) cost *= 2;
+  ```
+- Redeploy `enqueue-generation`.
+
+## UI: "PRO Mode" label
+
+Targets — both camera-motion `<select>` dropdowns in `src/pages/video/AnimateVideo.tsx` (main picker + per-image override at line 877-879).
+
+Approach: append ` — PRO · 2×` to the option text when `cm.id` is in the premium list. `<option>` can't render badges, but plain-text suffix is the standard pattern and matches the rest of the file.
+
+```tsx
+{CAMERA_MOTIONS.map(cm => (
+  <option key={cm.id} value={cm.id}>
+    {cm.label}{isPremiumCameraMotion(cm.id) ? ' — PRO · 2×' : ''}
+  </option>
+))}
 ```
-Keep the `startEnd` (flat 35) and `video_multishot` (40) branches as-is. Deploy this function.
 
-### 3. Remove Audio UI — `src/pages/video/AnimateVideo.tsx`
-- Drop `AudioModeSelector` import and its render block (line ~1277)
-- Drop the per-image Audio `<select>` in bulk overrides (lines ~952–956)
-- Hardcode `audioMode = 'silent'` (keep the constant so payloads/estimates stay valid) and remove the `useState`
-- Remove "Audio" row from the summary list (line ~503)
+Also: directly above each Camera Motion select, render a small inline hint when the currently-selected motion is premium:
+```
+PRO Mode active · doubles credit cost for cinematic camera work
+```
+Styled with existing `text-[10px] text-muted-foreground` token — no new tokens.
 
-### 4. Remove Audio UI — `src/pages/video/StartEndVideo.tsx`
-- Drop `AudioModeSelector` import and the entire "Audio & Note" section header for audio (line ~358–367) — keep the Note input, just rename heading to "Note"
-- Hardcode `audioMode = 'silent'`, remove `useState`
-- Remove "Audio" entry from the summary chips (line ~227)
+## Credit summary panel
 
-### 5. No DB migration needed
-`credits_reserved` continues to store whatever `enqueue-generation` calculates — only the formula changes.
+The summary row already calls `estimateCredits(...)` so it will automatically display 50 / 100 after the rule change. No extra wiring.
 
-## What this fixes
-- tsimkus's 5 s silent job will now deduct **25** credits (was 10), matching the button label
-- A 10 s silent video will deduct **50** credits (was 18)
-- 10 s + premium_handheld will deduct **52** credits (was 24)
-- Users can no longer pick Ambient audio on these two workflows, so the +4 ambient surcharge disappears entirely from these flows
+## Not changed
 
-## Not changing
-- Short Film pricing (already disabled in UI)
-- Consistent Model / Ad Sequence workflows
-- The `audio` field in `generated_videos.metadata` — old rows keep their value; new rows simply won't have audio enabled
+- Recipe presets that *default* to `premium_handheld` / `orbit` (Premium Campaign Reveal, Editorial Perfume Ad, Premium Electronics Ad, Premium Bottle Showcase, Clean Rotation, Dynamic Training) — they inherit the new 2× cost automatically, which is the intended behavior.
+- Start & End, Consistent Model, Ad Sequence, Short Film — out of scope.
+- Existing queued/completed jobs — historical `credits_reserved` values unchanged.
 
 ## Files touched
-- `src/config/videoCreditPricing.ts`
-- `supabase/functions/enqueue-generation/index.ts` (deploy)
-- `src/pages/video/AnimateVideo.tsx`
-- `src/pages/video/StartEndVideo.tsx`
+
+- `src/config/videoCreditPricing.ts` — multiplier + helper
+- `src/pages/video/AnimateVideo.tsx` — PRO suffix in both camera-motion selects + active hint
+- `supabase/functions/enqueue-generation/index.ts` — `*= 2` instead of `+= 2`, then deploy
