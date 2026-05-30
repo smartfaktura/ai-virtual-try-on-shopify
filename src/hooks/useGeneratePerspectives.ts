@@ -120,22 +120,27 @@ function getOnModelPhotographyDNA(category: PerspectiveCategory, label: string):
     default: {
       const isBack = label.toLowerCase().includes('back');
       const l = label.toLowerCase();
-      const sideNote = l.includes('left')
-        ? l.includes('45')
-          ? 'Camera positioned at 45° to the model\'s front-left. Both the front face and left side of the body/garment are visible, creating a three-quarter view with natural depth.'
-          : 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
-        : l.includes('right')
-          ? l.includes('45')
-            ? 'Camera positioned at 45° to the model\'s front-right. Both the front face and right side of the body/garment are visible, creating a three-quarter view with natural depth.'
-            : 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
-          : '';
+      const is45 = l.includes('45');
+      const sideNote = isBack && is45 && l.includes('left')
+        ? 'Camera positioned at 45° BEHIND the model on the left side. The full back of the body/garment AND the left side panel are both visible, creating a rear three-quarter view with natural depth. The front of the model is NOT visible — only the back and left flank.'
+        : isBack && is45 && l.includes('right')
+          ? 'Camera positioned at 45° BEHIND the model on the right side. The full back of the body/garment AND the right side panel are both visible, creating a rear three-quarter view with natural depth. The front of the model is NOT visible — only the back and right flank.'
+          : l.includes('left')
+            ? is45
+              ? 'Camera positioned at 45° to the model\'s front-left. Both the front face and left side of the body/garment are visible, creating a three-quarter view with natural depth.'
+              : 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
+            : l.includes('right')
+              ? is45
+                ? 'Camera positioned at 45° to the model\'s front-right. Both the front face and right side of the body/garment are visible, creating a three-quarter view with natural depth.'
+                : 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
+              : '';
 
       return `PHOTOGRAPHY DNA — ON-MODEL ANGLE:
 - Lens: 85mm at f/8, deep depth-of-field ensuring both the model and product are tack-sharp.
-- Camera height: At the model's torso midpoint — straight-on, not looking down or up.${l.includes('45') ? ' Slightly elevated (15–20° above horizontal) for the classic hero angle.' : ''}
+- Camera height: At the model's torso midpoint — straight-on, not looking down or up.${is45 ? ' Slightly elevated (15–20° above horizontal) for the classic hero angle.' : ''}
 - Framing: Model fills 70–80% of the frame. Same body coverage as the source (full body, upper body, etc.).
 - The model rotates naturally to present the requested angle — the camera moves around the model.
-${isBack ? '- Back-specific: Model\'s back is facing camera. Show rear construction of garment, back panel, any visible labels, the way fabric falls across the back and shoulders. The model\'s head may be slightly turned or facing away.' : ''}
+${isBack ? `- Back-specific: Model's back is facing camera. Show rear construction of garment — back panel seams, yoke, any visible labels, the way fabric falls across the back and shoulders.${is45 ? ' Because this is a 45° rear three-quarter, also reveal the chosen side seam, sleeve attachment, and how the garment wraps around the body.' : ''} The model's head may be slightly turned or facing away.` : ''}
 ${sideNote ? `- Side-specific: ${sideNote}` : ''}
 - Pose: Same pose INTENT as source — if standing with weight on one hip, maintain that. If arms are at sides, keep them. Adapt naturally for the new angle but preserve the energy and stance.
 - Lighting: Same key-light direction as source. Consistent shadow fall across all angles.
