@@ -1410,7 +1410,8 @@ export default function ProductImages() {
                     if (isFree) { setUpgradeModalOpen(true); return; }
                     const filtered = userProducts.filter(p =>
                       p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-                      p.product_type.toLowerCase().includes(productSearch.toLowerCase())
+                      p.product_type.toLowerCase().includes(productSearch.toLowerCase()) ||
+                      displayCategory(p).toLowerCase().includes(productSearch.toLowerCase())
                     );
                     setSelectedProductIdsCapped(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
                   }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
