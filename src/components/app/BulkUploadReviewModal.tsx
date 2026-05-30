@@ -246,12 +246,12 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover bg-muted flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                  Category
+                </div>
                 <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
                   <SelectTrigger className="h-10 text-sm w-full px-3">
                     <span className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground flex-shrink-0">
-                        Category
-                      </span>
                       <span className="min-w-0 flex-1 truncate text-left">
                         <SelectValue placeholder="Pick category…" />
                       </span>
@@ -287,7 +287,7 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                 type="button"
                 onClick={() => removeRow(row.id)}
                 disabled={isSaving}
-                className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                className="flex-shrink-0 self-start p-1.5 rounded-md text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
                 aria-label="Remove"
               >
                 <X className="w-4 h-4" />
