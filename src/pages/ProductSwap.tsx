@@ -49,6 +49,7 @@ interface LibraryPickerItem {
   id: string;
   imageUrl: string;
   title: string;
+  subtitle: string;
   createdAt: string;
   searchHaystack: string;
 }
