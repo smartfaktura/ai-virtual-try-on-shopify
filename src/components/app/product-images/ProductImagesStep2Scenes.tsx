@@ -873,7 +873,7 @@ function CuratorColorHint({ baseHex }: { baseHex: string }) {
 }
 
 /** Per-sub-group section with Select All on left and label on right */
-function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSelected, onToggleAll, gridClass }: {
+function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSelected, onToggleAll, gridClass, globalSelectionInfo }: {
   label: string;
   scenes: ProductImageScene[];
   selectedSceneIds: Set<string>;
@@ -881,6 +881,7 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
   allSelected: boolean;
   onToggleAll: () => void;
   gridClass: string;
+  globalSelectionInfo?: { count: number; onClear: () => void };
 }) {
   const selectedCount = scenes.filter(s => selectedSceneIds.has(s.id)).length;
   const curatorColor = scenes.find(s => s.suggestedColors?.length)?.suggestedColors?.[0];
@@ -895,6 +896,21 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
         {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
         <div className="h-px flex-1 bg-border min-w-[20px]" />
+        {globalSelectionInfo && (
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+              {globalSelectionInfo.count} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[10px] h-6 px-2 shrink-0"
+              onClick={(e) => { e.stopPropagation(); globalSelectionInfo.onClear(); }}
+            >
+              Clear
+            </Button>
+          </div>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -905,6 +921,7 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
           {selectedCount > 0 && !allSelected && ` (${selectedCount}/${scenes.length})`}
         </Button>
       </div>
+
       {showLegend && (
         <p className="text-[11px] text-muted-foreground/80 mb-2">
           Dynamic backgrounds — fully editable in the next step
