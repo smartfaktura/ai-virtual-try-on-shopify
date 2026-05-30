@@ -166,7 +166,7 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                 </div>
                 <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
                   <SelectTrigger className="h-10 text-sm w-full px-3">
-                    <span className="flex items-center justify-between gap-3 min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-6 sm:gap-8 min-w-0 flex-1 mr-1">
                       <span className="min-w-0 flex-1 truncate text-left">
                         <SelectValue placeholder="Pick category…" />
                       </span>
