@@ -189,12 +189,12 @@ export default function Perspectives() {
       const [fsResult, jobsResult] = await Promise.all([
         supabase
           .from('freestyle_generations')
-          .select('id, image_url, prompt, created_at')
+          .select('id, image_url, prompt, user_prompt, workflow_label, aspect_ratio, created_at')
           .order('created_at', { ascending: false })
           .limit(200),
         supabase
           .from('generation_jobs')
-          .select('id, results, created_at, status, workflows(name), user_products(title)')
+          .select('id, results, created_at, status, scene_name, model_name, workflow_slug, prompt_final, product_name, ratio, workflows(name), user_products(title)')
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
           .limit(200),
@@ -204,11 +204,15 @@ export default function Perspectives() {
 
       // Freestyle items
       for (const f of fsResult.data || []) {
+        const title = f.prompt?.slice(0, 40) || 'Freestyle';
+        const haystack = [title, f.prompt, f.user_prompt, f.workflow_label, f.aspect_ratio]
+          .filter(Boolean).join(' ').toLowerCase();
         items.push({
           id: `fs-${f.id}`,
           imageUrl: f.image_url,
-          title: f.prompt?.slice(0, 40) || 'Freestyle',
+          title,
           createdAt: f.created_at,
+          searchHaystack: haystack,
         });
       }
 
@@ -221,12 +225,19 @@ export default function Perspectives() {
           const url = typeof r === 'string' ? r : r?.url || r?.image_url;
           if (!url || url.startsWith('data:')) continue;
           const workflowName = (job.workflows as any)?.name || '';
-          const productTitle = (job.user_products as any)?.title || '';
+          const productTitle = (job.user_products as any)?.title || job.product_name || '';
+          const title = workflowName || productTitle || 'Generated';
+          const haystack = [
+            title, workflowName, productTitle,
+            job.scene_name, job.model_name, job.workflow_slug,
+            job.prompt_final, job.ratio,
+          ].filter(Boolean).join(' ').toLowerCase();
           items.push({
             id: `job-${job.id}-${i}`,
             imageUrl: url,
-            title: workflowName || productTitle || 'Generated',
+            title,
             createdAt: job.created_at,
+            searchHaystack: haystack,
           });
         }
       }
