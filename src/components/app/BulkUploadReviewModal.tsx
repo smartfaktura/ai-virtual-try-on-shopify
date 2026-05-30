@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -244,22 +245,9 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                 alt=""
                 className="w-16 h-16 rounded-md object-cover bg-muted flex-shrink-0"
               />
-              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Category</span>
-                  {row.isSuggested && row.status === 'suggested' && (
-                    <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                      Suggested
-                    </span>
-                  )}
-                  {row.status === 'failed' && (
-                    <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
-                      Pick one
-                    </span>
-                  )}
-                </div>
+              <div className="flex-1 min-w-0 flex items-center gap-2">
                 <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
-                  <SelectTrigger className="h-9 text-sm w-full">
+                  <SelectTrigger className="h-9 text-sm flex-1 min-w-0">
                     <SelectValue placeholder="Pick category…" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[280px]">
@@ -277,6 +265,12 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                     ))}
                   </SelectContent>
                 </Select>
+                {row.isSuggested && row.status === 'suggested' && (
+                  <Badge variant="secondary" className="text-[10px] flex-shrink-0">Suggested</Badge>
+                )}
+                {row.status === 'failed' && (
+                  <Badge variant="destructive" className="text-[10px] flex-shrink-0">Pick one</Badge>
+                )}
               </div>
               <button
                 type="button"
@@ -297,7 +291,14 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
           </Button>
           <Button onClick={handleConfirmAll} disabled={!allReady || isSaving} className="flex-1 sm:flex-none">
             {isSaving ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</>
+              <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+                </span>
+                <span>Saving</span>
+              </span>
             ) : (
               `Save ${rows.length} ${rows.length === 1 ? 'product' : 'products'}`
             )}
