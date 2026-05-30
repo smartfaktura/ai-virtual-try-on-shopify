@@ -30,10 +30,10 @@ function calculateCreditCost(
   // Video jobs use dedicated pricing
   if (jobType === "video" || jobType === "video_multishot") {
     const dur = String(payload?.duration || "5");
-    const audio = String(payload?.audioMode || "silent");
     const motion = String(payload?.cameraMotion || "");
     const wf = String(payload?.workflow_type || "");
     if (jobType === "video_multishot") return 40; // flat rate for short film / multi-shot
+
 
     // Start & End workflow: flat 35 credits per video (matches frontend).
     if (wf === "start_end") {
