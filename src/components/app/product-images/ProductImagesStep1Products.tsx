@@ -22,9 +22,29 @@ interface Step1Props {
 }
 
 export function ProductImagesStep1Products({ products, isLoading, selectedIds, onSelectionChange, onProductAdded }: Step1Props) {
+  const { user } = useAuth();
   const [showAdd, setShowAdd] = useState(false);
+  const [pendingSingleFile, setPendingSingleFile] = useState<File[] | undefined>(undefined);
+  const [bulkFiles, setBulkFiles] = useState<File[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+
+  const handleUploadTileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFilesPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+    e.target.value = '';
+    if (files.length === 0) return;
+    if (files.length === 1) {
+      setPendingSingleFile(files);
+      setShowAdd(true);
+    } else {
+      setBulkFiles(files);
+    }
+  };
 
   const productTypes = useMemo(() => {
     const types = new Set(products.map(p => p.product_type).filter(Boolean));
