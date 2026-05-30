@@ -10,6 +10,13 @@ import { AddProductModal } from '@/components/app/AddProductModal';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { UserProduct } from './types';
+import { getCategoryLabel } from '@/lib/productCategories';
+
+const displayCategory = (p: UserProduct): string => {
+  const catId = (p as any)?.analysis_json?.category as string | undefined;
+  const label = catId ? getCategoryLabel(catId) : '';
+  return label || p.product_type || '';
+};
 
 interface Step1Props {
   products: UserProduct[];
