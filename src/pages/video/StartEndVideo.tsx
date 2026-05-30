@@ -9,7 +9,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { toast } from '@/lib/brandedToast';
 import { ValidationWarnings, type ValidationWarning } from '@/components/app/video/ValidationWarnings';
 import { PreservationRulesPanel } from '@/components/app/video/PreservationRulesPanel';
-import { AudioModeSelector } from '@/components/app/video/AudioModeSelector';
+
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { VideoResultsPanel } from '@/components/app/video/VideoResultsPanel';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
