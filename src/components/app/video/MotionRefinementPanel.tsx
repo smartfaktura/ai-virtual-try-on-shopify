@@ -98,7 +98,7 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
                   tooltip="Controls how the virtual camera moves during the video."
                 />
                 {props.isPaidUser === false && (
-                  <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 -mt-2">
+                  <div className="flex items-center gap-2 rounded-full bg-muted/40 px-3 py-1.5 -mt-2">
                     <img src={avatarSophia} alt="Sophia" className="h-5 w-5 rounded-full object-cover ring-1 ring-border" />
                     <p className="text-[11px] text-muted-foreground flex-1">
                       Select multiple camera motions with any paid plan
@@ -106,7 +106,7 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
                     <button
                       type="button"
                       onClick={() => props.onUpgrade?.()}
-                      className="text-[11px] font-medium text-primary hover:underline"
+                      className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary hover:bg-primary/15"
                     >
                       Upgrade
                     </button>
