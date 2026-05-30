@@ -45,99 +45,13 @@ interface BulkUploadReviewModalProps {
   onComplete: (productIds: string[]) => void;
 }
 
-/** Grouped category picker — presentation only; stored values unchanged. */
-const CATEGORY_GROUPS: Array<{ label: string; items: Array<{ value: string; label: string }> }> = [
-  {
-    label: 'Apparel',
-    items: [
-      { value: 'dresses', label: 'Dress' },
-      { value: 'garments', label: 'Garment' },
-      { value: 'hoodies', label: 'Hoodie' },
-      { value: 'jackets', label: 'Jacket' },
-      { value: 'jeans', label: 'Jeans' },
-      { value: 'trousers', label: 'Trousers' },
-      { value: 'activewear', label: 'Activewear' },
-      { value: 'swimwear', label: 'Swimwear' },
-      { value: 'lingerie', label: 'Lingerie' },
-      { value: 'kidswear', label: 'Kidswear' },
-    ],
-  },
-  {
-    label: 'Footwear',
-    items: [
-      { value: 'sneakers', label: 'Sneakers' },
-      { value: 'shoes', label: 'Shoes' },
-      { value: 'boots', label: 'Boots' },
-      { value: 'high-heels', label: 'Heels' },
-    ],
-  },
-  {
-    label: 'Bags & Accessories',
-    items: [
-      { value: 'bags-accessories', label: 'Bag' },
-      { value: 'backpacks', label: 'Backpack' },
-      { value: 'wallets-cardholders', label: 'Wallet' },
-      { value: 'belts', label: 'Belt' },
-      { value: 'scarves', label: 'Scarf' },
-    ],
-  },
-  {
-    label: 'Headwear',
-    items: [
-      { value: 'caps', label: 'Cap' },
-      { value: 'hats', label: 'Hat' },
-      { value: 'beanies', label: 'Beanie' },
-    ],
-  },
-  {
-    label: 'Jewellery & Watches',
-    items: [
-      { value: 'watches', label: 'Watch' },
-      { value: 'jewellery-necklaces', label: 'Necklace' },
-      { value: 'jewellery-rings', label: 'Ring' },
-      { value: 'jewellery-bracelets', label: 'Bracelet' },
-      { value: 'jewellery-earrings', label: 'Earring' },
-    ],
-  },
-  {
-    label: 'Eyewear',
-    items: [{ value: 'eyewear', label: 'Eyewear' }],
-  },
-  {
-    label: 'Beauty & Fragrance',
-    items: [
-      { value: 'fragrance', label: 'Fragrance' },
-      { value: 'beauty-skincare', label: 'Skincare' },
-      { value: 'makeup-lipsticks', label: 'Makeup' },
-    ],
-  },
-  {
-    label: 'Food & Beverage',
-    items: [
-      { value: 'food', label: 'Food' },
-      { value: 'beverages', label: 'Beverage' },
-    ],
-  },
-  {
-    label: 'Home & Tech',
-    items: [
-      { value: 'furniture', label: 'Furniture' },
-      { value: 'home-decor', label: 'Home Décor' },
-      { value: 'tech-devices', label: 'Tech Device' },
-    ],
-  },
-  {
-    label: 'Wellness & Pets',
-    items: [
-      { value: 'supplements-wellness', label: 'Supplement' },
-      { value: 'pet-accessories', label: 'Pet Accessory' },
-    ],
-  },
-  {
-    label: 'Other',
-    items: [{ value: 'other', label: 'Other' }],
-  },
-];
+/** Grouped category picker — uses canonical category source so all subcategories appear. */
+const CATEGORY_GROUPS: Array<{ label: string; items: Array<{ value: string; label: string }> }> =
+  CATEGORY_SUPER_GROUPS.map(g => ({
+    label: g.label,
+    items: g.ids.map(id => ({ value: id, label: CATEGORY_LABELS[id] || id })),
+  }));
+
 
 async function runWithConcurrency<T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
