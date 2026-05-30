@@ -1368,9 +1368,6 @@ export default function ProductImages() {
   return (
     <div className="space-y-6 pb-36 overflow-x-clip max-w-full min-w-0">
       <SEOHead title="Create Product Visuals — VOVV" description="Generate product visuals" />
-      {step !== 6 && (
-        <PageHeader title="Create Product Visuals" subtitle="Choose one or more products to start generating visuals"><span /></PageHeader>
-      )}
 
       {step <= 4 && (
         <CatalogStepper
@@ -1390,6 +1387,10 @@ export default function ProductImages() {
         {step === 1 && (
           <>
             <div className="space-y-3">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Select products</h2>
+                <p className="text-sm text-muted-foreground mt-1">Choose one or more products to start generating visuals</p>
+              </div>
               {/* Toolbar */}
               {userProducts.length >= 10 && (
               <div className="flex flex-col sm:flex-row gap-3 sm:items-center min-w-0">
