@@ -1795,6 +1795,25 @@ export default function ProductImages() {
         onOpenChange={setDemoPickerOpen}
         onSelectDemo={handleDemoSelect}
       />
+      {bulkUploadFiles && user && (
+        <BulkUploadReviewModal
+          open={!!bulkUploadFiles}
+          files={bulkUploadFiles}
+          userId={user.id}
+          onClose={() => setBulkUploadFiles(null)}
+          onComplete={(productIds) => {
+            setBulkUploadFiles(null);
+            queryClient.invalidateQueries({ queryKey: ['user-products', user.id] });
+            if (productIds.length) {
+              setSelectedProductIdsCapped(prev => {
+                const next = new Set(prev);
+                productIds.forEach(id => next.add(id));
+                return next;
+              });
+            }
+          }}
+        />
+      )}
       <NoCreditsModal
         open={noCreditsModalOpen}
         onClose={() => setNoCreditsModalOpen(false)}
