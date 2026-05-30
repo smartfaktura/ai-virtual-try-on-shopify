@@ -86,7 +86,15 @@ interface LibraryPickerItem {
   imageUrl: string;
   title: string;
   createdAt: string;
+  searchHaystack: string;
 }
+
+const matchesTokens = (haystack: string, query: string) => {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const tokens = q.split(/\s+/);
+  return tokens.every(t => haystack.includes(t));
+};
 
 export default function Perspectives() {
   const navigate = useNavigate();
@@ -181,12 +189,12 @@ export default function Perspectives() {
       const [fsResult, jobsResult] = await Promise.all([
         supabase
           .from('freestyle_generations')
-          .select('id, image_url, prompt, created_at')
+          .select('id, image_url, prompt, user_prompt, workflow_label, aspect_ratio, created_at')
           .order('created_at', { ascending: false })
           .limit(200),
         supabase
           .from('generation_jobs')
-          .select('id, results, created_at, status, workflows(name), user_products(title)')
+          .select('id, results, created_at, status, scene_name, model_name, workflow_slug, prompt_final, product_name, ratio, workflows(name), user_products(title)')
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
           .limit(200),
@@ -196,11 +204,15 @@ export default function Perspectives() {
 
       // Freestyle items
       for (const f of fsResult.data || []) {
+        const title = f.prompt?.slice(0, 40) || 'Freestyle';
+        const haystack = [title, f.prompt, f.user_prompt, f.workflow_label, f.aspect_ratio]
+          .filter(Boolean).join(' ').toLowerCase();
         items.push({
           id: `fs-${f.id}`,
           imageUrl: f.image_url,
-          title: f.prompt?.slice(0, 40) || 'Freestyle',
+          title,
           createdAt: f.created_at,
+          searchHaystack: haystack,
         });
       }
 
@@ -213,12 +225,19 @@ export default function Perspectives() {
           const url = typeof r === 'string' ? r : r?.url || r?.image_url;
           if (!url || url.startsWith('data:')) continue;
           const workflowName = (job.workflows as any)?.name || '';
-          const productTitle = (job.user_products as any)?.title || '';
+          const productTitle = (job.user_products as any)?.title || job.product_name || '';
+          const title = workflowName || productTitle || 'Generated';
+          const haystack = [
+            title, workflowName, productTitle,
+            job.scene_name, job.model_name, job.workflow_slug,
+            job.prompt_final, job.ratio,
+          ].filter(Boolean).join(' ').toLowerCase();
           items.push({
             id: `job-${job.id}-${i}`,
             imageUrl: url,
-            title: workflowName || productTitle || 'Generated',
+            title,
             createdAt: job.created_at,
+            searchHaystack: haystack,
           });
         }
       }
@@ -235,13 +254,15 @@ export default function Perspectives() {
   });
 
 
-  const filteredProducts = products.filter(p =>
-    p.title.toLowerCase().includes(productSearch.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const haystack = [
+      p.title, p.description, p.product_type, p.color, p.materials,
+      p.sku, p.dimensions, p.weight, (p.tags || []).join(' '),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return matchesTokens(haystack, productSearch);
+  });
 
-  const filteredLibrary = libraryItems.filter(i =>
-    i.title.toLowerCase().includes(librarySearch.toLowerCase())
-  );
+  const filteredLibrary = libraryItems.filter(i => matchesTokens(i.searchHaystack, librarySearch));
 
   // ── Hook ──────────────────────────────────────────────────────────────
   const { generate, isGenerating, progress } = useGeneratePerspectives();
@@ -880,19 +901,28 @@ export default function Perspectives() {
           {sourceType === 'library' && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search generated images..."
+                  placeholder="Search by name, prompt, scene, model…"
                   value={librarySearch}
                   onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }}
-                  className="pl-9"
+                  className="pl-11 pr-4 h-11 rounded-full text-sm"
                 />
               </div>
               <div className="flex gap-2 items-center">
                 <Badge variant={selectedLibraryIds.size > 0 ? 'default' : 'secondary'}>
                   {selectedLibraryIds.size} selected
                 </Badge>
-                <span className="text-xs text-muted-foreground">(max 10)</span>
+                {selectedLibraryIds.size > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2"
+                    onClick={() => setSelectedLibraryIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
               {libraryLoading ? (
                 <div className="flex items-center justify-center py-8">
@@ -952,19 +982,28 @@ export default function Perspectives() {
               </div>
 
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search products..."
+                  placeholder="Search by name, type, color, SKU, tag…"
                   value={productSearch}
                   onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }}
-                  className="pl-9"
+                  className="pl-11 pr-4 h-11 rounded-full text-sm"
                 />
               </div>
               <div className="flex gap-2 items-center">
                 <Badge variant={selectedProductIds.size > 0 ? 'default' : 'secondary'}>
                   {selectedProductIds.size} selected
                 </Badge>
-                <span className="text-xs text-muted-foreground">(max 10)</span>
+                {selectedProductIds.size > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2"
+                    onClick={() => setSelectedProductIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
                 {filteredProducts.slice(0, productVisibleCount).map(product => {
