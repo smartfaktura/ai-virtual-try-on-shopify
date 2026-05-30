@@ -10,7 +10,7 @@ export const CreditEstimateBox = React.forwardRef<HTMLDivElement, CreditEstimate
     const credits = estimateCredits(params);
 
     return (
-      <div ref={ref} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+      <div ref={ref} className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-muted/50 border border-border">
         <span className="text-sm text-muted-foreground">Cost:</span>
         <span className="text-sm font-semibold text-foreground">{credits} credits</span>
       </div>
