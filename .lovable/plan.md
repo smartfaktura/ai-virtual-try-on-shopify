@@ -1,31 +1,30 @@
-## Replace flow header with per-step headers on `/app/generate/product-images`
+## Match step headers across the Product Visuals flow
 
-Remove the redundant static "Create Product Visuals" page header from steps 1–4 (it duplicates the per-step heading) and ensure every step has its own title + subtitle directly above the stepper content.
-
-### Mapping
-| Step | Title | Subtitle |
-|------|-------|----------|
-| 1 Product | Select products | Choose one or more products to start generating visuals |
-| 2 Shots | Select shots | Pick the shots you want to generate for your products (already present) |
-| 3 Setup | Complete setup | Only a few choices are needed for selected shots (already present) |
-| 4 Generate | Review & generate | A few last details left to fill (already present) |
-| 6 Generating | (no header — unchanged) | |
+Steps 2 (Shots), 3 (Setup), and 4 (Generate) already have their own title + subtitle. Step 1 (Product) is missing one, and the static `<PageHeader title="Create Product Visuals" …>` at the top duplicates content on every step.
 
 ### Changes
 
-1. **`src/pages/ProductImages.tsx`** (~line 1371-1373)
-   - Remove the `<PageHeader …>` block. Keep `<SEOHead>` so the browser tab title is unchanged.
+**`src/pages/ProductImages.tsx`**
 
-2. **`src/pages/ProductImages.tsx`** Step 1 block (~line 1390)
-   - Insert a small header above the toolbar:
-     ```tsx
-     <div className="mb-1">
-       <h2 className="text-lg font-semibold tracking-tight">Select products</h2>
-       <p className="text-sm text-muted-foreground mt-1">Choose one or more products to start generating visuals</p>
-     </div>
-     ```
-   - Match the typography used by Step 2/3 H2s (`text-lg font-semibold tracking-tight`) so visual rhythm stays consistent.
+1. Remove the static `<PageHeader …>` block (~line 1371-1373) that renders on every step except 6. Keep `<SEOHead>` so the browser tab title is unchanged.
+2. Add a Step 1 header above the toolbar, matching the visual rhythm of Steps 2/3/4:
+   ```tsx
+   <div className="mb-1">
+     <h2 className="text-lg font-semibold tracking-tight">Select products</h2>
+     <p className="text-sm text-muted-foreground mt-1">
+       Choose one or more products to start generating visuals
+     </p>
+   </div>
+   ```
 
-3. No changes needed to steps 2, 3, 4 — their headers already exist.
+### Result
 
-No other logic, copy, or component changes.
+| Step | Title | Subtitle |
+|------|-------|----------|
+| 1 Product | Select products | Choose one or more products to start generating visuals |
+| 2 Shots | Select shots | Pick the shots you want to generate for your products (unchanged) |
+| 3 Setup | Complete setup | Only a few choices are needed for selected shots (unchanged) |
+| 4 Generate | Review & generate | A few last details left to fill (unchanged) |
+| 6 Generating | (no header — unchanged) | |
+
+No logic, copy, or other component changes.
