@@ -1368,9 +1368,6 @@ export default function ProductImages() {
   return (
     <div className="space-y-6 pb-36 overflow-x-clip max-w-full min-w-0">
       <SEOHead title="Create Product Visuals — VOVV" description="Generate product visuals" />
-      {step !== 6 && (
-        <PageHeader title="Create Product Visuals" subtitle="Choose one or more products to start generating visuals"><span /></PageHeader>
-      )}
 
       {step <= 4 && (
         <CatalogStepper
