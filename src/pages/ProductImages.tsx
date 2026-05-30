@@ -1,4 +1,10 @@
 import { useState, useCallback, useEffect, useRef, useMemo, Suspense } from 'react';
+import { getCategoryLabel } from '@/lib/productCategories';
+
+const displayCategory = (p: { product_type?: string | null; analysis_json?: any }): string => {
+  const catId = (p as any)?.analysis_json?.category as string | undefined;
+  return (catId ? getCategoryLabel(catId) : '') || p.product_type || '';
+};
 import { lazyWithRetry as lazy } from '@/lib/lazyWithRetry';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
