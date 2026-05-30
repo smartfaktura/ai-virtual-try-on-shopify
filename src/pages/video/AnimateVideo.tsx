@@ -1273,9 +1273,8 @@ export default function AnimateVideo() {
                     ))}
                   </div>
                 </div>
-
-                <AudioModeSelector value={audioMode} onChange={(v) => setAudioMode(v as AudioMode)} />
               </div>
+
 
               {/* Specific Motion Note */}
               <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-3">
