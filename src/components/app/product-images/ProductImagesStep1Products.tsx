@@ -176,7 +176,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
                 <div className="h-[52px] flex flex-col justify-center px-2.5">
                   <p className="text-xs font-medium truncate leading-tight">{p.title}</p>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">
-                    {p.product_type || '\u00A0'}
+                    {displayCategory(p) || '\u00A0'}
                   </p>
                 </div>
                 {selected && (
