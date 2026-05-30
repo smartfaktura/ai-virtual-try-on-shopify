@@ -49,6 +49,7 @@ interface LibraryPickerItem {
   id: string;
   imageUrl: string;
   title: string;
+  subtitle: string;
   createdAt: string;
   searchHaystack: string;
 }
@@ -146,19 +147,21 @@ export default function ProductSwap() {
     queryKey: ['product-swap-library-items'],
     queryFn: async () => {
       const [fsResult, jobsResult] = await Promise.all([
-        supabase.from('freestyle_generations').select('id, image_url, prompt, user_prompt, workflow_label, created_at')
+        supabase.from('freestyle_generations').select('id, image_url, prompt, user_prompt, workflow_label, aspect_ratio, created_at')
           .order('created_at', { ascending: false }).limit(200),
         supabase.from('generation_jobs')
-          .select('id, results, created_at, status, scene_name, model_name, workflow_slug, prompt_final, product_name, workflows(name), user_products(title)')
+          .select('id, results, created_at, status, ratio, scene_name, model_name, workflow_slug, prompt_final, product_name, workflows(name), user_products(title)')
           .eq('status', 'completed').order('created_at', { ascending: false }).limit(200),
       ]);
 
       const items: LibraryPickerItem[] = [];
       for (const f of fsResult.data || []) {
-        const title = f.prompt?.slice(0, 40) || 'Freestyle';
+        const rawTitle = f.prompt?.slice(0, 40)?.trim();
+        const title = rawTitle || 'Freestyle';
+        const subtitle = (f as any).aspect_ratio || f.workflow_label || 'Freestyle';
         const haystack = [title, f.prompt, f.user_prompt, f.workflow_label]
           .filter(Boolean).join(' ').toLowerCase();
-        items.push({ id: `fs-${f.id}`, imageUrl: f.image_url, title, createdAt: f.created_at, searchHaystack: haystack });
+        items.push({ id: `fs-${f.id}`, imageUrl: f.image_url, title, subtitle, createdAt: f.created_at, searchHaystack: haystack });
       }
       for (const job of jobsResult.data || []) {
         const results = job.results as unknown;
@@ -169,18 +172,24 @@ export default function ProductSwap() {
           if (!url || url.startsWith('data:')) continue;
           const workflowName = (job.workflows as { name?: string } | null)?.name || '';
           const productTitle = (job.user_products as { title?: string } | null)?.title || '';
-          const dateLabel = new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-          const rawTitle = productTitle || workflowName || '';
-          const title = (!rawTitle || rawTitle === 'Product Visuals') ? `Library · ${dateLabel}` : rawTitle;
+          const jobAny = job as any;
+          const title =
+            productTitle ||
+            jobAny.product_name ||
+            workflowName ||
+            jobAny.scene_name ||
+            'Generated image';
+          const subtitle = jobAny.ratio || workflowName || jobAny.scene_name || 'Generated';
           const haystack = [
             title, productTitle, workflowName,
-            (job as any).product_name, (job as any).scene_name, (job as any).model_name,
-            (job as any).workflow_slug, (job as any).prompt_final,
+            jobAny.product_name, jobAny.scene_name, jobAny.model_name,
+            jobAny.workflow_slug, jobAny.prompt_final,
           ].filter(Boolean).join(' ').toLowerCase();
           items.push({
             id: `job-${job.id}-${i}`,
             imageUrl: url,
             title,
+            subtitle,
             createdAt: job.created_at,
             searchHaystack: haystack,
           });
@@ -686,7 +695,7 @@ export default function ProductSwap() {
                         </div>
                         <div className="h-[52px] flex flex-col justify-center px-2.5">
                           <p className="text-xs font-medium truncate leading-tight">{item.title || '\u00A0'}</p>
-                          <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{'\u00A0'}</p>
+                          <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{item.subtitle || '\u00A0'}</p>
                         </div>
                       </button>
                     ))}
@@ -814,12 +823,12 @@ export default function ProductSwap() {
                         : 'border-transparent hover:border-foreground/20'
                     }`}
                   >
-                    <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
+                    <div className="aspect-square bg-muted overflow-hidden">
                       {product.image_url ? (
                         <ShimmerImage
                           src={getOptimizedUrl(product.image_url, { quality: 70 })}
                           alt={product.title}
-                          className="max-w-full max-h-full object-contain"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
