@@ -1,33 +1,24 @@
-# Polish the Review Uploads modal
+# Move "Category" out of the field
 
-## 1. Fit "Dress" + Suggested pill inside the field
-Right now they touch (`Dress[SUGGESTED]`). Fix:
-- Add real `gap-2` between the value and the pill inside the trigger.
-- Bump the trigger to `h-10` with `px-3` so the pill breathes.
-- Prefix the value with a muted **Category:** label (`text-[10px] uppercase tracking-wider text-muted-foreground`) so the field reads:
-  ```
-  Category:  Dress   [ Suggested ]            ▾
-  ```
-- Truncate the value, never the pill (pill is `flex-shrink-0`).
+The label is crammed inside the trigger and overlaps the value. Fix:
 
-## 2. Rounder corners, consistent with the app
-- Thumbnail: `rounded-md` → `rounded-xl` (matches product cards).
-- Row container: `rounded-lg` → `rounded-xl`.
-- Trigger: keep shadcn default `rounded-md` (already consistent with other inputs).
+## Layout per row
+Two rows of content stacked next to the thumbnail:
+```
+[thumb]   CATEGORY                              [×]
+          [ Garment              Suggested  ▾ ]
+```
+- Tiny `CATEGORY` label sits **above** the field as a regular form label (`text-[10px] uppercase tracking-wider text-muted-foreground`, `mb-1`).
+- The SelectTrigger only contains: value (truncated, flex-1) + Suggested/Pick-one pill + chevron. Plenty of room now.
+- Trigger height stays `h-10`, padding `px-3`.
 
-## 3. Header sizing matches our modal standard
-- Title `text-base font-medium` → `text-lg font-semibold tracking-tight` (matches other dialogs like AddProduct).
-- Description stays `text-xs text-muted-foreground` but with `leading-relaxed` and no terminal period (per brand rule).
-- Tighten header `space-y-1` and dialog `gap-5`.
+## Row container
+- `flex items-start` (top-aligned) so the label + field column lines up with the thumb's top edge.
+- Thumb: `w-14 h-14 sm:w-16 sm:h-16 rounded-xl`, aligned with `mt-[18px]` so it visually centers against the field (label + field combined).
+  Simpler: align thumb to the field by giving the label a fixed height equal to `mt-0` on thumb and label sitting above — center the thumb vertically with the **field row** by making the right column `flex flex-col` and giving the thumb `self-end mb-0` so it bottom-aligns with the field. Cleanest: keep `items-center` on the outer row and let the label sit as a small line above the field; the thumb visually centers against the (label+field) block.
+- Remove `×` button stays inline far right, vertically centered.
 
-## 4. Mobile layout
-On `< sm` the 64px thumb + field + pill gets cramped. Switch the row to:
-- Thumb stays left at 56×56 on mobile, 64×64 on `sm+`.
-- Field takes full remaining width; pill wraps to a second visual line inside the trigger only if needed (kept on one line via `min-w-0` + truncation on value).
-- Remove (×) button moves from absolute top-right to inline at the far right on mobile so it doesn't overlap the pill.
-- Dialog: `max-w-xl` on desktop, full-width with `mx-3` padding and `p-4` on mobile.
+## File
+- `src/components/app/BulkUploadReviewModal.tsx` only.
 
-## 5. Files touched
-- `src/components/app/BulkUploadReviewModal.tsx` — header sizing, row container radius, thumb radius/size, trigger height/padding, in-trigger `Category:` label + gap, mobile remove-button placement.
-
-No logic, analyzer, or save-flow changes.
+No logic changes.
