@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Sparkles } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { InfoTooltip } from './InfoTooltip';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
