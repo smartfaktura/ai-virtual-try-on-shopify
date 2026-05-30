@@ -86,7 +86,15 @@ interface LibraryPickerItem {
   imageUrl: string;
   title: string;
   createdAt: string;
+  searchHaystack: string;
 }
+
+const matchesTokens = (haystack: string, query: string) => {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const tokens = q.split(/\s+/);
+  return tokens.every(t => haystack.includes(t));
+};
 
 export default function Perspectives() {
   const navigate = useNavigate();
