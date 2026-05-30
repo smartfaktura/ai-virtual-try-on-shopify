@@ -848,18 +848,15 @@ function CuratorColorHint({ baseHex }: { baseHex: string }) {
   );
 }
 
-/** Per-sub-group section with Select All on left and label on right */
-function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSelected, onToggleAll, gridClass, globalSelectionInfo }: {
+/** Per-sub-group section header with subtle selection count */
+function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, gridClass, globalSelectionInfo }: {
   label: string;
   scenes: ProductImageScene[];
   selectedSceneIds: Set<string>;
   toggleScene: (id: string) => void;
-  allSelected: boolean;
-  onToggleAll: () => void;
   gridClass: string;
   globalSelectionInfo?: { count: number; onClear: () => void };
 }) {
-  const selectedCount = scenes.filter(s => selectedSceneIds.has(s.id)).length;
   const curatorColor = scenes.find(s => s.suggestedColors?.length)?.suggestedColors?.[0];
   const hasEditableBackground = scenes.some(
     s => s.promptTemplate?.includes('{{background}}') || s.triggerBlocks?.includes('aestheticColor')
@@ -868,34 +865,24 @@ function SubGroupSection({ label, scenes, selectedSceneIds, toggleScene, allSele
 
   return (
     <div className="pt-3 pl-2 min-w-0 max-w-full">
-      <div className="flex items-center gap-2 mb-1 flex-wrap min-w-0 max-w-full">
+      <div className="flex items-center gap-2 mb-1 min-w-0 max-w-full">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">{label}</p>
         {curatorColor && <CuratorColorHint baseHex={curatorColor.hex} />}
-        <div className="h-px flex-1 bg-border min-w-[20px]" />
+        <div className="h-px flex-1 bg-border min-w-[12px]" />
         {globalSelectionInfo && (
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[10px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               {globalSelectionInfo.count} selected
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-[10px] h-6 px-2 shrink-0"
+            <button
+              type="button"
+              className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline shrink-0"
               onClick={(e) => { e.stopPropagation(); globalSelectionInfo.onClear(); }}
             >
               Clear
-            </Button>
+            </button>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-[10px] h-6 px-2 shrink-0"
-          onClick={(e) => { e.stopPropagation(); onToggleAll(); }}
-        >
-          {allSelected ? 'Deselect' : 'Select All'}
-          {selectedCount > 0 && !allSelected && ` (${selectedCount}/${scenes.length})`}
-        </Button>
       </div>
 
       {showLegend && (
