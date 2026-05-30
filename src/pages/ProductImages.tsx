@@ -1,4 +1,10 @@
 import { useState, useCallback, useEffect, useRef, useMemo, Suspense } from 'react';
+import { getCategoryLabel } from '@/lib/productCategories';
+
+const displayCategory = (p: { product_type?: string | null; analysis_json?: any }): string => {
+  const catId = (p as any)?.analysis_json?.category as string | undefined;
+  return (catId ? getCategoryLabel(catId) : '') || p.product_type || '';
+};
 import { lazyWithRetry as lazy } from '@/lib/lazyWithRetry';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -1404,7 +1410,8 @@ export default function ProductImages() {
                     if (isFree) { setUpgradeModalOpen(true); return; }
                     const filtered = userProducts.filter(p =>
                       p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-                      p.product_type.toLowerCase().includes(productSearch.toLowerCase())
+                      p.product_type.toLowerCase().includes(productSearch.toLowerCase()) ||
+                      displayCategory(p).toLowerCase().includes(productSearch.toLowerCase())
                     );
                     setSelectedProductIdsCapped(new Set(filtered.slice(0, MAX_PRODUCTS).map(p => p.id)));
                   }}>{productSearch ? 'Select Filtered' : 'Select All'}</Button>
@@ -1464,7 +1471,8 @@ export default function ProductImages() {
               (() => {
                 const filtered = userProducts.filter(p =>
                   p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-                   (p.product_type || '').toLowerCase().includes(productSearch.toLowerCase())
+                   (p.product_type || '').toLowerCase().includes(productSearch.toLowerCase()) ||
+                   displayCategory(p).toLowerCase().includes(productSearch.toLowerCase())
                 );
 
                 if (filtered.length === 0 && productSearch) {
@@ -1597,7 +1605,7 @@ export default function ProductImages() {
                             <ShimmerImage src={getOptimizedUrl(up.image_url, { quality: 60 })} alt={up.title} className="w-full aspect-square object-cover rounded-t-xl" />
                             <div className="h-[44px] px-1.5 py-1 bg-card flex flex-col justify-center">
                               <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-1">{up.title}</p>
-                              <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type || '\u00A0'}</p>
+                              <p className="text-[9px] text-muted-foreground truncate mt-0.5">{displayCategory(up) || '\u00A0'}</p>
                             </div>
                           </div>
                         );
