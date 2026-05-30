@@ -1,9 +1,12 @@
-Three small fixes in `src/components/app/product-images/ProductImagesStep2Scenes.tsx`:
+The Step 3 Product Details dropdown is built from a local `CATEGORY_LABELS` map in `src/lib/productSpecFields.ts` that is missing several categories present in the canonical `src/lib/productCategories.ts`.
 
-1. **Hide grid toggle on mobile.** Remove `<GridSizeToggle>` from the top toolbar entirely. The toggle only lives inside the first category header pill on desktop (sm+); on mobile there's no toggle at all.
+**What to change:**
+Add the following entries to `CATEGORY_LABELS` in `src/lib/productSpecFields.ts` (line 385):
+- `'phone-cases': 'Phone Case'`
+- `'wedding-dress': 'Wedding Dress'`
+- `'skirts': 'Skirt'`
+- `'streetwear': 'Streetwear'`
 
-2. **Tighten the gap between stepper and the first category.** When the toolbar has no content (no selection), don't render the toolbar wrapper — it currently contributes `space-y-6`'s 24px gap. Wrap the toolbar in `{selectedSceneIds.size > 0 && (...)}`.
+`ALL_CATEGORY_OPTIONS` is already derived from this map and sorted alphabetically, so the new options will appear automatically in the dropdown.
 
-3. **Make grid toggle sit nicely inside the pill on desktop.** Keep current `headerRight` placement (inside pill, before badge), already correct. No additional change needed beyond #1.
-
-These are all in lines 416-432 of the file.
+**No other files need to change.** `CATEGORY_SUPER_GROUPS` and spec fields for these categories already exist in the codebase.
