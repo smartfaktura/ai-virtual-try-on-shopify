@@ -901,19 +901,28 @@ export default function Perspectives() {
           {sourceType === 'library' && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search generated images..."
+                  placeholder="Search by name, prompt, scene, model…"
                   value={librarySearch}
                   onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }}
-                  className="pl-9"
+                  className="pl-11 pr-4 h-11 rounded-full text-sm"
                 />
               </div>
               <div className="flex gap-2 items-center">
                 <Badge variant={selectedLibraryIds.size > 0 ? 'default' : 'secondary'}>
                   {selectedLibraryIds.size} selected
                 </Badge>
-                <span className="text-xs text-muted-foreground">(max 10)</span>
+                {selectedLibraryIds.size > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2"
+                    onClick={() => setSelectedLibraryIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
               {libraryLoading ? (
                 <div className="flex items-center justify-center py-8">
