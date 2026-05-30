@@ -46,6 +46,7 @@ import {
 import { ProductSpecsCard } from './ProductSpecsCard';
 import { toast } from '@/lib/brandedToast';
 import { BrandModelsInfoModal, BRAND_MODEL_THUMBNAILS } from './BrandModelsInfoModal';
+import { preventAutoFocusOnMobile } from '@/lib/dialogAutoFocus';
 
 /* ══════════════════════════════════════════════
    Model Picker with Brand / Library sections
@@ -224,7 +225,7 @@ function ModelPickerSections({ userModels, globalModels, selectedModelId, select
 
       {/* Full model picker modal */}
       <Dialog open={showAllModal} onOpenChange={setShowAllModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+        <DialogContent onOpenAutoFocus={preventAutoFocusOnMobile} className="max-w-3xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base"><User className="w-4 h-4 text-primary" />Select Models</DialogTitle>
           </DialogHeader>

@@ -1,31 +1,24 @@
-Prevent mobile keyboard auto-opening on search-first modals
+## Plan
 
-## Problem
-On touch devices, opening the Library picker or Category picker immediately focuses the search input, causing the on-screen keyboard to slide up before the user has tapped anything. This blocks content and feels invasive.
+Fix the remaining mobile keyboard auto-open in the Product Visuals model picker.
 
-## Solution
-Add a touch-only guard on Radix Dialog's auto-focus so the keyboard only appears when the user intentionally taps the search field.
+### What I will change
 
-## Changes
+1. **Update the Product Visuals model picker modal**
+   - File: `src/components/app/product-images/ProductImagesStep3Refine.tsx`
+   - Import the existing `preventAutoFocusOnMobile` helper
+   - Add `onOpenAutoFocus={preventAutoFocusOnMobile}` to the “Select Models” `DialogContent`
 
-1. **Create `src/lib/dialogAutoFocus.ts`** — shared helper:
-   ```ts
-   export const preventAutoFocusOnMobile = (e: Event) => {
-     if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
-       e.preventDefault();
-     }
-   };
-   ```
-   - Only blocks on touch devices (`pointer: coarse`). Desktop mice/trackpads are unaffected.
-   - Tapping the search input still focuses it normally.
+2. **Keep desktop behavior unchanged**
+   - The helper only prevents auto-focus on touch devices using `(pointer: coarse)`
+   - Desktop keyboard/mouse users keep the normal dialog focus behavior
 
-2. **Update `src/components/app/video/LibraryPickerModal.tsx`**
-   - Add `onOpenAutoFocus={preventAutoFocusOnMobile}` to the `DialogContent` component.
+3. **Do not change selection logic or styling**
+   - Model selection, multi-select, filters, and search behavior stay the same
+   - User can still tap the search field manually to open the keyboard
 
-3. **Update `src/components/app/product-images/CategoryPickerModal.tsx`**
-   - Remove explicit `autoFocus` from the `Input` component.
-   - Add `onOpenAutoFocus={preventAutoFocusOnMobile}` to `DialogContent`.
+### Why it is still happening
 
-## Out of scope
-- Intentional focus-on-open inputs (rename editors, single-field prompts, admin forms).
-- Visual style changes.
+This modal does not have an explicit `autoFocus`, but Radix Dialog automatically focuses the first focusable element when it opens. In this modal, the first focusable field is the search input, so mobile Safari opens the keyboard immediately.
+
+The fix is the same safe pattern already added to the Library and Category picker modals.
