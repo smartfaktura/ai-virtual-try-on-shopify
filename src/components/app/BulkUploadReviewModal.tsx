@@ -245,10 +245,22 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                 alt=""
                 className="w-16 h-16 rounded-md object-cover bg-muted flex-shrink-0"
               />
-              <div className="flex-1 min-w-0 flex items-center gap-2">
+              <div className="flex-1 min-w-0">
                 <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
-                  <SelectTrigger className="h-9 text-sm flex-1 min-w-0">
-                    <SelectValue placeholder="Pick category…" />
+                  <SelectTrigger className="h-9 text-sm w-full pr-2">
+                    <span className="flex items-center gap-2 min-w-0 flex-1">
+                      <SelectValue placeholder="Pick category…" />
+                      {row.isSuggested && row.status === 'suggested' && (
+                        <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground flex-shrink-0">
+                          Suggested
+                        </span>
+                      )}
+                      {row.status === 'failed' && (
+                        <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground flex-shrink-0">
+                          Pick one
+                        </span>
+                      )}
+                    </span>
                   </SelectTrigger>
                   <SelectContent className="max-h-[280px]">
                     {categoryOptions.map(group => (
@@ -265,12 +277,6 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                     ))}
                   </SelectContent>
                 </Select>
-                {row.isSuggested && row.status === 'suggested' && (
-                  <Badge variant="secondary" className="text-[10px] flex-shrink-0">Suggested</Badge>
-                )}
-                {row.status === 'failed' && (
-                  <Badge variant="destructive" className="text-[10px] flex-shrink-0">Pick one</Badge>
-                )}
               </div>
               <button
                 type="button"

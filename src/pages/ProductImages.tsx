@@ -1552,8 +1552,8 @@ export default function ProductImages() {
                           key={card.id}
                           className="relative flex flex-col rounded-xl overflow-hidden border-2 border-transparent"
                         >
-                          <div className="relative w-full aspect-square">
-                            <img src={card.previewUrl} alt="" className="w-full h-full object-cover opacity-40" />
+                          <div className="relative w-full aspect-square overflow-hidden bg-muted">
+                            <img src={card.previewUrl} alt="" className="absolute inset-0 w-full h-full object-cover blur-md scale-110 opacity-60" />
                             <div className="absolute inset-0 flex items-center justify-center">
                               <Loader2 className="w-4 h-4 text-foreground/70 animate-spin" />
                             </div>
