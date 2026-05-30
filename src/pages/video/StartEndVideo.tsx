@@ -76,6 +76,12 @@ export default function StartEndVideo() {
 
   const project = useStartEndVideoProject();
 
+  // Hide floating support chat on this route
+  useEffect(() => {
+    document.body.setAttribute('data-hide-studio-chat', 'true');
+    return () => document.body.removeAttribute('data-hide-studio-chat');
+  }, []);
+
   // When goal changes, default the related sliders to that goal's defaults
   const setGoal = (id: string) => {
     setGoalId(id);
@@ -392,8 +398,8 @@ export default function StartEndVideo() {
           <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
             <CreditEstimateBox params={creditParams} />
             {notEnoughCredits && !project.isGenerating && (
-              <span className="text-xs text-muted-foreground">
-                Not enough credits — you need {creditCost}, you have {creditsBalance}
+              <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive">
+                Not enough credits
               </span>
             )}
           </div>
