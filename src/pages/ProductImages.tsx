@@ -351,19 +351,39 @@ export default function ProductImages() {
   const [sentinelEl, setSentinelEl] = useState<HTMLDivElement | null>(null);
   const MAX_PRODUCTS = 20;
 
-  // Direct image uploads are reviewed before saving so users can confirm product category.
-  const [bulkUploadFiles, setBulkUploadFiles] = useState<File[] | null>(null);
+  // Direct image uploads: analyze on the grid first, then open review popup.
+  type AnalyzingCard = { id: string; previewUrl: string };
+  const [analyzingCards, setAnalyzingCards] = useState<AnalyzingCard[]>([]);
+  const [reviewItems, setReviewItems] = useState<PreAnalyzedItem[] | null>(null);
   const quickUploadInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [demoPickerOpen, setDemoPickerOpen] = useState(false);
 
-  const openUploadReview = useCallback((files: File[]) => {
+  const openUploadReview = useCallback(async (files: File[]) => {
     if (!user) { toast.error('Please sign in to upload'); return; }
     const images = files.filter(file => file.type.startsWith('image/'));
     if (images.length === 0) { toast.error('Please upload an image file'); return; }
     const oversized = images.find(file => file.size > 20 * 1024 * 1024);
     if (oversized) { toast.error('Images must be under 20MB'); return; }
-    setBulkUploadFiles(images);
+
+    // Show analyzing placeholders on the grid
+    const cards: AnalyzingCard[] = images.map((f, i) => ({
+      id: `analyzing-${Date.now()}-${i}-${f.size}`,
+      previewUrl: URL.createObjectURL(f),
+    }));
+    setAnalyzingCards(cards);
+
+    try {
+      const items = await analyzeUploadedFiles(images);
+      setAnalyzingCards([]);
+      // Revoke placeholder URLs (modal uses its own previewUrls from analyzer)
+      cards.forEach(c => URL.revokeObjectURL(c.previewUrl));
+      setReviewItems(items);
+    } catch {
+      setAnalyzingCards([]);
+      cards.forEach(c => URL.revokeObjectURL(c.previewUrl));
+      toast.error('Could not analyze uploads');
+    }
   }, [user]);
 
   // Instant demo product insert — uses pre-baked metadata, zero AI cost
