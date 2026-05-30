@@ -2562,10 +2562,6 @@ export function ProductImagesStep3Refine({
 
       {(scenesNeedingModel.length > 0 || bgScenes.length > 0 || aestheticColorScenes.length > 0 || selectedProductIds.size > 0) && (
         <div className="space-y-3">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">Complete setup</h2>
-            <p className="text-sm text-muted-foreground mt-1">Only a few choices are needed for selected shots</p>
-          </div>
 
 
 
