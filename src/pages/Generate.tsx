@@ -74,6 +74,7 @@ import { PopularCombinations, createPopularCombinations } from '@/components/app
 import { SourceTypeSelector } from '@/components/app/SourceTypeSelector';
 import { UploadSourceCard } from '@/components/app/UploadSourceCard';
 import { BulkUploadReviewModal } from '@/components/app/BulkUploadReviewModal';
+import { analyzeUploadedFiles, type PreAnalyzedItem } from '@/lib/analyzeUploadedProduct';
 import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -505,6 +506,24 @@ export default function Generate() {
   const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
   const [bulkUploadFiles, setBulkUploadFiles] = useState<File[] | null>(null);
+  const [bulkReviewItems, setBulkReviewItems] = useState<PreAnalyzedItem[] | null>(null);
+
+  // When files arrive from the upload tile, pre-analyze before opening the review modal.
+  useEffect(() => {
+    if (!bulkUploadFiles || bulkUploadFiles.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const items = await analyzeUploadedFiles(bulkUploadFiles);
+      if (cancelled) {
+        items.forEach(it => URL.revokeObjectURL(it.previewUrl));
+        return;
+      }
+      setBulkReviewItems(items);
+      setBulkUploadFiles(null);
+    })();
+    return () => { cancelled = true; };
+  }, [bulkUploadFiles]);
+
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
@@ -4826,14 +4845,18 @@ export default function Generate() {
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
       <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category={conversionCategory} generationCount={generatedImages.length} />
-      {bulkUploadFiles && user && (
+      {bulkReviewItems && user && (
         <BulkUploadReviewModal
-          open={!!bulkUploadFiles}
-          files={bulkUploadFiles}
+          open={!!bulkReviewItems}
+          items={bulkReviewItems}
           userId={user.id}
-          onClose={() => setBulkUploadFiles(null)}
+          onClose={() => {
+            bulkReviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setBulkReviewItems(null);
+          }}
           onComplete={(productIds) => {
-            setBulkUploadFiles(null);
+            bulkReviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setBulkReviewItems(null);
             queryClient.invalidateQueries({ queryKey: ['user-products'] });
             setSourceType('product');
             setScratchUpload(null);

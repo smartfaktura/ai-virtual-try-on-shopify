@@ -21,6 +21,7 @@ import { CATEGORY_KEYWORDS } from '@/components/app/product-images/constants';
 import { getTriggeredBlocks, BLOCK_FIELD_MAP, REFERENCE_TRIGGERS } from '@/components/app/product-images/detailBlockConfig';
 import { AddProductModal, type AddProductTab } from '@/components/app/AddProductModal';
 import { BulkUploadReviewModal } from '@/components/app/BulkUploadReviewModal';
+import { analyzeUploadedFiles, type PreAnalyzedItem } from '@/lib/analyzeUploadedProduct';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -350,19 +351,39 @@ export default function ProductImages() {
   const [sentinelEl, setSentinelEl] = useState<HTMLDivElement | null>(null);
   const MAX_PRODUCTS = 20;
 
-  // Direct image uploads are reviewed before saving so users can confirm product category.
-  const [bulkUploadFiles, setBulkUploadFiles] = useState<File[] | null>(null);
+  // Direct image uploads: analyze on the grid first, then open review popup.
+  type AnalyzingCard = { id: string; previewUrl: string };
+  const [analyzingCards, setAnalyzingCards] = useState<AnalyzingCard[]>([]);
+  const [reviewItems, setReviewItems] = useState<PreAnalyzedItem[] | null>(null);
   const quickUploadInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [demoPickerOpen, setDemoPickerOpen] = useState(false);
 
-  const openUploadReview = useCallback((files: File[]) => {
+  const openUploadReview = useCallback(async (files: File[]) => {
     if (!user) { toast.error('Please sign in to upload'); return; }
     const images = files.filter(file => file.type.startsWith('image/'));
     if (images.length === 0) { toast.error('Please upload an image file'); return; }
     const oversized = images.find(file => file.size > 20 * 1024 * 1024);
     if (oversized) { toast.error('Images must be under 20MB'); return; }
-    setBulkUploadFiles(images);
+
+    // Show analyzing placeholders on the grid
+    const cards: AnalyzingCard[] = images.map((f, i) => ({
+      id: `analyzing-${Date.now()}-${i}-${f.size}`,
+      previewUrl: URL.createObjectURL(f),
+    }));
+    setAnalyzingCards(cards);
+
+    try {
+      const items = await analyzeUploadedFiles(images);
+      setAnalyzingCards([]);
+      // Revoke placeholder URLs (modal uses its own previewUrls from analyzer)
+      cards.forEach(c => URL.revokeObjectURL(c.previewUrl));
+      setReviewItems(items);
+    } catch {
+      setAnalyzingCards([]);
+      cards.forEach(c => URL.revokeObjectURL(c.previewUrl));
+      toast.error('Could not analyze uploads');
+    }
   }, [user]);
 
   // Instant demo product insert — uses pre-baked metadata, zero AI cost
@@ -1525,6 +1546,25 @@ export default function ProductImages() {
                         />
                       </div>
 
+                      {/* Analyzing placeholders */}
+                      {analyzingCards.map(card => (
+                        <div
+                          key={card.id}
+                          className="relative flex flex-col rounded-xl overflow-hidden border-2 border-dashed border-primary/40 bg-card"
+                        >
+                          <div className="relative w-full aspect-square">
+                            <img src={card.previewUrl} alt="" className="w-full h-full object-cover opacity-50" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-background/40 backdrop-blur-[1px]">
+                              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                            </div>
+                          </div>
+                          <div className="h-[44px] px-1.5 py-1 bg-card flex flex-col justify-center">
+                            <p className="text-[10px] font-medium text-foreground leading-tight">Analyzing…</p>
+                            <p className="text-[9px] text-muted-foreground truncate mt-0.5">Detecting category</p>
+                          </div>
+                        </div>
+                      ))}
+
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
                         const isDisabled = !isSelected && !isFree && selectedProductIds.size >= MAX_PRODUCTS;
@@ -1795,14 +1835,18 @@ export default function ProductImages() {
         onOpenChange={setDemoPickerOpen}
         onSelectDemo={handleDemoSelect}
       />
-      {bulkUploadFiles && user && (
+      {reviewItems && user && (
         <BulkUploadReviewModal
-          open={!!bulkUploadFiles}
-          files={bulkUploadFiles}
+          open={!!reviewItems}
+          items={reviewItems}
           userId={user.id}
-          onClose={() => setBulkUploadFiles(null)}
+          onClose={() => {
+            reviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setReviewItems(null);
+          }}
           onComplete={(productIds) => {
-            setBulkUploadFiles(null);
+            reviewItems.forEach(it => URL.revokeObjectURL(it.previewUrl));
+            setReviewItems(null);
             queryClient.invalidateQueries({ queryKey: ['user-products', user.id] });
             if (productIds.length) {
               setSelectedProductIdsCapped(prev => {

@@ -1,15 +1,29 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { ALL_CATEGORY_OPTIONS, getCategoryLabel } from '@/lib/productSpecFields';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Loader2, X } from 'lucide-react';
+import { getCategoryLabel } from '@/lib/productSpecFields';
 import { supabase } from '@/integrations/supabase/client';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { toast } from '@/lib/brandedToast';
 
-type RowStatus = 'analyzing' | 'suggested' | 'confirmed' | 'failed';
+type RowStatus = 'suggested' | 'confirmed' | 'failed';
+
+interface PreAnalyzedItem {
+  file: File;
+  previewUrl: string;
+  title: string;
+  suggestedCategory: string;
+}
 
 interface BulkRow {
   id: string;
@@ -17,50 +31,111 @@ interface BulkRow {
   previewUrl: string;
   title: string;
   category: string;
+  isSuggested: boolean; // true while user hasn't manually changed AI suggestion
   status: RowStatus;
-  error?: string;
 }
 
 interface BulkUploadReviewModalProps {
   open: boolean;
-  files: File[];
+  items: PreAnalyzedItem[]; // pre-analyzed on the grid
   userId: string;
   onClose: () => void;
   onComplete: (productIds: string[]) => void;
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onloadend = () => resolve(r.result as string);
-    r.onerror = () => reject(new Error('Read failed'));
-    r.readAsDataURL(file);
-  });
-}
-
-async function analyzeOne(file: File): Promise<{ title: string; productType: string; description: string; category: string } | null> {
-  try {
-    const base64 = await fileToBase64(file);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) throw new Error('Not authenticated');
-    const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-product-image`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ imageUrl: base64 }),
-    });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    if (data?.kind === 'not_product') return null;
-    return {
-      title: data.title || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-      productType: data.productType || '',
-      description: data.description || '',
-      category: data.userCategory || data.category || 'other',
-    };
-  } catch {
-    return null;
-  }
-}
+/** Grouped category picker — presentation only; stored values unchanged. */
+const CATEGORY_GROUPS: Array<{ label: string; items: Array<{ value: string; label: string }> }> = [
+  {
+    label: 'Apparel',
+    items: [
+      { value: 'dresses', label: 'Dress' },
+      { value: 'garments', label: 'Garment' },
+      { value: 'hoodies', label: 'Hoodie' },
+      { value: 'jackets', label: 'Jacket' },
+      { value: 'jeans', label: 'Jeans' },
+      { value: 'trousers', label: 'Trousers' },
+      { value: 'activewear', label: 'Activewear' },
+      { value: 'swimwear', label: 'Swimwear' },
+      { value: 'lingerie', label: 'Lingerie' },
+      { value: 'kidswear', label: 'Kidswear' },
+    ],
+  },
+  {
+    label: 'Footwear',
+    items: [
+      { value: 'sneakers', label: 'Sneakers' },
+      { value: 'shoes', label: 'Shoes' },
+      { value: 'boots', label: 'Boots' },
+      { value: 'high-heels', label: 'Heels' },
+    ],
+  },
+  {
+    label: 'Bags & Accessories',
+    items: [
+      { value: 'bags-accessories', label: 'Bag' },
+      { value: 'backpacks', label: 'Backpack' },
+      { value: 'wallets-cardholders', label: 'Wallet' },
+      { value: 'belts', label: 'Belt' },
+      { value: 'scarves', label: 'Scarf' },
+    ],
+  },
+  {
+    label: 'Headwear',
+    items: [
+      { value: 'caps', label: 'Cap' },
+      { value: 'hats', label: 'Hat' },
+      { value: 'beanies', label: 'Beanie' },
+    ],
+  },
+  {
+    label: 'Jewellery & Watches',
+    items: [
+      { value: 'watches', label: 'Watch' },
+      { value: 'jewellery-necklaces', label: 'Necklace' },
+      { value: 'jewellery-rings', label: 'Ring' },
+      { value: 'jewellery-bracelets', label: 'Bracelet' },
+      { value: 'jewellery-earrings', label: 'Earring' },
+    ],
+  },
+  {
+    label: 'Eyewear',
+    items: [{ value: 'eyewear', label: 'Eyewear' }],
+  },
+  {
+    label: 'Beauty & Fragrance',
+    items: [
+      { value: 'fragrance', label: 'Fragrance' },
+      { value: 'beauty-skincare', label: 'Skincare' },
+      { value: 'makeup-lipsticks', label: 'Makeup' },
+    ],
+  },
+  {
+    label: 'Food & Beverage',
+    items: [
+      { value: 'food', label: 'Food' },
+      { value: 'beverages', label: 'Beverage' },
+    ],
+  },
+  {
+    label: 'Home & Tech',
+    items: [
+      { value: 'furniture', label: 'Furniture' },
+      { value: 'home-decor', label: 'Home Décor' },
+      { value: 'tech-devices', label: 'Tech Device' },
+    ],
+  },
+  {
+    label: 'Wellness & Pets',
+    items: [
+      { value: 'supplements-wellness', label: 'Supplement' },
+      { value: 'pet-accessories', label: 'Pet Accessory' },
+    ],
+  },
+  {
+    label: 'Other',
+    items: [{ value: 'other', label: 'Other' }],
+  },
+];
 
 async function runWithConcurrency<T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
@@ -76,52 +151,39 @@ async function runWithConcurrency<T, R>(items: T[], limit: number, worker: (item
   return results;
 }
 
-export function BulkUploadReviewModal({ open, files, userId, onClose, onComplete }: BulkUploadReviewModalProps) {
+export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete }: BulkUploadReviewModalProps) {
   const [rows, setRows] = useState<BulkRow[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const { upload: uploadFile } = useFileUpload();
 
-  // Initialize rows + run analysis
+  // Initialize rows from pre-analyzed items
   useEffect(() => {
-    if (!open || files.length === 0) return;
-    const initial: BulkRow[] = files.map(f => ({
-      id: `${f.name}-${f.size}-${Math.random().toString(36).slice(2, 8)}`,
-      file: f,
-      previewUrl: URL.createObjectURL(f),
-      title: f.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-      category: '',
-      status: 'analyzing',
-    }));
-    setRows(initial);
-
-    runWithConcurrency(initial, 3, async (row) => {
-      const result = await analyzeOne(row.file);
-      setRows(prev => prev.map(r => {
-        if (r.id !== row.id) return r;
-        if (!result) return { ...r, status: 'failed', error: 'AI could not analyze — pick category manually' };
-        return { ...r, title: result.title || r.title, category: result.category, status: 'suggested' };
-      }));
+    if (!open || items.length === 0) return;
+    const initial: BulkRow[] = items.map((it, i) => {
+      const hasSuggestion = !!it.suggestedCategory;
+      return {
+        id: `${it.file.name}-${it.file.size}-${i}`,
+        file: it.file,
+        previewUrl: it.previewUrl,
+        title: it.title,
+        category: it.suggestedCategory || '',
+        isSuggested: hasSuggestion,
+        status: hasSuggestion ? 'suggested' : 'failed',
+      };
     });
-
-    return () => {
-      initial.forEach(r => URL.revokeObjectURL(r.previewUrl));
-    };
+    setRows(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const updateRow = useCallback((id: string, patch: Partial<BulkRow>) => {
-    setRows(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
+  const updateCategory = useCallback((id: string, category: string) => {
+    setRows(prev => prev.map(r => r.id === id ? { ...r, category, isSuggested: false, status: 'confirmed' } : r));
   }, []);
 
   const removeRow = useCallback((id: string) => {
-    setRows(prev => {
-      const target = prev.find(r => r.id === id);
-      if (target) URL.revokeObjectURL(target.previewUrl);
-      return prev.filter(r => r.id !== id);
-    });
+    setRows(prev => prev.filter(r => r.id !== id));
   }, []);
 
-  const allReady = rows.length > 0 && rows.every(r => r.status !== 'analyzing' && r.category && r.title.trim().length > 0);
+  const allReady = rows.length > 0 && rows.every(r => r.category && r.title.trim().length > 0);
 
   const handleConfirmAll = useCallback(async () => {
     if (!allReady) return;
@@ -149,7 +211,7 @@ export function BulkUploadReviewModal({ open, files, userId, onClose, onComplete
       if (created.length < rows.length) {
         toast.warning(`Saved ${created.length} of ${rows.length} products`);
       } else {
-        toast.success(`Saved ${created.length} products to your library`);
+        toast.success(`Saved ${created.length} ${created.length === 1 ? 'product' : 'products'} to your library`);
       }
       onComplete(created);
     } catch {
@@ -159,69 +221,86 @@ export function BulkUploadReviewModal({ open, files, userId, onClose, onComplete
     }
   }, [allReady, rows, uploadFile, userId, onComplete]);
 
+  const categoryOptions = useMemo(() => CATEGORY_GROUPS, []);
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !isSaving) onClose(); }}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Review {rows.length} uploads
-          </DialogTitle>
-          <DialogDescription>
-            AI suggested a category for each. Confirm or change, then save them all to your library.
+      <DialogContent className="max-w-xl p-5 sm:p-6 gap-4">
+        <DialogHeader className="space-y-1.5 text-left">
+          <DialogTitle className="text-base font-medium">Review uploads</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Confirm the category we picked, or change it
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1 -mr-1">
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
           {rows.map(row => (
-            <div key={row.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-border">
-              <img src={row.previewUrl} alt={row.title} className="w-14 h-14 rounded-md object-cover bg-muted flex-shrink-0" />
-              <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-2">
-                <Input
-                  value={row.title}
-                  onChange={e => updateRow(row.id, { title: e.target.value })}
-                  placeholder="Product title"
-                  className="h-9 text-sm"
-                />
+            <div
+              key={row.id}
+              className="relative flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card/40"
+            >
+              <img
+                src={row.previewUrl}
+                alt=""
+                className="w-16 h-16 rounded-md object-cover bg-muted flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                 <div className="flex items-center gap-2">
-                  {row.status === 'analyzing' ? (
-                    <div className="h-9 flex-1 flex items-center justify-center gap-2 rounded-md border border-border text-xs text-muted-foreground">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Analyzing…
-                    </div>
-                  ) : (
-                    <Select value={row.category} onValueChange={(v) => updateRow(row.id, { category: v, status: 'confirmed' })}>
-                      <SelectTrigger className="h-9 text-sm">
-                        <SelectValue placeholder="Pick category…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ALL_CATEGORY_OPTIONS.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Category</span>
+                  {row.isSuggested && row.status === 'suggested' && (
+                    <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                      Suggested
+                    </span>
                   )}
-                  {row.status === 'confirmed' && <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />}
-                  {row.status === 'failed' && <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />}
+                  {row.status === 'failed' && (
+                    <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
+                      Pick one
+                    </span>
+                  )}
                 </div>
+                <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
+                  <SelectTrigger className="h-9 text-sm w-full">
+                    <SelectValue placeholder="Pick category…" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[280px]">
+                    {categoryOptions.map(group => (
+                      <SelectGroup key={group.label}>
+                        <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {group.label}
+                        </SelectLabel>
+                        {group.items.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <button
                 type="button"
                 onClick={() => removeRow(row.id)}
                 disabled={isSaving}
-                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                className="absolute top-1.5 right-1.5 p-1 rounded-md text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
                 aria-label="Remove"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ))}
         </div>
 
-        <DialogFooter className="flex-row justify-between sm:justify-between">
-          <Button variant="ghost" onClick={onClose} disabled={isSaving}>Cancel</Button>
-          <Button onClick={handleConfirmAll} disabled={!allReady || isSaving}>
-            {isSaving ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</>) : `Confirm all (${rows.length})`}
+        <DialogFooter className="flex-row justify-between gap-2 sm:justify-between">
+          <Button variant="ghost" onClick={onClose} disabled={isSaving} className="flex-1 sm:flex-none">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmAll} disabled={!allReady || isSaving} className="flex-1 sm:flex-none">
+            {isSaving ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</>
+            ) : (
+              `Save ${rows.length} ${rows.length === 1 ? 'product' : 'products'}`
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
