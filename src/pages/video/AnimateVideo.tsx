@@ -560,7 +560,7 @@ export default function AnimateVideo() {
   const currentProgressMember = PROGRESS_TEAM[progressAvatarIdx];
 
   return (
-    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-6 sm:space-y-8 pb-32">
+    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-5 sm:space-y-6 pb-32">
       <PageHeader
         title="Animate Image"
         subtitle="Turn a still product image into a polished commercial video"
@@ -591,17 +591,9 @@ export default function AnimateVideo() {
                 isPaidUser ? 'border-border bg-muted/30' : 'border-border/60 bg-muted/20'
               )}>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  {isPaidUser ? (
-                    <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Images className="h-3.5 w-3.5 text-primary" />
-                    </div>
-                  ) : (
-                    <img
-                      src={getOptimizedUrl(TEAM_MEMBERS.find(m => m.name === 'Sophia')?.avatar || '', { quality: 60 })}
-                      alt="Sophia"
-                      className="w-7 h-7 rounded-full object-cover border-2 border-background shrink-0"
-                    />
-                  )}
+                  <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Images className="h-3.5 w-3.5 text-primary" />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground">Batch Mode</p>
                     {isPaidUser ? (
@@ -672,7 +664,7 @@ export default function AnimateVideo() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="w-full flex-1 min-h-[200px] rounded-xl border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-primary/[0.02] to-muted/5 hover:from-primary/[0.05] hover:to-muted/10 group"
+                  className="w-full flex-1 min-h-[200px] rounded-xl border border-border/60 hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-muted/20 to-transparent hover:from-primary/[0.05] group"
                 >
                   {isUploading ? (
                     <div className="flex flex-col items-center gap-2">
@@ -738,7 +730,7 @@ export default function AnimateVideo() {
             <div className="space-y-4">
               {/* How It Works */}
               <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4 hover:border-border/80 transition-colors">
-                <h3 className="text-sm font-semibold text-foreground">How it works</h3>
+                <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">How it works</h3>
                 <div className="space-y-3">
                   {[
                     { icon: Upload, label: 'Upload your image', sub: 'Any product or campaign photo' },
@@ -770,28 +762,6 @@ export default function AnimateVideo() {
           </div>
 
 
-          {/* Smart Assistant Banner — branded VOVV.AI Studio surface */}
-          <div className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4 hover:border-primary/30 transition-colors">
-            <div className="flex -space-x-2 shrink-0">
-              {TIPS_TEAM.map((m) => (
-                <img
-                  key={m.name}
-                  src={getOptimizedUrl(m.avatar, { quality: 60 })}
-                  alt={m.name}
-                  className="w-8 h-8 rounded-full ring-2 ring-background object-cover"
-                />
-              ))}
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-primary" />
-                <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">VOVV.AI Studio</p>
-              </div>
-              <p className="text-sm text-foreground/80 mt-1 leading-relaxed">
-                We detect category, scene type, and motion opportunities so you don't need to prompt from scratch.
-              </p>
-            </div>
-          </div>
 
         </>
       )}
