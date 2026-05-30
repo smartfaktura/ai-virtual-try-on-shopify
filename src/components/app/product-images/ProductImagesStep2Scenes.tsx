@@ -417,12 +417,8 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
 
 
-      {selectedSceneIds.size > 0 && (
-        <div className="flex items-center justify-end gap-2 flex-wrap min-w-0 max-w-full">
-          <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} selected</Badge>
-          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
-        </div>
-      )}
+
+
 
 
 
