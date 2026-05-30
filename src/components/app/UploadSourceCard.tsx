@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, X, Image as ImageIcon, Loader2, Sparkles, ClipboardPaste } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, X, Image as ImageIcon, Loader2, Sparkles, ClipboardPaste, Check, Pencil } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
+import { ALL_CATEGORY_OPTIONS, getCategoryLabel } from '@/lib/productSpecFields';
 import type { ScratchUpload } from '@/types';
 
 interface UploadSourceCardProps {
@@ -19,6 +21,7 @@ interface UploadSourceCardProps {
   variant?: 'product' | 'room';
   saveToLibrary?: boolean;
   onSaveToLibraryChange?: (checked: boolean) => void;
+  onBulkFiles?: (files: File[]) => void;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -35,12 +38,14 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function UploadSourceCard({
-  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false, variant = 'product', saveToLibrary = false, onSaveToLibraryChange,
+  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false, variant = 'product', saveToLibrary = false, onSaveToLibraryChange, onBulkFiles,
 }: UploadSourceCardProps) {
   const isRoom = variant === 'room';
+  const bulkEnabled = !isRoom && !!onBulkFiles;
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(false);
 
   const validateFile = (file: File): string | null => {
     if (!ACCEPTED_TYPES.includes(file.type)) return 'Please upload a JPG, PNG, or WEBP image.';
@@ -74,13 +79,15 @@ export function UploadSourceCard({
         title: data.title || currentInfo.title,
         productType: data.productType || currentInfo.productType,
         description: data.description || currentInfo.description,
+        category: data.category || currentInfo.category,
+        categoryConfirmed: false,
       });
     } catch {
       toast.error('AI analysis failed — fill in details manually');
     } finally {
       setIsAnalyzing(false);
     }
-  }, [onUpdateProductInfo]);
+  }, [onUpdateProductInfo, onRemove]);
 
   const handleFile = useCallback((file: File) => {
     const validationError = validateFile(file);
@@ -92,10 +99,35 @@ export function UploadSourceCard({
     if (!isRoom) analyzeProduct(file, productInfo);
   }, [onUpload, analyzeProduct, isRoom]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }, [handleFile]);
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file) handleFile(file); }, [handleFile]);
+  const handleFiles = useCallback((files: File[]) => {
+    if (files.length === 0) return;
+    if (files.length === 1 || !bulkEnabled) {
+      handleFile(files[0]);
+      return;
+    }
+    // Validate all up-front
+    const valid: File[] = [];
+    for (const f of files) {
+      const err = validateFile(f);
+      if (err) { setError(`${f.name}: ${err}`); return; }
+      valid.push(f);
+    }
+    setError(null);
+    onBulkFiles!(valid);
+  }, [handleFile, onBulkFiles, bulkEnabled]);
 
-  // Clipboard paste support
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length) handleFiles(files);
+  }, [handleFiles]);
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length) handleFiles(files);
+    e.target.value = '';
+  }, [handleFiles]);
+
+  // Clipboard paste support (single file only — paste typically delivers one item)
   useEffect(() => {
     if (scratchUpload) return;
     const handlePaste = (e: ClipboardEvent) => {
@@ -115,6 +147,9 @@ export function UploadSourceCard({
   }, [scratchUpload, handleFile]);
 
   if (scratchUpload) {
+    const info = scratchUpload.productInfo;
+    const categoryKnown = !!info.category;
+    const isConfirmed = !!info.categoryConfirmed;
     return (
       <div className="space-y-4">
         <div className="relative">
@@ -137,23 +172,71 @@ export function UploadSourceCard({
               </div>
             ) : (
               <>
+                {/* Category confirm chip */}
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-primary/70" />
+                    AI detected category
+                  </Label>
+                  {categoryKnown && !editingCategory && isConfirmed ? (
+                    <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 px-3 py-2">
+                      <span className="text-sm flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                        Category: <span className="font-medium">{getCategoryLabel(info.category)}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingCategory(true)}
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                      >
+                        <Pencil className="w-3 h-3" /> Edit
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={info.category || ''}
+                        onValueChange={(v) => { onUpdateProductInfo({ ...info, category: v, categoryConfirmed: true }); setEditingCategory(false); }}
+                      >
+                        <SelectTrigger className={`h-10 flex-1 ${!isConfirmed && categoryKnown ? 'ring-1 ring-primary/40' : ''}`}>
+                          <SelectValue placeholder="Pick a category…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALL_CATEGORY_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {categoryKnown && !isConfirmed && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => onUpdateProductInfo({ ...info, categoryConfirmed: true })}
+                        >
+                          <Check className="w-4 h-4 mr-1" /> Looks right
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <p className="text-sm text-muted-foreground">Add details to help the AI generate better images.</p>
                 <div className="space-y-1.5">
                   <Label htmlFor="product-title">Product Title</Label>
-                  <Input id="product-title" value={scratchUpload.productInfo.title} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, title: e.target.value })} placeholder="e.g., High-Waist Yoga Leggings" />
+                  <Input id="product-title" value={info.title} onChange={(e) => onUpdateProductInfo({ ...info, title: e.target.value })} placeholder="e.g., High-Waist Yoga Leggings" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Product Type</Label>
+                  <Label>Product Type <span className="text-xs text-muted-foreground font-normal">(optional — refines AI understanding)</span></Label>
                   <Input
-                    value={scratchUpload.productInfo.productType}
-                    onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: e.target.value })}
+                    value={info.productType}
+                    onChange={(e) => onUpdateProductInfo({ ...info, productType: e.target.value })}
                     placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
                     maxLength={100}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="product-desc">Description (optional)</Label>
-                  <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder="e.g., Black seamless leggings with high waistband" rows={3} />
+                  <Textarea id="product-desc" value={info.description} onChange={(e) => onUpdateProductInfo({ ...info, description: e.target.value })} placeholder="e.g., Black seamless leggings with high waistband" rows={3} />
                 </div>
                 {onSaveToLibraryChange && (
                   <label className="flex items-start gap-2.5 pt-1 cursor-pointer group">
@@ -190,20 +273,28 @@ export function UploadSourceCard({
           dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted'
         }`}
       >
-        <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={handleFileInput} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          multiple={bulkEnabled}
+          onChange={handleFileInput}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
         <div className="flex flex-col items-center gap-3">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center ${dragOver ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
             {dragOver ? <ImageIcon className="w-7 h-7" /> : <Upload className="w-7 h-7" />}
           </div>
           <div>
             <p className="font-semibold">{dragOver ? 'Drop your image here' : 'Drag & drop, paste, or tap to upload'}</p>
-            <p className="text-sm text-muted-foreground">JPG, PNG, WEBP • Max 10MB</p>
+            <p className="text-sm text-muted-foreground">
+              {bulkEnabled ? 'JPG, PNG, WEBP • Max 10MB • Upload multiple at once' : 'JPG, PNG, WEBP • Max 10MB'}
+            </p>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mt-1">
               <ClipboardPaste className="w-3 h-3" />
               ⌘V / Ctrl+V to paste from clipboard
             </p>
           </div>
-          <Button variant="outline" size="sm" disabled={dragOver}>Choose File</Button>
+          <Button variant="outline" size="sm" disabled={dragOver}>{bulkEnabled ? 'Choose File(s)' : 'Choose File'}</Button>
         </div>
       </div>
       {error && (
