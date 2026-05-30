@@ -695,7 +695,7 @@ export default function ProductSwap() {
                         </div>
                         <div className="h-[52px] flex flex-col justify-center px-2.5">
                           <p className="text-xs font-medium truncate leading-tight">{item.title || '\u00A0'}</p>
-                          <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{'\u00A0'}</p>
+                          <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{item.subtitle || '\u00A0'}</p>
                         </div>
                       </button>
                     ))}
