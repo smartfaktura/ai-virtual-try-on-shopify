@@ -38,12 +38,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
     const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
     e.target.value = '';
     if (files.length === 0) return;
-    if (files.length === 1) {
-      setPendingSingleFile(files);
-      setShowAdd(true);
-    } else {
-      setBulkFiles(files);
-    }
+    setBulkFiles(files);
   };
 
   const productTypes = useMemo(() => {
