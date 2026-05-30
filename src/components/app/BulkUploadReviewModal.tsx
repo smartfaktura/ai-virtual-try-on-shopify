@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2, X } from 'lucide-react';
 import { getCategoryLabel } from '@/lib/productSpecFields';
+import { CATEGORY_LABELS, CATEGORY_SUPER_GROUPS } from '@/lib/productCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { toast } from '@/lib/brandedToast';
