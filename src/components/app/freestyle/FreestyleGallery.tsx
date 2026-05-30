@@ -610,7 +610,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onCopySettings={onCopySettings}
       onAddAsScene={adminSceneHandler}
       onAddAsModel={adminModelHandler}
-      // onShareToDiscover intentionally not passed — hides the Share to Explore button
+      {/* onShareToDiscover intentionally not passed — hides the Share to Explore button */}
       onAddToDiscover={addToDiscoverHandler}
       natural={natural}
       isAdmin={isAdmin}
