@@ -91,7 +91,7 @@ export function CameraMotionGrid({
               onMouseEnter={() => handleHover(motion.id, true)}
               onMouseLeave={() => handleHover(motion.id, false)}
               className={cn(
-                'relative rounded-3xl border overflow-hidden transition-all duration-150 group focus:outline-none hover:scale-[1.03]',
+                'relative rounded-2xl border overflow-hidden transition-all duration-150 group focus:outline-none hover:scale-[1.03]',
                 active
                   ? 'border-primary ring-1 ring-primary/30'
                   : 'border-border hover:border-primary/40',
@@ -115,13 +115,13 @@ export function CameraMotionGrid({
                 )}
 
                 {isPro && (
-                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-foreground text-[10px] font-semibold tracking-wider uppercase text-background leading-none ring-1 ring-background/40">
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-lg bg-foreground text-[10px] font-semibold tracking-wider uppercase text-background leading-none ring-1 ring-background/40">
                     PRO · 2×
                   </div>
                 )}
 
                 {active && (
-                  <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                  <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
                     <Check className="h-2.5 w-2.5 text-primary-foreground" />
                   </div>
                 )}

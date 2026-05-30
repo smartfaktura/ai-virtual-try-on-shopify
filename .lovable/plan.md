@@ -1,17 +1,26 @@
+## Goal
+Standardize corner radii across `/app/video/animate` so cards = `rounded-2xl`, inner buttons/tiles = `rounded-xl`, pills = `rounded-full`. Fix PRO badge clipping caused by the over-rounded `rounded-3xl` motion tile.
+
+## Audit findings
+| Element | Current | Issue |
+|---|---|---|
+| MotionGoalSelector card | `rounded-xl` | inconsistent with sibling card (`rounded-2xl`) |
+| MotionGoalSelector item buttons (On-Body / Hold and Reveal / Wrist Detail) | `rounded-lg` | too sharp vs Motion Refinement tone |
+| CameraMotionGrid tile | `rounded-3xl` | too round; PRO · 2× and check badges visibly clip out of the corner |
+| CameraMotionGrid PRO badge | `rounded-md` at `top-1 left-1` | misaligned with rounder tile |
+| CameraMotionGrid check dot | `top-1 right-1` | same alignment issue |
+
 ## Changes
 
-### 1. Hide support chat on /app/video/start-end
-In `StartEndVideo.tsx`, add a `useEffect` that sets `document.body.setAttribute('data-hide-studio-chat', 'true')` on mount and removes it on unmount — same pattern already used in `ProductSwap.tsx`.
+### 1. `MotionGoalSelector.tsx`
+- Line 19: outer card `rounded-xl` → `rounded-2xl`.
+- Line 30: item button `rounded-lg` → `rounded-xl`.
 
-### 2. Simplify "Not enough credits" message + fix mobile layout
-Both `StartEndVideo.tsx` (line ~394) and `AnimateVideo.tsx` (line ~1356) currently render the long sentence "Not enough credits — you need X, you have Y" inline next to the cost pill, which wraps badly on mobile.
-
-- Replace the long sentence with a short pill: `Not enough credits` rendered as a `rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive` chip.
-- On mobile, ensure the chip sits on its own line under the cost pill (the parent row is already `flex-col sm:flex-row`, so the inner wrapper `flex items-center gap-2 flex-1 flex-wrap` keeps it tidy; the shorter pill will no longer overflow).
-
-### 3. Round motion tiles further
-In `CameraMotionGrid.tsx` line 94, bump tile radius `rounded-2xl` → `rounded-3xl` for the recommended motion selection cards.
+### 2. `CameraMotionGrid.tsx`
+- Line 94: tile `rounded-3xl` → `rounded-2xl` (matches Motion Refinement card; lets badges sit safely inside).
+- Line 118: PRO badge `rounded-md` → `rounded-lg`, move from `top-1 left-1` → `top-1.5 left-1.5` so it tucks inside the rounded corner cleanly.
+- Line 124: active check `top-1 right-1` → `top-1.5 right-1.5` for the same reason.
 
 ## Notes
-- Purely visual/UX adjustments — no logic or backend changes.
-- Uses existing `destructive` semantic token from the design system.
+- No logic changes.
+- Final radii ladder: outer cards `rounded-2xl`, item rows/tiles `rounded-xl`–`rounded-2xl`, badges `rounded-lg`, status dots / cost pills / chips `rounded-full`.
