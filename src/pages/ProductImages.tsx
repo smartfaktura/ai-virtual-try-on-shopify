@@ -1402,15 +1402,7 @@ export default function ProductImages() {
               )}
 
               {/* Empty state */}
-              {quickUploading && userProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 space-y-4 border-2 border-dashed border-border rounded-xl bg-muted/30">
-                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                  <div className="text-center space-y-1">
-                    <p className="text-base font-semibold">{quickUploadProgress || 'Uploading…'}</p>
-                    <p className="text-sm text-muted-foreground">Your product will appear here in a moment</p>
-                  </div>
-                </div>
-              ) : !isLoadingProducts && userProducts.length === 0 ? (
+              {!isLoadingProducts && userProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 space-y-5 border-2 border-dashed border-border rounded-xl bg-muted/30">
                   <Package className="w-12 h-12 text-muted-foreground/40" />
                   <div className="text-center space-y-1.5">
@@ -1439,10 +1431,10 @@ export default function ProductImages() {
                     ref={quickUploadInputRef}
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleQuickUpload(file);
+                      openUploadReview(Array.from(e.target.files || []));
                       e.target.value = '';
                     }}
                   />
@@ -1484,8 +1476,7 @@ export default function ProductImages() {
                       onDrop={(e) => {
                         e.preventDefault();
                         setIsDragOver(false);
-                        const file = Array.from(e.dataTransfer.files || []).find(f => f.type.startsWith('image/'));
-                        if (file) handleQuickUpload(file);
+                        openUploadReview(Array.from(e.dataTransfer.files || []));
                       }}
                     >
                       {/* Drag-and-drop overlay */}
@@ -1496,29 +1487,21 @@ export default function ProductImages() {
                         </div>
                       )}
 
-                      {/* Upload Image Card — quick-saves immediately */}
+                      {/* Upload Image Card — opens category confirmation before saving */}
                       <div className="group relative flex flex-col rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-all overflow-hidden">
                         <div
                           role="button"
-                          tabIndex={quickUploading ? -1 : 0}
-                          onClick={() => { if (!quickUploading) quickUploadInputRef.current?.click(); }}
-                          onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !quickUploading) { e.preventDefault(); quickUploadInputRef.current?.click(); } }}
-                          aria-disabled={quickUploading}
-                          className={cn(
-                            'flex-1 flex flex-col',
-                            quickUploading ? 'cursor-not-allowed' : 'cursor-pointer'
-                          )}
+                          tabIndex={0}
+                          onClick={() => quickUploadInputRef.current?.click()}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); quickUploadInputRef.current?.click(); } }}
+                          className="flex-1 flex flex-col cursor-pointer"
                         >
                           <div className="aspect-square flex flex-col items-center justify-center gap-1.5 bg-muted/40">
-                            {quickUploading ? (
-                              <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                            ) : (
-                              <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                            )}
+                            <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                           </div>
                           <div className="h-[44px] flex flex-col justify-center px-1.5 py-1">
                             <p className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                              {quickUploading ? (quickUploadProgress || 'Uploading…') : 'Upload Image'}
+                              Upload Image
                             </p>
                             <button
                               type="button"
@@ -1533,10 +1516,10 @@ export default function ProductImages() {
                           ref={quickUploadInputRef}
                           type="file"
                           accept="image/*"
+                          multiple
                           className="hidden"
                           onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleQuickUpload(file);
+                            openUploadReview(Array.from(e.target.files || []));
                             e.target.value = '';
                           }}
                         />
