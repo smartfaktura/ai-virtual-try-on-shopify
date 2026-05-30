@@ -356,7 +356,7 @@ export function AppShell({ children }: AppShellProps) {
                   Bug Bounty
                 </button>
                 <a
-                  href="https://discord.gg/ZgnSJqUyV"
+                  href="https://discord.gg/jJzDtrbbV"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setUserMenuOpen(false)}

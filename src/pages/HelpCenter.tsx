@@ -134,7 +134,7 @@ export default function HelpCenter() {
               <ArrowRight size={16} />
             </Link>
             <a
-              href="https://discord.gg/ZgnSJqUyV"
+              href="https://discord.gg/jJzDtrbbV"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 h-[3.25rem] px-8 rounded-full border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors w-full sm:w-auto"

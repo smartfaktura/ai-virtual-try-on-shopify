@@ -23,7 +23,7 @@ const columns = [
       { label: 'Help center', to: '/help' },
       { label: 'Contact', to: '/contact' },
       { label: 'Status', to: '/status' },
-      { label: 'Discord community', to: 'https://discord.gg/ZgnSJqUyV' },
+      { label: 'Discord community', to: 'https://discord.gg/jJzDtrbbV' },
     ],
   },
   {
