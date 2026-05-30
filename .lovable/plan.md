@@ -1,51 +1,30 @@
-# Fix Orbit pricing + Motion Refinement label legibility
+## Problem
 
-## Bug found
+In `/app/video/animate`, picking the same library image twice re-runs the `analyze-video-input` edge function each time. `analyzeImage` in `src/hooks/useVideoProject.ts` has no cache, so every selection costs a Gemini call + ~5s staged UI for an image we already analyzed.
 
-The camera-motion grid uses id **`orbit`** (`src/lib/videoMotionRecipes.ts:260`), but the premium list everywhere checks for **`product_orbit`**. Result:
+## Fix (minimal, additive, no risk to existing flows)
 
-- No `PRO · 2×` badge on the Orbit tile
-- Frontend `estimateCredits` never doubles for Orbit
-- Backend `enqueue-generation` never doubles for Orbit
-- Only Premium Handheld was actually doubled
+### 1. `src/hooks/useVideoProject.ts` — add URL-keyed cache
+- Add a **module-level** `Map<string, VideoAnalysis>` keyed by `${workflow_type}:${imageUrl}` (default `animate`). Module scope survives in-app navigation within the same tab; cleared on hard refresh.
+- Hydrate from `sessionStorage` (`vovv:video-analysis-cache:v1`) on module load inside a `try/catch` — any parse error silently resets the cache, so corrupt storage can never crash the hook.
+- In `analyzeImage(imageUrl)`:
+  - **Cache hit** → set `analysisResult`, do NOT flip `isAnalyzingImage`, return cached value (still async). No edge function call.
+  - **Cache miss** → existing path unchanged. On success, write to the Map + best-effort `sessionStorage.setItem` (try/catch for quota / Safari private mode).
+- Export a small helper `hasCachedAnalysis(imageUrl)` so the page can decide whether to skip the staged UI.
 
-The id `product_orbit` doesn't exist in `CAMERA_MOTIONS` at all — it was a stale name. We replace it with `orbit` everywhere (no backward-compat needed because no row in the DB could have matched it).
+No changes to: function signature, return shape, error handling, `runAnimatePipeline`, or the edge function. Fresh disk uploads still get fresh URLs → naturally bypass the cache.
 
-## Changes
+### 2. `src/pages/video/AnimateVideo.tsx` — skip staged UI on cache hit
+- At the three `analyzeImage` call sites (library pick ~L246, bulk handlers ~L323 and ~L355): check `hasCachedAnalysis(url)` **before** the call.
+  - If cached → skip the 5s `analysisStep` animation and `uploadCompleteTime` gate, apply the analysis to state immediately (same effect that runs on `uiRevealReady`).
+  - If not cached → behavior is 100% unchanged.
 
-### 1. Pricing — use the real id
+### Safety
+- Cache stores read-only metadata (category, scene type, recommended motion). Never touches credits, prompts, queue, or RLS.
+- Worst-case stale entry → slightly off default form values the user can override anyway (same as today's first analysis).
+- Storage key carries a `v1` suffix; bumping it cleanly invalidates old entries if `VideoAnalysis` shape ever changes.
+- Zero backend, DB, edge function, or migration changes.
 
-`src/config/videoCreditPricing.ts`
-```ts
-const PREMIUM_MOTION_RECIPES = ['orbit', 'premium_handheld'];
-```
-
-`supabase/functions/enqueue-generation/index.ts`
-```ts
-if (["orbit", "premium_handheld"].includes(motion)) cost *= 2;
-```
-Redeploy `enqueue-generation`.
-
-### 2. AnimateVideo override select
-
-The per-image override `<select>` already uses `isPremiumCameraMotion` — no change needed; it will now correctly tag Orbit with ` — PRO · 2×`.
-
-### 3. Motion Refinement label legibility
-
-`src/components/app/video/CameraMotionGrid.tsx` — tile labels currently render as `text-[10px] text-muted-foreground` (gray on white card, low contrast, too small). Fix:
-
-- Bump base size: `text-[10px]` → `text-[11px]`
-- Tighten weight + color for non-active: `text-muted-foreground` → `text-foreground/80 font-medium`
-- Active state already bold/foreground — keep as is
-- Add slightly more vertical padding: `py-1.5` → `py-2`
-
-PRO badge also gets a small contrast/readability bump:
-- Larger text: `text-[9px]` → `text-[10px]`
-- Tighter padding stays, but use full `bg-foreground` (not 90% alpha) for crisp contrast over varied video previews
-- Add subtle ring for definition: `ring-1 ring-background/40`
-
-## Files
-
-- `src/config/videoCreditPricing.ts` — swap `product_orbit` → `orbit`
-- `supabase/functions/enqueue-generation/index.ts` — swap `product_orbit` → `orbit`, redeploy
-- `src/components/app/video/CameraMotionGrid.tsx` — label + badge typography
+### Files touched
+- `src/hooks/useVideoProject.ts` — cache layer + `hasCachedAnalysis` export
+- `src/pages/video/AnimateVideo.tsx` — short-circuit staged analysis UI on cache hit
