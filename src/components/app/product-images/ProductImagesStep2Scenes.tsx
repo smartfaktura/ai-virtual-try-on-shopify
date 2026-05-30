@@ -483,30 +483,42 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
       )}
       {unifiedRecommended.length > 0 && (
         <div className="space-y-2">
-          {unifiedRecommended.map((cat, idx) => (
-            <UnifiedCategorySectionWithSelectAll
-              key={cat.id}
-              catId={cat.id}
-              catTitle={CATEGORY_LABELS[cat.id] || cat.title}
-              essentialScenes={cat.essentialScenes}
-              categoryScenes={cat.scenes}
-              categorySubGroups={cat.subGroups}
-              selectedSceneIds={selectedSceneIds}
-              onSelectionChange={onSelectionChange}
-              isOpen={expandedCategories.has(cat.id)}
-              onToggleOpen={() => toggleCategory(cat.id)}
-              toggleScene={toggleScene}
-              isRecommended
-              gridClass={gridClass}
-              headerRight={idx === 0 ? (
-                <span className="hidden sm:inline-flex">
-                  <GridSizeToggle value={gridSize} onChange={setGridSize} />
-                </span>
-              ) : undefined}
-            />
-          ))}
+          {unifiedRecommended.map((cat, idx) => {
+            const section = (
+              <UnifiedCategorySectionWithSelectAll
+                key={cat.id}
+                catId={cat.id}
+                catTitle={CATEGORY_LABELS[cat.id] || cat.title}
+                essentialScenes={cat.essentialScenes}
+                categoryScenes={cat.scenes}
+                categorySubGroups={cat.subGroups}
+                selectedSceneIds={selectedSceneIds}
+                onSelectionChange={onSelectionChange}
+                isOpen={expandedCategories.has(cat.id)}
+                onToggleOpen={() => toggleCategory(cat.id)}
+                toggleScene={toggleScene}
+                isRecommended
+                gridClass={gridClass}
+                showGlobalSelection={idx === 0 && selectedSceneIds.size > 0}
+                globalSelectionCount={selectedSceneIds.size}
+                onClearGlobalSelection={() => onSelectionChange(new Set())}
+              />
+            );
+            if (idx === 0) {
+              return (
+                <div key={cat.id} className="flex items-center gap-2 min-w-0 max-w-full">
+                  <div className="flex-1 min-w-0">{section}</div>
+                  <span className="hidden sm:inline-flex shrink-0">
+                    <GridSizeToggle value={gridSize} onChange={setGridSize} />
+                  </span>
+                </div>
+              );
+            }
+            return section;
+          })}
         </div>
       )}
+
 
       {(unifiedOther.length > 0 || isLoadingRest) && (
         <div className="space-y-4 pt-2">
