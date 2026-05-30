@@ -181,6 +181,12 @@ function RecentVideoCard({
           </Badge>
         )}
 
+        {showRatioBadge && video.aspect_ratio && !selectMode && !isProcessing && (
+          <Badge variant="secondary" className="absolute top-2 left-2 text-[10px] bg-background/80 backdrop-blur-sm text-foreground">
+            {video.aspect_ratio}
+          </Badge>
+        )}
+
         {isComplete && !selectMode && (
           <div className="absolute bottom-2 left-2 z-10">
             <div className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
