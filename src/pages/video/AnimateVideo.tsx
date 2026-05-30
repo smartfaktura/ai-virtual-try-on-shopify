@@ -25,7 +25,7 @@ import { isPremiumCameraMotion } from '@/config/videoCreditPricing';
 import { estimateCredits, estimateBulkCredits } from '@/config/videoCreditPricing';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { InfoTooltip } from '@/components/app/video/InfoTooltip';
-import { useVideoProject } from '@/hooks/useVideoProject';
+import { useVideoProject, getCachedAnalysis } from '@/hooks/useVideoProject';
 import { useBulkVideoProject } from '@/hooks/useBulkVideoProject';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { TEAM_MEMBERS } from '@/data/teamData';
