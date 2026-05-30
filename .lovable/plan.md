@@ -1,48 +1,31 @@
-## Fix floating action bar — pill sizing and style match
+Prevent mobile keyboard auto-opening on search-first modals
 
-Both `/app/video/animate` and `/app/video/start-end` show a sticky floating action bar with a `CreditEstimateBox` ("Cost: N credits") and a "Not enough credits" pill next to it. The two pills currently render at different sizes/typography, which is why the warning looks ~2× smaller.
+## Problem
+On touch devices, opening the Library picker or Category picker immediately focuses the search input, causing the on-screen keyboard to slide up before the user has tapped anything. This blocks content and feels invasive.
 
-### Current
+## Solution
+Add a touch-only guard on Radix Dialog's auto-focus so the keyboard only appears when the user intentionally taps the search field.
 
-```text
-CreditEstimateBox:        px-3.5 py-2  text-sm  rounded-full  bg-muted/50  border-border
-"Not enough credits":     px-3   py-1.5 text-xs  rounded-full  bg-destructive/10  border-destructive/30
-```
+## Changes
 
-The destructive pill is visibly smaller, sits lower on the baseline, and looks like a tag instead of a sibling chip.
+1. **Create `src/lib/dialogAutoFocus.ts`** — shared helper:
+   ```ts
+   export const preventAutoFocusOnMobile = (e: Event) => {
+     if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
+       e.preventDefault();
+     }
+   };
+   ```
+   - Only blocks on touch devices (`pointer: coarse`). Desktop mice/trackpads are unaffected.
+   - Tapping the search input still focuses it normally.
 
-### Plan
+2. **Update `src/components/app/video/LibraryPickerModal.tsx`**
+   - Add `onOpenAutoFocus={preventAutoFocusOnMobile}` to the `DialogContent` component.
 
-**1. Match the "Not enough credits" pill to the cost chip** in both files:
-- `src/pages/video/AnimateVideo.tsx` line 1332–1336
-- `src/pages/video/StartEndVideo.tsx` line 405–409
+3. **Update `src/components/app/product-images/CategoryPickerModal.tsx`**
+   - Remove explicit `autoFocus` from the `Input` component.
+   - Add `onOpenAutoFocus={preventAutoFocusOnMobile}` to `DialogContent`.
 
-Replace the span with the same geometry as `CreditEstimateBox` plus an `AlertCircle` glyph for parity with the "Cost:" label, using destructive tokens:
-
-```tsx
-<span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-destructive/30 bg-destructive/10 text-sm font-medium text-destructive">
-  <AlertCircle className="h-3.5 w-3.5" />
-  Not enough credits
-</span>
-```
-
-Import `AlertCircle` from `lucide-react` in both files (StartEndVideo doesn't have it yet; AnimateVideo also needs it added to its existing import).
-
-**2. Tighten the "× N videos = N credits" inline text** in `AnimateVideo.tsx` (line 1327–1331) so it sits inside a matching ghost chip instead of bare muted text — keeps the row visually coherent on mobile when wrapping:
-
-```tsx
-<span className="inline-flex items-center px-3 py-1.5 rounded-full bg-muted/30 text-xs font-medium text-muted-foreground">
-  × {totalVideos} = {totalCredits} credits
-</span>
-```
-
-**3. Get credits CTA** — already uses `openBuyModal(...)` in both files and `rounded-full` size lg. Confirm no change needed (the earlier "pricing link" issue was the previous turn's fix). No edits here.
-
-### Out of scope
-- Global "You're out of credits" banner
-- CreditEstimateBox internals (shared component)
-- Generate button behavior
-
-### Files
-- `src/pages/video/AnimateVideo.tsx`
-- `src/pages/video/StartEndVideo.tsx`
+## Out of scope
+- Intentional focus-on-open inputs (rename editors, single-field prompts, admin forms).
+- Visual style changes.
