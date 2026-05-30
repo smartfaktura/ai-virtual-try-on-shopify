@@ -1253,6 +1253,7 @@ export default function AnimateVideo() {
                 onMotionIntensityChange={setMotionIntensity}
                 multiSelect={isPaidUser}
                 isPaidUser={isPaidUser}
+                onUpgrade={() => openBuyModal('animate_multi_motion-gate')}
                 selectedCameraMotions={selectedCameraMotions}
                 onMultiCameraMotionChange={(ids) => { setSelectedCameraMotions(ids); setCameraMotion(ids[0]); }}
               />
@@ -1273,14 +1274,13 @@ export default function AnimateVideo() {
                 <h3 className="text-base font-semibold tracking-tight text-foreground">Settings</h3>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">Aspect Ratio</label>
-                    <InfoTooltip text="For image-to-video, the output always matches your source image ratio. This selector is informational only." />
+                    <span className="rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                      Auto · matches source
+                    </span>
+                    <InfoTooltip text="For image-to-video, the output always matches your source image ratio." />
                   </div>
-                  <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    Output matches your source image ratio
-                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -1353,14 +1353,18 @@ export default function AnimateVideo() {
                             × {totalVideos} videos = {totalCredits} credits
                           </span>
                         )}
+                        {notEnoughCredits && (
+                          <span className="text-xs text-muted-foreground">
+                            Not enough credits — you need {totalCredits}, you have {creditsBalance}
+                          </span>
+                        )}
                       </div>
                       {notEnoughCredits ? (
                         <Button
                           onClick={() => openBuyModal('animate_video_cta')}
                           size="lg"
-                          className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                          className="rounded-full w-full sm:w-auto sm:ml-auto"
                         >
-                          <Sparkles className="h-4 w-4" />
                           Get credits
                         </Button>
                       ) : (

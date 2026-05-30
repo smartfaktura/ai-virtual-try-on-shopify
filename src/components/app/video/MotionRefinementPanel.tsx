@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { SUBJECT_MOTIONS, REALISM_LEVELS, LOOP_STYLES } from '@/lib/videoMotionRecipes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Sparkles } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { InfoTooltip } from './InfoTooltip';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -26,6 +26,8 @@ interface MotionRefinementPanelProps {
   onMultiCameraMotionChange?: (ids: string[]) => void;
   /** Controls upsell display for free users */
   isPaidUser?: boolean;
+  /** Called when free user clicks the upsell "Upgrade" link */
+  onUpgrade?: () => void;
 }
 
 function ChipRow({ label, tooltip, items, value, onChange }: { label: string; tooltip?: string; items: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) {
@@ -101,10 +103,13 @@ export function MotionRefinementPanel(props: MotionRefinementPanelProps) {
                     <p className="text-[11px] text-muted-foreground flex-1">
                       Select multiple camera motions with any paid plan
                     </p>
-                    <a href="/pricing" className="text-[11px] font-medium text-primary hover:underline flex items-center gap-0.5">
-                      <Sparkles className="h-3 w-3" />
+                    <button
+                      type="button"
+                      onClick={() => props.onUpgrade?.()}
+                      className="text-[11px] font-medium text-primary hover:underline"
+                    >
                       Upgrade
-                    </a>
+                    </button>
                   </div>
                 )}
               </>

@@ -1,30 +1,37 @@
-## Problem
+## Items
 
-In `/app/video/animate`, picking the same library image twice re-runs the `analyze-video-input` edge function each time. `analyzeImage` in `src/hooks/useVideoProject.ts` has no cache, so every selection costs a Gemini call + ~5s staged UI for an image we already analyzed.
+### 2. Multi-camera-motion upsell opens upgrade modal instead of /pricing
+`src/components/app/video/MotionRefinementPanel.tsx` lines 98–109 use `<a href="/pricing">Upgrade</a>`. Change to a button that calls a new optional `onUpgrade?: () => void` prop. In `src/pages/video/AnimateVideo.tsx`, pass `onUpgrade={() => openBuyModal('animate_multi_motion-gate')}` to `<MotionRefinementPanel ...>`. The `-gate` suffix forces `GlobalUpgradeModal` into upgrade variant (not topup), correct for free-plan feature unlocks. Drop the `Sparkles` icon next to the word "Upgrade".
 
-## Fix (minimal, additive, no risk to existing flows)
+### 3. Insufficient-credits messaging on `/app/video/start-end`
+`/app/video/animate` already has `notEnoughCredits` branch that swaps the CTA to "Get credits" via `openBuyModal('animate_video_cta')`, but no inline message line. `/app/video/start-end` has nothing — `canGenerate` ignores balance, button just looks grey when other gates fail, and click silently opens `NoCreditsModal`.
 
-### 1. `src/hooks/useVideoProject.ts` — add URL-keyed cache
-- Add a **module-level** `Map<string, VideoAnalysis>` keyed by `${workflow_type}:${imageUrl}` (default `animate`). Module scope survives in-app navigation within the same tab; cleared on hard refresh.
-- Hydrate from `sessionStorage` (`vovv:video-analysis-cache:v1`) on module load inside a `try/catch` — any parse error silently resets the cache, so corrupt storage can never crash the hook.
-- In `analyzeImage(imageUrl)`:
-  - **Cache hit** → set `analysisResult`, do NOT flip `isAnalyzingImage`, return cached value (still async). No edge function call.
-  - **Cache miss** → existing path unchanged. On success, write to the Map + best-effort `sessionStorage.setItem` (try/catch for quota / Safari private mode).
-- Export a small helper `hasCachedAnalysis(imageUrl)` so the page can decide whether to skip the staged UI.
+Standardize both:
+- Compute `notEnoughCredits = creditsBalance < creditCost` (already exists in Animate; add to StartEnd).
+- When true, render a minimal inline hint above/left of the CTA: `"Not enough credits — you need X, you have Y"` (text-xs, muted-foreground, no icon).
+- Swap the primary CTA to a "Get credits" button that calls `openBuyModal('start_end_video_cta')` on StartEnd / `openBuyModal('animate_video_cta')` on Animate (Animate already does this — just add the hint line).
+- StartEnd: switch from local `NoCreditsModal` open state to `openBuyModal`. Remove `noCreditsOpen` state + `<NoCreditsModal>` mount to avoid two upgrade modals (`GlobalUpgradeModal` is mounted globally).
 
-No changes to: function signature, return shape, error handling, `runAnimatePipeline`, or the edge function. Fresh disk uploads still get fresh URLs → naturally bypass the cache.
+### 4. Remove Sparkles from CTAs
+- `src/pages/video/StartEndVideo.tsx` line 407: drop `<Sparkles className="h-4 w-4" />` before "Generate Video".
+- `src/pages/video/AnimateVideo.tsx` line 1363: drop `<Sparkles>` before "Get credits".
+- Leave the Sparkles on the main "Generate Video" CTA in Animate (line 1373) untouched — user only asked about Start-End's Generate and Animate's Get credits.
 
-### 2. `src/pages/video/AnimateVideo.tsx` — skip staged UI on cache hit
-- At the three `analyzeImage` call sites (library pick ~L246, bulk handlers ~L323 and ~L355): check `hasCachedAnalysis(url)` **before** the call.
-  - If cached → skip the 5s `analysisStep` animation and `uploadCompleteTime` gate, apply the analysis to state immediately (same effect that runs on `uiRevealReady`).
-  - If not cached → behavior is 100% unchanged.
+### 5. Aspect Ratio info styling in Animate Settings
+`src/pages/video/AnimateVideo.tsx` lines 1275–1284. Current:
+```
+<label>Aspect Ratio</label> <InfoTooltip ... />
+[Eye icon] Output matches your source image ratio
+```
+Replace with a cleaner readout — no eye icon, no awkward gray microcopy. Render the aspect ratio as a static pill next to the label, e.g.:
+```
+Aspect Ratio  [ Auto · matches source ]
+```
+Pill = `rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-xs text-muted-foreground`. Keep the `InfoTooltip` for full explanation. Remove the `Eye` import if unused elsewhere on the page.
 
-### Safety
-- Cache stores read-only metadata (category, scene type, recommended motion). Never touches credits, prompts, queue, or RLS.
-- Worst-case stale entry → slightly off default form values the user can override anyway (same as today's first analysis).
-- Storage key carries a `v1` suffix; bumping it cleanly invalidates old entries if `VideoAnalysis` shape ever changes.
-- Zero backend, DB, edge function, or migration changes.
+## Files
+- `src/components/app/video/MotionRefinementPanel.tsx`
+- `src/pages/video/AnimateVideo.tsx`
+- `src/pages/video/StartEndVideo.tsx`
 
-### Files touched
-- `src/hooks/useVideoProject.ts` — cache layer + `hasCachedAnalysis` export
-- `src/pages/video/AnimateVideo.tsx` — short-circuit staged analysis UI on cache hit
+No backend, schema, or edge function changes.

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, Play, X } from 'lucide-react';
+import { Loader2, Play, X } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,7 +12,7 @@ import { PreservationRulesPanel } from '@/components/app/video/PreservationRules
 
 import { CreditEstimateBox } from '@/components/app/video/CreditEstimateBox';
 import { VideoResultsPanel } from '@/components/app/video/VideoResultsPanel';
-import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+
 
 import { StartEndUploadPair, type UploadSlotState } from '@/components/app/video/start-end/StartEndUploadPair';
 import { CompatibilityCard } from '@/components/app/video/start-end/CompatibilityCard';
@@ -49,8 +49,7 @@ const EMPTY_SLOT: UploadSlotState = { url: null, preview: null, uploading: false
 export default function StartEndVideo() {
   const navigate = useNavigate();
   const { upload } = useFileUpload();
-  const { balance: creditsBalance } = useCredits();
-  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+  const { balance: creditsBalance, openBuyModal } = useCredits();
 
   // Upload slots
   const [start, setStart] = useState<UploadSlotState>(EMPTY_SLOT);
@@ -189,8 +188,10 @@ export default function StartEndVideo() {
     !project.isGenerating &&
     !project.isAnalyzing;
 
+  const notEnoughCredits = creditsBalance < creditCost;
+
   const handleGenerate = async () => {
-    if (creditsBalance < creditCost) { setNoCreditsOpen(true); return; }
+    if (notEnoughCredits) { openBuyModal('start_end_video_cta'); return; }
     if (!start.url || !end.url) return;
 
     await project.runPipeline({
@@ -390,29 +391,40 @@ export default function StartEndVideo() {
         <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
             <CreditEstimateBox params={creditParams} />
-          </div>
-          <Button
-            size="lg"
-            className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
-            disabled={!canGenerate}
-            onClick={handleGenerate}
-          >
-            {project.isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Generate Video
-              </>
+            {notEnoughCredits && !project.isGenerating && (
+              <span className="text-xs text-muted-foreground">
+                Not enough credits — you need {creditCost}, you have {creditsBalance}
+              </span>
             )}
-          </Button>
+          </div>
+          {notEnoughCredits && !project.isGenerating ? (
+            <Button
+              size="lg"
+              className="rounded-full w-full sm:w-auto sm:ml-auto"
+              onClick={() => openBuyModal('start_end_video_cta')}
+            >
+              Get credits
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+              disabled={!canGenerate}
+              onClick={handleGenerate}
+            >
+              {project.isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {project.pipelineStage === 'queued' ? 'Queued…' : 'Generating…'}
+                </>
+              ) : (
+                'Generate Video'
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
-      <NoCreditsModal open={noCreditsOpen} onClose={() => setNoCreditsOpen(false)} />
     </div>
   );
 }
