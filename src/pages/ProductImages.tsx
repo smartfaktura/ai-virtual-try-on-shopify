@@ -1546,24 +1546,25 @@ export default function ProductImages() {
                         />
                       </div>
 
-                      {/* Analyzing placeholders */}
+                      {/* Analyzing placeholders — match regular product card sizing exactly */}
                       {analyzingCards.map(card => (
                         <div
                           key={card.id}
-                          className="relative flex flex-col rounded-xl overflow-hidden border-2 border-dashed border-primary/40 bg-card"
+                          className="relative flex flex-col rounded-xl overflow-hidden border-2 border-transparent"
                         >
                           <div className="relative w-full aspect-square">
-                            <img src={card.previewUrl} alt="" className="w-full h-full object-cover opacity-50" />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-background/40 backdrop-blur-[1px]">
-                              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                            <img src={card.previewUrl} alt="" className="w-full h-full object-cover opacity-40" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Loader2 className="w-4 h-4 text-foreground/70 animate-spin" />
                             </div>
                           </div>
                           <div className="h-[44px] px-1.5 py-1 bg-card flex flex-col justify-center">
-                            <p className="text-[10px] font-medium text-foreground leading-tight">Analyzing…</p>
+                            <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-1">Analyzing…</p>
                             <p className="text-[9px] text-muted-foreground truncate mt-0.5">Detecting category</p>
                           </div>
                         </div>
                       ))}
+
 
                       {visible.map(up => {
                         const isSelected = selectedProductIds.has(up.id);
