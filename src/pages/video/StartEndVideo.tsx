@@ -188,8 +188,10 @@ export default function StartEndVideo() {
     !project.isGenerating &&
     !project.isAnalyzing;
 
+  const notEnoughCredits = creditsBalance < creditCost;
+
   const handleGenerate = async () => {
-    if (creditsBalance < creditCost) { setNoCreditsOpen(true); return; }
+    if (notEnoughCredits) { openBuyModal('start_end_video_cta'); return; }
     if (!start.url || !end.url) return;
 
     await project.runPipeline({
