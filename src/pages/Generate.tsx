@@ -504,6 +504,7 @@ export default function Generate() {
 
   const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
+  const [bulkUploadFiles, setBulkUploadFiles] = useState<File[] | null>(null);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
