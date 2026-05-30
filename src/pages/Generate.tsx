@@ -3347,12 +3347,12 @@ export default function Generate() {
                 {/* Toolbar: Search + Actions */}
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search products..."
+                      placeholder="Search by name, type, color, SKU, tag…"
                       value={tryOnSearchQuery}
                       onChange={e => { setTryOnSearchQuery(e.target.value); setVisibleProductCount(PRODUCTS_PER_PAGE); }}
-                      className="h-8 text-xs pl-8"
+                      className="h-10 text-sm pl-10 pr-4 rounded-full"
                     />
                   </div>
                   <Button
@@ -3360,10 +3360,7 @@ export default function Generate() {
                     variant="outline"
                     className="h-8 text-xs"
                     onClick={() => {
-                      const filtered = userProducts.filter(p =>
-                        p.title.toLowerCase().includes(tryOnSearchQuery.toLowerCase()) ||
-                        p.product_type.toLowerCase().includes(tryOnSearchQuery.toLowerCase())
-                      );
+                      const filtered = userProducts.filter(p => matchesProductTokens(p, tryOnSearchQuery));
                       setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS_PER_BATCH).map(p => p.id)));
                     }}
                   >
