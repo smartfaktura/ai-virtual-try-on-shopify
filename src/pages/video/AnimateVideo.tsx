@@ -616,8 +616,8 @@ export default function AnimateVideo() {
                 <div className="flex items-center gap-2 shrink-0">
                   {!isPaidUser && (
                     <button
-                      onClick={() => navigate('/app/settings')}
-                      className="text-[10px] font-semibold text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-md transition-colors"
+                      onClick={() => openBuyModal('animate_batch_upgrade')}
+                      className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary hover:bg-primary/15 transition-colors"
                     >
                       Upgrade
                     </button>
@@ -770,21 +770,24 @@ export default function AnimateVideo() {
           </div>
 
 
-          {/* Smart Assistant Banner — smarter copy */}
-          <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted/40 transition-colors">
+          {/* Smart Assistant Banner — branded VOVV.AI Studio surface */}
+          <div className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4 hover:border-primary/30 transition-colors">
             <div className="flex -space-x-2 shrink-0">
               {TIPS_TEAM.map((m) => (
                 <img
                   key={m.name}
                   src={getOptimizedUrl(m.avatar, { quality: 60 })}
                   alt={m.name}
-                  className="w-7 h-7 rounded-full border-2 border-background object-cover"
+                  className="w-8 h-8 rounded-full ring-2 ring-background object-cover"
                 />
               ))}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground/70">VOVV.AI Studio</p>
-              <p className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <p className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">VOVV.AI Studio</p>
+              </div>
+              <p className="text-sm text-foreground/80 mt-1 leading-relaxed">
                 We detect category, scene type, and motion opportunities so you don't need to prompt from scratch.
               </p>
             </div>
@@ -1354,7 +1357,7 @@ export default function AnimateVideo() {
                           </span>
                         )}
                         {notEnoughCredits && (
-                          <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive">
+                          <span className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive">
                             Not enough credits
                           </span>
                         )}
