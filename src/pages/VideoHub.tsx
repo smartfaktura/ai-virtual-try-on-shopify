@@ -53,6 +53,10 @@ interface RecentVideoCardProps {
   nowTick?: number;
   /** Briefly highlight this card after it transitions processing → complete */
   highlight?: boolean;
+  /** Force a fixed CSS aspect ratio (e.g. "4/5") — when set, ignores natural ratio */
+  forceRatio?: string;
+  /** Show a small ratio label badge */
+  showRatioBadge?: boolean;
 }
 
 function RecentVideoCard({
@@ -63,6 +67,8 @@ function RecentVideoCard({
   onToggleSelect,
   nowTick,
   highlight,
+  forceRatio,
+  showRatioBadge,
 }: RecentVideoCardProps) {
   const isComplete = video.status === 'complete' && video.video_url;
   const isProcessing = video.status === 'processing' || video.status === 'queued';
@@ -73,12 +79,12 @@ function RecentVideoCard({
   const thumbnailUrl = hasThumbnail ? getOptimizedUrl(rawThumb, { quality: 60 }) : undefined;
 
   // Determine aspect-ratio for the wrapper:
-  // Use the video's stored aspect_ratio when available, otherwise default to 3/4
-  const cssRatio = ratioToCss(video.aspect_ratio) || '3/4';
+  // forceRatio wins; otherwise use stored aspect_ratio; otherwise default to 3/4
+  const cssRatio = forceRatio || ratioToCss(video.aspect_ratio) || '3/4';
 
-  // Track natural image ratio for more accurate framing
+  // Track natural image ratio for more accurate framing (only when not forced)
   const [naturalRatio, setNaturalRatio] = useState<string | undefined>(undefined);
-  const displayRatio = naturalRatio || cssRatio;
+  const displayRatio = forceRatio || naturalRatio || cssRatio;
 
   const handleClick = useCallback(() => {
     if (selectMode) {
@@ -172,6 +178,12 @@ function RecentVideoCard({
         {video.camera_type && !isProcessing && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-[10px] bg-background/80 backdrop-blur-sm text-foreground capitalize">
             {video.camera_type.replace(/_/g, ' ')}
+          </Badge>
+        )}
+
+        {showRatioBadge && video.aspect_ratio && !selectMode && !isProcessing && (
+          <Badge variant="secondary" className="absolute top-2 left-2 text-[10px] bg-background/80 backdrop-blur-sm text-foreground">
+            {video.aspect_ratio}
           </Badge>
         )}
 
@@ -341,8 +353,10 @@ export default function VideoHub() {
     </div>
   );
 
+  const recentVideos = completedVideos.slice(0, 8);
+
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-12 max-w-5xl mx-auto">
       <PageHeader
         title="Create Videos"
         subtitle="Turn product shots, campaign visuals, and reference frames into polished short videos"
@@ -350,15 +364,27 @@ export default function VideoHub() {
         <div />
       </PageHeader>
 
-      {/* In Progress — surfaced first so users immediately see active work */}
+      {/* Start a New Video — workflow picker first so users know what this page does */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">Start a New Video</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Pick how you want to bring your visuals to life</p>
+        </div>
+        {workflowCards}
+      </section>
+
+      {/* In Progress — only when something is rendering */}
       {processingVideos.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
-            <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
-              {processingVideos.length}
-            </Badge>
+        <section className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              <h2 className="text-lg font-semibold text-foreground tracking-tight">In Progress</h2>
+              <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-900">
+                {processingVideos.length}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">Your videos are rendering — feel free to keep working</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {processingVideos.map((v) => (
@@ -370,25 +396,22 @@ export default function VideoHub() {
                 selected={false}
                 onToggleSelect={() => {}}
                 nowTick={nowTick}
+                forceRatio="4/5"
               />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Completed Videos — surface right under In Progress once user has any work */}
-      {hasOwnVideos && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-foreground tracking-tight">Completed Videos</h2>
-              {completedVideos.length > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {completedVideos.length}{totalCount > history.length ? ` / ${totalCount}` : ''}
-                </Badge>
-              )}
+      {/* Recent Videos — last 8, uniform 4:5 cards */}
+      {(isLoadingHistory || recentVideos.length > 0) && (
+        <section className="space-y-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground tracking-tight">Recent Videos</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Your latest 8 generations</p>
             </div>
-            {completedVideos.length > 0 && (
+            {recentVideos.length > 0 && (
               <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
                 {selectMode ? 'Done' : 'Select'}
               </Button>
@@ -397,50 +420,39 @@ export default function VideoHub() {
           {isLoadingHistory ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="aspect-[3/4] rounded-xl bg-muted/30 animate-pulse" />
+                <div key={i} className="aspect-[4/5] rounded-xl bg-muted/30 animate-pulse" />
               ))}
             </div>
-          ) : completedVideos.length > 0 ? (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {completedVideos.map((v) => (
-                  <RecentVideoCard
-                    key={v.id}
-                    video={v}
-                    onClick={() => setSelectedVideo(v)}
-                    selectMode={selectMode}
-                    selected={selectedIds.has(v.id)}
-                    onToggleSelect={() => toggleSelection(v.id)}
-                    highlight={recentlyCompleted.has(v.id)}
-                  />
-                ))}
-              </div>
-              {hasMore && (
-                <div className="flex justify-center pt-2">
-                  <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
-                    {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Load More Videos
-                  </Button>
-                </div>
-              )}
-            </>
-          ) : null}
-        </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {recentVideos.map((v) => (
+                <RecentVideoCard
+                  key={v.id}
+                  video={v}
+                  onClick={() => setSelectedVideo(v)}
+                  selectMode={selectMode}
+                  selected={selectedIds.has(v.id)}
+                  onToggleSelect={() => toggleSelection(v.id)}
+                  highlight={recentlyCompleted.has(v.id)}
+                  forceRatio="4/5"
+                  showRatioBadge
+                />
+              ))}
+            </div>
+          )}
+        </section>
       )}
-
-      {/* Workflow Cards — always available to start a new generation */}
-      {workflowCards}
 
       {/* Showcase — only for first-time visitors with nothing of their own yet */}
       {!hasOwnVideos && (
-        <div className="space-y-4">
+        <section className="space-y-4">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Showcase</h2>
-            <p className="text-base text-muted-foreground mt-1.5">See what's possible</p>
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">Showcase</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">See what's possible</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {Array.from({ length: 10 }, (_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-muted">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} className="aspect-[4/5] rounded-xl overflow-hidden bg-muted">
                 <video
                   src={`/videos/showcase/showcase-${i + 1}.mp4`}
                   autoPlay
@@ -452,7 +464,7 @@ export default function VideoHub() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
 
