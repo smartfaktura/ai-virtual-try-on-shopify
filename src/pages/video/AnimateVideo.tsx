@@ -1353,14 +1353,18 @@ export default function AnimateVideo() {
                             × {totalVideos} videos = {totalCredits} credits
                           </span>
                         )}
+                        {notEnoughCredits && (
+                          <span className="text-xs text-muted-foreground">
+                            Not enough credits — you need {totalCredits}, you have {creditsBalance}
+                          </span>
+                        )}
                       </div>
                       {notEnoughCredits ? (
                         <Button
                           onClick={() => openBuyModal('animate_video_cta')}
                           size="lg"
-                          className="rounded-full gap-2 w-full sm:w-auto sm:ml-auto"
+                          className="rounded-full w-full sm:w-auto sm:ml-auto"
                         >
-                          <Sparkles className="h-4 w-4" />
                           Get credits
                         </Button>
                       ) : (
