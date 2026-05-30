@@ -823,12 +823,12 @@ export default function ProductSwap() {
                         : 'border-transparent hover:border-foreground/20'
                     }`}
                   >
-                    <div className="aspect-square bg-muted overflow-hidden flex items-center justify-center p-2">
+                    <div className="aspect-square bg-muted overflow-hidden">
                       {product.image_url ? (
                         <ShimmerImage
                           src={getOptimizedUrl(product.image_url, { quality: 70 })}
                           alt={product.title}
-                          className="max-w-full max-h-full object-contain"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
