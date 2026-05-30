@@ -74,6 +74,7 @@ import { PopularCombinations, createPopularCombinations } from '@/components/app
 import { SourceTypeSelector } from '@/components/app/SourceTypeSelector';
 import { UploadSourceCard } from '@/components/app/UploadSourceCard';
 import { BulkUploadReviewModal } from '@/components/app/BulkUploadReviewModal';
+import { analyzeUploadedFiles, type PreAnalyzedItem } from '@/lib/analyzeUploadedProduct';
 import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
