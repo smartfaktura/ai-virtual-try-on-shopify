@@ -1,34 +1,74 @@
-## What happened
+# Upload review — analyze on grid, cleaner popup, grouped category picker
 
-I changed the wrong/older product selection component first. Your current route `/app/generate/product-images` is actually rendering `src/pages/ProductImages.tsx`, not `ProductImagesStep1Products.tsx`.
+Refines the upload flow on `/app/generate/product-images` based on your feedback. No backend, no generation, no schema changes — purely the upload review UX.
 
-That is why you still see the old upload tile text `More options` in the preview, and why clicking `Upload Image` still quick-saves the product immediately instead of showing the category confirmation popup.
+## 1. Move "Analyzing…" out of the popup, onto the grid
 
-## Why this won’t mess up the app
+Today the popup opens immediately and shows "Analyzing…" inside each row. Instead:
 
-The fix will be limited to the upload entry points on `/app/generate/product-images` only. I will not touch generation, shots, billing, credits, scene selection, existing saved products, backend schema, or global navigation.
+- When you pick/drop/paste images, **do not open the popup yet**.
+- Show a temporary "analyzing" placeholder card on the product grid for each file, with the image thumbnail + a subtle spinner + "Analyzing…" label (matching the existing product card style).
+- Run the AI category analysis in the background.
+- Once **all** files finish analyzing (success or failure), the review popup opens with results already filled in.
+- If a single file fails analysis, it still appears in the popup with category empty so you can pick manually.
 
-## Plan
+Placeholder cards disappear when the popup opens. If you cancel the popup, the placeholders are cleared (nothing saved).
 
-1. Update the real upload handler in `src/pages/ProductImages.tsx`
-   - Replace the current quick-upload path for the Step 1 upload tile with the existing `BulkUploadReviewModal` flow
-   - This means selecting one image or multiple images opens the review popup first
-   - The user can confirm or change category before saving
+## 2. Cleaner review popup
 
-2. Cover the matching upload entry points on that page
-   - Existing-products upload tile
-   - Empty-state “Upload product photo” button
-   - Drag-and-drop upload on the product grid
-   - Paste image upload while on Step 1
+- Remove the Sparkles icon from the title and the CheckCircle/AlertCircle icons next to each row.
+- Title becomes simply: **Review uploads** (count moved into the confirm button only).
+- Description shortened: *Confirm the category we picked, or change it*
+- **Drop the title/name input** — names are auto-generated, you said it's noise.
+- Each row shows: thumbnail · category dropdown (with a small "Suggested" badge next to the dropdown when the value came from AI and hasn't been changed) · remove (×) button.
+- The "Suggested" badge disappears the moment you change the category, so you can tell at a glance which ones you've reviewed.
 
-3. Keep the old “More options” path unchanged
-   - It will still open the Add Product modal for URL / manual / import-style workflows
-   - Only direct image upload should route to category confirmation
+## 3. Mobile-first popup layout
 
-4. Clean up the earlier misplaced change
-   - Remove the unused single-file/upload popup wiring from `ProductImagesStep1Products.tsx` if it is not used by this route
-   - This reduces risk and avoids having two conflicting upload implementations
+- Single-column stack on mobile: thumbnail (64px) on the left, category dropdown + Suggested badge on the right, remove button top-right corner.
+- Footer buttons stay side-by-side but full-width on mobile.
+- Max height tuned so the list scrolls inside the dialog on small screens.
 
-5. Verify the visible UI signal
-   - The upload tile on `/app/generate/product-images` should no longer immediately save
-   - It should open the review popup titled like `Review 1 uploads` with a category dropdown before saving
+## 4. Grouped category dropdown
+
+The flat 35-item alphabetical list is replaced with grouped sections inside the same `Select` (using `SelectGroup` + `SelectLabel`), with subcategories under each parent:
+
+```text
+Apparel
+  Dress, Garment, Hoodie, Jacket, Jeans, Trousers, Activewear,
+  Swimwear, Lingerie, Kidswear
+Footwear
+  Sneakers, Shoes, Boots, Heels
+Bags & Accessories
+  Bag, Backpack, Wallet, Belt, Scarf
+Headwear
+  Cap, Hat, Beanie
+Jewellery & Watches
+  Watch, Necklace, Ring, Bracelet, Earring
+Eyewear
+  Eyewear
+Beauty & Fragrance
+  Fragrance, Skincare, Makeup
+Food & Beverage
+  Food, Beverage
+Home & Tech
+  Furniture, Home Décor, Tech Device
+Wellness & Pets
+  Supplement, Pet Accessory
+Other
+  Other
+```
+
+Trigger still shows the resolved label (e.g. "Dress"). Grouping is presentation-only — the stored `category` value is unchanged, so all downstream prompt logic, scenes, and saved products keep working exactly as before.
+
+## Files touched
+
+- `src/components/app/BulkUploadReviewModal.tsx` — strip icons + title input, add Suggested badge, grouped Select, mobile layout, expose analysis result via a new path so the parent can pre-analyze.
+- `src/pages/ProductImages.tsx` — change `openUploadReview` to first run analysis and render placeholder cards on the grid, then open the modal with prepared rows.
+- `src/lib/productSpecFields.ts` — add a `CATEGORY_GROUPS` constant (presentation-only) used by the dropdown. No change to existing exports.
+
+## Out of scope
+
+- No changes to `analyze-product-image` edge function, `user_products` schema, scene logic, generation, billing, or any other page.
+- No change to the "More options" path (still opens `AddProductModal`).
+- No change to category values stored in DB.
