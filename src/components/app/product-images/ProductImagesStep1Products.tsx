@@ -138,7 +138,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <button
-            onClick={() => setShowAdd(true)}
+            onClick={handleUploadTileClick}
             className="group flex flex-col rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors cursor-pointer overflow-hidden"
           >
             <div className="aspect-square flex flex-col items-center justify-center bg-muted/30">
@@ -148,7 +148,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
             </div>
             <div className="h-[52px] flex flex-col justify-center px-2.5">
               <p className="text-xs font-medium text-muted-foreground group-hover:text-primary">Upload Image</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">or paste / import URL</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">single or multiple</p>
             </div>
           </button>
 
