@@ -1253,6 +1253,7 @@ export default function AnimateVideo() {
                 onMotionIntensityChange={setMotionIntensity}
                 multiSelect={isPaidUser}
                 isPaidUser={isPaidUser}
+                onUpgrade={() => openBuyModal('animate_multi_motion-gate')}
                 selectedCameraMotions={selectedCameraMotions}
                 onMultiCameraMotionChange={(ids) => { setSelectedCameraMotions(ids); setCameraMotion(ids[0]); }}
               />
