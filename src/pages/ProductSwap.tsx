@@ -146,15 +146,19 @@ export default function ProductSwap() {
     queryKey: ['product-swap-library-items'],
     queryFn: async () => {
       const [fsResult, jobsResult] = await Promise.all([
-        supabase.from('freestyle_generations').select('id, image_url, prompt, created_at')
+        supabase.from('freestyle_generations').select('id, image_url, prompt, user_prompt, workflow_label, created_at')
           .order('created_at', { ascending: false }).limit(200),
-        supabase.from('generation_jobs').select('id, results, created_at, status, workflows(name), user_products(title)')
+        supabase.from('generation_jobs')
+          .select('id, results, created_at, status, scene_name, model_name, workflow_slug, prompt_final, product_name, workflows(name), user_products(title)')
           .eq('status', 'completed').order('created_at', { ascending: false }).limit(200),
       ]);
 
       const items: LibraryPickerItem[] = [];
       for (const f of fsResult.data || []) {
-        items.push({ id: `fs-${f.id}`, imageUrl: f.image_url, title: f.prompt?.slice(0, 40) || 'Freestyle', createdAt: f.created_at });
+        const title = f.prompt?.slice(0, 40) || 'Freestyle';
+        const haystack = [title, f.prompt, f.user_prompt, f.workflow_label]
+          .filter(Boolean).join(' ').toLowerCase();
+        items.push({ id: `fs-${f.id}`, imageUrl: f.image_url, title, createdAt: f.created_at, searchHaystack: haystack });
       }
       for (const job of jobsResult.data || []) {
         const results = job.results as unknown;
@@ -168,11 +172,17 @@ export default function ProductSwap() {
           const dateLabel = new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
           const rawTitle = productTitle || workflowName || '';
           const title = (!rawTitle || rawTitle === 'Product Visuals') ? `Library · ${dateLabel}` : rawTitle;
+          const haystack = [
+            title, productTitle, workflowName,
+            (job as any).product_name, (job as any).scene_name, (job as any).model_name,
+            (job as any).workflow_slug, (job as any).prompt_final,
+          ].filter(Boolean).join(' ').toLowerCase();
           items.push({
             id: `job-${job.id}-${i}`,
             imageUrl: url,
             title,
             createdAt: job.created_at,
+            searchHaystack: haystack,
           });
         }
       }
@@ -184,8 +194,14 @@ export default function ProductSwap() {
     staleTime: 60_000,
   });
 
-  const filteredLibrary = libraryItems.filter(i => i.title.toLowerCase().includes(librarySearch.toLowerCase()));
-  const filteredProducts = products.filter(p => p.title.toLowerCase().includes(productSearch.toLowerCase()));
+  const filteredLibrary = libraryItems.filter(i => matchesTokens(i.searchHaystack, librarySearch));
+  const filteredProducts = products.filter(p => {
+    const haystack = [
+      p.title, p.description, p.product_type, p.color, p.materials,
+      p.sku, p.dimensions, p.weight, (p.tags || []).join(' '),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return matchesTokens(haystack, productSearch);
+  });
 
   // ── Hook ──────────────────────────────────────────────────────────────
   const { generate, isGenerating, progress } = useProductSwap();
