@@ -948,13 +948,8 @@ export default function AnimateVideo() {
                                         <option value="10">10s</option>
                                       </select>
                                     </div>
-                                    <div className="space-y-1">
-                                      <label className="text-xs text-muted-foreground">Audio</label>
-                                      <select value={imgOverrides.audioMode || audioMode} onChange={(e) => setOverride('audioMode', e.target.value)} className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
-                                        <option value="silent">Silent</option>
-                                        <option value="ambient">Ambient</option>
-                                      </select>
-                                    </div>
+
+
                                   </div>
                                 </div>
 
