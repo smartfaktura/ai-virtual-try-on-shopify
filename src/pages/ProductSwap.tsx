@@ -26,6 +26,7 @@ import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { CatalogStepper, type StepDef } from '@/components/app/catalog/CatalogStepper';
 import { PageHeader } from '@/components/app/PageHeader';
 import { cn } from '@/lib/utils';
