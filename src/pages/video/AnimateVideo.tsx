@@ -374,14 +374,21 @@ export default function AnimateVideo() {
       const updated = [...prev, ...newImages];
       // Trigger analysis on first image if not yet analyzed
       if (!hasAnalyzed && updated.length > 0 && updated[0].url) {
-        setUploadCompleteTime(Date.now());
-        analyzeImage(updated[0].url).then(analysis => {
-          if (analysis) setAnalysisCompleteData(analysis);
-        });
+        const firstUrl = updated[0].url;
+        const cached = getCachedAnalysis(firstUrl);
+        if (cached) {
+          applyAnalysis(cached);
+          analyzeImage(firstUrl); // sync hook state, instant
+        } else {
+          setUploadCompleteTime(Date.now());
+          analyzeImage(firstUrl).then(analysis => {
+            if (analysis) setAnalysisCompleteData(analysis);
+          });
+        }
       }
       return updated;
     });
-  }, [bulkImages, hasAnalyzed, analyzeImage]);
+  }, [bulkImages, hasAnalyzed, analyzeImage, applyAnalysis]);
 
   const motionCount = isPaidUser ? selectedCameraMotions.length : 1;
 
