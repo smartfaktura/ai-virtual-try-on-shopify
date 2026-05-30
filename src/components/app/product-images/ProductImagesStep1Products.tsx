@@ -188,11 +188,41 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
         </div>
       )}
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleFilesPicked}
+      />
+
       <AddProductModal
         open={showAdd}
-        onOpenChange={setShowAdd}
-        onProductAdded={() => { onProductAdded(); setShowAdd(false); }}
+        onOpenChange={(o) => { setShowAdd(o); if (!o) setPendingSingleFile(undefined); }}
+        onProductAdded={() => { onProductAdded(); setShowAdd(false); setPendingSingleFile(undefined); }}
+        compact
+        initialTab="manual"
+        initialFiles={pendingSingleFile}
       />
+
+      {bulkFiles && user && (
+        <BulkUploadReviewModal
+          open={!!bulkFiles}
+          files={bulkFiles}
+          userId={user.id}
+          onClose={() => setBulkFiles(null)}
+          onComplete={(productIds) => {
+            onProductAdded();
+            if (productIds.length) {
+              const next = new Set(selectedIds);
+              productIds.forEach((id) => next.add(id));
+              onSelectionChange(next);
+            }
+            setBulkFiles(null);
+          }}
+        />
+      )}
     </div>
   );
 }
