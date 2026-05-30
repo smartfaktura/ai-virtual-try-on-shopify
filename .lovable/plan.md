@@ -1,29 +1,38 @@
-## Fix mobile UX on `/app/perspectives` source selector
+## `/app/perspectives` — search + selection polish
 
-Frontend only — `src/pages/Perspectives.tsx`, Step 1 ("Choose Source").
+Frontend only — `src/pages/Perspectives.tsx`.
 
-### Problem
+### 1. Multi-factor search (Library + Products)
 
-On mobile the source selector uses `grid-cols-1` so the three "From Library / From Products / From Scratch" cards stack full-width. After tapping one, the picker panel renders below all three cards, forcing the user to scroll past the other two to find the actual picker they just opened.
+Currently both pickers filter only on `title.includes(query)`. Match the upgraded `/app/product-swap` behavior so users find images/products by more than the title.
 
-### Fix
+- **Library query** (around lines 180–224): extend `freestyle_generations` select with `user_prompt, workflow_label, aspect_ratio`; extend `generation_jobs` select with `scene_name, model_name, workflow_slug, prompt_final, product_name, ratio`. Build a lowercase `searchHaystack` per item joining title + all those fields. Add `searchHaystack: string` to `LibraryPickerItem`.
+- **Filter** (lines 238–244): replace `includes` with a small `matchesTokens(haystack, query)` helper — split query on whitespace, every token must appear in haystack. Apply to both library and products.
+- **Products haystack**: `title, description, product_type, color, materials, sku, dimensions, weight, (tags||[]).join(' ')`.
 
-Make the selector compact on mobile so all three options fit in one row and the picker appears immediately under them — same pattern desktop already has.
+### 2. Rounded search bar
 
-In the source-cards section (around lines 845–876):
+Replace the current `<Input className="pl-9" />` styling on **both** pickers with the same pill style used elsewhere: `pl-11 pr-4 h-11 rounded-full text-sm`. Move the search icon to `left-4` to match.
 
-1. Change grid to `grid-cols-3` at every breakpoint (drop `sm:grid-cols-3` distinction): `grid grid-cols-3 gap-2 sm:gap-3`.
-2. Tighten card padding on mobile: `p-2.5 sm:p-4`.
-3. Center contents on mobile, left-align on desktop: replace inner `space-y-2` wrapper with `flex flex-col items-center text-center sm:items-start sm:text-left gap-1.5 sm:gap-2`.
-4. Make the icon tile smaller on mobile: `w-9 h-9 sm:w-10 sm:h-10`.
-5. Title/description sizing:
-   - Title: keep `text-sm font-semibold`, add `leading-tight`.
-   - Description: hide on mobile (`hidden sm:block`) — the icon + title is enough on a 390px screen.
-6. "Selected" indicator: hide the text on mobile, keep the dot — `hidden sm:flex` on the row, or shrink it to just the dot. Simplest: keep `flex` but make the label `hidden sm:inline`.
+Also update placeholders:
+- Library: `"Search by name, prompt, scene, model…"`
+- Products: `"Search by name, type, color, SKU, tag…"`
 
-Result on mobile: a 3-up row of compact icon-cards (Library / Products / Scratch), and the chosen source's picker (search field, grid, or uploader) appears directly under the row — no more scrolling past unrelated cards.
+### 3. Drop "(max 10)" caption and add Clear button
+
+Both pickers currently show:
+
+```
+[N selected]  (max 10)
+```
+
+- Remove the `(max 10)` span entirely.
+- Show the count badge; when count > 0, render a small `Button variant="ghost" size="sm" className="text-xs h-7 px-2"` labeled **Clear** that empties the selection set (`setSelectedLibraryIds(new Set())` / `setSelectedProductIds(new Set())`).
+
+Layout: keep them inline with `flex gap-2 items-center`.
 
 ### Out of scope
 
-- No changes to picker contents, generation logic, variations, or desktop layout (cards still look the same ≥ sm).
-- No changes to the page hero, step 2 (variations), or step 3 (ratios).
+- No changes to source-tab cards, ratios, variations, or generation pipeline.
+- No new selection cap behavior — internal max (used by selection guards) stays as-is, we just hide the noisy "(max 10)" label.
+- No DB changes.
