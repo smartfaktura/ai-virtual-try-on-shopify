@@ -506,6 +506,24 @@ export default function Generate() {
   const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
   const [bulkUploadFiles, setBulkUploadFiles] = useState<File[] | null>(null);
+  const [bulkReviewItems, setBulkReviewItems] = useState<PreAnalyzedItem[] | null>(null);
+
+  // When files arrive from the upload tile, pre-analyze before opening the review modal.
+  useEffect(() => {
+    if (!bulkUploadFiles || bulkUploadFiles.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const items = await analyzeUploadedFiles(bulkUploadFiles);
+      if (cancelled) {
+        items.forEach(it => URL.revokeObjectURL(it.previewUrl));
+        return;
+      }
+      setBulkReviewItems(items);
+      setBulkUploadFiles(null);
+    })();
+    return () => { cancelled = true; };
+  }, [bulkUploadFiles]);
+
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
