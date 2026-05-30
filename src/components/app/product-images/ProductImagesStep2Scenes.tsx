@@ -757,17 +757,20 @@ function UnifiedCategorySectionWithSelectAll({
         }`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{catTitle}</span>
-            {isRecommended && (
-              <Badge variant="default" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">Recommended</Badge>
-            )}
-            {selectedCount > 0 && (
+            {selectedCount > 0 ? (
               <Badge variant="default" className="text-[10px] h-5 px-1.5">{selectedCount} / {allScenes.length}</Badge>
-            )}
-            {selectedCount === 0 && (
+            ) : (
               <span className="text-[10px] text-muted-foreground">{allScenes.length}</span>
             )}
           </div>
-          {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          <div className="flex items-center gap-2">
+            {isRecommended && (
+              <span className="inline-flex items-center rounded-full text-[10px] h-5 px-2 font-semibold bg-primary/10 text-primary">
+                Recommended
+              </span>
+            )}
+            {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          </div>
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
