@@ -560,11 +560,14 @@ export default function AnimateVideo() {
   const currentProgressMember = PROGRESS_TEAM[progressAvatarIdx];
 
   return (
-    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-5 sm:space-y-6 pb-32">
+    <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-6 pb-32">
+      <Button variant="ghost" size="sm" onClick={() => navigate('/app/video')} className="gap-1.5 -ml-2 self-start">
+        <ArrowLeft className="w-4 h-4" />Video
+      </Button>
+
       <PageHeader
         title="Animate Image"
-        subtitle="Turn a still product image into a polished commercial video"
-        backAction={{ content: 'Video', onAction: () => navigate('/app/video') }}
+        subtitle="Still image into a commercial video"
       >
         <div />
       </PageHeader>
