@@ -184,6 +184,7 @@ export function ProductImagesStep4Review({ selectedProducts, selectedSceneIds, d
     <div className="space-y-6 pb-20">
       <div>
         <h2 className="text-xl font-semibold tracking-tight">Review & generate</h2>
+        <p className="text-sm text-muted-foreground mt-1">A few last details left to fill</p>
       </div>
 
 
