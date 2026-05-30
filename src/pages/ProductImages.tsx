@@ -1365,9 +1365,26 @@ export default function ProductImages() {
     }
   };
 
+  const stepHeader = (() => {
+    switch (step) {
+      case 1: return { title: 'Select products', subtitle: 'Choose one or more products to start generating visuals' };
+      case 2: return { title: 'Select shots', subtitle: 'Pick the shots you want to generate for your products' };
+      case 3: return { title: 'Complete setup', subtitle: 'Only a few choices are needed for selected shots' };
+      case 4: return { title: 'Review & generate', subtitle: 'A few last details left to fill' };
+      default: return null;
+    }
+  })();
+
   return (
     <div className="space-y-6 pb-36 overflow-x-clip max-w-full min-w-0">
       <SEOHead title="Create Product Visuals — VOVV" description="Generate product visuals" />
+
+      {stepHeader && (
+        <div className="mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{stepHeader.title}</h1>
+          <p className="text-base text-muted-foreground mt-1.5">{stepHeader.subtitle}</p>
+        </div>
+      )}
 
       {step <= 4 && (
         <CatalogStepper
@@ -1387,10 +1404,6 @@ export default function ProductImages() {
         {step === 1 && (
           <>
             <div className="space-y-3">
-              <div>
-                <h2 className="text-lg font-semibold tracking-tight">Select products</h2>
-                <p className="text-sm text-muted-foreground mt-1">Choose one or more products to start generating visuals</p>
-              </div>
               {/* Toolbar */}
               {userProducts.length >= 10 && (
               <div className="flex flex-col sm:flex-row gap-3 sm:items-center min-w-0">
