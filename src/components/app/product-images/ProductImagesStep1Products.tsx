@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, CheckCircle, Upload, Package, Search, Plus } from 'lucide-react';
 import { AddProductModal } from '@/components/app/AddProductModal';
+import { BulkUploadReviewModal } from '@/components/app/BulkUploadReviewModal';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { useAuth } from '@/contexts/AuthContext';
 import type { UserProduct } from './types';
 
 interface Step1Props {
@@ -20,9 +22,29 @@ interface Step1Props {
 }
 
 export function ProductImagesStep1Products({ products, isLoading, selectedIds, onSelectionChange, onProductAdded }: Step1Props) {
+  const { user } = useAuth();
   const [showAdd, setShowAdd] = useState(false);
+  const [pendingSingleFile, setPendingSingleFile] = useState<File[] | undefined>(undefined);
+  const [bulkFiles, setBulkFiles] = useState<File[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+
+  const handleUploadTileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFilesPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+    e.target.value = '';
+    if (files.length === 0) return;
+    if (files.length === 1) {
+      setPendingSingleFile(files);
+      setShowAdd(true);
+    } else {
+      setBulkFiles(files);
+    }
+  };
 
   const productTypes = useMemo(() => {
     const types = new Set(products.map(p => p.product_type).filter(Boolean));
@@ -116,7 +138,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <button
-            onClick={() => setShowAdd(true)}
+            onClick={handleUploadTileClick}
             className="group flex flex-col rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors cursor-pointer overflow-hidden"
           >
             <div className="aspect-square flex flex-col items-center justify-center bg-muted/30">
@@ -126,7 +148,7 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
             </div>
             <div className="h-[52px] flex flex-col justify-center px-2.5">
               <p className="text-xs font-medium text-muted-foreground group-hover:text-primary">Upload Image</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">or paste / import URL</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">single or multiple</p>
             </div>
           </button>
 
@@ -166,11 +188,41 @@ export function ProductImagesStep1Products({ products, isLoading, selectedIds, o
         </div>
       )}
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleFilesPicked}
+      />
+
       <AddProductModal
         open={showAdd}
-        onOpenChange={setShowAdd}
-        onProductAdded={() => { onProductAdded(); setShowAdd(false); }}
+        onOpenChange={(o) => { setShowAdd(o); if (!o) setPendingSingleFile(undefined); }}
+        onProductAdded={() => { onProductAdded(); setShowAdd(false); setPendingSingleFile(undefined); }}
+        compact
+        initialTab="manual"
+        initialFiles={pendingSingleFile}
       />
+
+      {bulkFiles && user && (
+        <BulkUploadReviewModal
+          open={!!bulkFiles}
+          files={bulkFiles}
+          userId={user.id}
+          onClose={() => setBulkFiles(null)}
+          onComplete={(productIds) => {
+            onProductAdded();
+            if (productIds.length) {
+              const next = new Set(selectedIds);
+              productIds.forEach((id) => next.add(id));
+              onSelectionChange(next);
+            }
+            setBulkFiles(null);
+          }}
+        />
+      )}
     </div>
   );
 }
