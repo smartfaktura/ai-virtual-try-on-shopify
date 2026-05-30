@@ -73,6 +73,7 @@ import { TryOnPreview } from '@/components/app/TryOnPreview';
 import { PopularCombinations, createPopularCombinations } from '@/components/app/PopularCombinations';
 import { SourceTypeSelector } from '@/components/app/SourceTypeSelector';
 import { UploadSourceCard } from '@/components/app/UploadSourceCard';
+import { BulkUploadReviewModal } from '@/components/app/BulkUploadReviewModal';
 import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -503,6 +504,7 @@ export default function Generate() {
 
   const [sourceType, setSourceType] = useState<GenerationSourceType | null>(null);
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
+  const [bulkUploadFiles, setBulkUploadFiles] = useState<File[] | null>(null);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
@@ -2618,6 +2620,7 @@ export default function Generate() {
                   variant={isInteriorDesign ? 'room' : 'product'}
                   saveToLibrary={saveToLibrary}
                   onSaveToLibraryChange={isInteriorDesign ? undefined : setSaveToLibrary}
+                  onBulkFiles={(!isInteriorDesign && !!user) ? (files) => setBulkUploadFiles(files) : undefined}
                 />
 
                 {/* Recent uploads as collapsible section below upload area */}
@@ -2976,6 +2979,9 @@ export default function Generate() {
                         product_type: scratchUpload.productInfo.productType,
                         description: scratchUpload.productInfo.description,
                         image_url: finalUrl,
+                        analysis_json: scratchUpload.productInfo.category
+                          ? { category: scratchUpload.productInfo.category, userCategory: scratchUpload.productInfo.category }
+                          : null,
                       }).then(({ error }) => {
                         if (!error) {
                           queryClient.invalidateQueries({ queryKey: ['user-products'] });
@@ -4820,6 +4826,22 @@ export default function Generate() {
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
       <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} category={conversionCategory} generationCount={generatedImages.length} />
+      {bulkUploadFiles && user && (
+        <BulkUploadReviewModal
+          open={!!bulkUploadFiles}
+          files={bulkUploadFiles}
+          userId={user.id}
+          onClose={() => setBulkUploadFiles(null)}
+          onComplete={(productIds) => {
+            setBulkUploadFiles(null);
+            queryClient.invalidateQueries({ queryKey: ['user-products'] });
+            setSourceType('product');
+            setScratchUpload(null);
+            setSelectedProductIds(new Set(productIds));
+            setCurrentStep('product');
+          }}
+        />
+      )}
       <AddProductModal
         open={showAddProduct}
         onOpenChange={setShowAddProduct}
