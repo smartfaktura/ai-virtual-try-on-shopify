@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CheckCircle, Upload, Package, Search, Plus } from 'lucide-react';
+import { CheckCircle, Upload, Package, Search, Plus } from 'lucide-react';
 import { AddProductModal } from '@/components/app/AddProductModal';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
