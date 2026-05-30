@@ -776,7 +776,6 @@ function UnifiedCategorySectionWithSelectAll({
       <CollapsibleContent>
         {/* Essential shots sub-groups */}
         {essentialSubGroups.map((sg, i) => {
-          const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
           const isFirst = i === 0;
           return (
             <SubGroupSection
@@ -785,8 +784,6 @@ function UnifiedCategorySectionWithSelectAll({
               scenes={sg.scenes}
               selectedSceneIds={selectedSceneIds}
               toggleScene={toggleScene}
-              allSelected={sgAllSelected}
-              onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
               globalSelectionInfo={isFirst ? globalSelectionInfo : undefined}
             />
@@ -795,7 +792,6 @@ function UnifiedCategorySectionWithSelectAll({
 
         {/* Category shots sub-groups */}
         {catSubGroups.map((sg, i) => {
-          const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
           const isFirst = essentialSubGroups.length === 0 && i === 0;
           return (
             <SubGroupSection
@@ -804,8 +800,6 @@ function UnifiedCategorySectionWithSelectAll({
               scenes={sg.scenes}
               selectedSceneIds={selectedSceneIds}
               toggleScene={toggleScene}
-              allSelected={sgAllSelected}
-              onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
               globalSelectionInfo={isFirst ? globalSelectionInfo : undefined}
             />
