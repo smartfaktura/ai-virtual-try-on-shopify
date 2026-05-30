@@ -166,36 +166,40 @@ export function BulkUploadReviewModal({ open, items, userId, onClose, onComplete
                 </div>
                 <Select value={row.category} onValueChange={(v) => updateCategory(row.id, v)}>
                   <SelectTrigger className="h-10 text-sm w-full px-3">
-                    <span className="flex items-center justify-between gap-6 sm:gap-8 min-w-0 flex-1 mr-1">
+                    <span
+                      className="items-center justify-between gap-4 w-full min-w-0"
+                      style={{ display: 'flex' }}
+                    >
                       <span className="min-w-0 flex-1 truncate text-left">
                         <SelectValue placeholder="Pick category…" />
                       </span>
                       {row.isSuggested && row.status === 'suggested' && (
-                        <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground flex-shrink-0">
+                        <span className="ml-auto text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground flex-shrink-0">
                           Suggested
                         </span>
                       )}
                       {row.status === 'failed' && (
-                        <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-destructive/10 text-destructive flex-shrink-0">
+                        <span className="ml-auto text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-destructive/10 text-destructive flex-shrink-0">
                           Pick one
                         </span>
                       )}
                     </span>
                   </SelectTrigger>
-                  <SelectContent className="max-h-[280px]">
+                  <SelectContent className="max-h-[240px]">
                     {categoryOptions.map(group => (
                       <SelectGroup key={group.label}>
-                        <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground py-1">
                           {group.label}
                         </SelectLabel>
                         {group.items.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value}>
+                          <SelectItem key={opt.value} value={opt.value} className="py-1.5">
                             {opt.label}
                           </SelectItem>
                         ))}
                       </SelectGroup>
                     ))}
                   </SelectContent>
+
                 </Select>
               </div>
               <button
