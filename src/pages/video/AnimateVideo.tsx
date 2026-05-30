@@ -102,11 +102,10 @@ export default function AnimateVideo() {
     return () => clearTimeout(timer);
   }, [analysisCompleteData, uploadCompleteTime]);
 
-  // When uiRevealReady flips, apply buffered analysis data
-  useEffect(() => {
-    if (!uiRevealReady || !analysisCompleteData) return;
-    const analysis = analysisCompleteData;
+  // Apply analysis fields to form state (shared by staged-reveal and cache-hit paths)
+  const applyAnalysis = useCallback((analysis: any) => {
     setHasAnalyzed(true);
+    setUiRevealReady(true);
     if (analysis.category) { setCategory(analysis.category); setDetectedCategory(analysis.category); }
     if (analysis.ecommerce_scene_type) { setSceneType(analysis.ecommerce_scene_type); setDetectedSceneType(analysis.ecommerce_scene_type); }
     if (analysis.recommended_motion_goals?.length) { setRecommendedGoalIds(analysis.recommended_motion_goals); setMotionGoalId(analysis.recommended_motion_goals[0]); }
@@ -115,9 +114,15 @@ export default function AnimateVideo() {
     if (analysis.recommended_realism) setRealismLevel(analysis.recommended_realism);
     if (analysis.recommended_loop_style) setLoopStyle(analysis.recommended_loop_style);
     if (analysis.risk_flags?.identity_sensitive || analysis.identity_sensitive) { setPreserveIdentity(true); setPreserveOutfit(true); }
+  }, []);
+
+  // When uiRevealReady flips (staged path), apply buffered analysis data
+  useEffect(() => {
+    if (!uiRevealReady || !analysisCompleteData) return;
+    applyAnalysis(analysisCompleteData);
     setAnalysisCompleteData(null);
     setUploadCompleteTime(null);
-  }, [uiRevealReady, analysisCompleteData]);
+  }, [uiRevealReady, analysisCompleteData, applyAnalysis]);
 
   // Product Context
   const [category, setCategory] = useState('fashion_apparel');
