@@ -736,6 +736,7 @@ function UnifiedCategorySectionWithSelectAll({
   catId, catTitle, essentialScenes, categoryScenes, categorySubGroups,
   selectedSceneIds, onSelectionChange, isOpen, onToggleOpen, toggleScene,
   isRecommended, gridClass, headerRight,
+  showGlobalSelection, globalSelectionCount, onClearGlobalSelection,
 }: UnifiedCategorySectionProps) {
   const allScenes = [...essentialScenes, ...categoryScenes];
   const selectedCount = allScenes.filter(s => selectedSceneIds.has(s.id)).length;
@@ -771,6 +772,10 @@ function UnifiedCategorySectionWithSelectAll({
     onSelectionChange(next);
   };
 
+  const globalSelectionInfo = showGlobalSelection && globalSelectionCount && onClearGlobalSelection
+    ? { count: globalSelectionCount, onClear: onClearGlobalSelection }
+    : undefined;
+
   return (
     <Collapsible open={isOpen} onOpenChange={onToggleOpen}>
       <CollapsibleTrigger className="w-full">
@@ -794,8 +799,8 @@ function UnifiedCategorySectionWithSelectAll({
               </div>
             )}
             {isRecommended && (
-              <span className="inline-flex items-center rounded-full text-[10px] h-5 px-2 font-semibold bg-primary/10 text-primary">
-                Recommended Shots
+              <span className="text-[9px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                Recommended
               </span>
             )}
             {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -806,6 +811,7 @@ function UnifiedCategorySectionWithSelectAll({
         {/* Essential shots sub-groups */}
         {essentialSubGroups.map((sg, i) => {
           const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+          const isFirst = i === 0;
           return (
             <SubGroupSection
               key={`ess-${i}`}
@@ -816,6 +822,7 @@ function UnifiedCategorySectionWithSelectAll({
               allSelected={sgAllSelected}
               onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
+              globalSelectionInfo={isFirst ? globalSelectionInfo : undefined}
             />
           );
         })}
@@ -823,6 +830,7 @@ function UnifiedCategorySectionWithSelectAll({
         {/* Category shots sub-groups */}
         {catSubGroups.map((sg, i) => {
           const sgAllSelected = sg.scenes.length > 0 && sg.scenes.every(s => selectedSceneIds.has(s.id));
+          const isFirst = essentialSubGroups.length === 0 && i === 0;
           return (
             <SubGroupSection
               key={`cat-${i}`}
@@ -833,6 +841,7 @@ function UnifiedCategorySectionWithSelectAll({
               allSelected={sgAllSelected}
               onToggleAll={() => bulkToggle(sg.scenes)}
               gridClass={gridClass}
+              globalSelectionInfo={isFirst ? globalSelectionInfo : undefined}
             />
           );
         })}
@@ -840,6 +849,7 @@ function UnifiedCategorySectionWithSelectAll({
     </Collapsible>
   );
 }
+
 
 /** Animated color cycling dot */
 function CuratorColorHint({ baseHex }: { baseHex: string }) {
