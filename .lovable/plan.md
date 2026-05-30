@@ -1,33 +1,48 @@
-## Match Product Swap header pattern on video workflows
+## Fix floating action bar — pill sizing and style match
 
-Align `/app/video/animate` and `/app/video/start-end` headers with the `/app/product-swap` pattern: a standalone ghost back button above the title, tighter subtitle, and unified vertical rhythm.
+Both `/app/video/animate` and `/app/video/start-end` show a sticky floating action bar with a `CreditEstimateBox` ("Cost: N credits") and a "Not enough credits" pill next to it. The two pills currently render at different sizes/typography, which is why the warning looks ~2× smaller.
 
-### Reference pattern (ProductSwap.tsx)
+### Current
+
 ```text
-[ ← Visual Studio ]              ghost button, -ml-2, above
-Product Swap                     H1
-Same scene, different product    short subtitle, no period
+CreditEstimateBox:        px-3.5 py-2  text-sm  rounded-full  bg-muted/50  border-border
+"Not enough credits":     px-3   py-1.5 text-xs  rounded-full  bg-destructive/10  border-destructive/30
 ```
 
-### AnimateVideo.tsx
-- Remove `backAction` from `<PageHeader>`.
-- Add standalone ghost back button above:
-  ```tsx
-  <Button variant="ghost" size="sm" onClick={() => navigate('/app/video')} className="gap-1.5 -ml-2 self-start">
-    <ArrowLeft className="w-4 h-4" />Video
-  </Button>
-  ```
-- Trim subtitle to: `Still image into a commercial video`.
-- Outer container spacing: `space-y-5 sm:space-y-6` → `space-y-6`.
+The destructive pill is visibly smaller, sits lower on the baseline, and looks like a tag instead of a sibling chip.
 
-### StartEndVideo.tsx
-- Setup view: drop `backAction`, add the same standalone ghost button above, keep `titleBadge={Beta}`, subtitle → `Cinematic transition between two frames`.
-- Results view: add the same ghost back button above the header for consistency.
-- Outer container: `space-y-6 sm:space-y-8` → `space-y-6`.
+### Plan
+
+**1. Match the "Not enough credits" pill to the cost chip** in both files:
+- `src/pages/video/AnimateVideo.tsx` line 1332–1336
+- `src/pages/video/StartEndVideo.tsx` line 405–409
+
+Replace the span with the same geometry as `CreditEstimateBox` plus an `AlertCircle` glyph for parity with the "Cost:" label, using destructive tokens:
+
+```tsx
+<span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-destructive/30 bg-destructive/10 text-sm font-medium text-destructive">
+  <AlertCircle className="h-3.5 w-3.5" />
+  Not enough credits
+</span>
+```
+
+Import `AlertCircle` from `lucide-react` in both files (StartEndVideo doesn't have it yet; AnimateVideo also needs it added to its existing import).
+
+**2. Tighten the "× N videos = N credits" inline text** in `AnimateVideo.tsx` (line 1327–1331) so it sits inside a matching ghost chip instead of bare muted text — keeps the row visually coherent on mobile when wrapping:
+
+```tsx
+<span className="inline-flex items-center px-3 py-1.5 rounded-full bg-muted/30 text-xs font-medium text-muted-foreground">
+  × {totalVideos} = {totalCredits} credits
+</span>
+```
+
+**3. Get credits CTA** — already uses `openBuyModal(...)` in both files and `rounded-full` size lg. Confirm no change needed (the earlier "pricing link" issue was the previous turn's fix). No edits here.
 
 ### Out of scope
 - Global "You're out of credits" banner
-- Right-rail cards, Batch Mode row, dropzone, stepper
-- Any business logic
+- CreditEstimateBox internals (shared component)
+- Generate button behavior
 
-No new imports needed (`ArrowLeft`, `Button` already imported in both files).
+### Files
+- `src/pages/video/AnimateVideo.tsx`
+- `src/pages/video/StartEndVideo.tsx`

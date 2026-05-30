@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, ArrowLeft, Images, Lock, Settings2 } from 'lucide-react';
+import { Upload, X, Loader2, Sparkles, Brain, Wand2, CheckCircle2, Image, Clapperboard, Eye, ScanSearch, Zap, RotateCcw, ClipboardPaste, FolderOpen, Play, ArrowRight, ArrowLeft, Images, Lock, Settings2, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
@@ -1325,12 +1325,13 @@ export default function AnimateVideo() {
                           params={{ workflowType: 'animate', duration, audioMode, motionRecipe: cameraMotion }}
                         />
                         {totalVideos > 1 && (
-                          <span className="text-xs text-muted-foreground">
-                            × {totalVideos} videos = {totalCredits} credits
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-muted/30 text-xs font-medium text-muted-foreground">
+                            × {totalVideos} = {totalCredits} credits
                           </span>
                         )}
                         {notEnoughCredits && (
-                          <span className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive">
+                          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-destructive/30 bg-destructive/10 text-sm font-medium text-destructive">
+                            <AlertCircle className="h-3.5 w-3.5" />
                             Not enough credits
                           </span>
                         )}
