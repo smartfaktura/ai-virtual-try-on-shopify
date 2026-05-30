@@ -1354,8 +1354,8 @@ export default function AnimateVideo() {
                           </span>
                         )}
                         {notEnoughCredits && (
-                          <span className="text-xs text-muted-foreground">
-                            Not enough credits — you need {totalCredits}, you have {creditsBalance}
+                          <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive">
+                            Not enough credits
                           </span>
                         )}
                       </div>

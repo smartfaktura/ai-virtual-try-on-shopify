@@ -91,7 +91,7 @@ export function CameraMotionGrid({
               onMouseEnter={() => handleHover(motion.id, true)}
               onMouseLeave={() => handleHover(motion.id, false)}
               className={cn(
-                'relative rounded-2xl border overflow-hidden transition-all duration-150 group focus:outline-none hover:scale-[1.03]',
+                'relative rounded-3xl border overflow-hidden transition-all duration-150 group focus:outline-none hover:scale-[1.03]',
                 active
                   ? 'border-primary ring-1 ring-primary/30'
                   : 'border-border hover:border-primary/40',
