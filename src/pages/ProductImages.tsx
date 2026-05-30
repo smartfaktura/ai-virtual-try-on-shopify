@@ -1612,8 +1612,8 @@ export default function ProductImages() {
                 <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-muted/40 border border-border text-xs">
                   <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground">
-                    <span className="sm:hidden">Free plan: pick 1 product. Upgrade to pick several.</span>
-                    <span className="hidden sm:inline">Free plan: pick 1 product at a time. Upgrade to pick several products in one go.</span>
+                    <span className="sm:hidden">Free plan: select only 1 product. Upgrade to select multiple products.</span>
+                    <span className="hidden sm:inline">Free plan: select only 1 product at a time. Upgrade to select multiple products in one go.</span>
                   </span>
                   <button
                     onClick={() => setUpgradeModalOpen(true)}
