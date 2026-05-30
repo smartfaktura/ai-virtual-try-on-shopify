@@ -72,7 +72,7 @@ export default function StartEndVideo() {
   const [preserveIdentity, setPreserveIdentity] = useState(false);
   const [preserveOutfit, setPreserveOutfit] = useState(false);
 
-  const [audioMode, setAudioMode] = useState<'silent' | 'ambient'>('silent');
+  const audioMode: 'silent' | 'ambient' = 'silent';
   const [userNote, setUserNote] = useState('');
 
   const project = useStartEndVideoProject();
