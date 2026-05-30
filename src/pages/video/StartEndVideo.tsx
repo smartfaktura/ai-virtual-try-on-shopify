@@ -49,8 +49,7 @@ const EMPTY_SLOT: UploadSlotState = { url: null, preview: null, uploading: false
 export default function StartEndVideo() {
   const navigate = useNavigate();
   const { upload } = useFileUpload();
-  const { balance: creditsBalance } = useCredits();
-  const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+  const { balance: creditsBalance, openBuyModal } = useCredits();
 
   // Upload slots
   const [start, setStart] = useState<UploadSlotState>(EMPTY_SLOT);
