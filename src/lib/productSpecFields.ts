@@ -385,9 +385,11 @@ export function isApparelCategory(category: string | undefined | null): boolean 
 const CATEGORY_LABELS: Record<string, string> = {
   'furniture': 'Furniture',
   'garments': 'Garment', 'dresses': 'Dress', 'hoodies': 'Hoodie',
+  'skirts': 'Skirt', 'streetwear': 'Streetwear', 'wedding-dress': 'Wedding Dress',
   'jeans': 'Jeans', 'trousers': 'Trousers', 'jackets': 'Jacket', 'activewear': 'Activewear',
   'swimwear': 'Swimwear', 'lingerie': 'Lingerie', 'kidswear': 'Kidswear',
   'sneakers': 'Sneakers', 'shoes': 'Shoes', 'boots': 'Boots', 'high-heels': 'Heels',
+  'phone-cases': 'Phone Case',
   'bags-accessories': 'Bag', 'backpacks': 'Backpack',
   'wallets-cardholders': 'Wallet', 'belts': 'Belt', 'scarves': 'Scarf',
   'caps': 'Cap', 'hats': 'Hat', 'beanies': 'Beanie', 'watches': 'Watch',
