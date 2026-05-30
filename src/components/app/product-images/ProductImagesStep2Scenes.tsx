@@ -413,21 +413,17 @@ function SharedScenePicker({ selectedSceneIds, onSelectionChange, selectedProduc
 
 
 
-      <div className="flex sm:hidden items-center justify-end gap-2 flex-wrap min-w-0 max-w-full">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
+      {(selectedSceneIds.size > 0 || true) && (
+        <div className="flex items-center justify-end gap-2 flex-wrap min-w-0 max-w-full">
           {selectedSceneIds.size > 0 && (
             <>
               <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} selected</Badge>
               <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
             </>
           )}
-        </div>
-      </div>
-      {/* Mobile-only inline selection state above; desktop grid toggle moves into first category header below */}
-      {selectedSceneIds.size > 0 && (
-        <div className="hidden sm:flex items-center justify-end gap-2 -mt-2">
-          <Badge variant="secondary" className="text-xs">{selectedSceneIds.size} selected</Badge>
-          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => onSelectionChange(new Set())}>Clear</Button>
+          <span className="inline-flex sm:hidden">
+            <GridSizeToggle value={gridSize} onChange={setGridSize} />
+          </span>
         </div>
       )}
 
