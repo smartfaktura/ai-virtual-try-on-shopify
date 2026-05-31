@@ -1,36 +1,25 @@
 ## Objective
-Restyle the upscale quality badge (4K, 2K, HD) in the Library Detail Modal to use a solid pill shape with primary background and white text, removing the Sparkles icon.
+On the library card, hide the 4K/2K resolution badge on hover so it doesn't overlap with the bottom-right action buttons (e.g. download/favorite/info).
 
-## Changes
+## Change
+**File:** `src/components/app/LibraryImageCard.tsx`
 
-### File: `src/components/app/LibraryDetailModal.tsx`
-
-**Current badge (lines 292-295):**
+Resolution badge wrapper currently:
 ```tsx
-<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
-  <Sparkles className="w-3 h-3" /> {upscaleLabel}
-</span>
+<div className="absolute bottom-3 right-3 z-10">
+  <Badge ...>{item.quality === 'upscaled_4k' ? '4K' : '2K'}</Badge>
+</div>
 ```
 
-**New badge:**
+Update wrapper to fade out on card hover:
 ```tsx
-<span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-wider">
-  {upscaleLabel}
-</span>
+<div className="absolute bottom-3 right-3 z-10 transition-opacity duration-200 opacity-100 group-hover:opacity-0 pointer-events-none">
 ```
 
-**What changes:**
-- Remove the `<Sparkles>` icon import usage (keep import if used elsewhere)
-- Remove `gap-1` from the flex container
-- Change `rounded-md` to `rounded-full` (pill shape)
-- Change `bg-primary/10 text-primary` to `bg-primary text-primary-foreground` (solid blue background, white text)
-- Increase horizontal padding from `px-2` to `px-2.5` for better pill proportion
-- Keep `text-xs font-semibold uppercase tracking-wider`
+- `group-hover:opacity-0` — hides when hovering the card (parent uses `group` class)
+- `pointer-events-none` — badge never blocks button clicks even mid-transition
+- Smooth 200ms fade matches existing card transitions
+- On touch devices (no hover), badge stays visible as today
 
-**Scope guardrails:**
-- Only affects this one badge in the modal header
-- Does not touch the "Re-enhance" button Sparkles icon or "Enhancing..." status elsewhere in the file
-- Does not change how `upscaleLabel` itself is determined
-
-## Expected result
-The 4K/2K/HD badge renders as a compact blue pill with white text, without the sparkle icon.
+## Scope
+- Only the library grid card badge. Modal detail badge unchanged.

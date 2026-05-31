@@ -111,7 +111,7 @@ export function LibraryImageCard({
 
       {/* Resolution badge */}
       {item.quality?.startsWith('upscaled_') && !selectMode && (
-        <div className="absolute bottom-3 right-3 z-10">
+        <div className="absolute bottom-3 right-3 z-10 transition-opacity duration-200 group-hover:opacity-0 pointer-events-none">
           <Badge variant="secondary" className="bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0 font-bold shadow-md">
             {item.quality === 'upscaled_4k' ? '4K' : '2K'}
           </Badge>
