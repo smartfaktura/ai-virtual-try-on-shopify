@@ -1,6 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Product, GenerationSourceType, ScratchUpload } from '@/types';
@@ -12,8 +11,6 @@ interface UpscaleSettingsPanelProps {
   sourceType: GenerationSourceType | null;
   isMultiProductMode: boolean;
   productQueue: Product[];
-  upscaleResolution: '2k' | '4k';
-  setUpscaleResolution: (r: '2k' | '4k') => void;
   creditCost: number;
   upscaleImageCount: number;
   balance: number;
@@ -24,7 +21,7 @@ interface UpscaleSettingsPanelProps {
 
 export default function UpscaleSettingsPanel({
   selectedProduct, scratchUpload, sourceType, isMultiProductMode, productQueue,
-  upscaleResolution, setUpscaleResolution, creditCost, upscaleImageCount,
+  creditCost, upscaleImageCount,
   balance, openBuyModal, handleGenerateClick, setCurrentStep,
 }: UpscaleSettingsPanelProps) {
   return (
@@ -61,36 +58,25 @@ export default function UpscaleSettingsPanel({
         )}
       </CardContent></Card>
 
-      {/* Resolution Picker */}
+      {/* 4K Summary (locked tier) */}
       <Card><CardContent className="p-5 space-y-4">
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            Choose Resolution
+            Enhance to 4K
           </h3>
-          <p className="text-sm text-muted-foreground">Select the target resolution for your enhanced images</p>
+          <p className="text-sm text-muted-foreground">Print-ready 4096px output with AI texture recovery</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {([
-            { key: '2k' as const, label: '2K Resolution', desc: '2048px — Great for web, social media & listings', credits: 10, badge: 'Standard' },
-            { key: '4k' as const, label: '4K Resolution', desc: '4096px — Print-ready, maximum detail & sharpness', credits: 15, badge: 'Premium' },
-          ] as const).map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setUpscaleResolution(opt.key)}
-              className={cn(
-                'relative p-5 rounded-xl border-2 text-left transition-all',
-                upscaleResolution === opt.key
-                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                  : 'border-border hover:border-primary/40'
-              )}
-            >
-              <Badge variant="secondary" className="absolute top-3 right-3 text-[10px]">{opt.badge}</Badge>
-              <p className="text-lg font-bold">{opt.label}</p>
-              <p className="text-sm text-muted-foreground mt-1">{opt.desc}</p>
-              <p className="text-sm font-semibold text-primary mt-2">{opt.credits} credits per image</p>
-            </button>
-          ))}
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 flex items-center gap-4">
+          <div className="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-primary text-primary-foreground shrink-0">
+            <span className="text-lg font-bold leading-none">4K</span>
+            <span className="text-[10px] font-medium opacity-80 mt-1">4096px</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-foreground">Maximum resolution</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Sharper textures, richer detail, ready for print &amp; large displays</p>
+            <p className="text-sm font-semibold text-primary mt-2">15 credits per image</p>
+          </div>
         </div>
       </CardContent></Card>
 
@@ -99,7 +85,7 @@ export default function UpscaleSettingsPanel({
         <div>
           <p className="text-sm font-semibold">Total: {creditCost} credits</p>
           <p className="text-xs text-muted-foreground">
-            {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × {upscaleResolution === '4k' ? 15 : 10} credits ({upscaleResolution === '4k' ? '4K' : '2K'})
+            {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × 15 credits (4K)
           </p>
         </div>
         {balance >= creditCost ? (
@@ -119,7 +105,7 @@ export default function UpscaleSettingsPanel({
           className={cn("gap-2", balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : '')}
         >
           <Sparkles className="w-4 h-4" />
-          {balance >= creditCost ? `Enhance ${upscaleImageCount} Image${upscaleImageCount !== 1 ? 's' : ''} to ${upscaleResolution === '4k' ? '4K' : '2K'}` : 'Buy Credits'}
+          {balance >= creditCost ? `Enhance ${upscaleImageCount} Image${upscaleImageCount !== 1 ? 's' : ''} to 4K` : 'Buy Credits'}
         </Button>
       </div>
     </div>
