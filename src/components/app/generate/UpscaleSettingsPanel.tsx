@@ -24,15 +24,18 @@ export default function UpscaleSettingsPanel({
   creditCost, upscaleImageCount,
   balance, openBuyModal, handleGenerateClick, setCurrentStep,
 }: UpscaleSettingsPanelProps) {
+  const backStep: 'upload' | 'library' | 'product' =
+    sourceType === 'scratch' ? 'upload' : sourceType === 'library' ? 'library' : 'product';
   return (
     <div className="space-y-4">
+
       {/* Product summary */}
       <Card><CardContent className="p-5 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {sourceType === 'scratch' ? 'Uploaded Image' : isMultiProductMode ? `Selected Images (${productQueue.length})` : 'Selected Product'}
           </span>
-          <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
+          <Button variant="link" size="sm" onClick={() => setCurrentStep(backStep)}>Change</Button>
         </div>
         {isMultiProductMode ? (
           <div className="flex gap-2 overflow-x-auto pb-1">
@@ -99,7 +102,7 @@ export default function UpscaleSettingsPanel({
       </div>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+        <Button variant="outline" onClick={() => setCurrentStep(backStep)}>Back</Button>
         <Button
           onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
           className={cn("gap-2", balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : '')}

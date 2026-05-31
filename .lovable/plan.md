@@ -1,44 +1,35 @@
-## Changes (both in `src/pages/Generate.tsx`)
+## 1. Fix Back/Change bug on upscale Settings step
+`src/components/app/generate/UpscaleSettingsPanel.tsx`
 
-### 1. Stack header for upscale page (back on top, title + subtitle below)
-The shared `PageHeader` currently keeps the back chip inline with the title on `sm+`. Match the `AnimateVideo` pattern by rendering the back button as a separate row above `PageHeader` when `isUpscale`, and not passing `backAction` in that case.
-
-Replace lines 2400-2404 with:
-
-```tsx
-<>
-  {isUpscale && (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => navigate('/app/workflows')}
-      className="gap-1.5 -ml-2 self-start mb-2"
-    >
-      <ArrowLeft className="w-4 h-4" />Visual Studio
-    </Button>
-  )}
-  <PageHeader
-    title={isUpscale ? 'Image Upscaling' : pageTitle}
-    subtitle={isUpscale ? 'Enhance images to 4K, print-ready resolution' : undefined}
-    backAction={isUpscale ? undefined : { content: activeWorkflow ? 'Visual Studio' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}
-  >
-```
-
-(Wrapping in a Fragment so the existing `</PageHeader>` close tag at the bottom still pairs correctly. `ArrowLeft` is already imported via existing icons block — verify and add to the lucide-react import if missing.)
-
-### 2. Hide the "Workflow Info Banner" on the upscale page
-Lines 2410-2423 — guard the alert so it doesn't render when `isUpscale`:
+- Line 35 (inline "Change" link) and line 102 (footer "Back" button) currently route to `'product'` whenever `sourceType !== 'scratch'`, so coming from "From Library" lands the user on the products grid.
+- Update both handlers to map by `sourceType`:
+  - `'scratch'` → `'upload'`
+  - `'library'` → `'library'`
+  - otherwise → `'product'`
 
 ```tsx
-{activeWorkflow && !isUpscale && (
-  <Alert className="hidden sm:block">
-    …
-  </Alert>
-)}
+const backStep =
+  sourceType === 'scratch' ? 'upload'
+  : sourceType === 'library' ? 'library'
+  : 'product';
 ```
+Use `backStep` for both buttons.
 
-That removes the "Image Upscaling / Sharpen any image… / Visual Type" block, leaving the page header + stepper directly above the source picker.
+## 2. Tidy "Select Product(s)" toolbar (Generate.tsx, non-try-on branch, lines 3395–3440)
+
+- Remove the grid/list view toggle (lines 3426–3439).
+- Resize Select All + Clear buttons to match the search bar: drop `size="sm"` + `h-8 text-xs`, use `className="h-10 rounded-full px-4 text-sm"` so all three controls share height and pill radius.
+- Leave the try-on toolbar (lines 3213–3263) and admin-y variants untouched.
+
+## 3. Shorten product-selection subtitle (Generate.tsx line 3077)
+
+Change the non-flat-lay / non-tryon branch from:
+> "Choose one or multiple products. 2+ products will use bulk generation."
+
+to:
+> "Pick one or more products"
+
+No period (matches Core memory: no terminal period on single-sentence subtitles).
 
 ## Scope
-- Only `src/pages/Generate.tsx` is touched.
-- Other workflows are unchanged: they still get the in-line PageHeader back chip and the info banner.
+Only the two files above; other workflows and the library/tryon variants are unchanged.
