@@ -24,7 +24,6 @@ export default function UpscaleSettingsPanel({
   creditCost, upscaleImageCount,
   balance, openBuyModal, handleGenerateClick, setCurrentStep,
 }: UpscaleSettingsPanelProps) {
-}: UpscaleSettingsPanelProps) {
   const backStep: 'upload' | 'library' | 'product' =
     sourceType === 'scratch' ? 'upload' : sourceType === 'library' ? 'library' : 'product';
   return (
