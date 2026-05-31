@@ -1,37 +1,86 @@
 ## Objective
-Drop the 2K upscale tier (since our generation pipeline already outputs 2K PNGs). Make 4K the only option in both the modal and the `/app/generate/image-upscaling` flow, and rework the UI so the picker no longer looks like a choice.
+Polish the `/app/generate/image-upscaling` screen:
+1. Hide the global StudioChat support bubble on this route.
+2. In the "Select from Library" step, render only 12 thumbnails initially with a "Load more" pill.
+3. Tighten the header copy + improve mobile layout.
+4. Fix the search input — true pill shape (`rounded-full`) and change placeholder to "Search".
+
+All changes are in `src/pages/Generate.tsx` only.
 
 ## Changes
 
-### 1. `src/components/app/UpscaleModal.tsx` (popup from Library "Enhance to 4K")
-- Default `resolution` state to `'4k'`; remove the `TIERS` array and the 2-column grid picker entirely.
-- Replace "Resolution" picker block with a compact **4K summary card**:
-  - Solid primary-tinted card showing `4K · 4096px`, "Maximum resolution, print-ready", and `15 credits/image`.
-  - No selectable buttons — purely informational, matches design system tokens (`bg-primary/5`, `border-primary/30`, `rounded-xl`).
-- CTA stays `Upscale Image to 4K` (label already correct since resolution is fixed).
-- Modal width can shrink slightly (keep `max-w-md` — looks balanced).
+### 1. Hide StudioChat on the upscaling route
+Inside the existing `Generate` component (right after `isUpscale` is computed), add the same body-attribute pattern used by `ProductSwap.tsx`:
 
-### 2. `src/pages/Generate.tsx` (image-upscaling flow)
-- Initialize `upscaleResolution` to `'4k'` and stop exposing the 2K branch in any UI strings (`resLabel` always "4K").
-- Continue passing `upscaleResolution='4k'` to backend; no logic removal beyond UI.
+```tsx
+useEffect(() => {
+  if (!isUpscale) return;
+  document.body.setAttribute('data-hide-studio-chat', 'true');
+  return () => document.body.removeAttribute('data-hide-studio-chat');
+}, [isUpscale]);
+```
 
-### 3. `src/components/app/generate/UpscaleSettingsPanel.tsx`
-- Remove the 2-card resolution grid. Replace with a single locked 4K summary card mirroring the modal:
-  - Heading "4K Resolution", "4096px — Print-ready, maximum detail & sharpness", `15 credits per image`, small `Premium` badge.
-  - No click handler / state toggle.
-- Cost summary line becomes `{count} image(s) × 15 credits (4K)`.
-- CTA stays `Enhance N Image(s) to 4K`.
-- Drop `upscaleResolution` / `setUpscaleResolution` props from the interface (and from the call site in `Generate.tsx`).
+(StudioChat already respects `[data-hide-studio-chat]` per the existing pattern.)
 
-### 4. Hooks / types — keep
-- `useUpscaleImages` keeps the `UpscaleResolution` type and `'2k' | '4k'` parameter so existing backend contracts, queue jobs, and history rendering for legacy 2K assets keep working. We just never pass `'2k'` from UI anymore.
-- `LibraryImageCard` / `LibraryDetailModal` keep rendering the `2K` badge for historical assets already upscaled at 2K — no migration needed.
+### 2. Library step — 12 + Load more
+Add local state `const [libraryVisibleCount, setLibraryVisibleCount] = useState(12);` near other library state.
+
+In the grid block (lines ~3713-3754):
+- Apply `.slice(0, libraryVisibleCount)` after the existing `.filter(...)`.
+- Remove `max-h-[420px] overflow-y-auto pr-1` from the grid wrapper (no more inner scroll — page scrolls naturally).
+- Below the grid, when `filteredItems.length > libraryVisibleCount`, render a centered pill button:
+
+```tsx
+<div className="flex justify-center pt-2">
+  <Button
+    variant="outline"
+    size="sm"
+    className="rounded-full px-5"
+    onClick={() => setLibraryVisibleCount(c => c + 12)}
+  >
+    Load more
+  </Button>
+</div>
+```
+
+Reset `libraryVisibleCount` to 12 whenever the search query changes (small `useEffect`).
+
+### 3. Header copy + mobile layout (lines 3677-3683)
+Current:
+```tsx
+<div className="flex items-center justify-between">
+  <div>
+    <h2 className="text-base font-semibold">Select from Library</h2>
+    <p className="text-sm text-muted-foreground">Choose up to 10 previously generated images to create new perspectives from.</p>
+  </div>
+  <Button variant="link" onClick={...}>Change source</Button>
+</div>
+```
+
+New:
+```tsx
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+  <div className="min-w-0">
+    <h2 className="text-base font-semibold">Select from Library</h2>
+    <p className="text-sm text-muted-foreground">Pick up to 10 images to remix</p>
+  </div>
+  <Button variant="link" size="sm" className="self-start sm:self-auto -ml-3 sm:ml-0 px-0 sm:px-2" onClick={...}>
+    Change
+  </Button>
+</div>
+```
+
+- Shortened subtitle (no terminal period per project memory).
+- Header stacks on mobile; "Change" sits flush-left below the title instead of fighting the H2 for horizontal space.
+- Button label trimmed to "Change".
+
+### 4. Search input — pill + simpler placeholder (lines 3685-3693)
+- Change `className="h-8 text-xs pl-8"` → `className="h-9 text-sm pl-9 rounded-full"`.
+- Bump icon position to match (`left-3`, `w-4 h-4`).
+- Placeholder `"Search by prompt..."` → `"Search"`.
 
 ## Scope guardrails
-- Pure UI/state restriction. No edge-function or DB changes.
-- Existing 2K-upscaled assets in the library still display correctly.
-- No copy uses "Standard vs Premium" framing anymore — 4K is the single tier.
-
-## Expected result
-- Library "Enhance to 4K" modal: no 2K/4K choice; one fixed 4K summary block + primary CTA.
-- `/app/generate/image-upscaling` settings step: no choice card grid; one fixed 4K block with locked credit math, then the existing cost summary and CTA.
+- Touches only `src/pages/Generate.tsx`.
+- No logic changes to selection, filtering math, or generation pipeline.
+- StudioChat component itself is untouched — same opt-out attribute used elsewhere.
+- "Load more" is purely client-side pagination over the already-fetched library list.
