@@ -4750,7 +4750,7 @@ export default function Generate() {
             <Card><CardContent className="p-5 space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-semibold">Generated Images</h2>
+                  <h2 className="text-base font-semibold">{isUpscale ? 'Upscaled Images' : 'Generated Images'}</h2>
                   <p className="text-xs text-muted-foreground">Click images to select them</p>
                 </div>
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
@@ -4764,7 +4764,9 @@ export default function Generate() {
                   <Button variant="outline" size="sm"  onClick={() => handleDownloadZip()} disabled={zipDownloading}>
                     {zipDownloading ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{zipPct}%</> : <><Download className="w-3.5 h-3.5 mr-1.5" /> Download All</>}
                   </Button>
-                  <Button variant="outline" size="sm"  onClick={() => setCurrentStep('settings')}>Adjust</Button>
+                  {!isUpscale && (
+                    <Button variant="outline" size="sm"  onClick={() => setCurrentStep('settings')}>Adjust</Button>
+                  )}
                   {isInteriorDesign && (
                     <Button variant="outline" size="sm"  onClick={() => {
                       setGeneratedImages([]);
@@ -4779,16 +4781,16 @@ export default function Generate() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              <div className={isUpscale ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3"}>
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-                    <ShimmerImage src={url} alt={`Generated ${index + 1}`} className="w-full object-cover aspect-auto rounded" wrapperClassName="bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
+                    <ShimmerImage src={url} alt={isUpscale ? `Upscaled ${index + 1}` : `Generated ${index + 1}`} className="w-full object-cover aspect-auto rounded" wrapperClassName="bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={() => toggleImageSelection(index)}>
                       <button onClick={e => { e.stopPropagation(); handleImageClick(index); }} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="View full size"><Maximize2 className="w-3.5 h-3.5" /></button>
                       <button onClick={e => { e.stopPropagation(); handleDownloadImage(index); }} className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Download"><Download className="w-3.5 h-3.5" /></button>
                     </div>
                     <div className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedForPublish.has(index) ? 'bg-primary border-primary scale-110' : 'border-white bg-black/50'}`} onClick={() => toggleImageSelection(index)}>
-                      {selectedForPublish.has(index) ? <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" /> : <span className="text-white text-[9px] font-bold">{index + 1}</span>}
+                      {selectedForPublish.has(index) && <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />}
                     </div>
                   </div>
                 ))}
