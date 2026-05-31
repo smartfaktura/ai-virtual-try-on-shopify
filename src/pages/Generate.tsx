@@ -529,6 +529,8 @@ export default function Generate() {
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
+  const [libraryVisibleCount, setLibraryVisibleCount] = useState(12);
+  useEffect(() => { setLibraryVisibleCount(12); }, [librarySearchQuery]);
 
   // Fetch library items for "From Library" source
   const { data: libraryItems = [], isLoading: isLoadingLibrary } = useQuery({
