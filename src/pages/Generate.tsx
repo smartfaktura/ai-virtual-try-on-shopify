@@ -3074,7 +3074,7 @@ export default function Generate() {
                      ? 'Choose the product to feature in this generation'
                      : activeWorkflow?.uses_tryon
                      ? 'Choose one or more clothing items to try on a model.'
-                     : 'Choose one or multiple products. 2+ products will use bulk generation.'}
+                     : 'Pick one or more products'}
                  </p>
               </div>
               <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
