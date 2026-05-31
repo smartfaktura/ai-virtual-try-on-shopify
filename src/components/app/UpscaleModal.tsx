@@ -41,23 +41,13 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
         className="relative z-10 w-full max-w-md mx-4 bg-background rounded-2xl shadow-2xl border border-border/40 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Sparkles className="w-4.5 h-4.5 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">Enhance to 4K</h3>
-              <p className="text-xs text-muted-foreground">
-                {items.length} image{items.length > 1 ? 's' : ''} selected
-              </p>
-            </div>
-          </div>
+          <h3 className="text-lg font-semibold text-foreground">Enhance to 4K</h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
+
 
         {/* 4K summary */}
         <div className="px-6 pt-4 pb-2">
