@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PageHeader } from '@/components/app/PageHeader';
+import { UpscaleTile } from '@/components/app/UpscaleTile';
 import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
