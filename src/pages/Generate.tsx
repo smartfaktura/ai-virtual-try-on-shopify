@@ -3681,21 +3681,21 @@ export default function Generate() {
         {/* Library Selection Step */}
         {currentStep === 'library' && (
           <Card><CardContent className="p-5 space-y-5">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+              <div className="min-w-0">
                 <h2 className="text-base font-semibold">Select from Library</h2>
-                <p className="text-sm text-muted-foreground">Choose up to 10 previously generated images to create new perspectives from.</p>
+                <p className="text-sm text-muted-foreground">Pick up to 10 images to remix</p>
               </div>
-              <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
+              <Button variant="link" size="sm" className="self-start sm:self-auto -ml-3 sm:ml-0 px-0 sm:px-2 h-auto" onClick={() => setCurrentStep('source')}>Change</Button>
             </div>
 
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search by prompt..."
+                placeholder="Search"
                 value={librarySearchQuery}
                 onChange={e => setLibrarySearchQuery(e.target.value)}
-                className="h-8 text-xs pl-8"
+                className="h-9 text-sm pl-9 rounded-full"
               />
             </div>
 
@@ -3716,50 +3716,67 @@ export default function Generate() {
                 <p className="text-sm text-muted-foreground">No generated images in your library yet.</p>
                 <p className="text-xs text-muted-foreground">Generate some images first, then come back here to create new perspectives.</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 max-h-[420px] overflow-y-auto pr-1">
-                {libraryItems
-                  .filter(item => !librarySearchQuery || item.label.toLowerCase().includes(librarySearchQuery.toLowerCase()))
-                  .map(item => {
-                    const isSelected = selectedLibraryIds.has(item.id);
-                    const isDisabled = !isSelected && selectedLibraryIds.size >= 10;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          const newSet = new Set(selectedLibraryIds);
-                          if (newSet.has(item.id)) { newSet.delete(item.id); }
-                          else if (newSet.size < 10) { newSet.add(item.id); }
-                          setSelectedLibraryIds(newSet);
-                        }}
-                        disabled={isDisabled}
-                        className={cn(
-                          'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
-                          isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
-                          isDisabled && 'opacity-40 cursor-not-allowed'
-                        )}
+            ) : (() => {
+              const filteredLibraryItems = libraryItems.filter(item => !librarySearchQuery || item.label.toLowerCase().includes(librarySearchQuery.toLowerCase()));
+              const visibleLibraryItems = filteredLibraryItems.slice(0, libraryVisibleCount);
+              return (
+                <>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                    {visibleLibraryItems.map(item => {
+                      const isSelected = selectedLibraryIds.has(item.id);
+                      const isDisabled = !isSelected && selectedLibraryIds.size >= 10;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            const newSet = new Set(selectedLibraryIds);
+                            if (newSet.has(item.id)) { newSet.delete(item.id); }
+                            else if (newSet.size < 10) { newSet.add(item.id); }
+                            setSelectedLibraryIds(newSet);
+                          }}
+                          disabled={isDisabled}
+                          className={cn(
+                            'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+                            isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
+                            isDisabled && 'opacity-40 cursor-not-allowed'
+                          )}
+                        >
+                          <div className={cn(
+                            'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                            isSelected
+                              ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                              : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
+                          )}>
+                            {isSelected && <Check className="w-3 h-3" />}
+                          </div>
+                          <img src={item.imageUrl} alt={item.label} className="w-full aspect-square object-cover rounded-t-md" loading="lazy" />
+                          <div className="px-1.5 py-1.5 bg-card">
+                            <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{item.label}</p>
+                            <p className="text-[9px] text-muted-foreground truncate mt-0.5">
+                              {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {filteredLibraryItems.length > libraryVisibleCount && (
+                    <div className="flex justify-center pt-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full px-5"
+                        onClick={() => setLibraryVisibleCount(c => c + 12)}
                       >
-                        <div className={cn(
-                          'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
-                          isSelected
-                            ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                            : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
-                        )}>
-                          {isSelected && <Check className="w-3 h-3" />}
-                        </div>
-                        <img src={item.imageUrl} alt={item.label} className="w-full aspect-square object-cover rounded-t-md" loading="lazy" />
-                        <div className="px-1.5 py-1.5 bg-card">
-                          <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{item.label}</p>
-                          <p className="text-[9px] text-muted-foreground truncate mt-0.5">
-                            {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-              </div>
-            )}
+                        Load more
+                      </Button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
