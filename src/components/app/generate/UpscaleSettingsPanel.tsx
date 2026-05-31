@@ -35,7 +35,7 @@ export default function UpscaleSettingsPanel({
           <span className="text-sm text-muted-foreground">
             {sourceType === 'scratch' ? 'Uploaded Image' : isMultiProductMode ? `Selected Images (${productQueue.length})` : 'Selected Product'}
           </span>
-          <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
+          <Button variant="link" size="sm" onClick={() => setCurrentStep(backStep)}>Change</Button>
         </div>
         {isMultiProductMode ? (
           <div className="flex gap-2 overflow-x-auto pb-1">
