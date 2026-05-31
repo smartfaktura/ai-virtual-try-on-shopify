@@ -1,41 +1,32 @@
-## What’s wrong
+## Image Upscaling — Results page cleanup
 
-The worker completed the jobs, but bulk upscale polling is looking for `row.result.images`. The upscale worker saves completed rows as:
+Scope: `/app/generate/image-upscaling` results step only. All edits in `src/pages/Generate.tsx`, gated on `isUpscale`.
 
-```ts
-result: { imageUrl: newImageUrl, resolution }
-```
+### 1. Remove the top summary card
+The first `Card` (lines 4646–4733) shows "Image Upscaling / Visual Type" header plus the reference thumbnail row ("Product / Enhanced to 4K / Product / Generated …"). This is noisy and irrelevant for upscaling.
+- Hide this entire card when `isUpscale` is true.
 
-So the frontend sees the jobs as completed but never adds any images to `completedResults`, leaving `allImages.length === 0` and preventing the Results view from showing the completed output correctly.
+### 2. Rename results section for upscaling
+In the second `Card` (line 4747+):
+- Heading: `Generated Images` → `Upscaled Images` when `isUpscale`.
+- Subtitle: `Click images to select them` stays.
+- Hide "Adjust" button (Settings step is trivial; "Start Over" stays).
 
-## Fix
+### 3. Remove the "1, 2, 3 …" number badge on each image
+Line 4787–4789 shows a numbered circle in the top-right of each tile when unselected. Remove the number; keep only the empty selection circle that fills with a check when selected. Applies globally (the user explicitly said no numbers, and the index is not meaningful information).
 
-### 1. Support upscale result shape in bulk polling
+### 4. Hide "Help us improve" feedback card on upscale results
+`ContextualFeedbackCard` (lines 4797–4814) — wrap render in `!isUpscale`. Upscaling is deterministic enhancement, not a creative result that benefits from feedback.
 
-In `src/pages/Generate.tsx`, update the multi-job polling result type and completion parser:
+### 5. Layout polish for upscale results
+- Use a tighter grid better suited to large 4K outputs: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` when `isUpscale`, instead of the dense 6-col grid (which makes upscaled images look small and "strange").
+- Keep all other workflows on the current grid.
 
-- Accept both:
-  - normal workflow shape: `result.images: string[]`
-  - upscale shape: `result.imageUrl: string`
-- Convert upscale result into the same image array pipeline:
+### What stays
+- Toolbar (Select All, Download All, Start Over).
+- "Crafted by your studio team / Saved to your library" footer + View in Library CTA.
+- Floating selection bar.
+- Lightbox + per-image hover actions.
 
-```ts
-const resultImages = row.result?.images || (row.result?.imageUrl ? [row.result.imageUrl] : []);
-```
-
-Then use `resultImages.length > 0` instead of only `row.result?.images`.
-
-### 2. Keep only title + subtitle for upscale loading
-
-In `src/pages/Generate.tsx`:
-
-- Keep:
-  - `Enhancing to 4K...`
-  - `Upscaling N images`
-- Hide the duplicate `MultiProductProgressBanner` only for `isUpscale`, so the third line `Generating N images for Image Upscaling...` disappears.
-
-The progress bar/status chips are part of that banner too, but the main page still has title/subtitle and generation state. If needed later, we can make a smaller upscale-only progress bar, but I’ll keep this change minimal.
-
-## Backend status
-
-Latest `upscale-worker` logs show the 3 Topaz jobs completed successfully. This is a frontend result-shape mismatch, not a backend failure.
+### Out of scope
+No backend/data-shape changes. No edits to other workflows.
