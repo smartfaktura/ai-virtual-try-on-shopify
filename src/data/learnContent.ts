@@ -306,7 +306,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
     slug: 'image-upscaling',
     section: 'visual-studio',
     title: 'Image Upscaling',
-    tagline: 'Sharpen any image to 2K or 4K.',
+    tagline: 'Sharpen any image to 4K.',
     readMin: 1,
     tracks: ['quality', 'advanced'],
     level: 'advanced',
