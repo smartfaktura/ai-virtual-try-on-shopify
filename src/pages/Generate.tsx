@@ -707,6 +707,11 @@ export default function Generate() {
   const isAngleWorkflow = false; // Angle workflows redirect to /app/perspectives
   const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
   const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('4k');
+  useEffect(() => {
+    if (!isUpscale) return;
+    document.body.setAttribute('data-hide-studio-chat', 'true');
+    return () => document.body.removeAttribute('data-hide-studio-chat');
+  }, [isUpscale]);
   const [stylingNotes, setStylingNotes] = useState('');
   const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
   const [selectedFlatLayProductIds, setSelectedFlatLayProductIds] = useState<Set<string>>(new Set());
