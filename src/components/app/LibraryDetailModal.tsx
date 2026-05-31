@@ -290,8 +290,8 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling, onCopySet
                       <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                         {heading}
                         {upscaleLabel && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
-                            <Sparkles className="w-3 h-3" /> {upscaleLabel}
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-wider">
+                            {upscaleLabel}
                           </span>
                         )}
                       </h2>
