@@ -3405,9 +3405,8 @@ export default function Generate() {
                     />
                   </div>
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
+                    className="h-10 rounded-full px-4 text-sm"
                     onClick={() => {
                       const filtered = userProducts.filter(p => matchesProductTokens(p, tryOnSearchQuery));
                       setSelectedProductIds(new Set(filtered.slice(0, MAX_PRODUCTS_PER_BATCH).map(p => p.id)));
@@ -3416,27 +3415,12 @@ export default function Generate() {
                     Select All
                   </Button>
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
+                    className="h-10 rounded-full px-4 text-sm"
                     onClick={() => setSelectedProductIds(new Set())}
                   >
                     Clear
                   </Button>
-                  <div className="flex border border-border rounded-md overflow-hidden">
-                    <button
-                      onClick={() => setProductViewMode('grid')}
-                      className={cn('p-1.5 transition-colors', productViewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}
-                    >
-                      <LayoutGrid className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setProductViewMode('list')}
-                      className={cn('p-1.5 transition-colors', productViewMode === 'list' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}
-                    >
-                      <List className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
 
                 {selectedProductIds.size > 0 && (
