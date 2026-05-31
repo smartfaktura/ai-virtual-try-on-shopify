@@ -4536,7 +4536,7 @@ export default function Generate() {
             )}
 
             {/* Multi-product progress banner */}
-            {(isMultiProductMode || hasMultipleJobs) && !isFinalizingResults && (
+            {(isMultiProductMode || hasMultipleJobs) && !isFinalizingResults && !isUpscale && (
               <MultiProductProgressBanner
                 productQueue={productQueue}
                 multiProductResults={multiProductResults}
