@@ -2397,7 +2397,12 @@ export default function Generate() {
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Visuals';
 
   return (
-    <PageHeader title={pageTitle} backAction={{ content: activeWorkflow ? 'Visual Studio' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}>
+    <PageHeader
+      title={isUpscale ? 'Image Upscaling' : pageTitle}
+      subtitle={isUpscale ? 'Enhance images to 4K, print-ready resolution' : undefined}
+      backAction={{ content: activeWorkflow ? 'Visual Studio' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}
+    >
+
       <SEOHead title="Generate — VOVV.AI" description="Generate AI product visuals." noindex />
       <div className="space-y-6 overflow-x-hidden">
         
