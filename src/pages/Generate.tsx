@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom'
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddProductModal } from '@/components/app/AddProductModal';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Search, LayoutGrid, ChevronDown, Clock } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Search, LayoutGrid, ChevronDown, Clock, ArrowLeft } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 
@@ -2397,18 +2397,30 @@ export default function Generate() {
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Visuals';
 
   return (
+    <>
+      {isUpscale && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/app/workflows')}
+          className="gap-1.5 -ml-2 mb-2 self-start"
+        >
+          <ArrowLeft className="w-4 h-4" />Visual Studio
+        </Button>
+      )}
     <PageHeader
       title={isUpscale ? 'Image Upscaling' : pageTitle}
       subtitle={isUpscale ? 'Enhance images to 4K, print-ready resolution' : undefined}
-      backAction={{ content: activeWorkflow ? 'Visual Studio' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}
+      backAction={isUpscale ? undefined : { content: activeWorkflow ? 'Visual Studio' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}
     >
+
 
       <SEOHead title="Generate — VOVV.AI" description="Generate AI product visuals." noindex />
       <div className="space-y-6 overflow-x-hidden">
         
 
         {/* Workflow Info Banner */}
-        {activeWorkflow && (
+        {activeWorkflow && !isUpscale && (
           <Alert className="hidden sm:block">
             <AlertDescription>
               <div className="flex items-center justify-between">
@@ -4911,5 +4923,6 @@ export default function Generate() {
       />
 
     </PageHeader>
+    </>
   );
 }
