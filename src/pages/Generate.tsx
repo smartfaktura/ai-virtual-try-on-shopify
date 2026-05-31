@@ -4643,6 +4643,7 @@ export default function Generate() {
         {/* Results */}
         {currentStep === 'results' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
+            {!isUpscale && (
             <Card>
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
@@ -4731,6 +4732,8 @@ export default function Generate() {
 
               </CardContent>
             </Card>
+            )}
+
 
             {/* Layer 1: Post-generation upgrade card */}
             {isFreeUser && conversionState.canShowLayer1 && (
