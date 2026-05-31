@@ -102,7 +102,7 @@ export default function UpscaleSettingsPanel({
       </div>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+        <Button variant="outline" onClick={() => setCurrentStep(backStep)}>Back</Button>
         <Button
           onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
           className={cn("gap-2", balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : '')}
