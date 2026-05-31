@@ -4821,6 +4821,7 @@ export default function Generate() {
             )}
 
             {/* Combined crafted + saved + CTA */}
+            {!isUpscale && (
             <div className="flex flex-col items-center gap-2 pt-2">
               <div className="flex items-center gap-3">
                 <div className="flex items-center">
@@ -4845,6 +4846,8 @@ export default function Generate() {
                 View in Library
               </Button>
             </div>
+            )}
+
 
             {/* Floating selection bar */}
             {selectedForPublish.size > 0 && (
