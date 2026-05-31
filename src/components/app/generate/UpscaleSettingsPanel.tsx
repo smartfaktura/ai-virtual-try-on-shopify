@@ -24,8 +24,12 @@ export default function UpscaleSettingsPanel({
   creditCost, upscaleImageCount,
   balance, openBuyModal, handleGenerateClick, setCurrentStep,
 }: UpscaleSettingsPanelProps) {
+}: UpscaleSettingsPanelProps) {
+  const backStep: 'upload' | 'library' | 'product' =
+    sourceType === 'scratch' ? 'upload' : sourceType === 'library' ? 'library' : 'product';
   return (
     <div className="space-y-4">
+
       {/* Product summary */}
       <Card><CardContent className="p-5 space-y-3">
         <div className="flex items-center justify-between">
