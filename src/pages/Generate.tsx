@@ -4514,7 +4514,7 @@ export default function Generate() {
                  generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
+                {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''}` :
                  (generationMode === 'virtual-try-on' || activeWorkflow?.uses_tryon) ? (() => { const tryOnTotal = hasMultipleJobs ? multiProductJobIds.size : (tryOnModelCount * tryOnSceneCount * (selectedAspectRatios.size > 0 ? selectedAspectRatios.size : 1) * (selectedFramings.has('auto') ? 1 : Math.max(1, selectedFramings.size)) * multiProductCount); return `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"${tryOnTotal > 1 ? ` · ${tryOnTotal} images` : ''}`; })() :
                  (hasWorkflowConfig || isSelfieUgc || isMirrorSelfie) ? `Generating ${hasMultipleJobs ? multiProductJobIds.size : selectedVariationIndices.size} image${(hasMultipleJobs ? multiProductJobIds.size : selectedVariationIndices.size) !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
