@@ -1,24 +1,41 @@
-# Optimize upscale results grid thumbnails
+# Restore upscale progress banner & shorten subtitle
 
-## Problem
+## What's wrong
 
-On `/app/generate/image-upscaling`, the results grid renders each upscaled image with `<ShimmerImage src={url} … />` where `url` is the raw storage URL of the Topaz output. That output is a full 4K (or 2K) PNG — often 5–15 MB each — and the browser downloads the entire file just to paint a tile that's roughly 360 px wide. With 3+ results this can be 30–50 MB of unnecessary transfer and slow first paint.
+In `src/pages/Generate.tsx`:
 
-The non-upscale grid has the same pattern but the outputs there are much smaller, so the cost is mostly felt on the upscale page.
+- **Line 4539** — `MultiProductProgressBanner` is rendered for batch generations but explicitly excluded for upscale (`&& !isUpscale`). When bulk-upscaling 3 images, all 3 jobs are queued and tracked via `multiProductJobIds`, but the user sees only the static "Enhancing to 4K..." card with no per-image progress, no completed count, no ETA.
+- **Line 4517** — Upscale subtitle is verbose: `Upscaling 3 images — sharpening details & recovering textures`. User wants just `Upscaling 3 images`.
 
 ## Fix
 
-In `src/pages/Generate.tsx` (results grid around line 4784–4796), wrap the tile `src` with `getOptimizedUrl(url, { quality: 70 })` from `src/lib/imageOptimization.ts`.
+### 1. Show progress banner during upscale (line 4539)
 
-- Quality-only transform (no `width=`) — per project rule, passing `width` without `height` to Supabase's render endpoint causes a server-side crop zoom. Quality-only re-encodes to a smaller JPEG/WebP while preserving the full image and aspect ratio, which is what we want for a variable-aspect grid.
-- Only apply to the tile `<ShimmerImage>` source. Leave untouched:
-  - The lightbox view (`handleImageClick`) — must stay full resolution
-  - The per-image Download button (`handleDownloadImage`) — must download the full Topaz output
-  - The "Download All" ZIP path — must zip the originals
-- `getOptimizedUrl` is a no-op for non-Supabase URLs and for URLs already routed through `/render/image/`, so it's safe for both upscale and normal generation results. Apply the same wrapper to both branches of the grid (one line change covers both since they share the same `<ShimmerImage>` element).
+Remove the `!isUpscale` guard so the `MultiProductProgressBanner` renders for upscale runs the same way it does for normal multi-product jobs. It already reads from `multiProductJobIds`, `multiProductResults`, and `generatingProgress`, all of which the upscale flow populates (see lines 1290–1370). The banner will show:
+
+- N of M images completed
+- Per-job status
+- Cancel control
+- Implicit ETA via the progress bar
+
+Pass `workflowName="Image Upscaling"` when `isUpscale` so the banner header reads correctly, and keep `isProModel={false}` for upscale.
+
+### 2. Shorten subtitle (line 4517)
+
+Change:
+```
+Upscaling ${count} image${s} — sharpening details & recovering textures
+```
+to:
+```
+Upscaling ${count} image${s}
+```
+
+No terminal period (matches Core memory rule).
 
 ## Out of scope
 
-- No backend or worker changes (Topaz pipeline stays as-is)
-- No change to lightbox, download, or ZIP behavior
-- No change to the source/product picker thumbnails on the same page
+- No backend / worker changes
+- No change to the "Enhancing to 4K..." title
+- No change to results page layout (already cleaned up in earlier turns)
+- No change to non-upscale flows
