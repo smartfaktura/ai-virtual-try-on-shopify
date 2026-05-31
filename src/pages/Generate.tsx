@@ -2083,7 +2083,7 @@ export default function Generate() {
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) return;
-      const rows = await res.json() as Array<{ id: string; status: string; result: { images?: string[]; variations?: Array<{ label: string }> } | null; error_message: string | null; completed_at: string | null }>;
+      const rows = await res.json() as Array<{ id: string; status: string; result: { images?: string[]; imageUrl?: string; variations?: Array<{ label: string }> } | null; error_message: string | null; completed_at: string | null }>;
 
       // Build a map from job ID → row for reliable lookup
       const rowMap = new Map<string, (typeof rows)[number]>();
@@ -2102,11 +2102,14 @@ export default function Generate() {
           allTerminal = false;
           continue;
         }
-        if (row.status === 'completed' && row.result?.images) {
+        // Normalize: workflow jobs return result.images[], upscale jobs return result.imageUrl
+        const resultImages = row.result?.images
+          || (row.result?.imageUrl ? [row.result.imageUrl] : []);
+        if (row.status === 'completed' && resultImages.length > 0) {
           completedCount++;
           completedResults.set(prodId, {
-            images: row.result.images,
-            labels: row.result.variations?.map(v => v.label) || [],
+            images: resultImages,
+            labels: row.result?.variations?.map(v => v.label) || [],
           });
         } else if (row.status === 'failed' || row.status === 'cancelled') {
           failedCount++;
