@@ -4799,6 +4799,7 @@ export default function Generate() {
             </CardContent></Card>
 
             {/* Contextual feedback card — right after images */}
+            {!isUpscale && (
             <ContextualFeedbackCard
               workflow={activeWorkflow?.slug || 'freestyle'}
               questionText={activeWorkflow?.slug
@@ -4817,6 +4818,7 @@ export default function Generate() {
               imageUrl={generatedImages[0]}
               triggerType="result_ready"
             />
+            )}
 
             {/* Combined crafted + saved + CTA */}
             <div className="flex flex-col items-center gap-2 pt-2">
