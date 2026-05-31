@@ -4536,7 +4536,7 @@ export default function Generate() {
             )}
 
             {/* Multi-product progress banner */}
-            {(isMultiProductMode || hasMultipleJobs) && !isFinalizingResults && !isUpscale && (
+            {(isMultiProductMode || hasMultipleJobs) && !isFinalizingResults && (
               <MultiProductProgressBanner
                 productQueue={productQueue}
                 multiProductResults={multiProductResults}
@@ -4546,8 +4546,8 @@ export default function Generate() {
                 onCancel={cancelQueue}
                 totalExpectedImages={multiProductJobIds.size > 0 ? multiProductJobIds.size : undefined}
                 totalJobs={multiProductJobIds.size}
-                workflowName={activeWorkflow?.name}
-                isProModel={generationMode === 'virtual-try-on' || quality === 'high'}
+                workflowName={isUpscale ? 'Image Upscaling' : activeWorkflow?.name}
+                isProModel={!isUpscale && (generationMode === 'virtual-try-on' || quality === 'high')}
               />
             )}
 
