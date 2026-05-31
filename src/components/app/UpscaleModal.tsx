@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Zap, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/contexts/CreditContext';
-import { useUpscaleImages, type UpscaleResolution, type UpscaleItem } from '@/hooks/useUpscaleImages';
+import { useUpscaleImages, type UpscaleItem } from '@/hooks/useUpscaleImages';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { cn } from '@/lib/utils';
 
@@ -13,24 +13,18 @@ interface UpscaleModalProps {
   onComplete?: (jobIds: string[]) => void;
 }
 
-const TIERS: { id: UpscaleResolution; label: string; desc: string; cost: number }[] = [
-  { id: '2k', label: '2K', desc: '2048px — Sharp & detailed', cost: 10 },
-  { id: '4k', label: '4K', desc: '4096px — Maximum resolution', cost: 15 },
-];
-
 export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalProps) {
-  const [resolution, setResolution] = useState<UpscaleResolution>('2k');
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
   const { balance } = useCredits();
   const { upscaleImages, isUpscaling, getCreditCost } = useUpscaleImages();
 
   if (!open || items.length === 0) return null;
 
-  const totalCost = getCreditCost(items.length, resolution);
+  const totalCost = getCreditCost(items.length, '4k');
   const hasEnough = balance >= totalCost;
 
   const handleUpscale = async () => {
-    const jobIds = await upscaleImages(items, resolution);
+    const jobIds = await upscaleImages(items, '4k');
     if (jobIds.length > 0) {
       onComplete?.(jobIds);
       onClose();
@@ -54,7 +48,7 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
               <Sparkles className="w-4.5 h-4.5 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Upscale Images</h3>
+              <h3 className="text-lg font-semibold text-foreground">Enhance to 4K</h3>
               <p className="text-xs text-muted-foreground">
                 {items.length} image{items.length > 1 ? 's' : ''} selected
               </p>
@@ -65,43 +59,23 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
           </button>
         </div>
 
-        {/* Resolution picker */}
-        <div className="px-6 py-4 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/70">
-            Resolution
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {TIERS.map((tier) => (
-              <button
-                key={tier.id}
-                onClick={() => setResolution(tier.id)}
-                className={cn(
-                  'flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 transition-all',
-                  resolution === tier.id
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border/40 bg-muted/20 hover:border-border/70'
-                )}
-              >
-                <span className={cn(
-                  'text-xl font-bold',
-                  resolution === tier.id ? 'text-primary' : 'text-foreground'
-                )}>
-                  {tier.label}
-                </span>
-                <span className="text-[11px] text-muted-foreground text-center">{tier.desc}</span>
-                <span className={cn(
-                  'text-xs font-semibold mt-1',
-                  resolution === tier.id ? 'text-primary' : 'text-muted-foreground'
-                )}>
-                  {tier.cost} credits/image
-                </span>
-              </button>
-            ))}
+        {/* 4K summary */}
+        <div className="px-6 pt-4 pb-2">
+          <div className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-4 flex items-center gap-4">
+            <div className="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-primary text-primary-foreground">
+              <span className="text-base font-bold leading-none">4K</span>
+              <span className="text-[9px] font-medium opacity-80 mt-0.5">4096px</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Maximum resolution</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Print-ready, sharper textures, richer detail</p>
+              <p className="text-xs font-semibold text-primary mt-1.5">15 credits / image</p>
+            </div>
           </div>
         </div>
 
         {/* Cost summary */}
-        <div className="mx-6 px-4 py-3 rounded-xl bg-muted/30 border border-border/30 space-y-1">
+        <div className="mx-6 mt-3 px-4 py-3 rounded-xl bg-muted/30 border border-border/30 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Total cost</span>
             <span className="text-sm font-semibold text-foreground flex items-center gap-1">
@@ -129,17 +103,17 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
             {isUpscaling ? (
               <>
                 <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                Upscaling…
+                Enhancing…
               </>
             ) : !hasEnough ? (
               <>
                 <Zap className="w-4 h-4 mr-2" />
-                Get Credits to Upscale
+                Get Credits to Enhance
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4 mr-2" />
-                Upscale {items.length > 1 ? `${items.length} Images` : 'Image'} to {resolution.toUpperCase()}
+                Enhance {items.length > 1 ? `${items.length} Images` : 'Image'} to 4K
               </>
             )}
           </Button>

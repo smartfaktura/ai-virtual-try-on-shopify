@@ -704,7 +704,7 @@ export default function Generate() {
   const isUpscale = activeWorkflow?.slug === 'image-upscaling';
   const isAngleWorkflow = false; // Angle workflows redirect to /app/perspectives
   const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
-  const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('2k');
+  const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('4k');
   const [stylingNotes, setStylingNotes] = useState('');
   const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
   const [selectedFlatLayProductIds, setSelectedFlatLayProductIds] = useState<Set<string>>(new Set());
@@ -4317,8 +4317,6 @@ export default function Generate() {
             sourceType={sourceType}
             isMultiProductMode={isMultiProductMode}
             productQueue={productQueue}
-            upscaleResolution={upscaleResolution}
-            setUpscaleResolution={setUpscaleResolution}
             creditCost={creditCost}
             upscaleImageCount={upscaleImageCount}
             balance={balance}
