@@ -4781,7 +4781,7 @@ export default function Generate() {
                 </div>
               </div>
 
-              <div className={isUpscale ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3"}>
+              <div className={isUpscale ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start" : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3"}>
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
                     <ShimmerImage src={url} alt={isUpscale ? `Upscaled ${index + 1}` : `Generated ${index + 1}`} className="w-full object-cover aspect-auto rounded" wrapperClassName="bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
@@ -4821,6 +4821,7 @@ export default function Generate() {
             )}
 
             {/* Combined crafted + saved + CTA */}
+            {!isUpscale && (
             <div className="flex flex-col items-center gap-2 pt-2">
               <div className="flex items-center gap-3">
                 <div className="flex items-center">
@@ -4845,6 +4846,8 @@ export default function Generate() {
                 View in Library
               </Button>
             </div>
+            )}
+
 
             {/* Floating selection bar */}
             {selectedForPublish.size > 0 && (
