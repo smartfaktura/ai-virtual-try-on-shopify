@@ -2420,7 +2420,7 @@ export default function Generate() {
         
 
         {/* Workflow Info Banner */}
-        {activeWorkflow && (
+        {activeWorkflow && !isUpscale && (
           <Alert className="hidden sm:block">
             <AlertDescription>
               <div className="flex items-center justify-between">
