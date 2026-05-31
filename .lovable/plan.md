@@ -1,41 +1,29 @@
-# Restore upscale progress banner & shorten subtitle
+# Fix broken upscale thumbnails (lazy preview, full-size on click/download)
 
-## What's wrong
+## What's broken
 
-In `src/pages/Generate.tsx`:
+Screenshot shows two upscale tiles rendering with only the alt text "Upscaled 1" / "Upscaled 2"; only one image actually loaded. Root cause: the upscale-worker writes Topaz output to `freestyle-images/upscaled/...` as a 4K PNG. These files can easily exceed Supabase's `/render/image/` input size limit (~25 MB), so the optimized URL returns an error and the `<img>` fails. Tiles also have no lazy loading, so the browser tries to fetch all of them at once.
 
-- **Line 4539** — `MultiProductProgressBanner` is rendered for batch generations but explicitly excluded for upscale (`&& !isUpscale`). When bulk-upscaling 3 images, all 3 jobs are queued and tracked via `multiProductJobIds`, but the user sees only the static "Enhancing to 4K..." card with no per-image progress, no completed count, no ETA.
-- **Line 4517** — Upscale subtitle is verbose: `Upscaling 3 images — sharpening details & recovering textures`. User wants just `Upscaling 3 images`.
+## Fix (all in `src/pages/Generate.tsx`, upscale grid around line 4784–4796)
 
-## Fix
+### 1. Constrain tile size + lazy-load
 
-### 1. Show progress banner during upscale (line 4539)
+Wrap the upscale `ShimmerImage` in a fixed-ratio container (`aspect-[4/5]`) with `object-cover` so each tile renders a small consistent preview window rather than streaming the full image. Pass `loading="lazy"` so off-screen tiles defer their fetch. Keep `items-start` on the grid for non-upscale parity.
 
-Remove the `!isUpscale` guard so the `MultiProductProgressBanner` renders for upscale runs the same way it does for normal multi-product jobs. It already reads from `multiProductJobIds`, `multiProductResults`, and `generatingProgress`, all of which the upscale flow populates (see lines 1290–1370). The banner will show:
+### 2. Try optimized URL first, fall back to original on error
 
-- N of M images completed
-- Per-job status
-- Cancel control
-- Implicit ETA via the progress bar
+`getOptimizedUrl(url, { quality: 70 })` is the preferred path (small JPEG re-encode). When the render endpoint chokes on a large PNG, `ShimmerImage`'s `onError` fires — swap the `src` to the raw `url` so the tile still paints. Implement with a small local `<UpscaleTile>` component that holds `useState(optimizedUrl)` and on error sets it to the original.
 
-Pass `workflowName="Image Upscaling"` when `isUpscale` so the banner header reads correctly, and keep `isProModel={false}` for upscale.
+### 3. Keep full-size for lightbox & download
 
-### 2. Shorten subtitle (line 4517)
+The lightbox open (`handleImageClick`) and per-image / "Download All" actions already use the original `url` array — no change. Users always get the full 4K asset when they click.
 
-Change:
-```
-Upscaling ${count} image${s} — sharpening details & recovering textures
-```
-to:
-```
-Upscaling ${count} image${s}
-```
+## Why not server-side resize
 
-No terminal period (matches Core memory rule).
+Generating a real smaller preview at upscale-worker time would require an extra render+upload per job and a new column to store the preview URL. Out of scope for a UI fix; the lazy + fallback pattern matches what the rest of the app does and removes the bandwidth + reliability problem.
 
 ## Out of scope
 
-- No backend / worker changes
-- No change to the "Enhancing to 4K..." title
-- No change to results page layout (already cleaned up in earlier turns)
-- No change to non-upscale flows
+- No worker changes, no schema changes
+- Non-upscale results grid untouched
+- Lightbox, download, ZIP behaviour untouched
