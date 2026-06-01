@@ -1712,8 +1712,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroCollage: [
       { subCategory: 'Editorial', imageId: '1780309205809-7skt5e', alt: 'AI wedding dress cliffside goddess gown editorial.' },
       { subCategory: 'Video',     imageId: '1780308026963-vb0k3u', alt: 'AI wedding dress garden dip kiss motion clip.', videoSrc: weddingDressesMotion3 },
-      { subCategory: 'Atelier',   imageId: '1778332154533-vr8cht', alt: 'AI wedding dress atelier mirror studio.' },
-      { subCategory: 'Garden',    imageId: '1780307463188-xreub7', alt: 'AI wedding dress tuscan villa garden walk.' },
+      { subCategory: 'Studio',    imageId: '1780316713430-ogxh2r', alt: 'AI wedding dress studio portrait.' },
+      { subCategory: 'Garden',    imageId: '1780309211434-wj44g2', alt: 'AI wedding dress garden editorial.' },
     ],
   },
 ];
