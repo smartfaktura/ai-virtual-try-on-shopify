@@ -114,7 +114,7 @@ TERMINOLOGY (use exactly these names):
 PLATFORM KNOWLEDGE — VOVV.AI:
 
 VISUAL STUDIO (/app/workflows) — guided creation across these Visual Types:
-- **Product Visuals** — flagship and recommended; 1000+ studio and editorial scenes for any product. Includes on-model shots, lifestyle, studio backgrounds, and more. Start here for best results.
+- **Product Visuals** — flagship and recommended; 1600+ studio and editorial scenes for any product. Includes on-model shots, lifestyle, studio backgrounds, and more. Start here for best results.
 - **Selfie / UGC Visuals** — authentic creator-style content
 - **Flatlay Visuals** — overhead styled arrangements
 - **Mirror Selfie Visuals** — fit-check / room mirror shots
