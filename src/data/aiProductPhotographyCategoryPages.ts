@@ -901,7 +901,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create desk setup scenes for tech products?',   a: 'Yes — desk lifestyle scenes are a primary output for this category.' },
       { q: 'Can I create ecommerce images for phone cases, headphones, and devices?', a: 'Yes — all common tech accessories are supported.' },
     ],
-    relatedCategories: ['home-furniture', 'bags-accessories', 'food-beverage'],
+    relatedCategories: ['phone-cases', 'home-furniture', 'bags-accessories'],
     heroImageId: '1776250225810-gdcnka',
     heroAlt: 'AI electronics product photography example showing an editorial tech studio hero shot.',
     heroNoun: 'device',
