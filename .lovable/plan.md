@@ -1,24 +1,18 @@
-# Fix: StudioChat hook-order crash on /app/generate/product-images
+# Fix Brand Models upload copy in Studio chat
 
-## Cause
-My last edit added a new `useEffect` (toast surface for credit / rate-limit errors) **below** the early `return null` guards in `src/components/app/StudioChat.tsx` (lines 62–77, including `/app/generate/product-images`). On that route the component returns before reaching the new hook, so React sees fewer hooks than the previous render and throws:
+## Problem
+When users click "Brand Models" in Studio chat, the AI replies with "Upload 15–25 high-quality photos of your chosen person." That's wrong — VOVV.AI Brand Models only require **1 reference photo** (confirmed in `src/pages/BrandModels.tsx`: single-image upload flow, "Upload a reference" UI). The 15–25 number is a model hallucination from generic LoRA-training knowledge.
 
-> Rendered fewer hooks than expected. This may be caused by an accidental early return statement.
+## Change (1 file, copy-only)
+Edit `supabase/functions/studio-chat/index.ts` — Brand Models section (line ~136) to add a hard, explicit fact the model must use verbatim:
 
-The ErrorBoundary then replaces the whole page with "Something went wrong".
+- Replace the current Brand Models paragraph with a version that states:
+  - Creating a Brand Model needs **only 1 high-quality reference photo** of the person (front-facing, well-lit, clean background recommended).
+  - Never say "15–25 photos", "dataset", "training set" or anything implying multi-image LoRA training.
+- Add a matching line to the FACTS block (~line 187) so the rule is enforced from two places: `Brand Model creation: **1 reference photo** is enough — never quote 15–25 or any multi-image number.`
 
-## Fix (one file, one change)
-
-`src/components/app/StudioChat.tsx`
-
-- Move the new `useEffect` that watches `messages` for credit / rate-limit toasts to sit **alongside the other `useEffect` hooks at the top of the component** (next to the scroll, focus, and `hiddenByPage` effects, before any `return null`).
-- Leave everything else untouched: early-return guards, Stop button, quick-starter chips, `cancelStream`, prompt, backend — all unchanged.
-
-## Why it's safe
-- No behavior change — same effect, just moved up so it runs on every render (which is exactly what React's rules of hooks require).
-- No backend, route, prompt, or DB change.
-- Doesn't touch any other component or file.
-
-## Verify
-- `/app/generate/product-images` loads the Product Visuals flow normally (no error boundary)
-- Chat on `/app` still shows the 3 quick-starter chips, Stop button works mid-stream, and out-of-credit / rate-limit replies still surface as a toast with a "See Plans" action
+## Scope guardrails
+- Only `supabase/functions/studio-chat/index.ts` is touched.
+- No UI, no backend logic, no schema, no credit/plan changes.
+- All other Brand Models facts (Growth+ requirement, 20 credits per generation, public models free) stay unchanged.
+- Memory note will be added afterward so future prompt edits stay in sync.
