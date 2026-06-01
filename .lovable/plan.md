@@ -1,18 +1,18 @@
-## Phone Cases — expand scene examples to 16 + swap Travel tile
+## Add "Whole feed" section to /ai-product-photography/phone-cases
 
-Edit only `src/data/aiProductPhotographyCategoryPages.ts` (phone-cases entry, `sceneExamples`).
+Mirror the existing CategoryFeedShowcase pattern used by wedding-dresses, swimwear, eyewear, etc.
 
-### Replace "Travel & Resort"
-Drop `Jet Set Case` (Travel & Resort) and replace it with:
-- `Studio Case Pose` — `1779952806230-ieqbpt` · **Studio Shots**
+### Steps
 
-### Add 4 new tiles (all real scenes from the DB)
-1. `Sporty Case Break` — `1779952799672-sh4oyk` · Lifestyle Shots
-2. `Seashell Sand Glow` — `1779952787283-lfo8u8` · Editorial Shots
-3. `Resort Case Toast` — `1779952783861-lm6tmf` · Lifestyle Shots
-4. `Sunny Shadows` — `1779954084793-2r9mfk` · Creative Shots
+1. **Upload feed image** — push `user-uploads://phonecasesfeed-1.jpg` to Lovable Assets as `src/assets/seo/phone-cases-feed.jpg.asset.json` (CDN pointer; no binary in repo).
 
-### Final order (16 tiles, grids cleanly at 2/3/4 cols)
-Coastal Call · Saltwater Case Glow · Glossy Case Selfie · Shoulder Case Closeup · Pilates Case Selfie · Sporty Case Break · Sun Kissed Case · Seaside Case Sip · Stucco Case Pose · Seashell Sand Glow · Beach Club Call · Resort Case Toast · Studio Case Pose · Dynamic Bloom Studio · Earthy Minimal Shadow · Sunny Shadows
+2. **Register slug in `src/components/seo/photography/category/CategoryFeedShowcase.tsx`**:
+   - Import `phoneCasesFeed from '@/assets/seo/phone-cases-feed.jpg'`
+   - Extend `FeedSlug` union with `'phone-cases'`
+   - Add `FEED_BY_SLUG['phone-cases']` entry:
+     - eyebrow: `One case · Whole feed`
+     - heading: `Your entire phone case feed from a single upload`
+     - subline: warm, sun-drenched lifestyle copy matching the page tone
+     - alt: descriptive alt for the curated IG feed
 
-No component, route, asset, or DB changes — pure data update.
+3. **No changes** to `aiProductPhotographyCategoryPages.ts` or routing — the showcase is rendered automatically for any slug present in `FEED_BY_SLUG` (same as wedding-dresses).

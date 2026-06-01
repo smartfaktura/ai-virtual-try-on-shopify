@@ -9,8 +9,10 @@ import activewearFeed from '@/assets/seo/activewear-feed.jpg';
 import eyewearFeed from '@/assets/seo/eyewear-feed.jpg';
 import hoodiesFeed from '@/assets/seo/hoodies-feed.jpg';
 import weddingDressesFeed from '@/assets/seo/wedding-dresses-feed.jpg';
+import phoneCasesFeed from '@/assets/seo/phone-cases-feed.jpg';
 
-type FeedSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses';
+type FeedSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses' | 'phone-cases';
+
 
 
 const FEED_BY_SLUG: Record<FeedSlug, {
@@ -62,7 +64,15 @@ const FEED_BY_SLUG: Record<FeedSlug, {
     sub: 'One gown photo in — a season of editorials, reels and atelier stories out, on brand and on rhythm',
     alt: 'Curated Instagram-style feed of wedding dress editorials, vintage car bridal moments, garden walks and atelier portraits — all generated from a single gown upload',
   },
+  'phone-cases': {
+    image: phoneCasesFeed,
+    eyebrow: 'One case · Whole feed',
+    heading: 'Your entire phone case feed from a single upload',
+    sub: 'One case photo in — a season of sun-drenched editorials, reels and PDP details out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of phone case editorials, coastal lifestyle moments, pilates studios and golden-hour portraits — all generated from a single product upload',
+  },
 };
+
 
 
 /**
