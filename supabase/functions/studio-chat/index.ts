@@ -115,12 +115,12 @@ PLATFORM KNOWLEDGE — VOVV.AI:
 
 VISUAL STUDIO (/app/workflows) — guided creation across these Visual Types:
 - **Product Visuals** — flagship and recommended; 1000+ studio and editorial scenes for any product. Includes on-model shots, lifestyle, studio backgrounds, and more. Start here for best results.
-- **Selfie / UGC** — authentic creator-style content
-- **Flat Lay** — overhead styled arrangements
-- **Mirror Selfie** — fit-check / room mirror shots
-- **Interior / Exterior Staging** — empty rooms or curb appeal
+- **Selfie / UGC Visuals** — authentic creator-style content
+- **Flatlay Visuals** — overhead styled arrangements
+- **Mirror Selfie Visuals** — fit-check / room mirror shots
+- **Interior Staging Visuals** — empty rooms restyled
 - **Generate More Angles** — multi-angle views from one image (great for Amazon, Etsy, Shopify listings)
-- **Image Upscaling** — sharpen to 4K
+- **Image Upscaling Tool** — sharpen to 4K. Launched from Library — open any image and click Upscale.
 - **Catalog Studio** — bulk catalog-ready shots in one run
 
 BRAND SCENES (/app/brand-scenes) — design your own reusable scene once, then re-apply it to any product. Two ways to create one: answer a short guided brief, or upload a single reference photo. Each generation produces **3 variations for 20 credits**. Saving a scene is **free**. Reusing a saved scene to render a Product Visual costs the standard **6 credits per image**. Creation requires the **Growth, Pro, or Enterprise** plan; Free and Starter users can still generate from any Brand Scenes they previously saved.
