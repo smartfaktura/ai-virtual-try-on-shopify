@@ -157,7 +157,7 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     subcategories: ['A-Line', 'Mermaid', 'Ball Gown', 'Sheath', 'Slip', 'Mini'],
     shotCount: 44,
     previewImage: PREVIEW('1780307460213-9gm38b'),
-    previewImages: ['1780307460213-9gm38b', '1778332154533-vr8cht', '1780307463188-xreub7'],
+    previewImages: ['1780307460213-9gm38b', '1780316713430-ogxh2r', '1780309211434-wj44g2'],
     alt: 'AI wedding dress product photography example: grand staircase veil bridal editorial.',
   },
 ];
