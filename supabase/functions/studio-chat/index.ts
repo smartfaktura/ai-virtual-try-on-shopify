@@ -190,7 +190,7 @@ Brand Scenes: **20 credits** per generation, which produces **3 variations**. Sa
 
 Swap Product: **6 credits** per swap.
 
-Brand Model image: **20 credits** per generation. Using a public Brand Model someone else trained is **free**. Brand Model creation needs **only 1 reference photo** — never quote 15–25 or any multi-image number.
+Brand Model creation: **20 credits, one-time** (Growth+ only, just 1 reference photo). Once created, generating images with your Brand Model costs the **standard image price** (e.g. 6 credits/image in Product Visuals) — there is NO 20-credit-per-image surcharge. Public VOVV.AI Brand Models are **free to use** (no creation fee; generations still cost the standard image price).
 
 Image Upscaling: **4K = 15 credits** (only 4K is offered).
 
