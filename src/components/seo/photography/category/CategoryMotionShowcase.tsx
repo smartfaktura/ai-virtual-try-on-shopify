@@ -140,6 +140,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: wv5.url, poster: wp5.url },
     { video: wv6.url, poster: wp6.url },
   ],
+  'phone-cases': [
+    { video: pcv1.url, poster: pcp1.url },
+    { video: pcv2.url, poster: pcp2.url },
+    { video: pcv3.url, poster: pcp3.url },
+    { video: pcv4.url, poster: pcp4.url },
+    { video: pcv5.url, poster: pcp5.url },
+    { video: pcv6.url, poster: pcp6.url },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
