@@ -1710,10 +1710,10 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroAlt: 'AI wedding dress product photography example showing a grand staircase veil bridal editorial.',
     heroNoun: 'gown',
     heroCollage: [
-      { subCategory: 'Editorial', imageId: '1780307460213-9gm38b', alt: 'AI wedding dress grand staircase veil editorial.' },
+      { subCategory: 'Editorial', imageId: '1780309205809-7skt5e', alt: 'AI wedding dress cliffside goddess gown editorial.' },
       { subCategory: 'Video',     imageId: '1780308026963-vb0k3u', alt: 'AI wedding dress garden dip kiss motion clip.', videoSrc: weddingDressesMotion3 },
-      { subCategory: 'Atelier',   imageId: '1778332154533-vr8cht', alt: 'AI wedding dress atelier mirror studio.' },
-      { subCategory: 'Garden',    imageId: '1780307463188-xreub7', alt: 'AI wedding dress tuscan bridal gown garden walk.' },
+      { subCategory: 'Atelier',   imageId: '1780309226612-pdloqt', alt: 'AI wedding dress veil and bouquet atelier pause.' },
+      { subCategory: 'Garden',    imageId: '1780308026963-vb0k3u', alt: 'AI wedding dress garden dip kiss editorial.' },
     ],
   },
 ];
