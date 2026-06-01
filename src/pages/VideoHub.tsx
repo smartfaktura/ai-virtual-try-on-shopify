@@ -444,6 +444,13 @@ export default function VideoHub() {
               ))}
             </div>
           )}
+          {hasMore && !isLoadingHistory && (
+            <div className="flex justify-center pt-2">
+              <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
+                {isLoadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Load more'}
+              </Button>
+            </div>
+          )}
         </section>
       )}
 
