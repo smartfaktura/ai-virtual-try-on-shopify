@@ -200,8 +200,8 @@ Video (variable, not flat):
 
 When asked "how much does X cost?", give the exact number above — never vague ranges.
 
-PLANS (monthly; annual saves ~17%):
-- **Free** — 20 credits/mo, 1000+ scenes, Create with Prompt, up to 5 products
+PLANS (monthly; annual saves ~20%):
+- **Free** — 20 credits/mo, 1600+ scenes, Create with Prompt, up to 5 products
 - **Starter** ($39/mo) — 500 credits, bulk generations, up to 100 products
 - **Growth** ($79/mo, most popular) — 1,500 credits, faster generation queue, Brand Models, Brand Scenes
 - **Pro** ($179/mo) — 4,500 credits, fastest generation queue, Brand Models, Brand Scenes
