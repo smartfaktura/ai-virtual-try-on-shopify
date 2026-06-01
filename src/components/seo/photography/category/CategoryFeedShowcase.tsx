@@ -9,7 +9,7 @@ import activewearFeed from '@/assets/seo/activewear-feed.jpg';
 import eyewearFeed from '@/assets/seo/eyewear-feed.jpg';
 import hoodiesFeed from '@/assets/seo/hoodies-feed.jpg';
 import weddingDressesFeed from '@/assets/seo/wedding-dresses-feed.jpg';
-import phoneCasesFeed from '@/assets/seo/phone-cases-feed.jpg';
+import phoneCasesFeed from '@/assets/seo/phone-cases-feed.jpg.asset.json';
 
 type FeedSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses' | 'phone-cases';
 
