@@ -238,26 +238,29 @@ function buildSystemPrompt(pageUrl?: string): string {
   if (!pageUrl) return SYSTEM_PROMPT;
 
   const pageContextMap: Record<string, string> = {
-    '/app/': 'Dashboard — they see their overview, recent creations, and quick actions.',
+    '/app/': 'Dashboard — they see their overview, recent creations, and quick actions. Natural opener: "Want to start a new product visual?"',
     '/app/generate/product-images': 'Product Visuals — they are actively creating product images. They have access to the Additional Note field and Outfit picker in the Setup step. Offer tips relevant to scene selection, styling, and the Additional Note field for specific instructions.',
-    '/app/workflows': 'Visual Studio — they are browsing Visual Types.',
+    '/app/workflows': 'Visual Studio — they are browsing what to create. Natural opener: "Want to create a new product visual in Visual Studio?"',
     '/app/freestyle': 'Create with Prompt — they are generating from a text prompt.',
     '/app/perspectives': 'Generate More Angles — they are generating multi-angle product views.',
     '/app/catalog/new': 'Catalog Studio (new run) — they are setting up a bulk catalog generation.',
     '/app/catalog': 'Catalog Studio — they are viewing or starting bulk catalog runs.',
-    '/app/models': 'Brand Models — they are creating or browsing custom AI models.',
+    '/app/models': 'Brand Models — they are creating or browsing custom AI models. Creation requires Growth+; surface [[See Plans|/app/pricing]] if asked about creating one.',
     '/app/products/new': 'Add Product — they are uploading a new product.',
     '/app/products': 'Products — they are managing their product catalog.',
-    '/app/library': 'Library — they are reviewing their generated images.',
+    '/app/library': 'Library — they are reviewing their generated images. Remind them they can Swap Product on any image for 6 credits.',
     '/app/discover': 'Explore — they are browsing community presets and inspiration.',
-    '/app/video/animate': 'Animate — they are turning an image into a 5s or 10s video.',
-    '/app/video/start-end': 'Start & End — they are creating a frame-to-frame transition video.',
+    '/app/video/animate': 'Animate — they are turning an image into a 5s or 10s video (25 / 50 credits, premium motion 2× base).',
+    '/app/video/start-end': 'Start & End — they are creating a frame-to-frame transition video (35 credits).',
     '/app/video/short-film': 'Short Film — they are building a multi-shot AI campaign film.',
-    '/app/video': 'Video Hub — they are choosing a video flow.',
+    '/app/video': 'Video Hub — they are choosing a video flow. Natural opener: "Ready to animate a still into video?"',
     '/app/brand-profiles': 'Brand Profiles — they are setting up or editing brand guidelines.',
+    '/app/brand-scenes': 'Brand Scenes — they are designing or browsing reusable signature scenes. 20 credits per generation (3 variations), saving is free, creation requires Growth+. Natural opener: "Want to design a reusable signature scene?"',
+    '/app/swap': 'Swap Product — they are replacing the product inside an existing image (6 credits per swap). Natural opener: "Need to swap a product into an existing image?"',
+    '/app/upscale': 'Image Upscaling — they are upscaling to 4K (15 credits, 4K only). Natural opener: "Want to push an image to 4K?"',
     '/app/learn': 'Learn — they are reading short guides.',
     '/app/help': 'Help & Support — they may want a real person on the team. Lean toward the human escalation CTA.',
-    '/app/pricing': 'Pricing — they are comparing plans.',
+    '/app/pricing': 'Pricing — they are comparing plans. Natural opener: "Want help picking the right plan?"',
     '/app/settings': 'Settings — they may be looking at plan, credits, or account options.',
   };
 
@@ -273,7 +276,7 @@ function buildSystemPrompt(pageUrl?: string): string {
 
   if (!context) return SYSTEM_PROMPT;
 
-  return SYSTEM_PROMPT + `\n\nCONTEXT: The user is currently on the ${context} Tailor your initial suggestions to what's relevant on this page. Don't explicitly say "I see you're on X page" — just naturally steer the conversation toward what's useful here.`;
+  return SYSTEM_PROMPT + `\n\nCONTEXT: The user is currently on the ${context} Tailor your initial suggestions and any natural opener line to what's relevant on this page. Don't explicitly say "I see you're on X page" — just steer the conversation toward what's useful here.`;
 }
 
 serve(async (req) => {
