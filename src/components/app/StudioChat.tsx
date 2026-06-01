@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { MessageCircle, X, Send, RotateCcw, Sparkles, ArrowRight } from 'lucide-react';
+import { MessageCircle, X, Send, RotateCcw, Sparkles, ArrowRight, Square } from 'lucide-react';
+import { toast } from 'sonner';
 import { useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -27,7 +28,7 @@ export function StudioChat() {
   );
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { messages, isLoading, isThrottled, sendMessage, clearChat, addSystemMessage } = useStudioChat(location.pathname);
+  const { messages, isLoading, isThrottled, sendMessage, cancelStream, clearChat, addSystemMessage } = useStudioChat(location.pathname);
   const [showContactForm, setShowContactForm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -77,11 +78,11 @@ export function StudioChat() {
   if (hiddenByPage) return null;
 
 
-  const handleSend = () => {
-    const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
-    setInput('');
-    sendMessage(trimmed);
+  const handleSend = (text?: string) => {
+    const value = (text ?? input).trim();
+    if (!value || isLoading) return;
+    if (text === undefined) setInput('');
+    sendMessage(value);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -91,6 +92,26 @@ export function StudioChat() {
     }
   };
 
+  // Surface credit / rate-limit errors as toasts
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return;
+    const lc = last.content.toLowerCase();
+    if (lc.includes('credit') && lc.includes('issue')) {
+      toast.error("Out of credits", {
+        description: "See plans or pick up a top-up pack",
+        action: { label: "See Plans", onClick: () => { window.location.href = '/app/pricing'; } },
+      });
+    } else if (lc.includes('too quickly') || lc.includes('hourly message limit')) {
+      toast.warning("Slow down a moment", { description: "Please wait before sending more messages" });
+    }
+  }, [messages]);
+
+  const quickStarters = [
+    'Design a brand scene',
+    'Make a product visual',
+    'How do credits work?',
+  ];
 
   const displayMessages = messages.length === 0
     ? [{ role: 'assistant' as const, content: WELCOME_MESSAGE }]
@@ -210,6 +231,21 @@ export function StudioChat() {
               </div>
             )}
 
+            {/* Quick-starter chips (empty state only) */}
+            {messages.length === 0 && !isLoading && (
+              <div className="flex flex-wrap gap-1.5 pl-9">
+                {quickStarters.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => handleSend(q)}
+                    className="text-[11px] px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70 text-foreground/80 border border-border transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
           </div>
         </ScrollArea>
 
@@ -227,13 +263,23 @@ export function StudioChat() {
                 className="flex-1 resize-none bg-muted rounded-xl px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring max-h-24 min-h-[40px]"
                 style={{ height: 'auto', overflow: 'auto' }}
               />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading || isThrottled}
-                className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+              {isLoading ? (
+                <button
+                  onClick={cancelStream}
+                  className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors flex-shrink-0"
+                  title="Stop generating"
+                >
+                  <Square className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isThrottled}
+                  className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
           <button
