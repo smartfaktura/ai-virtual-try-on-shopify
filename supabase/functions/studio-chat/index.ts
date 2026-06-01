@@ -107,7 +107,7 @@ TERMINOLOGY (use exactly these names):
 - **Explore** — community gallery at /app/discover.
 - **Brand Models** — custom AI models at /app/models.
 - **Catalog Studio** — bulk catalog generation at /app/catalog.
-- **Video** — video hub at /app/video with sub-flows: Animate, Start & End, Short Film.
+- **Video** — video hub at /app/video with sub-flows: Animate, Start & End.
 - **Library** — saved generations at /app/library.
 - **Learn** — in-app guides at /app/learn.
 
@@ -115,12 +115,12 @@ PLATFORM KNOWLEDGE — VOVV.AI:
 
 VISUAL STUDIO (/app/workflows) — guided creation across these Visual Types:
 - **Product Visuals** — flagship and recommended; 1000+ studio and editorial scenes for any product. Includes on-model shots, lifestyle, studio backgrounds, and more. Start here for best results.
-- **Selfie / UGC** — authentic creator-style content
-- **Flat Lay** — overhead styled arrangements
-- **Mirror Selfie** — fit-check / room mirror shots
-- **Interior / Exterior Staging** — empty rooms or curb appeal
+- **Selfie / UGC Visuals** — authentic creator-style content
+- **Flatlay Visuals** — overhead styled arrangements
+- **Mirror Selfie Visuals** — fit-check / room mirror shots
+- **Interior Staging Visuals** — empty rooms restyled
 - **Generate More Angles** — multi-angle views from one image (great for Amazon, Etsy, Shopify listings)
-- **Image Upscaling** — sharpen to 4K
+- **Image Upscaling Tool** — sharpen to 4K. Launched from Library — open any image and click Upscale.
 - **Catalog Studio** — bulk catalog-ready shots in one run
 
 BRAND SCENES (/app/brand-scenes) — design your own reusable scene once, then re-apply it to any product. Two ways to create one: answer a short guided brief, or upload a single reference photo. Each generation produces **3 variations for 20 credits**. Saving a scene is **free**. Reusing a saved scene to render a Product Visual costs the standard **6 credits per image**. Creation requires the **Growth, Pro, or Enterprise** plan; Free and Starter users can still generate from any Brand Scenes they previously saved.
@@ -195,7 +195,7 @@ Brand Model creation: **20 credits, one-time** (Growth+ only, just 1 reference p
 Image Upscaling: **4K = 15 credits** (only 4K is offered).
 
 Video (variable, not flat):
-- Animate: **25 credits** (5s) / **50 credits** (10s); premium motion = **2× the base**. Ambient audio is included.
+- Animate: **25 credits** (5s) / **50 credits** (10s); premium motion = **2× the base**. Ambient audio mode is free (no surcharge).
 - Start & End: **35 credits** flat.
 
 When asked "how much does X cost?", give the exact number above — never vague ranges.
@@ -258,12 +258,10 @@ function buildSystemPrompt(pageUrl?: string): string {
     '/app/discover': 'Explore — they are browsing community presets and inspiration.',
     '/app/video/animate': 'Animate — they are turning an image into a 5s or 10s video (25 / 50 credits, premium motion 2× base).',
     '/app/video/start-end': 'Start & End — they are creating a frame-to-frame transition video (35 credits).',
-    '/app/video/short-film': 'Short Film — they are building a multi-shot AI campaign film.',
     '/app/video': 'Video Hub — they are choosing a video flow. Natural opener: "Ready to animate a still into video?"',
     '/app/brand-profiles': 'Brand Profiles — they are setting up or editing brand guidelines.',
     '/app/brand-scenes': 'Brand Scenes — they are designing or browsing reusable signature scenes. 20 credits per generation (3 variations), saving is free, creation requires Growth+. Natural opener: "Want to design a reusable signature scene?"',
-    '/app/swap': 'Swap Product — they are replacing the product inside an existing image (6 credits per swap). Natural opener: "Need to swap a product into an existing image?"',
-    '/app/upscale': 'Image Upscaling — they are upscaling to 4K (15 credits, 4K only). Natural opener: "Want to push an image to 4K?"',
+    '/app/product-swap': 'Swap Product — they are replacing the product inside an existing image (6 credits per swap). Natural opener: "Need to swap a product into an existing image?"',
     '/app/learn': 'Learn — they are reading short guides.',
     '/app/help': 'Help & Support — they may want a real person on the team. Lean toward the human escalation CTA.',
     '/app/pricing': 'Pricing — they are comparing plans. Natural opener: "Want help picking the right plan?"',
