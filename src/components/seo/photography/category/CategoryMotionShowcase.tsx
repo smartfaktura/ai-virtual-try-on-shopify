@@ -63,6 +63,18 @@ import hp3 from '@/assets/seo/hoodies-motion-3.jpg';
 import hp4 from '@/assets/seo/hoodies-motion-4.jpg';
 import hp5 from '@/assets/seo/hoodies-motion-5.jpg';
 import hp6 from '@/assets/seo/hoodies-motion-6.jpg';
+import wv1 from '@/assets/seo/wedding-dresses-motion-1.mp4.asset.json';
+import wv2 from '@/assets/seo/wedding-dresses-motion-2.mp4.asset.json';
+import wv3 from '@/assets/seo/wedding-dresses-motion-3.mp4.asset.json';
+import wv4 from '@/assets/seo/wedding-dresses-motion-4.mp4.asset.json';
+import wv5 from '@/assets/seo/wedding-dresses-motion-5.mp4.asset.json';
+import wv6 from '@/assets/seo/wedding-dresses-motion-6.mp4.asset.json';
+import wp1 from '@/assets/seo/wedding-dresses-motion-1.jpg.asset.json';
+import wp2 from '@/assets/seo/wedding-dresses-motion-2.jpg.asset.json';
+import wp3 from '@/assets/seo/wedding-dresses-motion-3.jpg.asset.json';
+import wp4 from '@/assets/seo/wedding-dresses-motion-4.jpg.asset.json';
+import wp5 from '@/assets/seo/wedding-dresses-motion-5.jpg.asset.json';
+import wp6 from '@/assets/seo/wedding-dresses-motion-6.jpg.asset.json';
 
 type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies';
 type Clip = { video: string; poster: string };
