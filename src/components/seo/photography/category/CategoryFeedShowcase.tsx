@@ -55,7 +55,15 @@ const FEED_BY_SLUG: Record<FeedSlug, {
     sub: 'One hoodie photo in — a month of editorials, reels and lifestyle stories out, on brand and on rhythm',
     alt: 'Curated Instagram-style feed of hoodie editorials, cozy lifestyle moments and off-duty streetwear scenes — all generated from a single product upload',
   },
+  'wedding-dresses': {
+    image: weddingDressesFeed,
+    eyebrow: 'One gown · Whole feed',
+    heading: 'Your entire bridal feed from a single upload',
+    sub: 'One gown photo in — a season of editorials, reels and atelier stories out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of wedding dress editorials, vintage car bridal moments, garden walks and atelier portraits — all generated from a single gown upload',
+  },
 };
+
 
 /**
  * "One {noun} · Whole feed" — gated to slugs with curated feed screenshots.
