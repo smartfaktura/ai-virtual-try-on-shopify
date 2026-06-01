@@ -1,15 +1,20 @@
-## Swap Editorial / Atelier / Garden hero tiles on `/ai-product-photography/wedding-dresses`
+## Wedding dresses hero — swap video clip + fix tile labels
 
-Update the `heroCollage` array in `src/data/aiProductPhotographyCategoryPages.ts` (lines 1712–1717). The **Video** tile stays unchanged.
+### 1. Replace hero VIDEO clip
+- Delete current `src/assets/seo/wedding-dresses-motion-3.mp4.asset.json` (and its `.jpg` poster pointer)
+- Upload `/mnt/user-uploads/1-7.mp4` → new pointer at the same path
+- Regenerate poster JPG (ffmpeg frame grab) → new `.jpg.asset.json` at same path
+- No code/wiring changes — `HERO_VIDEO_MAP['wedding-dresses-motion-3']` and `weddingDressesMotion3` import resolve to the new asset automatically
 
-### Swaps
-| Tile | New image | Source |
-|------|-----------|--------|
-| Editorial | `1780309205809-7skt5e` Cliffside Goddess Gown | already in `sceneExamples` |
-| Atelier | `1780309226612-pdloqt` Veil & Bouquet Pause | already in `sceneExamples` |
-| Garden | `1780308026963-vb0k3u` Garden Dip Kiss | already in `sceneExamples` |
+### 2. Realign hero collage so labels match imagery
+Edit `heroCollage` in `src/data/aiProductPhotographyCategoryPages.ts` (lines 1715–1716):
 
-Alt text updated to match each new image. No component or asset changes.
+| Tile | New imageId | Reason |
+|------|-------------|--------|
+| ATELIER | `1778332154533-vr8cht` Atelier Mirror | true indoor atelier studio |
+| GARDEN | `1780307463188-xreub7` Tuscan Bridal Gown | solo bride walking lush tuscan villa garden |
+
+EDITORIAL (Cliffside Goddess) and VIDEO tile poster stay the same. Alt text updated to match the new images.
 
 ### QA
-Reload `/ai-product-photography/wedding-dresses` → verify the 3 swapped tiles render the new bridal imagery and the Video tile is untouched.
+Refresh `/ai-product-photography/wedding-dresses` → VIDEO tile plays the new clip; ATELIER shows the mirror studio; GARDEN shows the tuscan villa walk.
