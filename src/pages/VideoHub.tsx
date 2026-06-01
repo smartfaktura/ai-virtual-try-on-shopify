@@ -353,9 +353,7 @@ export default function VideoHub() {
     </div>
   );
 
-  const [visibleCount, setVisibleCount] = useState(8);
-  const recentVideos = completedVideos.slice(0, visibleCount);
-  const hasMore = completedVideos.length > visibleCount;
+  const recentVideos = completedVideos;
 
   return (
     <div className="space-y-12 max-w-5xl mx-auto">
