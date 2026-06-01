@@ -107,7 +107,7 @@ TERMINOLOGY (use exactly these names):
 - **Explore** — community gallery at /app/discover.
 - **Brand Models** — custom AI models at /app/models.
 - **Catalog Studio** — bulk catalog generation at /app/catalog.
-- **Video** — video hub at /app/video with sub-flows: Animate, Start & End, Short Film.
+- **Video** — video hub at /app/video with sub-flows: Animate, Start & End.
 - **Library** — saved generations at /app/library.
 - **Learn** — in-app guides at /app/learn.
 

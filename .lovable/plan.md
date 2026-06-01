@@ -1,27 +1,63 @@
-# Fix Brand Model credit copy in Studio chat
+# Studio Chat audit — findings & fixes
 
-## Reality (verified in code: `supabase/functions/generate-user-model/index.ts`)
-- **Creating a Brand Model = 20 credits, one-time.** Function deducts 20 via `deduct_credits` RPC on creation.
-- **Using a Brand Model in a generation = standard image cost** (e.g. Product Visuals 6 credits/image). No extra Brand-Model surcharge per image.
-- **Public VOVV.AI Brand Models = free to use** (no creation cost since the user didn't create them; generations still cost the standard image price).
-- **Plan gate: Growth+ required to create.** Public models usable on every plan.
+I cross-checked the SYSTEM_PROMPT in `supabase/functions/studio-chat/index.ts` against the real codebase (router, pricing data, video pricing config, workflow display names, Brand Scenes / Brand Models pages). Here's what's wrong or stale.
 
-## What the chat said (wrong)
-"Once trained, generating an image with your model costs 20 credits."
-Implies 20 credits per image. Actual: 20 credits is the **one-time creation fee**.
+## Confirmed mistakes
 
-## Change (1 file, copy-only)
-Edit `supabase/functions/studio-chat/index.ts`:
+### 1. Short Film contradicts itself
+- Line 110 (TERMINOLOGY) lists Video sub-flows as: "Animate, Start & End, **Short Film**".
+- Line 240 (NEVER) says: "Never mention Short Film".
+- Router (`src/App.tsx`) redirects `/app/video/short-film` → `/app/video`. Feature is gone.
+- pageContextMap still has a `/app/video/short-film` entry.
 
-1. Brand Models section (~line 136–140) — already updated to drop "train/trained" wording last turn. Add: creation has a **one-time 20-credit cost**; subsequent image generations using your Brand Model cost the standard per-image price.
+**Fix:** drop "Short Film" from line 110, delete the `/app/video/short-film` pageContextMap entry.
 
-2. Replace current line 187 fact:
-   - Old: `Brand Model image: **20 credits** per generation. Using a public Brand Model someone else trained is **free**. Brand Model creation needs **only 1 reference photo** — never quote 15–25 or any multi-image number.`
-   - New: `Brand Model creation: **20 credits, one-time** (Growth+ only, just 1 reference photo). Once created, generating images with your Brand Model costs the **standard image price** (e.g. 6 credits/image in Product Visuals) — there is NO 20-credit-per-image surcharge. Public VOVV.AI Brand Models are **free to use** (no creation fee; generations still cost the standard image price).`
+### 2. Wrong Swap Product route in pageContextMap
+- Map key: `/app/swap`. Actual route: `/app/product-swap`.
+- Harmless today (chat never CTAs `/app/swap`), but page-context never matches when the user is on the real Swap page.
 
-3. Add to DO-NOT list: never say "20 credits per image" or "20 credits per generation" for Brand Models — that number is the one-time creation cost only.
+**Fix:** change key to `/app/product-swap`.
 
-## Scope guardrails
-- Only `supabase/functions/studio-chat/index.ts`.
-- No price changes, no UI, no backend logic.
-- Memory file `mem://features/studio-chat-knowledge-source` will be updated to reflect the correct rule so future re-syncs stay accurate.
+### 3. `/app/upscale` page context maps to a non-existent route
+- No `/app/upscale` route exists. Upscaling is launched from the Library (`/app/library`) via a modal.
+
+**Fix:** drop the `/app/upscale` entry from pageContextMap, and update Image Upscaling references so the AI tells users to open it from Library.
+
+### 4. Visual Type names don't match what Visual Studio actually shows
+Per `DISPLAY_NAMES` in `src/pages/Workflows.tsx`:
+- "Flat Lay" → actual: **Flatlay Visuals**
+- "Selfie / UGC" → actual: **Selfie / UGC Visuals**
+- "Mirror Selfie" → actual: **Mirror Selfie Visuals**
+- "Interior / Exterior Staging" → actual: **Interior Staging Visuals** (no "Exterior")
+- "Image Upscaling" → actual: **Image Upscaling Tool**
+
+**Fix:** use exact card names so users see the same label in app + chat.
+
+### 5. "Ambient audio is included" is misleading
+- `src/config/videoCreditPricing.ts` sets `animate.ambient = 0`, and the toggle is no longer exposed for Animate. Start & End also = 0.
+- Phrasing "ambient audio is included" implies audio plays by default. Actual: there's an audio mode selector (silent / ambient / voice) and ambient is just free of surcharge.
+
+**Fix:** rephrase to "no audio surcharge — ambient mode is free." Don't promise audio is on by default.
+
+## Cosmetic / consistency issues
+
+### 6. Pricing FAQ data (`src/components/landing/LandingPricing.tsx` line 120) still says
+> "Brand Model images are 20 credits each (public Brand Models are free to use)"
+
+Same outdated "20 credits per image" wording we just fixed in chat. Not part of chat, but inconsistent. Flag only — fix only if you want.
+
+### 7. Plan feature line conflates Brand Models & Brand Scenes
+Lines 206–207 say: "Growth — Brand Models, Brand Scenes" / "Pro — Brand Models, Brand Scenes". True per code (both gated to Growth+), but worth verifying these are the only gated features (no mention of Content Calendar which the FAQ mentions as Growth+).
+
+**Fix:** add Content Calendar to Growth/Pro features line if it's an active feature.
+
+## Plan of attack (edit `supabase/functions/studio-chat/index.ts` only)
+1. Line 110: remove "Short Film" from Video sub-flows.
+2. pageContextMap: delete `/app/video/short-film`, delete `/app/upscale`, rename `/app/swap` → `/app/product-swap`.
+3. Visual Types list (lines 117–124): use exact Visual Studio card names ("Selfie / UGC Visuals", "Flatlay Visuals", "Mirror Selfie Visuals", "Interior Staging Visuals", "Image Upscaling Tool").
+4. Animate credit line (198): change "Ambient audio is included" → "Ambient audio mode is free (no surcharge)."
+5. Add a sentence under Image Upscaling: "Launched from Library — open any image and click Upscale."
+6. (Optional) Add "Content Calendar (Growth+)" to plan features if confirmed live.
+7. Update `mem://features/studio-chat-knowledge-source` to reflect renamed Visual Types and removed Short Film.
+
+No backend/UI/route changes. Pure prompt + memory sync.
