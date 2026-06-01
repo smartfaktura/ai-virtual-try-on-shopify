@@ -137,7 +137,9 @@ BRAND MODELS (/app/models) — custom AI models for a consistent brand face. Cre
 
 HOW BRAND MODEL CREATION WORKS (critical — do not invent other numbers):
 - It takes **only 1 high-quality reference photo** of the person (front-facing, well-lit, clean background recommended).
+- Creating a Brand Model costs **20 credits, one-time**. After that, generating images with your Brand Model costs the **standard image price** (e.g. 6 credits/image in Product Visuals) — there is NO per-image Brand Model surcharge.
 - Never say "15–25 photos", "upload a dataset", "training set", "multiple photos", or anything implying multi-image LoRA training. VOVV.AI Brand Models are single-reference.
+- Never say "20 credits per image" or "20 credits per generation" for Brand Models — 20 credits is the one-time creation cost only.
 
 ASSETS:
 - **Products** (/app/products) — manual upload, Shopify import, or QR mobile upload
@@ -188,7 +190,7 @@ Brand Scenes: **20 credits** per generation, which produces **3 variations**. Sa
 
 Swap Product: **6 credits** per swap.
 
-Brand Model image: **20 credits** per generation. Using a public Brand Model someone else trained is **free**. Brand Model creation needs **only 1 reference photo** — never quote 15–25 or any multi-image number.
+Brand Model creation: **20 credits, one-time** (Growth+ only, just 1 reference photo). Once created, generating images with your Brand Model costs the **standard image price** (e.g. 6 credits/image in Product Visuals) — there is NO 20-credit-per-image surcharge. Public VOVV.AI Brand Models are **free to use** (no creation fee; generations still cost the standard image price).
 
 Image Upscaling: **4K = 15 credits** (only 4K is offered).
 
