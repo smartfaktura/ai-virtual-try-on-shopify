@@ -75,8 +75,20 @@ import wp3 from '@/assets/seo/wedding-dresses-motion-3.jpg.asset.json';
 import wp4 from '@/assets/seo/wedding-dresses-motion-4.jpg.asset.json';
 import wp5 from '@/assets/seo/wedding-dresses-motion-5.jpg.asset.json';
 import wp6 from '@/assets/seo/wedding-dresses-motion-6.jpg.asset.json';
+import pcv1 from '@/assets/seo/phone-cases-motion-1.mp4.asset.json';
+import pcv2 from '@/assets/seo/phone-cases-motion-2.mp4.asset.json';
+import pcv3 from '@/assets/seo/phone-cases-motion-3.mp4.asset.json';
+import pcv4 from '@/assets/seo/phone-cases-motion-4.mp4.asset.json';
+import pcv5 from '@/assets/seo/phone-cases-motion-5.mp4.asset.json';
+import pcv6 from '@/assets/seo/phone-cases-motion-6.mp4.asset.json';
+import pcp1 from '@/assets/seo/phone-cases-motion-1.jpg.asset.json';
+import pcp2 from '@/assets/seo/phone-cases-motion-2.jpg.asset.json';
+import pcp3 from '@/assets/seo/phone-cases-motion-3.jpg.asset.json';
+import pcp4 from '@/assets/seo/phone-cases-motion-4.jpg.asset.json';
+import pcp5 from '@/assets/seo/phone-cases-motion-5.jpg.asset.json';
+import pcp6 from '@/assets/seo/phone-cases-motion-6.jpg.asset.json';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses' | 'phone-cases';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
@@ -128,6 +140,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: wv5.url, poster: wp5.url },
     { video: wv6.url, poster: wp6.url },
   ],
+  'phone-cases': [
+    { video: pcv1.url, poster: pcp1.url },
+    { video: pcv2.url, poster: pcp2.url },
+    { video: pcv3.url, poster: pcp3.url },
+    { video: pcv4.url, poster: pcp4.url },
+    { video: pcv5.url, poster: pcp5.url },
+    { video: pcv6.url, poster: pcp6.url },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
@@ -166,6 +186,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     heading: 'Your wedding dress, brought to life',
     sub: 'Turn one wedding dress photo into scroll-stopping motion for bridal campaigns, reels and editorial loops',
     aria: 'AI-generated wedding dress motion clip',
+  },
+  'phone-cases': {
+    eyebrow: 'Motion · Cases in movement',
+    heading: 'Your phone case, brought to life',
+    sub: 'Turn one case photo into scroll-stopping motion for ads, reels and PDP loops',
+    aria: 'AI-generated phone case motion clip',
   },
 };
 
