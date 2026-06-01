@@ -195,7 +195,7 @@ Brand Model creation: **20 credits, one-time** (Growth+ only, just 1 reference p
 Image Upscaling: **4K = 15 credits** (only 4K is offered).
 
 Video (variable, not flat):
-- Animate: **25 credits** (5s) / **50 credits** (10s); premium motion = **2× the base**. Ambient audio is included.
+- Animate: **25 credits** (5s) / **50 credits** (10s); premium motion = **2× the base**. Ambient audio mode is free (no surcharge).
 - Start & End: **35 credits** flat.
 
 When asked "how much does X cost?", give the exact number above — never vague ranges.
