@@ -1,18 +1,27 @@
-# Fix Brand Models upload copy in Studio chat
+# Fix Brand Model credit copy in Studio chat
 
-## Problem
-When users click "Brand Models" in Studio chat, the AI replies with "Upload 15–25 high-quality photos of your chosen person." That's wrong — VOVV.AI Brand Models only require **1 reference photo** (confirmed in `src/pages/BrandModels.tsx`: single-image upload flow, "Upload a reference" UI). The 15–25 number is a model hallucination from generic LoRA-training knowledge.
+## Reality (verified in code: `supabase/functions/generate-user-model/index.ts`)
+- **Creating a Brand Model = 20 credits, one-time.** Function deducts 20 via `deduct_credits` RPC on creation.
+- **Using a Brand Model in a generation = standard image cost** (e.g. Product Visuals 6 credits/image). No extra Brand-Model surcharge per image.
+- **Public VOVV.AI Brand Models = free to use** (no creation cost since the user didn't create them; generations still cost the standard image price).
+- **Plan gate: Growth+ required to create.** Public models usable on every plan.
+
+## What the chat said (wrong)
+"Once trained, generating an image with your model costs 20 credits."
+Implies 20 credits per image. Actual: 20 credits is the **one-time creation fee**.
 
 ## Change (1 file, copy-only)
-Edit `supabase/functions/studio-chat/index.ts` — Brand Models section (line ~136) to add a hard, explicit fact the model must use verbatim:
+Edit `supabase/functions/studio-chat/index.ts`:
 
-- Replace the current Brand Models paragraph with a version that states:
-  - Creating a Brand Model needs **only 1 high-quality reference photo** of the person (front-facing, well-lit, clean background recommended).
-  - Never say "15–25 photos", "dataset", "training set" or anything implying multi-image LoRA training.
-- Add a matching line to the FACTS block (~line 187) so the rule is enforced from two places: `Brand Model creation: **1 reference photo** is enough — never quote 15–25 or any multi-image number.`
+1. Brand Models section (~line 136–140) — already updated to drop "train/trained" wording last turn. Add: creation has a **one-time 20-credit cost**; subsequent image generations using your Brand Model cost the standard per-image price.
+
+2. Replace current line 187 fact:
+   - Old: `Brand Model image: **20 credits** per generation. Using a public Brand Model someone else trained is **free**. Brand Model creation needs **only 1 reference photo** — never quote 15–25 or any multi-image number.`
+   - New: `Brand Model creation: **20 credits, one-time** (Growth+ only, just 1 reference photo). Once created, generating images with your Brand Model costs the **standard image price** (e.g. 6 credits/image in Product Visuals) — there is NO 20-credit-per-image surcharge. Public VOVV.AI Brand Models are **free to use** (no creation fee; generations still cost the standard image price).`
+
+3. Add to DO-NOT list: never say "20 credits per image" or "20 credits per generation" for Brand Models — that number is the one-time creation cost only.
 
 ## Scope guardrails
-- Only `supabase/functions/studio-chat/index.ts` is touched.
-- No UI, no backend logic, no schema, no credit/plan changes.
-- All other Brand Models facts (Growth+ requirement, 20 credits per generation, public models free) stay unchanged.
-- Memory note will be added afterward so future prompt edits stay in sync.
+- Only `supabase/functions/studio-chat/index.ts`.
+- No price changes, no UI, no backend logic.
+- Memory file `mem://features/studio-chat-knowledge-source` will be updated to reflect the correct rule so future re-syncs stay accurate.
