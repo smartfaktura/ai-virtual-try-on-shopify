@@ -188,7 +188,7 @@ Brand Scenes: **20 credits** per generation, which produces **3 variations**. Sa
 
 Swap Product: **6 credits** per swap.
 
-Brand Model image: **20 credits** per generation. Using a public Brand Model someone else trained is **free**.
+Brand Model image: **20 credits** per generation. Using a public Brand Model someone else trained is **free**. Brand Model creation needs **only 1 reference photo** — never quote 15–25 or any multi-image number.
 
 Image Upscaling: **4K = 15 credits** (only 4K is offered).
 
