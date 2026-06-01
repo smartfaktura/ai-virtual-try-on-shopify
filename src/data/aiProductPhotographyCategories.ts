@@ -148,4 +148,16 @@ export const aiProductPhotographyCategories: ProductPhotoCategory[] = [
     previewImages: ['1776250227186-ipm40h', '1776250232617-zoxalv', '1776250225810-gdcnka'],
     alt: 'AI electronics product photography example: color hero tech campaign visual.',
   },
+  {
+    name: 'Wedding Dresses',
+    slug: 'wedding-dresses',
+    url: '/ai-product-photography/wedding-dresses',
+    description:
+      'Create editorial bridal portraits, atelier studio scenes, garden and villa stories, vintage car moments, and on-model PDP angles for wedding dress brands.',
+    subcategories: ['A-Line', 'Mermaid', 'Ball Gown', 'Sheath', 'Slip', 'Mini'],
+    shotCount: 44,
+    previewImage: PREVIEW('1780307460213-9gm38b'),
+    previewImages: ['1780307460213-9gm38b', '1778332154533-vr8cht', '1780307463188-xreub7'],
+    alt: 'AI wedding dress product photography example: grand staircase veil bridal editorial.',
+  },
 ];
