@@ -1797,8 +1797,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroCollage: [
       { subCategory: 'Editorial', imageId: '1779952784987-6zcgd4', alt: 'AI phone case saltwater glow editorial.' },
       { subCategory: 'Lifestyle', imageId: '1779952779562-ueyyov', alt: 'AI phone case pilates selfie lifestyle.' },
-      { subCategory: 'Flatlay',   imageId: '1779952985161-cerwur', alt: 'AI phone case citrus flatlay.' },
-      { subCategory: 'Poolside',  imageId: '1779953205374-fogmii', alt: 'AI phone case poolside kiss editorial.' },
+      { subCategory: 'Closeup',   imageId: '1779952794821-nirn7y', alt: 'AI phone case shoulder closeup editorial.' },
+      { subCategory: 'Video',     imageId: '1779952807944-dzh93u', alt: 'AI phone case motion clip — slow push-in.', videoSrc: 'phone-cases-motion-1' },
     ],
   },
 ];
