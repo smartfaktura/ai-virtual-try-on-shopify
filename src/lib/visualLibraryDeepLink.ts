@@ -23,7 +23,9 @@ export function getVisualLibraryHrefForCategory(slug?: string): string {
     'lingerie': { family: 'fashion', collection: 'lingerie' },
     'activewear': { family: 'fashion', collection: 'activewear' },
     'dresses':    { family: 'fashion', collection: 'dresses' },
+    'wedding-dresses': { family: 'fashion', collection: 'wedding-dress' },
     'caps-hats':  { family: 'hats-caps-and-beanies', collection: 'caps' },
+
   };
   const m = map[slug];
   if (!m) return '/product-visual-library';
