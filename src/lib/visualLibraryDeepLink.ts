@@ -24,6 +24,7 @@ export function getVisualLibraryHrefForCategory(slug?: string): string {
     'activewear': { family: 'fashion', collection: 'activewear' },
     'dresses':    { family: 'fashion', collection: 'dresses' },
     'wedding-dresses': { family: 'fashion', collection: 'wedding-dress' },
+    'phone-cases': { family: 'tech', collection: 'phone-cases' },
     'caps-hats':  { family: 'hats-caps-and-beanies', collection: 'caps' },
 
   };
