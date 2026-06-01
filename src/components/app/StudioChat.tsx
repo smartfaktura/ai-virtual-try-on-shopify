@@ -28,7 +28,7 @@ export function StudioChat() {
   );
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { messages, isLoading, isThrottled, sendMessage, clearChat, addSystemMessage } = useStudioChat(location.pathname);
+  const { messages, isLoading, isThrottled, sendMessage, cancelStream, clearChat, addSystemMessage } = useStudioChat(location.pathname);
   const [showContactForm, setShowContactForm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
