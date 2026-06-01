@@ -231,6 +231,21 @@ export function StudioChat() {
               </div>
             )}
 
+            {/* Quick-starter chips (empty state only) */}
+            {messages.length === 0 && !isLoading && (
+              <div className="flex flex-wrap gap-1.5 pl-9">
+                {quickStarters.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => handleSend(q)}
+                    className="text-[11px] px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70 text-foreground/80 border border-border transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
           </div>
         </ScrollArea>
 
