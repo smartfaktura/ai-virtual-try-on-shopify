@@ -8,8 +8,10 @@ import swimwearFeed from '@/assets/seo/swimwear-feed.jpg';
 import activewearFeed from '@/assets/seo/activewear-feed.jpg';
 import eyewearFeed from '@/assets/seo/eyewear-feed.jpg';
 import hoodiesFeed from '@/assets/seo/hoodies-feed.jpg';
+import weddingDressesFeed from '@/assets/seo/wedding-dresses-feed.jpg';
 
-type FeedSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies';
+type FeedSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses';
+
 
 const FEED_BY_SLUG: Record<FeedSlug, {
   image: string;
