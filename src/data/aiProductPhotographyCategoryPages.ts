@@ -17,6 +17,11 @@ const bagsMotion3 = 'bags-motion-3';
 const swimwearMotion4 = 'swimwear-motion-4';
 const activewearMotion5 = 'activewear-motion-5';
 const eyewearMotion3 = 'eyewear-motion-3';
+const weddingDressesMotion3 = 'wedding-dresses-motion-3';
+
+
+
+
 
 
 
