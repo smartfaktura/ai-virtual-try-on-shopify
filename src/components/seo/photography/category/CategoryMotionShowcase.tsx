@@ -187,6 +187,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     sub: 'Turn one wedding dress photo into scroll-stopping motion for bridal campaigns, reels and editorial loops',
     aria: 'AI-generated wedding dress motion clip',
   },
+  'phone-cases': {
+    eyebrow: 'Motion · Cases in movement',
+    heading: 'Your phone case, brought to life',
+    sub: 'Turn one case photo into scroll-stopping motion for ads, reels and PDP loops',
+    aria: 'AI-generated phone case motion clip',
+  },
 };
 
 /**
