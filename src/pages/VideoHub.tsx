@@ -353,7 +353,7 @@ export default function VideoHub() {
     </div>
   );
 
-  const recentVideos = completedVideos.slice(0, 8);
+  const recentVideos = completedVideos;
 
   return (
     <div className="space-y-12 max-w-5xl mx-auto">
@@ -409,7 +409,11 @@ export default function VideoHub() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-foreground tracking-tight">Recent Videos</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Your latest 8 generations</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {totalCount > 0
+                  ? `Showing ${recentVideos.length} of ${totalCount}`
+                  : 'Your generated videos'}
+              </p>
             </div>
             {recentVideos.length > 0 && (
               <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
@@ -438,6 +442,13 @@ export default function VideoHub() {
                   showRatioBadge
                 />
               ))}
+            </div>
+          )}
+          {hasMore && !isLoadingHistory && (
+            <div className="flex justify-center pt-2">
+              <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
+                {isLoadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Load more'}
+              </Button>
             </div>
           )}
         </section>
