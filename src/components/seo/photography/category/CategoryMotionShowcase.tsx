@@ -63,8 +63,20 @@ import hp3 from '@/assets/seo/hoodies-motion-3.jpg';
 import hp4 from '@/assets/seo/hoodies-motion-4.jpg';
 import hp5 from '@/assets/seo/hoodies-motion-5.jpg';
 import hp6 from '@/assets/seo/hoodies-motion-6.jpg';
+import wv1 from '@/assets/seo/wedding-dresses-motion-1.mp4.asset.json';
+import wv2 from '@/assets/seo/wedding-dresses-motion-2.mp4.asset.json';
+import wv3 from '@/assets/seo/wedding-dresses-motion-3.mp4.asset.json';
+import wv4 from '@/assets/seo/wedding-dresses-motion-4.mp4.asset.json';
+import wv5 from '@/assets/seo/wedding-dresses-motion-5.mp4.asset.json';
+import wv6 from '@/assets/seo/wedding-dresses-motion-6.mp4.asset.json';
+import wp1 from '@/assets/seo/wedding-dresses-motion-1.jpg.asset.json';
+import wp2 from '@/assets/seo/wedding-dresses-motion-2.jpg.asset.json';
+import wp3 from '@/assets/seo/wedding-dresses-motion-3.jpg.asset.json';
+import wp4 from '@/assets/seo/wedding-dresses-motion-4.jpg.asset.json';
+import wp5 from '@/assets/seo/wedding-dresses-motion-5.jpg.asset.json';
+import wp6 from '@/assets/seo/wedding-dresses-motion-6.jpg.asset.json';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
@@ -108,6 +120,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: hv5, poster: hp5 },
     { video: hv6, poster: hp6 },
   ],
+  'wedding-dresses': [
+    { video: wv1.url, poster: wp1.url },
+    { video: wv2.url, poster: wp2.url },
+    { video: wv3.url, poster: wp3.url },
+    { video: wv4.url, poster: wp4.url },
+    { video: wv5.url, poster: wp5.url },
+    { video: wv6.url, poster: wp6.url },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
@@ -140,6 +160,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     heading: 'Your hoodie, brought to life',
     sub: 'Turn one product photo into scroll-stopping motion for ads, reels and lifestyle loops',
     aria: 'AI-generated hoodie motion clip',
+  },
+  'wedding-dresses': {
+    eyebrow: 'Motion · Bridal in movement',
+    heading: 'Your gown, brought to life',
+    sub: 'Turn one gown photo into scroll-stopping motion for bridal campaigns, reels and editorial loops',
+    aria: 'AI-generated wedding dress motion clip',
   },
 };
 
