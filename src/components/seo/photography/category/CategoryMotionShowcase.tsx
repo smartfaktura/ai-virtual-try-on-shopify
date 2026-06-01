@@ -163,8 +163,8 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
   },
   'wedding-dresses': {
     eyebrow: 'Motion · Bridal in movement',
-    heading: 'Your gown, brought to life',
-    sub: 'Turn one gown photo into scroll-stopping motion for bridal campaigns, reels and editorial loops',
+    heading: 'Your wedding dress, brought to life',
+    sub: 'Turn one wedding dress photo into scroll-stopping motion for bridal campaigns, reels and editorial loops',
     aria: 'AI-generated wedding dress motion clip',
   },
 };
