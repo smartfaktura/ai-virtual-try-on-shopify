@@ -76,7 +76,7 @@ import wp4 from '@/assets/seo/wedding-dresses-motion-4.jpg.asset.json';
 import wp5 from '@/assets/seo/wedding-dresses-motion-5.jpg.asset.json';
 import wp6 from '@/assets/seo/wedding-dresses-motion-6.jpg.asset.json';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
@@ -119,6 +119,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: hv4, poster: hp4 },
     { video: hv5, poster: hp5 },
     { video: hv6, poster: hp6 },
+  ],
+  'wedding-dresses': [
+    { video: wv1.url, poster: wp1.url },
+    { video: wv2.url, poster: wp2.url },
+    { video: wv3.url, poster: wp3.url },
+    { video: wv4.url, poster: wp4.url },
+    { video: wv5.url, poster: wp5.url },
+    { video: wv6.url, poster: wp6.url },
   ],
 };
 
