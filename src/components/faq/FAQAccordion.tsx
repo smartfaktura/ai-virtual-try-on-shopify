@@ -40,7 +40,7 @@ export const FAQ_GROUPS: FAQGroup[] = [
     items: [
       {
         q: 'How many credits does each generation cost?',
-        a: 'A standard image is ~4–6 credits depending on complexity. Video runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model training is a one-time ~50 credits. You always see the cost before you generate.',
+        a: 'Product Visuals are 6 credits per image. Brand Scenes generate 3 variations for 20 credits. Brand Model images are 20 credits each (using a public Brand Model is free). Animate video is 25 credits (5s) or 50 credits (10s) — premium motion doubles the base. Start & End video is 35 credits. 4K upscaling is 15 credits. You always see the cost before you generate.',
       },
       {
         q: 'Do unused credits roll over?',
@@ -93,6 +93,14 @@ export const FAQ_GROUPS: FAQGroup[] = [
       {
         q: 'What are Brand Models?',
         a: 'Custom AI models trained on your brand aesthetic so the same face, styling, and mood carries across every shoot. Available on Growth and Pro plans.',
+      },
+      {
+        q: 'What are Brand Scenes?',
+        a: 'A Brand Scene is a custom, reusable scene you design once — either by answering a short brief or by uploading a single reference photo — and then re-apply to any product. Each generation produces 3 variations for 20 credits. Saving the scene is free; reusing it later costs 6 credits per Product Visual. Available on Growth, Pro, and Enterprise plans.',
+      },
+      {
+        q: 'Can I reuse a scene with a different product?',
+        a: 'Yes. Open any image from your Library or a generation result and click Swap Product. We re-render the exact scene with your new product, preserving lighting, composition, and styling. 6 credits per swap.',
       },
       {
         q: 'Can I export everything as a ZIP?',

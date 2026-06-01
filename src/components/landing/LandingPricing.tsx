@@ -109,19 +109,20 @@ const PLATFORM_FEATURES = [
 ];
 
 const CREDIT_CARDS = [
-  { icon: Image, title: 'Images', detail: '5 credits per image on average. Visual Types cost 6, Freestyle costs 4.' },
-  { icon: Video, title: 'Video & Upscale', detail: 'Short films and 4K upscaling deducted from the same credit pool.' },
+  { icon: Image, title: 'Images', detail: 'Product Visuals are 6 credits each. Brand Scenes generate 3 variations for 20 credits.' },
+  { icon: Video, title: 'Video & Upscale', detail: 'Animate from 25 credits, Start & End 35 credits, 4K upscaling 15 credits — all from the same pool.' },
   { icon: Clock, title: 'Monthly Refresh', detail: "Credits reset each billing cycle. Unused credits don't roll over. Top-ups never expire." },
 ];
 
 const FAQS = [
-  { q: 'What can I create with VOVV.AI?', a: 'Product photography, virtual try-ons, lifestyle imagery, flat lays, interior staging, videos, and more — all from a single product photo.' },
+  { q: 'What can I create with VOVV.AI?', a: 'Product photography, lifestyle imagery, flat lays, interior staging, Brand Scenes, and videos — all from a single product photo.' },
   { q: 'Do I need photography experience?', a: 'Not at all. Choose a scene, upload your product, and the AI handles lighting, composition, and styling automatically.' },
-  { q: 'How many credits does each generation cost?', a: 'A standard image is ~4–6 credits depending on complexity. Video runs 30–60 credits per clip. 4K upscaling is ~5 credits. Brand Model training is a one-time ~50 credits. You always see the cost before you generate.' },
+  { q: 'How many credits does each generation cost?', a: 'Product Visuals are 6 credits per image. Brand Scenes generate 3 variations for 20 credits. Brand Model images are 20 credits each (public Brand Models are free to use). Animate video is 25 credits (5s) or 50 credits (10s). Start & End video is 35 credits. 4K upscaling is 15 credits. You always see the cost before you generate.' },
   { q: 'Is there a free trial?', a: "Every new account gets 20 free credits — no credit card required. That's enough to try multiple Visual Types and see the quality." },
   { q: 'What image formats and sizes are supported?', a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print.' },
   { q: 'Can I cancel my subscription anytime?', a: "Absolutely. Cancel, upgrade, or downgrade at any time — no contracts or fees. Unused monthly credits don't roll over, but top-up credits never expire." },
   { q: 'How does Brand Profile work?', a: 'Set your preferred tone, lighting, background, and composition rules. Every future generation uses this profile automatically so visuals stay on-brand.' },
+  { q: 'What are Brand Scenes?', a: 'Design a signature scene once — from a short brief or a single reference photo — and reuse it across every product. Each generation produces 3 variations for 20 credits. Reusing a saved scene costs 6 credits per Product Visual. Available on Growth and above.' },
   { q: 'What is the Content Calendar?', a: 'The Content Calendar automates recurring visual runs. Pick products and Visual Types, set a schedule, and fresh visuals arrive on autopilot. Growth+ plans.' },
 ];
 
