@@ -409,7 +409,11 @@ export default function VideoHub() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-foreground tracking-tight">Recent Videos</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Your latest 8 generations</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {totalCount > 0
+                  ? `Showing ${recentVideos.length} of ${totalCount}`
+                  : 'Your generated videos'}
+              </p>
             </div>
             {recentVideos.length > 0 && (
               <Button variant="ghost" size="sm" onClick={toggleSelectMode}>
