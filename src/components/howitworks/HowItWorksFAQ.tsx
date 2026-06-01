@@ -8,7 +8,7 @@ import {
 const QA = [
   {
     q: 'How many credits does one generation cost?',
-    a: 'A single product image typically uses 1 credit. Brand-model variation sets and high-resolution video shots use more. New accounts start with 20 free credits — enough for around 20 visuals.',
+    a: 'Each Product Visual is 6 credits. Brand Scenes generate 3 variations for 20 credits. Animate video starts at 25 credits (5s) or 50 credits (10s). 4K upscaling is 15 credits. New accounts start with 20 free credits — no credit card required.',
   },
   {
     q: 'What file formats can I upload?',

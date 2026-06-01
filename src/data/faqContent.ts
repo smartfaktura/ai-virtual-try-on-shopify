@@ -14,7 +14,7 @@ export const faqCategories: FaqCategory[] = [
     questions: [
       {
         q: 'How do I create my first product image?',
-        a: 'Upload your product photo in the Products section, then head to Visual Studio. Choose from seven Visual Types — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, or Generate More Angles — select your product, and hit Generate. Your images will be ready in about 60 seconds at 2K resolution in PNG format.',
+        a: 'Upload your product photo in the Products section, then head to Visual Studio. Choose a Visual Type — Product Visuals, Selfie / UGC, Flat Lay, Mirror Selfie, Interior / Exterior Staging, or Generate More Angles — select your product, and hit Generate. Your images will be ready in about 60 seconds at 2K resolution in PNG format. You can also design a Brand Scene to lock in a signature look and reuse it across every product.',
       },
       {
         q: 'What image formats are supported for uploads?',
@@ -25,12 +25,12 @@ export const faqCategories: FaqCategory[] = [
         a: 'No — our AI handles background removal automatically. However, starting with a clean, well-lit product photo on a simple background will give you the best results.',
       },
       {
-        q: 'What is Freestyle mode?',
-        a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Visual Types fit your vision. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene.',
+        q: 'What is Create with Prompt?',
+        a: 'Create with Prompt is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Visual Types fit your vision.',
       },
       {
         q: 'What is a Brand Profile and why should I create one?',
-        a: 'A Brand Profile teaches our AI your visual identity — your preferred colors, lighting style, scenes, tone, color temperature, and composition rules. Once set up, every image you generate across Visual Studio and Freestyle will automatically align with your brand aesthetic. Create one under Brand Profiles in the sidebar.',
+        a: 'A Brand Profile teaches our AI your visual identity — your preferred colors, lighting style, scenes, tone, color temperature, and composition rules. Once set up, every image you generate across Visual Studio will automatically align with your brand aesthetic. Create one under Brand Profiles in the sidebar.',
       },
     ],
   },
@@ -39,7 +39,7 @@ export const faqCategories: FaqCategory[] = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each generation costs credits based on the mode: Visual Types cost 6 credits per image. Freestyle costs 4 credits per image at Standard quality, or 6 credits at Pro quality or when you add a model or scene. Video generation costs 30 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
+        a: 'Each generation costs credits based on the mode: Product Visuals are 6 credits per image. Brand Scenes generate 3 variations for 20 credits. Brand Model images are 20 credits each (using a public Brand Model is free). Animate video is 25 credits (5s) or 50 credits (10s) — premium motion doubles the base. Start & End video is 35 credits. 4K upscaling is 15 credits. Every new account gets 20 free credits — no credit card required. Your dashboard always shows the exact cost before you generate.',
       },
       {
         q: 'What happens if I run out of credits?',
@@ -47,7 +47,7 @@ export const faqCategories: FaqCategory[] = [
       },
       {
         q: 'Is there a free trial?',
-        a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Visual Type or try Freestyle and see the quality before committing to a plan.',
+        a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Visual Type and see the quality before committing to a plan.',
       },
       {
         q: 'Can I change my plan?',
@@ -64,11 +64,15 @@ export const faqCategories: FaqCategory[] = [
     questions: [
       {
         q: 'What Visual Types are available?',
-        a: 'VOVV.AI offers seven core Visual Types, each pre-configured with the right prompts, aspect ratios, and model settings: Virtual Try-On (clothing on AI models), Product Listing (clean e-commerce shots), Selfie / UGC (user-generated-style content), Flat Lay (top-down product arrangements), Mirror Selfie (casual mirror-style shots), Interior / Exterior Staging (room and environment staging), and Generate More Angles (multi-angle product sets).',
+        a: 'VOVV.AI offers core Visual Types, each pre-configured with the right prompts, aspect ratios, and model settings: Product Visuals (the flagship 1000+ scenes for any product), Selfie / UGC (user-generated-style content), Flat Lay (top-down product arrangements), Mirror Selfie (casual mirror-style shots), Interior / Exterior Staging (room and environment staging), and Generate More Angles (multi-angle product sets). You can also design your own Brand Scenes and reuse them across every product.',
       },
       {
-        q: 'How does Virtual Try-On work?',
-        a: 'Upload a clothing item and choose from our library of 40+ diverse AI models across different ethnicities, body types, and ages. Select a pose, framing, and scene, and the AI generates realistic photos of the model wearing your product. Works best with tops, dresses, and outerwear. Costs 6 credits per image.',
+        q: 'What are Brand Scenes?',
+        a: 'A Brand Scene is a custom, reusable scene you design once — either by answering a short brief or by uploading a single reference photo — and then re-apply to any product. Each generation produces 3 variations for 20 credits. Saving the scene is free; reusing it later costs 6 credits per Product Visual. Available on Growth, Pro, and Enterprise plans. Free and Starter users can still generate from any Brand Scenes they previously saved.',
+      },
+      {
+        q: 'Can I reuse a scene with a different product?',
+        a: 'Yes. Open any image from your Library or a generation result and click Swap Product. We re-render the exact scene with your new product, preserving lighting, composition, and styling. 6 credits per swap.',
       },
       {
         q: 'What is Generate More Angles?',
@@ -84,7 +88,7 @@ export const faqCategories: FaqCategory[] = [
       },
       {
         q: 'Can I upscale my images?',
-        a: 'Yes — the Upscale feature lets you enhance any generated image to higher resolution. You can access it from the Library by selecting an image and choosing Upscale. Great for hero banners, print materials, and large-format displays.',
+        a: 'Yes — the Upscale feature lets you enhance any generated image to 4K resolution for 15 credits. You can access it from the Library by selecting an image and choosing Upscale. Great for hero banners, print materials, and large-format displays.',
       },
     ],
   },
@@ -93,15 +97,15 @@ export const faqCategories: FaqCategory[] = [
     questions: [
       {
         q: 'What resolution and format are generated images?',
-        a: 'All generated images are output at 2K resolution in PNG format by default. We support common aspect ratios (1:1, 4:5, 16:9, 9:16) suitable for e-commerce listings, social media, ads, and print. You can also upscale images for even higher resolution.',
+        a: 'All generated images are output at 2K resolution in PNG format by default. We support common aspect ratios (1:1, 4:5, 16:9, 9:16) suitable for e-commerce listings, social media, ads, and print. You can also upscale images to 4K for 15 credits.',
       },
       {
         q: 'What\'s the difference between Standard and High Quality?',
-        a: 'Standard uses fast generation suitable for social media and web listings. High Quality uses a more advanced model for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays. Both quality levels cost the same number of credits.',
+        a: 'Standard uses fast generation suitable for social media and web listings. High Quality uses a more advanced model for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays.',
       },
       {
         q: 'My generated images don\'t look right. What can I do?',
-        a: 'Try these tips: 1) Use a higher-quality source image with good lighting. 2) Create a Brand Profile to guide the AI\'s style decisions. 3) Use negative prompts to exclude unwanted elements. 4) Try different Visual Types — some work better for certain product types. 5) Try Freestyle mode for full creative control with a custom prompt.',
+        a: 'Try these tips: 1) Use a higher-quality source image with good lighting. 2) Create a Brand Profile to guide the AI\'s style decisions. 3) Use the Additional Note field in Setup to exclude unwanted elements. 4) Try different Visual Types — some work better for certain product types. 5) Design a Brand Scene to lock in the exact look you want.',
       },
     ],
   },
