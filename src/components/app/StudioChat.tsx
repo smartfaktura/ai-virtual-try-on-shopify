@@ -248,13 +248,23 @@ export function StudioChat() {
                 className="flex-1 resize-none bg-muted rounded-xl px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring max-h-24 min-h-[40px]"
                 style={{ height: 'auto', overflow: 'auto' }}
               />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading || isThrottled}
-                className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+              {isLoading ? (
+                <button
+                  onClick={cancelStream}
+                  className="p-2.5 rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors flex-shrink-0"
+                  title="Stop generating"
+                >
+                  <Square className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isThrottled}
+                  className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
           <button
