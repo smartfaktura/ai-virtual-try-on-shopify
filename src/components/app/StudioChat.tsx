@@ -78,11 +78,11 @@ export function StudioChat() {
   if (hiddenByPage) return null;
 
 
-  const handleSend = () => {
-    const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
-    setInput('');
-    sendMessage(trimmed);
+  const handleSend = (text?: string) => {
+    const value = (text ?? input).trim();
+    if (!value || isLoading) return;
+    if (text === undefined) setInput('');
+    sendMessage(value);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -92,6 +92,26 @@ export function StudioChat() {
     }
   };
 
+  // Surface credit / rate-limit errors as toasts
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return;
+    const lc = last.content.toLowerCase();
+    if (lc.includes('credit') && lc.includes('issue')) {
+      toast.error("Out of credits", {
+        description: "See plans or pick up a top-up pack",
+        action: { label: "See Plans", onClick: () => { window.location.href = '/app/pricing'; } },
+      });
+    } else if (lc.includes('too quickly') || lc.includes('hourly message limit')) {
+      toast.warning("Slow down a moment", { description: "Please wait before sending more messages" });
+    }
+  }, [messages]);
+
+  const quickStarters = [
+    'Design a brand scene',
+    'Make a product visual',
+    'How do credits work?',
+  ];
 
   const displayMessages = messages.length === 0
     ? [{ role: 'assistant' as const, content: WELCOME_MESSAGE }]
