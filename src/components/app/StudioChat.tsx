@@ -57,6 +57,21 @@ export function StudioChat() {
     if (hiddenByPage && isOpen) setIsOpen(false);
   }, [hiddenByPage, isOpen]);
 
+  // Surface credit / rate-limit errors as toasts (must run on every render — keep above early returns)
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return;
+    const lc = last.content.toLowerCase();
+    if (lc.includes('credit') && lc.includes('issue')) {
+      toast.error("Out of credits", {
+        description: "See plans or pick up a top-up pack",
+        action: { label: "See Plans", onClick: () => { window.location.href = '/app/pricing'; } },
+      });
+    } else if (lc.includes('too quickly') || lc.includes('hourly message limit')) {
+      toast.warning("Slow down a moment", { description: "Please wait before sending more messages" });
+    }
+  }, [messages]);
+
   const isProductImagesPage = location.pathname === '/app/generate/product-images';
 
   // Hard-hide on new brand model page across all viewports
