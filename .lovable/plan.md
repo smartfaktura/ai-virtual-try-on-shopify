@@ -1,63 +1,77 @@
-## Plan — Customer support answers: copy-only refresh
+# Studio Chat — Easiest, Highest-Impact Upgrade
 
-Scope: rewrite stale support/FAQ copy so it matches what we currently offer. **No UI, routes, or pricing logic — text only.**
+Two files. No schema, no new components, no new dependencies.
 
-### Current offering (truth to write to)
+---
 
-- **Product Visuals** — 6 credits per image (flat)
-- **Brand Models** — 20 credits per generated image; using a public Brand Model is free
-- **Brand Scenes** *(new)* — design a custom, reusable scene from your own brief or a single reference photo. Each generation produces **3 variations for 20 credits**. Saving a scene is free; re-using a saved scene generates Product Visuals at the standard 6 credits each. Creation is available on **Growth, Pro, and Enterprise** plans (Free and Starter can still use any scenes they already saved).
-- **Swap Product** — re-render a saved scene with a different product, 6 credits
-- **Animate video** — 25 credits (5s) · 50 credits (10s) · premium motion = 2× the base · ambient audio included
-- **Start & End video** — 35 credits flat
-- **Upscaling** — 4K only, 15 credits
-- **Plans** — Free 20 · Starter 500 · Growth 1,500 · Pro 4,500 · Enterprise unlimited
+## 1. Rewrite `SYSTEM_PROMPT` in `supabase/functions/studio-chat/index.ts`
 
-### Removed from all support copy
-- Short Film generation
-- Virtual Try-On
-- 2K upscaling tier
-- "1 credit", "4–10 credits", "30 credits flat video", "one-time 50-credit Brand Model training"
+### 1a. Intent Router (top of prompt)
 
-### Files and edits
+Forces correct feature on first reply:
 
-**1. `src/components/faq/FAQAccordion.tsx` (line 43)**
-Rewrite credit answer with the full breakdown above (incl. Brand Scenes line). Drop Short Film + 2K upscale.
+- "brand scene / reusable scene / signature look" → Brand Scenes (20 cr per 3 variations). Creation requires Growth+; Free/Starter can only reuse saved scenes. CTAs: `[[Design a Brand Scene|/app/brand-scenes]]` + `[[See Plans|/app/pricing]]` when plan-gated
+- "swap product / replace product" → Swap Product (6 cr). CTA: `[[Swap a Product|/app/swap]]`
+- "video / animate / motion" → Animate 25 cr (5s) / 50 cr (10s), premium motion 2×, Start & End 35 cr. CTA: `[[Open Video Hub|/app/video]]`
+- "upscale / hi-res / 4k" → Upscaling, 4K only, 15 cr. CTA: `[[Upscale Image|/app/upscale]]`
+- "AI model / person / brand model" → Brand Models (Growth+). CTA: `[[Create a Brand Model|/app/brand-models]]` or `[[See Plans|/app/pricing]]`
+- "out of credits / more credits / topup" → `[[See Plans|/app/pricing]]` + mention top-ups
+- everything else product-photo related → Product Visuals via Visual Studio (6 cr/image). CTA: `[[Open Visual Studio|/app/workflows]]`
 
-**2. `src/components/landing/LandingPricing.tsx` (line 120)**
-Same rewrite.
+### 1b. Answer Style rules
 
-**3. `src/data/faqContent.ts`**
-- Line 17: Visual Types list → remove Virtual Try-On; rename "Product Listing" → "Product Visuals"; mention Brand Scenes as a way to lock in a signature look.
-- Line 42 ("How do credits work?"): Product Visuals 6 · Brand Scenes 20/generation (3 variations) · Animate 25/50 · Start & End 35 · 4K upscale 15 · Brand Model 20/image.
-- Append two new Q&As under Features:
-  > **Q:** What are Brand Scenes?
-  > **A:** A Brand Scene is a custom, reusable scene you design once — either by answering a short brief or by uploading a single reference photo — and then re-apply to any product. Each generation produces 3 variations for 20 credits. Saving the scene is free; reusing it later costs 6 credits per Product Visual. Available on Growth, Pro, and Enterprise plans.
+- 2–5 lines for simple questions, max 6 + 1 CTA
+- Exact numbers always ("6 credits", never "around 6")
+- No terminal periods in single-sentence answers (brand voice)
+- Always say "VOVV.AI" and "Visual Studio" (never "workflows / templates / presets / visual types" as user-facing labels)
+- Never recommend a gated feature without naming the required plan and adding `[[See Plans|/app/pricing]]`
+- Never offer a CTA the user can't act on — swap creation CTAs for `[[See Plans]]` when plan-gated
 
-  > **Q:** Can I reuse a scene with a different product?
-  > **A:** Yes. Open any image from your Library or a generation result and click **Swap Product**. We re-render the exact scene with your new product, preserving lighting, composition, and styling. 6 credits.
+### 1c. Page-aware opener
 
-**4. `src/components/howitworks/HowItWorksFAQ.tsx` (line 11)**
-Replace "1 credit" claim with: Product Visuals 6 · Brand Scenes 20 per 3-variation generation · Animate from 25 · 4K upscale 15 · Free trial 20 credits.
+Extend the existing `pageContextMap` so the first assistant line matches the route:
 
-**5. `src/pages/AppPricing.tsx` (line 95)**
-Rewrite to current pricing only (incl. Brand Scenes, no Short Film, no 2K upscale).
+- `/app/workflows` → "Want to create a new product visual in Visual Studio?"
+- `/app/brand-scenes` → "Want to design a reusable signature scene?"
+- `/app/swap` → "Need to swap a product into an existing image?"
+- `/app/video` → "Ready to animate a still into video?"
+- `/app/upscale` → "Want to push an image to 4K?"
+- `/app/brand-models` → "Looking for a consistent AI model?"
+- `/app/pricing` → "Want help picking the right plan?"
 
-**6. `supabase/functions/studio-chat/index.ts` (SYSTEM_PROMPT)**
-- Fix Animate: 10s = 50 credits; premium motion = 2× base; remove "+4 ambient audio".
-- Remove the Short Film section entirely.
-- Remove Virtual Try-On from any Visual Types list.
-- Upscaling reference → "4K, 15 credits" (drop 2K).
-- Update Product Visuals cost to flat 6 credits.
-- Add a Brand Scenes capability paragraph (what it is, 20 credits for 3 variations, plan gating, reuse at 6 credits).
-- Add a one-line Swap Product capability note.
+---
 
-**7. `src/components/app/GenerationModeCards.tsx` (line 32)**
-"4–10 credits per image" → "6 credits per image".
+## 2. Tiny UI polish in `StudioChat.tsx` (+ minimal hook tweak in `useStudioChat.ts`)
 
-### Memory updates after copy ships
-- Update `mem://features/studio-chat-knowledge-source`: Short Film + Virtual Try-On removed, upscale = 4K only, Brand Scenes added.
-- Update Core memory if it lists removed Visual Types.
+Three low-risk additions, all reusing existing handlers:
 
-### Out of scope
-Routes, in-app cards, `CreditContext.calculateCost`, `videoCreditPricing.ts`, navigation, component layouts.
+- **Empty-state quick chips** — 3 tappable suggestions on first open: "Design a brand scene", "Make a product visual", "How do credits work?". Each calls the existing `send()`
+- **Stop button** while streaming — toggled in input row; aborts the in-flight request via the AbortController already created in `useStudioChat` (expose `abort` from the hook if not already returned)
+- **Error toast on 402 / 429** — copy: "Out of credits — see plans" with a link to `/app/pricing`. Hooks into the existing fetch catch
+
+---
+
+## Out of scope
+
+- Sending user plan/credits into prompt (requires DB read in function)
+- Conversation persistence / resume across sessions
+- Regenerate button, AI-generated follow-up chips
+- Markdown renderer changes
+- Any pricing, route, plan, or feature logic changes
+
+---
+
+## Files touched
+
+1. `supabase/functions/studio-chat/index.ts` — SYSTEM_PROMPT rewrite + `pageContextMap` additions
+2. `src/components/.../StudioChat.tsx` — chips, stop button, error toast
+3. `src/hooks/useStudioChat.ts` — expose `abort` if not already
+
+Estimated diff: ~120 lines prompt, ~50 lines UI.
+
+## Expected result
+
+- "Can I create a brand scene?" answered correctly with right CTAs and plan info on first try
+- Shorter, sharper, on-brand answers across the board
+- Page-aware opener on every feature page
+- Users can stop a runaway response and recover from out-of-credits gracefully
