@@ -1543,7 +1543,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I create dress photos for Shopify?',             a: 'Yes. The output is sized and styled for Shopify PDPs, collection grids, banners, and ads.' },
       { q: 'Can I create campaign visuals for new dress drops?', a: 'Yes. Editorial campaign heroes and quiet luxury stories are ready in minutes from one image.' },
     ],
-    relatedCategories: ['fashion', 'lingerie', 'swimwear', 'jewelry'],
+    relatedCategories: ['fashion', 'lingerie', 'swimwear', 'wedding-dresses'],
     heroImageId: '1776689322212-9lsvah',
     heroAlt: 'AI dress product photography example showing a super editorial campaign visual.',
     heroNoun: 'dress',
