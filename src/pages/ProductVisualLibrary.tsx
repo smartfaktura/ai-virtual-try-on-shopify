@@ -20,7 +20,7 @@ import { SceneDetailModal } from '@/components/library/SceneDetailModal';
 
 export default function ProductVisualLibrary() {
   const { families, totalScenes, isLoading } = usePublicSceneLibrary();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeFamilySlug, setActiveFamilySlug] = useState<string | null>(null);
   const [activeCollectionSlug, setActiveCollectionSlug] = useState<string | null>(null);
@@ -28,6 +28,15 @@ export default function ProductVisualLibrary() {
   const [selectedFamilyLabel, setSelectedFamilyLabel] = useState<string | undefined>();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const deepLinkAppliedRef = useRef(false);
+
+  const syncUrl = (familySlug: string | null, collectionSlug: string | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (familySlug) next.set('family', familySlug);
+    else next.delete('family');
+    if (collectionSlug) next.set('collection', collectionSlug);
+    else next.delete('collection');
+    setSearchParams(next, { replace: true });
+  };
 
   // Apply ?family=&collection= deep-link once families load.
   useEffect(() => {
@@ -86,20 +95,24 @@ export default function ProductVisualLibrary() {
   const handleSelectFamily = (slug: string) => {
     setActiveFamilySlug(slug);
     setActiveCollectionSlug(null);
+    syncUrl(slug, null);
     scrollToGrid();
   };
 
   const handleSelectCollection = (familySlug: string, collectionSlug: string | null) => {
     setActiveFamilySlug(familySlug);
     setActiveCollectionSlug(collectionSlug);
+    syncUrl(familySlug, collectionSlug);
     scrollToGrid();
   };
 
   const handleMobileSelect = (familySlug: string | null, collectionSlug: string | null) => {
     if (familySlug) setActiveFamilySlug(familySlug);
     setActiveCollectionSlug(collectionSlug);
+    syncUrl(familySlug ?? activeFamilySlug, collectionSlug);
     scrollToGrid();
   };
+
 
   const handleSceneClick = (s: PublicScene, familyLabel: string) => {
     setSelectedScene(s);
