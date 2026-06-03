@@ -319,14 +319,14 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                         key={p.planId}
                         type="button"
                         onClick={() => setSelectedPlanId(p.planId)}
-                        className={`w-full text-left rounded-2xl border p-4 transition-all ${
+                        className={`w-full text-left rounded-2xl border p-3.5 sm:p-4 transition-all ${
                           isSelected
                             ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30'
                             : 'border-border/50 hover:border-border bg-card'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 min-w-0">
+                        <div className="flex items-start justify-between gap-2 sm:gap-3">
+                          <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                             <span
                               className={`mt-0.5 inline-flex w-4 h-4 rounded-full border items-center justify-center shrink-0 ${
                                 isSelected ? 'border-primary' : 'border-muted-foreground/40'
@@ -334,12 +334,13 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                             >
                               {isSelected && <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />}
                             </span>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-semibold text-foreground">{p.name}</span>
                                 {isRecommended ? (
                                   <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
-                                    Recommended for You
+                                    <span className="sm:hidden">Recommended</span>
+                                    <span className="hidden sm:inline">Recommended for You</span>
                                   </span>
                                 ) : (
                                   p.badge && (
@@ -349,7 +350,7 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                                   )
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-1 whitespace-nowrap">
                                 {credits.toLocaleString()} credits · ~{approxImages} images/mo
                               </p>
                             </div>
@@ -361,7 +362,8 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                             </div>
                             {savingsPct > 0 && (
                               <span className="text-[10px] font-semibold mt-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                                −{savingsPct}% / credit
+                                <span className="sm:hidden">−{savingsPct}%/cr</span>
+                                <span className="hidden sm:inline">−{savingsPct}% / credit</span>
                               </span>
                             )}
                             {isAnnual && p.monthlyPrice > 0 && (
@@ -370,6 +372,7 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                               </span>
                             )}
                           </div>
+
                         </div>
                       </button>
                     );
