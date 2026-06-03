@@ -302,71 +302,90 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
 
               {/* Plan list */}
               <div className="space-y-2.5">
-                {upgradePlans.map((p) => {
-                  const isSelected = p.planId === selectedPlanId;
-                  const isRecommended = p.planId === 'growth';
-                  const credits = typeof p.credits === 'number' ? p.credits : 0;
-                  const approxImages = Math.floor(credits / CREDITS_PER_IMAGE).toLocaleString();
-                  const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
-
-                  return (
-                    <button
-                      key={p.planId}
-                      type="button"
-                      onClick={() => setSelectedPlanId(p.planId)}
-                      className={`w-full text-left rounded-2xl border p-4 transition-all ${
-                        isSelected
-                          ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30'
-                          : 'border-border/50 hover:border-border bg-card'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 min-w-0">
-                          <span
-                            className={`mt-0.5 inline-flex w-4 h-4 rounded-full border items-center justify-center shrink-0 ${
-                              isSelected ? 'border-primary' : 'border-muted-foreground/40'
-                            }`}
-                          >
-                            {isSelected && <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold text-foreground">{p.name}</span>
-                              {isRecommended ? (
-                                <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
-                                  Recommended for You
-                                </span>
-                              ) : (
-                                p.badge && (
-                                  <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
-                                    {p.badge}
-                                  </span>
-                                )
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {credits.toLocaleString()} credits · ~{approxImages} images/mo
-                            </p>
-
-
-
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end shrink-0">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-xl font-semibold tracking-tight">${displayPrice}</span>
-                            <span className="text-[11px] text-muted-foreground">/mo</span>
-                          </div>
-                          {isAnnual && p.monthlyPrice > 0 && (
-                            <span className="text-[10px] text-primary font-semibold mt-0.5 whitespace-nowrap">
-                              Save ${(p.monthlyPrice * 12) - p.annualPrice}/yr
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
+                {(() => {
+                  // Baseline = cheapest $/credit among shown upgrade plans
+                  const perCreditFor = (p: typeof upgradePlans[number]) => {
+                    const credits = typeof p.credits === 'number' ? p.credits : 0;
+                    if (!credits) return Infinity;
+                    const price = isAnnual ? p.annualPrice / 12 : p.monthlyPrice;
+                    return price / credits;
+                  };
+                  const baselinePerCredit = upgradePlans.reduce(
+                    (min, p) => Math.min(min, perCreditFor(p)),
+                    Infinity,
                   );
-                })}
+                  return upgradePlans.map((p) => {
+                    const isSelected = p.planId === selectedPlanId;
+                    const isRecommended = p.planId === 'growth';
+                    const credits = typeof p.credits === 'number' ? p.credits : 0;
+                    const approxImages = Math.floor(credits / CREDITS_PER_IMAGE).toLocaleString();
+                    const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                    const savingsPct =
+                      baselinePerCredit > 0 && Number.isFinite(baselinePerCredit)
+                        ? Math.round((1 - perCreditFor(p) / baselinePerCredit) * 100)
+                        : 0;
+
+                    return (
+                      <button
+                        key={p.planId}
+                        type="button"
+                        onClick={() => setSelectedPlanId(p.planId)}
+                        className={`w-full text-left rounded-2xl border p-4 transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/30'
+                            : 'border-border/50 hover:border-border bg-card'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <span
+                              className={`mt-0.5 inline-flex w-4 h-4 rounded-full border items-center justify-center shrink-0 ${
+                                isSelected ? 'border-primary' : 'border-muted-foreground/40'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-foreground">{p.name}</span>
+                                {isRecommended ? (
+                                  <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold whitespace-nowrap">
+                                    Recommended for You
+                                  </span>
+                                ) : (
+                                  p.badge && (
+                                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
+                                      {p.badge}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {credits.toLocaleString()} credits · ~{approxImages} images/mo
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end shrink-0">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-xl font-semibold tracking-tight">${displayPrice}</span>
+                              <span className="text-[11px] text-muted-foreground">/mo</span>
+                            </div>
+                            {savingsPct > 0 && (
+                              <span className="text-[10px] font-semibold mt-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                                −{savingsPct}% / credit
+                              </span>
+                            )}
+                            {isAnnual && p.monthlyPrice > 0 && (
+                              <span className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap">
+                                Save ${(p.monthlyPrice * 12) - p.annualPrice}/yr
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  });
+                })()}
               </div>
             </>
           )}
