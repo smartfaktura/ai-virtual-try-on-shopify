@@ -1,22 +1,26 @@
-# Shareable URLs for Product Visual Library
 
-## Problem
-On `/product-visual-library`, the URL only reads `?family=&collection=` on initial load (deep-link), but never updates when the user clicks a different family or collection. Copying the URL after navigating gives others the default view, not the tab they're seeing.
+# Show savings % badge under price in upgrade modal
 
-## Fix
-Make selection ↔ URL fully two-way in `src/pages/ProductVisualLibrary.tsx`.
+Add a small percentage badge directly under the `$XX /mo` price on Growth and Pro cards. Starter = baseline, no badge.
 
-1. Switch `useSearchParams()` to use the `setSearchParams` setter as well.
-2. On every selection handler (`handleSelectFamily`, `handleSelectCollection`, `handleMobileSelect`, and the "clear collection" path), update the URL:
-   - Family chosen → `?family=<slug>` (drop `collection`)
-   - Family + collection → `?family=<slug>&collection=<slug>`
-   - Cleared back to default → remove both params
-   - Use `replace: true` so each click doesn't pollute browser history.
-3. Keep the existing deep-link effect for first load (already handles `?family=&collection=`), so opening a shared URL lands on the correct tab and scrolls to the grid.
-4. No visual/behavior changes beyond URL syncing; no other files affected.
+## Change
 
-## QA
-- Click a family → URL updates to `?family=...`.
-- Click a sub-collection → URL becomes `?family=...&collection=...`.
-- Copy URL, open in new tab → same tab + sub-category preselected and grid scrolled into view.
-- Back/forward buttons still work (replace avoids history spam, but deep-link effect re-applies on full loads).
+Edit only `src/components/app/UpgradePlanModal.tsx`.
+
+- Compute baseline as the cheapest plan in `upgradePlans` by `$ per credit` (Starter in practice).
+- For each non-baseline card, compute:
+  ```
+  perCredit = displayPrice / credits   // uses active monthly/annual price
+  savings   = Math.round((1 - perCredit / baselinePerCredit) * 100)
+  ```
+- Render the badge in the existing right-aligned price column, on the line **right under** `$XX /mo`, replacing/co-existing with the current annual "Save $X/yr" line:
+  - If monthly and `savings > 0`: small pill `−{savings}%` in `text-[10px] font-semibold` with `bg-primary/10 text-primary px-1.5 py-0.5 rounded-full mt-0.5 whitespace-nowrap`.
+  - If annual: keep the existing `Save $X/yr` line and append the same `−{savings}%` pill next to it (or stack — pill below).
+- Baseline card renders nothing extra.
+- Updates live when toggling Monthly ↔ Annual.
+
+## Notes
+
+- Pure frontend, no schema, no copy file, no Stripe changes.
+- Uses existing design tokens (`primary`, `primary/10`) — no new colors.
+- No terminal period; concise label per memory rules.
