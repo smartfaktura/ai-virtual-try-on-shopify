@@ -1,14 +1,31 @@
-## Fix mobile clipping in Upgrade modal
+# Grant 100 credits to alpha@pugandbulldog.com
 
-The "1,500 credits · ~300 images/mo" line wraps awkwardly on mobile because the right column (price + `−32% / credit` pill + "Recommended for You" badge below the title) eats horizontal space.
+## Target account
+- Email: alpha@pugandbulldog.com
+- user_id: `15c1a8fe-41ed-4aec-836c-e682ff9224b7`
+- Plan: Growth (active)
+- Current balance: 1,278 → after grant: **1,378**
 
-### Changes (only `src/components/app/UpgradePlanModal.tsx`)
+## Action
+Call the existing `add_purchased_credits` RPC (same one Stripe credit-pack fulfillment uses):
 
-1. **Prevent the credits line from wrapping**: add `whitespace-nowrap` to the `<p>` at line 353 so "1,500 credits · ~300 images/mo" stays on one line.
-2. **Free up width on mobile**:
-   - Move the `Recommended for You` badge out of the title row and render it as a small chip on top of the card (or inline with the price column only on ≥sm). On mobile, drop the "for You" → show just `RECOMMENDED` to shorten.
-   - Reduce the right column footprint on mobile: pill text shortened to `−32%/cr` on `<sm`, full `−32% / credit` on `sm+`.
-3. **Tighter gaps on mobile**: change outer row `gap-3` → `gap-2 sm:gap-3`, inner `gap-3` → `gap-2.5 sm:gap-3`, card padding `p-4` → `p-3.5 sm:p-4`.
-4. Keep desktop layout visually identical.
+```sql
+SELECT public.add_purchased_credits(
+  '15c1a8fe-41ed-4aec-836c-e682ff9224b7'::uuid,
+  100
+);
+```
 
-No business logic, no Stripe, no plan data changes.
+## Why this RPC
+- Atomic balance update (no race conditions)
+- Treated as **purchased credits** → do NOT expire on monthly billing cycle rollover (use-it-or-lose-it only resets plan credits)
+- Same code path as Stripe top-ups, so audit/accounting stays consistent
+
+## Verification
+After execution, re-read `profiles.credits_balance` for the user and confirm it shows 1,378.
+
+## Out of scope
+- No schema changes
+- No code changes
+- No effect on subscription, plan, or billing cycle
+- Webhook plan stays untouched — resume after this
