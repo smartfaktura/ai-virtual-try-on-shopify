@@ -24,6 +24,10 @@ interface UpgradePlanModalProps {
 
 const CREDITS_PER_IMAGE = 5;
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+const PLAN_SAVINGS_PCT: Record<string, number> = {
+  growth: 32,
+  pro: 49,
+};
 
 interface ModalCopy {
   title: string;
@@ -302,28 +306,13 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
 
               {/* Plan list */}
               <div className="space-y-2.5">
-                {(() => {
-                  // Baseline = cheapest $/credit among shown upgrade plans
-                  const perCreditFor = (p: typeof upgradePlans[number]) => {
-                    const credits = typeof p.credits === 'number' ? p.credits : 0;
-                    if (!credits) return Infinity;
-                    const price = isAnnual ? p.annualPrice / 12 : p.monthlyPrice;
-                    return price / credits;
-                  };
-                  const baselinePerCredit = upgradePlans.reduce(
-                    (min, p) => Math.min(min, perCreditFor(p)),
-                    Infinity,
-                  );
-                  return upgradePlans.map((p) => {
+                {upgradePlans.map((p) => {
                     const isSelected = p.planId === selectedPlanId;
                     const isRecommended = p.planId === 'growth';
                     const credits = typeof p.credits === 'number' ? p.credits : 0;
                     const approxImages = Math.floor(credits / CREDITS_PER_IMAGE).toLocaleString();
                     const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
-                    const savingsPct =
-                      baselinePerCredit > 0 && Number.isFinite(baselinePerCredit)
-                        ? Math.round((1 - perCreditFor(p) / baselinePerCredit) * 100)
-                        : 0;
+                    const savingsPct = PLAN_SAVINGS_PCT[p.planId] ?? 0;
 
                     return (
                       <button
@@ -384,8 +373,7 @@ export const UpgradePlanModal = forwardRef<HTMLDivElement, UpgradePlanModalProps
                         </div>
                       </button>
                     );
-                  });
-                })()}
+                  })}
               </div>
             </>
           )}
