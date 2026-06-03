@@ -1,14 +1,14 @@
-The badge exists in the code, but it is comparing each visible plan against the cheapest visible plan. In this modal the visible plans are Starter, Growth, and Pro, and Growth/Pro have the same effective price per credit as Starter for the shown monthly pricing, so the computed savings is 0 and the pill hides.
+## Fix mobile clipping in Upgrade modal
 
-Plan:
-1. Replace the current dynamic “cheapest visible plan” calculation with explicit plan comparison values for the 3 plans:
-   - Growth vs Starter: show a `−32% / credit` pill
-   - Pro vs Starter: show a `−49% / credit` pill
-   - Starter: no pill
-2. Keep the pill in the same right-aligned price column, directly under `$79 /mo` and `$179 /mo`, so it appears exactly in the visible modal from your screenshot.
-3. Keep the annual toggle behavior intact and leave payments/Stripe/backend untouched.
+The "1,500 credits · ~300 images/mo" line wraps awkwardly on mobile because the right column (price + `−32% / credit` pill + "Recommended for You" badge below the title) eats horizontal space.
 
-Technical details:
-- Edit only `src/components/app/UpgradePlanModal.tsx`.
-- Remove the runtime baseline calculation that currently returns `0` for these plan prices.
-- Add a small fixed map keyed by `planId` for the visible badge percentages, rendering only for Growth and Pro.
+### Changes (only `src/components/app/UpgradePlanModal.tsx`)
+
+1. **Prevent the credits line from wrapping**: add `whitespace-nowrap` to the `<p>` at line 353 so "1,500 credits · ~300 images/mo" stays on one line.
+2. **Free up width on mobile**:
+   - Move the `Recommended for You` badge out of the title row and render it as a small chip on top of the card (or inline with the price column only on ≥sm). On mobile, drop the "for You" → show just `RECOMMENDED` to shorten.
+   - Reduce the right column footprint on mobile: pill text shortened to `−32%/cr` on `<sm`, full `−32% / credit` on `sm+`.
+3. **Tighter gaps on mobile**: change outer row `gap-3` → `gap-2 sm:gap-3`, inner `gap-3` → `gap-2.5 sm:gap-3`, card padding `p-4` → `p-3.5 sm:p-4`.
+4. Keep desktop layout visually identical.
+
+No business logic, no Stripe, no plan data changes.
