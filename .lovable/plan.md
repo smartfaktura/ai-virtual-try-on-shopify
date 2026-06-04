@@ -1,24 +1,24 @@
-## Plan — Mobile: prioritize image, hide details, keep title + CTA
+## Plan — Fresh Scenes mobile modal polish
 
-On mobile (< md), the Fresh Scenes preview modal should feel image-first: large image, eyebrow + title + one-line subtitle, primary "Use this scene" CTA, Close link. Hide the "What you get" bullets, the divider above it, and the meta `dl` (Collection / Added). Desktop layout stays exactly as it is today.
+Update `src/components/app/DashboardFreshScenes.tsx` only.
 
-### File — `src/components/app/DashboardFreshScenes.tsx`
+### 1. Remove the “active/hover” looking CTA state on mobile
+- The screenshot shows the primary button with a heavy double-outline/focus ring.
+- Add mobile-specific focus styling so touch focus does not leave that visible ring.
+- Keep desktop keyboard accessibility intact with focus-visible behavior on larger screens.
 
-1. **Image (line 205)** — let the image breathe again. Change `max-h-[42vh] md:max-h-none` → `max-h-[62vh] md:max-h-none`, and switch `object-cover` → `object-contain md:object-cover` so nothing is cropped on a portrait mobile screen. Add `bg-muted` already present on the wrapper handles the letterbox.
-2. **"What you get" block (lines 221-233)** — wrap the divider + section in `hidden md:block` so it only renders ≥ md.
-3. **Meta `dl` block (lines 235-246)** — wrap the divider + `dl` in `hidden md:grid` (use a `<div className="hidden md:contents">` wrapper, or simpler: add `hidden md:block` to the divider and `hidden md:grid` to the `dl`).
-4. **Right column padding/gap (line 208)** — keep `gap-5 md:gap-6 p-5 md:p-10`; no change.
-5. **CTA group (line 248)** — remove `mt-auto` since on mobile the column is short now and `mt-auto` would push the buttons against an empty space; replace with plain `flex flex-col gap-3 pt-1 md:mt-auto md:pt-2`.
+### 2. Remove the weird image side bars
+- Change the mobile preview image from `object-contain` back to a natural mobile crop using `object-cover`.
+- Use a stable mobile image frame, likely around `aspect-[4/5]` with a controlled max height, so the image fills the modal width without white/gray side bars.
+- Keep desktop behavior unchanged.
 
-### Result
+### 3. Keep the modal mobile-first and fitting normally
+- Keep the simplified mobile content: image, collection label, title, short subtitle, CTA, Close.
+- Slightly tune mobile spacing/padding if needed so it fits cleanly inside the visible viewport.
+- Preserve hidden desktop-only details (`What you get`, metadata) and the desktop two-column layout.
 
-- **Mobile**: image (up to 62vh, no crop) → eyebrow → title → 1-line subtitle → "Use this scene" → Close. Fits inside the 92dvh modal without scrolling on standard phones.
-- **Desktop**: unchanged — full structured right panel with bullets, meta, CTAs.
-
-### Out of scope
-
-No data, query, or routing changes. Same Dialog wrapper and scroll container as the previous fix.
-
-### Risk
-
-None — Tailwind responsive utility toggles only.
+### Expected result
+- Mobile modal opens as a clean card.
+- Image fills the top area without side bars.
+- CTA looks normal after tapping/opening, not stuck in an active/focused hover state.
+- Desktop Fresh Scenes modal remains unchanged.

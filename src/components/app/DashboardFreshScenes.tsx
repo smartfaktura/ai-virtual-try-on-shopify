@@ -198,11 +198,11 @@ export function DashboardFreshScenes() {
         <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[92dvh] sm:max-h-[90vh]">
           {preview && (
             <div className="grid md:grid-cols-[auto_minmax(0,1fr)] bg-background overflow-y-auto max-h-[92dvh] sm:max-h-[90vh]">
-              <div className="relative bg-muted overflow-hidden md:aspect-[4/5] md:h-[80vh] md:w-auto">
+              <div className="relative bg-muted overflow-hidden aspect-[4/5] md:aspect-[4/5] md:h-[80vh] md:w-auto">
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
-                  className="w-full h-full object-contain md:object-cover max-h-[62vh] md:max-h-none"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex flex-col gap-5 md:gap-6 p-5 md:p-10 bg-background">
@@ -249,7 +249,9 @@ export function DashboardFreshScenes() {
                   <Button
                     size="lg"
                     onClick={() => useScene(preview.scene_id)}
-                    className="w-full gap-2"
+                    onMouseUp={(e) => e.currentTarget.blur()}
+                    onTouchEnd={(e) => e.currentTarget.blur()}
+                    className="w-full gap-2 focus:ring-0 focus:ring-offset-0 focus-visible:ring-2 focus-visible:ring-offset-2"
                   >
                     <Sparkles className="w-4 h-4" />
                     Use this scene
