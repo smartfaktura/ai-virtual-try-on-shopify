@@ -206,18 +206,27 @@ export function DiscoverDetailModal({
 
   return createPortal(
     <div
-      className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
+      data-state={state}
+      className="fixed top-0 left-0 right-0 bottom-0 z-[200]"
       style={{ margin: 0, padding: 0 }}
     >
       {/* Backdrop */}
-      <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/90" onClick={onClose} />
+      <div
+        data-state={state}
+        className="fixed top-0 left-0 right-0 bottom-0 bg-black/90 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out duration-200"
+        onClick={onClose}
+      />
 
       {/* Split layout */}
       <div
         className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
       >
         {/* Left — Image showcase */}
-        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12" onClick={onClose}>
+        <div
+          data-state={state}
+          className="relative w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out duration-200"
+          onClick={onClose}
+        >
           {(() => {
             const ar = getDiscoverItemAspectRatio(item);
             // LQIP painted instantly under the full-quality image so the user
@@ -249,10 +258,20 @@ export function DiscoverDetailModal({
               </div>
             );
           })()}
+          {/* Soft blend into the panel on desktop, removes the harsh seam */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 hidden md:block w-6 bg-gradient-to-r from-transparent to-background"
+          />
         </div>
 
         {/* Right — Controls panel */}
-        <div ref={panelRef} className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20" onClick={(e) => e.stopPropagation()}>
+        <div
+          ref={panelRef}
+          data-state={state}
+          className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-right-4 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-right-4 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Close button */}
           <button
             onClick={onClose}
@@ -260,6 +279,7 @@ export function DiscoverDetailModal({
           >
             <X className="w-7 h-7" strokeWidth={2} />
           </button>
+
 
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
 
