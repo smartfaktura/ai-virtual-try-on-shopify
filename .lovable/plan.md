@@ -1,55 +1,35 @@
-## Fix Steal the Look onboarding mapping (keep maps, just correct them) + cap to 12
+## Goal
+When the user's onboarding sub-type maps inside a family (e.g. Swimwear → Fashion), keep showing the family chip ("Fashion") but **pre-filter the grid to that sub-type** so Steal the Look reflects what they actually sell.
 
-Single file: `src/components/app/DashboardDiscoverSection.tsx`. No deletions of useful code — the two lookup tables stay, their values are corrected to match the real Discover family ids.
+## Scope
+Single file: `src/components/app/DashboardDiscoverSection.tsx`. No taxonomy, onboarding writer, or DB changes.
 
-### Root cause
-`CATEGORIES` is built from `getDiscoverFamilies()` which produces kebab-case ids: `fashion`, `footwear`, `bags-accessories`, `hats-caps-beanies`, `watches`, `eyewear`, `jewelry`, `beauty-fragrance`, `home`, `tech`, `food-drink`, `wellness`.
+## Changes
 
-Today's maps point to stale labels (`beauty`, `fragrances`, `electronics`, `food`, `supplements`, `sports`, `accessories`, …) that no longer exist in `CATEGORIES`, so every lookup fails `CATEGORIES.find(...)` and defaults to `'all'` — onboarding preference is silently ignored.
+1. **Track preferred sub-type** alongside `defaultCategory`:
+   - From `profile.product_subcategories[0]`, remember the slug itself (e.g. `swimwear`) as `defaultSubtype` when its mapped family exists in `CATEGORIES`.
+   - Otherwise `defaultSubtype = '__all__'`.
 
-Also: the sub-type branch only triggers when `subs.length === 1`, but onboarding usually writes multiple sub-types, so it almost never fires.
+2. **Active sub-filter**:
+   - Add `selectedSub` state, default `null`.
+   - `activeSub = selectedSub ?? (activeCategory === defaultCategory ? defaultSubtype : '__all__')`.
+   - When the user switches family chip, reset `selectedSub` to `null` so the new family opens on `__all__`.
 
-### Changes (preserve structure, fix values)
+3. **Apply sub-filter to the grid**:
+   - Replace `itemMatchesDiscoverFilter(item.data, activeCategory, '__all__')` with `itemMatchesDiscoverFilter(item.data, activeCategory, activeSub)`.
 
-1. **Correct `SUBTYPE_TO_DISCOVER`** (keep the map, fix every value to a real Discover id):
-   - `beauty-skincare`, `makeup-lipsticks`, `fragrance` → `beauty-fragrance`
-   - `jewellery-rings`, `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets` → `jewelry`
-   - `watches` → `watches`
-   - `tech-devices` → `tech`
-   - `food`, `beverages`, `snacks-food` → `food-drink`
-   - `home-decor`, `furniture` → `home`
-   - `supplements-wellness` → `wellness`
-   - `activewear`, `swimwear`, `lingerie`, `streetwear`, `socks`, `garments`, `hoodies`, `dresses`, `jeans`, `trousers`, `jackets` → `fashion`
-   - `shoes`, `sneakers`, `boots`, `high-heels` → `footwear`
-   - `eyewear` → `eyewear`
-   - `bags-accessories`, `backpacks`, `wallets-cardholders`, `phone-cases`, `belts`, `scarves` → `bags-accessories`
-   - `caps`, `hats`, `beanies` → `hats-caps-beanies`
+4. **Render `DiscoverSubCategoryBar`** under the family chips, only when `isMultiSubFamily(activeCategory)` is true (already imported). Wire `selected={activeSub}` and `onSelect={setSelectedSub}`. Sub-types come from `getDiscoverSubtypes(activeCategory)`.
 
-2. **Correct `FAM_TO_DISC`** (same idea — values must be real Discover ids):
-   - `bags-accessories` → `bags-accessories`
-   - `beauty-fragrance` → `beauty-fragrance`
-   - `food-drink` → `food-drink`
-   - `tech` → `tech`
-   - `wellness` → `wellness`
-   - `watches` → `watches`
-   - `eyewear` → `eyewear`
-   - `footwear` → `footwear`
-   - `fashion` → `fashion`
-   - `home` → `home`
-   - `jewelry` → `jewelry`
-   - `hats-caps-beanies` → `hats-caps-beanies`
+5. **Graceful fallback**: if the sub-filtered grid is empty (e.g. no Swimwear presets yet), automatically fall back to `__all__` within the same family rather than showing the empty state — so the user still sees Fashion looks instead of an empty section. (Computed in the `filtered` memo.)
 
-   (Effectively becomes an identity map for current ids — keeps the structure as a safety net for any legacy/alias values.)
+6. **Keep**: 12-item cap, skeleton count, dashboard order, all data fetches.
 
-3. **Use the first sub-type even when user picked many** — change `if (subs?.length === 1)` to `if (subs && subs.length > 0)`. Onboarding writes multiple sub-types; today's `=== 1` gate skips the sub-type signal entirely, falling through to category-level which is coarser.
+## Result for the user
+- Selected Swimwear in onboarding → chip stays on **Fashion** (correct, Swimwear isn't a top-level family), but the grid is narrowed to **Swimwear** looks. A sub-row appears with `All / Swimwear / Dresses / Hoodies / ...` so they can broaden.
+- If no Swimwear items exist yet, the grid silently falls back to all Fashion items (no empty state).
 
-4. **Cap visible to 12** — `filtered.slice(0, 16)` → `filtered.slice(0, 12)`. Skeleton (8 placeholders) left as-is for snappy loading feel.
+## Out of scope
+Promoting Swimwear to its own Discover family, onboarding writers, Fresh Scenes, layout changes, RLS, DB.
 
-### Dashboard /app health check
-Reviewed `Dashboard.tsx` — hero → cards → `<DashboardDiscoverSection />` → `<DashboardFreshScenes />` → Create Video → rest. All sections have skeletons + null-empty guards. No layout/regression issues. No changes proposed here.
-
-### Out of scope
-Discover taxonomy, onboarding writers, Fresh Scenes, Dashboard layout, RLS, DB.
-
-### Risk
-Minimal — only adjusts two constants and one slice/length check inside an existing component. No data fetches, routes, or shared modules touched.
+## Risk
+Low. Pure presentation logic in one component. Empty-state fallback prevents regressions when a sub-type has no tagged items yet.
