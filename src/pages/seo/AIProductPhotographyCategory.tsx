@@ -128,14 +128,14 @@ export default function AIProductPhotographyCategory() {
       <main>
         <CategoryBreadcrumbs page={page} />
         <CategoryHero page={page} />
-        
+        {page.slug === 'socks' && <CategorySceneExamples page={page} />}
         <CategoryBuiltForEveryCategory page={page} />
         <CategoryMotionShowcase page={page} />
         <CategoryFeedShowcase page={page} />
         
         <CategoryVisualOutputs page={page} />
         {!hidePainAndUseCases && <CategoryPainPoints page={page} />}
-        <CategorySceneExamples page={page} />
+        {page.slug !== 'socks' && <CategorySceneExamples page={page} />}
         <PhotographyHowItWorks />
         {!hidePainAndUseCases && <CategoryUseCases page={page} />}
         <CategoryFAQ page={page} />
