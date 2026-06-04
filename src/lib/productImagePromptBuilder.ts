@@ -368,6 +368,7 @@ function defaultShadow(category?: string): string {
     case 'jeans':
     case 'trousers':
     case 'jackets':
+    case 'socks':
     case 'shoes':
     case 'sneakers':
     case 'boots':
