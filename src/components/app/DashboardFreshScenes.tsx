@@ -195,63 +195,35 @@ export function DashboardFreshScenes() {
       </div>
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[92dvh] sm:max-h-[90vh]">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[85dvh] sm:max-h-[90vh]">
           {preview && (
-            <div className="grid md:grid-cols-[auto_minmax(0,1fr)] bg-background overflow-y-auto max-h-[92dvh] sm:max-h-[90vh]">
-              <div className="relative bg-muted overflow-hidden aspect-[4/5] md:aspect-[4/5] md:h-[80vh] md:w-auto">
+            <div className="grid md:grid-cols-[auto_minmax(0,1fr)] bg-background overflow-y-auto max-h-[85dvh] sm:max-h-[90vh]">
+              <div className="relative bg-muted overflow-hidden max-h-[42dvh] md:max-h-none md:aspect-[4/5] md:h-[80vh] md:w-auto">
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full max-h-[42dvh] md:max-h-none object-cover"
                 />
               </div>
-              <div className="flex flex-col gap-5 md:gap-6 p-5 md:p-10 bg-background">
-                <div className="space-y-3">
+              <div className="flex flex-col gap-3 md:gap-6 p-4 md:p-10 bg-background">
+                <div className="space-y-2 md:space-y-3">
                   <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     {getCollectionLabel(preview.category_collection || '')}
                   </p>
-                  <DialogTitle className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
+                  <DialogTitle className="text-lg md:text-3xl font-bold text-foreground leading-tight">
                     {preview.title}
                   </DialogTitle>
-                  <DialogDescription className="text-[15px] leading-relaxed text-muted-foreground">
+                  <DialogDescription className="text-[13px] md:text-[15px] leading-snug md:leading-relaxed text-muted-foreground">
                     Use this look as the visual reference for your next product shoot
                   </DialogDescription>
                 </div>
-
-                <div className="hidden md:block border-t border-border/60" />
-
-                <div className="hidden md:block space-y-3">
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
-                    What you get
-                  </p>
-                  <ul className="space-y-2 text-sm text-foreground/85 leading-relaxed">
-                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>On-brand scene composition</li>
-                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>Lighting and color preserved</li>
-                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>Your product seamlessly placed</li>
-                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>2K PNG output</li>
-                  </ul>
-                </div>
-
-                <div className="hidden md:block border-t border-border/60" />
-
-                <dl className="hidden md:grid grid-cols-[110px_1fr] gap-y-2.5 text-sm">
-                  <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium self-center">Collection</dt>
-                  <dd className="text-foreground">{getCollectionLabel(preview.category_collection || '')}</dd>
-                  {preview.created_at && (
-                    <>
-                      <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium self-center">Added</dt>
-                      <dd className="text-foreground">{formatRelative(preview.created_at)}</dd>
-                    </>
-                  )}
-                </dl>
-
-                <div className="flex flex-col gap-3 pt-1 md:mt-auto md:pt-2">
+...
+                <div className="flex flex-col gap-2 md:gap-3 pt-1 md:mt-auto md:pt-2">
                   <Button
-                    size="lg"
                     onClick={() => useScene(preview.scene_id)}
                     onMouseUp={(e) => e.currentTarget.blur()}
                     onTouchEnd={(e) => e.currentTarget.blur()}
-                    className="w-full gap-2 focus:ring-0 focus:ring-offset-0 focus-visible:ring-2 focus-visible:ring-offset-2"
+                    className="w-full gap-2 md:h-11 md:text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-2 focus-visible:ring-offset-2"
                   >
                     <Sparkles className="w-4 h-4" />
                     Use this scene
