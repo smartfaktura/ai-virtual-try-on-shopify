@@ -35,6 +35,7 @@ export function DashboardDiscoverSection() {
   const { featuredMap } = useFeaturedItems();
   const { isSaved, toggleSave } = useSavedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSub, setSelectedSub] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const { data: profileCats } = useQuery({
     queryKey: ['dashboard-profile-cats', user?.id],
@@ -49,6 +50,7 @@ export function DashboardDiscoverSection() {
     enabled: !!user,
     staleTime: 10 * 60 * 1000,
   });
+
 
   // Maps profile sub-type slug → Discover family id (must match CATEGORIES ids
   // derived from getDiscoverFamilies()).
