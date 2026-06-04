@@ -602,6 +602,11 @@ function categoryOutfitDefaults(category?: string, gender?: string): OutfitPiece
       return isMale
         ? { top: 'plain white tee', bottom: 'slim dark wash denim', shoes: '', accessories: 'none' }
         : { top: 'plain white tee', bottom: 'cropped slim dark denim', shoes: '', accessories: 'none' };
+    case 'socks':
+      // Socks coexist with shoes — keep a simple casual outfit + minimal footwear so the socks lead.
+      return isMale
+        ? { top: 'plain white tee', bottom: 'cuffed mid-wash denim', shoes: 'low-profile white sneakers (optional, partially off)', accessories: 'none' }
+        : { top: 'plain white tee', bottom: 'cuffed mid-wash denim', shoes: 'low-profile white sneakers (optional, partially off)', accessories: 'none' };
     case 'jewellery-necklaces':
     case 'jewellery-earrings':
     case 'jewellery-bracelets':
