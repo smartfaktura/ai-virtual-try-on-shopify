@@ -1,23 +1,55 @@
-## Fix Fresh Scenes preview modal — black bars on desktop
+## Fix Steal the Look onboarding mapping (keep maps, just correct them) + cap to 12
 
-Single file: `src/components/app/DashboardFreshScenes.tsx`. No data, query, routing, or shared-component changes.
+Single file: `src/components/app/DashboardDiscoverSection.tsx`. No deletions of useful code — the two lookup tables stay, their values are corrected to match the real Discover family ids.
 
 ### Root cause
-On desktop the left modal pane is `bg-black` with `object-contain` and the column is `1.4fr` — wider than the image's 4:5 portrait aspect, so the image letterboxes with black bars on both sides. Mobile/tablet stack the image full-width, so the image's own ratio matches the column → no bars.
+`CATEGORIES` is built from `getDiscoverFamilies()` which produces kebab-case ids: `fashion`, `footwear`, `bags-accessories`, `hats-caps-beanies`, `watches`, `eyewear`, `jewelry`, `beauty-fragrance`, `home`, `tech`, `food-drink`, `wellness`.
 
-### Changes
+Today's maps point to stale labels (`beauty`, `fragrances`, `electronics`, `food`, `supplements`, `sports`, `accessories`, …) that no longer exist in `CATEGORIES`, so every lookup fails `CATEGORIES.find(...)` and defaults to `'all'` — onboarding preference is silently ignored.
 
-1. **Background token, not black** — `bg-black` → `bg-muted` on the left pane. Uses the design system; eliminates harsh black if any minor letterboxing ever appears.
+Also: the sub-type branch only triggers when `subs.length === 1`, but onboarding usually writes multiple sub-types, so it almost never fires.
 
-2. **Auto-sized image column** — grid: `md:grid-cols-[1.4fr_1fr]` → `md:grid-cols-[auto_minmax(0,1fr)]`. The image column hugs the natural image width, text panel takes the rest. No empty rails.
+### Changes (preserve structure, fix values)
 
-3. **Desktop image fills its column** — wrap the desktop `<img>` in a fixed-aspect block `aspect-[4/5] h-[80vh] w-auto` with `<img className="w-full h-full object-cover">`. Edge-to-edge fill, no bars.
+1. **Correct `SUBTYPE_TO_DISCOVER`** (keep the map, fix every value to a real Discover id):
+   - `beauty-skincare`, `makeup-lipsticks`, `fragrance` → `beauty-fragrance`
+   - `jewellery-rings`, `jewellery-necklaces`, `jewellery-earrings`, `jewellery-bracelets` → `jewelry`
+   - `watches` → `watches`
+   - `tech-devices` → `tech`
+   - `food`, `beverages`, `snacks-food` → `food-drink`
+   - `home-decor`, `furniture` → `home`
+   - `supplements-wellness` → `wellness`
+   - `activewear`, `swimwear`, `lingerie`, `streetwear`, `socks`, `garments`, `hoodies`, `dresses`, `jeans`, `trousers`, `jackets` → `fashion`
+   - `shoes`, `sneakers`, `boots`, `high-heels` → `footwear`
+   - `eyewear` → `eyewear`
+   - `bags-accessories`, `backpacks`, `wallets-cardholders`, `phone-cases`, `belts`, `scarves` → `bags-accessories`
+   - `caps`, `hats`, `beanies` → `hats-caps-beanies`
 
-4. **Mobile/tablet unchanged** — at `<md`, keep stacked layout, full-width image, `object-contain`, capped at `55vh`.
+2. **Correct `FAM_TO_DISC`** (same idea — values must be real Discover ids):
+   - `bags-accessories` → `bags-accessories`
+   - `beauty-fragrance` → `beauty-fragrance`
+   - `food-drink` → `food-drink`
+   - `tech` → `tech`
+   - `wellness` → `wellness`
+   - `watches` → `watches`
+   - `eyewear` → `eyewear`
+   - `footwear` → `footwear`
+   - `fashion` → `fashion`
+   - `home` → `home`
+   - `jewelry` → `jewelry`
+   - `hats-caps-beanies` → `hats-caps-beanies`
+
+   (Effectively becomes an identity map for current ids — keeps the structure as a safety net for any legacy/alias values.)
+
+3. **Use the first sub-type even when user picked many** — change `if (subs?.length === 1)` to `if (subs && subs.length > 0)`. Onboarding writes multiple sub-types; today's `=== 1` gate skips the sub-type signal entirely, falling through to category-level which is coarser.
+
+4. **Cap visible to 12** — `filtered.slice(0, 16)` → `filtered.slice(0, 12)`. Skeleton (8 placeholders) left as-is for snappy loading feel.
+
+### Dashboard /app health check
+Reviewed `Dashboard.tsx` — hero → cards → `<DashboardDiscoverSection />` → `<DashboardFreshScenes />` → Create Video → rest. All sections have skeletons + null-empty guards. No layout/regression issues. No changes proposed here.
 
 ### Out of scope
-- Pills, scene grid, query, RLS, Dashboard, other components.
-- Optimization is already correct (`getOptimizedUrl(..., { quality: 85 })`) — left as-is.
+Discover taxonomy, onboarding writers, Fresh Scenes, Dashboard layout, RLS, DB.
 
 ### Risk
-Minimal — pure CSS/markup change inside the existing modal; mobile/tablet path identical.
+Minimal — only adjusts two constants and one slice/length check inside an existing component. No data fetches, routes, or shared modules touched.

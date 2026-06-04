@@ -50,23 +50,41 @@ export function DashboardDiscoverSection() {
     staleTime: 10 * 60 * 1000,
   });
 
+  // Maps profile sub-type slug → Discover family id (must match CATEGORIES ids
+  // derived from getDiscoverFamilies()).
   const SUBTYPE_TO_DISCOVER: Record<string, string> = {
-    'beauty-skincare': 'beauty', 'makeup-lipsticks': 'beauty', 'fragrance': 'fragrances',
+    // Fashion
+    garments: 'fashion', hoodies: 'fashion', dresses: 'fashion', jeans: 'fashion',
+    trousers: 'fashion', jackets: 'fashion', activewear: 'fashion', swimwear: 'fashion',
+    lingerie: 'fashion', streetwear: 'fashion', socks: 'fashion',
+    // Footwear
+    shoes: 'footwear', sneakers: 'footwear', boots: 'footwear', 'high-heels': 'footwear',
+    // Bags & Accessories
+    'bags-accessories': 'bags-accessories', backpacks: 'bags-accessories',
+    'wallets-cardholders': 'bags-accessories', 'phone-cases': 'bags-accessories',
+    belts: 'bags-accessories', scarves: 'bags-accessories',
+    // Hats, Caps & Beanies
+    caps: 'hats-caps-beanies', hats: 'hats-caps-beanies', beanies: 'hats-caps-beanies',
+    // Watches / Eyewear
+    watches: 'watches',
+    eyewear: 'eyewear',
+    // Jewelry
     'jewellery-rings': 'jewelry', 'jewellery-necklaces': 'jewelry',
-    'jewellery-earrings': 'jewelry', 'jewellery-bracelets': 'jewelry', 'watches': 'jewelry',
-    'tech-devices': 'electronics',
-    'food': 'food', 'beverages': 'food', 'snacks-food': 'food',
-    'home-decor': 'home', 'furniture': 'home',
-    'supplements-wellness': 'supplements', 'activewear': 'sports',
-    'eyewear': 'accessories', 'bags-accessories': 'accessories', 'backpacks': 'accessories',
-    'belts': 'accessories', 'scarves': 'accessories', 'caps': 'accessories',
-    'wallets-cardholders': 'accessories',
-    'phone-cases': 'accessories',
+    'jewellery-earrings': 'jewelry', 'jewellery-bracelets': 'jewelry',
+    // Beauty & Fragrance
+    'beauty-skincare': 'beauty-fragrance', 'makeup-lipsticks': 'beauty-fragrance',
+    fragrance: 'beauty-fragrance',
+    // Home / Tech
+    'home-decor': 'home', furniture: 'home',
+    'tech-devices': 'tech',
+    // Food & Drink / Wellness
+    food: 'food-drink', beverages: 'food-drink', 'snacks-food': 'food-drink',
+    'supplements-wellness': 'wellness',
   };
 
   const defaultCategory = useMemo(() => {
     const subs = (profileCats as any)?.product_subcategories as string[] | null;
-    if (subs?.length === 1) {
+    if (subs && subs.length > 0) {
       const mapped = SUBTYPE_TO_DISCOVER[subs[0]];
       if (mapped && CATEGORIES.find(c => c.id === mapped)) return mapped;
     }
@@ -75,17 +93,27 @@ export function DashboardDiscoverSection() {
       const fam = cats[0];
       const direct = CATEGORIES.find(c => c.id === fam);
       if (direct) return direct.id;
-      // Map new family ids → discover category ids
+      // Safety net: alias map for any legacy/non-canonical family id.
       const FAM_TO_DISC: Record<string, string> = {
-        'bags-accessories': 'accessories', 'beauty-fragrance': 'beauty',
-        'food-drink': 'food', 'tech': 'electronics', 'wellness': 'supplements',
-        'watches': 'jewelry', 'eyewear': 'accessories', 'footwear': 'fashion',
+        fashion: 'fashion',
+        footwear: 'footwear',
+        'bags-accessories': 'bags-accessories',
+        'hats-caps-beanies': 'hats-caps-beanies',
+        watches: 'watches',
+        eyewear: 'eyewear',
+        jewelry: 'jewelry',
+        'beauty-fragrance': 'beauty-fragrance',
+        home: 'home',
+        tech: 'tech',
+        'food-drink': 'food-drink',
+        wellness: 'wellness',
       };
       const mapped = FAM_TO_DISC[fam];
-      if (mapped) return mapped;
+      if (mapped && CATEGORIES.find(c => c.id === mapped)) return mapped;
     }
     return 'all';
   }, [profileCats]);
+
 
   const activeCategory = selectedCategory ?? defaultCategory;
 
