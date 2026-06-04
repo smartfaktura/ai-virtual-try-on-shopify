@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,13 +112,15 @@ export function DashboardFreshScenes() {
             Just-added looks across your favorite categories
           </p>
         </div>
-        <Link
-          to="/app/discover"
+        <a
+          href="https://vovv.ai/product-visual-library"
+          target="_blank"
+          rel="noopener noreferrer"
           className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
           View all
           <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        </a>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -186,8 +188,6 @@ export function DashboardFreshScenes() {
                   alt={preview.title}
                   className="w-full h-full object-cover max-h-[55vh] md:max-h-none"
                 />
-                {/* Blend the image edge into the right panel — kills the harsh seam */}
-                <div className="hidden md:block pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-r from-transparent to-background" />
               </div>
               <div className="flex flex-col gap-5 p-6 md:p-8 bg-background">
                 <div className="space-y-2">
