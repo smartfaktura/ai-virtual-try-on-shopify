@@ -637,22 +637,25 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Credit packs */}
-        <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
-          <div className="space-y-3">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
-              Top-up
-            </p>
-            <h3 className="text-2xl font-semibold tracking-tight leading-none">Need more credits</h3>
-            <p className="text-sm text-muted-foreground">Purchase additional credits anytime · Credits never expire</p>
+        {/* Credit packs — paid plans only */}
+        {plan !== 'free' && (
+          <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
+            <div className="space-y-3">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+                Top-up
+              </p>
+              <h3 className="text-2xl font-semibold tracking-tight leading-none">Need more credits</h3>
+              <p className="text-sm text-muted-foreground">Purchase additional credits anytime · Credits never expire</p>
+            </div>
+            <div className="my-7 border-t border-border/60" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {creditPacks.map(pack => (
+                <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} isLoading={topUpLoadingId === pack.packId} disabled={!!topUpLoadingId} />
+              ))}
+            </div>
           </div>
-          <div className="my-7 border-t border-border/60" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {creditPacks.map(pack => (
-              <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} isLoading={topUpLoadingId === pack.packId} disabled={!!topUpLoadingId} />
-            ))}
-          </div>
-        </div>
+        )}
+
 
         {/* Cancel subscription link */}
         {plan !== 'free' && subscriptionStatus !== 'canceling' && (
