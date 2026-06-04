@@ -113,7 +113,7 @@ export function DashboardFreshScenes() {
           </p>
         </div>
         <Link
-          to="/product-visual-library#catalog-grid"
+          to="/app/discover"
           className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
           View all
