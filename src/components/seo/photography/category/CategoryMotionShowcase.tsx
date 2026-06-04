@@ -87,8 +87,20 @@ import pcp3 from '@/assets/seo/phone-cases-motion-3.jpg.asset.json';
 import pcp4 from '@/assets/seo/phone-cases-motion-4.jpg.asset.json';
 import pcp5 from '@/assets/seo/phone-cases-motion-5.jpg.asset.json';
 import pcp6 from '@/assets/seo/phone-cases-motion-6.jpg.asset.json';
+import skv1 from '@/assets/seo/socks-motion-1.mp4.asset.json';
+import skv2 from '@/assets/seo/socks-motion-2.mp4.asset.json';
+import skv3 from '@/assets/seo/socks-motion-3.mp4.asset.json';
+import skv4 from '@/assets/seo/socks-motion-4.mp4.asset.json';
+import skv5 from '@/assets/seo/socks-motion-5.mp4.asset.json';
+import skv6 from '@/assets/seo/socks-motion-6.mp4.asset.json';
+import skp1 from '@/assets/seo/socks-motion-1.jpg.asset.json';
+import skp2 from '@/assets/seo/socks-motion-2.jpg.asset.json';
+import skp3 from '@/assets/seo/socks-motion-3.jpg.asset.json';
+import skp4 from '@/assets/seo/socks-motion-4.jpg.asset.json';
+import skp5 from '@/assets/seo/socks-motion-5.jpg.asset.json';
+import skp6 from '@/assets/seo/socks-motion-6.jpg.asset.json';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses' | 'phone-cases';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses' | 'phone-cases' | 'socks';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
