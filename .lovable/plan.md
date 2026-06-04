@@ -1,22 +1,25 @@
-## Plan — Preselect Wedding Dress on Dashboard "Steal the Look"
+## Plan — Fix Fresh Scenes preview modal overflow on mobile
 
 ### Root cause
 
-`src/components/app/DashboardDiscoverSection.tsx` has a local `SUBTYPE_TO_DISCOVER` map (lines 57-85) that resolves the user's first onboarding sub-type slug to the matching Discover family. Wedding Dress was added to onboarding (`wedding-dress`) but the map was never updated, so when the user's `product_subcategories[0]` is `'wedding-dress'`, lookup returns undefined, the function falls through to the family-id branch, and the Wedding Dress sub-pill is never preselected.
+In `src/components/app/DashboardFreshScenes.tsx` (line 198), the modal uses:
 
-### Fix — single line in `src/components/app/DashboardDiscoverSection.tsx`
+```
+<DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl">
+```
 
-In the Fashion block of `SUBTYPE_TO_DISCOVER` (line 59), add `'wedding-dress': 'fashion'` alongside `garments`, `hoodies`, `dresses`, etc.
+No `max-h` and no inner scroll. On mobile the stacked image (`max-h-[55vh]`) + the long right column (eyebrow, title, subtitle, "What you get" list, divider, meta dl, two CTAs) exceeds 100vh, so the dialog runs off the bottom of the screen. Because the wrapper sets `overflow-hidden`, content below the viewport is simply clipped — exactly what the screenshot shows (no close button, body cut off).
 
-That's enough — the existing logic then:
-1. Maps `wedding-dress` → `fashion` family
-2. Calls `getDiscoverSubtypes('fashion')` which already includes `wedding-dress` (from yesterday's onboardingTaxonomy change)
-3. Sets `defaultSubtype = 'wedding-dress'`, reorders pills so it appears right after Featured, and selects it
+### Fix — single file, `src/components/app/DashboardFreshScenes.tsx`
+
+1. **DialogContent** (line 198): change to `max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[92dvh] sm:max-h-[90vh]` and add a wrapping scroller. Simplest: drop `overflow-hidden` from the outer DialogContent and put `overflow-y-auto max-h-[92dvh]` on the inner grid container (line 200) so the image + right column scroll together inside the dialog. Keep the rounded corners by leaving `overflow-hidden` on DialogContent and instead putting `overflow-y-auto` on the inner grid `<div>`.
+2. **Image cell** (line 201): tighten the mobile image height so the title/CTAs are visible without scrolling. Change `md:aspect-[4/5] md:h-[80vh] md:w-auto` → keep desktop classes, and change the `<img>` max height from `max-h-[55vh] md:max-h-none` to `max-h-[42vh] md:max-h-none`. This gives roughly half the screen to the image and half to the structured copy + CTAs on a typical phone.
+3. **Right column** (line 208): reduce mobile padding `p-6 md:p-10` → `p-5 md:p-10` and gap `gap-6` → `gap-5 md:gap-6` so the dividers, bullet list, meta rows, and CTAs fit more comfortably above the fold.
 
 ### Out of scope
 
-No other files. The pill already exists in the row (visible in screenshot) and item matching already handles the slug.
+Desktop layout (≥ md) is unchanged — only mobile spacing and the scroll container. No data, query, taxonomy, or routing changes.
 
 ### Risk
 
-None — pure constant addition.
+None — purely CSS. `dvh` falls back gracefully (we still set `sm:max-h-[90vh]`).

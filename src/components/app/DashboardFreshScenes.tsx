@@ -195,17 +195,17 @@ export function DashboardFreshScenes() {
       </div>
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[92dvh] sm:max-h-[90vh]">
           {preview && (
-            <div className="grid md:grid-cols-[auto_minmax(0,1fr)] bg-background">
+            <div className="grid md:grid-cols-[auto_minmax(0,1fr)] bg-background overflow-y-auto max-h-[92dvh] sm:max-h-[90vh]">
               <div className="relative bg-muted overflow-hidden md:aspect-[4/5] md:h-[80vh] md:w-auto">
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
-                  className="w-full h-full object-cover max-h-[55vh] md:max-h-none"
+                  className="w-full h-full object-cover max-h-[42vh] md:max-h-none"
                 />
               </div>
-              <div className="flex flex-col gap-6 p-6 md:p-10 bg-background">
+              <div className="flex flex-col gap-5 md:gap-6 p-5 md:p-10 bg-background">
                 <div className="space-y-3">
                   <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     {getCollectionLabel(preview.category_collection || '')}
