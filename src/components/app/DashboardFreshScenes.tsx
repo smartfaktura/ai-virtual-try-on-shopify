@@ -197,15 +197,16 @@ export function DashboardFreshScenes() {
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[85dvh] sm:max-h-[90vh]">
           {preview && (
-            <div className="grid md:grid-cols-[auto_minmax(0,1fr)] bg-background overflow-y-auto max-h-[85dvh] sm:max-h-[90vh]">
-              <div className="relative bg-muted overflow-hidden aspect-[4/5] md:aspect-[4/5] md:h-[80vh] md:w-auto">
+            <div className="flex flex-col md:grid md:grid-cols-[auto_minmax(0,1fr)] bg-background max-h-[85dvh] sm:max-h-[90vh]">
+              <div className="relative bg-muted overflow-hidden shrink-0 w-full max-h-[55dvh] aspect-[4/5] md:max-h-none md:aspect-[4/5] md:h-[80vh] md:w-auto">
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex flex-col gap-2 md:gap-6 px-4 py-3 md:p-10 bg-background">
+              <div className="flex flex-col gap-2 md:gap-6 px-4 py-3 md:p-10 bg-background shrink-0 md:flex-1">
+
                 <div className="space-y-0 md:space-y-3">
                   <p className="hidden md:block text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     {getCollectionLabel(preview.category_collection || '')}
