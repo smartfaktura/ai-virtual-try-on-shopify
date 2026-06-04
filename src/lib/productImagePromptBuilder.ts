@@ -413,6 +413,7 @@ function defaultStyling(category?: string): string {
     case 'jeans':
     case 'trousers':
     case 'jackets':
+    case 'socks':
       return 'Clean commercial styling — crisp, professional composition.';
     case 'lingerie':
     case 'swimwear':
