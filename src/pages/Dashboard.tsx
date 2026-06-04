@@ -173,6 +173,10 @@ export default function Dashboard() {
           <DashboardDiscoverSection />
         </div>
 
+        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '600px' }}>
+          <DashboardFreshScenes />
+        </div>
+
         {/* Create Video Section */}
         <div className="space-y-4">
           <div>
