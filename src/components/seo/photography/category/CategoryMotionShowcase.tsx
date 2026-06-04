@@ -213,6 +213,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     sub: 'Turn one case photo into scroll-stopping motion for ads, reels and PDP loops',
     aria: 'AI-generated phone case motion clip',
   },
+  socks: {
+    eyebrow: 'Motion · Socks in movement',
+    heading: 'Your socks, brought to life',
+    sub: 'Turn one sock photo into scroll-stopping motion for ads, reels and PDP loops',
+    aria: 'AI-generated sock motion clip',
+  },
 };
 
 /**
