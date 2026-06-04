@@ -238,14 +238,6 @@ export function DiscoverDetailModal({
                 className="relative max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
                 style={{ aspectRatio: ar, width: 'auto', height: '100%' }}
               >
-                {lqipUrl && (
-                  <img
-                    src={lqipUrl}
-                    alt=""
-                    aria-hidden
-                    className="absolute inset-0 w-full h-full object-contain rounded-lg blur-xl scale-105"
-                  />
-                )}
                 <ShimmerImage
                   src={imageUrl}
                   alt={title}
@@ -258,11 +250,6 @@ export function DiscoverDetailModal({
               </div>
             );
           })()}
-          {/* Soft blend into the panel on desktop, removes the harsh seam */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 hidden md:block w-6 bg-gradient-to-r from-transparent to-background"
-          />
         </div>
 
         {/* Right — Controls panel */}
