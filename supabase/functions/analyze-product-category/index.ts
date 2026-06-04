@@ -42,6 +42,7 @@ const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
   [/\bdress(?!\s+(pants?|shirts?|shorts?|shoes?|socks?|code))\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
   [/jacket|blazer|bomber|puffer|parka|trench/i, "jackets"],
   [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression|legging|sports bra|rash guard|\bjersey\b|tracksuit|\byoga\b|pilates|\brunning\b|jogger|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
+  [/\bsocks?\b|crew sock|ankle sock|no[- ]?show sock|knee[- ]?high sock|tube sock|athletic sock|dress sock|wool sock|compression sock/i, "socks"],
   [/swimwear|bikini|swimsuit|swim trunks/i, "swimwear"],
   [/lingerie|\bbra\b|underwear|corset/i, "lingerie"],
 ];
