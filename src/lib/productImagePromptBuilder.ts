@@ -478,6 +478,7 @@ function defaultLighting(category?: string): string {
     case 'jeans':
     case 'trousers':
     case 'jackets': return 'Even soft studio lighting revealing fabric texture and true color.';
+    case 'socks': return 'Even soft studio lighting revealing knit texture, cuff ribbing, and true sock color.';
     case 'bags-accessories':
     case 'backpacks':
     case 'wallets-cardholders':
