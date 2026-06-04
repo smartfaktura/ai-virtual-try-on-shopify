@@ -47,6 +47,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'swimwear': ['swimwear', 'bikini', 'swimsuit', 'one-piece', 'swim trunks', 'board shorts', 'bathing suit', 'rash guard'],
   'lingerie': ['lingerie', 'bra', 'underwear', 'bodysuit', 'corset', 'negligee', 'camisole', 'teddy', 'intimates'],
   'kidswear': ['kids', 'children', 'baby', 'toddler', 'infant', 'kidswear', 'boys', 'girls', 'newborn', 'junior'],
+  'socks': ['sock', 'socks', 'crew sock', 'ankle sock', 'no-show sock', 'knee-high sock', 'tube sock', 'athletic sock', 'dress sock', 'wool sock', 'compression sock'],
   'makeup-lipsticks': ['lipstick', 'mascara', 'foundation', 'concealer', 'blush', 'eyeshadow', 'makeup', 'cosmetic', 'lip gloss', 'lip liner', 'bronzer', 'highlighter', 'primer', 'eyeliner', 'contour', 'setting powder', 'setting spray', 'rouge', 'cheek'],
   'beauty-skincare': ['serum', 'moisturizer', 'cleanser', 'toner', 'skincare', 'cream', 'sunscreen', 'essence', 'treatment', 'mask', 'shampoo', 'conditioner', 'body wash', 'face wash', 'lotion', 'exfoliant', 'retinol', 'hyaluronic'],
   // ── Generic parent categories (fallback) ──
