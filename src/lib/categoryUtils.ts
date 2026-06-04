@@ -115,6 +115,7 @@ export const categoryLabels: Partial<Record<TemplateCategory, string>> = {
   jeans: 'Jeans',
   trousers: 'Trousers',
   jackets: 'Jackets',
+  socks: 'Socks',
 };
 
 /**
