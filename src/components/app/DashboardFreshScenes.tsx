@@ -218,9 +218,9 @@ export function DashboardFreshScenes() {
                   </DialogDescription>
                 </div>
 
-                <div className="border-t border-border/60" />
+                <div className="hidden md:block border-t border-border/60" />
 
-                <div className="space-y-3">
+                <div className="hidden md:block space-y-3">
                   <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     What you get
                   </p>
@@ -232,9 +232,9 @@ export function DashboardFreshScenes() {
                   </ul>
                 </div>
 
-                <div className="border-t border-border/60" />
+                <div className="hidden md:block border-t border-border/60" />
 
-                <dl className="grid grid-cols-[110px_1fr] gap-y-2.5 text-sm">
+                <dl className="hidden md:grid grid-cols-[110px_1fr] gap-y-2.5 text-sm">
                   <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium self-center">Collection</dt>
                   <dd className="text-foreground">{getCollectionLabel(preview.category_collection || '')}</dd>
                   {preview.created_at && (
