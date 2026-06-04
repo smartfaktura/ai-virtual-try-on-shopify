@@ -202,7 +202,7 @@ export function DashboardFreshScenes() {
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
-                  className="w-full h-full object-cover max-h-[42vh] md:max-h-none"
+                  className="w-full h-full object-contain md:object-cover max-h-[62vh] md:max-h-none"
                 />
               </div>
               <div className="flex flex-col gap-5 md:gap-6 p-5 md:p-10 bg-background">

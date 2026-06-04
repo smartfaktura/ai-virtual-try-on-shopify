@@ -1,25 +1,24 @@
-## Plan — Fix Fresh Scenes preview modal overflow on mobile
+## Plan — Mobile: prioritize image, hide details, keep title + CTA
 
-### Root cause
+On mobile (< md), the Fresh Scenes preview modal should feel image-first: large image, eyebrow + title + one-line subtitle, primary "Use this scene" CTA, Close link. Hide the "What you get" bullets, the divider above it, and the meta `dl` (Collection / Added). Desktop layout stays exactly as it is today.
 
-In `src/components/app/DashboardFreshScenes.tsx` (line 198), the modal uses:
+### File — `src/components/app/DashboardFreshScenes.tsx`
 
-```
-<DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl">
-```
+1. **Image (line 205)** — let the image breathe again. Change `max-h-[42vh] md:max-h-none` → `max-h-[62vh] md:max-h-none`, and switch `object-cover` → `object-contain md:object-cover` so nothing is cropped on a portrait mobile screen. Add `bg-muted` already present on the wrapper handles the letterbox.
+2. **"What you get" block (lines 221-233)** — wrap the divider + section in `hidden md:block` so it only renders ≥ md.
+3. **Meta `dl` block (lines 235-246)** — wrap the divider + `dl` in `hidden md:grid` (use a `<div className="hidden md:contents">` wrapper, or simpler: add `hidden md:block` to the divider and `hidden md:grid` to the `dl`).
+4. **Right column padding/gap (line 208)** — keep `gap-5 md:gap-6 p-5 md:p-10`; no change.
+5. **CTA group (line 248)** — remove `mt-auto` since on mobile the column is short now and `mt-auto` would push the buttons against an empty space; replace with plain `flex flex-col gap-3 pt-1 md:mt-auto md:pt-2`.
 
-No `max-h` and no inner scroll. On mobile the stacked image (`max-h-[55vh]`) + the long right column (eyebrow, title, subtitle, "What you get" list, divider, meta dl, two CTAs) exceeds 100vh, so the dialog runs off the bottom of the screen. Because the wrapper sets `overflow-hidden`, content below the viewport is simply clipped — exactly what the screenshot shows (no close button, body cut off).
+### Result
 
-### Fix — single file, `src/components/app/DashboardFreshScenes.tsx`
-
-1. **DialogContent** (line 198): change to `max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[92dvh] sm:max-h-[90vh]` and add a wrapping scroller. Simplest: drop `overflow-hidden` from the outer DialogContent and put `overflow-y-auto max-h-[92dvh]` on the inner grid container (line 200) so the image + right column scroll together inside the dialog. Keep the rounded corners by leaving `overflow-hidden` on DialogContent and instead putting `overflow-y-auto` on the inner grid `<div>`.
-2. **Image cell** (line 201): tighten the mobile image height so the title/CTAs are visible without scrolling. Change `md:aspect-[4/5] md:h-[80vh] md:w-auto` → keep desktop classes, and change the `<img>` max height from `max-h-[55vh] md:max-h-none` to `max-h-[42vh] md:max-h-none`. This gives roughly half the screen to the image and half to the structured copy + CTAs on a typical phone.
-3. **Right column** (line 208): reduce mobile padding `p-6 md:p-10` → `p-5 md:p-10` and gap `gap-6` → `gap-5 md:gap-6` so the dividers, bullet list, meta rows, and CTAs fit more comfortably above the fold.
+- **Mobile**: image (up to 62vh, no crop) → eyebrow → title → 1-line subtitle → "Use this scene" → Close. Fits inside the 92dvh modal without scrolling on standard phones.
+- **Desktop**: unchanged — full structured right panel with bullets, meta, CTAs.
 
 ### Out of scope
 
-Desktop layout (≥ md) is unchanged — only mobile spacing and the scroll container. No data, query, taxonomy, or routing changes.
+No data, query, or routing changes. Same Dialog wrapper and scroll container as the previous fix.
 
 ### Risk
 
-None — purely CSS. `dvh` falls back gracefully (we still set `sm:max-h-[90vh]`).
+None — Tailwind responsive utility toggles only.
