@@ -1,27 +1,22 @@
-## Plan — Surface Wedding Dress as a sub-type under Fashion
+## Plan — Preselect Wedding Dress on Dashboard "Steal the Look"
 
-`wedding-dress` already exists everywhere downstream (CATEGORY_FAMILY_MAP maps it to Fashion, productCategories.ts groups it under Fashion & Apparel, SUB_FAMILY_LABEL_OVERRIDES already renders the label "Wedding Dress"). The only reason it's missing from onboarding sub-types, Discover's Fashion sub-pill row, and the Admin Recommended Scenes sub-tabs is that it's not listed in `FAMILY_SUB_ORDER.Fashion` inside `src/lib/onboardingTaxonomy.ts`. Once added, `SUB_TYPES_BY_FAMILY.Fashion` includes it and every consumer picks it up.
+### Root cause
 
-### File — `src/lib/onboardingTaxonomy.ts`
+`src/components/app/DashboardDiscoverSection.tsx` has a local `SUBTYPE_TO_DISCOVER` map (lines 57-85) that resolves the user's first onboarding sub-type slug to the matching Discover family. Wedding Dress was added to onboarding (`wedding-dress`) but the map was never updated, so when the user's `product_subcategories[0]` is `'wedding-dress'`, lookup returns undefined, the function falls through to the family-id branch, and the Wedding Dress sub-pill is never preselected.
 
-1. `FAMILY_SUB_ORDER.Fashion` (line 25-36): insert `'wedding-dress'` right after `'dresses'` so the chip order reads: garments, hoodies, dresses, wedding-dress, jeans, trousers, jackets, activewear, swimwear, lingerie, socks.
-2. `SUBTYPE_NOUN` (line 173-221): add `'wedding-dress': 'wedding dress'` in the Fashion block so the dashboard headline copy (`buildMultiSubtypeHeadline`) renders correctly when a user selects it.
+### Fix — single line in `src/components/app/DashboardDiscoverSection.tsx`
 
-### What flows automatically (no other edits)
+In the Fashion block of `SUBTYPE_TO_DISCOVER` (line 59), add `'wedding-dress': 'fashion'` alongside `garments`, `hoodies`, `dresses`, etc.
 
-- **Onboarding Step 3** — Fashion section gets a "Wedding Dress" chip (uses `SUB_TYPES_BY_FAMILY.Fashion`).
-- **Settings sub-type editor** — same source.
-- **/app/discover Fashion pill** — sub-pill row pulls `getDiscoverSubtypes('fashion')`, so a Wedding Dress sub-pill appears next to Dresses.
-- **/app/discover item matching** — `itemMatchesDiscoverFilter` already supports filtering items where `subcategory === 'wedding-dress'` under the Fashion family.
-- **Admin Recommended Scenes** — the Fashion tab's sub-collection tabs derive from `SUB_TYPES_BY_FAMILY`, so a Wedding Dress sub-tab appears, letting the admin curate `recommended_scenes` rows tagged `category = 'wedding-dress'`.
-- **Round-robin interleavers** — `interleaveByFamilyAndSubFamily` already treats each `category_collection` slug as its own sub-bucket, so wedding-dress items rotate naturally inside the Fashion family.
+That's enough — the existing logic then:
+1. Maps `wedding-dress` → `fashion` family
+2. Calls `getDiscoverSubtypes('fashion')` which already includes `wedding-dress` (from yesterday's onboardingTaxonomy change)
+3. Sets `defaultSubtype = 'wedding-dress'`, reorders pills so it appears right after Featured, and selects it
 
 ### Out of scope
 
-- No DB changes — `wedding-dress` slug already exists in `product_image_scenes.category_collection` and `discover_presets.subcategory`.
-- No changes to `sceneTaxonomy.ts`, `categoryConstants.ts`, `productCategories.ts`, or `categoryResolver.ts` — they already handle the slug.
-- No headline override in `SUBTYPE_HEADLINES` (Fashion's family headline covers it; can revisit if specifically requested).
+No other files. The pill already exists in the row (visible in screenshot) and item matching already handles the slug.
 
 ### Risk
 
-Minimal. One slug added to one ordered array and one noun lookup. TypeScript build will catch any stray issues.
+None — pure constant addition.
