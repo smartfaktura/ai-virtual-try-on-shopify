@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles, Layers, RefreshCw, Compass, Wand2, Film, Clapperb
 import { Button } from '@/components/ui/button';
 import { UpgradePlanModal } from '@/components/app/UpgradePlanModal';
 import { DashboardDiscoverSection } from '@/components/app/DashboardDiscoverSection';
+import { DashboardFreshScenes } from '@/components/app/DashboardFreshScenes';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
