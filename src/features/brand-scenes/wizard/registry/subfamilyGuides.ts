@@ -93,6 +93,17 @@ export const SUBFAMILY_GUIDES: Partial<Record<Key, SubfamilyGuide>> = {
     mustWearProduct: true,
     safeguards: [],
   },
+  "fashion/socks": {
+    productNoun: "socks",
+    wardrobe:
+      "Model wears the brand's socks as the hero piece — a matching pair visible on both feet, cuff height and knit pattern readable. Shoes may be off, slipped on, or peeking; the socks lead the frame.",
+    safeguards: [
+      "Always render a matching pair — never a single sock.",
+      "Do not morph the socks into shoes or hide them entirely inside footwear.",
+    ],
+    mustWearProduct: true,
+  },
+
 
   // ── Footwear ───────────────────────────────────────────────────────────
   "footwear/sneakers": {
