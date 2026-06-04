@@ -169,8 +169,20 @@ export function DashboardDiscoverSection() {
   // Sub-types available for the active family chip
   const subcategoryItems = useMemo(() => {
     if (activeCategory === 'all') return [];
-    return getDiscoverSubtypes(activeCategory).map((s) => ({ id: s.slug, label: s.label }));
-  }, [activeCategory]);
+    const items = getDiscoverSubtypes(activeCategory).map((s) => ({ id: s.slug, label: s.label }));
+    if (
+      activeCategory === defaultCategory &&
+      defaultSubtype &&
+      defaultSubtype !== '__all__'
+    ) {
+      const idx = items.findIndex((i) => i.id === defaultSubtype);
+      if (idx > 0) {
+        const [preferred] = items.splice(idx, 1);
+        items.unshift(preferred);
+      }
+    }
+    return items;
+  }, [activeCategory, defaultCategory, defaultSubtype]);
 
   const showSubBar = activeCategory !== 'all' && isMultiSubFamily(activeCategory);
 
