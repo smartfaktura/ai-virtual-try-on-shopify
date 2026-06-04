@@ -35,6 +35,7 @@ export function DashboardDiscoverSection() {
   const { featuredMap } = useFeaturedItems();
   const { isSaved, toggleSave } = useSavedItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSub, setSelectedSub] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const { data: profileCats } = useQuery({
     queryKey: ['dashboard-profile-cats', user?.id],
@@ -49,6 +50,7 @@ export function DashboardDiscoverSection() {
     enabled: !!user,
     staleTime: 10 * 60 * 1000,
   });
+
 
   // Maps profile sub-type slug → Discover family id (must match CATEGORIES ids
   // derived from getDiscoverFamilies()).
@@ -82,17 +84,22 @@ export function DashboardDiscoverSection() {
     'supplements-wellness': 'wellness',
   };
 
-  const defaultCategory = useMemo(() => {
+  const { defaultCategory, defaultSubtype } = useMemo(() => {
     const subs = (profileCats as any)?.product_subcategories as string[] | null;
     if (subs && subs.length > 0) {
-      const mapped = SUBTYPE_TO_DISCOVER[subs[0]];
-      if (mapped && CATEGORIES.find(c => c.id === mapped)) return mapped;
+      const slug = subs[0];
+      const mapped = SUBTYPE_TO_DISCOVER[slug];
+      if (mapped && CATEGORIES.find(c => c.id === mapped)) {
+        // Confirm the slug is actually a known sub-type of the family.
+        const isKnownSub = getDiscoverSubtypes(mapped).some(s => s.slug === slug);
+        return { defaultCategory: mapped, defaultSubtype: isKnownSub ? slug : '__all__' };
+      }
     }
     const cats = profileCats?.product_categories as string[] | null;
     if (cats?.length && cats[0] !== 'any') {
       const fam = cats[0];
       const direct = CATEGORIES.find(c => c.id === fam);
-      if (direct) return direct.id;
+      if (direct) return { defaultCategory: direct.id, defaultSubtype: '__all__' };
       // Safety net: alias map for any legacy/non-canonical family id.
       const FAM_TO_DISC: Record<string, string> = {
         fashion: 'fashion',
@@ -109,13 +116,23 @@ export function DashboardDiscoverSection() {
         wellness: 'wellness',
       };
       const mapped = FAM_TO_DISC[fam];
-      if (mapped && CATEGORIES.find(c => c.id === mapped)) return mapped;
+      if (mapped && CATEGORIES.find(c => c.id === mapped)) {
+        return { defaultCategory: mapped, defaultSubtype: '__all__' };
+      }
     }
-    return 'all';
+    return { defaultCategory: 'all', defaultSubtype: '__all__' };
   }, [profileCats]);
 
 
   const activeCategory = selectedCategory ?? defaultCategory;
+  const activeSub =
+    selectedSub ??
+    (activeCategory === defaultCategory ? defaultSubtype : '__all__');
+
+  const handleSelectCategory = (id: string) => {
+    setSelectedCategory(id);
+    setSelectedSub(null);
+  };
 
 
   // Reorder categories: put user's preferred category right after "All"
@@ -139,26 +156,26 @@ export function DashboardDiscoverSection() {
   const orderedCategoriesFiltered = useMemo(() => {
     const nonEmpty = new Set<string>(['all']);
     for (const item of allItems) {
-      if (activeCategory === 'all' || true) {
-        // mark every family that has at least one matching item under '__all__'
-        for (const cat of CATEGORIES) {
-          if (cat.id === 'all') continue;
-          if (itemMatchesDiscoverFilter(item.data, cat.id, '__all__')) {
-            nonEmpty.add(cat.id);
-          }
+      for (const cat of CATEGORIES) {
+        if (cat.id === 'all') continue;
+        if (itemMatchesDiscoverFilter(item.data, cat.id, '__all__')) {
+          nonEmpty.add(cat.id);
         }
       }
     }
     return orderedCategories.filter((c) => nonEmpty.has(c.id));
-  }, [allItems]);
+  }, [allItems, orderedCategories]);
 
-  const filtered = useMemo(() => {
-    const items = activeCategory === 'all'
-      ? allItems
-      : allItems.filter((item) => itemMatchesDiscoverFilter(item.data, activeCategory, '__all__'));
-    
-    // Sort: featured first, then by created_at desc — matching Discover page
-    return [...items].sort((a, b) => {
+  // Sub-types available for the active family chip
+  const subcategoryItems = useMemo(() => {
+    if (activeCategory === 'all') return [];
+    return getDiscoverSubtypes(activeCategory).map((s) => ({ id: s.slug, label: s.label }));
+  }, [activeCategory]);
+
+  const showSubBar = activeCategory !== 'all' && isMultiSubFamily(activeCategory);
+
+  const sortItems = (items: DiscoverItem[]) =>
+    [...items].sort((a, b) => {
       const aKey = `${a.type}:${a.type === 'preset' ? a.data.id : a.data.poseId}`;
       const bKey = `${b.type}:${b.type === 'preset' ? b.data.id : b.data.poseId}`;
       const aFeat = featuredMap.get(aKey);
@@ -170,9 +187,25 @@ export function DashboardDiscoverSection() {
       const bDate = b.data.created_at ? new Date(b.data.created_at).getTime() : 0;
       return bDate - aDate;
     });
-  }, [allItems, activeCategory, featuredMap]);
+
+  const filtered = useMemo(() => {
+    if (activeCategory === 'all') return sortItems(allItems);
+    const withSub = allItems.filter((item) =>
+      itemMatchesDiscoverFilter(item.data, activeCategory, activeSub)
+    );
+    // Graceful fallback: if the sub-filter empties the grid, fall back to
+    // showing all items in the family rather than an empty state.
+    if (withSub.length === 0 && activeSub !== '__all__') {
+      const familyAll = allItems.filter((item) =>
+        itemMatchesDiscoverFilter(item.data, activeCategory, '__all__')
+      );
+      return sortItems(familyAll);
+    }
+    return sortItems(withSub);
+  }, [allItems, activeCategory, activeSub, featuredMap]);
 
   const visible = filtered.slice(0, 12);
+
 
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
@@ -281,9 +314,18 @@ export function DashboardDiscoverSection() {
       <DiscoverCategoryBar
         categories={orderedCategoriesFiltered}
         selectedCategory={activeCategory}
-        onSelectCategory={setSelectedCategory}
-        
+        onSelectCategory={handleSelectCategory}
       />
+
+      {showSubBar && (
+        <DiscoverSubCategoryBar
+          familyLabel={CATEGORIES.find(c => c.id === activeCategory)?.label ?? ''}
+          subcategories={subcategoryItems}
+          selectedSubcategory={activeSub}
+          onSelectSubcategory={setSelectedSub}
+        />
+      )}
+
 
       {visible.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
