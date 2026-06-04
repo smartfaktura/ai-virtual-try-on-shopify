@@ -1,56 +1,27 @@
-## Plan — Refine Fresh Scenes preview modal (right panel)
+## Plan — Surface Wedding Dress as a sub-type under Fashion
 
-File: `src/components/app/DashboardFreshScenes.tsx` (the modal opened from /app dashboard Fresh Scenes grid).
+`wedding-dress` already exists everywhere downstream (CATEGORY_FAMILY_MAP maps it to Fashion, productCategories.ts groups it under Fashion & Apparel, SUB_FAMILY_LABEL_OVERRIDES already renders the label "Wedding Dress"). The only reason it's missing from onboarding sub-types, Discover's Fashion sub-pill row, and the Admin Recommended Scenes sub-tabs is that it's not listed in `FAMILY_SUB_ORDER.Fashion` inside `src/lib/onboardingTaxonomy.ts`. Once added, `SUB_TYPES_BY_FAMILY.Fashion` includes it and every consumer picks it up.
 
-### Problem
-On desktop the right column has only an eyebrow, title, one-line description, then ~500px of empty space before two stacked CTAs. It feels unfinished.
+### File — `src/lib/onboardingTaxonomy.ts`
 
-### New right-panel structure (desktop)
+1. `FAMILY_SUB_ORDER.Fashion` (line 25-36): insert `'wedding-dress'` right after `'dresses'` so the chip order reads: garments, hoodies, dresses, wedding-dress, jeans, trousers, jackets, activewear, swimwear, lingerie, socks.
+2. `SUBTYPE_NOUN` (line 173-221): add `'wedding-dress': 'wedding dress'` in the Fashion block so the dashboard headline copy (`buildMultiSubtypeHeadline`) renders correctly when a user selects it.
 
-```
-WEDDING DRESS                    ← uppercase eyebrow, tracking-wider (unchanged)
+### What flows automatically (no other edits)
 
-Lake Column Bride                ← H2 (unchanged)
+- **Onboarding Step 3** — Fashion section gets a "Wedding Dress" chip (uses `SUB_TYPES_BY_FAMILY.Fashion`).
+- **Settings sub-type editor** — same source.
+- **/app/discover Fashion pill** — sub-pill row pulls `getDiscoverSubtypes('fashion')`, so a Wedding Dress sub-pill appears next to Dresses.
+- **/app/discover item matching** — `itemMatchesDiscoverFilter` already supports filtering items where `subcategory === 'wedding-dress'` under the Fashion family.
+- **Admin Recommended Scenes** — the Fashion tab's sub-collection tabs derive from `SUB_TYPES_BY_FAMILY`, so a Wedding Dress sub-tab appears, letting the admin curate `recommended_scenes` rows tagged `category = 'wedding-dress'`.
+- **Round-robin interleavers** — `interleaveByFamilyAndSubFamily` already treats each `category_collection` slug as its own sub-bucket, so wedding-dress items rotate naturally inside the Fashion family.
 
-Use this look as the visual      ← subtitle, slightly larger, single sentence,
-reference for your next            no period (per brand memory)
-product shoot
+### Out of scope
 
-─────────────────────────────    ← thin hr-border divider
-
-What you get                     ← small uppercase section label
-• On-brand scene composition
-• Lighting + color preserved
-• Your product seamlessly placed
-• 2K PNG output
-
-─────────────────────────────
-
-CATEGORY      Wedding Dress      ← two-column meta rows, muted labels
-COLLECTION    Fashion
-ADDED         3 days ago         ← from created_at via Intl.RelativeTimeFormat
-
-                                 ← spacer (mt-auto pushes CTA down)
-
-[ ✨ Use this scene ]            ← primary, full width (unchanged)
-Close                            ← ghost link-style, smaller, centered
-```
-
-### Specifics
-- Padding: bump from `p-6 md:p-8` to `p-8 md:p-10` for breathing room on the right column only.
-- Typography: title stays `text-2xl font-bold`; subtitle `text-[15px] leading-relaxed text-muted-foreground`.
-- Section labels: `text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium` (matches existing eyebrow pattern).
-- Bullets: simple `•` glyph, no icons. `text-sm text-foreground/85 leading-relaxed`.
-- Meta rows: `grid grid-cols-[100px_1fr] gap-y-2 text-sm`, label muted, value `text-foreground`.
-- "Added" derives from `preview.created_at` via a small `formatRelative()` helper inline in the file.
-- Divider: `border-t border-border/60`.
-- Close: change from full-width `<Button variant="ghost" size="lg">` to a slimmer `text-sm text-muted-foreground hover:text-foreground` centered button so the primary CTA dominates.
-- Keep the X close affordance already on the dialog; the new bottom Close stays for clarity.
-
-### Untouched
-- Left image column, dialog container, `max-w-5xl`, query/data flow, navigation handler.
-- Mobile layout (single column) — these additions still render cleanly stacked; padding bump applies via `md:` only.
-- No DB, no taxonomy, no other modal.
+- No DB changes — `wedding-dress` slug already exists in `product_image_scenes.category_collection` and `discover_presets.subcategory`.
+- No changes to `sceneTaxonomy.ts`, `categoryConstants.ts`, `productCategories.ts`, or `categoryResolver.ts` — they already handle the slug.
+- No headline override in `SUBTYPE_HEADLINES` (Fashion's family headline covers it; can revisit if specifically requested).
 
 ### Risk
-None. Pure presentation in one component. Falls back gracefully if `created_at` is missing (hides the row).
+
+Minimal. One slug added to one ordered array and one noun lookup. TypeScript build will catch any stray issues.
