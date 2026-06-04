@@ -1,31 +1,13 @@
-## Fresh Scenes: remove modal blur + point "View all" to vovv.ai
+## Plan
 
-One file: `src/components/app/DashboardFreshScenes.tsx`. Two presentation-only changes.
+Single file: `src/lib/onboardingTaxonomy.ts`.
 
-### 1. Remove preview-modal image gradient (the "blur")
-Delete the 24px `bg-gradient-to-r from-transparent to-background` overlay `<div>` inside the image column of the preview Dialog. It was washing the right edge of the photo to white. Image stays `object-cover` and fills the column edge-to-edge — clean, no blur, no seam.
-
-### 2. "View all" → external vovv.ai
-Replace the existing `<Link to="/app/discover">` with a plain anchor:
-
-```tsx
-<a
-  href="https://vovv.ai/product-visual-library"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="… (same classes)"
->
-  View all
-  <ArrowRight className="w-3.5 h-3.5" />
-</a>
-```
-
-Drop the `Link` import if it's no longer used elsewhere in the file.
+### Change
+Remove `'streetwear'` from the `Fashion` sub-type array (line 35). Leave the `streetwear` label mapping (line 184) intact so existing users who already picked it still render correctly elsewhere.
 
 ### Scope
-- One file.
-- No data, routing, taxonomy, RLS, or DB changes.
-- No changes to any other modal or page.
+- Onboarding sub-category picker only. Fashion family no longer offers Streetwear.
+- No DB migration, no taxonomy rename, no impact on Generate/Freestyle/Admin (those keep their `streetwear` pose category).
 
 ### Risk
-None — pure presentation + one href swap.
+None. Pure presentation removal from one array.
