@@ -176,6 +176,7 @@ export const SUBTYPE_NOUN: Record<string, string> = {
   garments: 'clothing',
   hoodies: 'hoodie',
   dresses: 'dress',
+  'wedding-dress': 'wedding dress',
   jeans: 'denim',
   jackets: 'jacket',
   activewear: 'activewear',
