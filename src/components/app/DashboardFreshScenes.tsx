@@ -112,13 +112,15 @@ export function DashboardFreshScenes() {
             Just-added looks across your favorite categories
           </p>
         </div>
-        <Link
-          to="/app/discover"
+        <a
+          href="https://vovv.ai/product-visual-library"
+          target="_blank"
+          rel="noopener noreferrer"
           className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
           View all
           <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        </a>
       </div>
 
       <div className="flex flex-wrap gap-2">
