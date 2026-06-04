@@ -60,7 +60,7 @@ export type ProductCategory =
   | 'bags-accessories' | 'caps' | 'hats' | 'beanies' | 'shoes'
   | 'garments' | 'home-decor' | 'furniture' | 'tech-devices'
   | 'food' | 'beverages' | 'supplements-wellness' | 'other'
-  | 'lingerie' | 'swimwear' | 'activewear' | 'kidswear'
+  | 'lingerie' | 'swimwear' | 'activewear' | 'kidswear' | 'socks'
   | 'dresses' | 'hoodies' | 'jeans' | 'trousers' | 'jackets'
   | 'sneakers' | 'boots' | 'high-heels'
   | 'backpacks' | 'wallets-cardholders' | 'belts' | 'scarves' | 'phone-cases' | 'eyewear'

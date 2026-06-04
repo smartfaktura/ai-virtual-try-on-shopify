@@ -100,6 +100,12 @@ export function resolveOutfitConflicts(
     return build('bottom', []);
   }
 
+  // ── Socks ── coexist with shoes; don't lock the footwear slot
+  if (cat === 'socks' || match(gt, ['sock', 'socks'])) {
+    // Treat as accessory-style: nothing locked, no slots hidden — user can still pick shoes.
+    return { lockedSlot: null, hiddenSlots: new Set(), availableSlots: ALL_SLOTS, hideOutfitPanel: false };
+  }
+
   // ── Shoes ──
   if (cat === 'shoes' || cat === 'sneakers' || cat === 'boots' || cat === 'high-heels' ||
       match(gt, ['sneaker', 'boot', 'heel', 'sandal', 'loafer', 'mule', 'slipper', 'oxford', 'derby', 'trainer', 'shoe', 'espadrille', 'wedge', 'pump'])) {

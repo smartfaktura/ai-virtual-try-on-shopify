@@ -42,6 +42,7 @@ const GARMENTS_REFINEMENT_PATTERNS: [RegExp, string][] = [
   [/\bdress(?!\s+(pants?|shirts?|shorts?|shoes?|socks?|code))\b|\bdresses\b|gown|maxi dress|midi dress|sundress/i, "dresses"],
   [/jacket|blazer|bomber|puffer|parka|trench/i, "jackets"],
   [/activewear|sportswear|athleisure|athletic|gym wear|workout|\btraining\b|performance wear|compression|legging|sports bra|rash guard|\bjersey\b|tracksuit|\byoga\b|pilates|\brunning\b|jogger|\btennis\b|padel|pickleball|squash|badminton|\bgolf\b|cycling|cyclist|ski(?:ing)?\b|snowboard|base layer|crossfit/i, "activewear"],
+  [/\bsocks?\b|crew sock|ankle sock|no[- ]?show sock|knee[- ]?high sock|tube sock|athletic sock|dress sock|wool sock|compression sock/i, "socks"],
   [/swimwear|bikini|swimsuit|swim trunks/i, "swimwear"],
   [/lingerie|\bbra\b|underwear|corset/i, "lingerie"],
 ];
@@ -146,7 +147,7 @@ Return a JSON object with ALL applicable fields. For category-specific fields, O
 
 IMPORTANT: Pay close attention to the product title — if the title says "perfume", "fragrance", "eau de", etc., the category MUST be "fragrance". If the title says "shirt", "dress", etc., the category MUST be "garments". The title is a strong signal.
 
-VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, trousers, jackets, activewear, swimwear, lingerie, kidswear, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
+VALID CATEGORIES: fragrance, beauty-skincare, makeup-lipsticks, bags-accessories, backpacks, wallets-cardholders, belts, scarves, phone-cases, caps, hats, beanies, shoes, sneakers, boots, high-heels, garments, dresses, wedding-dress, hoodies, jeans, trousers, jackets, activewear, swimwear, lingerie, kidswear, socks, jewellery-necklaces, jewellery-earrings, jewellery-bracelets, jewellery-rings, watches, eyewear, home-decor, furniture, tech-devices, food, beverages, supplements-wellness, other
 
 PHONE CASE GUIDANCE (CRITICAL): If the product IS a case for a phone, iPhone, AirPods, Samsung device, or any MagSafe accessory — even if it appears to be a "tech" or "accessory" item — the category MUST be "phone-cases". Never use "tech-devices" or "bags-accessories" for a case. Silicone case, clear case, leather case, MagSafe case → ALWAYS "phone-cases".
 

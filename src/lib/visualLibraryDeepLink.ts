@@ -26,6 +26,9 @@ export function getVisualLibraryHrefForCategory(slug?: string): string {
     'wedding-dresses': { family: 'fashion', collection: 'wedding-dress' },
     'phone-cases': { family: 'tech', collection: 'phone-cases' },
     'caps-hats':  { family: 'hats-caps-and-beanies', collection: 'caps' },
+    'socks':      { family: 'fashion', collection: 'socks' },
+
+
 
   };
   const m = map[slug];

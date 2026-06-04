@@ -33,6 +33,7 @@ const FAMILY_SUB_ORDER: Record<string, string[]> = {
     'swimwear',
     'lingerie',
     'streetwear',
+    'socks',
   ],
   Footwear: ['shoes', 'sneakers', 'boots', 'high-heels'],
   'Bags & Accessories': [
@@ -181,6 +182,7 @@ export const SUBTYPE_NOUN: Record<string, string> = {
   swimwear: 'swimwear',
   lingerie: 'lingerie',
   streetwear: 'streetwear',
+  socks: 'socks',
   // Footwear
   shoes: 'shoe',
   sneakers: 'sneaker',

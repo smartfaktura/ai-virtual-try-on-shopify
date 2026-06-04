@@ -258,6 +258,8 @@ function resolveBodyFramingDirective(category?: string, sceneType?: string, trig
     case 'activewear':
     case 'kidswear':
       return 'Full-body shot — model visible from head to toe, feet fully inside frame. The product IS the outfit — show the full garment coverage clearly.';
+    case 'socks':
+      return 'Lower-body framing — feet, ankles and calves fully in-frame, both socks visible as a matching pair. Shoes may be off, slipped on, or partially peeking; the socks lead the composition.';
     case 'shoes':
     case 'sneakers':
     case 'boots':
@@ -300,6 +302,7 @@ function defaultBackground(category?: string): string {
     case 'jeans':
     case 'trousers':
     case 'jackets':
+    case 'socks':
     case 'shoes':
     case 'sneakers':
     case 'boots':
@@ -365,6 +368,7 @@ function defaultShadow(category?: string): string {
     case 'jeans':
     case 'trousers':
     case 'jackets':
+    case 'socks':
     case 'shoes':
     case 'sneakers':
     case 'boots':
@@ -409,6 +413,7 @@ function defaultStyling(category?: string): string {
     case 'jeans':
     case 'trousers':
     case 'jackets':
+    case 'socks':
       return 'Clean commercial styling — crisp, professional composition.';
     case 'lingerie':
     case 'swimwear':
@@ -473,6 +478,7 @@ function defaultLighting(category?: string): string {
     case 'jeans':
     case 'trousers':
     case 'jackets': return 'Even soft studio lighting revealing fabric texture and true color.';
+    case 'socks': return 'Even soft studio lighting revealing knit texture, cuff ribbing, and true sock color.';
     case 'bags-accessories':
     case 'backpacks':
     case 'wallets-cardholders':
@@ -537,6 +543,7 @@ function defaultPersonDirective(category?: string): string {
     case 'caps':
     case 'hats':
     case 'beanies':
+    case 'socks':
       return 'Stylish model with clean, modern look — natural skin, understated elegance, product is the focus.';
     case 'jewellery-necklaces':
     case 'jewellery-earrings':
@@ -595,6 +602,11 @@ function categoryOutfitDefaults(category?: string, gender?: string): OutfitPiece
       return isMale
         ? { top: 'plain white tee', bottom: 'slim dark wash denim', shoes: '', accessories: 'none' }
         : { top: 'plain white tee', bottom: 'cropped slim dark denim', shoes: '', accessories: 'none' };
+    case 'socks':
+      // Socks coexist with shoes — keep a simple casual outfit + minimal footwear so the socks lead.
+      return isMale
+        ? { top: 'plain white tee', bottom: 'cuffed mid-wash denim', shoes: 'low-profile white sneakers (optional, partially off)', accessories: 'none' }
+        : { top: 'plain white tee', bottom: 'cuffed mid-wash denim', shoes: 'low-profile white sneakers (optional, partially off)', accessories: 'none' };
     case 'jewellery-necklaces':
     case 'jewellery-earrings':
     case 'jewellery-bracelets':

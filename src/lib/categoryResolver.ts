@@ -40,6 +40,7 @@ const TITLE_CATEGORY_PATTERNS: [RegExp, string][] = [
   [/\bcap\b|baseball cap|snapback|trucker cap|visor|dad hat/i, "caps"],
   [/\bhat\b|fedora|panama|bucket hat|wide brim|sun hat|cowboy hat|boater|beret|headband/i, "hats"],
   [/phone case|iphone case|airpods case|samsung case|silicone case|clear case|magsafe case|magsafe/i, "phone-cases"],
+  [/\bsocks?\b|crew sock|ankle sock|no[- ]?show sock|knee[- ]?high sock|tube sock|athletic sock|dress sock|wool sock|compression sock/i, "socks"],
   [/\bshoe\b|\bshoes\b|sandal|loafer|slipper|mule/i, "shoes"],
   [/\bshirt\b|coat|sweater|blouse|cardigan|vest/i, "garments"],
   [/armchair|sofa|couch|sectional|recliner|dining chair|office chair|accent chair|lounge chair|coffee table|dining table|desk|bookshelf|dresser|wardrobe|bed frame|nightstand|ottoman|cabinet|sideboard|credenza|tv stand|bar stool|bench|futon|mattress|furniture/i, "furniture"],

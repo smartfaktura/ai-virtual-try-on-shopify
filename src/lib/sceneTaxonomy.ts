@@ -21,6 +21,7 @@ export const CATEGORY_FAMILY_MAP: Record<string, string> = {
   kidswear: 'Fashion',
   streetwear: 'Fashion',
   'wedding-dress': 'Fashion',
+  socks: 'Fashion',
 
   shoes: 'Footwear',
   sneakers: 'Footwear',
@@ -106,7 +107,7 @@ export const FAMILY_ORDER = [
 
 /** Map onboarding product_categories slugs → category_collection slugs for personalisation. */
 export const ONBOARDING_TO_COLLECTIONS_MAP: Record<string, string[]> = {
-  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'trousers', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear', 'wedding-dress'],
+  fashion: ['garments', 'dresses', 'hoodies', 'jeans', 'trousers', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'streetwear', 'wedding-dress', 'socks'],
   'wedding-dress': ['wedding-dress'],
   wedding: ['wedding-dress'],
   bridal: ['wedding-dress'],

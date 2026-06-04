@@ -52,10 +52,11 @@ export const CATEGORY_LABELS: Record<string, string> = {
   trousers: 'Trousers',
   jackets: 'Jackets',
   'wedding-dress': 'Wedding Dress',
+  socks: 'Socks',
 };
 
 export const CATEGORY_SUPER_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'wedding-dress', 'skirts', 'hoodies', 'streetwear', 'jeans', 'trousers', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear'] },
+  { label: 'Fashion & Apparel', ids: ['garments', 'dresses', 'wedding-dress', 'skirts', 'hoodies', 'streetwear', 'jeans', 'trousers', 'jackets', 'activewear', 'swimwear', 'lingerie', 'kidswear', 'socks'] },
   { label: 'Footwear', ids: ['shoes', 'sneakers', 'boots', 'high-heels'] },
   { label: 'Bags & Accessories', ids: ['bags-accessories', 'backpacks', 'wallets-cardholders', 'phone-cases', 'belts', 'scarves', 'caps', 'hats', 'beanies', 'watches', 'eyewear'] },
   { label: 'Jewelry', ids: ['jewellery-rings', 'jewellery-necklaces', 'jewellery-earrings', 'jewellery-bracelets'] },

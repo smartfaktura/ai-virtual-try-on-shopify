@@ -142,6 +142,11 @@ const POOLS: Record<string, Pool> = {
     indoor_lifestyle: ["Atelier studio", "Gallery"],
     architectural: ["Marble gallery", "Glass atrium"],
   },
+  "fashion/socks": {
+    studio: ["Cyclorama", "Plinth on cyclorama", "Folded flat on paper", "Folded pair on linen", "Stacked on wood", "Drawer flat lay"],
+    indoor_lifestyle: ["Bedroom morning", "Loft", "Hardwood floor"],
+  },
+
 
   // ---------------- Footwear ----------------
   "footwear/sneakers": {
