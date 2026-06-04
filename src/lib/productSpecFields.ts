@@ -78,7 +78,6 @@ const CATEGORY_FIELDS: Record<string, SpecField[]> = {
   'socks': [
     { key: 'length', label: 'Length', type: 'select', options: ['No-show / liner', 'Ankle (low-cut)', 'Quarter (just above ankle)', 'Crew (mid-shin)', 'Mid-calf', 'Knee-high', 'Over-the-knee', 'Thigh-high'] },
     { key: 'material', label: 'Material', type: 'select', options: ['Cotton', 'Combed cotton', 'Merino wool', 'Cashmere', 'Bamboo', 'Linen', 'Silk blend', 'Modal / micromodal', 'Performance synthetic (nylon/polyester)', 'Compression knit', 'Terry / cushioned', 'Ribbed knit', 'Sheer / mesh'] },
-    { key: 'knitPattern', label: 'Knit pattern', type: 'select', options: ['Smooth flat knit', 'Ribbed', 'Cable knit', 'Jacquard / patterned', 'Argyle', 'Striped', 'Mesh / sheer', 'Terry loop'] },
   ],
 
   // ── Footwear ──
