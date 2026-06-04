@@ -182,6 +182,7 @@ export const SUBTYPE_NOUN: Record<string, string> = {
   swimwear: 'swimwear',
   lingerie: 'lingerie',
   streetwear: 'streetwear',
+  socks: 'socks',
   // Footwear
   shoes: 'shoe',
   sneakers: 'sneaker',
