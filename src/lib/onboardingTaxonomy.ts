@@ -26,6 +26,7 @@ const FAMILY_SUB_ORDER: Record<string, string[]> = {
     'garments',
     'hoodies',
     'dresses',
+    'wedding-dress',
     'jeans',
     'trousers',
     'jackets',
