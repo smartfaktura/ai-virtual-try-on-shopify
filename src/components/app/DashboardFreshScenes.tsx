@@ -202,7 +202,7 @@ export function DashboardFreshScenes() {
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
-                  className="w-full h-full object-cover max-h-[42vh] md:max-h-none"
+                  className="w-full h-full object-contain md:object-cover max-h-[62vh] md:max-h-none"
                 />
               </div>
               <div className="flex flex-col gap-5 md:gap-6 p-5 md:p-10 bg-background">
@@ -218,9 +218,9 @@ export function DashboardFreshScenes() {
                   </DialogDescription>
                 </div>
 
-                <div className="border-t border-border/60" />
+                <div className="hidden md:block border-t border-border/60" />
 
-                <div className="space-y-3">
+                <div className="hidden md:block space-y-3">
                   <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     What you get
                   </p>
@@ -232,9 +232,9 @@ export function DashboardFreshScenes() {
                   </ul>
                 </div>
 
-                <div className="border-t border-border/60" />
+                <div className="hidden md:block border-t border-border/60" />
 
-                <dl className="grid grid-cols-[110px_1fr] gap-y-2.5 text-sm">
+                <dl className="hidden md:grid grid-cols-[110px_1fr] gap-y-2.5 text-sm">
                   <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium self-center">Collection</dt>
                   <dd className="text-foreground">{getCollectionLabel(preview.category_collection || '')}</dd>
                   {preview.created_at && (
@@ -245,7 +245,7 @@ export function DashboardFreshScenes() {
                   )}
                 </dl>
 
-                <div className="mt-auto flex flex-col gap-3 pt-2">
+                <div className="flex flex-col gap-3 pt-1 md:mt-auto md:pt-2">
                   <Button
                     size="lg"
                     onClick={() => useScene(preview.scene_id)}
