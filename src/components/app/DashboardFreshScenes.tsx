@@ -52,6 +52,9 @@ function formatRelative(iso: string): string {
   if (abs < 2592000) return rtf.format(Math.round(diffSec / 86400), 'day');
   if (abs < 31536000) return rtf.format(Math.round(diffSec / 2592000), 'month');
   return rtf.format(Math.round(diffSec / 31536000), 'year');
+}
+
+
 
 export function DashboardFreshScenes() {
   const navigate = useNavigate();
