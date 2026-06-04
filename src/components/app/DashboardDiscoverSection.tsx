@@ -172,7 +172,7 @@ export function DashboardDiscoverSection() {
     });
   }, [allItems, activeCategory, featuredMap]);
 
-  const visible = filtered.slice(0, 16);
+  const visible = filtered.slice(0, 12);
 
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
