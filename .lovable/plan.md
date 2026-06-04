@@ -1,35 +1,36 @@
 ## Goal
-When the user's onboarding sub-type maps inside a family (e.g. Swimwear → Fashion), keep showing the family chip ("Fashion") but **pre-filter the grid to that sub-type** so Steal the Look reflects what they actually sell.
+Polish the Steal the Look preview modal (`DiscoverDetailModal`): remove the harsh white seam on the right panel and make open/close transitions smooth.
 
 ## Scope
-Single file: `src/components/app/DashboardDiscoverSection.tsx`. No taxonomy, onboarding writer, or DB changes.
+Single file: `src/components/app/DiscoverDetailModal.tsx`. No data, routing, or admin logic changes.
+
+## What's wrong today
+1. The right side is `bg-background/95` with a visible `border-l border-border/20`, producing a hard vertical white edge next to the image area (the "strange white border").
+2. Open animates via `animate-in fade-in duration-200`, but close instantly returns `null` — no exit transition. Result: pops away abruptly.
 
 ## Changes
 
-1. **Track preferred sub-type** alongside `defaultCategory`:
-   - From `profile.product_subcategories[0]`, remember the slug itself (e.g. `swimwear`) as `defaultSubtype` when its mapped family exists in `CATEGORIES`.
-   - Otherwise `defaultSubtype = '__all__'`.
+1. **Smooth enter + exit**
+   - Track `mounted` (controls portal presence) and `visible` (controls animation state) with `useState` + `useEffect` synced to the `open` prop.
+   - On `open=true`: set `mounted=true`, then `requestAnimationFrame` → `visible=true`.
+   - On `open=false`: set `visible=false`, then `setTimeout(220)` → `mounted=false`.
+   - Use `data-state={visible ? 'open' : 'closed'}` on the root, backdrop, and panel; switch to Tailwind animation utilities:
+     - Backdrop: `data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out duration-200`.
+     - Right panel: same fade + `slide-in-from-right-4 / slide-out-to-right-4`.
+     - Image side: `fade-in / fade-out` only (no slide).
+   - Remove the existing one-shot `animate-in fade-in` from the root.
+   - Keep Escape + body-scroll-lock effects; key them off `open` (existing).
 
-2. **Active sub-filter**:
-   - Add `selectedSub` state, default `null`.
-   - `activeSub = selectedSub ?? (activeCategory === defaultCategory ? defaultSubtype : '__all__')`.
-   - When the user switches family chip, reset `selectedSub` to `null` so the new family opens on `__all__`.
+2. **Remove the white seam**
+   - Right panel: drop `border-l border-border/20`; use solid `bg-background` (no `/95`) so it reads as one surface, not a translucent strip over the dark backdrop.
+   - Add a soft transition edge on the image side: a 24px wide gradient overlay on the inner right edge of the left column (`bg-gradient-to-r from-transparent to-background`) on `md:` and up only, so the image visually blends into the panel instead of butting against it.
+   - Keep the panel background solid in both light and dark themes (uses the semantic token, no hex).
 
-3. **Apply sub-filter to the grid**:
-   - Replace `itemMatchesDiscoverFilter(item.data, activeCategory, '__all__')` with `itemMatchesDiscoverFilter(item.data, activeCategory, activeSub)`.
-
-4. **Render `DiscoverSubCategoryBar`** under the family chips, only when `isMultiSubFamily(activeCategory)` is true (already imported). Wire `selected={activeSub}` and `onSelect={setSelectedSub}`. Sub-types come from `getDiscoverSubtypes(activeCategory)`.
-
-5. **Graceful fallback**: if the sub-filtered grid is empty (e.g. no Swimwear presets yet), automatically fall back to `__all__` within the same family rather than showing the empty state — so the user still sees Fashion looks instead of an empty section. (Computed in the `filtered` memo.)
-
-6. **Keep**: 12-item cap, skeleton count, dashboard order, all data fetches.
-
-## Result for the user
-- Selected Swimwear in onboarding → chip stays on **Fashion** (correct, Swimwear isn't a top-level family), but the grid is narrowed to **Swimwear** looks. A sub-row appears with `All / Swimwear / Dresses / Hoodies / ...` so they can broaden.
-- If no Swimwear items exist yet, the grid silently falls back to all Fashion items (no empty state).
+3. **Keep**
+   - Portal, z-index, layout proportions (60/40 split), close button, all controls, related items, admin editor — untouched.
 
 ## Out of scope
-Promoting Swimwear to its own Discover family, onboarding writers, Fresh Scenes, layout changes, RLS, DB.
+SceneDetailModal, DiscoverCard, dashboard layout, taxonomy, RLS, DB.
 
 ## Risk
-Low. Pure presentation logic in one component. Empty-state fallback prevents regressions when a sub-type has no tagged items yet.
+Low. Local presentation changes inside a single modal. No prop or API changes; consumers unaffected.

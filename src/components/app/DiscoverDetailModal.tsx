@@ -176,7 +176,24 @@ export function DiscoverDetailModal({
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
-  if (!open || !item) return null;
+  // Smooth enter/exit: keep portal mounted through the exit animation.
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    setVisible(false);
+    const t = setTimeout(() => setMounted(false), 220);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  if (!mounted || !item) return null;
+
+  const state = visible ? 'open' : 'closed';
+
 
   const isPreset = item.type === 'preset';
   const imageUrl = isPreset ? item.data.image_url : item.data.previewUrl;
