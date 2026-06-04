@@ -258,6 +258,8 @@ function resolveBodyFramingDirective(category?: string, sceneType?: string, trig
     case 'activewear':
     case 'kidswear':
       return 'Full-body shot — model visible from head to toe, feet fully inside frame. The product IS the outfit — show the full garment coverage clearly.';
+    case 'socks':
+      return 'Lower-body framing — feet, ankles and calves fully in-frame, both socks visible as a matching pair. Shoes may be off, slipped on, or partially peeking; the socks lead the composition.';
     case 'shoes':
     case 'sneakers':
     case 'boots':
