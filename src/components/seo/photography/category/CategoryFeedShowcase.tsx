@@ -72,6 +72,13 @@ const FEED_BY_SLUG: Record<FeedSlug, {
     sub: 'One case photo in — a season of sun-drenched editorials, reels and PDP details out, on brand and on rhythm',
     alt: 'Curated Instagram-style feed of phone case editorials, coastal lifestyle moments, pilates studios and golden-hour portraits — all generated from a single product upload',
   },
+  socks: {
+    image: socksFeed.url,
+    eyebrow: 'One sock · Whole feed',
+    heading: 'Your entire sock feed from a single upload',
+    sub: 'One sock photo in — a season of on-leg editorials, reels and detail shots out, on brand and on rhythm',
+    alt: 'Curated Instagram-style feed of sock on-leg editorials, sneaker styling, heel pairings and lifestyle scenes — all generated from a single product upload',
+  },
 };
 
 
