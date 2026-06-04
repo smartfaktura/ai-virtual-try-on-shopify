@@ -40,6 +40,22 @@ async function fetchFresh(): Promise<FreshScene[]> {
   ) as FreshScene[];
 }
 
+function formatRelative(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return '';
+  const diffSec = Math.round((then - Date.now()) / 1000);
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const abs = Math.abs(diffSec);
+  if (abs < 60) return rtf.format(diffSec, 'second');
+  if (abs < 3600) return rtf.format(Math.round(diffSec / 60), 'minute');
+  if (abs < 86400) return rtf.format(Math.round(diffSec / 3600), 'hour');
+  if (abs < 2592000) return rtf.format(Math.round(diffSec / 86400), 'day');
+  if (abs < 31536000) return rtf.format(Math.round(diffSec / 2592000), 'month');
+  return rtf.format(Math.round(diffSec / 31536000), 'year');
+}
+
+
+
 export function DashboardFreshScenes() {
   const navigate = useNavigate();
   const { data, isLoading } = useQuery({
@@ -189,20 +205,47 @@ export function DashboardFreshScenes() {
                   className="w-full h-full object-cover max-h-[55vh] md:max-h-none"
                 />
               </div>
-              <div className="flex flex-col gap-5 p-6 md:p-8 bg-background">
-                <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              <div className="flex flex-col gap-6 p-6 md:p-10 bg-background">
+                <div className="space-y-3">
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     {getCollectionLabel(preview.category_collection || '')}
                   </p>
-                  <DialogTitle className="text-2xl font-bold text-foreground leading-tight">
+                  <DialogTitle className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
                     {preview.title}
                   </DialogTitle>
-                  <DialogDescription className="text-sm text-muted-foreground">
-                    Generate on-brand product images using this scene as the visual reference
+                  <DialogDescription className="text-[15px] leading-relaxed text-muted-foreground">
+                    Use this look as the visual reference for your next product shoot
                   </DialogDescription>
                 </div>
 
-                <div className="mt-auto flex flex-col gap-2">
+                <div className="border-t border-border/60" />
+
+                <div className="space-y-3">
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
+                    What you get
+                  </p>
+                  <ul className="space-y-2 text-sm text-foreground/85 leading-relaxed">
+                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>On-brand scene composition</li>
+                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>Lighting and color preserved</li>
+                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>Your product seamlessly placed</li>
+                    <li className="flex gap-2"><span className="text-muted-foreground">•</span>2K PNG output</li>
+                  </ul>
+                </div>
+
+                <div className="border-t border-border/60" />
+
+                <dl className="grid grid-cols-[110px_1fr] gap-y-2.5 text-sm">
+                  <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium self-center">Collection</dt>
+                  <dd className="text-foreground">{getCollectionLabel(preview.category_collection || '')}</dd>
+                  {preview.created_at && (
+                    <>
+                      <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium self-center">Added</dt>
+                      <dd className="text-foreground">{formatRelative(preview.created_at)}</dd>
+                    </>
+                  )}
+                </dl>
+
+                <div className="mt-auto flex flex-col gap-3 pt-2">
                   <Button
                     size="lg"
                     onClick={() => useScene(preview.scene_id)}
@@ -211,16 +254,16 @@ export function DashboardFreshScenes() {
                     <Sparkles className="w-4 h-4" />
                     Use this scene
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="lg"
+                  <button
+                    type="button"
                     onClick={() => setPreview(null)}
-                    className="w-full"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
                   >
                     Close
-                  </Button>
+                  </button>
                 </div>
               </div>
+
             </div>
           )}
         </DialogContent>
