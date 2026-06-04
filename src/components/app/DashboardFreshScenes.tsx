@@ -245,7 +245,7 @@ export function DashboardFreshScenes() {
                   )}
                 </dl>
 
-                <div className="mt-auto flex flex-col gap-3 pt-2">
+                <div className="flex flex-col gap-3 pt-1 md:mt-auto md:pt-2">
                   <Button
                     size="lg"
                     onClick={() => useScene(preview.scene_id)}
