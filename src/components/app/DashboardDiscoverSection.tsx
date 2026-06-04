@@ -56,7 +56,7 @@ export function DashboardDiscoverSection() {
   // derived from getDiscoverFamilies()).
   const SUBTYPE_TO_DISCOVER: Record<string, string> = {
     // Fashion
-    garments: 'fashion', hoodies: 'fashion', dresses: 'fashion', jeans: 'fashion',
+    garments: 'fashion', hoodies: 'fashion', dresses: 'fashion', 'wedding-dress': 'fashion', jeans: 'fashion',
     trousers: 'fashion', jackets: 'fashion', activewear: 'fashion', swimwear: 'fashion',
     lingerie: 'fashion', streetwear: 'fashion', socks: 'fashion',
     // Footwear
