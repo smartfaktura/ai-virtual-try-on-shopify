@@ -314,9 +314,18 @@ export function DashboardDiscoverSection() {
       <DiscoverCategoryBar
         categories={orderedCategoriesFiltered}
         selectedCategory={activeCategory}
-        onSelectCategory={setSelectedCategory}
-        
+        onSelectCategory={handleSelectCategory}
       />
+
+      {showSubBar && (
+        <DiscoverSubCategoryBar
+          familyLabel={CATEGORIES.find(c => c.id === activeCategory)?.label ?? ''}
+          subcategories={subcategoryItems}
+          selectedSubcategory={activeSub}
+          onSelectSubcategory={setSelectedSub}
+        />
+      )}
+
 
       {visible.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
