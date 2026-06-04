@@ -113,7 +113,7 @@ export function DashboardFreshScenes() {
           </p>
         </div>
         <Link
-          to="/product-visual-library#catalog-grid"
+          to="/app/discover"
           className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
           View all
@@ -177,17 +177,19 @@ export function DashboardFreshScenes() {
       </div>
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden border-border bg-background">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl">
           {preview && (
-            <div className="grid md:grid-cols-[auto_minmax(0,1fr)]">
-              <div className="bg-muted flex items-center justify-center overflow-hidden md:aspect-[4/5] md:h-[80vh] md:w-auto">
+            <div className="grid md:grid-cols-[auto_minmax(0,1fr)] bg-background">
+              <div className="relative bg-muted overflow-hidden md:aspect-[4/5] md:h-[80vh] md:w-auto">
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
-                  className="w-full h-full object-contain max-h-[55vh] md:object-cover md:max-h-none"
+                  className="w-full h-full object-cover max-h-[55vh] md:max-h-none"
                 />
+                {/* Blend the image edge into the right panel — kills the harsh seam */}
+                <div className="hidden md:block pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-r from-transparent to-background" />
               </div>
-              <div className="flex flex-col gap-5 p-6 md:p-8">
+              <div className="flex flex-col gap-5 p-6 md:p-8 bg-background">
                 <div className="space-y-2">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                     {getCollectionLabel(preview.category_collection || '')}
