@@ -1,29 +1,65 @@
-## Fix
+## Goal
 
-Hide the Top-up / Credit packs section from free users in `src/pages/Settings.tsx`.
+Add a "Fresh scenes" section to `/app` (Dashboard) directly after the "Steal the Look" block, showing newly added public scenes grouped by category in pill tabs, 8 thumbnails per active pill.
 
-### Change
+Verified: `created_at` is readable on `product_image_scenes` under existing public RLS (confirmed via DB query), so no schema, RLS, or migration changes are needed.
 
-Wrap the existing Credit packs block (lines 640–655) in a `plan !== 'free' &&` guard:
+## Scope (additive only)
+
+- New component: `src/components/app/DashboardFreshScenes.tsx`
+- One insert (one line + wrapper div) in `src/pages/Dashboard.tsx`
+- No edits to existing components, hooks, queries, RLS, prompts, or generation logic.
+
+## New component — `DashboardFreshScenes.tsx`
+
+**Data fetch (own React Query key, isolated cache):**
+- `queryKey: ['dashboard-fresh-scenes']`, `staleTime: 10 min`
+- Selects only safe public columns: `scene_id, title, category_collection, sub_category, preview_image_url, created_at, owner_user_id, is_brand_scene`
+- Filters mirror `usePublicSceneLibrary` for safety in depth: `is_active=true`, `owner_user_id IS NULL`, `is_brand_scene=false`, `category_collection != 'bundle'`, `preview_image_url IS NOT NULL`
+- Order: `created_at DESC`, `limit 200`
+- Client-side defense filter: drop any row where `owner_user_id` or `is_brand_scene` slipped through
+
+**Grouping logic:**
+- Group by `category_collection`
+- Keep only categories with ≥4 fresh scenes
+- Sort categories by most-recent `created_at`, take top 8 pills
+- Cap each pill to its 8 most recent scenes
+
+**Rendering:**
+- Heading row: `<h2>Fresh scenes</h2>` + subtitle "New looks added this week, grouped by category" + a "View all" link → `/product-visual-library#catalog-grid`
+- Horizontally scrollable pill row using the same pill styling already used in `ProductVisualLibrary` (rounded-full, border, active = primary). Pills are local component state.
+- Grid: `grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2`, max 8 cards for the active pill
+- Each card: `<Link to={\`/app/generate/product-images?sceneId=\${scene.scene_id}&from=fresh\`}>` with `ShimmerImage` + `getOptimizedUrl(url, { quality: 60 })`, aspect-[4/5], truncated title (reuses visual language from `SceneCatalogCard`)
+- Skeleton placeholders while loading
+- **Render nothing** if zero qualifying categories — so the dashboard never shows an empty/broken slot
+
+## Edit `src/pages/Dashboard.tsx`
+
+Add one import, then insert directly after the existing `<DashboardDiscoverSection />` wrapper (between lines 174 and 176):
 
 ```tsx
-{plan !== 'free' && (
-  <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 shadow-sm">
-    {/* Top-up · Need more credits · Credit pack grid — unchanged */}
-  </div>
-)}
+<div style={{ contentVisibility: 'auto', containIntrinsicSize: '600px' }}>
+  <DashboardFreshScenes />
+</div>
 ```
 
-`plan` is already destructured from `useCredits()` at line 277 and is used the same way elsewhere in the file (lines 500, 506, 543, 553, 658, 672), so the gate is consistent with the rest of the page.
+No other edits to Dashboard.
 
-### Why it's safe
+## Safety checks
 
-- Pure conditional render — no logic, hooks, or data changes.
-- `creditPacks` array and `handleCreditPurchase` stay intact; free users simply don't see the entry point.
-- Backend top-up endpoint already enforces plan eligibility, so this is a UI hygiene change, not a security gate.
-- Free users still see "Choose your plan" above as the correct CTA.
+- **RLS:** uses the same public-readable surface as `usePublicSceneLibrary`; no new policies; verified `created_at` is returned for anon-accessible rows.
+- **No PII / no sensitive fields:** selects only the columns already public on the existing scene library page.
+- **No collisions with existing caches:** new query key `dashboard-fresh-scenes`.
+- **Preselect plumbing:** click target uses the existing `?sceneId=` query the wizard already handles (`ProductImages.tsx`). The `&from=fresh` is purely informational and ignored if not consumed.
+- **Failure mode:** if the query errors or returns nothing usable, the component renders `null`. No layout shift, no broken state on the dashboard.
+- **Perf:** one extra query, ~200 rows, cached 10 min, wrapped in `contentVisibility:auto`. Negligible.
+- **A11y:** pills are real `<button>`s with `aria-pressed`; cards are real `<a>` links with `alt` text on images.
 
-### Not touched
+## Out of scope (will NOT touch)
 
-- Plan picker, current-plan card, cancel flow, billing portal, profile/preferences sections.
-- Pricing copy on marketing pages.
+- `usePublicSceneLibrary`, `DashboardDiscoverSection`, `RecentCreationsGallery`
+- Public `/product-visual-library` page
+- Visual Studio, Product Images wizard, or any generation/prompt logic
+- Any DB / RLS / migration changes
+
+Approve and I'll implement.
