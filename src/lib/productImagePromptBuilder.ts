@@ -543,6 +543,7 @@ function defaultPersonDirective(category?: string): string {
     case 'caps':
     case 'hats':
     case 'beanies':
+    case 'socks':
       return 'Stylish model with clean, modern look — natural skin, understated elegance, product is the focus.';
     case 'jewellery-necklaces':
     case 'jewellery-earrings':
