@@ -6,7 +6,7 @@ export const VALID_CATEGORIES = new Set<string>([
   "fragrance", "beauty-skincare", "makeup-lipsticks", "bags-accessories", "backpacks",
   "wallets-cardholders", "belts", "scarves", "caps", "hats", "beanies", "shoes", "sneakers", "boots",
   "high-heels", "garments", "dresses", "wedding-dress", "skirts", "streetwear", "hoodies", "jeans",
-  "trousers", "jackets", "activewear", "swimwear", "lingerie", "kidswear", "jewellery-necklaces",
+  "trousers", "jackets", "activewear", "swimwear", "lingerie", "kidswear", "socks", "jewellery-necklaces",
   "jewellery-earrings", "jewellery-bracelets", "jewellery-rings", "watches", "eyewear",
   "home-decor", "furniture", "tech-devices", "phone-cases", "food", "beverages", "supplements-wellness",
 ]);
