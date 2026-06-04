@@ -87,8 +87,20 @@ import pcp3 from '@/assets/seo/phone-cases-motion-3.jpg.asset.json';
 import pcp4 from '@/assets/seo/phone-cases-motion-4.jpg.asset.json';
 import pcp5 from '@/assets/seo/phone-cases-motion-5.jpg.asset.json';
 import pcp6 from '@/assets/seo/phone-cases-motion-6.jpg.asset.json';
+import skv1 from '@/assets/seo/socks-motion-1.mp4.asset.json';
+import skv2 from '@/assets/seo/socks-motion-2.mp4.asset.json';
+import skv3 from '@/assets/seo/socks-motion-3.mp4.asset.json';
+import skv4 from '@/assets/seo/socks-motion-4.mp4.asset.json';
+import skv5 from '@/assets/seo/socks-motion-5.mp4.asset.json';
+import skv6 from '@/assets/seo/socks-motion-6.mp4.asset.json';
+import skp1 from '@/assets/seo/socks-motion-1.jpg.asset.json';
+import skp2 from '@/assets/seo/socks-motion-2.jpg.asset.json';
+import skp3 from '@/assets/seo/socks-motion-3.jpg.asset.json';
+import skp4 from '@/assets/seo/socks-motion-4.jpg.asset.json';
+import skp5 from '@/assets/seo/socks-motion-5.jpg.asset.json';
+import skp6 from '@/assets/seo/socks-motion-6.jpg.asset.json';
 
-type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses' | 'phone-cases';
+type MotionSlug = 'bags' | 'swimwear' | 'activewear' | 'eyewear' | 'hoodies' | 'wedding-dresses' | 'phone-cases' | 'socks';
 type Clip = { video: string; poster: string };
 
 const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
@@ -148,6 +160,14 @@ const CLIPS_BY_SLUG: Record<MotionSlug, Clip[]> = {
     { video: pcv5.url, poster: pcp5.url },
     { video: pcv6.url, poster: pcp6.url },
   ],
+  socks: [
+    { video: skv1.url, poster: skp1.url },
+    { video: skv2.url, poster: skp2.url },
+    { video: skv3.url, poster: skp3.url },
+    { video: skv4.url, poster: skp4.url },
+    { video: skv5.url, poster: skp5.url },
+    { video: skv6.url, poster: skp6.url },
+  ],
 };
 
 const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: string; aria: string }> = {
@@ -192,6 +212,12 @@ const COPY_BY_SLUG: Record<MotionSlug, { eyebrow: string; heading: string; sub: 
     heading: 'Your phone case, brought to life',
     sub: 'Turn one case photo into scroll-stopping motion for ads, reels and PDP loops',
     aria: 'AI-generated phone case motion clip',
+  },
+  socks: {
+    eyebrow: 'Motion · Socks in movement',
+    heading: 'Your socks, brought to life',
+    sub: 'Turn one sock photo into scroll-stopping motion for ads, reels and PDP loops',
+    aria: 'AI-generated sock motion clip',
   },
 };
 

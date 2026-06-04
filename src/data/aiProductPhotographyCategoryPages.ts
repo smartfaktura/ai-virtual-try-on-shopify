@@ -1890,7 +1890,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroCollage: [
       { subCategory: 'Editorial', imageId: '1780561753998-8v4ch1', alt: 'AI sock editorial pull-up detail.' },
       { subCategory: 'Lifestyle', imageId: '1780561775831-bdl9dx', alt: 'AI sock preppy curbside lifestyle.' },
-      { subCategory: 'Detail',    imageId: '1780561758765-d31zv2', alt: 'AI sock sneaker pairing detail.' },
+      { subCategory: 'Video',     imageId: '1780561758765-d31zv2', alt: 'AI sock motion clip — slow push-in.', videoSrc: 'socks-motion-1' },
       { subCategory: 'Flatlay',   imageId: '1780561814214-1h7t2a', alt: 'AI sock clean flatlay studio.' },
     ],
   },
