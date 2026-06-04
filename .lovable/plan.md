@@ -1,1 +1,1 @@
-Add `{ value: 'socks', label: 'Socks' }` to the Fashion group in `CATEGORY_GROUPS` in `src/pages/AdminProductImageScenes.tsx` so the tab renders "Socks" instead of the raw key.
+Add `socks` to the Gemini category enum in `supabase/functions/analyze-product-image/index.ts` (the prompt's category list currently omits it, so the model never picks it for the bulk-upload reviewer). Place it next to `kidswear` in the enum string.
