@@ -378,7 +378,7 @@ export function getCategoryFields(category: string | undefined | null, fieldValu
 
 const APPAREL_CATEGORIES = new Set([
   'garments', 'dresses', 'hoodies', 'jeans', 'trousers', 'jackets', 'activewear',
-  'swimwear', 'lingerie', 'kidswear',
+  'swimwear', 'lingerie', 'kidswear', 'socks',
 ]);
 
 export function isApparelCategory(category: string | undefined | null): boolean {
