@@ -84,6 +84,13 @@ const MOMENTS: Record<string, string[]> = {
     "Sitting elegantly",
     "Adjusting cuff",
   ],
+  "fashion/socks": [
+    "Pulling sock onto calf",
+    "Cuffed jeans step",
+    "Feet on hardwood",
+    "Sneaker peek mid-stride",
+    "Folded pair flat lay",
+  ],
 
   // Footwear
   "footwear/sneakers": [
