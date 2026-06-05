@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
