@@ -696,7 +696,7 @@ export default function MaterialSwap() {
 
 
               {/* LIBRARY */}
-              {(productSource ?? 'library') === 'library' && (
+              {productSource === 'library' && (
                 <div className="space-y-3 animate-in fade-in duration-200">
                   <div className="relative py-1 px-1">
                     <Search className="absolute left-[18px] top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
