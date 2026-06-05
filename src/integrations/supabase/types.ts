@@ -2179,6 +2179,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_materials: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          label?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_models: {
         Row: {
           age_range: string

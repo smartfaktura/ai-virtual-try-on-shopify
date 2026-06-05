@@ -11,8 +11,9 @@ import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
   Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
   Pencil, Download, Coins, ArrowRight, Layers, Images, ChevronLeft,
-  RefreshCw, Archive,
+  RefreshCw, Archive, Star, Plus,
 } from 'lucide-react';
+import { useSavedMaterials, MAX_SAVED_MATERIALS } from '@/hooks/useSavedMaterials';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,6 +80,7 @@ export default function MaterialSwap() {
   const { user } = useAuth();
   const { balance: credits, setBalanceFromServer, refreshBalance: refreshCredits } = useCredits();
   const { upload, isUploading } = useFileUpload();
+  const { materials: savedMaterials, save: saveMaterial, remove: removeSavedMaterial } = useSavedMaterials();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   // ── Product (anchor) state ────────────────────────────────────────────
@@ -363,6 +365,32 @@ export default function MaterialSwap() {
     setMaterials(prev => prev.filter(m => m.id !== id));
   const updateMaterialLabel = (id: string, label: string) =>
     setMaterials(prev => prev.map(m => m.id === id ? { ...m, label } : m));
+
+  // Saved swatches: lookup + toggle + add-to-batch
+  const savedByUrl = new Map(savedMaterials.map(s => [s.image_url, s]));
+  const addSavedToBatch = (s: { id: string; label: string; image_url: string }) => {
+    if (materials.some(m => m.imageUrl === s.image_url)) {
+      toast.info('Already in this batch');
+      return;
+    }
+    if (materials.length >= MAX_MATERIALS) {
+      toast.error(`Max ${MAX_MATERIALS} materials per batch`);
+      return;
+    }
+    setMaterials(prev => prev.concat({
+      id: crypto.randomUUID(),
+      imageUrl: s.image_url,
+      label: s.label || 'Material',
+    }));
+  };
+  const toggleSaveMaterial = async (m: MaterialItem) => {
+    const existing = savedByUrl.get(m.imageUrl);
+    if (existing) {
+      await removeSavedMaterial(existing.id);
+    } else {
+      await saveMaterial({ label: m.label, imageUrl: m.imageUrl });
+    }
+  };
 
   const toggleRatio = (r: RatioOption) => {
     const next = new Set(selectedRatios);
@@ -938,22 +966,88 @@ export default function MaterialSwap() {
               onChange={(e) => { if (e.target.files) handleMaterialFiles(e.target.files); e.currentTarget.value = ''; }} />
           </label>
 
+          {savedMaterials.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-end justify-between gap-2">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Your saved swatches
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Click to add to this batch
+                  </p>
+                </div>
+                <span className="text-[11px] text-muted-foreground">
+                  {savedMaterials.length} / {MAX_SAVED_MATERIALS} saved
+                </span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                {savedMaterials.map(s => {
+                  const inBatch = materials.some(m => m.imageUrl === s.image_url);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => addSavedToBatch(s)}
+                      title={inBatch ? 'Already in batch' : `Add ${s.label}`}
+                      className={cn(
+                        'group relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border transition-all',
+                        inBatch
+                          ? 'border-primary/60 ring-2 ring-primary/30'
+                          : 'border-border hover:border-foreground/40'
+                      )}
+                    >
+                      <img
+                        src={getOptimizedUrl(s.image_url, { quality: 60 })}
+                        alt={s.label}
+                        className="w-full h-full object-cover"
+                      />
+                      {!inBatch && (
+                        <span className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-background/60">
+                          <Plus className="w-4 h-4 text-foreground" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {materials.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {materials.map(m => (
-                <div key={m.id} className="flex items-center gap-3 p-2 pr-3 rounded-xl border border-border bg-card">
-                  <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-14 h-14 rounded-lg object-cover shrink-0" />
-                  <Input
-                    value={m.label}
-                    onChange={e => updateMaterialLabel(m.id, e.target.value)}
-                    placeholder="Material name"
-                    className="h-8 text-sm flex-1 min-w-0"
-                  />
-                  <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0" onClick={() => removeMaterial(m.id)} aria-label="Remove">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
+              {materials.map(m => {
+                const saved = savedByUrl.has(m.imageUrl);
+                return (
+                  <div key={m.id} className="flex items-center gap-2 p-2 pr-2 rounded-xl border border-border bg-card">
+                    <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-14 h-14 rounded-lg object-cover shrink-0" />
+                    <Input
+                      value={m.label}
+                      onChange={e => updateMaterialLabel(m.id, e.target.value)}
+                      placeholder="Material name"
+                      className="h-8 text-sm flex-1 min-w-0"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-7 h-7 shrink-0"
+                      onClick={() => toggleSaveMaterial(m)}
+                      aria-label={saved ? 'Remove from saved swatches' : 'Save swatch for later'}
+                      title={saved ? 'Saved — click to remove' : 'Save for next time'}
+                    >
+                      <Star className={cn('w-4 h-4', saved ? 'fill-primary text-primary' : 'text-muted-foreground')} />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0" onClick={() => removeMaterial(m.id)} aria-label="Remove">
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+              {savedMaterials.length === 0 && (
+                <p className="col-span-full text-[11px] text-muted-foreground">
+                  Tip: tap the star to save a swatch for next time
+                </p>
+              )}
             </div>
           )}
 
