@@ -11,8 +11,11 @@ import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
   Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
   Pencil, Download, Coins, ArrowRight, Layers, Images, ChevronLeft,
-  RefreshCw, Archive, Star, Plus,
+  RefreshCw, Archive, Bookmark, BookmarkCheck, Plus, MoreHorizontal, Trash2,
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { useSavedMaterials, MAX_SAVED_MATERIALS } from '@/hooks/useSavedMaterials';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/lib/brandedToast';
