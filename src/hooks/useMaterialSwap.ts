@@ -139,14 +139,13 @@ export function useMaterialSwap() {
 
         const prompt = buildMaterialSwapPrompt(material.label);
 
-        // CRITICAL slot mapping:
-        //   productImage         = material swatch (primary subject "preserve every detail")
-        //   referenceAngleImage  = product photo  (composition / geometry anchor)
-        // This is the deliberate inverse of Product Swap.
+        // Slot mapping (matches generate-freestyle labels):
+        //   productImage         = product photo  → labeled [PRODUCT REFERENCE] (primary subject, preserve EVERYTHING)
+        //   referenceAngleImage  = material swatch → labeled [REFERENCE IMAGE]   (material sample only)
         const payload: Record<string, unknown> = {
           prompt,
-          productImage: materialBase64,
-          referenceAngleImage: productAnchorBase64,
+          productImage: productAnchorBase64,
+          referenceAngleImage: materialBase64,
           aspectRatio: ratio,
           quality: 'high',
           polishPrompt: false,
