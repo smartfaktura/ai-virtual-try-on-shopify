@@ -996,7 +996,7 @@ export default function MaterialSwap() {
                     <div
                       key={s.id}
                       className={cn(
-                        'shrink-0 w-[160px] sm:w-auto snap-start rounded-xl border bg-card overflow-hidden flex flex-col',
+                        'shrink-0 w-[124px] sm:w-auto snap-start rounded-xl border bg-card overflow-hidden flex flex-col',
                         inBatch ? 'border-primary/50' : 'border-border',
                       )}
                     >
