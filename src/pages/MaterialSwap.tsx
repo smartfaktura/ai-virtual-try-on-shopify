@@ -80,6 +80,7 @@ export default function MaterialSwap() {
   const { user } = useAuth();
   const { balance: credits, setBalanceFromServer, refreshBalance: refreshCredits } = useCredits();
   const { upload, isUploading } = useFileUpload();
+  const { materials: savedMaterials, save: saveMaterial, remove: removeSavedMaterial } = useSavedMaterials();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   // ── Product (anchor) state ────────────────────────────────────────────
