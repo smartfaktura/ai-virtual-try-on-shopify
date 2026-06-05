@@ -94,7 +94,7 @@ export default function MaterialSwap() {
 
   // ── Materials state ───────────────────────────────────────────────────
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
-  const [userNote, setUserNote] = useState('');
+  
 
   // ── Ratios ────────────────────────────────────────────────────────────
   const [selectedRatios, setSelectedRatios] = useState<Set<RatioOption>>(new Set(['4:5']));
