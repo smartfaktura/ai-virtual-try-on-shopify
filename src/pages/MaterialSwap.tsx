@@ -941,12 +941,13 @@ export default function MaterialSwap() {
 
       {/* ═══════════ STEP 2: MATERIALS ═══════════ */}
       {currentStep === 2 && (
-        <div className="space-y-5 animate-in fade-in duration-200">
+        <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
           <div className="flex items-end justify-between gap-2">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Add fabric / colour references</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                One swatch per variant. The product's shape, scene and lighting stay locked
+                <span className="sm:hidden">One swatch per variant — shape & lighting stay locked</span>
+                <span className="hidden sm:inline">One swatch per variant. The product's shape, scene and lighting stay locked</span>
               </p>
             </div>
             <Badge variant={materials.length > 0 ? 'default' : 'secondary'}>
@@ -957,19 +958,25 @@ export default function MaterialSwap() {
           <label
             onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files.length) handleMaterialFiles(e.dataTransfer.files); }}
             onDragOver={(e) => e.preventDefault()}
-            className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+            className="flex flex-col items-center justify-center gap-2 p-4 sm:p-6 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
             {isUploading ? <Loader2 className="w-7 h-7 animate-spin text-primary" /> : (
               <>
-                <Upload className="w-7 h-7 text-muted-foreground" />
+                <Upload className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
                 <div className="text-center">
                   <p className="text-sm font-medium text-foreground">Add material swatches</p>
-                  <p className="text-xs text-muted-foreground">Drop, paste, or click to add multiple at once</p>
+                  <p className="hidden sm:block text-xs text-muted-foreground">Drop, paste, or click to add multiple at once</p>
                 </div>
               </>
             )}
             <input type="file" accept="image/*" multiple className="hidden" disabled={isUploading || materials.length >= MAX_MATERIALS}
               onChange={(e) => { if (e.target.files) handleMaterialFiles(e.target.files); e.currentTarget.value = ''; }} />
           </label>
+
+          {savedMaterials.length === 0 && materials.length === 0 && (
+            <p className="text-[11px] text-muted-foreground -mt-2">
+              Tip: tap Save on a swatch to keep it for next time — name it first so it's easy to find
+            </p>
+          )}
 
           {savedMaterials.length > 0 && (
             <div className="space-y-2">
@@ -989,7 +996,7 @@ export default function MaterialSwap() {
                     <div
                       key={s.id}
                       className={cn(
-                        'shrink-0 w-[160px] sm:w-auto snap-start rounded-xl border bg-card overflow-hidden flex flex-col',
+                        'shrink-0 w-[124px] sm:w-auto snap-start rounded-xl border bg-card overflow-hidden flex flex-col',
                         inBatch ? 'border-primary/50' : 'border-border',
                       )}
                     >
@@ -1080,26 +1087,24 @@ export default function MaterialSwap() {
           )}
 
           {materials.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {materials.map(m => {
                 const saved = savedByUrl.has(m.imageUrl);
                 return (
-                  <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 rounded-xl border border-border bg-card">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-14 h-14 rounded-lg object-cover shrink-0" />
-                      <Input
-                        value={m.label}
-                        onChange={e => updateMaterialLabel(m.id, e.target.value)}
-                        placeholder="Material name"
-                        className="h-9 sm:h-8 text-sm flex-1 min-w-0"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-0.5 sm:ml-auto shrink-0">
+                  <div key={m.id} className="flex items-center gap-2 p-2 rounded-xl border border-border bg-card">
+                    <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover shrink-0" />
+                    <Input
+                      value={m.label}
+                      onChange={e => updateMaterialLabel(m.id, e.target.value)}
+                      placeholder="Material name"
+                      className="h-9 sm:h-8 text-sm flex-1 min-w-0"
+                    />
+                    <div className="flex items-center gap-0.5 shrink-0">
                       <Button
                         type="button"
                         variant={saved ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="h-9 sm:h-8 gap-1.5 flex-1 sm:flex-initial"
+                        size="icon"
+                        className="h-9 w-9 sm:h-8 sm:w-8"
                         onClick={() => toggleSaveMaterial(m)}
                         aria-label={saved ? 'Remove from saved swatches' : 'Save swatch for later'}
                         title={saved ? 'Saved — tap to remove' : 'Save for next time'}
@@ -1109,28 +1114,21 @@ export default function MaterialSwap() {
                         ) : (
                           <Bookmark className="w-4 h-4" />
                         )}
-                        <span className="text-xs sm:hidden">{saved ? 'Saved' : 'Save'}</span>
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
-                        className="h-9 sm:h-8 gap-1.5"
+                        size="icon"
+                        className="h-9 w-9 sm:h-8 sm:w-8"
                         onClick={() => removeMaterial(m.id)}
                         aria-label="Remove"
                       >
                         <X className="w-4 h-4" />
-                        <span className="text-xs sm:hidden">Remove</span>
                       </Button>
                     </div>
                   </div>
                 );
               })}
-              {savedMaterials.length === 0 && (
-                <p className="col-span-full text-[11px] text-muted-foreground">
-                  Tip: tap Save to keep a swatch for next time — name it first so it's easy to find
-                </p>
-              )}
             </div>
           )}
 
