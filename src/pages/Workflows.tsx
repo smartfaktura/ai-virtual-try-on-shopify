@@ -29,6 +29,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   'interior-exterior-staging': 'Interior Staging Visuals',
   'picture-perspectives': 'Generate More Angles',
   'product-swap': 'Product Swap',
+  'material-swap': 'Material Swap',
   'image-upscaling': 'Image Upscaling Tool',
 };
 
@@ -468,6 +469,10 @@ export default function Workflows() {
       navigate('/app/product-swap');
       return;
     }
+    if (workflow.slug === 'material-swap') {
+      navigate('/app/material-swap');
+      return;
+    }
     if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio') {
       navigate('/app/catalog');
       return;
@@ -498,11 +503,13 @@ export default function Workflows() {
         const otherWorkflows = (() => {
           const rest = workflows.filter(w => w.slug !== 'product-images');
           const productSwap = rest.find(w => w.slug === 'product-swap');
+          const materialSwap = rest.find(w => w.slug === 'material-swap');
           const perspectives = rest.find(w => w.slug === 'picture-perspectives');
           const flatlay = rest.find(w => w.slug === 'flat-lay-set');
-          const middle = rest.filter(w => !['product-swap', 'picture-perspectives', 'flat-lay-set'].includes(w.slug));
+          const middle = rest.filter(w => !['product-swap', 'material-swap', 'picture-perspectives', 'flat-lay-set'].includes(w.slug));
           return [
             ...(productSwap ? [productSwap] : []),
+            ...(materialSwap ? [materialSwap] : []),
             ...(perspectives ? [perspectives] : []),
             ...middle,
             ...(flatlay ? [flatlay] : []),

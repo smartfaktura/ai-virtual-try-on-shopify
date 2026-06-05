@@ -64,6 +64,7 @@ const AdminProductImageScenes = lazy(() => import('@/pages/AdminProductImageScen
 const AdminRecommendedScenes = lazy(() => import('@/pages/AdminRecommendedScenes'));
 const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const ProductSwap = lazy(() => import('@/pages/ProductSwap'));
+const MaterialSwap = lazy(() => import('@/pages/MaterialSwap'));
 const Learn = lazy(() => import('@/pages/Learn'));
 const LearnGuide = lazy(() => import('@/pages/LearnGuide'));
 const AppHelp = lazy(() => import('@/pages/AppHelp'));
@@ -285,6 +286,7 @@ const App = () => {
                         <Route path="/catalog/new" element={<CatalogGenerate />} />
                         <Route path="/perspectives" element={<Perspectives />} />
                         <Route path="/product-swap" element={<ProductSwap />} />
+                        <Route path="/material-swap" element={<MaterialSwap />} />
                         <Route path="/learn" element={<Learn />} />
                         <Route path="/learn/freestyle" element={<LearnGuide />} />
                         <Route path="/learn/:section/:slug" element={<LearnGuide />} />
