@@ -198,7 +198,7 @@ export function DashboardFreshScenes() {
         <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[88dvh] sm:max-h-[90vh]">
           {preview && (
             <div className="flex flex-col md:grid md:grid-cols-[auto_minmax(0,1fr)] bg-background max-h-[88dvh] sm:max-h-[90vh]">
-              <div className="relative bg-muted overflow-hidden shrink-0 w-full max-h-[48dvh] aspect-[4/5] md:max-h-none md:aspect-[4/5] md:h-[80vh] md:w-auto">
+              <div className="relative bg-muted overflow-hidden shrink-0 mx-auto h-[55dvh] w-auto aspect-[4/5] md:mx-0 md:max-h-none md:aspect-[4/5] md:h-[80vh] md:w-auto">
                 <img
                   src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
                   alt={preview.title}
