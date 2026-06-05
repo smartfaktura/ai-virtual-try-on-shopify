@@ -1,25 +1,17 @@
-## Fix: Lock down `catalog-previews` bucket INSERT policy
+## Add 500 credits to anastasija@createurmedia.lt
 
-The current INSERT policy on `storage.objects` for the `catalog-previews` bucket targets the `public` role with only a `bucket_id` check — meaning anyone (even unauthenticated) can upload arbitrary files. Restrict it to `service_role` only.
+Use the existing `add_purchased_credits` RPC (SECURITY DEFINER, bypasses billing trigger, fires Resend `credits.purchased` event) to atomically grant credits to the user.
 
-### Why safe
-- Edge function `generate-catalog-preview` uses the service role key → bypasses RLS → uploads keep working.
-- No client code uploads to this bucket directly.
-- SELECT policy is untouched → all existing cached previews keep rendering.
-- Brand scenes (`brand-scene-references` bucket) are unaffected.
-
-### Migration
+### Step
+Look up the user's `user_id` from `profiles` by email, then call the RPC:
 
 ```sql
-DROP POLICY IF EXISTS "Service role insert catalog-previews" ON storage.objects;
-
-CREATE POLICY "Service role insert catalog-previews"
-ON storage.objects
-FOR INSERT
-TO service_role
-WITH CHECK (bucket_id = 'catalog-previews');
+SELECT public.add_purchased_credits(
+  (SELECT user_id FROM public.profiles WHERE email = 'anastasija@createurmedia.lt'),
+  500
+);
 ```
 
-### After migration
-- Mark `catalog_previews_unrestricted_insert` finding as fixed.
-- No code or UI changes needed.
+### Notes
+- No schema change. Single data-only call via the insert tool.
+- If the email doesn't match any profile, the RPC raises `User not found` and nothing changes.
