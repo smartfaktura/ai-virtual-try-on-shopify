@@ -135,7 +135,7 @@ export function useMaterialSwap() {
       for (const ratio of ratios) {
         if (shouldStop) break;
 
-        const prompt = buildMaterialSwapPrompt(material.label, userNote);
+        const prompt = buildMaterialSwapPrompt(material.label);
 
         // CRITICAL slot mapping:
         //   productImage         = material swatch (primary subject "preserve every detail")
