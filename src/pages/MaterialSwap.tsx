@@ -416,28 +416,31 @@ export default function MaterialSwap() {
 
     return (
       <div className="min-h-screen">
-        <SEOHead title={genAllDone && genCompletedCount > 0 ? 'Your re-skinned product' : 'Swapping materials…'} description="Your material swaps are being created." />
-        <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
-          <div className="text-center space-y-5">
-            {productUrl && (
-              <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-border bg-muted shadow-sm">
-                <img src={getOptimizedUrl(productUrl, { quality: 70 })} alt={productTitle} className="w-full h-full object-cover" />
-              </div>
-            )}
-            <div className="space-y-2">
-              {genAllDone && genCompletedCount > 0 && productTitle && (
-                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{productTitle}</p>
-              )}
-              <h1 className="text-2xl font-bold text-foreground">
-                {genAllDone && genCompletedCount > 0 ? 'Your re-skinned product' : 'Swapping materials…'}
-              </h1>
+        <SEOHead title={genAllDone && genCompletedCount > 0 ? 'Your visuals are ready' : 'Swapping materials…'} description="Your material swaps are being created." />
+        <div className="max-w-5xl mx-auto px-4 py-12 space-y-6">
+          {genAllDone && genCompletedCount > 0 ? (
+            <div className="space-y-1.5">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Your visuals are ready</h1>
               <p className="text-sm text-muted-foreground">
-                {genAllDone && genCompletedCount > 0
-                  ? `${genCompletedCount} new material${genCompletedCount !== 1 ? 's' : ''} ready — same shape, lighting and scene`
-                  : `Generating ${genTotalCount} variant${genTotalCount !== 1 ? 's' : ''} of the same product`}
+                {genCompletedCount} image{genCompletedCount !== 1 ? 's' : ''} generated successfully
               </p>
             </div>
-          </div>
+          ) : (
+            <div className="text-center space-y-5">
+              {productUrl && (
+                <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-border bg-muted shadow-sm">
+                  <img src={getOptimizedUrl(productUrl, { quality: 70 })} alt={productTitle} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-foreground">Swapping materials…</h1>
+                <p className="text-sm text-muted-foreground">
+                  Generating {genTotalCount} variant{genTotalCount !== 1 ? 's' : ''} of the same product
+                </p>
+              </div>
+            </div>
+          )}
+
 
 
           {!genAllDone && (
