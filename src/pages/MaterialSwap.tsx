@@ -372,7 +372,6 @@ export default function MaterialSwap() {
       productTitle: productTitle || 'product',
       materials: materials.map(m => ({ id: m.id, imageUrl: m.imageUrl, label: (m.label || 'Material').trim() })),
       ratios: Array.from(selectedRatios),
-      userNote,
     });
 
     if (result && result.jobs.length > 0) {
