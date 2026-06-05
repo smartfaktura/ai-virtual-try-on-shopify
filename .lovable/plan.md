@@ -1,63 +1,54 @@
 ## Goal
 
-Let users save the fabric/colour swatches they upload on `/app/material-swap` so they can reuse them in future generations, without bloating the page or leaking files between accounts.
+Make the "save swatch" affordance obvious, let users rename and delete saved swatches inline, and make the strip work well on mobile.
 
-## Is it hard?
+## Changes in `src/pages/MaterialSwap.tsx`
 
-No — it's a small, well-contained feature. Storage + a tiny `user_materials` table + a "Saved" tab in the existing swatch picker. No changes to the swap pipeline.
+### 1. Replace the star with a real "Save" icon + label
 
-## Risks and how we handle each
+- On each material card in the batch, swap the `Star` icon for `Bookmark` (outlined when not saved) / `BookmarkCheck` (filled accent when saved). Bookmark reads as "save for later" much more clearly than a star (which users associate with favorites/rating).
+- On mobile (`<sm`), the card layout becomes: thumbnail + name input on row 1, and a small action row underneath with `[ Save ] [ Remove ]` text buttons (icon + label) so the intent is unambiguous and tap targets are 36px+.
+- On desktop, keep the compact icon-only buttons, but with a tooltip "Save for next time" / "Saved — tap to remove".
 
-1. **Storage cost / abuse** — users could upload hundreds of swatches.
-   - Cap at **50 saved swatches per user**, max **5 MB per file**, image types only.
-   - Show count + cap in the UI; block uploads past the cap with a clear message.
-2. **Privacy / cross-account leakage** — one user must never see another's swatches.
-   - Dedicated bucket path `user-materials/{user_id}/...` with storage RLS limiting read/write/delete to `auth.uid() = owner`.
-   - `user_materials` table with RLS: owner-only `SELECT/INSERT/UPDATE/DELETE`. `service_role` full access. No `anon` grant.
-3. **Orphaned files** — DB row deleted but storage object remains (or vice versa).
-   - Delete the storage object first, then the DB row, inside the same handler. Tolerate "object not found" so retries succeed.
-4. **Bad uploads** — non-image files, oversized files, EXIF rotation issues.
-   - Validate MIME + size client-side before upload; reuse the existing `upload()` helper which already handles signed URLs.
-5. **Duplicate uploads** — same fabric uploaded twice.
-   - Soft-dedupe by filename + size hint; not strict (cheap, users can rename).
-6. **UX regression** — adds clutter to an already dense screen.
-   - Reuse the existing material card row. Add one small "Save" star icon on each freshly uploaded swatch + a "Saved swatches" strip above the upload dropzone that users can click to add back into the current batch.
+### 2. Saved swatches strip becomes a manageable gallery
 
-## Plan
+Replace the current 64×64 click-to-add buttons with a richer card:
 
-### Backend (one migration)
+```
+┌──────────────────────────┐
+│   [thumbnail 88×88]      │
+│   Anthology 7 Mocc       │  ← inline name (click to edit)
+│   [ Add ]   [ ⋯ ]        │  ← Add to batch | menu (Rename / Delete)
+└──────────────────────────┘
+```
 
-`supabase/migrations/<ts>_user_materials.sql`:
+- Horizontal scroll on mobile (snap-x), 2-column auto-fit on `sm+`.
+- Name is editable inline (click the text → it becomes an input, blur/Enter saves via `update`).
+- Three-dot menu (`MoreHorizontal`) opens a small dropdown with **Rename** and **Delete** (with confirm toast). Reuses existing `DropdownMenu` shadcn primitive already in the project.
+- Selected/in-batch state shows a subtle "In batch" pill instead of a plus overlay.
+- Header line stays terse: `Your saved swatches · 1/50` (no separate subtitle paragraph — the action button is self-explanatory).
 
-- Create `public.user_materials` with `id uuid pk`, `user_id uuid references auth.users on delete cascade`, `label text`, `image_path text not null` (storage path), `image_url text` (cached signed URL — optional), `created_at timestamptz default now()`.
-- `GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_materials TO authenticated;`
-- `GRANT ALL ON public.user_materials TO service_role;`
-- Enable RLS; policies: owner-only on all four verbs using `auth.uid() = user_id`.
-- Index on `(user_id, created_at DESC)`.
-- Create storage bucket `user-materials` (private) with RLS:
-  - `SELECT`/`INSERT`/`UPDATE`/`DELETE` allowed only when `bucket_id = 'user-materials' AND (storage.foldername(name))[1] = auth.uid()::text`.
+### 3. Mobile polish
 
-### Frontend (`src/pages/MaterialSwap.tsx` + one small hook)
+- Saved strip: `overflow-x-auto snap-x snap-mandatory` with `min-w-[160px]` cards so they don't squish.
+- Batch material cards stack vertically inside the card on `<sm` (thumbnail on top-left, input fills remaining width, action row below).
+- All buttons sized `h-9` minimum on touch, `h-7` on desktop.
 
-1. New hook `src/hooks/useSavedMaterials.ts`:
-   - `list()` — react-query fetch from `user_materials` (signed URLs via existing helper).
-   - `save(material)` — copy uploaded file from current temp path into `user-materials/{uid}/{uuid}.{ext}`, insert row, return record. Reject when count ≥ 50.
-   - `remove(id)` — delete storage object then row.
-2. On Step 2 ("Add fabric / colour references"):
-   - Above the existing dropzone, render a **"Your saved swatches"** strip (horizontal scroll, only visible when count > 0). Click a tile to add it to `materials` for this batch (no re-upload).
-   - On each item already in the `materials` list, show a small star/bookmark icon. Toggling it calls `save()` or `remove()`. Saved state is reflected with a filled star.
-   - Show `n / 50 saved` next to the strip header.
-3. Empty state: tiny one-liner under the dropzone — "Tip: star a swatch to save it for next time".
+### 4. Name on save
 
-### Out of scope
+- When the user taps Save on a freshly uploaded swatch, save it with the label currently in the input. (Already the case — confirmed.) Add a small inline hint under the input the first time a user saves something: "Tip: name it first so it's easy to find later". Dismissed via `localStorage` flag `vovv.mswap.save-hint-seen`.
 
-- No changes to `useMaterialSwap.ts`, generation prompt, edge functions, or pricing.
-- No sharing between users, no folders/tags, no admin moderation — can be added later if needed.
+## Hook change (`src/hooks/useSavedMaterials.ts`)
+
+- Add `rename(id, label)` that calls `update({ label }).eq('id', id)`, mirroring `remove`.
+- Trim + cap label at 80 chars, default to `'Material'`.
+
+## Out of scope
+
+- No backend / RLS changes (table already supports update via existing policy).
+- No changes to swap pipeline, pricing, or step 1/3.
 
 ## Total surface
 
-- 1 migration
-- 1 new hook (~80 lines)
-- ~60 lines added to `MaterialSwap.tsx` (saved-strip + star toggle)
-
-Simple, low-risk, fully isolated per user.
+- 1 hook gets one new method (~12 lines).
+- `MaterialSwap.tsx` step 2 saved-strip and material-card sections rewritten (~80 lines changed).

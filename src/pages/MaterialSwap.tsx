@@ -11,8 +11,11 @@ import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
   Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
   Pencil, Download, Coins, ArrowRight, Layers, Images, ChevronLeft,
-  RefreshCw, Archive, Star, Plus,
+  RefreshCw, Archive, Bookmark, BookmarkCheck, Plus, MoreHorizontal, Trash2,
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { useSavedMaterials, MAX_SAVED_MATERIALS } from '@/hooks/useSavedMaterials';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/lib/brandedToast';
@@ -80,7 +83,9 @@ export default function MaterialSwap() {
   const { user } = useAuth();
   const { balance: credits, setBalanceFromServer, refreshBalance: refreshCredits } = useCredits();
   const { upload, isUploading } = useFileUpload();
-  const { materials: savedMaterials, save: saveMaterial, remove: removeSavedMaterial } = useSavedMaterials();
+  const { materials: savedMaterials, save: saveMaterial, remove: removeSavedMaterial, rename: renameSavedMaterial } = useSavedMaterials();
+  const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
+  const [editingSavedLabel, setEditingSavedLabel] = useState<string>('');
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   // ── Product (anchor) state ────────────────────────────────────────────
@@ -969,45 +974,105 @@ export default function MaterialSwap() {
           {savedMaterials.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-end justify-between gap-2">
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Your saved swatches
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Click to add to this batch
-                  </p>
-                </div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Your saved swatches
+                </h3>
                 <span className="text-[11px] text-muted-foreground">
-                  {savedMaterials.length} / {MAX_SAVED_MATERIALS} saved
+                  {savedMaterials.length} / {MAX_SAVED_MATERIALS}
                 </span>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory sm:grid sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-3 sm:overflow-visible sm:snap-none">
                 {savedMaterials.map(s => {
                   const inBatch = materials.some(m => m.imageUrl === s.image_url);
+                  const isEditing = editingSavedId === s.id;
                   return (
-                    <button
+                    <div
                       key={s.id}
-                      type="button"
-                      onClick={() => addSavedToBatch(s)}
-                      title={inBatch ? 'Already in batch' : `Add ${s.label}`}
                       className={cn(
-                        'group relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border transition-all',
-                        inBatch
-                          ? 'border-primary/60 ring-2 ring-primary/30'
-                          : 'border-border hover:border-foreground/40'
+                        'shrink-0 w-[160px] sm:w-auto snap-start rounded-xl border bg-card overflow-hidden flex flex-col',
+                        inBatch ? 'border-primary/50' : 'border-border',
                       )}
                     >
-                      <img
-                        src={getOptimizedUrl(s.image_url, { quality: 60 })}
-                        alt={s.label}
-                        className="w-full h-full object-cover"
-                      />
-                      {!inBatch && (
-                        <span className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-background/60">
-                          <Plus className="w-4 h-4 text-foreground" />
-                        </span>
-                      )}
-                    </button>
+                      <div className="relative aspect-square bg-muted/40">
+                        <img
+                          src={getOptimizedUrl(s.image_url, { quality: 60 })}
+                          alt={s.label}
+                          className="w-full h-full object-cover"
+                        />
+                        {inBatch && (
+                          <span className="absolute top-1.5 left-1.5 text-[10px] px-1.5 py-0.5 rounded-md bg-background/85 backdrop-blur-sm border border-border text-foreground">
+                            In batch
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-2 space-y-1.5">
+                        {isEditing ? (
+                          <Input
+                            autoFocus
+                            value={editingSavedLabel}
+                            onChange={e => setEditingSavedLabel(e.target.value)}
+                            onBlur={async () => {
+                              const next = editingSavedLabel.trim();
+                              if (next && next !== s.label) await renameSavedMaterial(s.id, next);
+                              setEditingSavedId(null);
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                              if (e.key === 'Escape') setEditingSavedId(null);
+                            }}
+                            className="h-7 text-xs"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setEditingSavedId(s.id); setEditingSavedLabel(s.label); }}
+                            className="w-full text-left text-xs font-medium text-foreground truncate hover:text-primary transition-colors"
+                            title="Click to rename"
+                          >
+                            {s.label}
+                          </button>
+                        )}
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            type="button"
+                            variant={inBatch ? 'ghost' : 'secondary'}
+                            size="sm"
+                            disabled={inBatch}
+                            onClick={() => addSavedToBatch(s)}
+                            className="h-8 flex-1 text-xs gap-1"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            {inBatch ? 'Added' : 'Add'}
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                aria-label="Swatch options"
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => { setEditingSavedId(s.id); setEditingSavedLabel(s.label); }}
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-2" />Rename
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => removeSavedMaterial(s.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-2" />Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -1019,33 +1084,51 @@ export default function MaterialSwap() {
               {materials.map(m => {
                 const saved = savedByUrl.has(m.imageUrl);
                 return (
-                  <div key={m.id} className="flex items-center gap-2 p-2 pr-2 rounded-xl border border-border bg-card">
-                    <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-14 h-14 rounded-lg object-cover shrink-0" />
-                    <Input
-                      value={m.label}
-                      onChange={e => updateMaterialLabel(m.id, e.target.value)}
-                      placeholder="Material name"
-                      className="h-8 text-sm flex-1 min-w-0"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-7 h-7 shrink-0"
-                      onClick={() => toggleSaveMaterial(m)}
-                      aria-label={saved ? 'Remove from saved swatches' : 'Save swatch for later'}
-                      title={saved ? 'Saved — click to remove' : 'Save for next time'}
-                    >
-                      <Star className={cn('w-4 h-4', saved ? 'fill-primary text-primary' : 'text-muted-foreground')} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0" onClick={() => removeMaterial(m.id)} aria-label="Remove">
-                      <X className="w-4 h-4" />
-                    </Button>
+                  <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 rounded-xl border border-border bg-card">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-14 h-14 rounded-lg object-cover shrink-0" />
+                      <Input
+                        value={m.label}
+                        onChange={e => updateMaterialLabel(m.id, e.target.value)}
+                        placeholder="Material name"
+                        className="h-9 sm:h-8 text-sm flex-1 min-w-0"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-0.5 sm:ml-auto shrink-0">
+                      <Button
+                        type="button"
+                        variant={saved ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-9 sm:h-8 gap-1.5 flex-1 sm:flex-initial"
+                        onClick={() => toggleSaveMaterial(m)}
+                        aria-label={saved ? 'Remove from saved swatches' : 'Save swatch for later'}
+                        title={saved ? 'Saved — tap to remove' : 'Save for next time'}
+                      >
+                        {saved ? (
+                          <BookmarkCheck className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Bookmark className="w-4 h-4" />
+                        )}
+                        <span className="text-xs sm:hidden">{saved ? 'Saved' : 'Save'}</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 sm:h-8 gap-1.5"
+                        onClick={() => removeMaterial(m.id)}
+                        aria-label="Remove"
+                      >
+                        <X className="w-4 h-4" />
+                        <span className="text-xs sm:hidden">Remove</span>
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
               {savedMaterials.length === 0 && (
                 <p className="col-span-full text-[11px] text-muted-foreground">
-                  Tip: tap the star to save a swatch for next time
+                  Tip: tap Save to keep a swatch for next time — name it first so it's easy to find
                 </p>
               )}
             </div>
