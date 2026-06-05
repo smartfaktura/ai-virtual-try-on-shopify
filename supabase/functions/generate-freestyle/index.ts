@@ -1391,6 +1391,10 @@ serve(async (req) => {
       if (isPerspective && referenceAngleImage) {
         contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
         contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
+      } else if (!isPerspective && referenceAngleImage) {
+        // Material Swap / edit-with-material-ref: attach swatch as MATERIAL REFERENCE
+        contentArray.push({ type: "text", text: "[MATERIAL REFERENCE]" });
+        contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
       }
 
       // Determine primary provider/model for this image
