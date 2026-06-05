@@ -469,6 +469,10 @@ export default function Workflows() {
       navigate('/app/product-swap');
       return;
     }
+    if (workflow.slug === 'material-swap') {
+      navigate('/app/material-swap');
+      return;
+    }
     if (workflow.slug === 'catalog-shot-set' || workflow.name === 'Catalog Studio') {
       navigate('/app/catalog');
       return;
