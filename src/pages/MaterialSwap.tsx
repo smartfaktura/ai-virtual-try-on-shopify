@@ -522,7 +522,7 @@ export default function MaterialSwap() {
                   <div className="space-y-3">
                     {productTitle && (
                       <div className="flex items-center gap-2 min-w-0">
-                        <h3 className="text-sm font-semibold truncate">{productTitle}</h3>
+                        <h3 className="text-sm font-semibold truncate">{looksLikePrompt(productTitle) ? 'Selected product' : productTitle}</h3>
                         <Badge variant="secondary" className="text-[10px] flex-shrink-0 whitespace-nowrap">
                           {resultEntries.length} image{resultEntries.length !== 1 ? 's' : ''}
                         </Badge>
