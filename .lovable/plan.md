@@ -1,36 +1,33 @@
-## Goal
-Replace the Material Swap success view (post-generation) with a layout matching `/app/generate/product-images` (Step 6 Results). Remove the redundant product thumbnail and the "RE-RENDER…" eyebrow.
+## Root cause
+The chair in "Anthony 7 Mocca" was re-invented because the model is treating the **swatch** as the primary subject and the **chair photo** as soft "reference". The edge function `generate-freestyle` labels the slots like this when `isPerspective=true`:
 
-## Changes — `src/pages/MaterialSwap.tsx` (success branch only, lines ~415–595)
+1. `productImage` → text label `[PRODUCT REFERENCE]` (treated as the subject)
+2. `referenceAngleImage` → text label `[REFERENCE IMAGE]` (treated as a hint)
 
-Only touches the `genAllDone && genCompletedCount > 0` state. The generating/in-progress view stays unchanged.
+Today `useMaterialSwap.ts` deliberately inverts the slots:
+- `productImage` = material swatch
+- `referenceAngleImage` = chair photo
 
-1. **Header (drop the floating product image + eyebrow)**
-   - Remove the 24×24 product thumbnail block (lines 420–424).
-   - Remove the uppercase product-title eyebrow (lines 426–428).
-   - Remove the `RE-RENDER THE EXACT PRODUCT…` text (this is the prompt body bleeding through — it should not be shown).
-   - New header:
-     - `h1`: `Your visuals are ready` (text-2xl sm:text-3xl font-semibold tracking-tight)
-     - subtitle: `{N} image{s} generated successfully` (text-sm text-muted-foreground)
+So the model sees the swatch as the product and the chair as just a vibe reference — it freely re-imagines the chair geometry, scene, and lighting. This matches the Mocca screenshot.
 
-2. **Results grid** — match Product Images Step 6:
-   - Group under a single row: product name + `Badge` showing `{N} images` (uses existing `productTitle`).
-   - Grid: `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3`.
-   - Each tile: rounded-xl border card, image fills using `aspectRatio` from `job.ratio` (replace `:` with `/`), `ShimmerImage` with `object-contain`, hover scale.
-   - Bottom strip: scene/material label + small ratio badge when mixed ratios.
-   - Top-right hover download button (existing per-tile download, keep current `buildFileName` naming).
-   - Click opens existing `ImageLightbox` (unchanged).
+## Fix — swap the slot mapping back
 
-3. **Actions card** — wrap action buttons in a `Card` / `CardContent` flex row, matching Step 6:
-   - `Generate More` (outline + `RefreshCw` icon) — same handler as today.
-   - `Download All (N)` (outline + `Archive` icon, `Loader2` while running) — same `downloadDropAsZip` call.
-   - `View in Library` (outline + `Download` icon) — same handler.
-   - Keep failed-count helper line above the card when `genFailedCount > 0`.
+### `src/hooks/useMaterialSwap.ts`
+1. **Flip the payload slots** in the per-material loop:
+   - `productImage: productAnchorBase64`  (the chair photo — primary subject)
+   - `referenceAngleImage: materialBase64` (the swatch — material source)
+   - Update the explanatory comment above the payload to reflect the new mapping.
 
-4. **SEO title**: change to `Your visuals are ready` for the success state (was `Your re-skinned product`). Generating-state title unchanged.
+2. **Rewrite `buildMaterialSwapPrompt`** so its label references match what the edge function actually emits:
+   - Refer to the chair as **`[PRODUCT REFERENCE]`** everywhere (was `[REFERENCE IMAGE]`).
+   - Refer to the swatch as **`[REFERENCE IMAGE]`** / "the second image" (was "first image").
+   - Open with: `Re-render the EXACT product shown in [PRODUCT REFERENCE]. Only re-skin its upholstered / skinnable surfaces using the material sampled from [REFERENCE IMAGE] ("${materialLabel}"). Treat [PRODUCT REFERENCE] as the absolute source of truth for geometry, scene, framing, lighting, and any people. Treat [REFERENCE IMAGE] as a material sample only — never import its scene, background, lighting, or composition.`
+   - Keep the existing `SCENE & PRODUCT FIDELITY`, `SWATCH ANALYSIS`, `TARGET SURFACES`, `PHYSICAL REALISM`, `NEGATIVES` blocks but update internal wording so "first image" → `[REFERENCE IMAGE]` and "reference" → `[PRODUCT REFERENCE]`.
+   - Add one more negative: `Do NOT redesign, restyle, or substitute the product. If you cannot identify a clearly upholstered surface to apply a soft material, leave geometry untouched.`
 
-5. **Imports**: add `Card`, `CardContent`, `Badge`, `ShimmerImage`, `RefreshCw`, `Archive`, `Loader2`; drop unused after refactor (e.g., the standalone `productUrl` thumbnail no longer needed in success view — keep import if still used elsewhere in the file).
+### `mem://features/material-swap`
+Update the memory: remove the "deliberate inverse of Product Swap" language and document the corrected mapping (`productImage` = product anchor; `referenceAngleImage` = swatch). Also note the prompt labels (`[PRODUCT REFERENCE]` = anchor, `[REFERENCE IMAGE]` = swatch).
 
 ## Out of scope
-- Generating/progress view, materials/upload steps, prompt logic, pricing, backend, lightbox component.
-- Product Images page itself — only Material Swap is touched.
+- UI, success page, pricing, edge function, polling, lightbox, materials step UX.
+- No fallback / model changes — same Pro → Seedream → Flash chain.

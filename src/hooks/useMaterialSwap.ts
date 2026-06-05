@@ -34,16 +34,16 @@ export interface MaterialSwapResult {
 
 function buildMaterialSwapPrompt(materialLabel: string): string {
   return [
-    `Re-render the EXACT product shown in [REFERENCE IMAGE] but re-skinned with the material shown in the first image ("${materialLabel}").`,
+    `Re-render the EXACT product shown in [PRODUCT REFERENCE]. Only re-skin its upholstered / skinnable surfaces using the material sampled from [REFERENCE IMAGE] ("${materialLabel}"). Treat [PRODUCT REFERENCE] as the absolute source of truth for geometry, scene, framing, lighting, and any people. Treat [REFERENCE IMAGE] as a material sample only — never import its scene, background, lighting, or composition.`,
 
-    `SCENE & PRODUCT FIDELITY — STRICT (REFERENCE IMAGE):
-- Preserve EVERY structural detail of the product in the reference: silhouette, geometry, proportions, scale, seams, stitching lines, piping, buttons, hardware, legs, feet, frame, and any non-upholstered parts (wood, metal, glass, plastic).
+    `SCENE & PRODUCT FIDELITY — STRICT ([PRODUCT REFERENCE]):
+- Preserve EVERY structural detail of the product in [PRODUCT REFERENCE]: silhouette, geometry, proportions, scale, seams, stitching lines, piping, buttons, hardware, legs, feet, frame, and any non-upholstered parts (wood, metal, glass, plastic).
 - Identical camera angle, focal length, framing, crop, and aspect ratio. Do NOT zoom, reframe, or shift the camera.
 - Identical lighting setup, direction, intensity, colour temperature, and shadow fall.
 - Identical background, surface, environment, props, and styling.
 - If a person, hand, or body part is present, preserve them with the SAME identity, pose, skin tone, hair, and clothing.`,
 
-    `SWATCH ANALYSIS — READ THE FIRST IMAGE CAREFULLY BEFORE APPLYING:
+    `SWATCH ANALYSIS — READ [REFERENCE IMAGE] CAREFULLY BEFORE APPLYING:
 - Identify the material family from visual cues: hard vs soft; woven vs knit vs pile vs leather vs wood vs metal vs stone vs glass vs lacquer.
 - Read the texture grain in detail: smooth / ribbed / brushed / hammered / pebbled / veined; weave scale; pile height and direction; knit loops; slubs and knots.
 - Read the sheen and softness: matte / satin / semi-gloss / glossy / metallic; soft and pliable vs rigid; absorbent vs reflective.
@@ -51,24 +51,26 @@ function buildMaterialSwapPrompt(materialLabel: string): string {
 - If the material is ambiguous, infer from texture: high pile = velvet or bouclé; flat tight weave = linen or wool; pebble grain = leather; visible knots/rings = wood; reflective + cool = metal; veined and opaque = stone.`,
 
     `TARGET SURFACES — MATCH PHYSICALITY:
-- Soft materials (fabric, leather, velvet, bouclé, suede, wool, linen, knit) → apply ONLY to upholstered / soft / skinnable surfaces. Leave hard parts (legs, frame, base, hardware) untouched.
-- Hard materials (wood, metal, stone, glass, lacquer, plastic) → apply ONLY to the corresponding hard parts (frame, legs, base, top, shell). Leave upholstered areas untouched.
+- Soft materials (fabric, leather, velvet, bouclé, suede, wool, linen, knit) → apply ONLY to upholstered / soft / skinnable surfaces of [PRODUCT REFERENCE]. Leave hard parts (legs, frame, base, hardware) untouched.
+- Hard materials (wood, metal, stone, glass, lacquer, plastic) → apply ONLY to the corresponding hard parts (frame, legs, base, top, shell) of [PRODUCT REFERENCE]. Leave upholstered areas untouched.
 - Never paint a soft material onto a hard structural element, or a hard material onto a cushion.`,
 
     `PHYSICAL REALISM:
 - Preserve realistic weave / grain / vein scale relative to the product's real-world size. Never stretch a swatch 1:1 across a large surface; tile it at correct scale.
 - Drape, fold, compression and tension must match the material's softness: soft fabrics sag into cushions; leather creases at seams; bouclé puffs evenly; wood and stone stay rigid; metal reflects sharply.
-- Shadows, specular highlights, and contact response on the new material must follow the scene's existing light direction and intensity exactly.
-- Do NOT import the swatch's own background, lighting, framing, props, or any object edges from the first image.`,
+- Shadows, specular highlights, and contact response on the new material must follow the existing light direction and intensity in [PRODUCT REFERENCE] exactly.
+- Do NOT import [REFERENCE IMAGE]'s own background, lighting, framing, props, or any object edges.`,
 
     `NEGATIVES — DO NOT:
 - Do NOT change the product's shape, proportions, geometry, or pose.
 - Do NOT change the scene, background, camera, framing, or lighting.
 - Do NOT add, remove, or restyle any props, people, or accessories.
 - Do NOT reinterpret the product as a different model or variant.
+- Do NOT redesign, restyle, or substitute the product. If you cannot identify a clearly upholstered surface to apply a soft material, leave geometry untouched.
 - Do NOT introduce text, watermarks, borders, letterboxing, or padding.`,
   ].join('\n\n');
 }
+
 
 
 export function useMaterialSwap() {
@@ -137,14 +139,13 @@ export function useMaterialSwap() {
 
         const prompt = buildMaterialSwapPrompt(material.label);
 
-        // CRITICAL slot mapping:
-        //   productImage         = material swatch (primary subject "preserve every detail")
-        //   referenceAngleImage  = product photo  (composition / geometry anchor)
-        // This is the deliberate inverse of Product Swap.
+        // Slot mapping (matches generate-freestyle labels):
+        //   productImage         = product photo  → labeled [PRODUCT REFERENCE] (primary subject, preserve EVERYTHING)
+        //   referenceAngleImage  = material swatch → labeled [REFERENCE IMAGE]   (material sample only)
         const payload: Record<string, unknown> = {
           prompt,
-          productImage: materialBase64,
-          referenceAngleImage: productAnchorBase64,
+          productImage: productAnchorBase64,
+          referenceAngleImage: materialBase64,
           aspectRatio: ratio,
           quality: 'high',
           polishPrompt: false,
