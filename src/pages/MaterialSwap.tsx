@@ -505,91 +505,119 @@ export default function MaterialSwap() {
             </div>
           )}
 
-          {genAllDone && genCompletedCount > 0 && (
-            <div className="space-y-6">
-              {resultUrls.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {resultEntries.map((entry, idx) => (
-                    <div key={entry.job.jobId} className="group relative rounded-2xl overflow-hidden border border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-lg">
-                      <button type="button" onClick={() => setLightboxIndex(idx)} className="block w-full text-left">
-                        <div className="aspect-square overflow-hidden bg-muted">
-                          <img src={getOptimizedUrl(entry.url, { quality: 75 })} alt={entry.job.materialLabel}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border">
-                          <span className="text-xs font-medium text-foreground truncate flex-1">{entry.job.materialLabel}</span>
-                          {entry.job.ratio !== '1:1' && <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">{entry.job.ratio}</span>}
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async (e) => {
-                          e.stopPropagation();
+          {genAllDone && genCompletedCount > 0 && (() => {
+            const ratios = new Set(resultEntries.map(e => e.job.ratio).filter(Boolean));
+            const hasMultipleRatios = ratios.size > 1;
+            const [zipping, _setZipping] = [false, (_: boolean) => {}]; // placeholder, using inline toast
+            return (
+              <div className="space-y-8">
+                {resultEntries.length > 0 && (
+                  <div className="space-y-3">
+                    {productTitle && (
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h3 className="text-sm font-semibold truncate">{productTitle}</h3>
+                        <Badge variant="secondary" className="text-[10px] flex-shrink-0 whitespace-nowrap">
+                          {resultEntries.length} image{resultEntries.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {resultEntries.map((entry, idx) => (
+                        <button
+                          key={entry.job.jobId}
+                          onClick={() => setLightboxIndex(idx)}
+                          className="rounded-xl overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer group relative text-left"
+                        >
+                          <div
+                            className="bg-muted/40 overflow-hidden"
+                            style={{ aspectRatio: entry.job.ratio ? entry.job.ratio.replace(':', '/') : '1/1' }}
+                          >
+                            <ShimmerImage
+                              src={getOptimizedUrl(entry.url, { quality: 65 })}
+                              alt={`${productTitle || 'Material'} - ${entry.job.materialLabel}`}
+                              loading={idx < 4 ? 'eager' : 'lazy'}
+                              fetchPriority={idx < 4 ? 'high' : 'auto'}
+                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                          <div className="px-2 py-1.5 bg-card border-t border-border flex items-center gap-1.5">
+                            <p className="text-[10px] text-muted-foreground truncate flex-1">{entry.job.materialLabel}</p>
+                            {hasMultipleRatios && entry.job.ratio && (
+                              <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-3.5 shrink-0 font-medium">{entry.job.ratio}</Badge>
+                            )}
+                          </div>
+                          <span
+                            role="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                await downloadSingleImage(entry.url, buildFileName(entry.job.materialLabel, idx));
+                              } catch {
+                                toast.error('Download failed');
+                              }
+                            }}
+                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {genFailedCount > 0 && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    {genFailedCount} swap{genFailedCount !== 1 ? 's' : ''} failed and credits were refunded
+                  </p>
+                )}
+
+                <Card>
+                  <CardContent className="p-4 flex flex-wrap gap-3 items-center justify-center">
+                    <Button variant="outline" onClick={() => {
+                      setMaterials([]);
+                      setCurrentStep(2);
+                      setIsGeneratingView(false); setGeneratingJobs([]); setJobStatuses({}); setJobResults({});
+                    }} className="gap-1.5">
+                      <RefreshCw className="w-4 h-4" />Generate More
+                    </Button>
+                    {resultEntries.length >= 2 && (
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          const t = toast.loading(`Packaging ${resultEntries.length} images…`);
                           try {
-                            await downloadSingleImage(entry.url, buildFileName(entry.job.materialLabel, idx));
+                            await downloadDropAsZip(
+                              resultEntries.map((e) => ({
+                                url: e.url,
+                                workflow_name: 'Material Swap',
+                                product_title: productTitle || 'Product',
+                                scene_name: e.job.materialLabel,
+                              })),
+                              `material-swap-${new Date().toISOString().slice(0, 10)}`,
+                            );
+                            toast.dismiss(t);
+                            toast.success(`Downloaded ${resultEntries.length} images`);
                           } catch {
+                            toast.dismiss(t);
                             toast.error('Download failed');
                           }
                         }}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/90 backdrop-blur border border-border flex items-center justify-center text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background shadow-sm"
-                        aria-label="Download image"
+                        className="gap-1.5"
                       >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-              )}
-
-              {genFailedCount > 0 && (
-                <p className="text-xs text-center text-muted-foreground">
-                  {genFailedCount} swap{genFailedCount !== 1 ? 's' : ''} failed and credits were refunded
-                </p>
-              )}
-
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <Button size="pill" onClick={() => {
-                  // Keep the product, clear materials, jump back to material step
-                  setMaterials([]);
-                  setCurrentStep(2);
-                  setIsGeneratingView(false); setGeneratingJobs([]); setJobStatuses({}); setJobResults({});
-                }}>
-                  Generate more
-                </Button>
-                {resultEntries.length >= 2 && (
-                  <Button
-                    variant="outline"
-                    size="pill"
-                    onClick={async () => {
-                      const t = toast.loading(`Packaging ${resultEntries.length} images…`);
-                      try {
-                        await downloadDropAsZip(
-                          resultEntries.map((e) => ({
-                            url: e.url,
-                            workflow_name: 'Material Swap',
-                            product_title: productTitle || 'Product',
-                            scene_name: e.job.materialLabel,
-                          })),
-                          `material-swap-${new Date().toISOString().slice(0, 10)}`,
-                        );
-                        toast.dismiss(t);
-                        toast.success(`Downloaded ${resultEntries.length} images`);
-                      } catch {
-                        toast.dismiss(t);
-                        toast.error('Download failed');
-                      }
-                    }}
-                  >
-                    <Download className="w-4 h-4 mr-2" />Download all ({resultEntries.length})
-                  </Button>
-                )}
-                <Button variant="outline" size="pill" onClick={() => { setIsGeneratingView(false); navigate('/app/library'); }}>
-                  View in Library
-                </Button>
+                        <Archive className="w-4 h-4" />Download All ({resultEntries.length})
+                      </Button>
+                    )}
+                    <Button variant="outline" onClick={() => { setIsGeneratingView(false); navigate('/app/library'); }} className="gap-1.5">
+                      <Download className="w-4 h-4" />View in Library
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          )}
+            );
+          })()}
+
 
           {genAllDone && genCompletedCount === 0 && (
             <div className="text-center space-y-3">
