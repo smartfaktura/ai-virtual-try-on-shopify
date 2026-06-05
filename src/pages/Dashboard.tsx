@@ -158,7 +158,7 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-foreground">Visual Studio</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Access creative tools like Generate More Angles, Product Swap, Material Swap, Material Change, and more.
+                  Access creative tools like Generate More Angles, Product Swap, Material Swap, and more.
                 </p>
               </div>
               <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/workflows')}>
