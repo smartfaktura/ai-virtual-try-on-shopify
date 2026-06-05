@@ -11,8 +11,9 @@ import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
   Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
   Pencil, Download, Coins, ArrowRight, Layers, Images, ChevronLeft,
-  RefreshCw, Archive,
+  RefreshCw, Archive, Star, Plus,
 } from 'lucide-react';
+import { useSavedMaterials, MAX_SAVED_MATERIALS } from '@/hooks/useSavedMaterials';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
