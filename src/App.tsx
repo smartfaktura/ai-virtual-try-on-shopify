@@ -286,6 +286,7 @@ const App = () => {
                         <Route path="/catalog/new" element={<CatalogGenerate />} />
                         <Route path="/perspectives" element={<Perspectives />} />
                         <Route path="/product-swap" element={<ProductSwap />} />
+                        <Route path="/material-swap" element={<MaterialSwap />} />
                         <Route path="/learn" element={<Learn />} />
                         <Route path="/learn/freestyle" element={<LearnGuide />} />
                         <Route path="/learn/:section/:slug" element={<LearnGuide />} />
