@@ -1,13 +1,19 @@
-Add a secondary Close button beneath the "Use this scene" CTA in the Fresh Scenes preview modal.
+Replace the small top-right "Preview" pill on Fresh Scenes cards with the centered "View" hover pill used by Recent Creations.
 
 ## Change — `src/components/app/DashboardFreshScenes.tsx`
 
-In `FreshScenePreviewModal`, inside the CTA wrapper that currently holds only the primary `Button`, add a second `Button` directly after it:
+1. Import `Eye` from `lucide-react` (alongside the existing icons).
+2. In the scene card (currently around lines 190–193), remove the `<span>...Preview</span>` element in the top-right corner.
+3. Add a Recent Creations-style centered overlay inside the same card, after the gradient/title overlay:
 
-- `variant="outline"`, `onClick={onClose}`
-- Same sizing as the primary: `w-full h-11 text-base`
-- Label: `Close`
+```tsx
+<div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+  <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+    <Eye className="w-3.5 h-3.5" /> View
+  </span>
+</div>
+```
 
-Wrap the two buttons in a `flex flex-col gap-2` container so they stack with consistent spacing. The top-right `X` icon remains for parity with Discover/Library modals.
+Keep the existing bottom gradient + title overlay (Fresh Scenes still shows the scene title at the bottom). The overlay must sit above the gradient so the pill remains centered and crisp.
 
-No other changes.
+No other changes — modal, data, and grid sizing untouched.
