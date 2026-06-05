@@ -145,8 +145,7 @@ export default function MaterialSwap() {
 
       const items: LibraryPickerItem[] = [];
       for (const f of fsResult.data || []) {
-        const rawTitle = f.prompt?.slice(0, 40)?.trim();
-        const title = rawTitle || 'Freestyle';
+        const title = f.workflow_label || 'Freestyle image';
         const subtitle = (f as any).aspect_ratio || f.workflow_label || 'Freestyle';
         const haystack = [title, f.prompt, f.user_prompt, f.workflow_label]
           .filter(Boolean).join(' ').toLowerCase();
