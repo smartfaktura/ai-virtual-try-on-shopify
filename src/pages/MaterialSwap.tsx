@@ -366,6 +366,32 @@ export default function MaterialSwap() {
   const updateMaterialLabel = (id: string, label: string) =>
     setMaterials(prev => prev.map(m => m.id === id ? { ...m, label } : m));
 
+  // Saved swatches: lookup + toggle + add-to-batch
+  const savedByUrl = new Map(savedMaterials.map(s => [s.image_url, s]));
+  const addSavedToBatch = (s: { id: string; label: string; image_url: string }) => {
+    if (materials.some(m => m.imageUrl === s.image_url)) {
+      toast.info('Already in this batch');
+      return;
+    }
+    if (materials.length >= MAX_MATERIALS) {
+      toast.error(`Max ${MAX_MATERIALS} materials per batch`);
+      return;
+    }
+    setMaterials(prev => prev.concat({
+      id: crypto.randomUUID(),
+      imageUrl: s.image_url,
+      label: s.label || 'Material',
+    }));
+  };
+  const toggleSaveMaterial = async (m: MaterialItem) => {
+    const existing = savedByUrl.get(m.imageUrl);
+    if (existing) {
+      await removeSavedMaterial(existing.id);
+    } else {
+      await saveMaterial({ label: m.label, imageUrl: m.imageUrl });
+    }
+  };
+
   const toggleRatio = (r: RatioOption) => {
     const next = new Set(selectedRatios);
     if (next.has(r)) {
