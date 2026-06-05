@@ -602,13 +602,15 @@ export default function MaterialSwap() {
             open={lightboxIndex !== null}
             onClose={() => setLightboxIndex(null)}
             onNavigate={setLightboxIndex}
-            onDownload={(idx) => {
+            onDownload={async (idx) => {
               const url = resultUrls[idx]; if (!url) return;
-              const a = document.createElement('a');
-              a.href = url.includes('?') ? `${url}&download=` : `${url}?download=`;
-              a.download = '';
-              document.body.appendChild(a); a.click(); a.remove();
+              try {
+                await downloadSingleImage(url, buildFileName(resultEntries[idx]?.job.materialLabel, idx));
+              } catch {
+                toast.error('Download failed');
+              }
             }}
+
             onEdit={(idx) => {
               const url = resultUrls[idx]; if (!url) return;
               setLightboxIndex(null);
