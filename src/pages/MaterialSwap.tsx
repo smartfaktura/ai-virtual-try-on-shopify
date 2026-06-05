@@ -145,8 +145,7 @@ export default function MaterialSwap() {
 
       const items: LibraryPickerItem[] = [];
       for (const f of fsResult.data || []) {
-        const rawTitle = f.prompt?.slice(0, 40)?.trim();
-        const title = rawTitle || 'Freestyle';
+        const title = f.workflow_label || 'Freestyle image';
         const subtitle = (f as any).aspect_ratio || f.workflow_label || 'Freestyle';
         const haystack = [title, f.prompt, f.user_prompt, f.workflow_label]
           .filter(Boolean).join(' ').toLowerCase();
@@ -275,9 +274,17 @@ export default function MaterialSwap() {
   const canGenerate = !!productUrl && materials.length > 0 && selectedRatios.size > 0 && !isGenerating;
 
   // ── Handlers: product picker ─────────────────────────────────────────
+  const looksLikePrompt = (s: string) => {
+    if (!s) return false;
+    if (/[\[\]{}]/.test(s)) return true;
+    if (/^(re-?render|edit|generate|create|make|produce)\b/i.test(s)) return true;
+    if (s.length > 32 && s.includes(' ')) return true;
+    return false;
+  };
   const pickLibrary = (item: LibraryPickerItem) => {
     setProductUrl(item.imageUrl);
-    setProductTitle(item.title || 'Library image');
+    const safe = item.title && !looksLikePrompt(item.title) ? item.title : 'Library image';
+    setProductTitle(safe);
   };
   const pickProduct = (p: UserProduct) => {
     if (!p.image_url) return;
@@ -515,7 +522,7 @@ export default function MaterialSwap() {
                   <div className="space-y-3">
                     {productTitle && (
                       <div className="flex items-center gap-2 min-w-0">
-                        <h3 className="text-sm font-semibold truncate">{productTitle}</h3>
+                        <h3 className="text-sm font-semibold truncate">{looksLikePrompt(productTitle) ? 'Selected product' : productTitle}</h3>
                         <Badge variant="secondary" className="text-[10px] flex-shrink-0 whitespace-nowrap">
                           {resultEntries.length} image{resultEntries.length !== 1 ? 's' : ''}
                         </Badge>

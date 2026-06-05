@@ -1,27 +1,41 @@
-Goal: make `/app/material-swap` preserve the original product photo as the locked canvas and only replace the material surface.
+## Why this happens
 
-Plan:
+On the Material Swap success page, the heading above the result grid shows `Re-render the EXACT product shown in [PR…` — that is the first 40 characters of an old generation **prompt**, not a real product title.
 
-1. Change Material Swap from “re-render” to “surgical edit”
-   - In `src/hooks/useMaterialSwap.ts`, stop sending the product photo as a generated product reference.
-   - Send the product photo as the image to edit: `sourceImage` + `imageRole: 'edit'`.
-   - Keep the material image as the secondary material reference.
-   - Remove `isPerspective: true` for this workflow so the backend uses the edit-preservation path.
+Source of the bug, in `src/pages/MaterialSwap.tsx`:
 
-2. Update the backend edit flow to accept a material reference
-   - In `supabase/functions/generate-freestyle/index.ts`, include `referenceAngleImage` during edit mode too, labelled as `[MATERIAL REFERENCE]` instead of generic `[REFERENCE IMAGE]`.
-   - Add a workflow-specific guard for `workflow_id: 'material-swap'` so it never treats the material image as scene/style inspiration.
-   - Disable Seedream fallback for Material Swap/edit jobs, because fallback regeneration is more likely to shift product geometry, crop, scene, and tiny details.
+1. When building the library picker items (lines 135–193), each `freestyle_generations` row gets:
+   ```ts
+   const rawTitle = f.prompt?.slice(0, 40)?.trim();
+   const title = rawTitle || 'Freestyle';
+   ```
+   So the item's `title` is literally a slice of the prompt text.
+2. When the user picks that library image as the source product (line 280):
+   ```ts
+   setProductTitle(item.title || 'Library image');
+   ```
+   That prompt slice becomes `productTitle`.
+3. The success view renders `productTitle` as the section heading (line 518):
+   ```tsx
+   <h3>{productTitle}</h3>
+   ```
 
-3. Rewrite the Material Swap prompt for pixel-lock behavior
-   - Replace “Re-render the EXACT product...” with “Edit the provided image surgically.”
-   - Explicitly preserve: canvas size, crop, camera, background, shadows, chair dimensions, wooden frame, legs, seams, small tags/logos/labels, and all non-target areas.
-   - Tell the model to modify only the upholstery pixels and to leave every hard/wood/metal/background pixel visually unchanged.
+Result: the old generation prompt shows up as the product name on the new Material Swap result page. Nothing else (generation, files, library writes) is affected — it is purely a display label.
 
-4. Add a practical limitation note in the app copy only if needed
-   - Generative editing can be made much stricter, but it cannot mathematically guarantee 100% pixel-identical geometry.
-   - True 100% would require masked/composited texture transfer, which is a different pipeline. This plan gives the strictest improvement within the current AI edit pipeline.
+## Plan
 
-Technical outcome:
-- Material Swap becomes an image-edit operation, not a fresh scene generation.
-- The chair should no longer become longer/wider, the scene should not change, and small original details near the leg should be preserved unless they are directly on the material surface being edited.
+Frontend-only fix in `src/pages/MaterialSwap.tsx`. No backend, no schema, no prompt/generation changes.
+
+1. Stop using prompt text as the library item title for freestyle rows:
+   - Replace `const rawTitle = f.prompt?.slice(0, 40)?.trim();` with a clean label that prefers `workflow_label`, then aspect ratio, then a generic `'Freestyle image'`. The prompt stays only in `searchHaystack` so search still works.
+2. Harden the picker handler so a prompt-like title can never leak in from older cached data:
+   - In the library `onSelect` (line 280), detect "promptish" titles (contains `[`, `]`, starts with `Re-render`, longer than ~32 chars with spaces, etc.) and fall back to `'Library image'`.
+3. Also guard the success heading itself:
+   - In the results section (line 516–522), if `productTitle` looks promptish, render `'Selected product'` instead so any stale state can't surface the prompt.
+
+No changes to generation jobs query (line 155+) since that branch already prefers `user_products.title` / `product_name` and does not use the prompt.
+
+## Out of scope
+
+- No edits to `useMaterialSwap.ts`, edge functions, prompts, or the actual swap pipeline.
+- No DB writes — existing freestyle rows keep their `prompt` field untouched.
