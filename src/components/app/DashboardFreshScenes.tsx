@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getCollectionLabel } from '@/hooks/usePublicSceneLibrary';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -194,53 +194,132 @@ export function DashboardFreshScenes() {
         ))}
       </div>
 
-      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="w-fit max-w-[92vw] md:w-auto md:max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[88dvh] sm:max-h-[90vh]">
-          {preview && (
-            <div className="flex flex-col md:grid md:grid-cols-[auto_minmax(0,1fr)] bg-background max-h-[88dvh] sm:max-h-[90vh]">
-              <div className="relative bg-muted overflow-hidden shrink-0 mx-auto h-[55dvh] w-auto aspect-[4/5] md:mx-0 md:max-h-none md:aspect-[4/5] md:h-[80vh] md:w-auto">
-                <img
-                  src={getOptimizedUrl(preview.preview_image_url || '', { quality: 85 })}
-                  alt={preview.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col gap-3 md:gap-6 px-4 pt-3 pb-4 md:p-10 bg-background shrink-0 md:flex-1 items-center text-center md:items-stretch md:text-left">
-                <div className="space-y-0 md:space-y-3 w-full">
-                  <p className="hidden md:block text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
-                    {getCollectionLabel(preview.category_collection || '')}
-                  </p>
-                  <DialogTitle className="text-[15px] md:text-3xl font-semibold md:font-bold text-foreground leading-tight line-clamp-1 md:line-clamp-2">
-                    {preview.title}
-                  </DialogTitle>
-                  <DialogDescription className="sr-only md:not-sr-only md:text-[15px] md:leading-relaxed md:text-muted-foreground">
-                    Use this look as the visual reference for your next product shoot
-                  </DialogDescription>
-                </div>
-                <div className="flex flex-col gap-1.5 md:gap-3 w-full md:mt-auto md:pt-2">
-                  <Button
-                    onClick={() => useScene(preview.scene_id)}
-                    onMouseUp={(e) => e.currentTarget.blur()}
-                    onTouchEnd={(e) => e.currentTarget.blur()}
-                    className="w-full gap-2 h-10 md:h-11 text-sm md:text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-2 focus-visible:ring-offset-2"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Use this scene
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPreview(null)}
-                    className="w-full h-10 md:h-11 text-sm md:text-base"
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-
-      </Dialog>
+      <FreshScenePreviewModal
+        scene={preview}
+        onClose={() => setPreview(null)}
+        onUse={useScene}
+      />
     </section>
   );
 }
+
+function FreshScenePreviewModal({
+  scene,
+  onClose,
+  onUse,
+}: {
+  scene: FreshScene | null;
+  onClose: () => void;
+  onUse: (sceneId: string) => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const open = !!scene;
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    setVisible(false);
+    const t = setTimeout(() => setMounted(false), 220);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.overflow = 'hidden';
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handler);
+    };
+  }, [open, onClose]);
+
+  if (!mounted || !scene) return null;
+  const state = visible ? 'open' : 'closed';
+  const imageUrl = scene.preview_image_url || '';
+
+  return createPortal(
+    <div
+      data-state={state}
+      className="fixed top-0 left-0 right-0 bottom-0 z-[200]"
+      style={{ margin: 0, padding: 0 }}
+    >
+      <div
+        data-state={state}
+        className="fixed top-0 left-0 right-0 bottom-0 bg-black/90 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out duration-200"
+        onClick={onClose}
+      />
+
+      <div className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row">
+        {/* Left — image */}
+        <div
+          data-state={state}
+          className="relative w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out duration-200"
+          onClick={onClose}
+        >
+          <div
+            className="relative max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
+            style={{ aspectRatio: '4/5', width: 'auto', height: '100%' }}
+          >
+            <ShimmerImage
+              src={getOptimizedUrl(imageUrl, { quality: 85 })}
+              alt={scene.title}
+              aspectRatio="4/5"
+              wrapperClassName="relative w-full h-full flex items-center justify-center"
+              wrapperStyle={{ aspectRatio: '4/5', width: '100%', height: '100%' }}
+              className="w-full h-full object-contain rounded-lg shadow-2xl"
+              fetchPriority="high"
+            />
+          </div>
+        </div>
+
+        {/* Right — panel */}
+        <div
+          data-state={state}
+          className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-right-4 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-right-4 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 z-20 text-foreground/70 hover:text-foreground transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-7 h-7" strokeWidth={2} />
+          </button>
+
+          <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                {getCollectionLabel(scene.category_collection || '')}
+              </p>
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+                {scene.title}
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed pt-1">
+                Use this look as the visual reference for your next product shoot
+              </p>
+            </div>
+
+            <div className="md:mt-auto md:pt-2">
+              <Button
+                onClick={() => onUse(scene.scene_id)}
+                className="w-full gap-2 h-11 text-base"
+              >
+                <Sparkles className="w-4 h-4" />
+                Use this scene
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
