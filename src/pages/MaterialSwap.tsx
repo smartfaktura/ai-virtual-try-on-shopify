@@ -917,18 +917,7 @@ export default function MaterialSwap() {
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Extra direction (optional)
-            </label>
-            <Textarea
-              value={userNote}
-              onChange={e => setUserNote(e.target.value)}
-              placeholder="e.g. match the weave texture exactly, ignore the swatch's background colour"
-              rows={2}
-              className="text-sm"
-            />
-          </div>
+
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
