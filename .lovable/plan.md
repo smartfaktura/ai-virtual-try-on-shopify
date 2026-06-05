@@ -1,29 +1,36 @@
-# Material Swap — Step 1 redesign
+# Material Swap — Success page polish
 
-Replace the pre-opened tab picker in `/app/material-swap` Step 1 with a clean, mobile-friendly **method chooser**. The user first picks *how* they want to bring the product image in; the actual picker only opens after they select a method.
+Scope: visual + naming improvements on the done-state of `/app/material-swap`. No backend or pipeline changes.
 
-## Changes (all in `src/pages/MaterialSwap.tsx`, Step 1 block only)
+## Changes (all in `src/pages/MaterialSwap.tsx`)
 
-1. **Copy**
-   - Replace heading `Pick the product photo to re-skin` with: `Add your product image`
-   - Add a one-line subtitle: `Choose where to bring it from — we'll keep its shape, lighting and scene exactly as-is`
+1. **Primary CTA**
+   - Rename `Try more materials` → `Generate more`
+   - Remove the `Sparkles` icon from the button (no leading icon)
 
-2. **Method chooser (default state, no product selected, no method chosen yet)**
-   - Render **3 cards** in a responsive grid: `grid-cols-1 sm:grid-cols-3 gap-3`
-   - Each card: large icon, title, one-line helper, full tap target (min height ~140px), rounded-2xl, border, hover/active states, semantic tokens only
-     - **Library** — icon `Images`, helper: `Reuse a visual you already generated`
-     - **Products** — icon `Package`, helper: `Pick from your saved products`
-     - **Upload** — icon `Upload`, helper: `Drop a new photo or paste a URL`
-   - Tapping a card sets `productSource` and reveals that picker below
+2. **Success header polish** (the `genAllDone && genCompletedCount > 0` block, ~lines 410–426)
+   - Replace the tiny 64×64 product thumb on top with a larger 96×96 rounded-2xl tile with subtle border + soft shadow, centered
+   - If `productTitle` exists, show it as a small uppercase tracking-wider eyebrow above the H1 (e.g. `LAYLA ARMCHAIR`)
+   - Keep H1 `Your re-skinned product` but make subtitle clearer: `{n} new material{s} ready — same shape, lighting and scene`
+   - Tighten vertical rhythm (space-y-2 inside the text block, space-y-5 around it)
 
-3. **Active picker view (after a method is chosen, still no product picked)**
-   - Show a small back control above the picker: `← Change source` that clears `productSource`
-   - Render only the picker for the chosen source (Library / Products / Upload) — remove the pill/tab row entirely
-   - Keep all existing picker internals (search, grid, load more, dropzone, URL paste) unchanged
+3. **Result grid polish**
+   - Cards: rounded-2xl, thinner border, hover lift via `hover:-translate-y-0.5 hover:shadow-lg`
+   - Caption bar: replace the dark gradient overlay with a clean caption strip *below* the image (white/card bg, single line with material label + ratio chip on right) — matches the rest of the app's editorial look
+   - Add a small download icon button in the top-right corner of each card (appears on hover) that downloads that single image with proper filename (see step 4)
 
-4. **Selected state**
-   - Unchanged: existing "selected product preview" card with `Change` button (clears `productUrl`, `productTitle`, `productSource` → returns to method chooser)
+4. **Filename naming** — use `downloadSingleImage` from `@/lib/dropDownload`
+   - Filename pattern: `{productTitle}_{materialLabel}.{ext}` sanitized (replace non-alphanumeric with `_`, collapse repeats)
+   - Fallbacks: if no `productTitle` → `material-swap_{materialLabel}`; if no `materialLabel` → `{productTitle}_material_{idx+1}`; if neither → `material-swap_{idx+1}`
+   - Apply to:
+     - new per-card hover download button (step 3)
+     - existing lightbox `onDownload` (replace the manual `?download=` anchor with `downloadSingleImage(url, builtName)`)
+   - ZIP download (`Download all`) — keep existing `downloadDropAsZip` but pass `scene_name: job.materialLabel` (already correct) and ensure `product_title` is the actual `productTitle` (already correct). No code change needed here beyond verifying the values; the per-file naming inside the zip already produces `{Product}_{Material}_{n}.ext`.
+
+5. **Secondary action**
+   - Keep `View in Library` as outline pill, unchanged
+   - Keep `Download all (n)` as outline pill, unchanged copy
 
 ## Out of scope
-- No changes to Step 2, Step 3, hook, pricing, prompt, routes, or backend
-- No new components, no new dependencies; reuse existing icons from `lucide-react` already imported (add `Images`, `Package` if missing)
+- Step 1/2/3 UI, hook, pricing, prompt, routing, backend
+- No new dependencies; only `downloadSingleImage` which already exists in `@/lib/dropDownload`
