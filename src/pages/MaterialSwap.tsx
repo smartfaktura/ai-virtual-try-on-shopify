@@ -504,21 +504,38 @@ export default function MaterialSwap() {
           {genAllDone && genCompletedCount > 0 && (
             <div className="space-y-6">
               {resultUrls.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {resultEntries.map((entry, idx) => (
-                    <button key={entry.job.jobId} type="button" onClick={() => setLightboxIndex(idx)}
-                      className="group relative rounded-xl overflow-hidden border border-border bg-muted text-left transition-all hover:border-primary/50 hover:shadow-md">
-                      <div className="aspect-square overflow-hidden">
-                        <img src={getOptimizedUrl(entry.url, { quality: 75 })} alt={entry.job.materialLabel}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
-                      </div>
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 flex items-center gap-1.5 text-xs text-white">
-                        <span className="font-medium truncate">{entry.job.materialLabel}</span>
-                        {entry.job.ratio !== '1:1' && <span className="opacity-70 ml-auto text-[10px] px-1.5 py-0.5 rounded bg-white/15">{entry.job.ratio}</span>}
-                      </div>
-                    </button>
+                    <div key={entry.job.jobId} className="group relative rounded-2xl overflow-hidden border border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                      <button type="button" onClick={() => setLightboxIndex(idx)} className="block w-full text-left">
+                        <div className="aspect-square overflow-hidden bg-muted">
+                          <img src={getOptimizedUrl(entry.url, { quality: 75 })} alt={entry.job.materialLabel}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border">
+                          <span className="text-xs font-medium text-foreground truncate flex-1">{entry.job.materialLabel}</span>
+                          {entry.job.ratio !== '1:1' && <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">{entry.job.ratio}</span>}
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await downloadSingleImage(entry.url, buildFileName(entry.job.materialLabel, idx));
+                          } catch {
+                            toast.error('Download failed');
+                          }
+                        }}
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/90 backdrop-blur border border-border flex items-center justify-center text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background shadow-sm"
+                        aria-label="Download image"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   ))}
                 </div>
+
               )}
 
               {genFailedCount > 0 && (
