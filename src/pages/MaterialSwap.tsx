@@ -21,7 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useMaterialSwap, type MaterialSwapJobInfo } from '@/hooks/useMaterialSwap';
 import { toSignedUrls } from '@/lib/signedUrl';
-import { downloadDropAsZip } from '@/lib/dropDownload';
+import { downloadDropAsZip, downloadSingleImage } from '@/lib/dropDownload';
 import { TEAM_MEMBERS, getStableStatusMessage } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -402,28 +402,42 @@ export default function MaterialSwap() {
   if (isGeneratingView) {
     const resultEntries = generatingJobs.map(job => ({ job, url: jobResults[job.jobId] })).filter(e => !!e.url) as Array<{ job: MaterialSwapJobInfo; url: string }>;
     const resultUrls = resultEntries.map(e => e.url);
+    const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9À-ÿ_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60);
+    const buildFileName = (materialLabel: string | undefined, idx: number) => {
+      const p = productTitle ? sanitize(productTitle) : '';
+      const m = materialLabel ? sanitize(materialLabel) : '';
+      if (p && m) return `${p}_${m}`;
+      if (!p && m) return `material-swap_${m}`;
+      if (p && !m) return `${p}_material_${idx + 1}`;
+      return `material-swap_${idx + 1}`;
+    };
+
 
     return (
       <div className="min-h-screen">
         <SEOHead title={genAllDone && genCompletedCount > 0 ? 'Your re-skinned product' : 'Swapping materials…'} description="Your material swaps are being created." />
         <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-5">
             {productUrl && (
-              <div className="w-16 h-16 mx-auto rounded-2xl overflow-hidden border border-border bg-muted">
+              <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-border bg-muted shadow-sm">
                 <img src={getOptimizedUrl(productUrl, { quality: 70 })} alt={productTitle} className="w-full h-full object-cover" />
               </div>
             )}
-            <div className="space-y-1">
+            <div className="space-y-2">
+              {genAllDone && genCompletedCount > 0 && productTitle && (
+                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{productTitle}</p>
+              )}
               <h1 className="text-2xl font-bold text-foreground">
                 {genAllDone && genCompletedCount > 0 ? 'Your re-skinned product' : 'Swapping materials…'}
               </h1>
               <p className="text-sm text-muted-foreground">
                 {genAllDone && genCompletedCount > 0
-                  ? `${genCompletedCount} variant${genCompletedCount !== 1 ? 's' : ''} ready`
+                  ? `${genCompletedCount} new material${genCompletedCount !== 1 ? 's' : ''} ready — same shape, lighting and scene`
                   : `Generating ${genTotalCount} variant${genTotalCount !== 1 ? 's' : ''} of the same product`}
               </p>
             </div>
           </div>
+
 
           {!genAllDone && (
             <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
@@ -490,21 +504,38 @@ export default function MaterialSwap() {
           {genAllDone && genCompletedCount > 0 && (
             <div className="space-y-6">
               {resultUrls.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {resultEntries.map((entry, idx) => (
-                    <button key={entry.job.jobId} type="button" onClick={() => setLightboxIndex(idx)}
-                      className="group relative rounded-xl overflow-hidden border border-border bg-muted text-left transition-all hover:border-primary/50 hover:shadow-md">
-                      <div className="aspect-square overflow-hidden">
-                        <img src={getOptimizedUrl(entry.url, { quality: 75 })} alt={entry.job.materialLabel}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
-                      </div>
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 flex items-center gap-1.5 text-xs text-white">
-                        <span className="font-medium truncate">{entry.job.materialLabel}</span>
-                        {entry.job.ratio !== '1:1' && <span className="opacity-70 ml-auto text-[10px] px-1.5 py-0.5 rounded bg-white/15">{entry.job.ratio}</span>}
-                      </div>
-                    </button>
+                    <div key={entry.job.jobId} className="group relative rounded-2xl overflow-hidden border border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                      <button type="button" onClick={() => setLightboxIndex(idx)} className="block w-full text-left">
+                        <div className="aspect-square overflow-hidden bg-muted">
+                          <img src={getOptimizedUrl(entry.url, { quality: 75 })} alt={entry.job.materialLabel}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border">
+                          <span className="text-xs font-medium text-foreground truncate flex-1">{entry.job.materialLabel}</span>
+                          {entry.job.ratio !== '1:1' && <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">{entry.job.ratio}</span>}
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await downloadSingleImage(entry.url, buildFileName(entry.job.materialLabel, idx));
+                          } catch {
+                            toast.error('Download failed');
+                          }
+                        }}
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/90 backdrop-blur border border-border flex items-center justify-center text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background shadow-sm"
+                        aria-label="Download image"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   ))}
                 </div>
+
               )}
 
               {genFailedCount > 0 && (
@@ -520,7 +551,7 @@ export default function MaterialSwap() {
                   setCurrentStep(2);
                   setIsGeneratingView(false); setGeneratingJobs([]); setJobStatuses({}); setJobResults({});
                 }}>
-                  <Sparkles className="w-4 h-4 mr-2" />Try more materials
+                  Generate more
                 </Button>
                 {resultEntries.length >= 2 && (
                   <Button
@@ -571,13 +602,15 @@ export default function MaterialSwap() {
             open={lightboxIndex !== null}
             onClose={() => setLightboxIndex(null)}
             onNavigate={setLightboxIndex}
-            onDownload={(idx) => {
+            onDownload={async (idx) => {
               const url = resultUrls[idx]; if (!url) return;
-              const a = document.createElement('a');
-              a.href = url.includes('?') ? `${url}&download=` : `${url}?download=`;
-              a.download = '';
-              document.body.appendChild(a); a.click(); a.remove();
+              try {
+                await downloadSingleImage(url, buildFileName(resultEntries[idx]?.job.materialLabel, idx));
+              } catch {
+                toast.error('Download failed');
+              }
             }}
+
             onEdit={(idx) => {
               const url = resultUrls[idx]; if (!url) return;
               setLightboxIndex(null);
