@@ -941,12 +941,13 @@ export default function MaterialSwap() {
 
       {/* ═══════════ STEP 2: MATERIALS ═══════════ */}
       {currentStep === 2 && (
-        <div className="space-y-5 animate-in fade-in duration-200">
+        <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
           <div className="flex items-end justify-between gap-2">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Add fabric / colour references</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                One swatch per variant. The product's shape, scene and lighting stay locked
+                <span className="sm:hidden">One swatch per variant — shape & lighting stay locked</span>
+                <span className="hidden sm:inline">One swatch per variant. The product's shape, scene and lighting stay locked</span>
               </p>
             </div>
             <Badge variant={materials.length > 0 ? 'default' : 'secondary'}>
@@ -957,19 +958,25 @@ export default function MaterialSwap() {
           <label
             onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files.length) handleMaterialFiles(e.dataTransfer.files); }}
             onDragOver={(e) => e.preventDefault()}
-            className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+            className="flex flex-col items-center justify-center gap-2 p-4 sm:p-6 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
             {isUploading ? <Loader2 className="w-7 h-7 animate-spin text-primary" /> : (
               <>
-                <Upload className="w-7 h-7 text-muted-foreground" />
+                <Upload className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
                 <div className="text-center">
                   <p className="text-sm font-medium text-foreground">Add material swatches</p>
-                  <p className="text-xs text-muted-foreground">Drop, paste, or click to add multiple at once</p>
+                  <p className="hidden sm:block text-xs text-muted-foreground">Drop, paste, or click to add multiple at once</p>
                 </div>
               </>
             )}
             <input type="file" accept="image/*" multiple className="hidden" disabled={isUploading || materials.length >= MAX_MATERIALS}
               onChange={(e) => { if (e.target.files) handleMaterialFiles(e.target.files); e.currentTarget.value = ''; }} />
           </label>
+
+          {savedMaterials.length === 0 && materials.length === 0 && (
+            <p className="text-[11px] text-muted-foreground -mt-2">
+              Tip: tap Save on a swatch to keep it for next time — name it first so it's easy to find
+            </p>
+          )}
 
           {savedMaterials.length > 0 && (
             <div className="space-y-2">
