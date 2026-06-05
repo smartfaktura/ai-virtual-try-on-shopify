@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
@@ -94,7 +94,7 @@ export default function MaterialSwap() {
 
   // ── Materials state ───────────────────────────────────────────────────
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
-  const [userNote, setUserNote] = useState('');
+  
 
   // ── Ratios ────────────────────────────────────────────────────────────
   const [selectedRatios, setSelectedRatios] = useState<Set<RatioOption>>(new Set(['4:5']));
@@ -372,7 +372,6 @@ export default function MaterialSwap() {
       productTitle: productTitle || 'product',
       materials: materials.map(m => ({ id: m.id, imageUrl: m.imageUrl, label: (m.label || 'Material').trim() })),
       ratios: Array.from(selectedRatios),
-      userNote,
     });
 
     if (result && result.jobs.length > 0) {
@@ -918,18 +917,7 @@ export default function MaterialSwap() {
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Extra direction (optional)
-            </label>
-            <Textarea
-              value={userNote}
-              onChange={e => setUserNote(e.target.value)}
-              placeholder="e.g. match the weave texture exactly, ignore the swatch's background colour"
-              rows={2}
-              className="text-sm"
-            />
-          </div>
+
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
