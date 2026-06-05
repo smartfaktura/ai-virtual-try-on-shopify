@@ -306,13 +306,20 @@ function FreshScenePreviewModal({
               </p>
             </div>
 
-            <div className="md:mt-auto md:pt-2">
+            <div className="md:mt-auto md:pt-2 flex flex-col gap-2">
               <Button
                 onClick={() => onUse(scene.scene_id)}
                 className="w-full gap-2 h-11 text-base"
               >
                 <Sparkles className="w-4 h-4" />
                 Use this scene
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="w-full h-11 text-base"
+              >
+                Close
               </Button>
             </div>
           </div>
