@@ -1,41 +1,36 @@
-# Material Swap — strengthen swatch fidelity, drop the extra-direction field
+## Goal
+Replace the Material Swap success view (post-generation) with a layout matching `/app/generate/product-images` (Step 6 Results). Remove the redundant product thumbnail and the "RE-RENDER…" eyebrow.
 
-Skip per-material questions. Instead, push the AI harder to **read the swatch image itself** (texture grain, weave, pile, sheen, softness) and apply it correctly — and remove the now-redundant global "Extra direction" field.
+## Changes — `src/pages/MaterialSwap.tsx` (success branch only, lines ~415–595)
 
-## Changes
+Only touches the `genAllDone && genCompletedCount > 0` state. The generating/in-progress view stays unchanged.
 
-### 1. `src/hooks/useMaterialSwap.ts` — prompt rewrite
+1. **Header (drop the floating product image + eyebrow)**
+   - Remove the 24×24 product thumbnail block (lines 420–424).
+   - Remove the uppercase product-title eyebrow (lines 426–428).
+   - Remove the `RE-RENDER THE EXACT PRODUCT…` text (this is the prompt body bleeding through — it should not be shown).
+   - New header:
+     - `h1`: `Your visuals are ready` (text-2xl sm:text-3xl font-semibold tracking-tight)
+     - subtitle: `{N} image{s} generated successfully` (text-sm text-muted-foreground)
 
-Replace `MATERIAL APPLICATION` block with a stronger, more analytical contract that forces the model to inspect the swatch before applying it. New structure:
+2. **Results grid** — match Product Images Step 6:
+   - Group under a single row: product name + `Badge` showing `{N} images` (uses existing `productTitle`).
+   - Grid: `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3`.
+   - Each tile: rounded-xl border card, image fills using `aspectRatio` from `job.ratio` (replace `:` with `/`), `ShimmerImage` with `object-contain`, hover scale.
+   - Bottom strip: scene/material label + small ratio badge when mixed ratios.
+   - Top-right hover download button (existing per-tile download, keep current `buildFileName` naming).
+   - Click opens existing `ImageLightbox` (unchanged).
 
-- **SWATCH ANALYSIS — READ THE FIRST IMAGE CAREFULLY:**
-  - Identify the material family from visual cues: hard vs soft, woven vs knit vs pile vs leather vs wood vs metal vs stone vs glass.
-  - Read texture grain (smooth, ribbed, brushed, hammered), weave scale, pile height/direction, sheen (matte / satin / glossy / metallic), micro-detail (knots, slubs, pores, veins), softness vs rigidity.
-  - Read true colour under neutral light; ignore the swatch's own lighting bias, background tint, and any props.
-- **TARGET SURFACES — MATCH PHYSICALITY:**
-  - Soft materials (fabric, leather, velvet, bouclé, suede, wool) → apply ONLY to upholstered / soft surfaces.
-  - Hard materials (wood, metal, stone, glass, plastic, lacquer) → apply ONLY to the corresponding hard parts (frame, legs, base, top); leave upholstered areas untouched.
-  - If the swatch is ambiguous, infer from texture: high pile = velvet/bouclé; flat woven = linen/wool; pebble grain = leather; visible knots/rings = wood; reflective + cool = metal; veined = stone.
-- **PHYSICAL REALISM:**
-  - Preserve realistic weave/grain/vein scale relative to the product's real-world size — never stretch a swatch 1:1 across a large surface.
-  - Drape, fold, and tension must match the material's softness/rigidity (soft sags into cushions, leather creases at seams, wood stays rigid, metal reflects, stone is opaque).
-  - Lighting and shadows on the new material must follow the scene's existing light direction and intensity.
-- **DO NOT IMPORT FROM THE SWATCH:** background, lighting, framing, props, or any object boundaries.
+3. **Actions card** — wrap action buttons in a `Card` / `CardContent` flex row, matching Step 6:
+   - `Generate More` (outline + `RefreshCw` icon) — same handler as today.
+   - `Download All (N)` (outline + `Archive` icon, `Loader2` while running) — same `downloadDropAsZip` call.
+   - `View in Library` (outline + `Download` icon) — same handler.
+   - Keep failed-count helper line above the card when `genFailedCount > 0`.
 
-Keep `SCENE & PRODUCT FIDELITY` and `NEGATIVES` blocks unchanged.
+4. **SEO title**: change to `Your visuals are ready` for the success state (was `Your re-skinned product`). Generating-state title unchanged.
 
-Remove the `userNote` parameter from `buildMaterialSwapPrompt` and from `StartMaterialSwapInput`; drop the `ADDITIONAL DIRECTION FROM USER` section.
-
-### 2. `src/pages/MaterialSwap.tsx` — UI cleanup
-
-- Delete the entire `Extra direction (optional)` block (label + Textarea, lines ~921–932) and remove the `userNote` state and import.
-- Stop passing `userNote` to `startMaterialSwap`.
-- Material row stays as-is (swatch + name input + remove).
-
-### 3. No backend / pricing / schema changes
+5. **Imports**: add `Card`, `CardContent`, `Badge`, `ShimmerImage`, `RefreshCw`, `Archive`, `Loader2`; drop unused after refactor (e.g., the standalone `productUrl` thumbnail no longer needed in success view — keep import if still used elsewhere in the file).
 
 ## Out of scope
-
-- Per-material metadata UI
-- Auto-detecting material name from the swatch
-- Step 1 / Step 3 changes
+- Generating/progress view, materials/upload steps, prompt logic, pricing, backend, lightbox component.
+- Product Images page itself — only Material Swap is touched.
