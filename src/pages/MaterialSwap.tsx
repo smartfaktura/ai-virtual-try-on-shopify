@@ -10,7 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
   Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
-  Pencil, Download, Coins, ArrowRight, Layers,
+  Pencil, Download, Coins, ArrowRight, Layers, Images, ChevronLeft,
 } from 'lucide-react';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
@@ -638,7 +638,10 @@ export default function MaterialSwap() {
       {/* ═══════════ STEP 1: PRODUCT ═══════════ */}
       {currentStep === 1 && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          <h2 className="text-lg font-semibold text-foreground">Pick the product photo to re-skin</h2>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Add your product image</h2>
+            <p className="text-sm text-muted-foreground mt-1">Choose where to bring it from — we'll keep its shape, lighting and scene exactly as-is</p>
+          </div>
 
           {/* Selected product preview */}
           {productUrl && (
@@ -654,33 +657,46 @@ export default function MaterialSwap() {
             </div>
           )}
 
-          {/* Source picker tabs — only when nothing selected */}
-          {!productUrl && (
+          {/* Method chooser cards — only when nothing selected AND no source picked */}
+          {!productUrl && !productSource && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {([
+                { key: 'library' as const, label: 'Library', helper: 'Reuse a visual you already generated', Icon: Images },
+                { key: 'products' as const, label: 'Products', helper: 'Pick from your saved products', Icon: Package },
+                { key: 'upload' as const, label: 'Upload', helper: 'Drop a new photo or paste a URL', Icon: Upload },
+              ]).map(({ key, label, helper, Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setProductSource(key)}
+                  className="group flex flex-col items-start text-left gap-3 p-5 min-h-[140px] rounded-2xl border border-border bg-card hover:border-foreground/30 hover:bg-accent/30 active:scale-[0.99] transition-all"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-foreground group-hover:bg-foreground group-hover:text-background transition-colors">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground leading-snug">{helper}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Active picker — after source chosen, still no product picked */}
+          {!productUrl && productSource && (
             <div className="space-y-4">
-              <div className="inline-flex rounded-full border border-border bg-muted/40 p-1 text-sm">
-                {([
-                  { key: 'library' as const, label: 'Library' },
-                  { key: 'products' as const, label: 'Products' },
-                  { key: 'upload' as const, label: 'Upload' },
-                ]).map(t => (
-                  <button
-                    key={t.key}
-                    type="button"
-                    onClick={() => setProductSource(t.key)}
-                    className={cn(
-                      'px-4 h-8 rounded-full transition-colors',
-                      (productSource ?? 'library') === t.key
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+              <button
+                type="button"
+                onClick={() => setProductSource(null)}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />Change source
+              </button>
+
 
               {/* LIBRARY */}
-              {(productSource ?? 'library') === 'library' && (
+              {productSource === 'library' && (
                 <div className="space-y-3 animate-in fade-in duration-200">
                   <div className="relative py-1 px-1">
                     <Search className="absolute left-[18px] top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
