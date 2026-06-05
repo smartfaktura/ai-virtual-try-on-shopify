@@ -551,7 +551,7 @@ export default function MaterialSwap() {
                   setCurrentStep(2);
                   setIsGeneratingView(false); setGeneratingJobs([]); setJobStatuses({}); setJobResults({});
                 }}>
-                  <Sparkles className="w-4 h-4 mr-2" />Try more materials
+                  Generate more
                 </Button>
                 {resultEntries.length >= 2 && (
                   <Button
