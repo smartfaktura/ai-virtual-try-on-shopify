@@ -16,7 +16,6 @@ interface SwapParams {
   productTitle: string;
   materials: MaterialInput[];
   ratios: string[];
-  userNote?: string;
 }
 
 export interface MaterialSwapJobInfo {
@@ -33,9 +32,9 @@ export interface MaterialSwapResult {
   newBalance: number | null;
 }
 
-function buildMaterialSwapPrompt(materialLabel: string, userNote?: string): string {
-  const parts = [
-    `Re-render the EXACT product shown in [REFERENCE IMAGE] but re-skinned with the material/upholstery/colour shown in the first image ("${materialLabel}").`,
+function buildMaterialSwapPrompt(materialLabel: string): string {
+  return [
+    `Re-render the EXACT product shown in [REFERENCE IMAGE] but re-skinned with the material shown in the first image ("${materialLabel}").`,
 
     `SCENE & PRODUCT FIDELITY — STRICT (REFERENCE IMAGE):
 - Preserve EVERY structural detail of the product in the reference: silhouette, geometry, proportions, scale, seams, stitching lines, piping, buttons, hardware, legs, feet, frame, and any non-upholstered parts (wood, metal, glass, plastic).
@@ -44,12 +43,23 @@ function buildMaterialSwapPrompt(materialLabel: string, userNote?: string): stri
 - Identical background, surface, environment, props, and styling.
 - If a person, hand, or body part is present, preserve them with the SAME identity, pose, skin tone, hair, and clothing.`,
 
-    `MATERIAL APPLICATION — STRICT (FIRST IMAGE):
-- Treat the first image as a material/fabric/colour swatch ONLY. Extract just the surface finish: colour, hue, weave pattern, texture grain, sheen, pile direction.
-- Apply this material EXCLUSIVELY to the product's upholstered / soft / skinnable surfaces in the reference. Hard parts (wooden legs, metal frame, glass, etc.) keep their original finish unless the swatch clearly describes them.
-- Preserve realistic weave scale relative to the product's real-world size — do NOT stretch a swatch 1:1 across a large surface.
-- The new material must sit naturally with physically correct shadows, highlights, and contact response consistent with the scene's existing lighting.
-- Do NOT import the swatch's own background, lighting, framing, or any props from the first image.`,
+    `SWATCH ANALYSIS — READ THE FIRST IMAGE CAREFULLY BEFORE APPLYING:
+- Identify the material family from visual cues: hard vs soft; woven vs knit vs pile vs leather vs wood vs metal vs stone vs glass vs lacquer.
+- Read the texture grain in detail: smooth / ribbed / brushed / hammered / pebbled / veined; weave scale; pile height and direction; knit loops; slubs and knots.
+- Read the sheen and softness: matte / satin / semi-gloss / glossy / metallic; soft and pliable vs rigid; absorbent vs reflective.
+- Read the true colour under neutral light. Ignore the swatch's own lighting bias, shadows, background tint, and any props or hands.
+- If the material is ambiguous, infer from texture: high pile = velvet or bouclé; flat tight weave = linen or wool; pebble grain = leather; visible knots/rings = wood; reflective + cool = metal; veined and opaque = stone.`,
+
+    `TARGET SURFACES — MATCH PHYSICALITY:
+- Soft materials (fabric, leather, velvet, bouclé, suede, wool, linen, knit) → apply ONLY to upholstered / soft / skinnable surfaces. Leave hard parts (legs, frame, base, hardware) untouched.
+- Hard materials (wood, metal, stone, glass, lacquer, plastic) → apply ONLY to the corresponding hard parts (frame, legs, base, top, shell). Leave upholstered areas untouched.
+- Never paint a soft material onto a hard structural element, or a hard material onto a cushion.`,
+
+    `PHYSICAL REALISM:
+- Preserve realistic weave / grain / vein scale relative to the product's real-world size. Never stretch a swatch 1:1 across a large surface; tile it at correct scale.
+- Drape, fold, compression and tension must match the material's softness: soft fabrics sag into cushions; leather creases at seams; bouclé puffs evenly; wood and stone stay rigid; metal reflects sharply.
+- Shadows, specular highlights, and contact response on the new material must follow the scene's existing light direction and intensity exactly.
+- Do NOT import the swatch's own background, lighting, framing, props, or any object edges from the first image.`,
 
     `NEGATIVES — DO NOT:
 - Do NOT change the product's shape, proportions, geometry, or pose.
@@ -57,14 +67,9 @@ function buildMaterialSwapPrompt(materialLabel: string, userNote?: string): stri
 - Do NOT add, remove, or restyle any props, people, or accessories.
 - Do NOT reinterpret the product as a different model or variant.
 - Do NOT introduce text, watermarks, borders, letterboxing, or padding.`,
-  ];
-
-  if (userNote && userNote.trim()) {
-    parts.push(`ADDITIONAL DIRECTION FROM USER:\n${userNote.trim()}`);
-  }
-
-  return parts.join('\n\n');
+  ].join('\n\n');
 }
+
 
 export function useMaterialSwap() {
   const { user } = useAuth();
