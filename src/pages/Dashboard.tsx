@@ -121,7 +121,7 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-foreground">Create Product Visuals</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Create brand-ready visuals tailored to your product and category.
+                  Generate brand-ready product visuals using guided shot scenes tailored to your product category.
                 </p>
               </div>
               <Button
@@ -141,7 +141,7 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-bold text-foreground">Create with Prompt</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Describe any shot, scene, or style you want to create.
+                  Describe any custom shot, scene, or style and generate it from scratch.
                 </p>
               </div>
               <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
@@ -150,19 +150,19 @@ export default function Dashboard() {
               </Button>
             </div>
 
-            {/* Card 3 — Explore */}
+            {/* Card 3 — Visual Studio */}
             <div className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Compass className="w-5 h-5 text-primary" />
+                <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-foreground">Explore Examples</h3>
+                <h3 className="text-lg font-bold text-foreground">Visual Studio</h3>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Browse real examples and recreate them with your product.
+                  Access creative tools like Generate More Angles, Product Swap, Material Swap, Material Change, and more.
                 </p>
               </div>
-              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/discover')}>
-                Browse looks
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/workflows')}>
+                Open Visual Studio
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
