@@ -83,7 +83,9 @@ export default function MaterialSwap() {
   const { user } = useAuth();
   const { balance: credits, setBalanceFromServer, refreshBalance: refreshCredits } = useCredits();
   const { upload, isUploading } = useFileUpload();
-  const { materials: savedMaterials, save: saveMaterial, remove: removeSavedMaterial } = useSavedMaterials();
+  const { materials: savedMaterials, save: saveMaterial, remove: removeSavedMaterial, rename: renameSavedMaterial } = useSavedMaterials();
+  const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
+  const [editingSavedLabel, setEditingSavedLabel] = useState<string>('');
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
 
   // ── Product (anchor) state ────────────────────────────────────────────
