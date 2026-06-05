@@ -508,7 +508,7 @@ export default function MaterialSwap() {
           {genAllDone && genCompletedCount > 0 && (() => {
             const ratios = new Set(resultEntries.map(e => e.job.ratio).filter(Boolean));
             const hasMultipleRatios = ratios.size > 1;
-            const [zipping, _setZipping] = [false, (_: boolean) => {}]; // placeholder, using inline toast
+            
             return (
               <div className="space-y-8">
                 {resultEntries.length > 0 && (
