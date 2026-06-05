@@ -274,9 +274,17 @@ export default function MaterialSwap() {
   const canGenerate = !!productUrl && materials.length > 0 && selectedRatios.size > 0 && !isGenerating;
 
   // ── Handlers: product picker ─────────────────────────────────────────
+  const looksLikePrompt = (s: string) => {
+    if (!s) return false;
+    if (/[\[\]{}]/.test(s)) return true;
+    if (/^(re-?render|edit|generate|create|make|produce)\b/i.test(s)) return true;
+    if (s.length > 32 && s.includes(' ')) return true;
+    return false;
+  };
   const pickLibrary = (item: LibraryPickerItem) => {
     setProductUrl(item.imageUrl);
-    setProductTitle(item.title || 'Library image');
+    const safe = item.title && !looksLikePrompt(item.title) ? item.title : 'Library image';
+    setProductTitle(safe);
   };
   const pickProduct = (p: UserProduct) => {
     if (!p.image_url) return;
