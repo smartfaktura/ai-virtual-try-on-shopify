@@ -34,39 +34,32 @@ export interface MaterialSwapResult {
 
 function buildMaterialSwapPrompt(materialLabel: string): string {
   return [
-    `Re-render the EXACT product shown in [PRODUCT REFERENCE]. Only re-skin its upholstered / skinnable surfaces using the material sampled from [REFERENCE IMAGE] ("${materialLabel}"). Treat [PRODUCT REFERENCE] as the absolute source of truth for geometry, scene, framing, lighting, and any people. Treat [REFERENCE IMAGE] as a material sample only — never import its scene, background, lighting, or composition.`,
+    `SURGICAL MATERIAL EDIT — pixel-lock mode.`,
+    `You are editing the provided image labelled [IMAGE TO EDIT]. Return the EXACT same image at the EXACT same canvas size, crop, camera, framing, and aspect ratio. The ONLY allowed change is the visible material of the upholstered / skinnable surfaces, which must now look like the material sampled from [MATERIAL REFERENCE] ("${materialLabel}").`,
 
-    `SCENE & PRODUCT FIDELITY — STRICT ([PRODUCT REFERENCE]):
-- Preserve EVERY structural detail of the product in [PRODUCT REFERENCE]: silhouette, geometry, proportions, scale, seams, stitching lines, piping, buttons, hardware, legs, feet, frame, and any non-upholstered parts (wood, metal, glass, plastic).
-- Identical camera angle, focal length, framing, crop, and aspect ratio. Do NOT zoom, reframe, or shift the camera.
-- Identical lighting setup, direction, intensity, colour temperature, and shadow fall.
-- Identical background, surface, environment, props, and styling.
-- If a person, hand, or body part is present, preserve them with the SAME identity, pose, skin tone, hair, and clothing.`,
+    `ABSOLUTE PRESERVATION (do NOT modify these pixels):
+- Product geometry, silhouette, proportions, dimensions, and pose — the chair/object must occupy the exact same pixel footprint as in [IMAGE TO EDIT]. Do not make it longer, wider, taller, or shorter.
+- Wooden frame, legs, feet, arms, joinery, hardware, screws, casters — preserve their exact shape, position, wood grain, color, and finish.
+- Cushion shape, edges, seams, stitching, piping, buttons, zippers, tags, labels, tiny logos, brand marks, and any small printed or stitched details — keep them in their exact original positions, even near legs or arm joints.
+- Background, walls, floor, rug, windows, curtains, plants, props, lighting, shadows, reflections, color temperature, and overall scene.
+- Camera angle, lens, perspective, framing, and crop. Do NOT zoom, pan, reframe, or re-render the scene.`,
 
-    `SWATCH ANALYSIS — READ [REFERENCE IMAGE] CAREFULLY BEFORE APPLYING:
-- Identify the material family from visual cues: hard vs soft; woven vs knit vs pile vs leather vs wood vs metal vs stone vs glass vs lacquer.
-- Read the texture grain in detail: smooth / ribbed / brushed / hammered / pebbled / veined; weave scale; pile height and direction; knit loops; slubs and knots.
-- Read the sheen and softness: matte / satin / semi-gloss / glossy / metallic; soft and pliable vs rigid; absorbent vs reflective.
-- Read the true colour under neutral light. Ignore the swatch's own lighting bias, shadows, background tint, and any props or hands.
-- If the material is ambiguous, infer from texture: high pile = velvet or bouclé; flat tight weave = linen or wool; pebble grain = leather; visible knots/rings = wood; reflective + cool = metal; veined and opaque = stone.`,
+    `ALLOWED EDIT (only these pixels may change):
+- The visible covering of the upholstered cushions / soft skinnable surfaces only.
+- Replace their material appearance with the material in [MATERIAL REFERENCE]: match color, sheen, weave/grain, pile height, and texture scale realistically to the product's real-world size.
+- Preserve the original cushion shape, folds, compression, drape, seam lines, and shadow structure exactly — only the surface material changes.
+- Lighting on the new material must follow the existing light direction, intensity, and shadow fall already present in [IMAGE TO EDIT].`,
 
-    `TARGET SURFACES — MATCH PHYSICALITY:
-- Soft materials (fabric, leather, velvet, bouclé, suede, wool, linen, knit) → apply ONLY to upholstered / soft / skinnable surfaces of [PRODUCT REFERENCE]. Leave hard parts (legs, frame, base, hardware) untouched.
-- Hard materials (wood, metal, stone, glass, lacquer, plastic) → apply ONLY to the corresponding hard parts (frame, legs, base, top, shell) of [PRODUCT REFERENCE]. Leave upholstered areas untouched.
-- Never paint a soft material onto a hard structural element, or a hard material onto a cushion.`,
+    `READ [MATERIAL REFERENCE] CAREFULLY:
+- Identify family: leather / bouclé / velvet / linen / wool / knit / suede / wood / metal / stone / lacquer.
+- Read true color under neutral light; ignore the swatch's own background, lighting bias, hands, or props.
+- Never import [MATERIAL REFERENCE]'s scene, background, edges, framing, or any object from that image.`,
 
-    `PHYSICAL REALISM:
-- Preserve realistic weave / grain / vein scale relative to the product's real-world size. Never stretch a swatch 1:1 across a large surface; tile it at correct scale.
-- Drape, fold, compression and tension must match the material's softness: soft fabrics sag into cushions; leather creases at seams; bouclé puffs evenly; wood and stone stay rigid; metal reflects sharply.
-- Shadows, specular highlights, and contact response on the new material must follow the existing light direction and intensity in [PRODUCT REFERENCE] exactly.
-- Do NOT import [REFERENCE IMAGE]'s own background, lighting, framing, props, or any object edges.`,
-
-    `NEGATIVES — DO NOT:
-- Do NOT change the product's shape, proportions, geometry, or pose.
-- Do NOT change the scene, background, camera, framing, or lighting.
-- Do NOT add, remove, or restyle any props, people, or accessories.
-- Do NOT reinterpret the product as a different model or variant.
-- Do NOT redesign, restyle, or substitute the product. If you cannot identify a clearly upholstered surface to apply a soft material, leave geometry untouched.
+    `HARD NEGATIVES — DO NOT:
+- Do NOT regenerate, reimagine, recompose, or restyle the image.
+- Do NOT change product dimensions, position, or any non-upholstered part (wood, metal, legs).
+- Do NOT add, move, or remove tags, logos, labels, or small details near the legs or frame.
+- Do NOT change the background, scene, camera, framing, crop, or lighting.
 - Do NOT introduce text, watermarks, borders, letterboxing, or padding.`,
   ].join('\n\n');
 }
@@ -139,12 +132,14 @@ export function useMaterialSwap() {
 
         const prompt = buildMaterialSwapPrompt(material.label);
 
-        // Slot mapping (matches generate-freestyle labels):
-        //   productImage         = product photo  → labeled [PRODUCT REFERENCE] (primary subject, preserve EVERYTHING)
-        //   referenceAngleImage  = material swatch → labeled [REFERENCE IMAGE]   (material sample only)
+        // Surgical-edit slot mapping (matches generate-freestyle edit path):
+        //   sourceImage          = product photo   → labeled [IMAGE TO EDIT] (locked canvas — preserve EVERYTHING)
+        //   referenceAngleImage  = material swatch → labeled [MATERIAL REFERENCE] (texture sample only)
         const payload: Record<string, unknown> = {
           prompt,
-          productImage: productAnchorBase64,
+          sourceImage: productAnchorBase64,
+          imageRole: 'edit',
+          editIntent: ['enhance'],
           referenceAngleImage: materialBase64,
           aspectRatio: ratio,
           quality: 'high',
@@ -152,7 +147,6 @@ export function useMaterialSwap() {
           imageCount: 1,
           batch_id: batchId,
           productId: null,
-          isPerspective: true,
           forceProModel: true,
           workflow_label: `Material Swap — ${productTitle.slice(0, 40)}`,
           workflow_id: 'material-swap',
