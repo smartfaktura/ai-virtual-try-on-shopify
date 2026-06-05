@@ -407,23 +407,27 @@ export default function MaterialSwap() {
       <div className="min-h-screen">
         <SEOHead title={genAllDone && genCompletedCount > 0 ? 'Your re-skinned product' : 'Swapping materials…'} description="Your material swaps are being created." />
         <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-5">
             {productUrl && (
-              <div className="w-16 h-16 mx-auto rounded-2xl overflow-hidden border border-border bg-muted">
+              <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-border bg-muted shadow-sm">
                 <img src={getOptimizedUrl(productUrl, { quality: 70 })} alt={productTitle} className="w-full h-full object-cover" />
               </div>
             )}
-            <div className="space-y-1">
+            <div className="space-y-2">
+              {genAllDone && genCompletedCount > 0 && productTitle && (
+                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{productTitle}</p>
+              )}
               <h1 className="text-2xl font-bold text-foreground">
                 {genAllDone && genCompletedCount > 0 ? 'Your re-skinned product' : 'Swapping materials…'}
               </h1>
               <p className="text-sm text-muted-foreground">
                 {genAllDone && genCompletedCount > 0
-                  ? `${genCompletedCount} variant${genCompletedCount !== 1 ? 's' : ''} ready`
+                  ? `${genCompletedCount} new material${genCompletedCount !== 1 ? 's' : ''} ready — same shape, lighting and scene`
                   : `Generating ${genTotalCount} variant${genTotalCount !== 1 ? 's' : ''} of the same product`}
               </p>
             </div>
           </div>
+
 
           {!genAllDone && (
             <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
