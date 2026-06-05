@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Eye, Sparkles, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -187,9 +187,11 @@ export function DashboardFreshScenes() {
                 {scene.title}
               </p>
             </div>
-            <span className="pointer-events-none absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2 py-1 text-[11px] font-medium text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-              Preview
-            </span>
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+                <Eye className="w-3.5 h-3.5" /> View
+              </span>
+            </div>
           </button>
         ))}
       </div>
