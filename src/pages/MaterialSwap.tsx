@@ -11,7 +11,9 @@ import {
   Search, Upload, X, Sparkles, ArrowLeft, Image as ImageLucide,
   Loader2, Package, ClipboardPaste, CheckCircle, XCircle, Clock,
   Pencil, Download, Coins, ArrowRight, Layers, Images, ChevronLeft,
+  RefreshCw, Archive,
 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
