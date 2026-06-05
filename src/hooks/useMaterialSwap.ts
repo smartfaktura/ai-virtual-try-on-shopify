@@ -82,7 +82,7 @@ export function useMaterialSwap() {
       return null;
     }
 
-    const { productImageUrl, productTitle, materials, ratios, userNote } = params;
+    const { productImageUrl, productTitle, materials, ratios } = params;
     const totalJobs = materials.length * ratios.length;
 
     if (totalJobs === 0) {
