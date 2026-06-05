@@ -1,9 +1,39 @@
-All edits in `src/components/app/DashboardFreshScenes.tsx` modal block (lines 198–238).
+## Goal
 
-1. **Modal width = image width on mobile (no side bars).** On `DialogContent` add `w-fit` and replace mobile width default so it shrinks to its content (the 4:5 image column). Change `max-w-5xl` → `w-fit max-w-[92vw] md:w-auto md:max-w-5xl`. Also keep image wrapper `h-[55dvh] w-auto aspect-[4/5] mx-auto` (already done). Result: the dialog box is exactly as wide as the 4:5 image on mobile.
+Replace the current shadcn `Dialog`-based Fresh Scenes preview with the same full-screen split-portal modal used by Explore "Steal the look" (`DiscoverDetailModal`) and Library (`SceneDetailModal`) — so all three preview experiences feel identical.
 
-2. **Centered title on mobile.** On the text container (line 208) add `items-center text-center md:items-stretch md:text-left`. On `DialogTitle` keep current classes (centering inherited).
+## Reference pattern (from `DiscoverDetailModal.tsx`)
 
-3. **Close button = same size/style as CTA.** Replace the small text `<button>Close</button>` with a `<Button variant="outline">` that mirrors the CTA's sizing: `w-full h-10 md:h-11 text-sm md:text-base`. Remove the `mx-auto` text-link styling.
+- React portal rendered into `document.body`, `z-[200]`, locks body scroll, closes on Escape and backdrop click
+- Black backdrop (`bg-black/90`) with fade animation
+- Split layout: image left (`md:w-[60%] h-full`, `object-contain`, shadow) / panel right (`md:w-[40%] h-full bg-background`, slide-in-from-right)
+- Mobile: stacks vertically — image `h-[45vh]`, panel `h-[55vh]` scrollable
+- Close `X` icon top-right of the panel (not a button row)
+- Smooth mount/unmount via `mounted`/`visible` state with 220ms exit delay
 
-No behavior changes; only layout/sizing classes and the close-button element swap.
+## Changes — `src/components/app/DashboardFreshScenes.tsx`
+
+1. Remove the `Dialog` / `DialogContent` block (lines ~197–243) and its imports.
+2. Add a new local `FreshScenePreviewModal` component (or inline render) that mirrors `DiscoverDetailModal`'s shell:
+   - `createPortal` to `document.body`
+   - Backdrop + split layout exactly as referenced above
+   - Left: `ShimmerImage` with the scene's `preview_image_url`, 4:5 aspect, `object-contain`, rounded + shadow
+   - Right panel content (Fresh Scenes specific, minimal):
+     - Tiny uppercase eyebrow: collection label (`getCollectionLabel(...)`)
+     - `h2` title: `scene.title` (same type scale as Discover modal — `text-2xl md:text-3xl font-semibold tracking-tight`)
+     - Short description line (existing copy: "Use this look as the visual reference for your next product shoot")
+     - Primary CTA `Button`: "Use this scene" (Sparkles icon) → calls existing `useScene(scene.scene_id)`
+     - No secondary Close button in the panel — rely on the top-right `X` icon and backdrop click (matches Discover/Library)
+   - Body scroll lock + Escape handler + mount/visibility animation (copy the small effect blocks from `DiscoverDetailModal`)
+3. Keep all existing Fresh Scenes grid logic, `preview` state, and `setPreview(null)` close path unchanged — only the rendered modal shell changes.
+4. Drop the now-unused imports (`Dialog`, `DialogContent`, `DialogTitle`, `DialogDescription`) and any classes that are no longer referenced.
+
+## Out of scope
+
+- No changes to Discover or Library modals
+- No changes to scene data, routing, or `useScene` behavior
+- No changes to the Fresh Scenes grid card styling
+
+## Result
+
+Fresh Scenes preview becomes a full-screen, dark, split-layout modal visually indistinguishable from Explore's "Steal the look" and Library's scene preview — image left, scene info + CTA right, top-right X to close, consistent animations across the app.
