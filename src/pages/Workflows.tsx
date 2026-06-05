@@ -29,6 +29,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   'interior-exterior-staging': 'Interior Staging Visuals',
   'picture-perspectives': 'Generate More Angles',
   'product-swap': 'Product Swap',
+  'material-swap': 'Material Swap',
   'image-upscaling': 'Image Upscaling Tool',
 };
 
