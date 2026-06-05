@@ -2,6 +2,11 @@ import { Plus, User, MapPin, Camera, Star, Layers, Smartphone, Home, Sparkles, M
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import materialSwapMocca from '@/assets/material-swap/material-swap-mocca.jpg.asset.json';
+import materialSwapTerra from '@/assets/material-swap/material-swap-terra.jpg.asset.json';
+import materialSwapTeal from '@/assets/material-swap/material-swap-teal.jpg.asset.json';
+import materialSwapDeepBlue from '@/assets/material-swap/material-swap-deep-blue.jpg.asset.json';
+import materialSwapCream from '@/assets/material-swap/material-swap-cream.jpg.asset.json';
 
 const s = (path: string) => getOptimizedUrl(getLandingAssetUrl(path), { quality: 60 });
 
@@ -51,6 +56,15 @@ const mirrorSelfieProduct = s('products/crop-top-white.jpg');
 const flatProduct1 = s('products/powder-setting.jpg');
 const flatProduct2 = s('products/lipstick-matte.jpg');
 const flatResult = s('workflows/workflow-flat-lay.jpg');
+
+// Material Swap
+const materialSwapFrames = [
+  materialSwapMocca.url,
+  materialSwapTerra.url,
+  materialSwapTeal.url,
+  materialSwapDeepBlue.url,
+  materialSwapCream.url,
+];
 
 /* ── Product Visuals carousel images (optimized) ── */
 const pvRaw = [
@@ -305,6 +319,24 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       {
         type: 'badge', label: 'Catalog Ready', icon: <Star className="w-3 h-3" />,
         position: { bottom: '8%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+      },
+    ],
+  },
+
+  'Material Swap': {
+    mode: 'carousel',
+    background: materialSwapFrames[0],
+    objectPosition: 'center',
+    interval: 1400,
+    backgrounds: materialSwapFrames,
+    elements: [
+      {
+        type: 'badge', label: 'Change Material', icon: <Layers className="w-3 h-3" />,
+        position: { bottom: '14%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+      },
+      {
+        type: 'badge', label: 'Same Product', icon: <Sparkles className="w-3 h-3" />,
+        position: { bottom: '4%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
