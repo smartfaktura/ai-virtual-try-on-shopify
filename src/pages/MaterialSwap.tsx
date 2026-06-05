@@ -402,6 +402,16 @@ export default function MaterialSwap() {
   if (isGeneratingView) {
     const resultEntries = generatingJobs.map(job => ({ job, url: jobResults[job.jobId] })).filter(e => !!e.url) as Array<{ job: MaterialSwapJobInfo; url: string }>;
     const resultUrls = resultEntries.map(e => e.url);
+    const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9À-ÿ_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60);
+    const buildFileName = (materialLabel: string | undefined, idx: number) => {
+      const p = productTitle ? sanitize(productTitle) : '';
+      const m = materialLabel ? sanitize(materialLabel) : '';
+      if (p && m) return `${p}_${m}`;
+      if (!p && m) return `material-swap_${m}`;
+      if (p && !m) return `${p}_material_${idx + 1}`;
+      return `material-swap_${idx + 1}`;
+    };
+
 
     return (
       <div className="min-h-screen">
