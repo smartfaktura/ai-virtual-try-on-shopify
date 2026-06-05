@@ -1,54 +1,59 @@
-## Goal
+# Plan: Material Swap card animation for /app/workflows
 
-Make the "save swatch" affordance obvious, let users rename and delete saved swatches inline, and make the strip work well on mobile.
+## What I’ll build
+- Add a dedicated animated thumbnail for the **Material Swap** card on `/app/workflows`
+- Use your **5 uploaded chair images** as a lightweight looping **image sequence** so it matches the existing workflow cards
+- Keep it **optimized for fast loading** and **safe on mobile** by reusing the current thumbnail system instead of introducing a new video player
 
-## Changes in `src/pages/MaterialSwap.tsx`
+## Approach
+1. **Externalize the 5 uploaded images as app assets**
+   - Convert each uploaded chair image into a CDN-backed asset pointer
+   - This keeps the repo light and serves the images efficiently
 
-### 1. Replace the star with a real "Save" icon + label
+2. **Register a new Material Swap scene in the existing animation data**
+   - Add a `workflowScenes['Material Swap']` entry in `src/components/app/workflowAnimationData.tsx`
+   - Use `mode: 'carousel'` with all 5 chair variations as `backgrounds`
+   - Add 2 short overlay badges so the card feels consistent with Product Swap / Generate More Angles
+   - Keep timing subtle and premium, likely around 1200–1800ms per frame
 
-- On each material card in the batch, swap the `Star` icon for `Bookmark` (outlined when not saved) / `BookmarkCheck` (filled accent when saved). Bookmark reads as "save for later" much more clearly than a star (which users associate with favorites/rating).
-- On mobile (`<sm`), the card layout becomes: thumbnail + name input on row 1, and a small action row underneath with `[ Save ] [ Remove ]` text buttons (icon + label) so the intent is unambiguous and tap targets are 36px+.
-- On desktop, keep the compact icon-only buttons, but with a tooltip "Save for next time" / "Saved — tap to remove".
+3. **Plug it into the existing card system**
+   - No new card component
+   - `WorkflowCardCompact` already reads from `workflowScenes[workflow.name]`, so once the Material Swap scene exists, the card will animate automatically
 
-### 2. Saved swatches strip becomes a manageable gallery
+4. **Optimize for speed and stability**
+   - Keep using the existing `getOptimizedUrl(..., { quality: 60 })` pattern for carousel backgrounds
+   - Do not use width transforms for these full-card images, since this project already avoids width-based crop zoom on card imagery
+   - Rely on the current intersection-based activation so offscreen cards don’t animate unnecessarily
 
-Replace the current 64×64 click-to-add buttons with a richer card:
+5. **Validate visually**
+   - Confirm the Material Swap card animates in `/app/workflows`
+   - Check desktop and mobile layout/feel
+   - Make sure transitions read clearly and don’t feel too fast or too busy
 
-```
-┌──────────────────────────┐
-│   [thumbnail 88×88]      │
-│   Anthology 7 Mocc       │  ← inline name (click to edit)
-│   [ Add ]   [ ⋯ ]        │  ← Add to batch | menu (Rename / Delete)
-└──────────────────────────┘
-```
+## Why this is the safe path
+- It matches the architecture already used by the other animated workflow cards
+- It avoids heavier MP4/WebM logic, autoplay quirks, poster handling, and extra mobile/browser risk
+- It limits scope to the workflow card preview only, exactly as requested
 
-- Horizontal scroll on mobile (snap-x), 2-column auto-fit on `sm+`.
-- Name is editable inline (click the text → it becomes an input, blur/Enter saves via `update`).
-- Three-dot menu (`MoreHorizontal`) opens a small dropdown with **Rename** and **Delete** (with confirm toast). Reuses existing `DropdownMenu` shadcn primitive already in the project.
-- Selected/in-batch state shows a subtle "In batch" pill instead of a plus overlay.
-- Header line stays terse: `Your saved swatches · 1/50` (no separate subtitle paragraph — the action button is self-explanatory).
+## Risks and mitigations
+- **Risk: animation feels jumpy** because the chair changes color abruptly between frames  
+  **Mitigation:** use a slightly slower interval and let the existing progress/overlay system smooth the perception
 
-### 3. Mobile polish
+- **Risk: loading weight increases** with 5 full images  
+  **Mitigation:** CDN assets + existing optimized image URLs + reuse only on this one card
 
-- Saved strip: `overflow-x-auto snap-x snap-mandatory` with `min-w-[160px]` cards so they don't squish.
-- Batch material cards stack vertically inside the card on `<sm` (thumbnail on top-left, input fills remaining width, action row below).
-- All buttons sized `h-9` minimum on touch, `h-7` on desktop.
+- **Risk: mobile card feels visually noisy**  
+  **Mitigation:** keep overlays minimal and reuse the existing compact/mobile behavior already built into `WorkflowAnimatedThumbnail`
 
-### 4. Name on save
-
-- When the user taps Save on a freshly uploaded swatch, save it with the label currently in the input. (Already the case — confirmed.) Add a small inline hint under the input the first time a user saves something: "Tip: name it first so it's easy to find later". Dismissed via `localStorage` flag `vovv.mswap.save-hint-seen`.
-
-## Hook change (`src/hooks/useSavedMaterials.ts`)
-
-- Add `rename(id, label)` that calls `update({ label }).eq('id', id)`, mirroring `remove`.
-- Trim + cap label at 80 chars, default to `'Material'`.
+## Files I expect to touch
+- `src/components/app/workflowAnimationData.tsx`
+- New asset pointer files under `src/assets/` for the 5 uploaded chair images
 
 ## Out of scope
+- No changes to `/app/material-swap` page behavior
+- No backend/database changes
+- No true video generation or MP4 asset
+- No redesign of the workflows grid
 
-- No backend / RLS changes (table already supports update via existing policy).
-- No changes to swap pipeline, pricing, or step 1/3.
-
-## Total surface
-
-- 1 hook gets one new method (~12 lines).
-- `MaterialSwap.tsx` step 2 saved-strip and material-card sections rewritten (~80 lines changed).
+## Expected result
+The **Material Swap** card on `/app/workflows` will show a polished looping preview of the chair changing materials/colors, using your uploaded images, with fast-loading optimized assets and behavior consistent with the other workflow cards.
