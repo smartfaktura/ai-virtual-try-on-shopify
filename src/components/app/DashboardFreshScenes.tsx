@@ -195,7 +195,7 @@ export function DashboardFreshScenes() {
       </div>
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[88dvh] sm:max-h-[90vh]">
+        <DialogContent className="w-fit max-w-[92vw] md:w-auto md:max-w-5xl p-0 overflow-hidden border-0 bg-background shadow-2xl max-h-[88dvh] sm:max-h-[90vh]">
           {preview && (
             <div className="flex flex-col md:grid md:grid-cols-[auto_minmax(0,1fr)] bg-background max-h-[88dvh] sm:max-h-[90vh]">
               <div className="relative bg-muted overflow-hidden shrink-0 mx-auto h-[55dvh] w-auto aspect-[4/5] md:mx-0 md:max-h-none md:aspect-[4/5] md:h-[80vh] md:w-auto">
@@ -205,8 +205,8 @@ export function DashboardFreshScenes() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex flex-col gap-3 md:gap-6 px-4 pt-3 pb-4 md:p-10 bg-background shrink-0 md:flex-1">
-                <div className="space-y-0 md:space-y-3">
+              <div className="flex flex-col gap-3 md:gap-6 px-4 pt-3 pb-4 md:p-10 bg-background shrink-0 md:flex-1 items-center text-center md:items-stretch md:text-left">
+                <div className="space-y-0 md:space-y-3 w-full">
                   <p className="hidden md:block text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     {getCollectionLabel(preview.category_collection || '')}
                   </p>
@@ -217,7 +217,7 @@ export function DashboardFreshScenes() {
                     Use this look as the visual reference for your next product shoot
                   </DialogDescription>
                 </div>
-                <div className="flex flex-col gap-1.5 md:gap-3 md:mt-auto md:pt-2">
+                <div className="flex flex-col gap-1.5 md:gap-3 w-full md:mt-auto md:pt-2">
                   <Button
                     onClick={() => useScene(preview.scene_id)}
                     onMouseUp={(e) => e.currentTarget.blur()}
@@ -227,18 +227,19 @@ export function DashboardFreshScenes() {
                     <Sparkles className="w-4 h-4" />
                     Use this scene
                   </Button>
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
                     onClick={() => setPreview(null)}
-                    className="h-8 md:h-10 text-xs md:text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
+                    className="w-full h-10 md:h-11 text-sm md:text-base"
                   >
                     Close
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
           )}
         </DialogContent>
+
       </Dialog>
     </section>
   );
