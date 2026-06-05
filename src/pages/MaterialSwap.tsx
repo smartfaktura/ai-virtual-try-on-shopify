@@ -1087,26 +1087,24 @@ export default function MaterialSwap() {
           )}
 
           {materials.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {materials.map(m => {
                 const saved = savedByUrl.has(m.imageUrl);
                 return (
-                  <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 rounded-xl border border-border bg-card">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-14 h-14 rounded-lg object-cover shrink-0" />
-                      <Input
-                        value={m.label}
-                        onChange={e => updateMaterialLabel(m.id, e.target.value)}
-                        placeholder="Material name"
-                        className="h-9 sm:h-8 text-sm flex-1 min-w-0"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-0.5 sm:ml-auto shrink-0">
+                  <div key={m.id} className="flex items-center gap-2 p-2 rounded-xl border border-border bg-card">
+                    <img src={getOptimizedUrl(m.imageUrl, { quality: 60 })} alt={m.label} className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover shrink-0" />
+                    <Input
+                      value={m.label}
+                      onChange={e => updateMaterialLabel(m.id, e.target.value)}
+                      placeholder="Material name"
+                      className="h-9 sm:h-8 text-sm flex-1 min-w-0"
+                    />
+                    <div className="flex items-center gap-0.5 shrink-0">
                       <Button
                         type="button"
                         variant={saved ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="h-9 sm:h-8 gap-1.5 flex-1 sm:flex-initial"
+                        size="icon"
+                        className="h-9 w-9 sm:h-8 sm:w-8"
                         onClick={() => toggleSaveMaterial(m)}
                         aria-label={saved ? 'Remove from saved swatches' : 'Save swatch for later'}
                         title={saved ? 'Saved — tap to remove' : 'Save for next time'}
@@ -1116,28 +1114,21 @@ export default function MaterialSwap() {
                         ) : (
                           <Bookmark className="w-4 h-4" />
                         )}
-                        <span className="text-xs sm:hidden">{saved ? 'Saved' : 'Save'}</span>
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
-                        className="h-9 sm:h-8 gap-1.5"
+                        size="icon"
+                        className="h-9 w-9 sm:h-8 sm:w-8"
                         onClick={() => removeMaterial(m.id)}
                         aria-label="Remove"
                       >
                         <X className="w-4 h-4" />
-                        <span className="text-xs sm:hidden">Remove</span>
                       </Button>
                     </div>
                   </div>
                 );
               })}
-              {savedMaterials.length === 0 && (
-                <p className="col-span-full text-[11px] text-muted-foreground">
-                  Tip: tap Save to keep a swatch for next time — name it first so it's easy to find
-                </p>
-              )}
             </div>
           )}
 
