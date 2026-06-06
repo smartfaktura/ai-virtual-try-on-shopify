@@ -39,7 +39,7 @@ export function ImageRoleSelector({
   editIntent,
   onEditIntentChange,
 }: ImageRoleSelectorProps) {
-  const [roleExpanded, setRoleExpanded] = useState(true);
+  const [roleExpanded, setRoleExpanded] = useState(false);
   const [intentExpanded, setIntentExpanded] = useState(true);
 
   const toggleIntent = (intent: EditIntent) => {
