@@ -579,14 +579,17 @@ export default function Freestyle() {
 
       // Edit mode: build prompt from edit intents
       if (sourceImage && imageRole === 'edit') {
-        const effectiveIntents = editIntent.length > 0 ? editIntent : ['enhance'];
         const intentPhrases: Record<string, string> = {
-          replace_product: 'Replace the product in this image with a new one',
-          change_background: 'Change the background/environment while keeping the subject',
-          change_model: 'Replace the person while preserving composition and product placement',
-          enhance: 'Improve image quality, lighting, and details without changing content',
+          replace_product: "Replace or modify only the product as described. Keep the person, pose, background, framing, and overall lighting the same. Match the new product's materials to the scene's light so it sits naturally",
+          change_background: 'Change the background/environment as described. Keep the subject (person and product) identity, pose, and framing intact. Re-derive the lighting on the subject so it matches the new environment',
+          change_model: 'Replace the person as described. Keep the product, product placement, pose silhouette, and framing close to the original. Let skin tone, hair, and facial lighting re-derive naturally for the new person',
+          enhance: "Refine sharpness, color accuracy, and fine detail without changing what's in the image, the composition, the lighting, or the colors",
         };
-        parts.push(effectiveIntents.map(i => intentPhrases[i] || i).join('. '));
+        if (editIntent.length > 0) {
+          parts.push(editIntent.map(i => intentPhrases[i] || i).join('. '));
+        } else {
+          parts.push('Edit the uploaded image as described');
+        }
       } else if (sourceImage && imageRole === 'product') {
         parts.push("High-end product photography featuring the item shown in the uploaded image. Use a fresh angle, creative composition, and professional lighting");
       } else if (sourceImage && imageRole === 'model') {

@@ -155,17 +155,18 @@ function polishUserPrompt(
   if (imageRole === 'edit' && context.hasSource) {
     const editLayers: string[] = [];
     if (rawPrompt.trim()) editLayers.push(rawPrompt);
-    editLayers.push("Edit the provided image surgically. Return the SAME image with ONLY the requested modification. Do NOT regenerate, reimagine, or recompose the image. Preserve all other details, composition, lighting, and colors exactly as they are.");
+    editLayers.push("Apply the change described above to the uploaded image. Leave everything not mentioned by the user or the directive below unchanged. Match the input image's product identity (shape, color, materials, logos, proportions).");
 
     const intentInstructions: Record<string, string> = {
-      replace_product: "Replace the product in the image while preserving everything else.",
-      change_background: "Keep the subject intact, change the background/environment.",
-      change_model: "Replace the person while preserving composition and product placement.",
-      enhance: "Improve image quality, lighting, and details without changing content.",
+      replace_product: "Replace or modify only the product as described. Keep the person, pose, background, framing, and overall lighting the same. Match the new product's materials to the scene's light so it sits naturally.",
+      change_background: "Change the background/environment as described. Keep the subject (person and product) identity, pose, and framing intact. Re-derive the lighting on the subject so it matches the new environment.",
+      change_model: "Replace the person as described. Keep the product, product placement, pose silhouette, and framing close to the original. Let skin tone, hair, and facial lighting re-derive naturally for the new person.",
+      enhance: "Refine sharpness, color accuracy, and fine detail without changing what's in the image, the composition, the lighting, or the colors.",
     };
-    const effectiveIntents = editIntent && editIntent.length > 0 ? editIntent : ['enhance'];
-    for (const intent of effectiveIntents) {
-      if (intentInstructions[intent]) editLayers.push(intentInstructions[intent]);
+    if (editIntent && editIntent.length > 0) {
+      for (const intent of editIntent) {
+        if (intentInstructions[intent]) editLayers.push(intentInstructions[intent]);
+      }
     }
     editLayers.push("High resolution, clean result, single cohesive photograph.");
     return editLayers.join("\n");
