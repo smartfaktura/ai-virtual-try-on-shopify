@@ -398,6 +398,12 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
         return [sneakers, ...family.collections.filter((c) => c.slug !== 'sneakers')];
       }
     }
+    if (family.slug === 'food-and-drink') {
+      const beverages = family.collections.find((c) => c.slug === 'beverages');
+      if (beverages) {
+        return [beverages, ...family.collections.filter((c) => c.slug !== 'beverages')];
+      }
+    }
     return family.collections;
   }, [family.collections, family.slug, activeCollectionSlug]);
 
