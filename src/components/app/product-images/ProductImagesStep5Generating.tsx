@@ -84,12 +84,26 @@ export function ProductImagesStep5Generating({
 
   const pct = effectiveTotal > 0 ? Math.min(100, Math.round((completedJobs / effectiveTotal) * 100)) : 0;
 
-  const estimatePerImage = 8;
+  const estimatePerImage = 5;
   const totalEstSeconds = Math.max(effectiveTotal * estimatePerImage, 1);
-  const timeFloor = Math.min((elapsed / totalEstSeconds) * 15, 15);
+
+  // Perceived progress curve: fast 0→70, slower 70→90, asymptotic 90→95.
+  // Real completed-jobs pct (`pct`) always wins if higher, so the bar still
+  // jumps forward on real completions. 100% only when all jobs are truly done.
+  const t = Math.min(elapsed / totalEstSeconds, 1.5);
+  let timeCurve: number;
+  if (t < 0.4) {
+    timeCurve = (t / 0.4) * 70;
+  } else if (t < 0.8) {
+    timeCurve = 70 + ((t - 0.4) / 0.4) * 20;
+  } else {
+    timeCurve = 90 + (1 - Math.exp(-(t - 0.8) * 3)) * 5;
+  }
+  const isAllDone = effectiveTotal > 0 && completedJobs >= effectiveTotal;
+  const ceiling = isAllDone ? 100 : 95;
   const displayPct = isQueuing
     ? Math.max(2, Math.round((enqueuedJobs / Math.max(expectedJobCount, 1)) * 10))
-    : Math.max(Math.round(Math.max(timeFloor, 2)), pct);
+    : Math.min(ceiling, Math.max(Math.round(timeCurve), pct, 2));
 
   const phase: 'queuing' | 'generating' | 'finishing' =
     isQueuing ? 'queuing' : pct >= 80 ? 'finishing' : 'generating';
@@ -119,8 +133,8 @@ export function ProductImagesStep5Generating({
   const currentMsg = BRANDED_MESSAGES[msgIndex];
   const member = TEAM_MEMBERS.find(m => m.name === currentMsg.member);
 
-  const lowMin = Math.max(1, Math.ceil((effectiveTotal * 10) / 60));
-  const highMin = Math.max(lowMin, Math.ceil((effectiveTotal * 15) / 60));
+  const lowMin = Math.max(1, Math.ceil((effectiveTotal * 5) / 60));
+  const highMin = Math.max(lowMin, Math.ceil((effectiveTotal * 8) / 60));
   const estimateCopy = effectiveTotal <= 1
     ? 'Estimated under a minute'
     : lowMin === highMin
