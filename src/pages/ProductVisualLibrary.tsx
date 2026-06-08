@@ -392,6 +392,12 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
         return [bags, ...family.collections.filter((c) => c.slug !== 'bags-accessories')];
       }
     }
+    if (family.slug === 'footwear') {
+      const sneakers = family.collections.find((c) => c.slug === 'sneakers');
+      if (sneakers) {
+        return [sneakers, ...family.collections.filter((c) => c.slug !== 'sneakers')];
+      }
+    }
     return family.collections;
   }, [family.collections, family.slug, activeCollectionSlug]);
 
