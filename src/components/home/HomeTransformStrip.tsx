@@ -90,7 +90,7 @@ const BAGS_CARDS: GridCardData[] = [
   { label: 'Studio Editorial',          src: PREVIEW('1779254042866-tzk34b') },
   { label: 'Dynamic Bloom Studio',      src: PREVIEW('1779254038259-suks3t') },
   { label: 'Botanical Oasis',           src: PREVIEW('1777880664879-qp4xbg') },
-  { label: 'Sunny Shadows',             src: PREVIEW('1779254023329-q4m922') },
+  { label: 'Sunny Shadows',             src: PREVIEW('1780922504004-qq24dq') },
   { label: 'Dynamic Water Splash',      src: PREVIEW('1780060131424-9kwee8') },
   { label: 'Dynamic Studio Background', src: PREVIEW('1779254022047-um76cz') },
   { label: 'Earthy Bubble Wrap',        src: PREVIEW('1779254027797-grs4vw') },
