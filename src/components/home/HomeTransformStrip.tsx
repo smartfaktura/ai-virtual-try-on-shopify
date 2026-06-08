@@ -121,7 +121,7 @@ const CATEGORIES = [
   { id: 'watches',    label: 'Watches',            cards: WATCHES_CARDS,    hub: '/ai-product-photography/jewelry' },
   { id: 'swimwear',   label: 'Swimwear',           cards: SWIMWEAR_CARDS,   hub: '/ai-product-photography/fashion' },
   { id: 'activewear', label: 'Activewear',         cards: ACTIVEWEAR_CARDS, hub: '/ai-product-photography/fashion' },
-  { id: 'bags',       label: 'Bags & Accessories', cards: BAGS_CARDS,       hub: '/ai-product-photography/bags-accessories' },
+  { id: 'bags',       label: 'Bags',               cards: BAGS_CARDS,       hub: '/ai-product-photography/bags-accessories' },
   { id: 'eyewear',    label: 'Eyewear',            cards: EYEWEAR_CARDS,    hub: '/ai-product-photography/bags-accessories' },
   { id: 'fragrance',  label: 'Fragrance',          cards: FRAGRANCE_CARDS,  hub: '/ai-product-photography/fragrance' },
 ] as const;
