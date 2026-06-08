@@ -4,9 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { ArrowRight } from 'lucide-react';
 
 import { getOptimizedUrl, getResizedSrcSet } from '@/lib/imageOptimization';
-import { LazyVideo } from '@/components/ui/LazyVideo';
 import originalDress from '@/assets/home-hero-original-dress.jpg';
-import productVideoLoop from '@/assets/home-create-product-videos.mp4';
 
 /* ── Dresses category showcase: 1 original + 11 dress scene previews ── */
 const SUPABASE_PUBLIC =
@@ -20,7 +18,7 @@ type HeroCard = { label: string; src: string; alt?: string; isOriginal?: boolean
 
 const heroImages: HeroCard[] = [
   { label: 'Original',         src: ORIGINAL_DRESS,                       isOriginal: true, alt: 'Brown midi dress original product photo before AI editing' },
-  { label: 'Video',            src: productVideoLoop,                     isVideo: true,    alt: 'AI-generated product video of a brown dress for e-commerce' },
+  { label: 'Golden Hour',      src: PREVIEW('1776688403670-i0t3r6'),                        alt: 'AI golden hour campaign visual of a brown dress on a model' },
   { label: 'Editorial',        src: PREVIEW('1776689318257-yahkye'),                        alt: 'AI editorial campaign visual of a brown dress in flash-night fashion lighting' },
   { label: 'Studio',           src: PREVIEW('1776688965090-edaogg'),                        alt: 'AI on-model studio shot of a brown dress for product page hero' },
   { label: 'Lifestyle',        src: PREVIEW('1776840733386-n4bc6x'),                        alt: 'AI lifestyle visual of a brown dress in a greenhouse setting' },
@@ -42,24 +40,20 @@ const row2 = heroImages
   .filter((c) => !c.isVideo);
 
 /* ── Marquee card ── */
-function MarqueeCard({ label, src, alt, isOriginal, isVideo, eager }: HeroCard & { eager?: boolean }) {
+function MarqueeCard({ label, src, alt, isOriginal, eager }: HeroCard & { eager?: boolean }) {
   return (
     <div className="relative flex-shrink-0 w-[180px] sm:w-[210px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md shadow-foreground/[0.04] bg-muted/30">
-      {isVideo ? (
-        <LazyVideo src={src} className="w-full h-full" />
-      ) : (
-        <img
-          src={isOriginal ? src : getOptimizedUrl(src, { width: 480, height: 640, quality: 85, resize: 'cover' })}
-          srcSet={isOriginal ? undefined : getResizedSrcSet(src, { widths: [320, 480, 640, 840], aspect: [3, 4], quality: 85 })}
-          sizes="(max-width: 640px) 180px, 210px"
-          alt={alt ?? label}
-          loading={eager || isOriginal ? 'eager' : 'lazy'}
-          decoding="async"
-          // @ts-expect-error fetchpriority is valid HTML
-          fetchpriority={isOriginal ? 'high' : eager ? 'auto' : 'low'}
-          className="w-full h-full object-cover"
-        />
-      )}
+      <img
+        src={isOriginal ? src : getOptimizedUrl(src, { width: 480, height: 640, quality: 85, resize: 'cover' })}
+        srcSet={isOriginal ? undefined : getResizedSrcSet(src, { widths: [320, 480, 640, 840], aspect: [3, 4], quality: 85 })}
+        sizes="(max-width: 640px) 180px, 210px"
+        alt={alt ?? label}
+        loading={eager || isOriginal ? 'eager' : 'lazy'}
+        decoding="async"
+        // @ts-expect-error fetchpriority is valid HTML
+        fetchpriority={isOriginal ? 'high' : eager ? 'auto' : 'low'}
+        className="w-full h-full object-cover"
+      />
       {isOriginal && (
         <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wider bg-foreground/80 text-background px-2 py-0.5 rounded-full">
           Original

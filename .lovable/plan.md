@@ -1,63 +1,57 @@
-## What we're fixing — in plain English
+## Goal
 
-Right now your admin chart says "83 people started checkout, only 5 finished" — that looks scary, but it's wrong. Customers ARE paying (you have 99 active subscribers). The problem is we only write down "completed ✅" for one-time credit pack purchases. For **subscriptions** we forget to mark them done.
+Two small homepage changes:
 
-Real conversion is about **55%** — totally healthy.
+1. **Remove the laggy video** from the hero marquee on `/` — replace it with another dress image so the hero strip is 100% images.
+2. **Add a new Video Showcase section** right after the "Explore AI product photography by category" strip, autoplaying 8 short product videos.
 
-## What I'll change (only 2 small things)
+All work is frontend-only. No backend, no database, no payments, no auth — nothing risky.
 
-### 1. Add subscription tracking to one edge function
+---
 
-File: `supabase/functions/check-subscription/index.ts`
+## What you'll see
 
-After this function confirms a user has an active subscription (it already does this every minute), it will additionally:
-- Look at that user's recent Stripe checkout sessions
-- Find any **subscription** sessions Stripe says are `status = "complete"`
-- Stamp `completed_at` on the matching row in our `checkout_sessions` table — but only if it's still empty
+**Hero (top of homepage):** still the same scrolling dress marquee, but the one tile that played a video is now a dress image. Smoother on every device.
 
-Wrapped in a try/catch safety net (same pattern used elsewhere). If anything fails, it's silently logged and the function keeps working exactly like today.
+**New section** (between the category strip and the "Models" section):
+- Heading: **"Motion that sells, from a still"**
+- Subheading: **"Turn any product visual into a short, on-brand video"**
+- Grid of 8 short looping product videos (autoplay, muted, no controls), arranged 2 columns on mobile, 3 on tablet, 4 on desktop, 4:5 portrait cards with rounded corners — same look as the in-app showcase
+- A subtle "Create a video →" link below the grid that goes to `/auth`
 
-### 2. One-time cleanup of old records
+---
 
-A single SQL `UPDATE` that fixes historical rows so your chart shows the real story going forward.
+## Files touched
 
-**Conservative rules so we never mark the wrong row:**
-- Only touches rows where `completed_at` is empty
-- Only for users currently on a paid plan (`subscription_status = 'active'` AND `plan != 'free'`)
-- Only if their `current_period_end` is later than that checkout's `started_at` (proves the subscription came from that attempt or later)
+1. **`src/components/home/HomeHero.tsx`** — replace the single `{ label: 'Video', isVideo: true, ... }` card with another dress preview tile (re-using an existing dress scene preview URL already in the file). Remove the now-unused `productVideoLoop` import and the `LazyVideo` import. Simplify `MarqueeCard` to drop the video branch. The `!c.isVideo` filter on row 2 stays as a harmless safety net.
 
-## Edge cases — already handled
+2. **`src/components/home/HomeVideoShowcase.tsx`** *(new file)* — section with the heading, subheading, 8-video grid, and CTA link. Uses the existing `LazyVideo` component (videos only start loading + autoplaying once the section scrolls into view, so the homepage stays fast). Cards use `muted loop playsInline preload="metadata"`. Fade-in on viewport, Inter font, Lovable design tokens, no terminal periods on the headers — consistent with the rest of the homepage.
 
-| Scenario | What happens |
-|---|---|
-| User cancels later | Old row stays marked completed (correct — they DID pay at the time). Cancellation is a separate event. |
-| Existing subscriber upgrades plan | New checkout row inserted, new Stripe session ID, gets marked completed normally. Old row untouched. |
-| Subscriber opens checkout but bails | Stripe session never reaches `status = "complete"` → our filter ignores it → row stays open and eventually marked abandoned by existing logic. |
-| Stripe API fails during the new code block | try/catch swallows the error, logs it, function returns user's plan normally. Zero customer impact. |
+3. **`src/pages/Home.tsx`** — add one import and mount `<HomeVideoShowcase />` between `<HomeTransformStrip />` and `<HomeModels />`.
 
-## Safety guarantees (why this can't break anything)
+Source videos are already shipped: `/public/videos/showcase/showcase-1.mp4` … `showcase-8.mp4`. **No new uploads, no new assets, no Stripe/Supabase/edge-function changes.**
 
-- **No payment code changes.** Stripe charges, credit grants, plan changes — completely untouched
-- **No schema changes.** No new tables, no new columns
-- **The column we touch (`completed_at`) is purely a reporting timestamp.** Nothing in the app reads it to decide who pays, who gets credits, or who has access
-- **Can never overwrite an existing value** — every update has `.is('completed_at', null)` guard
-- **Can never close a row Stripe didn't confirm** — we filter on Stripe's `status === "complete"`
-- **Reversible in one SQL statement** if you ever want to undo
+---
 
-## What you'll see after it ships
+## Why this is safe
 
-- Funnel chart jumps from ~6% to ~50–60% completion (the real number)
-- Future abandoned-cart emails will correctly skip people who actually paid
-- Zero change for customers — they don't see any of this
+- Pure presentation change — zero business logic, zero data flow
+- New section is **additive and isolated** in its own file; if anything ever looked off, deleting the one line in `Home.tsx` reverts it instantly
+- Videos are **lazy-loaded** via the existing `LazyVideo` component already used elsewhere on the homepage — off-screen videos don't fetch, so no performance regression
+- The 8 video files already exist in the project, already shipped to production via `/public/videos/showcase/`
+- Hero change is just swapping one tile in an array — the rest of the marquee, animations, layout, and timing are untouched
+- No backend, no database, no auth, no payments touched
+- Fully reversible in one commit if you ever want to undo
 
-## What this plan does NOT touch
+---
 
-- Stripe configuration, prices, products, plans
-- Pricing page, checkout UI, payment buttons
-- Credits, subscriptions, user profiles
-- RLS, auth, security
+## Acceptance check (I will verify after building)
 
-## Files changed
+- Homepage `/` loads, hero scrolls smoothly with no video card visible
+- New "Motion that sells, from a still" section appears directly after the category strip
+- All 8 videos autoplay silently, looping, in the grid
+- Section is responsive (2 / 3 / 4 columns)
+- No console errors, no broken images
+- The rest of the homepage (Models, How It Works, Why Switch, On Brand, Environments, FAQ, Final CTA, Footer) is unchanged
 
-1. `supabase/functions/check-subscription/index.ts` — add ~15 lines inside a try/catch after the active subscription is detected
-2. One new SQL migration with the historical backfill (single `UPDATE` statement, scoped by the rules above)
+Approve and I'll build it.
