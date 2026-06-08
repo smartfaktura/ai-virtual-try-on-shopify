@@ -1,14 +1,14 @@
-# Pin Sneakers first under Footwear
+# Pin Beverages first under Food & Drink
 
-Extend the same family reorder logic in `src/pages/ProductVisualLibrary.tsx`:
+Add another branch to the `collections` memo in `src/pages/ProductVisualLibrary.tsx`:
 
 ```ts
-if (family.slug === 'footwear') {
-  const sneakers = family.collections.find((c) => c.slug === 'sneakers');
-  if (sneakers) {
-    return [sneakers, ...family.collections.filter((c) => c.slug !== 'sneakers')];
+if (family.slug === 'food-and-drink') {
+  const beverages = family.collections.find((c) => c.slug === 'beverages');
+  if (beverages) {
+    return [beverages, ...family.collections.filter((c) => c.slug !== 'beverages')];
   }
 }
 ```
 
-Only affects the "All" view under Footwear; pill order in the sidebar and other families stay untouched.
+Affects only the Food & Drink → All view; sidebar pill order unchanged.
