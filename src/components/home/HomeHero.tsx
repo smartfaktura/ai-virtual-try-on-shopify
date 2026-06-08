@@ -18,7 +18,7 @@ type HeroCard = { label: string; src: string; alt?: string; isOriginal?: boolean
 
 const heroImages: HeroCard[] = [
   { label: 'Original',         src: ORIGINAL_DRESS,                       isOriginal: true, alt: 'Brown midi dress original product photo before AI editing' },
-  { label: 'Golden Hour',      src: PREVIEW('1776688403670-i0t3r6'),                        alt: 'AI golden hour campaign visual of a brown dress on a model' },
+  
   { label: 'Editorial',        src: PREVIEW('1776689318257-yahkye'),                        alt: 'AI editorial campaign visual of a brown dress in flash-night fashion lighting' },
   { label: 'Studio',           src: PREVIEW('1776688965090-edaogg'),                        alt: 'AI on-model studio shot of a brown dress for product page hero' },
   { label: 'Lifestyle',        src: PREVIEW('1776840733386-n4bc6x'),                        alt: 'AI lifestyle visual of a brown dress in a greenhouse setting' },
