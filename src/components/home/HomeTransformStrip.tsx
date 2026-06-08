@@ -70,35 +70,36 @@ const EYEWEAR_CARDS: GridCardData[] = [
 
 /* ── Activewear (creative / editorial scenes — real previews) ── */
 const ACTIVEWEAR_CARDS: GridCardData[] = [
-  { label: 'Movement Shot',        src: PREVIEW('1780056568752-tb4ok4'), isOriginal: true },
-  { label: 'Blue Gradient Studio', src: PREVIEW('1776838027987-mbf6go') },
-  { label: 'Court Lines Golden',   src: PREVIEW('1776838042880-aahpqn') },
-  { label: 'Poolside Power Flow',  src: PREVIEW('1779350585137-r2ba9h') },
-  { label: 'Jungle Retreat Flow',  src: PREVIEW('1779350584371-u9uryi') },
-  { label: 'Clifton Rock Flow',    src: PREVIEW('1779351245239-vmha5z') },
-  { label: 'Urban Concrete',       src: PREVIEW('1776838086063-vtd5sy') },
-  { label: 'Sunny Shadows',        src: PREVIEW('1776838079872-s4rzia') },
-  { label: 'Open Sky Stretch',     src: PREVIEW('1779350586741-5j51se') },
-  { label: 'Fisheye Portrait',     src: PREVIEW('1776838311945-wihpw9') },
-  { label: 'Clean Studio Light',   src: PREVIEW('1776838095499-uq31ie') },
-  { label: 'On-Model Editorial',   src: PREVIEW('1780056572364-suiqtt') },
+  { label: 'Original',             src: PREVIEW('1776234970067-5vlptt'), isOriginal: true },
+  { label: 'Studio Editorial',     src: PREVIEW('1776192312181-3v0u0t') },
+  { label: 'Court Lines Golden',   src: PREVIEW('1776768268121-ceu2p2') },
+  { label: 'Movement Shot',        src: PREVIEW('1776769937151-gknduq') },
+  { label: 'Poolside Power Flow',  src: PREVIEW('1780057441113-nrbomw') },
+  { label: 'Jungle Retreat Flow',  src: PREVIEW('1776768266956-51yyir') },
+  { label: 'Clifton Rock Flow',    src: PREVIEW('1776762658046-8ef77l') },
+  { label: 'Urban Concrete',       src: PREVIEW('1780057438189-8oulx7') },
+  { label: 'Sunny Shadows',        src: PREVIEW('1776762651422-p9psd4') },
+  { label: 'Open Sky Stretch',     src: PREVIEW('1776231822346-2f1iqc') },
+  { label: 'Fisheye Portrait',     src: PREVIEW('1776838045580-te7r49') },
+  { label: 'Clean Studio Light',   src: PREVIEW('1776762656752-dpc9i6') },
 ];
 
-/* ── Bags & Accessories (creative / editorial scenes — real previews) ── */
+/* ── Bags (creative / editorial scenes — real previews) ── */
 const BAGS_CARDS: GridCardData[] = [
-  { label: 'Reclined Studio Editorial', src: PREVIEW('1780060132900-b5fasg'), isOriginal: true },
-  { label: 'Volcanic Sunset',           src: PREVIEW('1777880675405-os018h') },
-  { label: 'Dynamic Bloom Studio',      src: PREVIEW('1777880657712-vbdpyt') },
-  { label: 'Botanical Oasis',           src: PREVIEW('1777880653990-b5b1fn') },
-  { label: 'Sunny Shadows',             src: PREVIEW('1777880674126-ze4qoe') },
-  { label: 'Dynamic Water Splash',      src: PREVIEW('1777880659869-51ou19') },
-  { label: 'Dynamic Studio Background', src: PREVIEW('1777880658693-qop0cf') },
-  { label: 'Earthy Bubble Wrap',        src: PREVIEW('1777880662254-s15wji') },
-  { label: 'Amber Glow Studio',         src: PREVIEW('1777880652803-wd6fit') },
-  { label: 'Red Gradient Embrace',      src: PREVIEW('1777880670453-dgeyxn') },
-  { label: 'Natural Woodscape',         src: PREVIEW('1777880669255-k938tt') },
-  { label: 'Frozen Product',            src: PREVIEW('1777880666022-ob9pal') },
+  { label: 'Original',                  src: PREVIEW('1779254030949-v68n45'), isOriginal: true },
+  { label: 'Studio Editorial',          src: PREVIEW('1779254042866-tzk34b') },
+  { label: 'Dynamic Bloom Studio',      src: PREVIEW('1779254038259-suks3t') },
+  { label: 'Botanical Oasis',           src: PREVIEW('1777880664879-qp4xbg') },
+  { label: 'Sunny Shadows',             src: PREVIEW('1779254023329-q4m922') },
+  { label: 'Dynamic Water Splash',      src: PREVIEW('1780060131424-9kwee8') },
+  { label: 'Dynamic Studio Background', src: PREVIEW('1779254022047-um76cz') },
+  { label: 'Earthy Bubble Wrap',        src: PREVIEW('1779254027797-grs4vw') },
+  { label: 'Amber Glow Studio',         src: PREVIEW('1780922510641-rpcur5') },
+  { label: 'Red Gradient Embrace',      src: PREVIEW('1777880663547-i1ngr6') },
+  { label: 'Natural Woodscape',         src: PREVIEW('1780922515913-cu4m5i') },
+  { label: 'Frozen Product',            src: PREVIEW('1780922507032-mpoowj') },
 ];
+
 
 /* ── Watches (Creative Shots — bold, art-directed scenes) ── */
 const WATCHES_CARDS: GridCardData[] = [
@@ -120,7 +121,7 @@ const CATEGORIES = [
   { id: 'watches',    label: 'Watches',            cards: WATCHES_CARDS,    hub: '/ai-product-photography/jewelry' },
   { id: 'swimwear',   label: 'Swimwear',           cards: SWIMWEAR_CARDS,   hub: '/ai-product-photography/fashion' },
   { id: 'activewear', label: 'Activewear',         cards: ACTIVEWEAR_CARDS, hub: '/ai-product-photography/fashion' },
-  { id: 'bags',       label: 'Bags & Accessories', cards: BAGS_CARDS,       hub: '/ai-product-photography/bags-accessories' },
+  { id: 'bags',       label: 'Bags',               cards: BAGS_CARDS,       hub: '/ai-product-photography/bags-accessories' },
   { id: 'eyewear',    label: 'Eyewear',            cards: EYEWEAR_CARDS,    hub: '/ai-product-photography/bags-accessories' },
   { id: 'fragrance',  label: 'Fragrance',          cards: FRAGRANCE_CARDS,  hub: '/ai-product-photography/fragrance' },
 ] as const;

@@ -1,65 +1,51 @@
-# Swap Footwear → Activewear, Jackets → Bags & Accessories (creative scenes, not essentials)
+# Update homepage Activewear + Bags cards
 
-**Scope:** frontend only — single file `src/components/home/HomeTransformStrip.tsx`. The "Explore AI product photography by category" tabs on `/` are driven by `CATEGORIES` in this file. No backend, no other section, no asset upload — every preview already lives in the public `product-uploads` bucket.
+**Scope:** frontend only — `src/components/home/HomeTransformStrip.tsx`.
 
-Per feedback, both new arrays skip the essential / e-commerce shots (flat-lay, ghost mannequin, front/back/side packshots, plain on-model front/back, basic close-ups). They favour lifestyle / editorial / styled scenes — the ones that show off VOVV.AI rather than basic catalog work.
+## 1. Replace `ACTIVEWEAR_CARDS` (12 entries)
 
-## Activewear — replace `FOOTWEAR_CARDS` with `ACTIVEWEAR_CARDS`
-
-| Label | Scene id (preview) |
+| Label (Original first) | Scene id |
 |---|---|
-| Movement Shot *(Original badge)* | `1780056568752-tb4ok4` |
-| Blue Gradient Studio | `1776838027987-mbf6go` |
-| Court Lines Golden | `1776838042880-aahpqn` |
-| Poolside Power Flow | `1779350585137-r2ba9h` |
-| Jungle Retreat Flow | `1779350584371-u9uryi` |
-| Clifton Rock Flow | `1779351245239-vmha5z` |
-| Urban Concrete | `1776838086063-vtd5sy` |
-| Sunny Shadows | `1776838079872-s4rzia` |
-| Open Sky Stretch | `1779350586741-5j51se` |
-| Fisheye Portrait | `1776838311945-wihpw9` |
-| Clean Studio Light | `1776838095499-uq31ie` |
-| On-Model Editorial | `1780056572364-suiqtt` |
+| *Original* | `1776234970067-5vlptt` |
+| 1 | `1776192312181-3v0u0t` |
+| 2 | `1776768268121-ceu2p2` |
+| 3 | `1776769937151-gknduq` |
+| 4 | `1780057441113-nrbomw` |
+| 5 | `1776768266956-51yyir` |
+| 6 | `1776762658046-8ef77l` |
+| 7 | `1780057438189-8oulx7` |
+| 8 | `1776762651422-p9psd4` |
+| 9 | `1776231822346-2f1iqc` |
+| 10 | `1776838045580-te7r49` |
+| 11 | `1776762656752-dpc9i6` |
 
-## Bags & Accessories — replace `JACKETS_CARDS` with `BAGS_CARDS`
+(Keep existing card labels/structure; only swap the preview IDs in order. If labels are tied to scenes, I'll reuse generic descriptive labels matching current pattern.)
 
-| Label | Scene id (preview) |
+## 2. Replace `BAGS_CARDS` (12 entries) + rename label
+
+Change `CATEGORIES` entry label from `'Bags & Accessories'` → `'Bags'` (id stays `'bags'`, hub unchanged).
+
+| Label | Scene id |
 |---|---|
-| Reclined Studio Editorial *(Original badge)* | `1780060132900-b5fasg` |
-| Volcanic Sunset | `1777880675405-os018h` |
-| Dynamic Bloom Studio | `1777880657712-vbdpyt` |
-| Botanical Oasis | `1777880653990-b5b1fn` |
-| Sunny Shadows | `1777880674126-ze4qoe` |
-| Dynamic Water Splash | `1777880659869-51ou19` |
-| Dynamic Studio Background | `1777880658693-qop0cf` |
-| Earthy Bubble Wrap | `1777880662254-s15wji` |
-| Amber Glow Studio | `1777880652803-wd6fit` |
-| Red Gradient Embrace | `1777880670453-dgeyxn` |
-| Natural Woodscape | `1777880669255-k938tt` |
-| Frozen Product | `1777880666022-ob9pal` |
-
-## `CATEGORIES` array (lines 119–126)
-
-```ts
-{ id: 'watches',    label: 'Watches',             cards: WATCHES_CARDS,    hub: '/ai-product-photography/jewelry' },
-{ id: 'swimwear',   label: 'Swimwear',            cards: SWIMWEAR_CARDS,   hub: '/ai-product-photography/fashion' },
-{ id: 'activewear', label: 'Activewear',          cards: ACTIVEWEAR_CARDS, hub: '/ai-product-photography/fashion' },
-{ id: 'bags',       label: 'Bags & Accessories',  cards: BAGS_CARDS,       hub: '/ai-product-photography/bags-accessories' },
-{ id: 'eyewear',    label: 'Eyewear',             cards: EYEWEAR_CARDS,    hub: '/ai-product-photography/bags-accessories' },
-{ id: 'fragrance',  label: 'Fragrance',           cards: FRAGRANCE_CARDS,  hub: '/ai-product-photography/fragrance' },
-```
+| *Original* | `1779254030949-v68n45` |
+| 1 | `1779254042866-tzk34b` |
+| 2 | `1779254038259-suks3t` |
+| 3 | `1777880664879-qp4xbg` |
+| 4 | `1779254023329-q4m922` |
+| 5 | `1780060131424-9kwee8` |
+| 6 | `1779254022047-um76cz` |
+| 7 | `1779254027797-grs4vw` |
+| 8 | `1780922510641-rpcur5` |
+| 9 | `1777880663547-i1ngr6` |
+| 10 | `1780922515913-cu4m5i` |
+| 11 | `1780922507032-mpoowj` |
 
 ## Safe / out of scope
 
-- No type changes — `CategoryId` is derived from the array, auto-updates.
-- `ALL_CATEGORY_NAMES` dropdown already contains "Activewear" and "Bags & Accessories".
-- All 24 preview URLs verified via `product_image_scenes` query against `category_collection` (`activewear`, `bags-accessories`), `is_active=true`.
-- No `width=` param added (per Image Optimization No-Crop rule); cards use the existing `PREVIEW()` helper.
+- No backend, type, or asset changes.
+- All IDs come from same `product-uploads` bucket, public.
+- `ALL_CATEGORY_NAMES` dropdown: if "Bags & Accessories" entry exists there, also rename to "Bags" for consistency.
 
 ## Validation
 
-- Hard reload `/`, scroll to "Explore AI product photography by category".
-- Tab order: Watches · Swimwear · **Activewear** · **Bags & Accessories** · Eyewear · Fragrance.
-- Each new tab shows 12 cards, "Original" badge on the first.
-- Spot-open 2–3 cards per tab to confirm CDN URL resolves and shots are clearly creative/editorial (no plain packshots dominate).
-- "View all" CTA on each tab routes to the listed hub.
+- Reload `/`, Activewear & Bags tabs show new previews in order; first card has "Original" badge; tab label reads "Bags".
