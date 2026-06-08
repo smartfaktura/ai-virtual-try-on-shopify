@@ -84,20 +84,17 @@ export function ProductImagesStep5Generating({
 
   const pct = effectiveTotal > 0 ? Math.min(100, Math.round((completedJobs / effectiveTotal) * 100)) : 0;
 
-  const estimatePerImage = 5;
-  const totalEstSeconds = Math.max(effectiveTotal * estimatePerImage, 1);
-
-  // Perceived progress curve: fast 0→70, slower 70→90, asymptotic 90→95.
-  // Real completed-jobs pct (`pct`) always wins if higher, so the bar still
-  // jumps forward on real completions. 100% only when all jobs are truly done.
-  const t = Math.min(elapsed / totalEstSeconds, 1.5);
+  // Wall-clock anchored perceived progress curve.
+  // Same pacing regardless of image count: 70 at 12s, 90 at 24s, ~94 at 30s,
+  // asymptote → 95. Real completed-jobs pct (`pct`) still wins if higher.
+  // 100% only when all jobs are truly done.
   let timeCurve: number;
-  if (t < 0.4) {
-    timeCurve = (t / 0.4) * 70;
-  } else if (t < 0.8) {
-    timeCurve = 70 + ((t - 0.4) / 0.4) * 20;
+  if (elapsed < 12) {
+    timeCurve = (elapsed / 12) * 70;
+  } else if (elapsed < 24) {
+    timeCurve = 70 + ((elapsed - 12) / 12) * 20;
   } else {
-    timeCurve = 90 + (1 - Math.exp(-(t - 0.8) * 3)) * 5;
+    timeCurve = 90 + (1 - Math.exp(-(elapsed - 24) / 6)) * 5;
   }
   const isAllDone = effectiveTotal > 0 && completedJobs >= effectiveTotal;
   const ceiling = isAllDone ? 100 : 95;
