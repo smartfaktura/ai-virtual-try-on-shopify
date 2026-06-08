@@ -4,6 +4,7 @@ import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/constants';
 import { LandingNav } from '@/components/landing/LandingNav';
 import { HomeHero } from '@/components/home/HomeHero';
 import { HomeTransformStrip } from '@/components/home/HomeTransformStrip';
+import { HomeVideoShowcase } from '@/components/home/HomeVideoShowcase';
 import { HomeCreateCards } from '@/components/home/HomeCreateCards';
 import { HomeModels } from '@/components/home/HomeModels';
 
@@ -88,6 +89,7 @@ export default function Home() {
       <LandingNav />
       <HomeHero />
       <HomeTransformStrip />
+      <HomeVideoShowcase />
       <HomeModels />
       <HomeCreateCards />
       <HomeHowItWorks />
