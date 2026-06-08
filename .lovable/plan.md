@@ -1,72 +1,63 @@
-# Fix edit-image flow only (Freestyle)
+## What we're fixing — in plain English
 
-Strictly scoped to the **Edit image** path. No changes to other generation modes, no schema/config/dependency changes.
+Right now your admin chart says "83 people started checkout, only 5 finished" — that looks scary, but it's wrong. Customers ARE paying (you have 99 active subscribers). The problem is we only write down "completed ✅" for one-time credit pack purchases. For **subscriptions** we forget to mark them done.
 
----
+Real conversion is about **55%** — totally healthy.
 
-## Fix 1 — UI: intent pills hidden on first mount
+## What I'll change (only 2 small things)
 
-**File:** `src/components/app/freestyle/ImageRoleSelector.tsx`, line 45.
+### 1. Add subscription tracking to one edge function
 
-**Bug:** `roleExpanded` defaults to `true`, so on mount the role-picker row renders and the intent pills are gated behind `imageRole === 'edit' && !roleExpanded` (line 102). The user has to click the already-selected "Edit this image" pill once to collapse the role row before the intent pills appear — the "double-click" they reported.
+File: `supabase/functions/check-subscription/index.ts`
 
-**Change:** flip the default.
+After this function confirms a user has an active subscription (it already does this every minute), it will additionally:
+- Look at that user's recent Stripe checkout sessions
+- Find any **subscription** sessions Stripe says are `status = "complete"`
+- Stamp `completed_at` on the matching row in our `checkout_sessions` table — but only if it's still empty
 
-```ts
-const [roleExpanded, setRoleExpanded] = useState(false);
-```
+Wrapped in a try/catch safety net (same pattern used elsewhere). If anything fails, it's silently logged and the function keeps working exactly like today.
 
-That's the entire UI fix. When an image is already attached with `imageRole='edit'`, intent pills appear immediately. The collapsed "Using image as: Edit ⌄" pill remains as the affordance to switch roles. For non-edit roles, the collapsed pill is still correct (no intent step exists for them).
+### 2. One-time cleanup of old records
 
----
+A single SQL `UPDATE` that fixes historical rows so your chart shows the real story going forward.
 
-## Fix 2 — Backend: each intent pill carries non-contradictory rules
+**Conservative rules so we never mark the wrong row:**
+- Only touches rows where `completed_at` is empty
+- Only for users currently on a paid plan (`subscription_status = 'active'` AND `plan != 'free'`)
+- Only if their `current_period_end` is later than that checkout's `started_at` (proves the subscription came from that attempt or later)
 
-**File:** `supabase/functions/generate-freestyle/index.ts`, only the `imageRole === 'edit'` block (lines 154–172).
+## Edge cases — already handled
 
-**Why:** today the universal opener says *"preserve composition, lighting, and colors exactly"* while `change_background` says *"change the environment"* — the model is told to swap the background but keep the old background's lighting on the subject. Same conflict for `change_model`. Result: subjects floating in new scenes still lit like the old scene.
+| Scenario | What happens |
+|---|---|
+| User cancels later | Old row stays marked completed (correct — they DID pay at the time). Cancellation is a separate event. |
+| Existing subscriber upgrades plan | New checkout row inserted, new Stripe session ID, gets marked completed normally. Old row untouched. |
+| Subscriber opens checkout but bails | Stripe session never reaches `status = "complete"` → our filter ignores it → row stays open and eventually marked abandoned by existing logic. |
+| Stripe API fails during the new code block | try/catch swallows the error, logs it, function returns user's plan normally. Zero customer impact. |
 
-**Changes inside that block only:**
+## Safety guarantees (why this can't break anything)
 
-1. Replace the universal opener with a softer scope line that doesn't lock lighting globally:
+- **No payment code changes.** Stripe charges, credit grants, plan changes — completely untouched
+- **No schema changes.** No new tables, no new columns
+- **The column we touch (`completed_at`) is purely a reporting timestamp.** Nothing in the app reads it to decide who pays, who gets credits, or who has access
+- **Can never overwrite an existing value** — every update has `.is('completed_at', null)` guard
+- **Can never close a row Stripe didn't confirm** — we filter on Stripe's `status === "complete"`
+- **Reversible in one SQL statement** if you ever want to undo
 
-   > "Apply the change described above to the uploaded image. Leave everything not mentioned by the user or the directive below unchanged. Match the input image's product identity (shape, color, materials, logos, proportions)."
+## What you'll see after it ships
 
-2. Rewrite the four intent strings so each pill carries its own preserve/permit rules:
+- Funnel chart jumps from ~6% to ~50–60% completion (the real number)
+- Future abandoned-cart emails will correctly skip people who actually paid
+- Zero change for customers — they don't see any of this
 
-   | Pill | New line |
-   |---|---|
-   | `replace_product` | "Replace or modify only the product as described. Keep the person, pose, background, framing, and overall lighting the same. Match the new product's materials to the scene's light so it sits naturally." |
-   | `change_background` | "Change the background/environment as described. Keep the subject (person and product) identity, pose, and framing intact. Re-derive the lighting on the subject so it matches the new environment." |
-   | `change_model` | "Replace the person as described. Keep the product, product placement, pose silhouette, and framing close to the original. Let skin tone, hair, and facial lighting re-derive naturally for the new person." |
-   | `enhance` | "Refine sharpness, color accuracy, and fine detail without changing what's in the image, the composition, the lighting, or the colors." |
+## What this plan does NOT touch
 
-3. Drop the silent `['enhance']` fallback. With Fix 1, the user always sees the pills — no need to secretly inject "improve lighting" when they picked nothing. New behavior: if no intent picked, only the opener + user prompt go through.
+- Stripe configuration, prices, products, plans
+- Pricing page, checkout UI, payment buttons
+- Credits, subscriptions, user profiles
+- RLS, auth, security
 
-4. Keep the closing "High resolution, clean result, single cohesive photograph" line as-is. Minimal blast radius.
+## Files changed
 
-**Untouched:** `[IMAGE TO EDIT]` label, function signature (`editIntent` param stays for backward compat), all other branches in this file, fallback chain, 2K PNG enforcement, JWT auth.
-
----
-
-## Fix 3 — Client: mirror the same strings
-
-**File:** `src/pages/Freestyle.tsx`, lines ~581–589.
-
-Same four intent strings as Fix 2, drop the same `|| ['enhance']` default. If only the backend changes and the client still appends old phrasing, the model receives both copies — defeats the fix.
-
-Nothing else in `Freestyle.tsx` changes.
-
----
-
-## Files touched (3, all surgical)
-
-- `src/components/app/freestyle/ImageRoleSelector.tsx` — one line (`useState(true)` → `useState(false)`)
-- `supabase/functions/generate-freestyle/index.ts` — only the edit branch (lines 154–172)
-- `src/pages/Freestyle.tsx` — only the intent-string map + `|| ['enhance']` default
-
-No DB, no migrations, no `config.toml`, no new deps, no new env vars, no other generation paths affected. Pure prompt-string + one UI default flip. Trivially revertable.
-
-## Risk
-
-Near-zero. UI fix is a state default flip. Backend changes are string edits inside a single `if (imageRole === 'edit')` branch. Material Swap, Product Swap, Perspectives, Catalog, Video, and the non-edit Freestyle paths (product / model / scene / full freestyle) are untouched and cannot be affected.
+1. `supabase/functions/check-subscription/index.ts` — add ~15 lines inside a try/catch after the active subscription is detected
+2. One new SQL migration with the historical backfill (single `UPDATE` statement, scoped by the rules above)
