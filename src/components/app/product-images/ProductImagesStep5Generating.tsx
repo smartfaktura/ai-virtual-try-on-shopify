@@ -133,8 +133,8 @@ export function ProductImagesStep5Generating({
   const currentMsg = BRANDED_MESSAGES[msgIndex];
   const member = TEAM_MEMBERS.find(m => m.name === currentMsg.member);
 
-  const lowMin = Math.max(1, Math.ceil((effectiveTotal * 10) / 60));
-  const highMin = Math.max(lowMin, Math.ceil((effectiveTotal * 15) / 60));
+  const lowMin = Math.max(1, Math.ceil((effectiveTotal * 5) / 60));
+  const highMin = Math.max(lowMin, Math.ceil((effectiveTotal * 8) / 60));
   const estimateCopy = effectiveTotal <= 1
     ? 'Estimated under a minute'
     : lowMin === highMin
