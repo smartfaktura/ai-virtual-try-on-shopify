@@ -1,19 +1,37 @@
-# Swap one Bags preview on homepage
+# Default Bags & Accessories "All" view to show Bags first
 
-**Scope:** frontend only — `src/components/home/HomeTransformStrip.tsx`, `BAGS_CARDS` array.
+**Scope:** frontend only — `src/pages/ProductVisualLibrary.tsx`, single `useMemo` (line 385).
 
-Current slot 5 ("Sunny Shadows") uses `1779254023329-q4m922`. `1780922507032-mpoowj` is already used in slot 12. So I'll interpret the request as: replace `1779254023329-q4m922` with the new scene `1780922504004-qq24dq`.
+Collections inside a family currently render in DB `category_sort_order`, which puts Phone Cases first under Bags & Accessories. When the user opens the family with "All" selected, we'll reorder so the `bags` collection appears first (other collections keep their existing relative order).
 
 ## Change
 
-| Slot | Before | After |
-|---|---|---|
-| 5 (Sunny Shadows) | `1779254023329-q4m922` | `1780922504004-qq24dq` |
+In the `collections` memo (line 385), after picking `family.collections` and before returning, if `family.slug === 'bags-accessories'` and no specific collection is selected, move the `bags` collection to the front:
 
-Other 11 cards untouched. No label/type/hub changes.
+```ts
+const collections = useMemo<CollectionGroup[]>(() => {
+  if (activeCollectionSlug) {
+    return family.collections.filter((c) => c.slug === activeCollectionSlug);
+  }
+  if (family.slug === 'bags-accessories') {
+    const bags = family.collections.find((c) => c.slug === 'bags');
+    if (bags) {
+      return [bags, ...family.collections.filter((c) => c.slug !== 'bags')];
+    }
+  }
+  return family.collections;
+}, [family.collections, family.slug, activeCollectionSlug]);
+```
+
+## Safe / out of scope
+
+- No DB / sort_order edits — purely a per-family UI reorder.
+- Sidebar pill order untouched (still reflects DB order).
+- Other families unchanged.
+- "All" count and totals unaffected.
 
 ## Validation
 
-Reload `/`, open Bags tab, confirm slot 5 shows the new preview and no duplicates.
-
-> If you actually meant a different swap (e.g. replace with `mpoowj` and remove the duplicate elsewhere), tell me and I'll adjust.
+- `/product-visual-library` → Bags & Accessories → All: first section is "Bags", Phone Cases follows.
+- Click Phone Cases pill: still works, shows only Phone Cases.
+- Other families (Fashion & Apparel, Footwear, …): order unchanged.

@@ -383,9 +383,17 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
 
   // Filtered collections (one collection or all).
   const collections: CollectionGroup[] = useMemo(() => {
-    if (!activeCollectionSlug) return family.collections;
-    return family.collections.filter((c) => c.slug === activeCollectionSlug);
-  }, [family.collections, activeCollectionSlug]);
+    if (activeCollectionSlug) {
+      return family.collections.filter((c) => c.slug === activeCollectionSlug);
+    }
+    if (family.slug === 'bags-accessories') {
+      const bags = family.collections.find((c) => c.slug === 'bags');
+      if (bags) {
+        return [bags, ...family.collections.filter((c) => c.slug !== 'bags')];
+      }
+    }
+    return family.collections;
+  }, [family.collections, family.slug, activeCollectionSlug]);
 
   const totalAvailable = useMemo(
     () => collections.reduce((acc, c) => acc + c.totalCount, 0),
