@@ -556,10 +556,28 @@ ${themeNotes ? `Additional direction: ${themeNotes}` : ""}\n`
   const pairModeNegativeSaugiklis = isPairMode
     ? 'do not replace or duplicate the product the subject is already wearing, no second copy of the product, no competing garments in the same slot as the product'
     : '';
+  const productFidelityNegatives = [
+    'redesigned product',
+    'altered silhouette',
+    'changed proportions',
+    'wrong dimensions',
+    'fabricated logo',
+    'fake brand text',
+    'substituted letters',
+    'misspelled brand name',
+    'distorted text',
+    'warped logo',
+    'printed logo when reference is embossed',
+    'contrasting logo when reference is tone-on-tone',
+    'invented graphics',
+    'added labels',
+    'removed labels',
+  ].join(', ');
   const allNegatives = [
     config.negative_prompt_additions,
     outfitNegativeSaugiklis,
     pairModeNegativeSaugiklis,
+    productFidelityNegatives,
     ...(brandProfile?.do_not_rules || []),
   ].filter(Boolean).join('. ');
 
