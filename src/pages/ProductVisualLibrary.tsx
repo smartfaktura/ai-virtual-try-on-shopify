@@ -386,10 +386,10 @@ function FamilySection({ family, activeCollectionSlug, onChangeCollection, onSce
     if (activeCollectionSlug) {
       return family.collections.filter((c) => c.slug === activeCollectionSlug);
     }
-    if (family.slug === 'bags-accessories') {
-      const bags = family.collections.find((c) => c.slug === 'bags');
+    if (family.slug === 'bags-and-accessories') {
+      const bags = family.collections.find((c) => c.slug === 'bags-accessories');
       if (bags) {
-        return [bags, ...family.collections.filter((c) => c.slug !== 'bags')];
+        return [bags, ...family.collections.filter((c) => c.slug !== 'bags-accessories')];
       }
     }
     return family.collections;
