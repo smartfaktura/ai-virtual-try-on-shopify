@@ -68,36 +68,36 @@ const EYEWEAR_CARDS: GridCardData[] = [
   { label: 'Beauty Closeup II', src: PREVIEW('aesthetic-beauty-closeup-eyewear-1776148096014') },
 ];
 
-/* ── Jackets (real preview filenames from product_image_scenes · jackets) ── */
-const JACKETS_CARDS: GridCardData[] = [
-  { label: 'Original',                   src: PREVIEW('1776690211513-2hgcjm'), isOriginal: true },
-  { label: 'Side Profile Street Study',  src: PREVIEW('1776691909999-ra3rym') },
-  { label: 'Old Money Outdoor Portrait', src: PREVIEW('1776691906436-3fe7l9') },
-  { label: 'On-Model Front',             src: PREVIEW('1776690214570-al6wzo') },
-  { label: 'On-Model Back',              src: PREVIEW('1776690213075-4gnekd') },
-  { label: 'On-Model Editorial',         src: PREVIEW('1776690213983-4h5fjc') },
-  { label: 'Movement Shot',              src: PREVIEW('1776690212460-cq4xnb') },
-  { label: 'Texture Detail',             src: PREVIEW('1776690215217-gkv2x3') },
-  { label: 'Fisheye Streetwear Studio',  src: PREVIEW('1776691901110-5dydmu') },
-  { label: 'Sunlit Tailored Chair',      src: PREVIEW('1776691912818-yiu2uq') },
-  { label: 'Paris Curb Side',            src: PREVIEW('1776691907477-77vt46') },
-  { label: 'Soft Volume Lean',           src: PREVIEW('1776691911049-gsxycu') },
+/* ── Activewear (creative / editorial scenes — real previews) ── */
+const ACTIVEWEAR_CARDS: GridCardData[] = [
+  { label: 'Movement Shot',        src: PREVIEW('1780056568752-tb4ok4'), isOriginal: true },
+  { label: 'Blue Gradient Studio', src: PREVIEW('1776838027987-mbf6go') },
+  { label: 'Court Lines Golden',   src: PREVIEW('1776838042880-aahpqn') },
+  { label: 'Poolside Power Flow',  src: PREVIEW('1779350585137-r2ba9h') },
+  { label: 'Jungle Retreat Flow',  src: PREVIEW('1779350584371-u9uryi') },
+  { label: 'Clifton Rock Flow',    src: PREVIEW('1779351245239-vmha5z') },
+  { label: 'Urban Concrete',       src: PREVIEW('1776838086063-vtd5sy') },
+  { label: 'Sunny Shadows',        src: PREVIEW('1776838079872-s4rzia') },
+  { label: 'Open Sky Stretch',     src: PREVIEW('1779350586741-5j51se') },
+  { label: 'Fisheye Portrait',     src: PREVIEW('1776838311945-wihpw9') },
+  { label: 'Clean Studio Light',   src: PREVIEW('1776838095499-uq31ie') },
+  { label: 'On-Model Editorial',   src: PREVIEW('1780056572364-suiqtt') },
 ];
 
-/* ── Footwear / Sneakers (real preview filenames) ── */
-const FOOTWEAR_CARDS: GridCardData[] = [
-  { label: 'Original',              src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/pair-display-shoes-sneakers-1776008063507.jpg?quality=60', isOriginal: true },
-  { label: 'Pair Display',          src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770356335-261bui.jpg?quality=75' },
-  { label: 'In-Hand Studio',        src: PREVIEW('in-hand-studio-shoes-sneakers-1776008276313') },
-  { label: 'Front View',            src: PREVIEW('front-view-shoes-sneakers-1776008034245') },
-  { label: 'Geometric Grid Minimal',src: PREVIEW('1776770345914-cg8uyy') },
-  { label: 'Clean Top View',        src: PREVIEW('1776770342811-jr21sq') },
-  { label: 'Close-Up Detail',       src: PREVIEW('closeup-detail-shoes-sneakers-1776008260513') },
-  { label: 'Woven Chair Display',   src: PREVIEW('1776770352201-yu4wqm') },
-  { label: 'Casual Lace Moment',    src: PREVIEW('1776770353784-010tv3') },
-  { label: 'Hard Shadow Hero',      src: PREVIEW('hard-shadow-shoes-sneakers-1776008136691') },
-  { label: 'Studio Hero',           src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770347820-s3qwmr.jpg?quality=75' },
-  { label: 'Sculpt Balance Edge',   src: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776770349853-t3x72w.jpg?quality=75' },
+/* ── Bags & Accessories (creative / editorial scenes — real previews) ── */
+const BAGS_CARDS: GridCardData[] = [
+  { label: 'Reclined Studio Editorial', src: PREVIEW('1780060132900-b5fasg'), isOriginal: true },
+  { label: 'Volcanic Sunset',           src: PREVIEW('1777880675405-os018h') },
+  { label: 'Dynamic Bloom Studio',      src: PREVIEW('1777880657712-vbdpyt') },
+  { label: 'Botanical Oasis',           src: PREVIEW('1777880653990-b5b1fn') },
+  { label: 'Sunny Shadows',             src: PREVIEW('1777880674126-ze4qoe') },
+  { label: 'Dynamic Water Splash',      src: PREVIEW('1777880659869-51ou19') },
+  { label: 'Dynamic Studio Background', src: PREVIEW('1777880658693-qop0cf') },
+  { label: 'Earthy Bubble Wrap',        src: PREVIEW('1777880662254-s15wji') },
+  { label: 'Amber Glow Studio',         src: PREVIEW('1777880652803-wd6fit') },
+  { label: 'Red Gradient Embrace',      src: PREVIEW('1777880670453-dgeyxn') },
+  { label: 'Natural Woodscape',         src: PREVIEW('1777880669255-k938tt') },
+  { label: 'Frozen Product',            src: PREVIEW('1777880666022-ob9pal') },
 ];
 
 /* ── Watches (Creative Shots — bold, art-directed scenes) ── */
@@ -117,13 +117,14 @@ const WATCHES_CARDS: GridCardData[] = [
 ];
 
 const CATEGORIES = [
-  { id: 'watches',   label: 'Watches',   cards: WATCHES_CARDS,   hub: '/ai-product-photography/jewelry' },
-  { id: 'swimwear',  label: 'Swimwear',  cards: SWIMWEAR_CARDS,  hub: '/ai-product-photography/fashion' },
-  { id: 'footwear',  label: 'Footwear',  cards: FOOTWEAR_CARDS,  hub: '/ai-product-photography/footwear' },
-  { id: 'jackets',   label: 'Jackets',   cards: JACKETS_CARDS,   hub: '/ai-product-photography/fashion' },
-  { id: 'eyewear',   label: 'Eyewear',   cards: EYEWEAR_CARDS,   hub: '/ai-product-photography/bags-accessories' },
-  { id: 'fragrance', label: 'Fragrance', cards: FRAGRANCE_CARDS, hub: '/ai-product-photography/fragrance' },
+  { id: 'watches',    label: 'Watches',            cards: WATCHES_CARDS,    hub: '/ai-product-photography/jewelry' },
+  { id: 'swimwear',   label: 'Swimwear',           cards: SWIMWEAR_CARDS,   hub: '/ai-product-photography/fashion' },
+  { id: 'activewear', label: 'Activewear',         cards: ACTIVEWEAR_CARDS, hub: '/ai-product-photography/fashion' },
+  { id: 'bags',       label: 'Bags & Accessories', cards: BAGS_CARDS,       hub: '/ai-product-photography/bags-accessories' },
+  { id: 'eyewear',    label: 'Eyewear',            cards: EYEWEAR_CARDS,    hub: '/ai-product-photography/bags-accessories' },
+  { id: 'fragrance',  label: 'Fragrance',          cards: FRAGRANCE_CARDS,  hub: '/ai-product-photography/fragrance' },
 ] as const;
+
 
 const ALL_CATEGORY_NAMES = [
   'Swimwear', 'Fragrance', 'Eyewear', 'Skincare', 'Makeup',
