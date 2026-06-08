@@ -229,6 +229,29 @@ serve(async (req) => {
       logStep("No active subscription — free plan");
     }
 
+    // Mark subscription checkout_sessions rows as completed (for funnel + abandoned-cart accuracy).
+    // Only fires when we found an active sub. Safety: only touches rows where completed_at IS NULL
+    // and only for Stripe sessions that are status === "complete". Fully wrapped in try/catch.
+    if (activeSub) {
+      try {
+        const completedSubSessionIds = sessions.data
+          .filter((s) => s.mode === "subscription" && s.status === "complete")
+          .map((s) => s.id);
+        if (completedSubSessionIds.length > 0) {
+          await supabaseAdmin
+            .from("checkout_sessions")
+            .update({ completed_at: new Date().toISOString() })
+            .in("stripe_session_id", completedSubSessionIds)
+            .is("completed_at", null);
+          logStep("Marked subscription checkout_sessions completed", {
+            count: completedSubSessionIds.length,
+          });
+        }
+      } catch (e) {
+        logStep("subscription checkout_sessions update failed", { error: (e as Error).message });
+      }
+    }
+
     // Detect plan change (e.g. free → starter) → grant credits via change_user_plan
     if (plan !== currentProfile?.plan && plan !== "free" && planInfo) {
       logStep("Plan changed, granting credits via change_user_plan", {
