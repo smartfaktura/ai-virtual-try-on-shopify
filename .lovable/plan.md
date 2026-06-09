@@ -1,14 +1,8 @@
-# Pin Beverages first under Food & Drink
+Add 200 credits to the account `founder@tennisclubfinejewelry.com` via the `add_purchased_credits` RPC (which safely bumps `profiles.credits_balance` and fires the Resend `credits.purchased` event).
 
-Add another branch to the `collections` memo in `src/pages/ProductVisualLibrary.tsx`:
+Steps:
+1. Look up `user_id` from `profiles` where `email = 'founder@tennisclubfinejewelry.com'`.
+2. Call `SELECT add_purchased_credits('<user_id>', 200);`
+3. Verify new balance and report back.
 
-```ts
-if (family.slug === 'food-and-drink') {
-  const beverages = family.collections.find((c) => c.slug === 'beverages');
-  if (beverages) {
-    return [beverages, ...family.collections.filter((c) => c.slug !== 'beverages')];
-  }
-}
-```
-
-Affects only the Food & Drink → All view; sidebar pill order unchanged.
+No code or schema changes.
