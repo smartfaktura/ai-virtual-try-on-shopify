@@ -1,61 +1,71 @@
-## Tighten all 7 fashion-welcome emails
+## Goal
 
-### 1. Remove the personal signature
-Drop the `— Tomas, VOVV` row entirely from the SHELL template (and from the `Hey, Tomas here, founder of VOVV.AI` line in email 1's intro). Emails close on the final CTA, then footer.
+Make all 7 emails in `src/emails/fashion-welcome/` (01-welcome → 07-upgrade) visually identical in structure, spacing, and button system. Remove the orphan "button-only" row that currently appears between the grey section and the footer.
 
-### 2. Standardize section spacing
-Every body section (grey or white) gets identical structure:
+## Problems found
 
+1. **Orphan CTA row** — every email has a standalone row right after the grey section that contains only a black button (e.g. "Save your direction", "Start creating"). It floats with no image, no copy, no eyebrow → looks broken.
+2. **Two button sizes coexist** — primary `padding:16px 36px; font-size:15px` and secondary `padding:14px 28px; font-size:14px`. Inconsistent across hero / section / final.
+3. **Brand mark inconsistency** — header wordmark still says `VOVV`, footer says `VOVV.AI`. Memory says always `VOVV.AI` in user-facing text.
+4. **Email 1 has an extra bullet section** (76 lines vs 74 in others) that breaks rhythm — it stacks: grey section CTA → bullet section CTA → orphan CTA → footer (three buttons in a row).
+5. **Spacing drift** — hero block uses `padding-bottom:48px`, grey section uses `padding:56px`, final orphan uses `padding:16px 44px 64px`, footer uses `padding:48px 44px 56px`. Different rhythms.
+6. **Inline `<table>` soup on one line** for grey section makes diffs and edits fragile, but visually OK — leave structure, just normalize values via the build script.
+
+## Fix (applied uniformly to all 7 emails)
+
+### A. Kill the orphan CTA row
+Remove the standalone final CTA block (currently `padding:16px 44px 64px 44px` with only a button). The grey section already ends with its own contextual CTA — that becomes the email's closing action. Footer follows directly.
+
+For email 1 specifically: also remove the extra "Four things to ship" bullet section so all 7 emails share the exact same skeleton:
+```text
+Header wordmark
+Hero (h1 + p + primary CTA)
+Hero image (clickable)
+Grey section (eyebrow + h2 + 3×2 image grid + section CTA)
+Footer
 ```
-padding-top:    56px   (section vertical rhythm)
-eyebrow → h2:   12px
-h2 → grid:      28px
-grid → CTA:     32px
-padding-bottom: 56px
+
+### B. One button system, two roles (same visual size)
+- **Primary** (hero + grey section CTA): `bgcolor:#0a0a0a`, `padding:15px 32px`, `font-size:14px`, `font-weight:600`, `border-radius:6px`, white text, `letter-spacing:-0.01em`.
+- Drop the secondary variant entirely. Every CTA in every email uses the **same** primary spec so size never shifts.
+
+### C. Standardized spacing tokens (applied in build script)
+```text
+Header row:        padding: 40px 44px 32px 44px
+Hero block:        padding: 0 44px 36px 44px
+  h1 margin-bottom: 16px
+  p  margin-bottom: 28px
+Hero image row:    padding: 0 44px 48px 44px
+Grey section:      padding: 56px 44px 56px 44px (inside grey wrapper)
+  eyebrow margin-bottom: 12px
+  h2 margin-bottom: 28px
+  grid → CTA gap (spacer div): 32px
+Footer:            padding: 48px 44px 56px 44px, top border 1px #e7e5e4
+Grid cell gap:     6px horizontal, 12px vertical (unchanged)
 ```
 
-Outer side padding stays `44px` everywhere (24px on mobile). Image grid row gap normalized to `12px`, between-image gap `10px`. Hero image block gets `padding: 0 44px 48px`. Headline block: `padding: 0 44px 40px`. Final CTA block: `padding: 16px 44px 64px`. Footer: `padding: 56px 44px 56px`.
+### D. Brand mark
+Header wordmark string `VOVV` → `VOVV.AI` in all 7 templates (matches footer + project memory).
 
-### 3. Section-level CTAs
-Each `section_grid` gets its own CTA underneath the image grid, contextual to that section:
-- **Email 1** — Grey section "Ship from one product" → `Browse the visual library` (→ `/product-visual-library`). Bullets section "What you can do this week" → `Open Visual Studio` (→ `/app/generate/product-images`).
-- **Email 2** — Shot types → `Try a flat lay first`. How it works → `Upload your first product`.
-- **Email 3** — Angle set → `Generate the full set`.
-- **Email 4** — Scenes → `Browse all scenes` (→ library).
-- **Email 5** — Catalogue swap → `Build a scene set`.
-- **Email 6** — Brand look → `Lock your brand look`.
-- **Email 7** — Month of VOVV → `See plans`. What's included → `See plans`.
+### E. Typography (unchanged, just confirmed consistent)
+- h1: 32px / line 1.15 / weight 600 / -0.02em
+- h2: 22px / line 1.3 / weight 600 / -0.015em
+- body p: 16px / line 1.65 / #374151
+- eyebrow: 12px / 600 / uppercase / 0.08em / #6b7280
 
-All section CTAs use the same secondary style: ghost outlined dark on grey sections, solid dark on white sections, both `padding: 14px 28px`, 14px font.
+### F. Clickable images, footer socials, dynamic unsubscribe
+Already in place from last pass — preserved exactly. No changes.
 
-### 4. Make every image clickable
-Wrap every `<img>` in grids and the hero in `<a href="..." style="text-decoration:none;">…</a>`. Each image links to the most contextually relevant page:
-- Hero → main CTA destination of the email
-- Grid images → `/product-visual-library` (so users can browse the actual scene)
+## Mechanics
 
-Add `border:0;` and `display:block;` reinforcement on anchor to prevent client-side underline halos.
+1. Edit `/tmp/build_emails.py`:
+   - Remove `secondary_cta()` helper; have `section_grid()` and `hero` both call the single `cta()` helper with the unified spec.
+   - Remove the `final_cta` row emission from the `build()` template.
+   - Remove the bullet block from email 1's `build(...)` call.
+   - Change wordmark constant to `VOVV.AI`.
+   - Update the spacing constants listed in section C.
+2. Run `python3 /tmp/build_emails.py` → regenerates all 7 files in `src/emails/fashion-welcome/`.
+3. Verify with `grep`: every file has exactly one `padding:15px 32px` button spec per CTA, no `padding:16px 36px`, no `padding:14px 28px`, header contains `VOVV.AI`, and no orphan trailing CTA row between grey section and footer.
+4. Re-emit all 7 as `<presentation-artifact>` for preview.
 
-### 5. Copy corrections
-Sweep all 7 emails for stilted phrasing and rewrite:
-
-- Email 1 intro currently: *"Hey, Tomas here, founder of VOVV.AI. If you sell dresses, hoodies, jeans…"* → *"If you sell dresses, hoodies, jeans, jackets, activewear, swimwear or lingerie, you can upload one product photo today and start creating the visuals you need — store, ads, email, social — without booking a shoot."* (no first-person founder voice now that the signature is gone)
-- Replace *"the visuals you actually need"* → *"the visuals you need"* (less defensive)
-- Email 2: *"The fastest way to see what VOVV.AI does is the simplest one"* → *"The fastest way to see what VOVV.AI does is to start with the simplest shot"*
-- Email 3: *"A product page with one photo converts worse than a page with six."* → *"A product page with one photo converts worse than a page with six angles."*
-- Email 4: *"Locations and scenes are the difference between a product page and a campaign."* keep, but change *"Pick a mood — studio, street, desert, interior, editorial — and the same product gets placed there, lit there and styled there."* → *"Pick a mood — studio, street, desert, interior, editorial — and your product gets placed, lit and styled in that world."*
-- Email 5: *"That is how brands make a season look like a season"* → *"That is how a season actually looks like a season"*
-- Email 6: *"A brand is recognisable when the framing, light and styling stay consistent."* → *"A brand is recognisable when framing, light and styling stay consistent across every product."*
-- Email 7: *"If VOVV.AI is already producing visuals you would otherwise pay a studio, photographer and model for, a paid plan turns that into your full content engine."* → *"If VOVV.AI is already producing visuals you would otherwise pay a studio, photographer and model for, a paid plan turns it into your full content engine."*
-- Drop all section-level `final_top` lines that duplicate the section CTA (e.g. "Open Visual Studio and create your first one in a few minutes." becomes the bottom CTA only, not a repeated sentence).
-- Bullet list intros: shorten *"Three steps, no shoot"* stays, but ensure consistent eyebrow casing (UPPERCASE 12px) — already consistent.
-- Strip terminal periods from H2 subheads per the brand rule (audit all six h2s).
-
-### Mechanics
-Single edit pass on `/tmp/build_emails.py`:
-- Update `SHELL` (remove signature row, retune all padding).
-- Add `link` param to `grid()` and `hero_image()` so every image is wrapped in `<a>`.
-- Extend `section_grid()` with optional `cta_label` + `cta_href` (renders a `secondary_cta()` block below the grid).
-- Add `secondary_cta()` helper.
-- Update each `build(...)` call: rewrite intros/copy, add per-section CTAs, drop `final_top` duplicates where the section CTA already covers it (keep one final closing CTA).
-
-Regenerate all 7 emails and re-emit artifacts.
+No app/runtime code is touched — only the static HTML files under `src/emails/fashion-welcome/`.
