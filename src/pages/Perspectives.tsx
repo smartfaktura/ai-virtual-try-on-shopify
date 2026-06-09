@@ -12,8 +12,10 @@ import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
   Package, Image as ImageLucide, Info, ClipboardPaste, CheckCircle, XCircle,
-  Clock, Focus, CornerUpLeft, CornerUpRight, ArrowDown, Square, ArrowUp,
+  Clock, Focus, CornerUpLeft, CornerUpRight, ArrowDown, Square, ArrowUp, Archive,
 } from 'lucide-react';
+import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
+import { saveOrShareImage } from '@/lib/mobileImageSave';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
