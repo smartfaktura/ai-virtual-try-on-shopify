@@ -318,6 +318,7 @@ const App = () => {
                         <Route path="/admin/seo-page-visuals" element={<SeoPageVisuals />} />
                         <Route path="/admin/email-marketing" element={<EmailMarketing />} />
                         <Route path="/admin/campaigns" element={<EmailMarketing />} />
+                        <Route path="/admin/email-preview/fashion-welcome" element={<EmailPreviewFashionWelcome />} />
                         
                         <Route path="/pricing" element={<AppPricing />} />
                         <Route path="/settings" element={<Settings />} />
