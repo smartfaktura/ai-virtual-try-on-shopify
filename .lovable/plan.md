@@ -1,50 +1,27 @@
-# Rebuild the 7 fashion-welcome emails with real images + sharper copy
+# Speed up email images — serve resized variants from Supabase render endpoint
 
-## Problems with the current set
-- Each email shows only a single placeholder URL (`vovv.ai/og-fashion-*.jpg` — these don't exist, so the email body looks empty).
-- Copy reads generic.
-- No visual proof of what VOVV actually produces.
+## Why it's slow
+The grid uses the raw `/storage/v1/object/public/...` URLs. Those are the full-size scene previews (typically 1–3 MB each). With 7 images per email × 7 emails, every inbox preview is downloading ~15 MB of source files just to render them at 252–520 px.
 
 ## Fix
+Swap every image URL from the **object** endpoint to Supabase's **render/image** endpoint and add width + quality + `resize=contain`. That serves a freshly-resized JPEG (~30–80 KB instead of 1–3 MB) and uses `resize=contain` so the image is not cropped (respects the project's "no crop zoom from width param" rule — contain mode resizes the full image to fit, no zoom).
 
-### 1. Real image URLs
-I pulled the actual scene preview URLs from the `product_image_scenes` table — the same ones rendered on `/product-visual-library`. They live at `azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/.../scene-previews/*.jpg` and are world-readable, so they work in any inbox without auth.
+URL transform:
 
-Curated pool (real URLs in hand): ~50 fashion images spanning **garments, dresses, jeans, activewear, swimwear, lingerie** — across the angles users actually generate the most (Old Money Outdoor Portrait, Luxury Street Walk, On-Model Front/Back/Editorial, Editorial Lean, Soft Volume Lean, Super Editorial Campaign, Movement Shot, Ghost Mannequin, Close-Up Detail, Texture Detail, Front View Flat Lay, etc.).
+```
+before: .../storage/v1/object/public/product-uploads/.../scene-previews/abc.jpg
+after:  .../storage/v1/render/image/public/product-uploads/.../scene-previews/abc.jpg?width=560&quality=72&resize=contain
+```
 
-### 2. New image layout — multiple images per email
-Replace the lonely single placeholder with:
+Sizes used:
+- **Hero image** → `width=560&quality=75&resize=contain` (renders at 520 px, 2× cap for retina)
+- **Grid thumbnails** → `width=560&quality=70&resize=contain` (renders at 252 px, oversized for retina)
 
-- **Hero image** (full-width, ~520px) at the top of each email
-- **2-column image grid** (4–6 thumbnails, ~252px each) showing variety — email-safe `<table>` markup, supported by Gmail/Apple Mail/Outlook
-- Optional **second 2-col grid** near the bottom for use-case proof
+Single shared `?width=560` keeps the CDN cache key consistent across both uses, so the same file is downloaded once when used in both spots.
 
-Per email, the grid is curated to the email's angle:
+## Mechanics
+Update the generator script `/tmp/build_emails.py` so the `IMG` map values are wrapped through one helper that swaps `/object/` → `/render/image/` and appends the transform query string. Re-run it to regenerate the 7 files in `src/emails/fashion-welcome/` and `/mnt/documents/resend-templates/fashion-welcome/`.
 
-| # | Hero | Grid theme (6 images) |
-|---|------|---|
-| 1 Welcome | Super Editorial Campaign (garments) | Mix across categories — dress, hoodie, swimwear, activewear, lingerie, jeans |
-| 2 First gen | Clean Ghost Mannequin | 4 simple "easy first product" shots (flat lay, on-model front, ghost mannequin) |
-| 3 More angles | On-Model Front | 6 angles of similar products — front, back, editorial, movement, close-up, texture |
-| 4 Fashion scenes | Old Money Outdoor Portrait | 6 scene moods — street, desert, interior, studio, editorial, flash |
-| 5 Product Swap | Editorial Lean | 6 on-model fronts across different fashion categories (visual proof of "same scene, different product") |
-| 6 Brand look | Super Editorial Campaign | 6 images sharing the same editorial direction |
-| 7 Upgrade | Luxury Door Statement (dresses) | 6-image "content system" grid mixing categories |
-
-### 3. Copy rewrite
-Tighter, more concrete, more outcome-driven. Each email gets:
-- A sharper headline focused on one outcome
-- Founder-voice intro (1–2 sentences) that names the specific fashion products
-- A specific proof line under the grid ("these were generated from one uploaded product")
-- A clean closing line from Tomas
-
-Brand & structural rules unchanged: VOVV only, one CTA repeated max twice, Inter font, black `#0a0a0a` buttons, soft grey `#f5f5f4` sections, one-column layout, hidden preheader, no manual unsubscribe, "Visual Studio" wording, no emojis/hype.
-
-### 4. Mechanics
-- Update the 7 files at `src/emails/fashion-welcome/*.html` in place.
-- Copy the updated files to `/mnt/documents/resend-templates/fashion-welcome/` and re-emit `<presentation-artifact>` tags so you can re-preview.
-- In-app preview at `/admin/email-preview/fashion-welcome` keeps working (loads files via `?raw` import).
-
-No backend / DB / route changes needed.
+No template, copy or layout changes. Re-emit artifact tags.
 
 Approve and I'll ship.
