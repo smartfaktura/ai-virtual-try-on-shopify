@@ -10,6 +10,12 @@ The shots below were generated from the same scene direction, swapping the produ
 Build a scene set: https://vovv.ai/app/generate/product-images
 
 ------------------------------------------------------------
+BEFORE AND AFTER
+Same scene direction, different product
+Before: first product, locked scene
+After:  swapped product, same scene
+
+------------------------------------------------------------
 
 WHOLE SEASON, ONE UPLOAD
 Swap fabric, color and styling
