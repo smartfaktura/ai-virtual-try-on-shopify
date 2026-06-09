@@ -105,6 +105,8 @@ export default function Perspectives() {
   const { balance: credits, refreshBalance: refreshCredits, setBalanceFromServer } = useCredits();
   const { upload, isUploading } = useFileUpload();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadPct, setDownloadPct] = useState(0);
 
   // ── State ──────────────────────────────────────────────────────────────
   const initialSource: SourceType | null = searchParams.get('source') ? 'scratch' : null;
