@@ -1,0 +1,30 @@
+VOVV.AI
+============================================================
+
+One scene, your whole catalogue
+
+Hi {{first_name|"there"}},
+
+The shots below were generated from the same scene direction, swapping the product each time. That is how a season actually looks like a season — consistent model, consistent light, every product on the page.
+
+Build a scene set: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+
+WHOLE SEASON, ONE UPLOAD
+Swap fabric, color and styling
+
+Spin a single product into a full seasonal range without a re-shoot.
+
+Try a swap: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+VOVV.AI
+Juozo Balčikonio g. 7, Vilnius, Lithuania
+Instagram: https://instagram.com/vovv.ai
+TikTok:    https://tiktok.com/@vovv.ai
+LinkedIn:  https://linkedin.com/company/vovv-ai
+
+You are receiving this email because you signed up for VOVV.AI.
+Unsubscribe: {{RESEND_UNSUBSCRIBE_URL}}
+Manage preferences: https://vovv.ai/app/settings

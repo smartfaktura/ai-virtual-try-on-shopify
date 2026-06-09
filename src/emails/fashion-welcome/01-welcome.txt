@@ -1,0 +1,30 @@
+VOVV.AI
+============================================================
+
+Your next product shoot starts with one photo
+
+Hi {{first_name|"there"}},
+
+If you sell dresses, hoodies, jeans, jackets, activewear, swimwear or lingerie, you can upload one product photo today and start creating the visuals you need — store, ads, email, social — without booking a shoot.
+
+Start creating: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+
+READY WHEN YOU ARE
+Your first shot is one upload away
+
+Drop in one product photo and we will turn it into store, ad and social visuals.
+
+Start creating: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+VOVV.AI
+Juozo Balčikonio g. 7, Vilnius, Lithuania
+Instagram: https://instagram.com/vovv.ai
+TikTok:    https://tiktok.com/@vovv.ai
+LinkedIn:  https://linkedin.com/company/vovv-ai
+
+You are receiving this email because you signed up for VOVV.AI.
+Unsubscribe: {{RESEND_UNSUBSCRIBE_URL}}
+Manage preferences: https://vovv.ai/app/settings

@@ -1,0 +1,30 @@
+VOVV.AI
+============================================================
+
+One product, every angle your store needs
+
+Hi {{first_name|"there"}},
+
+A product page with one photo converts worse than a page with six angles. From the same upload, VOVV.AI gives you the full set — front, back, editorial, movement, close-up and texture — so every product looks complete.
+
+Create the full set: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+
+FULL PRODUCT PAGE
+Six angles from one upload
+
+Front, back, side, detail, ghost and flat — all from the photo you already have.
+
+Build the gallery: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+VOVV.AI
+Juozo Balčikonio g. 7, Vilnius, Lithuania
+Instagram: https://instagram.com/vovv.ai
+TikTok:    https://tiktok.com/@vovv.ai
+LinkedIn:  https://linkedin.com/company/vovv-ai
+
+You are receiving this email because you signed up for VOVV.AI.
+Unsubscribe: {{RESEND_UNSUBSCRIBE_URL}}
+Manage preferences: https://vovv.ai/app/settings

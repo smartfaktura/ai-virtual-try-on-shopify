@@ -1,0 +1,30 @@
+VOVV.AI
+============================================================
+
+Take your product anywhere
+
+Hi {{first_name|"there"}},
+
+Locations and scenes are the difference between a product page and a campaign. Pick a mood — studio, street, desert, interior, editorial — and your product gets placed, lit and styled in that world.
+
+Browse scenes: https://vovv.ai/product-visual-library
+
+------------------------------------------------------------
+
+EDITORIAL SCENES
+Place your product in a real world
+
+Pick a location and your product gets placed, lit and styled to match.
+
+Open Visual Studio: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+VOVV.AI
+Juozo Balčikonio g. 7, Vilnius, Lithuania
+Instagram: https://instagram.com/vovv.ai
+TikTok:    https://tiktok.com/@vovv.ai
+LinkedIn:  https://linkedin.com/company/vovv-ai
+
+You are receiving this email because you signed up for VOVV.AI.
+Unsubscribe: {{RESEND_UNSUBSCRIBE_URL}}
+Manage preferences: https://vovv.ai/app/settings
