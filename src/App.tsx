@@ -81,6 +81,7 @@ const LoadingLab = lazy(() => import('@/pages/admin/LoadingLab'));
 const SceneUsage = lazy(() => import('@/pages/admin/SceneUsage'));
 const SeoPageVisuals = lazy(() => import('@/pages/admin/SeoPageVisuals'));
 const EmailMarketing = lazy(() => import('@/pages/admin/EmailMarketing'));
+const EmailPreviewFashionWelcome = lazy(() => import('@/pages/admin/EmailPreviewFashionWelcome'));
 const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 
 const BrandModels = lazy(() => import('@/pages/BrandModels'));
