@@ -10,6 +10,12 @@ A product page with one photo converts worse than a page with six angles. From t
 Create the full set: https://vovv.ai/app/generate/product-images
 
 ------------------------------------------------------------
+BEFORE AND AFTER
+From one photo to every angle
+Before: your product photo
+After:  generated in VOVV.AI
+
+------------------------------------------------------------
 
 FULL PRODUCT PAGE
 Six angles from one upload
