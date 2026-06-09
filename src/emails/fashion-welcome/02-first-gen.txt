@@ -1,0 +1,30 @@
+VOVV.AI
+============================================================
+
+Start with the easiest win
+
+Hi {{first_name|"there"}},
+
+The fastest way to see what VOVV.AI does is to start with the simplest shot: upload a single product photo against any background and let it become a clean on-model image or a flat lay you can drop straight into your store.
+
+Generate your first shot: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+
+EASY FIRST WIN
+Try the simplest shot today
+
+A clean flat lay or on-model image is the fastest way to feel the difference.
+
+Generate your first shot: https://vovv.ai/app/generate/product-images
+
+------------------------------------------------------------
+VOVV.AI
+Juozo Balčikonio g. 7, Vilnius, Lithuania
+Instagram: https://instagram.com/vovv.ai
+TikTok:    https://tiktok.com/@vovv.ai
+LinkedIn:  https://linkedin.com/company/vovv-ai
+
+You are receiving this email because you signed up for VOVV.AI.
+Unsubscribe: {{RESEND_UNSUBSCRIBE_URL}}
+Manage preferences: https://vovv.ai/app/settings
