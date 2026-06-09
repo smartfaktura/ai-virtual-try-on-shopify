@@ -12,8 +12,10 @@ import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
   Package, Image as ImageLucide, Info, ClipboardPaste, CheckCircle, XCircle,
-  Clock, Focus, CornerUpLeft, CornerUpRight, ArrowDown, Square, ArrowUp,
+  Clock, Focus, CornerUpLeft, CornerUpRight, ArrowDown, Square, ArrowUp, Archive,
 } from 'lucide-react';
+import { downloadDropAsZip, type DropImage } from '@/lib/dropDownload';
+import { saveOrShareImage } from '@/lib/mobileImageSave';
 import { toast } from '@/lib/brandedToast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -103,6 +105,8 @@ export default function Perspectives() {
   const { balance: credits, refreshBalance: refreshCredits, setBalanceFromServer } = useCredits();
   const { upload, isUploading } = useFileUpload();
   const [noCreditsOpen, setNoCreditsOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadPct, setDownloadPct] = useState(0);
 
   // ── State ──────────────────────────────────────────────────────────────
   const initialSource: SourceType | null = searchParams.get('source') ? 'scratch' : null;
@@ -751,6 +755,46 @@ export default function Perspectives() {
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   Generate more
+                </Button>
+                <Button
+                  variant="outline"
+                  size="pill"
+                  disabled={downloading || resultEntries.length === 0}
+                  onClick={async () => {
+                    if (resultEntries.length === 0) return;
+                    setDownloading(true);
+                    setDownloadPct(0);
+                    try {
+                      if (resultEntries.length === 1) {
+                        const e = resultEntries[0];
+                        const safe = e.job.variationLabel.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+                        await saveOrShareImage(e.url, `Perspectives_${safe}.png`);
+                      } else {
+                        const images: DropImage[] = resultEntries.map((e) => ({
+                          url: e.url,
+                          workflow_name: 'Perspectives',
+                          scene_name: e.job.variationLabel,
+                        }));
+                        await downloadDropAsZip(images, 'Perspectives', (pct) => setDownloadPct(pct));
+                      }
+                    } catch {
+                      toast.error('Download failed');
+                    } finally {
+                      setDownloading(false);
+                    }
+                  }}
+                >
+                  {downloading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {downloadPct}%
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="w-4 h-4 mr-2" />
+                      Download All ({resultEntries.length})
+                    </>
+                  )}
                 </Button>
                 <Button
                   variant="outline"
