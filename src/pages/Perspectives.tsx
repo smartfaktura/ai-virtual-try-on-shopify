@@ -759,6 +759,46 @@ export default function Perspectives() {
                 <Button
                   variant="outline"
                   size="pill"
+                  disabled={downloading || resultEntries.length === 0}
+                  onClick={async () => {
+                    if (resultEntries.length === 0) return;
+                    setDownloading(true);
+                    setDownloadPct(0);
+                    try {
+                      if (resultEntries.length === 1) {
+                        const e = resultEntries[0];
+                        const safe = e.job.variationLabel.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+                        await saveOrShareImage(e.url, `Perspectives_${safe}.png`);
+                      } else {
+                        const images: DropImage[] = resultEntries.map((e) => ({
+                          url: e.url,
+                          workflow_name: 'Perspectives',
+                          scene_name: e.job.variationLabel,
+                        }));
+                        await downloadDropAsZip(images, 'Perspectives', (pct) => setDownloadPct(pct));
+                      }
+                    } catch {
+                      toast.error('Download failed');
+                    } finally {
+                      setDownloading(false);
+                    }
+                  }}
+                >
+                  {downloading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {downloadPct}%
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="w-4 h-4 mr-2" />
+                      Download All ({resultEntries.length})
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="pill"
                   onClick={() => {
                     setIsGeneratingView(false);
                     navigate('/app/library');
