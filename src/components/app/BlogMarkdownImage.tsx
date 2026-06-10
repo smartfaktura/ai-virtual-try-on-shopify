@@ -11,9 +11,17 @@ export function BlogMarkdownImage({ src, alt }: BlogMarkdownImageProps) {
 
   const showCaption = alt && alt.trim().length > 0;
 
+  // react-markdown URI-encodes the src, so "|" arrives as "%7C". Decode first.
+  let decoded = src;
+  try {
+    decoded = decodeURIComponent(src);
+  } catch {
+    decoded = src;
+  }
+
   // Collage syntax: ![alt](url1|url2|url3)
-  if (src.includes('|')) {
-    const urls = src.split('|').map((u) => u.trim()).filter(Boolean);
+  if (decoded.includes('|')) {
+    const urls = decoded.split('|').map((u) => u.trim()).filter(Boolean);
     if (urls.length >= 2) {
       const cols = urls.length >= 3 ? 'grid-cols-3' : 'grid-cols-2';
       return (
