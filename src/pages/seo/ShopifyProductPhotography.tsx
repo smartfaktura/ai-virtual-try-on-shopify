@@ -80,16 +80,16 @@ export default function ShopifyProductPhotography() {
           secondaryCta={{ label: 'See examples', to: '/discover' }}
           altPrefix="AI Shopify product photography example"
           tiles={[
-            { id: '1776770347820-s3qwmr', label: 'PDP Hero' },
-            { id: '1776664924644-8pmju4', label: 'Lifestyle' },
-            { id: '1776841027943-vetumj', label: 'Detail Shot' },
-            { id: '1776102204479-9rlc0n', label: 'Ad Creative' },
-            { id: '1776524132929-q8upyp', label: 'Banner' },
-            { id: '1776691906436-3fe7l9', label: 'Email Hero' },
-            { id: 'editorial-office-flash-eyewear-1776150153576', label: 'Social Post' },
-            { id: '1776664933175-rjlbn6', label: 'Collection' },
-            { id: '1776574228066-oyklfz', label: 'Seasonal' },
-            { id: '1776691911049-gsxycu', label: 'Lookbook' },
+            { id: '1776664732243-2tc8uy', label: 'Apparel' },
+            { id: 'beauty-closeup-oversized-eyewear-1776150210659', label: 'Eyewear' },
+            { id: '1776770345914-cg8uyy', label: 'Sneakers' },
+            { id: '1777880675405-os018h', label: 'Bags' },
+            { id: '1776596240525-wafgtx', label: 'Watches' },
+            { id: '1776842387930-h6xw7w', label: 'Fragrance' },
+            { id: '1778306143929-tptakg', label: 'Activewear' },
+            { id: '1776243905045-8aw72b', label: 'Jewelry' },
+            { id: '1776239826550-uaopmt', label: 'Beauty' },
+            { id: '1776574730668-ltg55f', label: 'Swimwear' },
           ]}
         />
 
