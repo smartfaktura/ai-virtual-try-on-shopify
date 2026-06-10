@@ -1,12 +1,17 @@
-## Why the hero didn't change
+## Safety
 
-Eyewear renders a 4-tile `heroCollage` (Editorial · Video · Vintage · UGC), not the single `heroImageId`. `CategoryHero.tsx` only uses `heroImageId`/`heroMain` when no collage is provided. My previous edit swapped `heroImageId`, which the eyewear page never displays.
+Yes — fully safe. The `p:domain_verify` meta tag is a passive, read-only token Pinterest fetches to prove you own the domain. It:
 
-## Fix
+- Doesn't load scripts, set cookies, or track users
+- Doesn't affect SEO, performance, or other meta tags
+- Is the standard, Pinterest-recommended verification method
 
-Update `heroCollage[0]` (the "EDITORIAL" tile, top-left in the collage) on the eyewear entry in `src/data/aiProductPhotographyCategoryPages.ts`:
+## Change
 
-- `imageId`: `beauty-closeup-oversized-eyewear-1776150210659` → `apparel-oldmoney-outdoor-portrait-copy-copy-copy-copy-copy-1780507647655`
-- `alt`: "AI eyewear old-money outdoor editorial portrait."
+Add one line inside the existing `<head>` of `index.html`, grouped near other verification/meta tags:
 
-The other 3 collage tiles (Video, Vintage, UGC) stay as is. `heroImageId` also stays pointed at the new image (harmless; used by SEO og:image and sitemap).
+```html
+<meta name="p:domain_verify" content="dcb7589d44bac2e0ab99fd475efc996a" />
+```
+
+That's it — no other files touched. After deploy, click "Continue setup" / Verify in Pinterest and it will detect the tag on https://vovv.ai.
