@@ -906,7 +906,367 @@ No. A clear smartphone photo on a plain background works well. The AI handles th
 VOVV offers [flexible plans](/pricing) starting with free credits. Most images cost 4–6 credits depending on quality settings. A single image replaces what used to cost $200–$500 in traditional photography.
 `,
   },
+  {
+    slug: 'ai-swimwear-photography-resort-campaigns',
+    title: 'AI Swimwear Photography: How DTC Brands Skip the Resort Shoot',
+    metaDescription: 'AI swimwear photography lets DTC brands produce Maldives, Mykonos, and Cape Town resort campaigns without the $40k flight, villa, and crew. See how it works.',
+    publishDate: '2026-06-10',
+    author: 'VOVV.AI Team',
+    readTime: '8 min read',
+    category: 'AI Photography',
+    excerpt: 'A swimwear founder we spoke to budgeted $42,000 for a 4-day Mykonos shoot — flights, villa, model, photographer, glam. Then she shot the entire SS26 campaign for $180 in AI credits. Here is exactly how.',
+    tags: ['AI swimwear photography', 'swimwear product photos', 'resort campaign photography', 'swimwear lookbook', 'beach product photography', 'DTC swimwear marketing'],
+    coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779343672535-j0u73e.jpg',
+    content: `
+## The swimwear shoot that almost killed a brand
+
+Every January, swimwear founders start the same panicked calculation. The summer drop lands in March. Investors want a campaign. Wholesale buyers want a lookbook. Meta needs creative. TikTok needs UGC. And the only way to get it — historically — is to fly a crew somewhere warm and burn through six figures in two weeks.
+
+For most DTC swimwear brands under $5M in revenue, that math simply does not work.
+
+> **The shift:** AI swimwear photography produces editorial resort campaigns, beach UGC, and PDP angles from a single product flat-lay — at roughly $2–$5 per generated image instead of $400–$800 per shot location.
+
+This is not a downgrade. The brands doing it well — and there are dozens now — are producing campaigns that read more polished than the agency work they replaced.
+
+![AI swimwear photography example with editorial Maldives resort portrait](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779343672535-j0u73e.jpg)
+
+*Generated in 40 seconds from a single product photo. Scene: Maldives It Girl.*
+
+## What "an AI swimwear shoot" actually produces
+
+Walk through what a real swimwear brand needs from one drop:
+
+- **Editorial resort heroes** for the homepage, lookbook PDF, and wholesale deck
+- **On-model PDP shots** — front, back, three-quarter, movement
+- **Lifestyle UGC** for paid social and organic TikTok
+- **Aesthetic color stories** for IG carousels and email
+- **Stills and flat-lays** for the listing grid
+
+Traditionally that means three different shoot days, two locations, multiple stylists, and a few thousand RAW files to cull. With [AI swimwear photography](/ai-product-photography/swimwear), one product upload generates the entire matrix — and you regenerate it free next season.
+
+### Editorial resort heroes
+
+![AI swimwear White Lotus glow editorial scene](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779347039851-qiw1ib.jpg)
+
+The White Lotus aesthetic is currently the highest-performing visual reference in DTC swim. AI replicates the warm Mediterranean light, the linen drape, the unbothered villa-girl pose — without the Sicily booking fee.
+
+![AI swimwear Aegean Deck editorial siren scene](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779346999911-klrly1.jpg)
+
+### Pool and beach lifestyle UGC
+
+![AI swimwear poolside fever dream lifestyle scene](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779344965626-u2ro8h.jpg)
+
+UGC-style shots — the unposed, candid, "my friend took this" look — convert better than studio polish on TikTok and Meta. AI handles the genre cleanly: soft phone-camera depth of field, real-feeling shadows, no model-search required.
+
+### Villa moments and Mediterranean stories
+
+![AI swimwear villa espresso walk lifestyle scene](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779347030368-pgte54.jpg)
+
+These narrative shots — espresso on the villa terrace, morning swim, the walk back from the beach — are what turn a swimwear brand into an aspiration. They are also the most expensive shots to produce traditionally. AI flips that economics entirely.
+
+## The honest cost comparison
+
+A 60-SKU swimwear drop, 5 images per SKU = 300 images.
+
+| | Mykonos shoot | AI swimwear photography |
+|---|---|---|
+| **Total cost** | $38,000–$52,000 | $900–$1,500 |
+| **Timeline** | 6–10 weeks | 2–4 days |
+| **Reshoots / variations** | $$$ each | Included |
+| **Aspect ratios** | Re-crop manually | Auto-generated for IG, TikTok, Shopify, Amazon |
+| **Inventory risk** | Sample must exist | Generate before samples arrive |
+
+The reshoot line is the silent killer. Traditional shoots produce what they produce. AI lets you test 12 background variations of the same product, kill the losers, and double down on the converter — all in an afternoon.
+
+## What AI still cannot do well for swimwear
+
+We try to be honest about this:
+
+- **Brand-anthem video** still belongs to a real director and a real location
+- **Texture-critical macro** (think rib detail of a specific knit) sometimes benefits from a real macro lens — though our [Brand Profiles](/features/brand-profiles) close this gap quickly
+- **Genuinely "candid" content from real customers** is still UGC, and that is a different game
+
+For the other 80% of swimwear visuals — campaign, PDP, lifestyle, social — AI is the smarter call in 2026.
+
+## How to start (with your existing product photos)
+
+1. **Upload one swimwear flat-lay** — even a phone shot on a white wall works
+2. **Pick the [Swimwear scenes](/ai-product-photography/swimwear)** — Villa & Resort Mood, Mediterranean, Maldives & Tropics, Pool & Beach UGC, Aesthetic Color
+3. **Generate 5–8 variations** of your hero SKU first to feel the quality
+4. **Bulk-run the whole drop** once you are confident — see our guide to [automated product listing images at scale](/blog/automated-product-listing-images-at-scale)
+
+Every new account starts with free credits, enough to produce a full mini-campaign for your top SKU and compare it to your current listing imagery before committing.
+
+---
+
+## Frequently Asked Questions
+
+### Can AI swimwear photography handle different body types and skin tones?
+
+Yes. Modern AI models render diverse skin tones, body shapes, and ethnicities accurately. See our piece on [diverse representation in AI model photography](/blog/ai-model-photography-diverse-representation) for the full breakdown — this is non-negotiable for any swimwear brand that takes its audience seriously.
+
+### Will AI-generated swimwear images get my Meta ads rejected?
+
+No. The images are standard JPG/PNG output. Meta evaluates ads on the usual policies (skin exposure, claims, targeting) — not on whether a model was photographed or generated. Most swimwear ads pass review the same as traditional shoots.
+
+### Can I keep the same model across an entire campaign?
+
+Yes. With Brand Profiles and saved model references, you can lock a recurring model identity across every shot in a drop — same face, same body, different scenes. This is something traditional shoots also do, but at significantly higher cost per appearance.
+
+### Do AI swimwear photos work for wholesale buyers and PR?
+
+Increasingly yes. The disclosure norm in DTC has shifted — most buyers care about the product fit and the creative direction, not the production method. A well-art-directed AI campaign reads more premium than a poorly-lit real shoot.
+\`,
+  },
+  {
+    slug: 'ai-bag-photography-product-pages',
+    title: 'AI Bag Photography for Product Pages: Every Angle, Every Scene',
+    metaDescription: 'AI bag photography produces 360° PDP angles, on-body editorial, lifestyle context, and campaign heroes from one product photo. See how leather goods brands ship faster.',
+    publishDate: '2026-06-10',
+    author: 'VOVV.AI Team',
+    readTime: '8 min read',
+    category: 'AI Photography',
+    excerpt: 'Bags are the trickiest category in product photography — reflective hardware, soft leather, complex shapes that look different from every angle. AI now handles all of it. Here is what a complete PDP set looks like.',
+    tags: ['AI bag photography', 'handbag product photography', 'accessories photography', 'leather goods photography', 'PDP product images', 'bag campaign photography'],
+    coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239449949-ygljai.jpg',
+    content: `
+## Why bag photography is the hardest category to fake
+
+Ask any product photographer which category they dread shooting at scale and most will say bags. The reasons are technical and unforgiving:
+
+- **Hardware reflections** must read as real metal, not painted plastic
+- **Leather grain** has to survive compression to thumbnail size
+- **The bag changes shape** depending on what is inside it
+- **Every angle tells a different product story** — top handle vs crossbody silhouette
+- **The interior shot** is non-negotiable for conversion
+
+For years this is exactly where AI struggled. In 2026, that gap has effectively closed. The current generation of [AI bag photography](/ai-product-photography/bags-accessories) handles reflections, stitching detail, and material fidelity at a level that survives PDP zoom.
+
+![AI bag photography sculptural studio hero shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239449949-ygljai.jpg)
+
+*Sculptural studio hero — generated from a single product upload.*
+
+## The complete PDP set for a bag
+
+Conversion data from leading bag brands consistently shows the same thing: **listings with 6+ angles outperform listings with 3 angles by 18–34% on add-to-cart rate**. AI lets you ship that full set on every SKU.
+
+### Essential studio angles
+
+A modern bag PDP needs at minimum:
+
+1. **Front** — the silhouette shot
+2. **Side** — depth and gusset
+3. **Back** — buyers want to see it
+4. **In-hand / scale** — gives sense of size
+5. **Interior** — pocket layout, lining
+6. **Close-up hardware detail** — closure, stitching, branding
+
+![AI bag photography hardware and craft closeup](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749772492-j9qpsv.jpg)
+
+The hardware closeup is the one shot most small brands skip — and it is the one that signals luxury most reliably. AI nails it now.
+
+### On-body editorial
+
+![AI bag on-body architectural editorial shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239415973-p3m8bq.jpg)
+
+On-body shots solve the scale-and-styling problem that flat product photos cannot. A buyer needs to see how the strap falls, where it sits on the body, how it pairs with an outfit. AI generates this without a model booking, a stylist, or a half-day rate.
+
+### Campaign and lifestyle context
+
+![AI bag campaign editorial wind shoulder shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749559127-ra3hur.jpg)
+
+Once the PDP set is locked, the same upload generates campaign visuals — windswept editorial, alpine carry, desert depth, vintage car still. These run on Pinterest, the homepage hero, the wholesale deck, and the email banner. One product upload, an entire seasonal campaign.
+
+### Lifestyle UGC
+
+![AI bag photography casual city carry UGC moment](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749517351-v1bwbf.jpg)
+
+The candid mirror-selfie, café-errand, weekend-outing register — these are the shots that drive social. AI produces them in volume so the brand can post daily instead of monthly.
+
+## Brand consistency at catalog scale
+
+The single biggest unlock for any bag or accessories brand running AI photography is [Brand Profiles](/features/brand-profiles). A saved brand profile locks in:
+
+- Lighting temperature and direction
+- Background palette
+- Model archetype and styling
+- Composition rules (negative space, framing, eye line)
+
+Apply the profile to every generation and 80 SKUs read like a single coherent collection — which is the bar Saint Laurent, The Row, and Polène have trained the consumer to expect. Our deeper walkthrough on [brand consistency with AI-generated visuals](/blog/brand-consistency-ai-generated-visuals) covers exactly how to set this up.
+
+## The real cost math for an accessories brand
+
+Take a brand launching 40 bag SKUs across 3 colorways = 120 product variations. Five PDP angles + two lifestyle + one campaign = 8 images each. **960 images total.**
+
+| | Traditional studio | AI bag photography |
+|---|---|---|
+| **Cost per image** | $80–$150 | $2–$5 |
+| **Total** | $77,000–$144,000 | $1,900–$4,800 |
+| **Hardware-detail reshoot** | $3k–$6k | Free |
+| **Adding a new colorway later** | New shoot day | One generation |
+
+The colorway line is the killer for accessories brands specifically. Every time merchandising adds a seasonal color, traditional photography means scheduling another shoot. AI just regenerates the catalog.
+
+## When to still book the studio
+
+We tell every brand the same thing: keep traditional shoots for **the one anthem shot** that defines the brand for the year — the founder portrait, the workshop story, the hero campaign video. Use AI for the other 95% of the catalog.
+
+That ratio is what is letting small leather-goods brands compete visually with $200M heritage labels.
+
+---
+
+## Frequently Asked Questions
+
+### Can AI handle exotic leathers and unusual textures?
+
+Yes — croc embossing, woven leather, suede, and patent all render accurately. For genuinely rare materials, upload a clear macro reference and the AI preserves the texture across every generated angle.
+
+### How does AI bag photography handle reflective hardware?
+
+Reflections are generated based on the simulated lighting setup of each scene. The result reads as real metal with directional highlights — not the flat painted look that gave earlier AI generators away.
+
+### Can I use the same generated bag in a campaign and on Amazon?
+
+Yes. The images you generate are yours commercially with no licensing fees. We recommend a white-background variant for Amazon listings and the editorial/lifestyle versions for your own site and social channels.
+
+### How do I keep all my bag photos looking like one brand?
+
+Set up a Brand Profile once with your lighting, background, and styling rules — then apply it to every generation. The full pattern is covered in our [brand consistency guide](/blog/brand-consistency-ai-generated-visuals).
+\`,
+  },
+  {
+    slug: 'ai-fashion-photography-ecommerce-brands',
+    title: 'AI Fashion Photography for E-commerce Brands: The 2026 Playbook',
+    metaDescription: 'AI fashion photography replaces studio shoots, model bookings, and location days for DTC fashion brands. See on-model PDP, editorial campaign, and lifestyle workflows.',
+    publishDate: '2026-06-10',
+    author: 'VOVV.AI Team',
+    readTime: '9 min read',
+    category: 'AI Photography',
+    excerpt: 'A fashion founder we work with replaced her $58k SS26 editorial budget with $640 in AI credits — and the campaign tested higher on every Meta creative metric than the prior season. Here is the exact playbook.',
+    tags: ['AI fashion photography', 'fashion product images AI', 'on-model fashion photography', 'AI fashion editorial', 'fashion ecommerce photography', 'DTC fashion marketing'],
+    coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664933175-rjlbn6.jpg',
+    content: `
+## The fashion brand math nobody wants to admit
+
+A typical DTC fashion brand doing $3–10M in annual revenue spends between **8% and 14% of revenue on content production** — photography, models, locations, post. That is a heavier line item than performance media for most brands. And the output is fundamentally the same every season: lookbook, PDP set, campaign hero, social variants.
+
+[AI fashion photography](/ai-product-photography/fashion) collapses that line item by an order of magnitude without sacrificing the creative direction.
+
+The brands winning the 2026 cycle are not the ones with the biggest shoot budgets. They are the ones generating 10x the creative volume, testing aggressively, and iterating weekly instead of seasonally.
+
+![AI fashion photography sunlit tailoring studio editorial](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664933175-rjlbn6.jpg)
+
+*Sunlit tailoring studio — generated in under a minute from a single garment upload.*
+
+## The complete fashion content stack
+
+A modern DTC fashion brand needs roughly five visual registers per season:
+
+1. **Editorial studio looks** for the lookbook PDF and homepage hero
+2. **On-model PDP shots** for product pages and merchandising
+3. **Elevated location editorial** for campaigns and email
+4. **Lifestyle and UGC** for paid social and TikTok organic
+5. **Aesthetic stills and detail shots** for the collection grid
+
+Historically that means a 3-day studio block, a location day, a separate UGC shoot, and a still-life day. With AI, one garment upload feeds every register.
+
+### Editorial studio looks
+
+![AI fashion photography clean full-body studio look](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776605969689-gsjfti.jpg)
+
+The clean full-body studio shot is the workhorse of e-commerce. AI handles fabric drape, natural posture, accurate fit through the waist and shoulders. Pair our [Virtual Try-On](/features/virtual-try-on) feature with a saved model identity and you have a consistent face for the entire collection.
+
+### On-model PDP
+
+![AI fashion chair studio editorial pose](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664924644-8pmju4.jpg)
+
+PDP imagery converts. Specifically, **listings with 4+ on-model angles outperform single-image listings by 22–41% on add-to-cart**, depending on category. AI lets you produce the full angle set per garment without the per-shot cost.
+
+### Elevated location editorial
+
+![AI fashion architectural exterior editorial shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664739925-oirnsa.jpg)
+
+The architectural-exterior editorial used to require a permit, a sunrise call time, and a six-person crew. AI generates it in 40 seconds — and you can regenerate the same garment in a Paris café, a Marrakech rooftop, and a Tokyo crosswalk to test which resonates most with your audience.
+
+### Lifestyle and creative scenes
+
+![AI fashion mid-century modern lounge editorial scene](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776840702343-v6zl7g.jpg)
+
+These narrative scenes — the lounge, the greenhouse, the brutalist concrete wall — turn product into editorial. They are also what fills the Pinterest queue, the email banner library, and the IG carousel calendar for the entire season.
+
+### UGC-coded social content
+
+![AI fashion luxury street walk lifestyle shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664927729-9yr8is.jpg)
+
+For paid social specifically, the UGC register — looser framing, ambient light, candid attitude — outperforms studio polish on Meta and TikTok. AI generates the look without an influencer brief.
+
+## The cost reality for a fashion drop
+
+A typical SS drop: 35 SKUs, 6 images each = 210 images.
+
+| | Traditional production | AI fashion photography |
+|---|---|---|
+| **Production cost** | $42,000–$68,000 | $700–$1,400 |
+| **Timeline** | 8–12 weeks | 3–5 days |
+| **Reshoots** | Per-shot fee | Included |
+| **Aspect ratios** | Manual recrops | Auto for IG, TikTok, Shopify, Pinterest, Amazon |
+| **Add a new colorway in season** | New shoot day | One generation |
+
+The reshoot and recrop lines are where AI compounds. Every season, traditional brands ship what the shoot produced. AI brands test, iterate, and replace what isn't working — weekly.
+
+## Brand consistency: the make-or-break
+
+The trap that kills bad AI rollouts is inconsistency — model A on Tuesday, model B on Wednesday, different lighting register on every image. [Brand Profiles](/features/brand-profiles) solve this by saving:
+
+- A locked model identity (face, body type, hair) you can reuse across the season
+- A lighting and color palette that applies to every generation
+- Composition rules (negative space, eye line, framing) the AI honors automatically
+
+This is also where diverse representation gets handled intentionally — see our piece on [AI model photography and diverse representation](/blog/ai-model-photography-diverse-representation) for how to build a model roster that reflects your actual customer base.
+
+## What to keep traditional
+
+Three things still belong to real production:
+
+1. **The founder portrait** — authenticity matters
+2. **The annual brand-anthem video** — a director's eye is still the best tool
+3. **Genuine customer UGC** — your community telling your story
+
+For the catalog, the campaign, the PDP, and the social calendar, AI is the smarter call.
+
+## How to start
+
+1. **Pick one bestselling SKU** from your current season
+2. **Upload a clean flat-lay or ghost-mannequin shot** of the garment
+3. **Generate 8 variations** across studio, editorial, and lifestyle registers
+4. **Compare to your current listing imagery** — quality, conversion potential, aesthetic fit
+5. **Roll out to the catalog** with a saved Brand Profile
+
+Every new account starts with free credits. Most brands generate their first comparable test set inside an hour.
+
+---
+
+## Frequently Asked Questions
+
+### Will customers know the photos are AI?
+
+In blind tests, consumers cannot reliably tell modern AI fashion imagery from traditional studio output. The brands disclosing it have generally found audiences neutral-to-positive — buyers care about the garment and the styling, not the production process.
+
+### Can AI handle delicate fabrics like silk, lace, and chiffon?
+
+Yes. Modern models render translucency, drape, and movement accurately. For pieces where fabric behavior is the entire selling point — say, a silk slip dress — pair AI with a [Virtual Try-On](/features/virtual-try-on) using a clean garment upload for best results.
+
+### How does AI fashion photography integrate with Shopify and Amazon?
+
+The output is standard JPG/PNG in any aspect ratio you specify. Upload to Shopify, Amazon, Faire, or Shopline the same way you would any other product image. No special integration required.
+
+### Can I keep the same model across an entire seasonal campaign?
+
+Yes. Save a model identity in your Brand Profile and apply it to every garment in the drop. The same face, same body, different garments and scenes — exactly the consistency a traditional editorial shoot delivers, at a fraction of the cost.
+\`,
+  },
 ];
+
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
   return blogPosts.find((p) => p.slug === slug);
