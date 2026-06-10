@@ -184,53 +184,15 @@ const categoryEntries: SitemapEntry[] = aiProductPhotographyCategoryPages.map((c
   };
 });
 
-// ───────── Discover items (live from backend) ─────────
-async function fetchDiscoverEntries(): Promise<SitemapEntry[]> {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.warn('⚠ Skipping discover items — VITE_SUPABASE_URL / KEY not found');
-    return [];
-  }
-  const url =
-    `${SUPABASE_URL}/rest/v1/discover_presets` +
-    `?select=slug,created_at,image_url,title&order=created_at.desc&limit=5000`;
-  try {
-    const res = await fetch(url, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-    });
-    if (!res.ok) {
-      console.warn(`⚠ Discover fetch failed: ${res.status} ${res.statusText}`);
-      return [];
-    }
-    const rows = (await res.json()) as Array<{
-      slug: string;
-      created_at: string;
-      image_url: string | null;
-      title: string | null;
-    }>;
-    return rows
-      .filter((r) => typeof r.slug === 'string' && r.slug.length > 0)
-      .map((r) => ({
-        loc: `/discover/${r.slug}`,
-        lastmod: pickDate(r.created_at),
-        changefreq: 'monthly' as const,
-        priority: 0.7,
-        images: r.image_url
-          ? [{ loc: r.image_url, title: r.title ?? undefined }]
-          : undefined,
-      }));
-  } catch (err) {
-    console.warn('⚠ Discover fetch threw:', (err as Error).message);
-    return [];
-  }
-}
-
-const discoverEntries = await fetchDiscoverEntries();
+// ───────── Discover items intentionally excluded ─────────
+// /discover/* URLs are disallowed in robots.txt (CSR-only item pages).
+// Including them in the sitemap wastes crawl budget and dilutes signals
+// for indexable pages. The /discover index page itself stays above.
 
 const all: SitemapEntry[] = [
   ...MARKETING_URLS.map((e) => ({ ...e, lastmod: e.lastmod ?? TODAY })),
   ...blogEntries,
   ...categoryEntries,
-  ...discoverEntries,
 ];
 
 // Dedupe by loc, keeping the highest priority entry
