@@ -1,55 +1,48 @@
 ## Goal
 
-Refine the `/ai-product-photography/swimwear` page based on the latest feedback.
+Add 3 SEO-optimized, engaging blog posts to `src/data/blogPosts.ts` — one per category landing page — using real scene-library images from those pages so each post visually showcases what VOVV produces.
 
-## Changes
+## Posts
 
-### 1. Reorder swimwear chip pills
+Each follows the existing `BlogPost` schema (slug, title, metaDescription, publishDate `2026-06-10`, author `VOVV.AI Team`, readTime, category, excerpt, tags, coverImage, markdown `content`). All link back to their category page and to relevant internal posts/features, and embed 4–6 inline scene images via the `PREVIEW(imageId)` URL pattern.
 
-`src/data/aiProductPhotographyBuiltForGrids.ts` — reorder the `swimwear` array so the first three chips are the strongest editorial groups:
+### 1. Swimwear → `/blog/ai-swimwear-photography-resort-campaigns`
+- **Angle**: How DTC swimwear brands ditch the Mykonos shoot for AI resort campaigns
+- **Target keywords**: AI swimwear photography, swimwear product photos, resort campaign photography, swimwear lookbook AI, beach product photography
+- **Hero + inline images** from new swimwear batch: Maldives It Girl, White Lotus Glow, Aegean Deck Siren, Villa Espresso Walk, Poolside Fever Dream, Cape Town Siren
+- **Links**: `/ai-product-photography/swimwear`, `/features/virtual-try-on`, `/blog/automated-product-listing-images-at-scale`
+- **Sections**: Resort-shoot cost reality → 8 swimwear shots every brand needs → Editorial vs UGC vs Stills → Aesthetic Color stories → ROI table → FAQs
 
-1. Villa & Resort Mood
-2. Mediterranean
-3. Maldives & Tropics
-4. Resort Editorial
-5. Pool & Beach UGC
-6. Aesthetic Color
-7. Stills & Flat-Lay
-8. Essential Shots
+### 2. Bags & Accessories → `/blog/ai-bag-photography-product-pages`
+- **Angle**: PDP-ready bag photography — 360° angles, on-body, flat-lay, lifestyle — without a studio
+- **Target keywords**: AI bag photography, handbag product photography, accessories photography AI, leather goods photography, PDP product images bags
+- **Hero + inline images** from bags category (will pick from existing `bags` grid in `aiProductPhotographyBuiltForGrids.ts`)
+- **Links**: `/ai-product-photography/bags-accessories`, `/features/brand-profiles`, `/blog/brand-consistency-ai-generated-visuals`
+- **Sections**: Why bag photography is uniquely hard → Essential PDP angles → Lifestyle context shots → Texture & material fidelity → Seasonal campaign reuse → FAQs
 
-No card content changes — order only.
+### 3. Fashion → `/blog/ai-fashion-photography-ecommerce-brands`
+- **Angle**: How fashion DTC brands cut campaign costs 90%+ with AI editorial, on-model, and lifestyle imagery
+- **Target keywords**: AI fashion photography, fashion product images AI, on-model fashion photography, AI fashion editorial, fashion ecommerce photography
+- **Hero + inline images** from fashion category (will pick from existing `fashion` grid)
+- **Links**: `/ai-product-photography/fashion`, `/features/virtual-try-on`, `/blog/ai-model-photography-diverse-representation`
+- **Sections**: The $50k editorial vs the $50 generation → On-model PDP → Editorial campaigns → Lifestyle/UGC → Brand consistency → FAQs
 
-### 2. Hide the last 3 pills on mobile
+## Content quality bar
 
-`src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` — in the chip rail map, add a per-chip mobile-hide class so the trailing chips (anything past the first 5) only appear on `sm` and up:
-
-```tsx
-idx >= 5 && 'hidden sm:inline-flex'
-```
-
-Effect on swimwear: mobile shows Villa & Resort Mood, Mediterranean, Maldives & Tropics, Resort Editorial, Pool & Beach UGC. Aesthetic Color, Stills & Flat-Lay, Essential Shots are hidden on mobile, visible from `sm` up. Other category pages with ≤5 chips are unaffected.
-
-### 3. Add 4 more Scene examples (8 → 12)
-
-`src/data/aiProductPhotographyCategoryPages.ts` — extend the swimwear `sceneExamples` array from 8 to 12 by appending 4 fresh editorial scenes from the new batch, each with `collectionLabel: 'Swimwear'`, matching `subCategory`, and descriptive `alt`:
-
-- Villa Shade Siren (`1779347035251-z5k8cv`) — Villa & Resort Mood
-- Poolside Double Take (`1779347015401-sti2jy`) — Pool & Beach UGC
-- Maldives Bicycle Girl (`1779343666035-zdhcpb`) — Maldives & Tropics
-- Coastal Stillness Swim Frame (`1777996830864-yd13ny`) — Stills & Flat-Lay
-
-The existing grid is `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` so 12 items lay out cleanly (6 rows mobile / 4 rows tablet / 3 rows desktop) — no component changes needed.
+- ~900–1,200 words per post
+- Engaging hook, narrative tone matching existing posts (specific dollar examples, blind-test framing, ROI table)
+- Single H1 (post title rendered by template), H2/H3 hierarchy, one comparison table, FAQ block, internal links
+- Inline images use `![descriptive alt with keyword](https://…/scene-previews/{imageId}.jpg)` — alt text optimized for image search
+- No terminal periods in H2/H3 headings (per project core memory)
 
 ## Files touched
 
-- `src/data/aiProductPhotographyBuiltForGrids.ts` (reorder)
-- `src/data/aiProductPhotographyCategoryPages.ts` (append 4)
-- `src/components/seo/photography/category/CategoryBuiltForEveryCategory.tsx` (1-line mobile-hide class)
+- `src/data/blogPosts.ts` — append 3 new `BlogPost` objects to the `blogPosts` array
 
-No routes, hooks, backend, or other category pages affected.
+No new components, routes, or backend changes — the existing `/blog` and `/blog/:slug` pages render new entries automatically. Sitemap regeneration: the existing `scripts/generate-sitemap.ts` already picks up `blogPosts`, so the next build refresh includes the new URLs.
 
 ## Verification
 
 - `bunx tsc --noEmit` passes
-- `/ai-product-photography/swimwear` desktop: 8 chips, Villa/Med/Maldives lead; Scene examples shows 12 images
-- Mobile (375px): 5 chips, remaining 3 hidden; Scene examples stacks 2-up
+- Visit `/blog` — 3 new cards appear
+- Visit each new `/blog/<slug>` — content renders, images load, internal links work
