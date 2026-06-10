@@ -1206,6 +1206,8 @@ The clean full-body studio shot is the workhorse of e-commerce. AI handles fabri
 
 PDP imagery converts. Specifically, **listings with 4+ on-model angles outperform single-image listings by 22–41% on add-to-cart**, depending on category. AI lets you produce the full angle set per garment without the per-shot cost.
 
+![Three fashion editorial scenes generated from one garment upload](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664933175-rjlbn6.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776605969689-gsjfti.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664924644-8pmju4.jpg)
+
 ### Elevated location editorial
 
 ![AI fashion architectural exterior editorial shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664739925-oirnsa.jpg)
@@ -1223,6 +1225,8 @@ These narrative scenes — the lounge, the greenhouse, the brutalist concrete wa
 ![AI fashion luxury street walk lifestyle shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664927729-9yr8is.jpg)
 
 For paid social specifically, the UGC register — looser framing, ambient light, candid attitude — outperforms studio polish on Meta and TikTok. AI generates the look without an influencer brief.
+
+![Two fashion scenes — architectural exterior and luxury street walk](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664739925-oirnsa.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664927729-9yr8is.jpg)
 
 ## The cost reality for a fashion drop
 
