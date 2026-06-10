@@ -1100,6 +1100,8 @@ Once the PDP set is locked, the same upload generates campaign visuals — winds
 
 The candid mirror-selfie, café-errand, weekend-outing register — these are the shots that drive social. AI produces them in volume so the brand can post daily instead of monthly.
 
+![Two bag campaign frames — windswept editorial and city carry](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749559127-ra3hur.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749517351-v1bwbf.jpg)
+
 ## Brand consistency at catalog scale
 
 The single biggest unlock for any bag or accessories brand running AI photography is [Brand Profiles](/features/brand-profiles). A saved brand profile locks in:
