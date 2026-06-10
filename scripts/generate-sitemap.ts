@@ -76,7 +76,6 @@ const MARKETING_URLS: SitemapEntry[] = [
 
   // Public galleries / discovery
   { loc: '/discover',                       changefreq: 'weekly',  priority: 0.8 },
-  { loc: '/freestyle',                      changefreq: 'daily',   priority: 0.9 },
   { loc: '/product-visual-library',         changefreq: 'weekly',  priority: 0.9 },
 
   // SEO landing pages (AI photography family)
@@ -179,8 +178,8 @@ const categoryEntries: SitemapEntry[] = aiProductPhotographyCategoryPages.map((c
   return {
     loc: `/ai-product-photography/${cat.slug}`,
     lastmod: TODAY,
-    changefreq: 'monthly',
-    priority: 0.85,
+    changefreq: 'weekly',
+    priority: 0.9,
     images: images.length ? images : undefined,
   };
 });
