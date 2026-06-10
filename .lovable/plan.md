@@ -1,12 +1,34 @@
-Replace all 8 cards under the Necklaces pill in `src/data/aiProductPhotographyBuiltForGrids.ts` (`jewelry` → `Necklaces · Editorial`) with the 8 imageIds the user provided, in order:
+# Fix Necklaces pill on /ai-product-photography/jewelry
 
-1. `1781096206479-c2y9uk`
-2. `1781096215251-97khdq`
-3. `1781096209858-839zxz`
-4. `1781079803994-j0qytc`
-5. `1781095614795-0fm37e`
-6. `1781079789093-0dauye`
-7. `1781097565486-9ztlst`
-8. `1781096555232-uq7jqb`
+## Root cause
+The data file `src/data/aiProductPhotographyBuiltForGrids.ts` already lists the 8 imageIds you provided. But `CategoryBuiltForEveryCategory` resolves each card via `resolveSlotImageUrl`, which checks `seo_page_visuals` (admin overrides) FIRST. There are 6 stale override rows for this page pinning slots 1, 2, 3, 4, 6, 8 to the old necklace images — so those keep showing regardless of the data file.
 
-Labels resolved against `product_image_scenes` for accessibility. No other sections, pills, or files touched.
+Existing override rows on `page_route = /ai-product-photography/jewelry`:
+- `builtFor_necklaces_1` → 1776243895901-oddcm2
+- `builtFor_necklaces_2` → 1776243907007-f0mhvm
+- `builtFor_necklaces_3` → 1776243905045-8aw72b
+- `builtFor_necklaces_4` → 1776243927613-381b7c
+- `builtFor_necklaces_6` → 1776243897922-iqre1y
+- `builtFor_necklaces_8` → 1776243920507-0krxkp
+
+## Change
+Run a single migration that deletes those 6 override rows so the cards fall back to the data file's imageIds (the 8 you specified, in the same order as before):
+
+```sql
+DELETE FROM public.seo_page_visuals
+WHERE page_route = '/ai-product-photography/jewelry'
+  AND slot_key IN (
+    'builtFor_necklaces_1',
+    'builtFor_necklaces_2',
+    'builtFor_necklaces_3',
+    'builtFor_necklaces_4',
+    'builtFor_necklaces_6',
+    'builtFor_necklaces_8'
+  );
+```
+
+No code changes — the data file already contains the correct 8 visuals.
+
+## Out of scope
+- Other pills (Rings, Earrings, Bracelets) and other pages are not touched.
+- No changes to `src/data/aiProductPhotographyCategoryPages.ts` Scene Examples tile.
