@@ -970,6 +970,8 @@ UGC-style shots — the unposed, candid, "my friend took this" look — convert 
 
 These narrative shots — espresso on the villa terrace, morning swim, the walk back from the beach — are what turn a swimwear brand into an aspiration. They are also the most expensive shots to produce traditionally. AI flips that economics entirely.
 
+![Three swimwear scenes generated from a single product upload](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779343672535-j0u73e.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779347039851-qiw1ib.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779344965626-u2ro8h.jpg)
+
 ## The honest cost comparison
 
 A 60-SKU swimwear drop, 5 images per SKU = 300 images.
