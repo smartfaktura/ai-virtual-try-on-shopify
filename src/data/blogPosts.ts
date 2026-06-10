@@ -915,7 +915,7 @@ VOVV offers [flexible plans](/pricing) starting with free credits. Most images c
     author: 'VOVV.AI Team',
     readTime: '8 min read',
     category: 'AI Photography',
-    excerpt: 'A swimwear founder we spoke to budgeted $42,000 for a 4-day Mykonos shoot — flights, villa, model, photographer, glam. Then she shot the entire SS26 campaign for $180 in AI credits. Here is exactly how.',
+    excerpt: 'A swimwear founder we spoke to budgeted $42,000 for a 4-day Mykonos shoot — flights, villa, model, photographer, glam. Then she shot the entire SS26 campaign on a VOVV.AI plan that starts at $39/mo. Here is exactly how.',
     tags: ['AI swimwear photography', 'swimwear product photos', 'resort campaign photography', 'swimwear lookbook', 'beach product photography', 'DTC swimwear marketing'],
     coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779343672535-j0u73e.jpg',
     coverImages: [
@@ -930,7 +930,7 @@ Every January, swimwear founders start the same panicked calculation. The summer
 
 For most DTC swimwear brands under $5M in revenue, that math simply does not work.
 
-> **The shift:** AI swimwear photography produces editorial resort campaigns, beach UGC, and PDP angles from a single product flat-lay — at roughly $2–$5 per generated image instead of $400–$800 per shot location.
+> **The shift:** AI swimwear photography produces editorial resort campaigns, beach UGC, and PDP angles from a single product flat-lay — on [VOVV.AI plans starting at $39/mo](/pricing) instead of $400–$800 per shot location.
 
 This is not a downgrade. The brands doing it well — and there are dozens now — are producing campaigns that read more polished than the agency work they replaced.
 
@@ -976,13 +976,13 @@ A 60-SKU swimwear drop, 5 images per SKU = 300 images.
 
 | | Mykonos shoot | AI swimwear photography |
 |---|---|---|
-| **Total cost** | $38,000–$52,000 | $900–$1,500 |
+| **Total cost** | $38,000–$52,000 | From $39/mo on a [VOVV.AI plan](/pricing) |
 | **Timeline** | 6–10 weeks | 2–4 days |
-| **Reshoots / variations** | $$$ each | Included |
+| **Reshoots / variations** | $$$ each | Included in your monthly credits |
 | **Aspect ratios** | Re-crop manually | Auto-generated for IG, TikTok, Shopify, Amazon |
 | **Inventory risk** | Sample must exist | Generate before samples arrive |
 
-The reshoot line is the silent killer. Traditional shoots produce what they produce. AI lets you test 12 background variations of the same product, kill the losers, and double down on the converter — all in an afternoon.
+Plans start at **$39/mo** with monthly credits that cover a full small-brand drop; higher tiers ($79, $179) add more credits and seats. The reshoot line is the silent killer. Traditional shoots produce what they produce. AI lets you test 12 background variations of the same product, kill the losers, and double down on the converter — all in an afternoon.
 
 ## What AI still cannot do well for swimwear
 
