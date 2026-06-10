@@ -1161,7 +1161,7 @@ Set up a Brand Profile once with your lighting, background, and styling rules �
     author: 'VOVV.AI Team',
     readTime: '9 min read',
     category: 'AI Photography',
-    excerpt: 'A fashion founder we work with replaced her $58k SS26 editorial budget with $640 in AI credits — and the campaign tested higher on every Meta creative metric than the prior season. Here is the exact playbook.',
+    excerpt: 'A fashion founder we work with replaced her $58k SS26 editorial budget with a VOVV.AI plan starting at $39/mo — and the campaign tested higher on every Meta creative metric than the prior season. Here is the exact playbook.',
     tags: ['AI fashion photography', 'fashion product images AI', 'on-model fashion photography', 'AI fashion editorial', 'fashion ecommerce photography', 'DTC fashion marketing'],
     coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664933175-rjlbn6.jpg',
     coverImages: [
@@ -1230,9 +1230,9 @@ A typical SS drop: 35 SKUs, 6 images each = 210 images.
 
 | | Traditional production | AI fashion photography |
 |---|---|---|
-| **Production cost** | $42,000–$68,000 | $700–$1,400 |
+| **Production cost** | $42,000–$68,000 | From $39/mo on a [VOVV.AI plan](/pricing) |
 | **Timeline** | 8–12 weeks | 3–5 days |
-| **Reshoots** | Per-shot fee | Included |
+| **Reshoots** | Per-shot fee | Included in your monthly credits |
 | **Aspect ratios** | Manual recrops | Auto for IG, TikTok, Shopify, Pinterest, Amazon |
 | **Add a new colorway in season** | New shoot day | One generation |
 
@@ -1266,7 +1266,7 @@ For the catalog, the campaign, the PDP, and the social calendar, AI is the smart
 4. **Compare to your current listing imagery** — quality, conversion potential, aesthetic fit
 5. **Roll out to the catalog** with a saved Brand Profile
 
-Every new account starts with free credits. Most brands generate their first comparable test set inside an hour.
+Every new account starts with free credits. Most brands generate their first comparable test set inside an hour. Paid [VOVV.AI plans start at $39/mo](/pricing), with $79 and $179 tiers for higher-volume catalogs.
 
 ---
 
