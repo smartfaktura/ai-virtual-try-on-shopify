@@ -1003,7 +1003,9 @@ For the other 80% of swimwear visuals — campaign, PDP, lifestyle, social — A
 3. **Generate 5–8 variations** of your hero SKU first to feel the quality
 4. **Bulk-run the whole drop** once you are confident — see our guide to [automated product listing images at scale](/blog/automated-product-listing-images-at-scale)
 
-Every new account starts with free credits, enough to produce a full mini-campaign for your top SKU and compare it to your current listing imagery before committing.
+Every new account starts with free credits, enough to produce a full mini-campaign for your top SKU and compare it to your current listing imagery before committing. Paid [VOVV.AI plans start at $39/mo](/pricing).
+
+![Two swimwear editorial scenes side by side](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779346999911-klrly1.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779347030368-pgte54.jpg)
 
 ---
 
