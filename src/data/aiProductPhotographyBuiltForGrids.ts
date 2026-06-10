@@ -930,28 +930,28 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
           "imageId": "1781096215251-97khdq"
         },
         {
-          "label": "Waterlight Necklace Campaign",
-          "imageId": "1781096555232-uq7jqb"
+          "label": "Hand & Neck Crop",
+          "imageId": "1781096209858-839zxz"
         },
         {
-          "label": "Side Profile Gold Necklace",
-          "imageId": "1781097562540-o5v2wt"
+          "label": "Sunlit Necklace Laugh Portrait",
+          "imageId": "1781079803994-j0qytc"
         },
         {
-          "label": "Mediterranean Sun Necklace",
-          "imageId": "1781079796604-6n66k3"
-        },
-        {
-          "label": "Golden Hour Choker Necklace",
-          "imageId": "1781079791470-exagx8"
-        },
-        {
-          "label": "Sea Glow Necklace Portrait",
-          "imageId": "1781079799214-qbk8ai"
+          "label": "Floating Pendant Studio Hero",
+          "imageId": "1781095614795-0fm37e"
         },
         {
           "label": "Golden Coast Necklace Walk",
           "imageId": "1781079789093-0dauye"
+        },
+        {
+          "label": "Sun Shadow Necklace Portrait",
+          "imageId": "1781097565486-9ztlst"
+        },
+        {
+          "label": "Waterlight Necklace Campaign",
+          "imageId": "1781096555232-uq7jqb"
         }
       ]
     },
