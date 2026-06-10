@@ -2314,12 +2314,14 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
     {
       "subCategory": "Eyewear · Color Vintage",
       "cards": [
-        { "label": "Candy Flash",     "imageId": "1776102176417-iih747" },
-        { "label": "Sunset Drive",    "imageId": "1776102204479-9rlc0n" },
-        { "label": "Dessert Table",   "imageId": "1776102181320-jisnae" },
-        { "label": "Hotel Flash",     "imageId": "1776102187711-askbvg" },
-        { "label": "Office Story",    "imageId": "1776102196841-qahufa" },
-        { "label": "Summer Wall",     "imageId": "pool-wall-vintage-summer-eyewear-1776150336684" }
+        { "label": "Candy Flash",         "imageId": "1776102176417-iih747" },
+        { "label": "Sunset Drive",        "imageId": "1776102204479-9rlc0n" },
+        { "label": "Dessert Table",       "imageId": "1776102181320-jisnae" },
+        { "label": "Hotel Flash",         "imageId": "1776102187711-askbvg" },
+        { "label": "Office Story",        "imageId": "1776102196841-qahufa" },
+        { "label": "Summer Wall",         "imageId": "pool-wall-vintage-summer-eyewear-1776150336684" },
+        { "label": "Color Vintage Studio", "imageId": "1780509112937-eo400q" },
+        { "label": "Color Vintage Editorial", "imageId": "1780509114264-eb6aw7" }
       ]
     },
     {
