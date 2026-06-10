@@ -1,20 +1,27 @@
 ## Problem
 
-On `/ai-product-photography/jewelry`, the two necklace tiles in the "Scene Examples" grid (`Editorial Neck Portrait` and `Dark Campaign Necklace`) point at stale preview image IDs that no longer match the current scene library. The "Dark Campaign Necklace" scene was also renamed/removed.
+The "Built for every jewelry shot" section on `/ai-product-photography/jewelry` lives in `src/data/aiProductPhotographyBuiltForGrids.ts` (`"jewelry"` block, lines 920–end-of-jewelry). The `Necklaces · Editorial` pill still references 8 stale `imageId`s (`1776243…`) that point at retired previews. Also, `Necklaces` is the 2nd pill — user wants it first.
 
 ## Fix
 
-In `src/data/aiProductPhotographyCategoryPages.ts` (jewelry block, `sceneExamples` array, lines 486–487), replace the two necklace entries with current scenes pulled from the two subcategories the user requested — **Editorial Neck Studio** and **LIFESTYLE EDITORIAL** — using their real `preview_image_url` IDs.
+In `src/data/aiProductPhotographyBuiltForGrids.ts`, inside the `"jewelry"` array:
 
-| Slot | Label | Subcategory | New imageId |
+1. **Reorder pills** so the order is: **Necklaces · Editorial → Rings · Editorial → Earrings · Editorial → Bracelets · Editorial**.
+2. **Replace all 8 cards** under `Necklaces · Editorial` with current scenes from the two subcategories the user previously called out (Editorial Neck Studio + Lifestyle Editorial), using real `preview_image_url` IDs verified in `product_image_scenes`:
+
+| # | Label | Source subcategory | imageId |
 |---|---|---|---|
 | 1 | Editorial Neck Portrait | Editorial Neck Studio | `1781094448800-p8owdm` |
-| 2 | Mediterranean Sun Necklace | LIFESTYLE EDITORIAL | `1781079796604-6n66k3` |
+| 2 | Seated Necklace Editorial | Editorial Neck Studio | `1781094452666-qbkiuy` |
+| 3 | Shadowed Face Necklace | Editorial Neck Studio | `1781094456275-fuzt62` |
+| 4 | Sunlit Collarbone Necklace | Editorial Neck Studio | `1781094463108-3v36ur` |
+| 5 | Mediterranean Sun Necklace | Lifestyle Editorial | `1781079796604-6n66k3` |
+| 6 | Golden Hour Choker Necklace | Lifestyle Editorial | `1781079791470-exagx8` |
+| 7 | Sea Glow Necklace Portrait | Lifestyle Editorial | `1781079799214-qbk8ai` |
+| 8 | Golden Coast Necklace Walk | Lifestyle Editorial | `1781079789093-0dauye` |
 
-All other tiles (rings, earrings, bracelets) stay unchanged. Alt text and labels updated to match new scenes.
+No other categories or sections are touched. Pill labels for Rings/Earrings/Bracelets stay unchanged.
 
 ## Files touched
 
-- `src/data/aiProductPhotographyCategoryPages.ts` — 2 line edits inside the jewelry `sceneExamples`.
-
-No other components, hero image, or copy changes.
+- `src/data/aiProductPhotographyBuiltForGrids.ts` — reorder `jewelry` groups; rewrite `Necklaces · Editorial` cards.

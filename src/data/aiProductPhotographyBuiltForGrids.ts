@@ -919,6 +919,43 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "jewelry": [
     {
+      "subCategory": "Necklaces · Editorial",
+      "cards": [
+        {
+          "label": "Editorial Neck Portrait",
+          "imageId": "1781094448800-p8owdm"
+        },
+        {
+          "label": "Seated Necklace Editorial",
+          "imageId": "1781094452666-qbkiuy"
+        },
+        {
+          "label": "Shadowed Face Necklace",
+          "imageId": "1781094456275-fuzt62"
+        },
+        {
+          "label": "Sunlit Collarbone Necklace",
+          "imageId": "1781094463108-3v36ur"
+        },
+        {
+          "label": "Mediterranean Sun Necklace",
+          "imageId": "1781079796604-6n66k3"
+        },
+        {
+          "label": "Golden Hour Choker Necklace",
+          "imageId": "1781079791470-exagx8"
+        },
+        {
+          "label": "Sea Glow Necklace Portrait",
+          "imageId": "1781079799214-qbk8ai"
+        },
+        {
+          "label": "Golden Coast Necklace Walk",
+          "imageId": "1781079789093-0dauye"
+        }
+      ]
+    },
+    {
       "subCategory": "Rings · Editorial",
       "cards": [
         {
@@ -952,43 +989,6 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         {
           "label": "Reflective Floral Display",
           "imageId": "1776848683482-msco41"
-        }
-      ]
-    },
-    {
-      "subCategory": "Necklaces · Editorial",
-      "cards": [
-        {
-          "label": "Color Necklace Portrait",
-          "imageId": "1776243900784-nu8sf2"
-        },
-        {
-          "label": "Color Necklace Still Life",
-          "imageId": "1776243901906-gxqm06"
-        },
-        {
-          "label": "Color Draped Necklace",
-          "imageId": "1776243899803-cyk3pa"
-        },
-        {
-          "label": "Color Sculptural Necklace",
-          "imageId": "1776243902934-5cvjwf"
-        },
-        {
-          "label": "Dark Campaign Necklace",
-          "imageId": "1776243903909-thrg8i"
-        },
-        {
-          "label": "Sunlit Necklace Glow",
-          "imageId": "1776243927613-381b7c"
-        },
-        {
-          "label": "Waterlight Necklace Campaign",
-          "imageId": "1776243929585-ly2diw"
-        },
-        {
-          "label": "Iconic Necklace Hero",
-          "imageId": "1776243911073-nyyu8k"
         }
       ]
     },
