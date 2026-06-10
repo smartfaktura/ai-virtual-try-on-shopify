@@ -6,6 +6,7 @@ const columns = [
     links: [
       { label: 'Pricing', to: '/pricing' },
       { label: 'Examples', to: '/discover' },
+      { label: 'AI bag photography', to: '/ai-product-photography/bags' },
       { label: 'Changelog', to: '/changelog' },
     ],
   },
