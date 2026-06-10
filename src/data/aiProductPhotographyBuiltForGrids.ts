@@ -922,20 +922,20 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
       "subCategory": "Necklaces · Editorial",
       "cards": [
         {
-          "label": "Editorial Neck Portrait",
-          "imageId": "1781094448800-p8owdm"
+          "label": "Collarbone Closeup",
+          "imageId": "1781096206479-c2y9uk"
         },
         {
-          "label": "Seated Necklace Editorial",
-          "imageId": "1781094452666-qbkiuy"
+          "label": "Open Shirt Necklace",
+          "imageId": "1781096215251-97khdq"
         },
         {
-          "label": "Shadowed Face Necklace",
-          "imageId": "1781094456275-fuzt62"
+          "label": "Waterlight Necklace Campaign",
+          "imageId": "1781096555232-uq7jqb"
         },
         {
-          "label": "Sunlit Collarbone Necklace",
-          "imageId": "1781094463108-3v36ur"
+          "label": "Side Profile Gold Necklace",
+          "imageId": "1781097562540-o5v2wt"
         },
         {
           "label": "Mediterranean Sun Necklace",

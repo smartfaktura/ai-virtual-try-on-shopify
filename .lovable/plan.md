@@ -1,27 +1,23 @@
-## Problem
-
-The "Built for every jewelry shot" section on `/ai-product-photography/jewelry` lives in `src/data/aiProductPhotographyBuiltForGrids.ts` (`"jewelry"` block, lines 920–end-of-jewelry). The `Necklaces · Editorial` pill still references 8 stale `imageId`s (`1776243…`) that point at retired previews. Also, `Necklaces` is the 2nd pill — user wants it first.
-
 ## Fix
 
-In `src/data/aiProductPhotographyBuiltForGrids.ts`, inside the `"jewelry"` array:
+Rewrite the 8 cards under `Necklaces · Editorial` in `src/data/aiProductPhotographyBuiltForGrids.ts` using only `Collarbone & Body Crops` (4) + `LIFESTYLE EDITORIAL` (4) — drop all `1781094…` Editorial Neck Studio IDs.
 
-1. **Reorder pills** so the order is: **Necklaces · Editorial → Rings · Editorial → Earrings · Editorial → Bracelets · Editorial**.
-2. **Replace all 8 cards** under `Necklaces · Editorial` with current scenes from the two subcategories the user previously called out (Editorial Neck Studio + Lifestyle Editorial), using real `preview_image_url` IDs verified in `product_image_scenes`:
-
-| # | Label | Source subcategory | imageId |
+| # | Label | Subcategory | imageId |
 |---|---|---|---|
-| 1 | Editorial Neck Portrait | Editorial Neck Studio | `1781094448800-p8owdm` |
-| 2 | Seated Necklace Editorial | Editorial Neck Studio | `1781094452666-qbkiuy` |
-| 3 | Shadowed Face Necklace | Editorial Neck Studio | `1781094456275-fuzt62` |
-| 4 | Sunlit Collarbone Necklace | Editorial Neck Studio | `1781094463108-3v36ur` |
+| 1 | Collarbone Closeup | Collarbone & Body Crops | `1781096206479-c2y9uk` |
+| 2 | Open Shirt Necklace | Collarbone & Body Crops | `1781096215251-97khdq` |
+| 3 | Waterlight Necklace Campaign | Collarbone & Body Crops | `1781096555232-uq7jqb` |
+| 4 | Side Profile Gold Necklace | Collarbone & Body Crops | `1781097562540-o5v2wt` |
 | 5 | Mediterranean Sun Necklace | Lifestyle Editorial | `1781079796604-6n66k3` |
 | 6 | Golden Hour Choker Necklace | Lifestyle Editorial | `1781079791470-exagx8` |
 | 7 | Sea Glow Necklace Portrait | Lifestyle Editorial | `1781079799214-qbk8ai` |
 | 8 | Golden Coast Necklace Walk | Lifestyle Editorial | `1781079789093-0dauye` |
 
-No other categories or sections are touched. Pill labels for Rings/Earrings/Bracelets stay unchanged.
+Also update the necklace scene tile in `src/data/aiProductPhotographyCategoryPages.ts:486` (currently uses `1781094448800-p8owdm` Editorial Neck Studio) → replace with `Collarbone Closeup` (`1781096206479-c2y9uk`, `Collarbone & Body Crops`) so the Scene Examples row also pulls from the two requested subcategories.
 
-## Files touched
+Necklaces stays first pill. No other groups touched.
 
-- `src/data/aiProductPhotographyBuiltForGrids.ts` — reorder `jewelry` groups; rewrite `Necklaces · Editorial` cards.
+## Files
+
+- `src/data/aiProductPhotographyBuiltForGrids.ts` — rewrite Necklaces cards
+- `src/data/aiProductPhotographyCategoryPages.ts` — swap one scene tile (line 486)
