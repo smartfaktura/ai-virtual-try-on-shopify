@@ -1728,187 +1728,78 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
     {
       "subCategory": "Supplements · Essential Shots",
       "cards": [
-        {
-          "label": "Front View",
-          "imageId": "1776247484304-xpwv5f"
-        },
-        {
-          "label": "In-Hand Studio",
-          "imageId": "1776247486394-r95qn0"
-        },
-        {
-          "label": "Capsule / Tablet Spill",
-          "imageId": "1776247474402-h90732"
-        },
-        {
-          "label": "Close-Up Detail",
-          "imageId": "1776247476167-fwn0so"
-        },
-        {
-          "label": "In-Hand Lifestyle",
-          "imageId": "1776247470649-211k4n"
-        },
-        {
-          "label": "Product + Packaging",
-          "imageId": "1776247495950-u5fsgi"
-        },
-        {
-          "label": "Back View",
-          "imageId": "1776247472438-n0hb3j"
-        },
-        {
-          "label": "Packaging Detail",
-          "imageId": "1776247493080-1uim2g"
-        }
+        { "label": "Front View",            "imageId": "1776247484304-xpwv5f" },
+        { "label": "In-Hand Studio",        "imageId": "1779910755432-21l309" },
+        { "label": "Capsule / Tablet Spill", "imageId": "1776247474402-h90732" },
+        { "label": "Close-Up Detail",       "imageId": "1779905509869-u14whg" },
+        { "label": "In-Hand Lifestyle",     "imageId": "1776247470649-211k4n" },
+        { "label": "Product + Packaging",   "imageId": "1776247495950-u5fsgi" },
+        { "label": "Back View",             "imageId": "1776247472438-n0hb3j" },
+        { "label": "Hard Shadow Hero",      "imageId": "1776247469759-qxzi7i" }
       ]
     },
     {
       "subCategory": "Supplements · Editorial Routine",
       "cards": [
-        {
-          "label": "Morning Counter Ritual",
-          "imageId": "1776247491181-ox42m3"
-        },
-        {
-          "label": "Hand and Water Ritual",
-          "imageId": "1776247468839-d6f55j"
-        },
-        {
-          "label": "Dose Preparation Editorial",
-          "imageId": "1776247483431-4i3gbx"
-        },
-        {
-          "label": "Shelf Wellness Portrait",
-          "imageId": "1776247497983-q02i5n"
-        },
-        {
-          "label": "Sinkside Wellness Composition",
-          "imageId": "1776247499852-jy1uxk"
-        },
-        {
-          "label": "Wellness Tray Ritual",
-          "imageId": "1776247504806-p9xhhn"
-        }
+        { "label": "Soft Ritual Hold",          "imageId": "1779945336044-l182le" },
+        { "label": "Pure Joy Glow",             "imageId": "1779945504810-74fe51" },
+        { "label": "Glossed Wellness Close-Up", "imageId": "1779910171858-94bets" },
+        { "label": "Sunlit Ritual Hand Hold",   "imageId": "1779911299275-6ksf6d" },
+        { "label": "Morning Counter Ritual",    "imageId": "1776247491181-ox42m3" },
+        { "label": "Hand and Water Ritual",     "imageId": "1779905512135-aizrz3" },
+        { "label": "Bathroom Wellness Routine", "imageId": "1779911327701-tfqf0y" },
+        { "label": "Wellness Tray Ritual",      "imageId": "1776247504806-p9xhhn" }
       ]
     },
     {
       "subCategory": "Supplements · Aesthetic Color",
       "cards": [
-        {
-          "label": "Color Counter Ritual",
-          "imageId": "1776247477107-2sx6jy"
-        },
-        {
-          "label": "Color Kitchen Wellness Story",
-          "imageId": "1776247479746-ylu66u"
-        },
-        {
-          "label": "Color Surface Still Life",
-          "imageId": "1776247481534-5bm91q"
-        },
-        {
-          "label": "Color Reflection Wellness Mood",
-          "imageId": "1776247480618-yn2o7d"
-        },
-        {
-          "label": "Color Tray Ritual Hero",
-          "imageId": "1776247482493-qkcc0s"
-        },
-        {
-          "label": "Color Hero Campaign Wellness",
-          "imageId": "1776247478611-ci4c06"
-        }
+        { "label": "Color Counter Ritual",         "imageId": "1776247477107-2sx6jy" },
+        { "label": "Color Kitchen Wellness Story", "imageId": "1776247479746-ylu66u" },
+        { "label": "Color Surface Still Life",     "imageId": "1776247481534-5bm91q" },
+        { "label": "Color Reflection Wellness Mood", "imageId": "1776247480618-yn2o7d" },
+        { "label": "Color Tray Ritual Hero",       "imageId": "1776247482493-qkcc0s" },
+        { "label": "Color Hero Campaign Wellness", "imageId": "1776247478611-ci4c06" }
       ]
     },
     {
       "subCategory": "Supplements · Still Life",
       "cards": [
-        {
-          "label": "Powder and Scoop Still",
-          "imageId": "1776247494837-xnpgly"
-        },
-        {
-          "label": "Ingredient Pairing Surface Story",
-          "imageId": "1776247487257-g59840"
-        },
-        {
-          "label": "Capsule Dish and Tray Composition",
-          "imageId": "1776247473530-9wnkc6"
-        },
-        {
-          "label": "Clean Product and Water Glass Still",
-          "imageId": "1776247475327-k7tdfv"
-        },
-        {
-          "label": "Macro Wellness Detail Still",
-          "imageId": "1776247489924-ygkka7"
-        }
+        { "label": "Powder and Scoop Still",            "imageId": "1776247494837-xnpgly" },
+        { "label": "Ingredient Pairing Surface Story",  "imageId": "1776247487257-g59840" },
+        { "label": "Capsule Dish and Tray Composition", "imageId": "1776247473530-9wnkc6" },
+        { "label": "Clean Product and Water Glass Still", "imageId": "1776247475327-k7tdfv" },
+        { "label": "Macro Wellness Detail Still",       "imageId": "1776247489924-ygkka7" }
       ]
     },
     {
       "subCategory": "Supplements · Daily UGC",
       "cards": [
-        {
-          "label": "Kitchen Counter Daily Use",
-          "imageId": "1776247488148-hdz2kj"
-        },
-        {
-          "label": "Post-Workout Routine",
-          "imageId": "1776247493970-vykoas"
-        },
-        {
-          "label": "Workday Wellness Break",
-          "imageId": "1776247506258-6b04vh"
-        },
-        {
-          "label": "Smoothie or Mix Prep Lifestyle",
-          "imageId": "1776247500821-de5jji"
-        },
-        {
-          "label": "Travel or On-the-Go Wellness",
-          "imageId": "1776247503038-0h5iah"
-        },
-        {
-          "label": "Handheld Daily Wellness Moment",
-          "imageId": "1776247485158-xe02s0"
-        }
+        { "label": "Kitchen Counter Daily Use",      "imageId": "1776247488148-hdz2kj" },
+        { "label": "Workday Wellness Break",         "imageId": "1776247506258-6b04vh" },
+        { "label": "Travel or On-the-Go Wellness",   "imageId": "1776247503038-0h5iah" },
+        { "label": "Handheld Daily Wellness Moment", "imageId": "1776247485158-xe02s0" }
+      ]
+    },
+    {
+      "subCategory": "Supplements · Outdoor Editorial",
+      "cards": [
+        { "label": "Coastal Cliff",               "imageId": "1779910172676-4krpnw" },
+        { "label": "Coastal Wellness Ritual",     "imageId": "1779910754703-82fde9" },
+        { "label": "Beachside Supplement Ritual", "imageId": "1779911321508-v9n6qu" }
       ]
     },
     {
       "subCategory": "Supplements · Creative Shots",
       "cards": [
-        {
-          "label": "Natural Light Backdrop",
-          "imageId": "1776856582781-grdk0o"
-        },
-        {
-          "label": "Sunny Shadows",
-          "imageId": "1776856586561-9ekfcs"
-        },
-        {
-          "label": "Red Gradient Embrace",
-          "imageId": "1776856584876-12tw9v"
-        },
-        {
-          "label": "Earthy Minimal Shadows",
-          "imageId": "1775136153833-abw8j5"
-        },
-        {
-          "label": "Earthy Glow Stage",
-          "imageId": "1775135707468-egh405"
-        },
-        {
-          "label": "Gradient Backdrop Elegance",
-          "imageId": "1776856581773-y0p48h"
-        },
-        {
-          "label": "Frozen Surface Product",
-          "imageId": "1776856580364-9fpith"
-        },
-        {
-          "label": "Dynamic Water Splash",
-          "imageId": "1775132044712-m8fods"
-        }
+        { "label": "Sky Product Portrait",     "imageId": "1779908989824-srme6q" },
+        { "label": "Brutalist Concrete",       "imageId": "1779910171054-jwwlkk" },
+        { "label": "Volcanic Sunset",          "imageId": "1776856588457-a5mm5p" },
+        { "label": "Dynamic Water Splash",     "imageId": "1779911308975-vu8f3s" },
+        { "label": "Earthy Botanicals Plinth", "imageId": "1779905513555-gve18i" },
+        { "label": "Frozen Aura",              "imageId": "1776856579533-jtra0z" },
+        { "label": "Sunny Shadows",            "imageId": "1776856586561-9ekfcs" },
+        { "label": "Warm Neutral Studio",      "imageId": "1776856589768-ldrmt8" }
       ]
     }
   ],

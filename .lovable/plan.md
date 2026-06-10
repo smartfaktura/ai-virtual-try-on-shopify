@@ -1,39 +1,52 @@
 ## Goal
 
-Update the `/ai-product-photography/supplements-wellness` page to feature the new wellness scenes now live in the Product Visual Library (family=wellness), replacing the older imagery currently rendered in the hero and "Scene examples" grid.
+Rebuild the "Built for every supplements & wellness shot" chip rail + grids on `/ai-product-photography/supplements-wellness` so the chips and the 8-image grids beneath each chip match the **current** state of the wellness library (which now has 60 scenes across 7 sub-categories, including the new Outdoor Editorial set and many new Editorial Wellness Routine / Creative Shots).
 
-## What changes
+## Why it's wrong today
 
-Single file edit: `src/data/aiProductPhotographyCategoryPages.ts` — the `supplements-wellness` entry (currently lines 762–833). Everything else (copy, SEO, FAQs, related categories) stays the same.
+`src/data/aiProductPhotographyBuiltForGrids.ts` `supplements-wellness` block is stale:
+- Missing the new **Outdoor Editorial** chip (3 new coastal scenes)
+- "Editorial Routine" chip still shows the 6 older shots, missing 7 new editorial routine scenes (Soft Ritual Hold, Pure Joy Glow, Sunlit Ritual Hand Hold, Glossed Wellness Close-Up, Bathroom Wellness Routine, Clean Profile Wellness Hold, Joyful Active Beauty Hold)
+- "Creative Shots" chip references some old scene IDs but misses new ones (Sky Product Portrait, Brutalist Concrete, Volcanic Sunset, Earthy Botanicals Plinth, etc.) and contains 2 IDs no longer in the live library (`1775135707468-egh405`, `1775132044712-m8fods`)
+- "Essential Shots" still has `1776247486394-r95qn0` and `1776247476167-fwn0so` which are no longer in the active wellness library (replaced with Hard Shadow Hero, new In-Hand Studio, new Close-Up Detail)
+- Daily UGC has a stale `Post-Workout Routine` and `Smoothie or Mix Prep Lifestyle` (no longer active) — only 4 daily UGC scenes are live now
 
-### Hero image
-- `heroImageId`: replace `1776247491181-ox42m3` with `1779945336044-l182le` (new "Soft Ritual Hold" — editorial wellness routine, warm hand-held bottle).
-- Update `heroAlt` to match.
+## What changes (single file)
 
-### Scene examples grid (8 tiles)
-Swap all 8 to a curated mix of the new wellness library scenes, balanced across sub-categories:
+Replace the `"supplements-wellness": [...]` block (lines 1727–1914) of `src/data/aiProductPhotographyBuiltForGrids.ts` with 7 chip groups, in this order. All `subCategory` values keep the `"Supplements · {Style}"` prefix so `splitLabel` produces short, single-word-ish chips ("Essential Shots", "Editorial Routine", …) — same convention used across all other categories.
 
-| # | Label | Sub-category | New imageId | Source title |
-|---|---|---|---|---|
-| 1 | Soft Ritual Hold | Editorial Wellness Routine | `1779945336044-l182le` | Soft Ritual Hold |
-| 2 | Pure Joy Glow | Editorial Wellness Routine | `1779945504810-74fe51` | Pure Joy Glow |
-| 3 | Glossed Wellness Close-Up | Editorial Wellness Routine | `1779910171858-94bets` | Glossed Wellness Close-Up |
-| 4 | Sunlit Ritual Hand Hold | Editorial Wellness Routine | `1779911299275-6ksf6d` | Sunlit Ritual Hand Hold |
-| 5 | Coastal Cliff | Outdoor Editorial | `1779910172676-4krpnw` | Coastal Cliff |
-| 6 | Beachside Supplement Ritual | Outdoor Editorial | `1779911321508-v9n6qu` | Beachside Supplement Ritual |
-| 7 | Sky Product Portrait | Creative Shots | `1779908989824-srme6q` | Sky Product Portrait |
-| 8 | Brutalist Concrete | Creative Shots | `1779910171054-jwwlkk` | Brutalist Concrete |
+Each group capped at 8 cards (matches the live grid). New / refreshed list (all IDs verified live in DB):
 
-Each tile keeps `collectionLabel: 'Supplements & Wellness'`, gets a fresh `alt` describing the scene, and the existing `subcategories` array gets `'Outdoor Editorial'` appended so the new theme is reflected in the on-page chip list.
+### 1. Supplements · Essential Shots (8)
+Front View · In-Hand Studio · Capsule / Tablet Spill · Close-Up Detail · In-Hand Lifestyle · Product + Packaging · Back View · Hard Shadow Hero
+
+### 2. Supplements · Editorial Routine (8 of 13 — newest first)
+Soft Ritual Hold · Pure Joy Glow · Glossed Wellness Close-Up · Sunlit Ritual Hand Hold · Morning Counter Ritual · Hand and Water Ritual · Bathroom Wellness Routine · Wellness Tray Ritual
+
+### 3. Supplements · Aesthetic Color (6 — all live)
+Color Counter Ritual · Color Kitchen Wellness Story · Color Surface Still Life · Color Reflection Wellness Mood · Color Tray Ritual Hero · Color Hero Campaign Wellness
+
+### 4. Supplements · Still Life (5 — all live)
+Powder and Scoop Still · Ingredient Pairing Surface Story · Capsule Dish and Tray Composition · Clean Product and Water Glass Still · Macro Wellness Detail Still
+
+### 5. Supplements · Daily UGC (4 — all live)
+Kitchen Counter Daily Use · Workday Wellness Break · Travel or On-the-Go Wellness · Handheld Daily Wellness Moment
+
+### 6. Supplements · Outdoor Editorial (3 — NEW chip)
+Coastal Cliff · Coastal Wellness Ritual · Beachside Supplement Ritual
+
+### 7. Supplements · Creative Shots (8 of 21 — curated mix new + classics)
+Sky Product Portrait · Brutalist Concrete · Volcanic Sunset · Dynamic Water Splash · Earthy Botanicals Plinth · Frozen Aura · Sunny Shadows · Warm Neutral Studio
 
 ## Technical notes
 
-- `imageId` is the bare filename (no extension) consumed by `PREVIEW(id)` in the same file, which builds the `scene-previews/{id}.jpg` URL. All 9 chosen IDs are `.jpg` (no PNG-list entry needed).
-- No schema, RLS, or component changes — only data array edits.
-- The Visual Library page (`/product-visual-library`) is unaffected; it reads directly from `product_image_scenes`.
+- Chip labels come from `splitLabel(subCategory).subject`. The grid resolver auto-strips the shared "Supplements" prefix because all 7 entries share it (`singleSubject` branch in `getBuiltForGroupsForPage`). Result: chip rail reads `Essential Shots · Editorial Routine · Aesthetic Color · Still Life · Daily UGC · Outdoor Editorial · Creative Shots`.
+- All `imageId` values are the `scene-previews/{id}.jpg` filename (no extension); `PREVIEW(id)` builds the URL. None are in the PNG list — all `.jpg`.
+- Admin SEO overrides are keyed by `builtFor_{slot-slug}_{n}`. Renaming/reordering creates new slot keys, so any existing per-slot admin overrides for old wellness slots become orphaned — they don't break anything (the page falls back to the new defaults).
+- The file header says "AUTO-GENERATED" by `scripts/build_category_grids.py`. We're hand-editing only the wellness block because the live library is the source of truth and the script hasn't been re-run since the new scenes shipped. If the script is run later, it should regenerate this same block from the DB.
 
 ## Out of scope
 
-- No new heroCollage section (this page intentionally uses a single hero image).
-- Copy, FAQs, SEO meta, and related-categories stay untouched.
-- If you want different specific scenes from the wellness family swapped in, share the titles and I'll restructure the table before building.
+- No layout/component changes (`CategoryBuiltForEveryCategory.tsx` already supports any chip count).
+- Other categories (`fashion`, `electronics-gadgets`, etc.) untouched.
+- The `sceneExamples` and `heroImageId` on the supplements-wellness page were already refreshed in the previous turn — unchanged here.
