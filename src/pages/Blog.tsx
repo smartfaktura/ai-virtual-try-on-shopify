@@ -226,7 +226,18 @@ export default function Blog() {
                 <Link to={`/blog/${featured.slug}`} className="block group mb-8 sm:mb-12">
                   <article className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-[#f0efed] shadow-sm hover:shadow-md transition-all">
                     <div className="relative">
-                      {featured.coverImage ? (
+                      {featured.coverImages && featured.coverImages.length === 3 ? (
+                        <div className="relative w-full aspect-[16/10] sm:aspect-[2.2/1] overflow-hidden grid grid-cols-3 gap-0.5 bg-[#f0efed]">
+                          {featured.coverImages.map((src, i) => (
+                            <ShimmerImage
+                              key={i}
+                              src={src}
+                              alt={`${featured.title} — ${i + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                            />
+                          ))}
+                        </div>
+                      ) : featured.coverImage ? (
                         <div className="relative w-full aspect-[16/10] sm:aspect-[2.2/1] overflow-hidden">
                           <ShimmerImage
                             src={featured.coverImage}
@@ -281,7 +292,18 @@ export default function Blog() {
                   {rest.map((post) => (
                     <Link key={post.slug} to={`/blog/${post.slug}`} className="block group">
                       <article className="relative h-full border border-[#f0efed] rounded-2xl bg-white hover:shadow-md transition-all overflow-hidden">
-                        {post.coverImage ? (
+                        {post.coverImages && post.coverImages.length === 3 ? (
+                          <div className="w-full aspect-[16/9] overflow-hidden grid grid-cols-3 gap-0.5 bg-[#f0efed]">
+                            {post.coverImages.map((src, i) => (
+                              <ShimmerImage
+                                key={i}
+                                src={src}
+                                alt={`${post.title} — ${i + 1}`}
+                                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                              />
+                            ))}
+                          </div>
+                        ) : post.coverImage ? (
                           <div className="w-full aspect-[16/9] overflow-hidden">
                             <ShimmerImage
                               src={post.coverImage}

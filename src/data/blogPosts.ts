@@ -18,6 +18,7 @@ export interface BlogPost {
   tags: string[];
   content: string;
   coverImage?: string;
+  coverImages?: string[];
 }
 
 export const blogPosts: BlogPost[] = [
@@ -917,6 +918,11 @@ VOVV offers [flexible plans](/pricing) starting with free credits. Most images c
     excerpt: 'A swimwear founder we spoke to budgeted $42,000 for a 4-day Mykonos shoot — flights, villa, model, photographer, glam. Then she shot the entire SS26 campaign for $180 in AI credits. Here is exactly how.',
     tags: ['AI swimwear photography', 'swimwear product photos', 'resort campaign photography', 'swimwear lookbook', 'beach product photography', 'DTC swimwear marketing'],
     coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779343672535-j0u73e.jpg',
+    coverImages: [
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779343672535-j0u73e.jpg',
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779346999911-klrly1.jpg',
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1779347030368-pgte54.jpg',
+    ],
     content: `
 ## The swimwear shoot that almost killed a brand
 
@@ -1029,6 +1035,11 @@ Increasingly yes. The disclosure norm in DTC has shifted — most buyers care ab
     excerpt: 'Bags are the trickiest category in product photography — reflective hardware, soft leather, complex shapes that look different from every angle. AI now handles all of it. Here is what a complete PDP set looks like.',
     tags: ['AI bag photography', 'handbag product photography', 'accessories photography', 'leather goods photography', 'PDP product images', 'bag campaign photography'],
     coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239449949-ygljai.jpg',
+    coverImages: [
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239449949-ygljai.jpg',
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239415973-p3m8bq.jpg',
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749559127-ra3hur.jpg',
+    ],
     content: `
 ## Why bag photography is the hardest category to fake
 
@@ -1145,6 +1156,11 @@ Set up a Brand Profile once with your lighting, background, and styling rules �
     excerpt: 'A fashion founder we work with replaced her $58k SS26 editorial budget with $640 in AI credits — and the campaign tested higher on every Meta creative metric than the prior season. Here is the exact playbook.',
     tags: ['AI fashion photography', 'fashion product images AI', 'on-model fashion photography', 'AI fashion editorial', 'fashion ecommerce photography', 'DTC fashion marketing'],
     coverImage: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664933175-rjlbn6.jpg',
+    coverImages: [
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776605969689-gsjfti.jpg',
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664933175-rjlbn6.jpg',
+      'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776664927729-9yr8is.jpg',
+    ],
     content: `
 ## The fashion brand math nobody wants to admit
 

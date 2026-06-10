@@ -224,7 +224,22 @@ export default function BlogPost() {
         </div>
 
         {/* Hero image — natural aspect, no forced crop, no overflow */}
-        {post.coverImage && (
+        {post.coverImages && post.coverImages.length === 3 ? (
+          <div className="max-w-[760px] mx-auto px-4 sm:px-6 -mt-6 sm:-mt-10 relative z-10">
+            <div className="rounded-2xl overflow-hidden border border-[#f0efed] shadow-sm bg-[#f5f4f1] grid grid-cols-3 gap-0.5 aspect-[16/10]">
+              {post.coverImages.map((src, i) => (
+                <ShimmerImage
+                  key={i}
+                  src={getOptimizedUrl(src, { quality: 80 })}
+                  alt={`${post.title} — ${i + 1}`}
+                  className="block w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ))}
+            </div>
+          </div>
+        ) : post.coverImage && (
           <div className="max-w-[760px] mx-auto px-4 sm:px-6 -mt-6 sm:-mt-10 relative z-10">
             <div className="rounded-2xl overflow-hidden border border-[#f0efed] shadow-sm bg-[#f5f4f1]">
               <ShimmerImage
