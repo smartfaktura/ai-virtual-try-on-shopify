@@ -1016,7 +1016,7 @@ Yes. With Brand Profiles and saved model references, you can lock a recurring mo
 ### Do AI swimwear photos work for wholesale buyers and PR?
 
 Increasingly yes. The disclosure norm in DTC has shifted — most buyers care about the product fit and the creative direction, not the production method. A well-art-directed AI campaign reads more premium than a poorly-lit real shoot.
-\`,
+`,
   },
   {
     slug: 'ai-bag-photography-product-pages',
@@ -1132,7 +1132,7 @@ Yes. The images you generate are yours commercially with no licensing fees. We r
 ### How do I keep all my bag photos looking like one brand?
 
 Set up a Brand Profile once with your lighting, background, and styling rules — then apply it to every generation. The full pattern is covered in our [brand consistency guide](/blog/brand-consistency-ai-generated-visuals).
-\`,
+`,
   },
   {
     slug: 'ai-fashion-photography-ecommerce-brands',
@@ -1263,7 +1263,7 @@ The output is standard JPG/PNG in any aspect ratio you specify. Upload to Shopif
 ### Can I keep the same model across an entire seasonal campaign?
 
 Yes. Save a model identity in your Brand Profile and apply it to every garment in the drop. The same face, same body, different garments and scenes — exactly the consistency a traditional editorial shoot delivers, at a fraction of the cost.
-\`,
+`,
   },
 ];
 
