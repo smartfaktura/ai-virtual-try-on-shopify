@@ -117,6 +117,7 @@ export function CategoryBuiltForEveryCategory({ page }: { page: CategoryPage }) 
                   onClick={() => setActiveIdx(idx)}
                   className={cn(
                     'px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-sm font-medium transition-colors whitespace-nowrap border',
+                    idx >= 5 && 'hidden sm:inline-flex',
                     activeIdx === idx
                       ? 'bg-foreground text-background border-foreground shadow-sm'
                       : 'bg-muted/60 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted',
