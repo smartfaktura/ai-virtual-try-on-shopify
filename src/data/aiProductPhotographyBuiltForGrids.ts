@@ -2257,19 +2257,6 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
   ],
   "swimwear": [
     {
-      "subCategory": "Swimwear · Resort Editorial",
-      "cards": [
-        { "label": "Sunlit Arch Swim Editorial",        "imageId": "1776522810241-oh3lyd" },
-        { "label": "Sun Lounger Resort Pose",           "imageId": "1776246328634-fw8s9o" },
-        { "label": "Cabana Curtain Movement",           "imageId": "1776522770222-za8n2n" },
-        { "label": "Resort Staircase Pose",             "imageId": "1776246324066-hu5ob2" },
-        { "label": "Resort Bokeh Swim Editorial",       "imageId": "1776522789403-pnvcux" },
-        { "label": "Seated Balcony Resort Portrait",    "imageId": "1776246325971-mrh821" },
-        { "label": "Yacht Deck Editorial Pose",         "imageId": "1777996843133-j8fyxu" },
-        { "label": "Architectural Stair Swim Editorial","imageId": "1777996827311-gx5s9t" }
-      ]
-    },
-    {
       "subCategory": "Swimwear · Villa & Resort Mood",
       "cards": [
         { "label": "Private Villa Glow",        "imageId": "1779344972409-ntn94t" },
@@ -2302,6 +2289,19 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
         { "label": "Sun Chaser Girl",             "imageId": "1779348545288-6ot498" },
         { "label": "Golden Sand",                 "imageId": "1779344959426-hzoaie" },
         { "label": "Yacht Bow Swim Editorial",    "imageId": "1777996842051-0zknjz" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Resort Editorial",
+      "cards": [
+        { "label": "Sunlit Arch Swim Editorial",        "imageId": "1776522810241-oh3lyd" },
+        { "label": "Sun Lounger Resort Pose",           "imageId": "1776246328634-fw8s9o" },
+        { "label": "Cabana Curtain Movement",           "imageId": "1776522770222-za8n2n" },
+        { "label": "Resort Staircase Pose",             "imageId": "1776246324066-hu5ob2" },
+        { "label": "Resort Bokeh Swim Editorial",       "imageId": "1776522789403-pnvcux" },
+        { "label": "Seated Balcony Resort Portrait",    "imageId": "1776246325971-mrh821" },
+        { "label": "Yacht Deck Editorial Pose",         "imageId": "1777996843133-j8fyxu" },
+        { "label": "Architectural Stair Swim Editorial","imageId": "1777996827311-gx5s9t" }
       ]
     },
     {
