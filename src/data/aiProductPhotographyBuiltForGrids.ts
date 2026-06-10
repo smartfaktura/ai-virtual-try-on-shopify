@@ -934,8 +934,8 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
           "imageId": "1781096209858-839zxz"
         },
         {
-          "label": "Sunlit Necklace Laugh Portrait",
-          "imageId": "1781079803994-j0qytc"
+          "label": "Bare Collarbone Necklace Crop",
+          "imageId": "1781097559714-kvwslw"
         },
         {
           "label": "Floating Pendant Studio Hero",
