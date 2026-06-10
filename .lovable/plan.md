@@ -1,29 +1,59 @@
-## Why
+## Super-safe indexing plan — only 2 files touched
 
-On `/app/perspectives` the results view shows only **Generate more** and **View in Library** — there's no one-click way to grab every angle of the current generation. Users have to open each image individually.
+Footer already lists 19 of 22 category pages, and the blog + every blog post are already in the sitemap. So this plan is intentionally tiny. Nothing in the running app, routing, auth, backend, or generation is touched.
 
-## Change
+## What changes
 
-Add a **Download All (N)** button next to the existing two CTAs in the results action row (`src/pages/Perspectives.tsx`, around lines 741–765).
+### 1. `scripts/generate-sitemap.ts` — clean the sitemap
 
-### Behavior
-- Visible only when `resultEntries.length > 0` (already the condition for the grid).
-- Single image → uses `saveOrShareImage` (mobile-friendly: native share / save-to-photos).
-- Multiple images → uses `downloadDropAsZip` to bundle into one ZIP named `Perspectives_<source-product-or-date>.zip`.
-- Shows progress `0–100%` while zipping (mirrors `WorkflowPreviewModal` pattern) and disables itself during download.
-- Filenames inside the ZIP use the variation label (e.g. `45_Front-Right.png`), sanitized.
+Build-time script only (writes `public/sitemap.xml`, never runs in the browser — cannot crash the app):
 
-### Technical
+- **Remove `fetchDiscoverEntries()` and its 380+ `/discover/*` URLs.** They are blocked in `robots.txt`, so Google wastes crawl budget on them and dilutes signals for everything else (including category pages and the blog).
+- **Remove the `/freestyle` entry** for the same reason (`/freestyle/*` items are CSR-only and disallowed).
+- **Bump the 22 `/ai-product-photography/*` entries** to `priority: 0.9`, `changefreq: weekly`.
+- **Blog (already strong, small tune-up):**
+  - `/blog` index stays at `priority: 0.9`, `changefreq: daily` (already set).
+  - Each blog post entry stays at `priority: 0.8`. Confirm `lastmod` uses `updatedAt ?? publishedAt` (already does).
+  - No other blog changes — every published post is already included.
 
-- Reuse existing helpers — no new dependencies:
-  - `downloadDropAsZip` from `@/lib/dropDownload`
-  - `saveOrShareImage` from `@/lib/mobileImageSave`
-  - `toast` from `@/lib/brandedToast`
-  - `Download` / `Loader2` / `Archive` icons (already imported elsewhere; verify and add to the existing `lucide-react` import in this file).
-- Add local state: `downloading: boolean`, `downloadPct: number`.
-- Map `resultEntries` → `DropImage[]` with `{ url, workflow_name: 'Perspectives', scene_name: entry.job.variationLabel }`.
-- Place the new button as the **middle** action (Generate more · Download All · View in Library), `variant="outline"`, `size="pill"` to match.
+Result: `public/sitemap.xml` shrinks from ~452 → ~70 URLs at next build, all crawlable, all worth indexing. XML format unchanged.
 
-### Out of scope
-- No change to grid, lightbox, library, or per-image hover download.
-- No change to the "View in Library" / "Generate more" flows.
+### 2. `src/components/landing/LandingFooter.tsx` — add 3 missing footer links
+
+Footer is missing 3 of the 22 categories. Add them so every category page receives a sitewide internal link (same shape as the existing 19 entries — cannot break anything):
+
+- Socks → `/ai-product-photography/socks`
+- Supplements & Wellness → `/ai-product-photography/supplements-wellness`
+- Bags & Accessories → `/ai-product-photography/bags-accessories`
+
+Blog is already linked from the footer, so no footer change is needed for blog.
+
+## What does NOT change
+
+- No route, component, or `SEOHead` changes
+- No `index.html`, `robots.txt`, or backend changes
+- No prerender / SSR work
+- No new dependencies
+- No blog post content edits
+- No removal of any existing functionality
+
+## Verification before declaring done
+
+1. `predev`/`prebuild` regenerates `public/sitemap.xml` with ~70 URLs.
+2. All 22 category URLs present at priority 0.9.
+3. `/blog` and every published blog post URL still present.
+4. Footer renders with the 3 new links; page still loads.
+5. No build errors.
+
+## After deploy — actions in Google Search Console (you do these)
+
+1. Sitemaps → resubmit `https://vovv.ai/sitemap.xml`.
+2. URL Inspection → "Request Indexing" for:
+   - The 22 `/ai-product-photography/*` pages.
+   - `/blog` and your 5–10 most important blog posts.
+   - Google rate-limits ~10/day per property; spread over 2–3 days.
+3. Wait 1–3 weeks. Indexed count for both buckets should climb.
+
+## Honest expectation
+
+This removes technical drag and sends Google the right signals. It cannot force faster indexing than Google's own schedule. For a newer domain, full indexing of all 22 category pages and blog posts typically takes 2–6 weeks after these signals improve. Blog indexing also depends on post quality and update frequency — neither of which this plan touches.
