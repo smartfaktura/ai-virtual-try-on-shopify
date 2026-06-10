@@ -1,59 +1,118 @@
-## Super-safe indexing plan — only 2 files touched
+## Swimwear page refresh — expanded chip grid + Scene Examples
 
-Footer already lists 19 of 22 category pages, and the blog + every blog post are already in the sitemap. So this plan is intentionally tiny. Nothing in the running app, routing, auth, backend, or generation is touched.
+The live scene library has **69 swimwear scenes**. Today the chip grid only surfaces ~35 of them. This plan reorganizes the chips into **7 themed groups, each at the 8-card cap**, so the page shows **52 scenes** instead of 35 — and uses the fresh `177934…` Maldives / Cape Town / Aegean / White Lotus / Villa batch that's currently missing.
 
-## What changes
+Two data files only. No component, route, hook, or backend changes.
 
-### 1. `scripts/generate-sitemap.ts` — clean the sitemap
+## 1. Chip grid — `aiProductPhotographyBuiltForGrids.ts` (swimwear block)
 
-Build-time script only (writes `public/sitemap.xml`, never runs in the browser — cannot crash the app):
+New chip structure (renamed where it makes the grouping cleaner):
 
-- **Remove `fetchDiscoverEntries()` and its 380+ `/discover/*` URLs.** They are blocked in `robots.txt`, so Google wastes crawl budget on them and dilutes signals for everything else (including category pages and the blog).
-- **Remove the `/freestyle` entry** for the same reason (`/freestyle/*` items are CSR-only and disallowed).
-- **Bump the 22 `/ai-product-photography/*` entries** to `priority: 0.9`, `changefreq: weekly`.
-- **Blog (already strong, small tune-up):**
-  - `/blog` index stays at `priority: 0.9`, `changefreq: daily` (already set).
-  - Each blog post entry stays at `priority: 0.8`. Confirm `lastmod` uses `updatedAt ?? publishedAt` (already does).
-  - No other blog changes — every published post is already included.
+### Chip 1 — `Swimwear · Resort Editorial` (8)
+- Sunlit Arch Swim Editorial · `1776522810241-oh3lyd`
+- Sun Lounger Resort Pose · `1776246328634-fw8s9o`
+- Cabana Curtain Movement · `1776522770222-za8n2n`
+- Resort Staircase Pose · `1776246324066-hu5ob2`
+- Resort Bokeh Swim Editorial · `1776522789403-pnvcux`
+- Seated Balcony Resort Portrait · `1776246325971-mrh821`
+- Yacht Deck Editorial Pose · `1777996843133-j8fyxu`
+- Architectural Stair Swim Editorial · `1777996827311-gx5s9t`
 
-Result: `public/sitemap.xml` shrinks from ~452 → ~70 URLs at next build, all crawlable, all worth indexing. XML format unchanged.
+### Chip 2 — `Swimwear · Villa & Resort Mood` *(new chip)* (8)
+- Private Villa Glow · `1779344972409-ntn94t`
+- White Lotus Glow · `1779347039851-qiw1ib`
+- Villa Shade Siren · `1779347035251-z5k8cv`
+- Jungle Villa Afterglow · `1779347010918-7zu59q`
+- Resort Mirror Heat · `1779347024318-h43k3f`
+- Villa Espresso Walk · `1779347030368-pgte54`
+- Island Flash Hour · `1779347005284-g2tttx`
+- Poolside Fever Dream · `1779344965626-u2ro8h`
 
-### 2. `src/components/landing/LandingFooter.tsx` — add 3 missing footer links
+### Chip 3 — `Swimwear · Mediterranean` *(new chip)* (6)
+- Aegean Deck Siren · `1779346999911-klrly1`
+- Aegean Cliff Siren · `1779348543991-txp84o`
+- Cape Town Siren · `1779344951443-20h9xc`
+- Coastal Stillness Swim Frame · `1777996830864-yd13ny`
+- Golden Horizon Swim · `1777996832895-0e40jt`
+- Minimal Horizon Swim Editorial · `1776574730668-ltg55f`
 
-Footer is missing 3 of the 22 categories. Add them so every category page receives a sitewide internal link (same shape as the existing 19 entries — cannot break anything):
+### Chip 4 — `Swimwear · Maldives & Tropics` *(new chip)* (6)
+- Maldives It Girl · `1779343672535-j0u73e`
+- Maldives Palm Girl · `1779343681835-hd7hp3`
+- Maldives Bicycle Girl · `1779343666035-zdhcpb`
+- Sun Chaser Girl · `1779348545288-6ot498`
+- Golden Sand · `1779344959426-hzoaie`
+- Yacht Bow Swim Editorial · `1777996842051-0zknjz`
 
-- Socks → `/ai-product-photography/socks`
-- Supplements & Wellness → `/ai-product-photography/supplements-wellness`
-- Bags & Accessories → `/ai-product-photography/bags-accessories`
+### Chip 5 — `Swimwear · Pool & Beach UGC` (8)
+- Towel Wrap After Swim · `1776246331485-jyrtgf`
+- Floating Pool Product Shot · `1777996831843-l3w3d6`
+- Palm Shadow Swim Editorial · `1776522783936-8h56rb`
+- Walking Along Pool Edge · `1777996839874-rwutl7`
+- Sun-Dried Swimwear · `1777996837190-gozhuc`
+- Beach Towel Sitting Moment · `1776246304639-tjof8z`
+- Shoreline Walk Pause · `1777996836335-qaub4x`
+- Poolside Friend-Shot Candid · `1777996833942-pm1vjo`
 
-Blog is already linked from the footer, so no footer change is needed for blog.
+### Chip 6 — `Swimwear · Aesthetic Color` (5)
+Already strong — keep as-is, no source-able alternatives:
+- Color-Washed Resort Wall · `1777996990945-7t4iqw`
+- Aesthetic Color Poolside Story · `1777996986914-n16g2p`
+- Aesthetic Color Towel and Fabric Story · `1777996989794-75995p`
+- Aesthetic Color Sunset Resort Mood · `1777996988655-w0z9fg`
+- Aesthetic Color Resort Editorial Hero · `1777996987704-clgu3v`
+
+### Chip 7 — `Swimwear · Stills & Flat-Lay` (renamed from "Stills") (4)
+- Folded on Towel Hero Still · `1776246310078-jeoctl`
+- Sandy Towel Surface Detail · `1776246325029-44re6c`
+- Water Reflection Still Life · `1776246333620-ntl6rn`
+- Resort Essentials Flat · `1776246329554-uvtjp1`
+
+### Chip 8 — `Swimwear · Essential Shots` (5) — unchanged
+PDP angles, kept as the closer:
+- Ghost Mannequin Shot · `1776523219756-c5vnc7`
+- On-Model Front · `1776246318297-apxkit`
+- On-Model Back · `1776246316545-ge07py`
+- On-Model Editorial · `1776246317384-rtaqcj`
+- Movement Shot · `1776246314604-0psi6v`
+
+**Coverage:** 8 chips × ~6.5 avg = **~52 scenes shown** (up from ~35), using the freshest editorial batch where it exists.
+
+All imageIds verified to exist in the live `product_image_scenes` table.
+
+## 2. Scene Examples grid — `aiProductPhotographyCategoryPages.ts` (swimwear `sceneExamples`)
+
+Pick 8 fresh scenes that don't appear in the first chip (Resort Editorial), so the page feels new as the user scrolls:
+
+1. Maldives It Girl — Editorial Resort Poses — `1779343672535-j0u73e`
+2. White Lotus Glow — Aesthetic Color Stories — `1779347039851-qiw1ib`
+3. Cape Town Siren — Editorial Resort Poses — `1779344951443-20h9xc`
+4. Poolside Fever Dream — Pool / Beach Lifestyle UGC — `1779344965626-u2ro8h`
+5. Aegean Deck Siren — Editorial Resort Poses — `1779346999911-klrly1`
+6. Sandy Towel Surface Detail — Wet Surface Stills — `1776246325029-44re6c`
+7. Villa Espresso Walk — Pool / Beach Lifestyle UGC — `1779347030368-pgte54`
+8. Maldives Palm Girl — Editorial Resort Poses — `1779343681835-hd7hp3`
+
+Each entry: `label`, `category`, `imageId`, `collectionLabel: 'Swimwear'`, `subCategory`, descriptive `alt`. Schema unchanged.
+
+## 3. Subtitle copy
+
+The Scene Examples subtitle ("Studio, lifestyle, editorial, and seasonal — one click.") is a generic line in the shared component used by **every** category page. Two options:
+
+- **(A)** Leave it as-is — zero risk to other category pages. *Recommended.*
+- **(B)** Branch the copy by `page.slug === 'swimwear'` to show e.g. *"Resort, Maldives, Mediterranean and poolside editorials — one click"*. Tiny 1-line component change, only affects swimwear.
+
+If you don't tell me, I'll go with **(A)**.
 
 ## What does NOT change
 
-- No route, component, or `SEOHead` changes
-- No `index.html`, `robots.txt`, or backend changes
-- No prerender / SSR work
-- No new dependencies
-- No blog post content edits
-- No removal of any existing functionality
+- Hero collage at the top of the page (different section).
+- All other category pages (chip data is keyed by `slug: 'swimwear'`).
+- No component, route, hook, or backend changes.
+- No SEO/schema/canonical changes.
 
-## Verification before declaring done
+## Verification
 
-1. `predev`/`prebuild` regenerates `public/sitemap.xml` with ~70 URLs.
-2. All 22 category URLs present at priority 0.9.
-3. `/blog` and every published blog post URL still present.
-4. Footer renders with the 3 new links; page still loads.
-5. No build errors.
-
-## After deploy — actions in Google Search Console (you do these)
-
-1. Sitemaps → resubmit `https://vovv.ai/sitemap.xml`.
-2. URL Inspection → "Request Indexing" for:
-   - The 22 `/ai-product-photography/*` pages.
-   - `/blog` and your 5–10 most important blog posts.
-   - Google rate-limits ~10/day per property; spread over 2–3 days.
-3. Wait 1–3 weeks. Indexed count for both buckets should climb.
-
-## Honest expectation
-
-This removes technical drag and sends Google the right signals. It cannot force faster indexing than Google's own schedule. For a newer domain, full indexing of all 22 category pages and blog posts typically takes 2–6 weeks after these signals improve. Blog indexing also depends on post quality and update frequency — neither of which this plan touches.
+1. Open `/ai-product-photography/swimwear` in preview — 8 chips render with the new groupings, each shows the new imagery, Scene examples grid below shows 8 fresh scenes.
+2. No console errors. All ~60 images load.
+3. `tsc` passes (typed data file).
