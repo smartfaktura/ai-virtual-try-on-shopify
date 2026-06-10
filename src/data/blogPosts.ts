@@ -1080,6 +1080,8 @@ A modern bag PDP needs at minimum:
 
 The hardware closeup is the one shot most small brands skip — and it is the one that signals luxury most reliably. AI nails it now.
 
+![Three bag scenes — sculptural studio, hardware closeup, on-body editorial](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239449949-ygljai.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776749772492-j9qpsv.jpg|https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239415973-p3m8bq.jpg)
+
 ### On-body editorial
 
 ![AI bag on-body architectural editorial shot](https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/product-uploads/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/scene-previews/1776239415973-p3m8bq.jpg)
@@ -1115,12 +1117,12 @@ Take a brand launching 40 bag SKUs across 3 colorways = 120 product variations. 
 
 | | Traditional studio | AI bag photography |
 |---|---|---|
-| **Cost per image** | $80–$150 | $2–$5 |
-| **Total** | $77,000–$144,000 | $1,900–$4,800 |
-| **Hardware-detail reshoot** | $3k–$6k | Free |
+| **Pricing model** | Per-shot day rate | Flat monthly subscription |
+| **Cost** | $77,000–$144,000 one-time | From $39/mo on a [VOVV.AI plan](/pricing) |
+| **Hardware-detail reshoot** | $3k–$6k | Included in your monthly credits |
 | **Adding a new colorway later** | New shoot day | One generation |
 
-The colorway line is the killer for accessories brands specifically. Every time merchandising adds a seasonal color, traditional photography means scheduling another shoot. AI just regenerates the catalog.
+Plans start at **$39/mo** and scale up to $79 and $179 tiers as your monthly image volume grows. The colorway line is the killer for accessories brands specifically. Every time merchandising adds a seasonal color, traditional photography means scheduling another shoot. AI just regenerates the catalog.
 
 ## When to still book the studio
 
