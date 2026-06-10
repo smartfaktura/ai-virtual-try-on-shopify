@@ -1,17 +1,28 @@
-## Root cause
+## Plan: Add "Bags" link to the home footer
 
-`react-markdown` URI-encodes image `src` values, so the `|` separators we use for collages (`![alt](url1|url2|url3)`) arrive at `BlogMarkdownImage` as `%7C`. The current check `src.includes('|')` is false, so all three blog collages render as a single broken-URL image (the broken-image icon you see). Same bug affects bags and fashion posts — they all use the same syntax.
+Add a footer link pointing to the existing dedicated `/ai-product-photography/bags` page (the "bags-only" SEO landing, separate from the broader `/bags-accessories` hub).
 
-## Fix
+### Change
 
-In `src/components/app/BlogMarkdownImage.tsx`:
+In `src/components/home/HomeFooter.tsx`, add one entry to the **Product** column:
 
-- Compute `const decoded = src.includes('|') ? src : decodeURIComponent(src);` once at the top.
-- Use `decoded.includes('|')` for the collage check.
-- Use `decoded.split('|')` for the URL list.
+```ts
+{ label: 'AI bag photography', to: '/ai-product-photography/bags' },
+```
 
-Keep everything else (grid layout, optimization, captions) unchanged. No blog content edits needed — the markdown is correct; only the renderer needs the decode.
+Final Product column order:
+- Pricing
+- Examples
+- AI bag photography  ← new
+- Changelog
 
-## Files
+### Why this column / label
+- The Product column already groups the user-facing surface; the SEO bag page fits there.
+- Label "AI bag photography" matches the page's actual H1/intent and gives the footer link real keyword value (better than just "Bags", which reads ambiguously in a footer).
 
-- `src/components/app/BlogMarkdownImage.tsx`
+### Not changing
+- No other footer columns touched.
+- No sitemap edit needed — `/ai-product-photography/:slug` pages are already generated from the category data source.
+
+### File to edit
+- `src/components/home/HomeFooter.tsx` (one new array item)
