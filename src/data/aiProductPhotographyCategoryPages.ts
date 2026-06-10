@@ -1386,8 +1386,8 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
       { q: 'Can I generate eyewear photos for Shopify?',             a: 'Yes. The output is sized and styled for Shopify PDPs, collection grids, banners, and ads.' },
     ],
     relatedCategories: ['bags-accessories', 'watches', 'fashion', 'jewelry'],
-    heroImageId: 'beauty-closeup-oversized-eyewear-1776150210659',
-    heroAlt: 'AI eyewear product photography example showing an editorial beauty closeup oversized portrait.',
+    heroImageId: 'apparel-oldmoney-outdoor-portrait-copy-copy-copy-copy-copy-1780507647655',
+    heroAlt: 'AI eyewear product photography example showing an old-money outdoor editorial portrait.',
     heroNoun: 'frame',
     heroCollage: [
       { subCategory: 'Editorial', imageId: 'beauty-closeup-oversized-eyewear-1776150210659', alt: 'AI eyewear beauty closeup oversized portrait.' },
