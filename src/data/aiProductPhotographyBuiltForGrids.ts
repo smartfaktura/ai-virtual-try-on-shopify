@@ -2259,41 +2259,76 @@ export const BUILT_FOR_GRIDS: Record<string, BuiltForGroup[]> = {
     {
       "subCategory": "Swimwear · Resort Editorial",
       "cards": [
-        { "label": "Sunlit Arch Swim Editorial",   "imageId": "1776522810241-oh3lyd" },
-        { "label": "Sun Lounger Resort Pose",      "imageId": "1776246328634-fw8s9o" },
-        { "label": "On-Model Lifestyle",           "imageId": "1776522776954-akr8x6" },
-        { "label": "Poolside Standing Hero",       "imageId": "1776246322011-4gzbpx" },
-        { "label": "Resort Bokeh Swim Editorial",  "imageId": "1776522789403-pnvcux" },
-        { "label": "Seated Balcony Resort Portrait", "imageId": "1776246325971-mrh821" },
-        { "label": "Cabana Curtain Movement",      "imageId": "1776522770222-za8n2n" },
-        { "label": "Yacht Deck Editorial Pose",    "imageId": "1777996843133-j8fyxu" }
+        { "label": "Sunlit Arch Swim Editorial",        "imageId": "1776522810241-oh3lyd" },
+        { "label": "Sun Lounger Resort Pose",           "imageId": "1776246328634-fw8s9o" },
+        { "label": "Cabana Curtain Movement",           "imageId": "1776522770222-za8n2n" },
+        { "label": "Resort Staircase Pose",             "imageId": "1776246324066-hu5ob2" },
+        { "label": "Resort Bokeh Swim Editorial",       "imageId": "1776522789403-pnvcux" },
+        { "label": "Seated Balcony Resort Portrait",    "imageId": "1776246325971-mrh821" },
+        { "label": "Yacht Deck Editorial Pose",         "imageId": "1777996843133-j8fyxu" },
+        { "label": "Architectural Stair Swim Editorial","imageId": "1777996827311-gx5s9t" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Villa & Resort Mood",
+      "cards": [
+        { "label": "Private Villa Glow",        "imageId": "1779344972409-ntn94t" },
+        { "label": "White Lotus Glow",          "imageId": "1779347039851-qiw1ib" },
+        { "label": "Villa Shade Siren",         "imageId": "1779347035251-z5k8cv" },
+        { "label": "Jungle Villa Afterglow",    "imageId": "1779347010918-7zu59q" },
+        { "label": "Resort Mirror Heat",        "imageId": "1779347024318-h43k3f" },
+        { "label": "Villa Espresso Walk",       "imageId": "1779347030368-pgte54" },
+        { "label": "Island Flash Hour",         "imageId": "1779347005284-g2tttx" },
+        { "label": "Poolside Fever Dream",      "imageId": "1779344965626-u2ro8h" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Mediterranean",
+      "cards": [
+        { "label": "Aegean Deck Siren",                "imageId": "1779346999911-klrly1" },
+        { "label": "Aegean Cliff Siren",               "imageId": "1779348543991-txp84o" },
+        { "label": "Cape Town Siren",                  "imageId": "1779344951443-20h9xc" },
+        { "label": "Coastal Stillness Swim Frame",     "imageId": "1777996830864-yd13ny" },
+        { "label": "Golden Horizon Swim",              "imageId": "1777996832895-0e40jt" },
+        { "label": "Minimal Horizon Swim Editorial",   "imageId": "1776574730668-ltg55f" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Maldives & Tropics",
+      "cards": [
+        { "label": "Maldives It Girl",            "imageId": "1779343672535-j0u73e" },
+        { "label": "Maldives Palm Girl",          "imageId": "1779343681835-hd7hp3" },
+        { "label": "Maldives Bicycle Girl",       "imageId": "1779343666035-zdhcpb" },
+        { "label": "Sun Chaser Girl",             "imageId": "1779348545288-6ot498" },
+        { "label": "Golden Sand",                 "imageId": "1779344959426-hzoaie" },
+        { "label": "Yacht Bow Swim Editorial",    "imageId": "1777996842051-0zknjz" }
+      ]
+    },
+    {
+      "subCategory": "Swimwear · Pool & Beach UGC",
+      "cards": [
+        { "label": "Towel Wrap After Swim",         "imageId": "1776246331485-jyrtgf" },
+        { "label": "Floating Pool Product Shot",    "imageId": "1777996831843-l3w3d6" },
+        { "label": "Palm Shadow Swim Editorial",    "imageId": "1776522783936-8h56rb" },
+        { "label": "Walking Along Pool Edge",       "imageId": "1777996839874-rwutl7" },
+        { "label": "Sun-Dried Swimwear",            "imageId": "1777996837190-gozhuc" },
+        { "label": "Beach Towel Sitting Moment",    "imageId": "1776246304639-tjof8z" },
+        { "label": "Shoreline Walk Pause",          "imageId": "1777996836335-qaub4x" },
+        { "label": "Poolside Friend-Shot Candid",   "imageId": "1777996833942-pm1vjo" }
       ]
     },
     {
       "subCategory": "Swimwear · Aesthetic Color",
       "cards": [
-        { "label": "Color-Washed Resort Wall",         "imageId": "1777996990945-7t4iqw" },
-        { "label": "Aesthetic Color Poolside Story",   "imageId": "1777996986914-n16g2p" },
-        { "label": "Aesthetic Color Towel and Fabric Story", "imageId": "1777996989794-75995p" },
-        { "label": "Aesthetic Color Sunset Resort Mood", "imageId": "1777996988655-w0z9fg" },
-        { "label": "Aesthetic Color Resort Editorial Hero", "imageId": "1777996987704-clgu3v" }
+        { "label": "Color-Washed Resort Wall",                 "imageId": "1777996990945-7t4iqw" },
+        { "label": "Aesthetic Color Poolside Story",           "imageId": "1777996986914-n16g2p" },
+        { "label": "Aesthetic Color Towel and Fabric Story",   "imageId": "1777996989794-75995p" },
+        { "label": "Aesthetic Color Sunset Resort Mood",       "imageId": "1777996988655-w0z9fg" },
+        { "label": "Aesthetic Color Resort Editorial Hero",    "imageId": "1777996987704-clgu3v" }
       ]
     },
     {
-      "subCategory": "Swimwear · Beach UGC",
-      "cards": [
-        { "label": "Towel Wrap After Swim",         "imageId": "1776246331485-jyrtgf" },
-        { "label": "Sun-Dried Swimwear",            "imageId": "1777996837190-gozhuc" },
-        { "label": "Floating Pool Product Shot",    "imageId": "1777996831843-l3w3d6" },
-        { "label": "Palm Shadow Swim Editorial",    "imageId": "1776522783936-8h56rb" },
-        { "label": "Walking Along Pool Edge",       "imageId": "1777996839874-rwutl7" },
-        { "label": "Beach Towel Sitting Moment",    "imageId": "1776246304639-tjof8z" },
-        { "label": "Beach Bag and Essentials",      "imageId": "1776246303699-b50y33" },
-        { "label": "Shoreline Walk Pause",          "imageId": "1777996836335-qaub4x" }
-      ]
-    },
-    {
-      "subCategory": "Swimwear · Stills",
+      "subCategory": "Swimwear · Stills & Flat-Lay",
       "cards": [
         { "label": "Folded on Towel Hero Still",   "imageId": "1776246310078-jeoctl" },
         { "label": "Sandy Towel Surface Detail",   "imageId": "1776246325029-44re6c" },
