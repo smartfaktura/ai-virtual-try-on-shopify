@@ -1390,7 +1390,7 @@ export const aiProductPhotographyCategoryPages: CategoryPage[] = [
     heroAlt: 'AI eyewear product photography example showing an old-money outdoor editorial portrait.',
     heroNoun: 'frame',
     heroCollage: [
-      { subCategory: 'Editorial', imageId: 'beauty-closeup-oversized-eyewear-1776150210659', alt: 'AI eyewear beauty closeup oversized portrait.' },
+      { subCategory: 'Editorial', imageId: 'apparel-oldmoney-outdoor-portrait-copy-copy-copy-copy-copy-1780507647655', alt: 'AI eyewear old-money outdoor editorial portrait.' },
       { subCategory: 'Video',     imageId: 'editorial-office-flash-eyewear-1776150153576',   alt: 'AI eyewear editorial office flash motion clip.', videoSrc: eyewearMotion3 },
       { subCategory: 'Vintage',   imageId: '1776102204479-9rlc0n',                            alt: 'AI eyewear sunset drive vintage editorial.' },
       { subCategory: 'UGC',       imageId: 'concrete-stair-selfie-eyewear-1776149876284',     alt: 'AI eyewear concrete stair selfie brutalist UGC.' },
